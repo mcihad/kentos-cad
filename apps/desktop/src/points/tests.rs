@@ -161,6 +161,7 @@ fn a_point_reads_its_label_place_elevation_kod_layer_and_selection() {
             label: Some("101".into()),
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         p: kentos_contracts::Vec2 {
             x: 487001.5,

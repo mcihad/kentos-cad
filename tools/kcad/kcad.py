@@ -131,6 +131,15 @@ SCHEMA_WITH_NETWORKS = 33
 SCHEMA_WITH_TEMPORAL = 34
 # Schema 35: schema 34 and a layer node's `filter` (docs/adr/0211 §2).
 SCHEMA_WITH_FILTERS = 35
+# Schema 36: schema 35 and the label engine (docs/adr/0212 §2): a label style's engine fields, a layer style's
+# `labels`, an object's `labelPins`.
+SCHEMA_WITH_LABELS = 36
+# The label engine's bounds (kentos_contracts::labels).
+LABEL_CLASSES_MAX = 64
+LABEL_EXPRESSION_MAX = 10_000
+LABEL_NAME_MAX = 100
+LABEL_WORDS_MAX = 500
+LABEL_PINS_MAX = 64
 # A filter's bounds (kentos_contracts::layer_filter).
 FILTER_EXPRESSION_MAX = 10_000
 FILTER_OBJECTS_MAX = 100_000
@@ -253,7 +262,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -740,6 +749,143 @@ def layer_filter_problem(f):
             if x in seen:
                 return f"süzgecin listesinde {x} iki kez var"
             seen.add(x)
+    return None
+
+
+def label_color_ok(c):
+    """A colour a label may name (kentos_contracts::labels::label_color_ok): `#rrggbb`, `#rrggbbaa` or a theme name."""
+    if c in ("fg", "fg-dim", "label", "ink", "paper"):
+        return True
+    if not c.startswith("#"):
+        return False
+    h = c[1:]
+    return len(h) in (6, 8) and all(ch in "0123456789abcdefABCDEF" for ch in h)
+
+
+def label_style_problem(s):
+    """A label style with the label engine's fields (kentos_contracts::labels::style_problem, docs/adr/0212 §2): its
+    numbers in their ranges, its colours and expressions as the rules say."""
+
+    def out(x, lo, hi):
+        return not (lo <= x <= hi)
+
+    def bad_expr(e):
+        return e is not None and (e.strip() != e or not e or len(e) > LABEL_EXPRESSION_MAX)
+
+    def bad_color(c):
+        return c is not None and not label_color_ok(c)
+
+    for k, lo, hi in (("size", 1, 200), ("grow", 0, 1000), ("maxSize", 1, 200), ("minFeaturePx", 0, 100_000), ("minScale", 0, 1e9),
+                      ("maxScale", 0, 1e9), ("distance", 0, 500), ("repeat", 20, 100_000), ("maxAngle", 5, 90), ("shrink", 0.5, 1),
+                      ("duplicates", 1, 10_000)):
+        if k in s and out(s[k], lo, hi):
+            return f"{k} {lo}–{hi} arasında olmalı"
+    if "weight" in s and out(s["weight"], 100, 900):
+        return "kalınlık 100–900 olmalı"
+    if "priority" in s and s["priority"] > 10:
+        return "öncelik 0–10 olmalı"
+    if bad_expr(s.get("text")):
+        return "metnin ifadesi boş, uzun ya da başında veya sonunda boşluk var"
+    if bad_color(s.get("color")):
+        return "yazının rengi renk değil"
+    h = s.get("halo")
+    if h is not None and (out(h["width"], 0, 10) or bad_color(h.get("color"))):
+        return "hale geçersiz"
+    b = s.get("background")
+    if b is not None and (bad_color(b.get("fill")) or bad_color(b.get("stroke")) or ("padding" in b and out(b["padding"], 0, 50))):
+        return "zemin geçersiz"
+    h = s.get("shadow")
+    if h is not None and (out(h["dx"], -50, 50) or out(h["dy"], -50, 50) or bad_color(h.get("color")) or ("opacity" in h and out(h["opacity"], 0, 1))):
+        return "gölge geçersiz"
+    c = s.get("callout")
+    if c is not None and (bad_color(c.get("color")) or ("width" in c and out(c["width"], 0.1, 10)) or ("minLength" in c and out(c["minLength"], 0, 1000))):
+        return "çağrı çizgisi geçersiz"
+    k = s.get("stack")
+    if k is not None:
+        if out(k["chars"], 2, 500):
+            return "yığmanın satırı 2–500 harf olmalı"
+        if "at" in k and (not k["at"] or len(k["at"]) > 20):
+            return "yığmanın bölme karakterleri 1–20 harf olmalı"
+    a = s.get("abbreviate")
+    if a is not None:
+        words = a["words"]
+        if not words or len(words) > LABEL_WORDS_MAX:
+            return f"kısaltma sözlüğü 1–{LABEL_WORDS_MAX} sözcük olmalı"
+        seen = set()
+        for w in words:
+            for t in (w["word"], w["short"]):
+                if not t or len(t) > 100 or any(ch.isspace() for ch in t):
+                    return "kısaltma sözlüğünün sözcüğü ve kısası 1–100 harf, boşluksuz olmalı"
+            if w["word"] in seen:
+                return f"kısaltma sözlüğünde “{w['word']}” iki kez var"
+            seen.add(w["word"])
+    return None
+
+
+def layer_labels_problem(l):
+    """A layer's labelling (kentos_contracts::labels::layer_labels_problem): 1–64 named classes in rules, none
+    otherwise; each class's name trimmed, 1–100 characters, once; its condition and style by their rules; an
+    obstacle's weight 1–10."""
+    classes = l.get("classes", [])
+    if l["mode"] == "rules":
+        if not classes or len(classes) > LABEL_CLASSES_MAX:
+            return f"kurallı etiketlemede 1–{LABEL_CLASSES_MAX} sınıf olmalı"
+    elif classes:
+        return "sınıflar yalnız kurallı etiketlemede olur"
+    names = set()
+    for c in classes:
+        n = c["name"]
+        if not n or n.strip() != n or len(n) > LABEL_NAME_MAX:
+            return "sınıfın adı geçersiz"
+        if n in names:
+            return f"“{n}” adlı sınıf iki kez var"
+        names.add(n)
+        w = c.get("when")
+        if w is not None and (w.strip() != w or not w or len(w) > LABEL_EXPRESSION_MAX):
+            return f"“{n}” sınıfının koşulu geçersiz"
+        p = label_style_problem(c["style"])
+        if p:
+            return f"“{n}” sınıfı: {p}"
+    o = l.get("obstacle")
+    if o is not None and not 1 <= o["weight"] <= 10:
+        return "engelin ağırlığı 1–10 olmalı"
+    return None
+
+
+def pins_problem(pins):
+    """An object's pins (kentos_contracts::labels::pins_problem): at most 64, one a class, a place or hidden (true
+    only), a turn only with a place, the numbers finite and in their ranges."""
+    if len(pins) > LABEL_PINS_MAX:
+        return f"en çok {LABEL_PINS_MAX} etiket iğnesi"
+    classes = []
+    for p in pins:
+        c = p.get("class")
+        if c is not None and (c.strip() != c or not c or len(c) > LABEL_NAME_MAX):
+            return "etiket iğnesinin sınıfı geçerli bir ad değil"
+        if c in classes:
+            return "aynı sınıfın iki etiket iğnesi var"
+        classes.append(c)
+        if "at" not in p and "rotation" in p:
+            return "etiket iğnesinin açısı yerle birlikte verilir"
+        if "at" not in p and p.get("hidden") is not True:
+            return "etiket iğnesi ya bir yer ya da gizli olur"
+        if p.get("hidden") is False:
+            return "etiket iğnesinin hidden'ı yalnız true yazılır"
+        if "at" in p and any(not (abs(p["at"][k]) <= 1e7) for k in ("x", "y")):
+            return "etiket iğnesinin yeri sonlu ve 10 000 km'den yakın olmalı"
+        if "rotation" in p and not abs(p["rotation"]) <= 360:
+            return "etiket iğnesinin açısı −360–360 derece olmalı"
+    return None
+
+
+def labels_problem(layers):
+    """The tree's labelling (kentos_contracts::labels::labels_problem): no group labels."""
+    for n in layers:
+        if n["type"] == "group" and "labels" in n["style"]:
+            return f"“{n['name']}” bir grup; grubun etiketlemesi olmaz, etiketleme katmanındır"
+        p = labels_problem(n["children"])
+        if p:
+            return p
     return None
 
 
@@ -1363,6 +1509,7 @@ class _Schema:
         self.networks = version >= SCHEMA_WITH_NETWORKS
         self.temporal = version >= SCHEMA_WITH_TEMPORAL
         self.filters = version >= SCHEMA_WITH_FILTERS
+        self.labels = version >= SCHEMA_WITH_LABELS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -1395,6 +1542,11 @@ class _Schema:
             self.fail("bad_value", tree)
         # Schema 35's tree rule (docs/adr/0211 §2).
         tree = filters_problem(d["layers"])
+        if tree:
+            self.path.append("layers")
+            self.fail("bad_value", tree)
+        # Schema 36's tree rule (docs/adr/0212 §2).
+        tree = labels_problem(d["layers"])
         if tree:
             self.path.append("layers")
             self.fail("bad_value", tree)
@@ -2195,6 +2347,7 @@ class _Schema:
                 "fill": (self.text, False),
                 "color": (self.text, True),
                 "label": (self.label_style, False),
+                **({"labels": (self.layer_labels_, False)} if self.labels else {}),
                 "point": (self.fields({"size": (self.float, True), "symbol": (self.enum(("ring", "cross", "triangle")), True)}), False),
                 "lineType": (self.enum(("continuous", "dashed", "dashdot", "dotted")), True),
                 "renderer": (self.not_null, False),
@@ -2204,7 +2357,46 @@ class _Schema:
         )(v)
 
     def label_style(self, v):
-        return self.fields(
+        engine = {}
+        if self.labels:
+            # The label engine's fields (schema 36, docs/adr/0212 §2).
+            engine = {
+                "text": (self.text, False),
+                "color": (self.text, False),
+                "italic": (self.bool, False),
+                "align": (self.enum(("left", "center", "right")), False),
+                "point": (self.enum(("around", "center")), False),
+                "line": (self.enum(("parallel", "curved", "horizontal", "contour")), False),
+                "area": (self.enum(("horizontal", "free", "perimeter", "boundary", "parcel", "corner")), False),
+                "position": (self.enum(("on", "above", "below", "sides")), False),
+                "distance": (self.float, False),
+                "repeat": (self.float, False),
+                "maxAngle": (self.float, False),
+                "curved": (self.bool, False),
+                "mergeLines": (self.bool, False),
+                "inside": (self.bool, False),
+                "outside": (self.bool, False),
+                "halo": (self.fields({"width": (self.float, True), "color": (self.text, False)}), False),
+                "background": (
+                    self.fields({"shape": (self.enum(("rect", "round", "ellipse")), True), "fill": (self.text, False), "stroke": (self.text, False), "padding": (self.float, False)}),
+                    False,
+                ),
+                "shadow": (self.fields({"dx": (self.float, True), "dy": (self.float, True), "color": (self.text, False), "opacity": (self.float, False)}), False),
+                "callout": (
+                    self.fields({"kind": (self.enum(("straight", "manhattan")), True), "color": (self.text, False), "width": (self.float, False), "minLength": (self.float, False)}),
+                    False,
+                ),
+                "stack": (self.fields({"mode": (self.enum(("ifNeeded", "always")), True), "chars": (self.uint(32), True), "at": (self.text, False)}), False),
+                "abbreviate": (
+                    self.fields({"always": (self.bool, False), "words": (self.array(self.fields({"word": (self.text, True), "short": (self.text, True)})), True)}),
+                    False,
+                ),
+                "shrink": (self.float, False),
+                "priority": (self.uint(8), False),
+                "overlap": (self.enum(("never", "ifNeeded", "always")), False),
+                "duplicates": (self.float, False),
+            }
+        s = self.fields(
             {
                 "ink": (self.enum(("fg", "fg-dim", "label")), False),
                 "grow": (self.float, False),
@@ -2216,8 +2408,42 @@ class _Schema:
                 "template": (self.text, False),
                 "placement": (self.enum(("center", "corner", "beside", "along")), True),
                 "minFeaturePx": (self.float, False),
+                **engine,
             }
         )(v)
+        # The old fields keep the old readers' leniency; a schema 36 style is checked whole.
+        if self.labels:
+            p = label_style_problem(s)
+            if p:
+                self.fail("bad_value", p)
+        return s
+
+    # Schema 36's labelling (docs/adr/0212 §2): read field by field, then checked by the contract's rule.
+
+    def layer_labels_(self, v):
+        cls = self.fields({"name": (self.text, True), "when": (self.text, False), "style": (self.label_style, True)})
+        l = self.fields(
+            {
+                "mode": (self.enum(("single", "rules", "off")), True),
+                "classes": (self.array(cls), False),
+                "obstacle": (self.fields({"kind": (self.enum(("interior", "boundary")), False), "weight": (self.uint(8), True)}), False),
+            }
+        )(v)
+        if "classes" in l and not l["classes"]:
+            self.fail("bad_value", "sınıf listesi boş; boş liste yazılmaz")
+        p = layer_labels_problem(l)
+        if p:
+            self.fail("bad_value", p)
+        return l
+
+    def label_pins_(self, v):
+        pins = self.array(self.fields({"at": (self.point, False), "class": (self.text, False), "hidden": (self.bool, False), "rotation": (self.float, False)}))(v)
+        if not pins:
+            self.fail("bad_value", "etiket iğneleri boş; boş liste yazılmaz")
+        p = pins_problem(pins)
+        if p:
+            self.fail("bad_value", p)
+        return pins
 
     def uid(self, v):
         text = self.id16(v)
@@ -2964,6 +3190,8 @@ class _Schema:
             "symbol": (self.text, False),
             "layerId": (self.text, True),
             **({"lineWeight": (self.line_weight, False)} if self.weights else {}),
+            # Labels pinned by hand (schema 36, docs/adr/0212 §2): the drawing's objects only.
+            **({"labelPins": (self.label_pins_, False)} if self.labels and self.inside is None else {}),
         }
 
     def line_weight(self, v):

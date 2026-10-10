@@ -4,6 +4,7 @@ import type { DimensionStyle } from "./DimensionStyle";
 import type { DimensionTextPlace } from "./DimensionTextPlace";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { Vec2 } from "./Vec2";
 
@@ -45,6 +46,11 @@ symbol?: string,
  * object (docs/adr/0139).
  */
 lineWeight?: number, 
+/**
+ * Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+ * §3.7), one a class at most.
+ */
+labelPins?: Array<LabelPin>, 
 /**
  * The project's dimension style it follows, by its id; absent: Standart.
  */

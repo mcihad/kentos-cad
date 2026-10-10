@@ -451,6 +451,7 @@ mod tests {
                     label: None,
                     symbol: None,
                     line_weight: None,
+                    label_pins: Vec::new(),
                 },
                 pts: vec![at(486_600.0, 4_420_150.0), at(486_606.0, 4_420_155.0)],
                 text: Some("Mevcut bina".into()),

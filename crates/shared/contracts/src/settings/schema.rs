@@ -601,6 +601,19 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Saydamlık",
                 "Yarı saydam dolgular ve resimler saydamlıklarıyla çizilir. Kapalıyken tam örtücü çizilir.",
             ),
+        // The label engine's views (docs/adr/0212 §4): what was moved or pinned by hand, what found no place.
+        boolean("graphics.pinnedLabels", false)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Sabit etiketleri vurgula",
+                "Elle taşınan, döndürülen ya da sabitlenen etiketlerin çevresi vurgu rengiyle çizilir. Çizim değişmez.",
+            ),
+        boolean("graphics.unplacedLabels", false)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Yerleşmeyen etiketleri göster",
+                "Başka etiketlerle ya da engellerle çakıştığı için yer bulamayan etiketler en iyi yerlerinde kırmızı çizilir. Çizim değişmez.",
+            ),
         choice(
             "graphics.highlightColor",
             "accent",

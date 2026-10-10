@@ -42,6 +42,7 @@ import { SurveyPointTool } from './surveyPointTool';
 import { VertexPointsTool } from './vertexPointsTool';
 import { ElevationTool } from './elevationTool';
 import { MatchPropertiesTool } from './matchTool';
+import { LabelTool } from './labelTools';
 import { LayerTool } from './layerTools';
 import { LayerMoveTool } from './layerMoveTool';
 import { ChamferAllTool, FilletAllTool, ReverseTool, SimplifyTool } from './reshapeTools';
@@ -74,6 +75,7 @@ import { entitiesDelete } from '../product/entitiesDelete';
 import { entitiesEdit } from '../product/entitiesEdit';
 import { entitiesSet } from '../product/entitiesSet';
 import { entitiesTransform } from '../product/entitiesTransform';
+import { labelsPin } from '../product/labelsPin';
 import { lineCreate } from '../product/lineCreate';
 import { pointCreate } from '../product/pointCreate';
 import { polygonCreate } from '../product/polygonCreate';
@@ -446,6 +448,11 @@ const defs: Def[] = [
 
   // Harita
   { id: 'parcel', primary: true, label: 'Parsel oluştur', icon: 'parcel', group: 'map', section: 'parcel', shortcut: 'Alt+P', aliases: ['PARSEL'], description: 'Köşe noktalarından parsel çizer ve numaralar; tapu alanı çizimden hesaplanmaz, tapudan girilir.', steps: ['Parsel köşelerine sırayla tıklayın.', 'İlk köşeye ya da sağ tıklayın: parsel numaralanır ve seçilir.', 'Ada, mahalle ve tapu alanını Öznitelikler panelinden girin.', '“İzle” açıkken komşu parselin sınırı boyunca çizilir: sınırın köşeleri parselin köşeleri olur, ortak sınır ayrılmaz.'], productCommand: entitiesCreate.id, create: (c) => new PathTool(c, { id: 'parcel', label: 'Parsel', closed: true, parcelLayer: LAYERS.parcel }) },
+  // Etiket motoru (docs/adr/0212 §4): the labels moved, turned, pinned and hidden by hand, through cad.labels.pin.
+  { id: 'labelMove', label: 'Etiketi taşı', icon: 'labelMove', group: 'map', section: 'label', aliases: ['ETIKETTASI', 'MOVELABEL'], description: 'Etiketi elle başka bir yere taşır ve orada sabitler: etiket nesnesiyle gider, motor onu yeniden yerleştirmez. Yerleşmeyen etiketleri göster açıkken kırmızı çizilenler de taşınabilir.', steps: ['Taşınacak etikete tıklayın.', 'Yeni yerine tıklayın ya da koordinat yazın: etiket tek adımda yazılır.', 'Etiketi motora geri vermek için Etiketi sabitle’nin Çöz’ünü kullanın.'], productCommand: labelsPin.id, create: (c) => new LabelTool(c, 'move') },
+  { id: 'labelRotate', label: 'Etiketi döndür', icon: 'labelRotate', group: 'map', section: 'label', aliases: ['ETIKETDONDUR', 'ROTATELABEL'], description: 'Etiketi olduğu yerde elle döndürür ve sabitler: açı imleçle gösterilir (okunur yönde; Shift 15° adımlarla) ya da derece olarak yazılır.', steps: ['Döndürülecek etikete tıklayın.', 'Açıyı imleçle gösterip tıklayın ya da derece olarak yazın.'], productCommand: labelsPin.id, create: (c) => new LabelTool(c, 'rotate') },
+  { id: 'labelPin', label: 'Etiketi sabitle', icon: 'labelPin', group: 'map', section: 'label', aliases: ['ETIKETSABITLE', 'PINLABEL'], description: 'Etiketleri motorun koyduğu yerde sabitler: sonra başka etiketler onlardan kaçar, kaydırınca ya da yakınlaştırınca yerleri değişmez. Çöz (Ç) sabit etiketleri motora geri verir.', steps: ['Sabitlenecek etikete tıklayın ya da pencereyle birçoğunu seçin.', 'Çöz (Ç) açıkken tıklanan ya da pencereyle seçilen sabit etiketler serbest kalır.'], productCommand: labelsPin.id, create: (c) => new LabelTool(c, 'pin') },
+  { id: 'labelHide', label: 'Etiketi gizle', icon: 'labelHide', group: 'map', section: 'label', aliases: ['ETIKETGIZLE', 'HIDELABEL'], description: 'Tek bir etiketi gizler; nesnesi ve katmanın öbür etiketleri kalır. Göster (G) gizlenenleri soluk çizer; tıklanan yeniden görünür.', steps: ['Gizlenecek etikete tıklayın.', 'Göster (G) ile gizli etiketler soluk görünür; birine tıklayın: yeniden gösterilir.'], productCommand: labelsPin.id, create: (c) => new LabelTool(c, 'hide') },
   { id: 'subdivide', label: 'İfraz', icon: 'subdivide', group: 'map', section: 'parcel', shortcut: 'Alt+I', aliases: ['IFRAZ'], description: 'Parseli verilen alan ya da doğrultuya göre böler.' },
   { id: 'stakeout', label: 'Aplikasyon', icon: 'stakeout', group: 'map', section: 'field', shortcut: 'Alt+A', aliases: ['APL'], description: 'Seçili noktalar için istasyondan semt ve mesafe hesaplar.' },
   { id: 'spot', primary: true, label: 'Kot noktası', icon: 'spot', group: 'map', section: 'field', shortcut: 'Alt+Z', aliases: ['KOT'], description: 'Kot değeri girilerek yükseklik noktası ekler.', steps: ['Kot noktasının yerine tıklayın.', 'Kot değerini yazıp Enter’a basın.'], productCommand: pointCreate.id, create: (c) => new PointTool(c, { id: 'spot', label: 'Kot noktası', askZ: true, layerId: LAYERS.spot }) },

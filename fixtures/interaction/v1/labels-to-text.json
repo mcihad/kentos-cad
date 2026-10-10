@@ -2,7 +2,7 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "labels-to-text",
-  "title": "Etiketleri yazıya çevir (ADR 0175 §3), labels.kcad üzerinde, seçim yokken bütün çizim: beş etiket, gizli katmandaki ve yazı girmez; 1:1000'de bir numara öbürünün üstüne düşüp atlanır; Örtüşenler de (R) ve Zemin (Z) açılır, yazılan 500 ölçektir; Enter beş yazıyı yerleri, boyları, hizaları ve zeminleriyle tek adımda açılan Yazılar katmanına yazar ve seçer; Ctrl+Z geri alır; seçenekler hatırlanır, bellek başladığı gibi bırakılır, Esc çıkar",
+  "title": "Etiketleri yazıya çevir (ADR 0175 §3), labels.kcad üzerinde, seçim yokken bütün çizim: beş nesne, gizli katmandaki ve yazı girmez; 1:1000'de bir numara öbürünün üstüne düşüp atlanır; Örtüşenler de (R) ve Zemin (Z) açılır, yazılan 500 ölçektir; Enter beş yazıyı yerleri, boyları, hizaları ve zeminleriyle tek adımda açılan Yazılar katmanına yazar ve seçer; Ctrl+Z geri alır; seçenekler hatırlanır, bellek başladığı gibi bırakılır, Esc çıkar",
   "source": "Web'in LabelsToTextTool'u (labelsToTextTool.ts), masaüstünün kentos_interaction::labels_to_text'i; çekirdeğin label_text'i ve Store::label_texts'i; cad.entities.create labels, ADR 0175",
   "covers": [
     "UX-01",
@@ -34,7 +34,7 @@
     },
     {
       "run": "tool.labelsToText",
-      "note": "Seçim yok: görünen katmanlardaki beş etiket; gizli katmandaki parsel ve yazı girmez. 1:1000'de 104'ün numarası 101'inkinin üstüne düşer.",
+      "note": "Seçim yok: görünen katmanlardaki beş nesne; gizli katmandaki parsel ve yazı girmez. 1:1000'de 104'ün numarası, yalnız parselin içine yazılan, 101'inkinin üstüne düşer.",
       "expect": {
         "tool": "labelsToText",
         "options": [
@@ -46,7 +46,7 @@
           "Enter"
         ],
         "logged": [
-          "Etiketleri yazıya çevir: bütün çizimde 5 etiket; 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak. Enter ile yazın."
+          "Etiketleri yazıya çevir: bütün çizimde 5 nesne; 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak. Enter ile yazın."
         ],
         "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Nesneye bağlı (B): kapalı / Uygula (Enter)]"
       }
@@ -93,7 +93,7 @@
     },
     {
       "key": "Enter",
-      "note": "Yazılar tek adımda Yazılar katmanına (yoktu, aynı adımda açılır); seçili kalırlar.",
+      "note": "Yazılar tek adımda Yazılar katmanına (yoktu, aynı adımda açılır); seçili kalırlar. 1:500'de 104'ün numarası parselinin içinde, 101'inkinin altında yer bulur; P1'inki noktanın sağ üstünde, ortası hizalı.",
       "expect": {
         "tool": "select",
         "log": "success",
@@ -147,7 +147,7 @@
             "points": [
               [
                 -8,
-                0
+                -2.778125
               ]
             ],
             "height": 1.8520833333333333,
@@ -161,12 +161,12 @@
             "text": "P1",
             "points": [
               [
-                15.926041666666666,
-                -1.0739583333333336
+                16.170826,
+                -0.790975
               ]
             ],
             "height": 1.3890625,
-            "align": "middleLeft",
+            "align": "middleCenter",
             "rotation": 0,
             "mask": true
           },

@@ -149,7 +149,8 @@ export const TOOL_SECTIONS = {
   transform: { move: 'Dönüştür', array: 'Dizi' },
   modify: { edge: 'Kenar', corner: 'Köşe', object: 'Nesne', elevation: 'Kot' },
   area: { create: 'Oluştur ve çevir', boolean: 'Birleştir ve böl', hole: 'Delikler' },
-  map: { parcel: 'Parsel', field: 'Arazi', measure: 'Ölçme', time: 'Zaman' },
+  // Etiket motoru's tools (docs/adr/0212 §4).
+  map: { parcel: 'Parsel', field: 'Arazi', measure: 'Ölçme', time: 'Zaman', label: 'Etiket' },
   // Pictures beside the blocks (docs/adr/0192 §5).
   block: { block: 'Blok', image: 'Resim' },
 } as const satisfies Partial<Record<ToolGroup, Record<string, string>>>;

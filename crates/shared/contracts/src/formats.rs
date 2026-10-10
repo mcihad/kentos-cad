@@ -101,7 +101,9 @@ use crate::layer::LineType;
 /// 44: temporal layers and scenarios (docs/adr/0210): `.kcad` document schema 34, a layer's `time`,
 ///    a group's `scenario` and a scenario layer's `replaces`.
 /// 45: layer filters (docs/adr/0211): `.kcad` document schema 35, a layer's `filter`.
-pub const FORMATS_VERSION: u32 = 45;
+/// 46: the label engine (docs/adr/0212): `.kcad` document schema 36, a label style's engine
+///    fields, a layer style's `labels`, an object's `labelPins` (the typed columns' `PINS` flag).
+pub const FORMATS_VERSION: u32 = 46;
 
 // ── Every import ────────────────────────────────────────────────────────
 

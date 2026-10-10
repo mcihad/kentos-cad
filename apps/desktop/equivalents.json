@@ -148,6 +148,7 @@
     "apps/web/src/ui/time/TimeLayerDialog.ts#openTimeLayer": { "desktop": "implemented", "where": "apps/desktop/src/temporal/layer.rs (ADR 0210 §10)" },
     "apps/web/src/ui/time/ScenarioDialog.ts#openScenarioCreate": { "desktop": "implemented", "where": "apps/desktop/src/temporal/scenario.rs (ADR 0210 §10)" },
     "apps/web/src/ui/layers/LayerFilterDialog.ts#openLayerFilter": { "desktop": "implemented", "where": "apps/desktop/src/layer_filters.rs (ADR 0211 §4)" },
+    "apps/web/src/ui/labels/LabelsDialog.ts#openLabels": { "desktop": "implemented", "where": "apps/desktop/src/labelling/ (ADR 0212 §4)" },
     "apps/web/src/ui/raster/RasterAddDialog.ts#openRasterAdd": { "desktop": "implemented", "where": "apps/desktop/src/rasters/add.rs (ADR 0204 §8)" },
     "apps/web/src/ui/raster/RasterStyleDialog.ts#openRasterStyle": { "desktop": "implemented", "where": "apps/desktop/src/rasters/look.rs (ADR 0204 §8)" },
     "apps/web/src/ui/raster/RasterGeorefDialog.ts#openRasterGeoref": { "desktop": "implemented", "where": "apps/desktop/src/calc/raster_fit.rs (ADR 0204 §6)" },

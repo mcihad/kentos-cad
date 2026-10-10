@@ -241,12 +241,51 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
   const attribute: Pick = (v, where) => p.fields(v, { tag: same, prompt: same, value: same, p: vec, height: same, rotation: same, align: same, widthFactor: same }, where);
   const block: Pick = (v, where) =>
     p.fields(v, { id: same, name: same, base: vec, entities: (x, w) => p.list(blockObject)(x, w), attributes: (x, w) => p.list(attribute)(x, w), description: same }, where);
+  // A label style's fields, the label engine's too (docs/adr/0212 §2; schema 36): its look and fitting parts whole.
   const label = (v: unknown, where: string) =>
     p.fields(
       v,
-      { placement: same, size: same, grow: same, maxSize: same, weight: same, template: same, minFeaturePx: same, minScale: same, maxScale: same, ink: same },
+      {
+        placement: same,
+        size: same,
+        grow: same,
+        maxSize: same,
+        weight: same,
+        template: same,
+        minFeaturePx: same,
+        minScale: same,
+        maxScale: same,
+        ink: same,
+        text: same,
+        color: same,
+        italic: same,
+        align: same,
+        point: same,
+        line: same,
+        area: same,
+        position: same,
+        distance: same,
+        repeat: same,
+        maxAngle: same,
+        curved: same,
+        mergeLines: same,
+        inside: same,
+        outside: same,
+        halo: same,
+        background: same,
+        shadow: same,
+        callout: same,
+        stack: same,
+        abbreviate: same,
+        shrink: same,
+        priority: same,
+        overlap: same,
+        duplicates: same,
+      },
       where,
     );
+  const labelClass = (v: unknown, where: string) => p.fields(v, { name: same, when: same, style: label }, where);
+  const labels = (v: unknown, where: string) => p.fields(v, { mode: same, classes: (x, w) => p.list(labelClass)(x, w), obstacle: same }, where);
   const style = (v: unknown, where: string) =>
     p.fields(
       v,
@@ -257,6 +296,7 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
         fill: same,
         point: (x, w) => p.fields(x, { symbol: same, size: same }, w),
         label,
+        labels,
         pickInterior: same,
         renderer: same,
       },

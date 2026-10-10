@@ -115,6 +115,8 @@ const MIGRATED: PreferencesData = {
   fills: true,
   areaEdges: true,
   transparency: true,
+  pinnedLabels: false,
+  unplacedLabels: false,
   highlightColor: 'accent',
   highlightWidth: 1,
   startScreen: false,

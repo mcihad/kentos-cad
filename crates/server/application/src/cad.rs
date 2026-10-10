@@ -34,7 +34,7 @@ pub const PROJECTION_TOLERANCE: f64 = 0.001;
 /// Coordinates and sizes beyond this are refused as garbage (TM coordinates reach 4.5·10⁶ m).
 const MAX_ABS: f64 = 1e9;
 const MAX_POINTS: usize = 1_000_000;
-const BASE_KEYS: [&str; 8] = [
+const BASE_KEYS: [&str; 9] = [
     "kind",
     "id",
     "layerId",
@@ -43,6 +43,7 @@ const BASE_KEYS: [&str; 8] = [
     "label",
     "symbol",
     "lineWeight",
+    "labelPins",
 ];
 
 /// A feature row's content (without ids, versions and audit columns).
@@ -59,6 +60,8 @@ pub struct Stored {
     pub symbol: Option<String>,
     /// Its own line weight, mm (docs/adr/0139); none: its layer's.
     pub line_weight: Option<f64>,
+    /// Its labels pinned by hand, as the contract writes them (docs/adr/0212 §2); none: no pins.
+    pub label_pins: Option<Value>,
 }
 
 fn p(v: kentos_contracts::Vec2) -> P {
@@ -145,6 +148,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             "çizgi kalınlığı {w} mm; 0 ile {} arasında olmalı",
             kentos_contracts::MAX_LINE_WEIGHT
         ));
+    }
+    // Labels pinned by hand (docs/adr/0212 §2): the drawing's objects only, by the contract's rules.
+    if !base.label_pins.is_empty() {
+        if in_block {
+            return Err("blok tanımının nesnesinde etiket iğnesi olmaz".into());
+        }
+        if let Some(problem) = kentos_contracts::pins_problem(&base.label_pins) {
+            return Err(problem);
+        }
     }
     if base.attrs.len() > 500
         || base
@@ -570,6 +582,10 @@ pub fn to_stored(entity: &Entity, srid: u32, blocks: &Placing) -> Result<Stored,
         text(&map, "symbol"),
     );
     let line_weight = map.get("lineWeight").and_then(Value::as_f64);
+    let label_pins = map
+        .get("labelPins")
+        .filter(|p| p.as_array().is_some_and(|a| !a.is_empty()))
+        .cloned();
     let properties = map
         .get("attrs")
         .cloned()
@@ -594,6 +610,7 @@ pub fn to_stored(entity: &Entity, srid: u32, blocks: &Placing) -> Result<Stored,
         color,
         symbol,
         line_weight,
+        label_pins,
     })
 }
 
@@ -692,6 +709,9 @@ pub fn from_stored(s: &Stored) -> Result<Entity, String> {
     }
     if let Some(w) = s.line_weight {
         map.insert("lineWeight".into(), w.into());
+    }
+    if let Some(p) = &s.label_pins {
+        map.insert("labelPins".into(), p.clone());
     }
     serde_json::from_value(Value::Object(map)).map_err(|e| format!("nesne okunamadı: {e}"))
 }
@@ -806,6 +826,74 @@ mod tests {
         assert_eq!(l.b.y.to_bits(), 0.0f64.to_bits());
         assert_eq!(l.base.id, 0);
         assert_eq!(l.base.attrs["Ad"], "x");
+    }
+
+    #[test]
+    fn an_objects_label_pins_are_a_column_of_their_own() {
+        // docs/adr/0212 §2: a point keeps its geometry as source and has no definition to hold them.
+        let point = entity(
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {},
+            "p": { "x": 487000, "y": 4420000 },
+            "labelPins": [{ "class": "No", "at": { "x": -8, "y": 6 }, "rotation": 20 }, { "hidden": true }] }),
+        );
+        let s = to_stored(&point, 5256, &none()).unwrap();
+        assert_eq!(s.source_kind, "geom");
+        assert_eq!(
+            s.label_pins,
+            Some(
+                serde_json::json!([{ "class": "No", "at": { "x": -8.0, "y": 6.0 }, "rotation": 20.0 }, { "hidden": true }])
+            )
+        );
+        assert_eq!(
+            from_stored(&s).unwrap().base().label_pins,
+            point.base().label_pins
+        );
+        // A circle's definition does not hold them twice.
+        let circle = entity(
+            serde_json::json!({ "kind": "circle", "id": 1, "layerId": "p", "attrs": {},
+            "c": { "x": 0, "y": 0 }, "r": 2, "labelPins": [{ "hidden": true }] }),
+        );
+        let s = to_stored(&circle, 5256, &none()).unwrap();
+        assert!(
+            s.cad_definition
+                .as_ref()
+                .unwrap()
+                .get("labelPins")
+                .is_none()
+        );
+        assert_eq!(
+            from_stored(&s).unwrap().base().label_pins,
+            circle.base().label_pins
+        );
+        // Without any, none; against the contract's rules, refused.
+        let plain = entity(
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "p": { "x": 0, "y": 0 } }),
+        );
+        assert_eq!(to_stored(&plain, 5256, &none()).unwrap().label_pins, None);
+        let turned_only = entity(
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {},
+            "p": { "x": 0, "y": 0 }, "labelPins": [{ "rotation": 20 }] }),
+        );
+        assert_eq!(
+            to_stored(&turned_only, 5256, &none()).unwrap_err(),
+            "etiket iğnesinin açısı yerle birlikte verilir"
+        );
+    }
+
+    #[test]
+    fn a_blocks_object_has_no_label_pins() {
+        // docs/adr/0212 §2: pins are the drawing's objects', as the file's reader says.
+        let block: BlockDefinition = serde_json::from_value(serde_json::json!({
+            "id": "018f3a2b-0000-7000-8000-000000000001", "name": "Direk", "base": { "x": 0, "y": 0 },
+            "entities": [{ "kind": "point", "id": 1, "layerId": "", "attrs": {}, "p": { "x": 1, "y": 3 },
+                           "labelPins": [{ "hidden": true }] }]
+        }))
+        .unwrap();
+        let err = to_stored_block(&block).unwrap_err();
+        assert!(
+            err.contains("blok tanımının nesnesinde etiket iğnesi olmaz"),
+            "{err}"
+        );
     }
 
     #[test]

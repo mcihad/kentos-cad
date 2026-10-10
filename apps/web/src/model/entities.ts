@@ -1,3 +1,4 @@
+import type { LabelPin } from '../contracts/generated/LabelPin';
 import { op } from '../wasm/core';
 import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
@@ -45,6 +46,8 @@ interface EntityBase {
    * DXF's group 370 and a Netcad pen give an object.
    */
   lineWeight?: number;
+  /** Its labels moved, turned, pinned or hidden by hand (docs/adr/0212 §3.7), one a class at most. */
+  labelPins?: LabelPin[];
 }
 
 /** The heaviest line weight an object may have, mm (`MAX_LINE_WEIGHT` in the contracts). */

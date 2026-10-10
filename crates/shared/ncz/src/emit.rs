@@ -311,6 +311,7 @@ impl Emitter {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         }
     }
 

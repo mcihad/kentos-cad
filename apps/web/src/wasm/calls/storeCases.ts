@@ -59,7 +59,8 @@ export class StoreScene {
   constructor(file: Pick<StoreFile, 'entities' | 'layers' | 'labelDefaults'>) {
     this.store.put(JSON.stringify(file.entities));
     this.store.setLayers(JSON.stringify(file.layers));
-    this.store.setLabelDefaults(JSON.stringify(file.labelDefaults));
+    // The recorded label defaults were the objects' labels' rules: the label engine's now, its own cases
+    // (docs/adr/0212); the store answers `labels` with the drawing's text, as tests/store.rs does.
     this.byId = new Map(file.entities.map((e) => [e.id, e]));
     this.objects = new ObjectStore(file.entities as unknown as Entity[]);
   }

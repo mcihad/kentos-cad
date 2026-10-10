@@ -170,6 +170,8 @@ pub enum Dialog {
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
     LayerFilter,
+    /// Etiketler (labelling/, docs/adr/0212 §4); the window is `App::labelling`.
+    Labelling,
     /// Bağlantılar (services/connections.rs).
     Connections,
     /// Harita servisi (services/window.rs).
@@ -384,6 +386,8 @@ pub enum Message {
     LayerMerge(crate::layer_merge::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
+    /// Etiketler's window (labelling/, docs/adr/0212 §4).
+    Labelling(crate::labelling::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
     LayerStates(crate::layer_states::Event),
     AnnotationStyles(crate::annotation_styles::Event),
@@ -760,6 +764,8 @@ pub struct App {
     pub(crate) layer_merge: Option<crate::layer_merge::Window>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
+    /// Etiketler's window (labelling/, docs/adr/0212 §4).
+    pub(crate) labelling: Option<crate::labelling::Window>,
     /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
     pub(crate) layer_states_window: Option<crate::layer_states::Window>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
@@ -1033,6 +1039,7 @@ impl App {
             isolated_layers: Vec::new(),
             layer_merge: None,
             layer_filter: None,
+            labelling: None,
             layer_states_window: None,
             annotation_styles: None,
             layer_purge: None,
@@ -1491,6 +1498,7 @@ impl App {
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
+            Message::Labelling(event) => return self.labelling_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
@@ -1695,6 +1703,7 @@ impl App {
             geographic: kentos_interaction::second::Notation::parse(&s.text("display.geographic")),
             // Seçim süzgeci's kinds are the session's (docs/adr/0187 §5).
             select_kinds: s.bool("drafting.selectFilter").then_some(self.select_kinds),
+            unplaced_labels: s.bool("graphics.unplacedLabels"),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
@@ -1708,6 +1717,20 @@ impl App {
     /// Görünüm kipleri's colour mode (`graphics.colorMode`, docs/adr/0195 §1).
     pub fn color_mode(&self) -> kentos_native_style::color::ColorMode {
         kentos_native_style::color::ColorMode::from_key(&self.settings.text("graphics.colorMode"))
+    }
+
+    /// What the label engine is asked besides the labels (docs/adr/0212 §4):
+    /// Yerleşmeyen etiketleri göster, Etiketi gizle's Göster, Sabit etiketleri
+    /// vurgula; the drawing area's labels are kept for the tools' hit test.
+    pub fn label_engine(&self) -> crate::labels::Engine {
+        crate::labels::Engine {
+            options: kentos_geometry_core::store::placing::PlaceOptions {
+                unplaced: self.settings.bool("graphics.unplacedLabels"),
+                hidden: self.session.shows_hidden_labels(),
+            },
+            pinned: self.settings.bool("graphics.pinnedLabels"),
+            keep: true,
+        }
     }
 
     /// How the drawing's text is sized on the screen (docs/adr/0205 §5): the
@@ -2025,6 +2048,13 @@ impl App {
             "view.fills" => self.toggle_session("graphics.fills", "Dolgular ve taramalar"),
             "view.areaEdges" => self.toggle_session("graphics.areaEdges", "Alan sınırları"),
             "view.transparency" => self.toggle_session("graphics.transparency", "Saydamlık"),
+            // Sabit ve yerleşmeyen etiketler (docs/adr/0212 §4): the user's view, the drawing unchanged.
+            "view.pinnedLabels" => {
+                self.toggle_session("graphics.pinnedLabels", "Sabit etiketleri vurgula");
+            }
+            "view.unplacedLabels" => {
+                self.toggle_session("graphics.unplacedLabels", "Yerleşmeyen etiketleri göster");
+            }
             "style.layerStyle" => self.open_layer_style(None),
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
@@ -2158,6 +2188,8 @@ impl App {
             "layer.filter" => return self.open_layer_filter(None),
             "layer.filterFromSelection" => self.filter_from_selection(None),
             "layer.filterClear" => self.clear_layer_filter(None),
+            // Etiketler (labelling/, docs/adr/0212 §4): the active layer's; Katmanlar's menu names its layer.
+            "layer.labels" => self.open_labelling(None),
             // Veri karşılaştır (docs/adr/0179).
             "data.compare" => self.open_data_compare(),
             // Harita servisleri (services/, docs/adr/0208 §14).
@@ -2279,6 +2311,8 @@ impl App {
             }
             "view.fills" => self.settings.bool("graphics.fills"),
             "view.areaEdges" => self.settings.bool("graphics.areaEdges"),
+            "view.pinnedLabels" => self.settings.bool("graphics.pinnedLabels"),
+            "view.unplacedLabels" => self.settings.bool("graphics.unplacedLabels"),
             "view.transparency" => self.settings.bool("graphics.transparency"),
             "view.symbols.plot" => self.settings.text("graphics.symbolSize") != "screen",
             "view.symbols.screen" => self.settings.text("graphics.symbolSize") == "screen",

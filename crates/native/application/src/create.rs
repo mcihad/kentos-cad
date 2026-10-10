@@ -336,6 +336,7 @@ fn entities(input: &EntitiesCreate, attrs: &[BTreeMap<String, String>]) -> Vec<E
                     label: object.label.clone(),
                     symbol: object.symbol.clone(),
                     line_weight: object.line_weight,
+                    label_pins: Vec::new(),
                 },
             );
             // A linked text knows its object (docs/adr/0175 §4).

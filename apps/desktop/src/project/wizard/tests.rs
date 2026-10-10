@@ -402,6 +402,7 @@ fn axes_screens() {
                     label: None,
                     symbol: None,
                     line_weight: None,
+                    label_pins: Vec::new(),
                 },
                 pts,
                 bulges: None,

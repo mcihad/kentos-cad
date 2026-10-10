@@ -312,8 +312,15 @@ pub const SCHEMA_WITH_TEMPORAL: u32 = 34;
 /// those refuses it rather than lose it.
 pub const SCHEMA_WITH_FILTERS: u32 = 35;
 
+/// Document schema 36 (docs/specs/kcad-v2.md §6.5, §6.6): schema 35 and the
+/// label engine (docs/adr/0212 §2): a label style's engine fields, a layer
+/// style's `labels` and an object's `labelPins`. A writer writes it only when
+/// the drawing has one of these: any other drawing stays 35 or older, byte for
+/// byte; a reader of those refuses them rather than lose them.
+pub const SCHEMA_WITH_LABELS: u32 = 36;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 34] = [
+pub const SCHEMAS: [u32; 35] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -348,6 +355,7 @@ pub const SCHEMAS: [u32; 34] = [
     SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_TEMPORAL,
     SCHEMA_WITH_FILTERS,
+    SCHEMA_WITH_LABELS,
 ];
 
 /// The file a drawing is saved as.

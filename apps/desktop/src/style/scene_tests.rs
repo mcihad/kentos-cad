@@ -41,6 +41,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
             label: None,
             pick_interior: None,
             renderer,
+            labels: None,
         },
         children: Vec::new(),
         snap: None,
@@ -65,6 +66,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         label: None,
         symbol: None,
         line_weight: None,
+        label_pins: Vec::new(),
     };
     for i in 0..n {
         let (x, y) = (

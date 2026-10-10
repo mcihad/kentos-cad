@@ -26,9 +26,9 @@ use iced::widget::canvas::{self, Frame, LineJoin, Path, Stroke};
 use iced::{
     Color, Element, Fill, Font, Pixels, Point, Rectangle, Renderer, Size, Theme, Vector, mouse,
 };
-use kentos_contracts::{DrawingFont, Entity, LabelInk, LabelStyle};
+use kentos_contracts::{DrawingFont, Entity, LabelInk};
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::ops::label_text::fill_template;
+use kentos_geometry_core::labels::engine::{HIDDEN, MASKED, PINNED, UNPLACED};
 use kentos_geometry_core::text::paragraph::{Run, Script, advance};
 use kentos_interaction::spatial::{Grow, LabelSize, default_label};
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
@@ -82,6 +82,7 @@ pub fn layer<'a>(
     mode: ColorMode,
     size: LabelSize,
     lift: f32,
+    engine: Engine,
 ) -> Element<'a, Message> {
     build(
         doc,
@@ -97,7 +98,18 @@ pub fn layer<'a>(
         Some(lift),
         mode,
         size,
+        engine,
     )
+}
+
+/// What the label engine is asked besides the labels (docs/adr/0212 §4):
+/// the unplaced and the hidden too, pinned ones outlined; the main view's
+/// labels are kept for the tools' hit test.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Engine {
+    pub options: kentos_geometry_core::store::placing::PlaceOptions,
+    pub pinned: bool,
+    pub keep: bool,
 }
 
 /// The same through Büyüteç's camera (docs/adr/0181 §5): the drawing's
@@ -116,10 +128,26 @@ pub fn lens_layer<'a>(
     preview: Option<Preview>,
     mode: ColorMode,
     size: LabelSize,
+    engine: Engine,
 ) -> Element<'a, Message> {
     build(
-        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, None, mode,
+        doc,
+        drawing,
+        spatial,
+        kept,
+        camera,
+        canvas,
+        palette,
+        format,
+        hidden,
+        preview,
+        None,
+        mode,
         size,
+        Engine {
+            keep: false,
+            ..engine
+        },
     )
 }
 
@@ -150,6 +178,7 @@ fn build<'a>(
     map_marks: Option<f32>,
     mode: ColorMode,
     size: LabelSize,
+    engine: Engine,
 ) -> Element<'a, Message> {
     let mut key = DefaultHasher::new();
     (
@@ -164,8 +193,8 @@ fn build<'a>(
         hidden.map(|s| s.0),
     )
         .hash(&mut key);
-    // How the text is sized on screen (docs/adr/0205 §5).
-    format!("{size:?}").hash(&mut key);
+    // How the text is sized on screen (docs/adr/0205 §5); what the label engine is asked (docs/adr/0212 §4).
+    format!("{size:?}{engine:?}").hash(&mut key);
     // The time slider's window: its temporal layers' labels come and go (docs/adr/0210 §6).
     format!("{:?}", spatial.store().time_window()).hash(&mut key);
     let spots = kept.get(key.finish(), || {
@@ -175,6 +204,8 @@ fn build<'a>(
             Vec2::new(view.max_x, view.max_y),
             camera.scale,
             size,
+            engine.options,
+            engine.keep,
         );
         // A text or a dimension's value being edited in place (the web's `setEditing`).
         if let Some(hidden) = hidden {
@@ -215,6 +246,7 @@ fn build<'a>(
         current: Cell::new(None),
         map_marks,
         preview: preview.map(Rc::new),
+        pinned: engine.pinned,
     })
     .width(Fill)
     .height(Fill)
@@ -264,6 +296,11 @@ impl Colors {
                 }
             }
         }
+    }
+
+    /// The canvas's accent (the web's `--canvas-accent`): a pinned label's outline (docs/adr/0212 §4).
+    fn accent(&self) -> Color {
+        Color::from_rgb8(0xf2, 0xb6, 0x32)
     }
 
     /// A colour the drawing names (a layer's, an object's, a run's) as the mode shows it.
@@ -318,6 +355,30 @@ pub fn colors(canvas: Canvas, palette: &Palette) -> Colors {
     }
 }
 
+/// The look of the label engine's label being drawn (docs/adr/0212 §3.8).
+struct Placed {
+    slot: Slot,
+    color: Color,
+    /// Its halo's width (px) and colour; none with a filled background.
+    halo: Option<(f32, Color)>,
+    font: Font,
+    /// Its shadow's offset on screen (px) and colour.
+    shadow: Option<(f32, f32, Color)>,
+    background: Option<Backdrop>,
+    callout: Color,
+    manhattan: bool,
+    /// Outlined: pinned, with Sabit etiketleri vurgula on.
+    pinned: bool,
+}
+
+/// A shape behind a placed label.
+struct Backdrop {
+    shape: kentos_contracts::LabelShape,
+    fill: Option<Color>,
+    stroke: Option<Color>,
+    pad: f32,
+}
+
 struct Labels<'a> {
     doc: &'a Document,
     /// The labels and how each grows (docs/adr/0205 §5).
@@ -340,6 +401,8 @@ struct Labels<'a> {
     map_marks: Option<f32>,
     /// A multi-line text being written or edited, over the rest (docs/adr/0182 §4).
     preview: Option<Rc<Preview>>,
+    /// Sabit etiketleri vurgula (docs/adr/0212 §4): pinned labels outlined.
+    pinned: bool,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -404,6 +467,7 @@ pub fn paint_in_map(
         current: Cell::new(None),
         map_marks: None,
         preview: None,
+        pinned: false,
     }
     .paint(frame);
 }
@@ -432,6 +496,10 @@ pub struct MapLabel {
     pub mask: Option<Vec<[f64; 2]>>,
     /// A multi-line text's underlined run's bar, on the ground, in its colour (docs/adr/0182 §3).
     pub underline: Option<Vec<[f64; 2]>>,
+    /// A placed label's background or its shadow (docs/adr/0212 §3.8): a ring on the ground filled in `color`.
+    pub fill: Option<Vec<[f64; 2]>>,
+    /// A placed label's callout or its background's outline: a line on the ground in `color`, closed or not.
+    pub stroke: Option<(Vec<[f64; 2]>, bool)>,
 }
 
 /// The drawing's text in a sheet's map as [`paint_in_map`] lays it out (the same pieces, the
@@ -464,6 +532,7 @@ pub fn texts_in_map(
         current: Cell::new(None),
         map_marks: None,
         preview: None,
+        pinned: false,
     }
     .paint(&mut list);
     list.labels
@@ -484,10 +553,11 @@ trait Ink {
         axes: kentos_interaction::Axes,
         lift: f32,
     );
-    /// A ring of the screen filled, and a line drawn (a grown leader's
-    /// arrowhead, docs/adr/0205 §5); a list of pieces takes none.
-    fn fill_ring(&mut self, _ring: &[Point], _color: Color) {}
-    fn stroke_line(&mut self, _pts: &[Point], _closed: bool, _color: Color) {}
+    /// A ring of the screen filled, and a line drawn: a grown leader's arrowhead (docs/adr/0205 §5),
+    /// a placed label's background, shadow and callout (docs/adr/0212 §3.8). A list of pieces takes
+    /// those of an object (`of`), on its layer.
+    fn fill_ring(&mut self, ring: &[Point], color: Color, of: Option<Slot>);
+    fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color, of: Option<Slot>);
 }
 
 impl Ink for Frame {
@@ -520,7 +590,7 @@ impl Ink for Frame {
         crate::map_marks::paint(self, camera, colors, axes, lift);
     }
 
-    fn fill_ring(&mut self, ring: &[Point], color: Color) {
+    fn fill_ring(&mut self, ring: &[Point], color: Color, _of: Option<Slot>) {
         let Some((first, rest)) = ring.split_first() else {
             return;
         };
@@ -534,7 +604,7 @@ impl Ink for Frame {
         self.fill(&path, color);
     }
 
-    fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color) {
+    fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color, _of: Option<Slot>) {
         let Some((first, rest)) = pts.split_first() else {
             return;
         };
@@ -572,6 +642,47 @@ struct Collect<'a> {
     doc: &'a Document,
     camera: Camera,
     labels: Vec<MapLabel>,
+}
+
+impl Collect<'_> {
+    /// Points of the screen on the ground, and a wordless label of the object's layer in `color` to
+    /// carry them (a placed label's background, shadow or callout); none for no object.
+    fn shape(
+        &self,
+        pts: &[Point],
+        color: Color,
+        of: Option<Slot>,
+    ) -> Option<(Vec<[f64; 2]>, MapLabel)> {
+        let layer = self.doc.get(of?)?.base().layer_id.clone();
+        let ground: Vec<[f64; 2]> = pts
+            .iter()
+            .map(|p| {
+                let w = self.camera.screen_to_world(f64::from(p.x), f64::from(p.y));
+                [w.x, w.y]
+            })
+            .collect();
+        let at = kentos_render_wgpu::Vec2::new(ground.first()?[0], ground.first()?[1]);
+        Some((
+            ground,
+            MapLabel {
+                layer,
+                text: String::new(),
+                at,
+                anchor: kentos_sheet::pdf::TextAnchor::LeftBaseline,
+                rotation: 0.0,
+                size: 0.0,
+                weight: 400,
+                italic: false,
+                font: None,
+                color,
+                halo: color,
+                mask: None,
+                underline: None,
+                fill: None,
+                stroke: None,
+            },
+        ))
+    }
 }
 
 impl Ink for Collect<'_> {
@@ -620,7 +731,6 @@ impl Ink for Collect<'_> {
             anchor: match piece.anchor {
                 Anchor::LeftBaseline => TextAnchor::LeftBaseline,
                 Anchor::CenterBaseline => TextAnchor::CenterBaseline,
-                Anchor::LeftMiddle => TextAnchor::LeftMiddle,
                 Anchor::CenterMiddle => TextAnchor::CenterMiddle,
             },
             rotation,
@@ -644,6 +754,8 @@ impl Ink for Collect<'_> {
             color: piece.color,
             halo,
             mask,
+            fill: None,
+            stroke: None,
             underline: (piece.underline > 0.0).then(|| {
                 // From the baseline's start 0.12 of the height down, 0.06 thick, the bar's length along.
                 let (w, h) = (f64::from(piece.underline) * px, f64::from(piece.size) * px);
@@ -659,6 +771,24 @@ impl Ink for Collect<'_> {
                 .collect()
             }),
         });
+    }
+
+    fn fill_ring(&mut self, ring: &[Point], color: Color, of: Option<Slot>) {
+        if let Some(label) = self.shape(ring, color, of) {
+            self.labels.push(MapLabel {
+                fill: Some(label.0),
+                ..label.1
+            });
+        }
+    }
+
+    fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color, of: Option<Slot>) {
+        if let Some(label) = self.shape(pts, color, of) {
+            self.labels.push(MapLabel {
+                stroke: Some((label.0, closed)),
+                ..label.1
+            });
+        }
     }
 
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>) {
@@ -692,6 +822,8 @@ impl Ink for Collect<'_> {
             halo: color,
             mask: Some(ground),
             underline: None,
+            fill: None,
+            stroke: None,
         });
     }
 
@@ -741,9 +873,7 @@ enum Anchor {
     LeftBaseline,
     /// Middle, on the baseline (dimension values).
     CenterBaseline,
-    /// Left end, halfway up (labels beside and at a corner).
-    LeftMiddle,
-    /// Middle, halfway up (labels centred and along).
+    /// Middle, halfway up (the label engine's lines and letters, docs/adr/0212 §3.8).
     CenterMiddle,
 }
 
@@ -845,11 +975,11 @@ impl Labels<'_> {
         };
         for ring in &layout.head.fills {
             let pts: Vec<Point> = ring.iter().map(|p| at(*p)).collect();
-            frame.fill_ring(&pts, color);
+            frame.fill_ring(&pts, color, None);
         }
         for line in &layout.head.lines {
             let pts: Vec<Point> = line.pts.iter().map(|p| at(*p)).collect();
-            frame.stroke_line(&pts, line.closed, color);
+            frame.stroke_line(&pts, line.closed, color, None);
         }
     }
 
@@ -975,18 +1105,20 @@ impl Labels<'_> {
             Some(_) => Size::new(self.view.width as f32, self.view.height as f32),
             None => frame.size(),
         };
-        let mut room = Room::new(size.width, size.height);
+        let _ = size;
         let layers = self.doc.layers();
+        // The label engine's label being drawn: its frame's look (docs/adr/0212 §3.8).
+        let mut current: Option<Placed> = None;
         for (spot, grow) in self.spots.iter() {
             // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
             self.camera.set(grown(self.view, *grow));
             let slot = match spot {
                 LabelSpot::Dimension { slot, .. }
                 | LabelSpot::Text { slot, .. }
-                | LabelSpot::Center { slot, .. }
-                | LabelSpot::Corner { slot, .. }
-                | LabelSpot::Beside { slot, .. }
-                | LabelSpot::Along { slot, .. }
+                | LabelSpot::Placed { slot, .. }
+                | LabelSpot::PlacedLine { slot, .. }
+                | LabelSpot::PlacedLetter { slot, .. }
+                | LabelSpot::PlacedCallout { slot, .. }
                 | LabelSpot::PieceText { slot, .. }
                 | LabelSpot::PieceDimension { slot, .. }
                 | LabelSpot::Line { slot, .. }
@@ -994,12 +1126,6 @@ impl Labels<'_> {
                 | LabelSpot::Cell { slot, .. } => *slot,
             };
             self.current.set(Some(slot));
-            // A label whose place is taken is not drawn: known before its
-            // object, style and text are looked at (an overview offers
-            // hundreds of thousands, a few hundred fit).
-            if self.anchor(spot).is_some_and(|at| room.taken_at(at)) {
-                continue;
-            }
             let Some(entity) = self.doc.get(slot) else {
                 continue;
             };
@@ -1328,17 +1454,90 @@ impl Labels<'_> {
                         &face,
                     );
                 }
-                (LabelSpot::Dimension { .. } | LabelSpot::Text { .. }, _) => {}
-                (spot, entity) => {
-                    let own = layer.and_then(|l| l.style.label.clone());
-                    let Some(style) = own.or_else(|| default_label(entity.kind())) else {
-                        continue;
-                    };
-                    let Some(label) = base.label.as_deref().filter(|l| !l.is_empty()) else {
-                        continue;
-                    };
-                    self.label(frame, &mut room, spot, &style, label);
+                (
+                    LabelSpot::Placed {
+                        at,
+                        angle,
+                        width,
+                        height,
+                        class,
+                        state,
+                        ..
+                    },
+                    entity,
+                ) => {
+                    current = self.placed_frame(entity, layer, *class, *state, slot);
+                    if let Some(c) = &current {
+                        self.placed_backdrop(
+                            frame,
+                            c,
+                            *at,
+                            *angle,
+                            *width as f32,
+                            *height as f32,
+                            false,
+                        );
+                    }
                 }
+                (
+                    LabelSpot::PlacedLine {
+                        at,
+                        angle,
+                        size,
+                        text,
+                        ..
+                    },
+                    _,
+                ) => {
+                    if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
+                        self.placed_text(frame, c, text, *at, *angle, *size as f32);
+                    }
+                }
+                (
+                    LabelSpot::PlacedLetter {
+                        at,
+                        angle,
+                        size,
+                        letter,
+                        advance,
+                        ..
+                    },
+                    _,
+                ) => {
+                    if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
+                        self.placed_backdrop(
+                            frame,
+                            c,
+                            *at,
+                            *angle,
+                            *advance as f32,
+                            *size as f32,
+                            true,
+                        );
+                        let mut buf = [0u8; 4];
+                        self.placed_text(
+                            frame,
+                            c,
+                            letter.encode_utf8(&mut buf),
+                            *at,
+                            *angle,
+                            *size as f32,
+                        );
+                    }
+                }
+                (LabelSpot::PlacedCallout { from, to, .. }, _) => {
+                    if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
+                        let (a, b) = (self.screen(*from), self.screen(*to));
+                        let pts = if c.manhattan {
+                            vec![a, Point::new(b.x, a.y), b]
+                        } else {
+                            vec![a, b]
+                        };
+                        frame.stroke_line(&pts, false, c.callout, Some(c.slot));
+                    }
+                }
+                (LabelSpot::Dimension { .. } | LabelSpot::Text { .. }, _) => {}
+                _ => {}
             }
         }
         // The view's own camera again for what follows.
@@ -1395,117 +1594,226 @@ impl Labels<'_> {
         }
     }
 
-    /// Where an object's label is anchored on screen, inside the box it
-    /// claims whatever its text and size; none for texts and dimensions.
-    fn anchor(&self, spot: &LabelSpot) -> Option<Point> {
-        match *spot {
-            LabelSpot::Center { at, .. } => Some(self.screen(at)),
-            LabelSpot::Corner { at, .. } => {
-                let tl = self.screen(at);
-                Some(Point::new(tl.x + 8.0, tl.y + 14.0))
+    /// The look of the label engine's label whose frame this is (docs/adr/0212
+    /// §3.8): its class's style (its layer's rule's, its single label's, else
+    /// its kind's default) on this canvas, in its state's colour.
+    fn placed_frame(
+        &self,
+        entity: &Entity,
+        layer: Option<&kentos_contracts::LayerNode>,
+        class: u16,
+        state: u32,
+        slot: Slot,
+    ) -> Option<Placed> {
+        let style = match layer.and_then(|l| l.style.labels.as_ref()) {
+            Some(l) if l.mode == kentos_contracts::LabelsMode::Rules => {
+                l.classes.get(class as usize).map(|c| c.style.clone())?
             }
-            LabelSpot::Beside { at, .. } => {
-                let p = self.screen(at);
-                Some(Point::new(p.x + 7.0, p.y - 7.0))
+            _ => layer
+                .and_then(|l| l.style.label.clone())
+                .or_else(|| default_label(entity.kind()))?,
+        };
+        let named = |c: &str| match c {
+            "label" => Some(self.colors.label),
+            other => self.colors.named(other),
+        };
+        let unplaced = state & UNPLACED != 0;
+        let mut color = if unplaced {
+            Color::from_rgb8(0xef, 0x6b, 0x61)
+        } else {
+            match (&style.color, style.ink) {
+                (Some(c), _) => named(c).unwrap_or(self.colors.label),
+                (None, Some(LabelInk::Fg)) => self.colors.fg,
+                (None, Some(LabelInk::FgDim)) => self.colors.fg_dim,
+                (None, _) => self.colors.label,
             }
-            LabelSpot::Along { a, b, .. } => {
-                let (a, c) = (self.screen(a), self.screen(b));
-                Some(Point::new((a.x + c.x) / 2.0, (a.y + c.y) / 2.0))
+        };
+        let faint = state & HIDDEN != 0;
+        if faint {
+            color.a *= 0.35;
+        }
+        let masked = state & MASKED != 0;
+        let background = match &style.background {
+            Some(b) => Some(Backdrop {
+                shape: b.shape,
+                fill: b.fill.as_deref().and_then(named),
+                stroke: b.stroke.as_deref().and_then(named),
+                pad: b.padding.unwrap_or(2.0) as f32,
+            }),
+            None if masked => Some(Backdrop {
+                shape: kentos_contracts::LabelShape::Rect,
+                fill: Some(self.colors.halo),
+                stroke: None,
+                pad: 1.0,
+            }),
+            None => None,
+        };
+        let halo = match &style.halo {
+            Some(h) if h.width <= 0.0 => None,
+            Some(h) => Some((
+                h.width as f32,
+                h.color
+                    .as_deref()
+                    .and_then(named)
+                    .unwrap_or(self.colors.halo),
+            )),
+            None => Some((HALO, self.colors.halo)),
+        };
+        let shadow = style.shadow.as_ref().filter(|_| !unplaced).map(|h| {
+            let mut c = h.color.as_deref().and_then(named).unwrap_or(Color::BLACK);
+            c.a *= h.opacity.unwrap_or(0.5) as f32;
+            (h.dx as f32, -h.dy as f32, c)
+        });
+        Some(Placed {
+            slot,
+            color,
+            halo: if background.as_ref().is_some_and(|b| b.fill.is_some()) {
+                None
+            } else {
+                halo
+            },
+            font: drawing_fonts::font(
+                self.font,
+                style.weight.unwrap_or(500),
+                style.italic == Some(true),
+            ),
+            shadow,
+            background,
+            callout: style
+                .callout
+                .as_ref()
+                .and_then(|c| c.color.as_deref().and_then(named))
+                .unwrap_or(color),
+            manhattan: style
+                .callout
+                .as_ref()
+                .is_some_and(|c| c.kind == kentos_contracts::CalloutKind::Manhattan),
+            pinned: self.pinned && state & PINNED != 0,
+        })
+    }
+
+    /// A placed label's backdrop: its background or a contour's mask, `w`
+    /// × `h` px round `at` turned `angle` degrees (a curved label's every
+    /// letter's: `letter`), its shadow first; a pinned label's outline.
+    #[allow(clippy::too_many_arguments)]
+    fn placed_backdrop(
+        &self,
+        frame: &mut impl Ink,
+        c: &Placed,
+        at: Vec2,
+        angle: f64,
+        w: f32,
+        h: f32,
+        letter: bool,
+    ) {
+        let m = self.screen(at);
+        let a = -(angle.to_radians() as f32);
+        let quad = |dx: f32, dy: f32, hw: f32, hh: f32| {
+            let (s, cs) = a.sin_cos();
+            let at =
+                |u: f32, v: f32| Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs);
+            [at(-hw, -hh), at(hw, -hh), at(hw, hh), at(-hw, hh)]
+        };
+        if let Some(b) = &c.background {
+            let (hw, hh) = (w / 2.0 + b.pad, h / 2.0 + b.pad);
+            // A rectangle as a quadrilateral (a sheet's PDF takes it as a mask); a round one or an ellipse as a ring.
+            let ring = |dx: f32, dy: f32| -> Vec<Point> {
+                let (s, cs) = a.sin_cos();
+                let at = |u: f32, v: f32| {
+                    Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs)
+                };
+                match b.shape {
+                    kentos_contracts::LabelShape::Ellipse => (0..32)
+                        .map(|i| {
+                            let t = i as f32 / 32.0 * std::f32::consts::TAU;
+                            at(
+                                hw * std::f32::consts::SQRT_2 * t.cos(),
+                                hh * std::f32::consts::SQRT_2 * t.sin(),
+                            )
+                        })
+                        .collect(),
+                    _ => {
+                        let r = (hh).min(6.0).min(hw);
+                        let mut pts = Vec::with_capacity(24);
+                        for (cx, cy, from) in [
+                            (hw - r, hh - r, 0.0f32),
+                            (-hw + r, hh - r, 90.0),
+                            (-hw + r, -hh + r, 180.0),
+                            (hw - r, -hh + r, 270.0),
+                        ] {
+                            for k in 0..=5 {
+                                let t = (from + k as f32 * 18.0).to_radians();
+                                pts.push(at(cx + r * t.cos(), cy + r * t.sin()));
+                            }
+                        }
+                        pts
+                    }
+                }
+            };
+            let round = b.shape != kentos_contracts::LabelShape::Rect;
+            if let Some((dx, dy, sc)) = c.shadow
+                && b.fill.is_some()
+            {
+                if round {
+                    frame.fill_ring(&ring(dx, dy), sc, Some(c.slot));
+                } else {
+                    frame.fill_ring(&quad(dx, dy, hw, hh), sc, Some(c.slot));
+                }
             }
-            LabelSpot::Dimension { .. }
-            | LabelSpot::Text { .. }
-            | LabelSpot::PieceText { .. }
-            | LabelSpot::PieceDimension { .. }
-            | LabelSpot::Line { .. }
-            | LabelSpot::ParagraphMask { .. }
-            | LabelSpot::Cell { .. } => None,
+            if let Some(f) = b.fill {
+                if round {
+                    frame.fill_ring(&ring(0.0, 0.0), f, Some(c.slot));
+                } else {
+                    frame.fill_ring(&quad(0.0, 0.0, hw, hh), f, Some(c.slot));
+                }
+            }
+            if let Some(st) = b.stroke {
+                if round {
+                    frame.stroke_line(&ring(0.0, 0.0), true, st, Some(c.slot));
+                } else {
+                    frame.stroke_line(&quad(0.0, 0.0, hw, hh), true, st, Some(c.slot));
+                }
+            }
+        }
+        if c.pinned && !letter {
+            let q = quad(0.0, 0.0, w / 2.0 + 3.0, h / 2.0 + 3.0);
+            frame.stroke_line(&q, true, self.colors.accent(), None);
         }
     }
 
-    /// An object's label where its style places it, unless one is already there.
-    fn label(
+    /// One line or letter of a placed label: its shadow, then itself in its halo.
+    fn placed_text(
         &self,
         frame: &mut impl Ink,
-        room: &mut Room,
-        spot: &LabelSpot,
-        style: &LabelStyle,
-        label: &str,
+        c: &Placed,
+        text: &str,
+        at: Vec2,
+        angle: f64,
+        size: f32,
     ) {
-        let size = (style.max_size.unwrap_or(style.size))
-            .min(style.size + style.grow.unwrap_or(0.0) * self.camera.get().scale)
-            as f32;
-        // The template's first `{label}`, literally: the converted texts' rule (docs/adr/0175 §1).
-        let text = fill_template(style.template.as_deref(), label);
-        let color = match style.ink {
-            Some(LabelInk::Fg) => self.colors.fg,
-            Some(LabelInk::FgDim) => self.colors.fg_dim,
-            Some(LabelInk::Label) | None => self.colors.label,
-        };
-        let font = drawing_fonts::font(self.font, style.weight.unwrap_or(500), false);
-        // Room is claimed with the letters' advances added up (no kerning):
-        // shaping every label a view offers would cost more than drawing the
-        // ones that fit; a drawn label is measured exactly where its place needs it.
-        let width = quick_width(&text, font) * size / REFERENCE;
-        let piece = |at: Point, angle: f32, anchor: Anchor| Piece {
-            text: &text,
+        let s = self.screen(at);
+        let piece = |at: Point, color: Color| Piece {
+            text,
             at,
-            angle,
+            angle: -(angle.to_radians() as f32),
             size,
-            font,
-            anchor,
+            font: c.font,
+            anchor: Anchor::CenterMiddle,
             color,
             width_factor: 1.0,
             mask: 0.0,
             underline: 0.0,
             lean: 0.0,
         };
-        let halo = self.colors.halo;
-        let Some(s) = self.anchor(spot) else {
-            return;
-        };
-        match *spot {
-            LabelSpot::Center { .. } => {
-                if room.claim(
-                    s.x - width / 2.0,
-                    s.y - size / 2.0,
-                    s.x + width / 2.0,
-                    s.y + size / 2.0,
-                ) {
-                    self.draw(frame, &piece(s, 0.0, Anchor::CenterMiddle), halo);
-                }
-            }
-            LabelSpot::Corner { .. } => {
-                if room.claim(s.x, s.y - size / 2.0, s.x + width, s.y + size / 2.0) {
-                    self.draw(frame, &piece(s, 0.0, Anchor::LeftMiddle), halo);
-                }
-            }
-            LabelSpot::Beside { .. } => {
-                if room.claim(s.x, s.y - size / 2.0, s.x + width, s.y + size / 2.0) {
-                    self.draw(frame, &piece(s, 0.0, Anchor::LeftMiddle), halo);
-                }
-            }
-            LabelSpot::Along { a, b, .. } => {
-                // Between the two vertices, kept upright.
-                let (a, c) = (self.screen(a), self.screen(b));
-                let mut angle = (c.y - a.y).atan2(c.x - a.x);
-                if !(-std::f32::consts::FRAC_PI_2..=std::f32::consts::FRAC_PI_2).contains(&angle) {
-                    angle += std::f32::consts::PI;
-                }
-                let mid = s;
-                let hx = (angle.cos().abs() * width + angle.sin().abs() * size) / 2.0;
-                let hy = (angle.sin().abs() * width + angle.cos().abs() * size) / 2.0;
-                if room.claim(mid.x - hx, mid.y - hy, mid.x + hx, mid.y + hy) {
-                    self.draw(frame, &piece(mid, angle, Anchor::CenterMiddle), halo);
-                }
-            }
-            LabelSpot::Dimension { .. }
-            | LabelSpot::Text { .. }
-            | LabelSpot::PieceText { .. }
-            | LabelSpot::PieceDimension { .. }
-            | LabelSpot::Line { .. }
-            | LabelSpot::ParagraphMask { .. }
-            | LabelSpot::Cell { .. } => {}
+        if let Some((dx, dy, sc)) = c.shadow {
+            frame.piece(
+                &piece(Point::new(s.x + dx, s.y + dy), sc),
+                Color::TRANSPARENT,
+                Some(c.slot),
+            );
         }
+        let halo = c.halo.map_or(Color::TRANSPARENT, |(_, h)| h);
+        frame.piece(&piece(s, c.color), halo, Some(c.slot));
     }
 }
 
@@ -1528,26 +1836,6 @@ struct Measure {
 static MEASURES: Mutex<Option<HashMap<Font, HashMap<String, Measure>>>> = Mutex::new(None);
 /// Measured texts kept at most (a dense view offers tens of thousands).
 const MEASURES_KEPT: usize = 200_000;
-
-/// Letters' advances by face at the reference size, kept for the program's life.
-static ADVANCES: Mutex<Option<HashMap<(Font, char), f32>>> = Mutex::new(None);
-
-/// A text's width at the reference size from its letters' advances (no
-/// kerning): close enough to keep labels apart, and cheap for thousands.
-fn quick_width(text: &str, font: Font) -> f32 {
-    let Ok(mut all) = ADVANCES.lock() else {
-        return measure(text, font).width;
-    };
-    let all = all.get_or_insert_with(HashMap::new);
-    let mut width = 0.0;
-    let mut buffer = [0u8; 4];
-    for ch in text.chars() {
-        width += *all
-            .entry((font, ch))
-            .or_insert_with(|| shaped(ch.encode_utf8(&mut buffer), font).width);
-    }
-    width
-}
 
 /// A text shaped at the reference size: its width and where its baseline falls.
 fn shaped(text: &str, font: Font) -> Measure {
@@ -1778,12 +2066,12 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
     let k = piece.size / REFERENCE;
     let m = || measure(piece.text, piece.font);
     let dx = match piece.anchor {
-        Anchor::LeftBaseline | Anchor::LeftMiddle => 0.0,
+        Anchor::LeftBaseline => 0.0,
         Anchor::CenterBaseline | Anchor::CenterMiddle => -m().width * k / 2.0,
     };
     let dy = match piece.anchor {
         Anchor::LeftBaseline | Anchor::CenterBaseline => -m().baseline * k,
-        Anchor::LeftMiddle | Anchor::CenterMiddle => -piece.size / 2.0,
+        Anchor::CenterMiddle => -piece.size / 2.0,
     };
     let text = |position: Point, color: Color| canvas::Text {
         content: piece.text.to_owned(),
@@ -1964,74 +2252,15 @@ fn kept_outlines(key: OutlineKey, make: impl FnOnce() -> Vec<Path>) -> Rc<Vec<Pa
     })
 }
 
-/// Where labels already are on screen, in 8 px cells: a label that would
-/// cover one is not drawn (the web's `LabelRoom`). Coarse on purpose: a
-/// cell or two of slack is spacing between labels.
-struct Room {
-    cols: usize,
-    rows: usize,
-    taken: Vec<bool>,
-}
-
-impl Room {
-    const CELL: f32 = 8.0;
-
-    fn new(width: f32, height: f32) -> Self {
-        let cols = ((width / Self::CELL).ceil() as usize).max(1);
-        let rows = ((height / Self::CELL).ceil() as usize).max(1);
-        Self {
-            cols,
-            rows,
-            taken: vec![false; cols * rows],
-        }
-    }
-
-    /// Whether the cell under a point on screen is taken: a label whose box
-    /// holds the point cannot claim it then (`claim` refuses it).
-    fn taken_at(&self, p: Point) -> bool {
-        if !(p.x >= 0.0 && p.y >= 0.0) {
-            return false;
-        }
-        let (c, r) = ((p.x / Self::CELL) as usize, (p.y / Self::CELL) as usize);
-        c < self.cols && r < self.rows && self.taken[r * self.cols + c]
-    }
-
-    /// Takes the box if nothing is there yet; false (and nothing taken) when a label is in the way.
-    fn claim(&mut self, x0: f32, y0: f32, x1: f32, y1: f32) -> bool {
-        let cell = |v: f32| (v / Self::CELL).floor();
-        let c0 = cell(x0).max(0.0);
-        let c1 = cell(x1).min(self.cols as f32 - 1.0);
-        let r0 = cell(y0).max(0.0);
-        let r1 = cell(y1).min(self.rows as f32 - 1.0);
-        // Wholly off screen: nothing to keep apart from.
-        if c0 > c1 || r0 > r1 {
-            return true;
-        }
-        let (c0, c1, r0, r1) = (c0 as usize, c1 as usize, r0 as usize, r1 as usize);
-        for r in r0..=r1 {
-            if self.taken[r * self.cols + c0..=r * self.cols + c1]
-                .iter()
-                .any(|t| *t)
-            {
-                return false;
-            }
-        }
-        for r in r0..=r1 {
-            self.taken[r * self.cols + c0..=r * self.cols + c1].fill(true);
-        }
-        true
-    }
-}
-
 /// The object a spot writes for.
 pub fn slot_of(spot: &LabelSpot) -> Slot {
     match spot {
         LabelSpot::Dimension { slot, .. }
         | LabelSpot::Text { slot, .. }
-        | LabelSpot::Center { slot, .. }
-        | LabelSpot::Corner { slot, .. }
-        | LabelSpot::Beside { slot, .. }
-        | LabelSpot::Along { slot, .. }
+        | LabelSpot::Placed { slot, .. }
+        | LabelSpot::PlacedLine { slot, .. }
+        | LabelSpot::PlacedLetter { slot, .. }
+        | LabelSpot::PlacedCallout { slot, .. }
         | LabelSpot::PieceText { slot, .. }
         | LabelSpot::PieceDimension { slot, .. }
         | LabelSpot::Line { slot, .. }
@@ -2049,36 +2278,6 @@ fn slots(spots: &[LabelSpot]) -> Vec<kentos_domain::Slot> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    /// A label whose box holds a taken cell's point cannot claim it: what
-    /// lets the paint pass over it before looking at its object.
-    #[test]
-    fn a_taken_anchor_means_the_claim_fails() {
-        let mut room = Room::new(200.0, 120.0);
-        assert!(room.claim(40.0, 30.0, 90.0, 45.0));
-        for (x, y) in [(40.0, 30.0), (60.0, 40.0), (95.0, 47.9)] {
-            assert!(room.taken_at(Point::new(x, y)), "{x}, {y}");
-            // Every box around the point, wide or narrow.
-            for (w, h) in [(0.0, 0.0), (30.0, 10.0), (4.0, 60.0)] {
-                assert!(!room.claim(x - w / 2.0, y - h / 2.0, x + w / 2.0, y + h / 2.0));
-            }
-        }
-        // Off the screen, or not a number: never taken (the claim decides then).
-        for (x, y) in [(-1.0, 40.0), (60.0, 500.0), (f32::NAN, 40.0)] {
-            assert!(!room.taken_at(Point::new(x, y)));
-        }
-        assert!(!room.taken_at(Point::new(150.0, 100.0)));
-    }
-
-    #[test]
-    fn a_label_in_the_way_is_left_out_and_off_screen_ones_always_fit() {
-        let mut room = Room::new(100.0, 100.0);
-        assert!(room.claim(10.0, 10.0, 40.0, 20.0));
-        assert!(!room.claim(30.0, 12.0, 60.0, 22.0), "overlaps the first");
-        assert!(room.claim(50.0, 30.0, 90.0, 40.0));
-        assert!(room.claim(-80.0, -80.0, -10.0, -10.0), "wholly off screen");
-        assert!(room.claim(200.0, 10.0, 260.0, 20.0));
-    }
 
     /// The desktop's default label styles are the web's `DEFAULT_LABELS`
     /// (apps/web/src/model/labelDefaults.ts), read from its source.
@@ -2106,9 +2305,71 @@ mod tests {
                 json.push_str(&format!("\"{}\":{},", k.trim(), v.trim()));
             }
             let json = format!("{{{}}}", json.trim_end_matches(','));
-            let web: LabelStyle = serde_json::from_str(&json).expect("a label style");
+            let web: kentos_contracts::LabelStyle =
+                serde_json::from_str(&json).expect("a label style");
             assert_eq!(default_label(kind.trim()), Some(web), "{kind}");
         }
+    }
+
+    /// A sheet's map writes the label engine's placed labels as the drawing area draws them
+    /// (docs/adr/0212 §4): the contours' masks filled, the sliver's callout a line, each on its
+    /// object's layer beside the texts; the PDF puts them under the texts (sheet_pdf.rs).
+    #[test]
+    fn a_map_takes_the_placed_labels_backgrounds_and_callouts() {
+        let snapshot =
+            kentos_contracts::DocumentSnapshotV1::from_json(crate::label_scenes::DRAWING)
+                .expect("the scene reads");
+        let doc = crate::document::Document::new(snapshot, None).expect("opens");
+        let mut spatial = Spatial::new();
+        spatial.reload(&doc.model);
+        // The scene at 1:1000 on the paper: CSS pixels per ground metre.
+        let camera = Camera {
+            center: kentos_render_wgpu::Vec2::new(487_140.0, 4_420_085.0),
+            scale: 1.0 / crate::sheet_pdf::PX_MM,
+            width: 1400.0,
+            height: 900.0,
+        };
+        let view = camera.visible_bounds();
+        let spots = spatial.labels(
+            Vec2::new(view.min_x, view.min_y),
+            Vec2::new(view.max_x, view.max_y),
+            camera.scale,
+            Default::default(),
+        );
+        let fence = Fence {
+            from: Point::new(700.0, 450.0),
+            size: Size::new(1400.0, 900.0),
+            turn: 0.0,
+            scale: 1.0,
+        };
+        let texts = texts_in_map(
+            &doc.model,
+            spots,
+            camera,
+            paper_colors(),
+            DrawingFont::Barlow,
+            Format::default(),
+            fence,
+        );
+        let on = |layer: &str, what: fn(&MapLabel) -> bool| {
+            texts.iter().any(|t| t.layer == layer && what(t))
+        };
+        assert!(
+            on("esyukselti", |t| t.fill.is_some()),
+            "the contours' masks"
+        );
+        assert!(
+            on("parsel", |t| t
+                .stroke
+                .as_ref()
+                .is_some_and(|(line, closed)| !closed && line.len() >= 2)),
+            "the sliver's callout"
+        );
+        assert!(on("parsel", |t| !t.text.is_empty()), "the parcels' numbers");
+        assert!(
+            texts.iter().all(|t| !t.layer.is_empty()),
+            "every piece on its object's layer"
+        );
     }
 
     #[test]
@@ -2122,6 +2383,7 @@ mod tests {
             Vec2::new(extent.min_x, extent.min_y),
             Vec2::new(extent.max_x, extent.max_y),
             4.0,
+            Default::default(),
         );
         assert!(!spots.is_empty());
         for slot in slots(&spots) {
@@ -2556,6 +2818,7 @@ fn perf() {
                 label: Some(format!("N{i}")),
                 symbol: None,
                 line_weight: None,
+                label_pins: Vec::new(),
             },
             p: kentos_contracts::Vec2 {
                 x: 486_400.0 + (i % side) as f64,
@@ -2583,6 +2846,7 @@ fn perf() {
                 Vec2::new(v.min_x, v.min_y),
                 Vec2::new(v.max_x, v.max_y),
                 4.0,
+                Default::default(),
             )
             .len()
     };
@@ -2603,6 +2867,7 @@ fn perf() {
             Vec2::new(v.min_x, v.min_y),
             Vec2::new(v.max_x, v.max_y),
             4.0,
+            Default::default(),
         );
     }
     let query = started.elapsed().as_secs_f64() * 1000.0 / f64::from(frames);
@@ -2615,6 +2880,7 @@ fn perf() {
                     Vec2::new(v.min_x, v.min_y),
                     Vec2::new(v.max_x, v.max_y),
                     4.0,
+                    Default::default(),
                 )
                 .into_iter()
                 .map(|s| (s, Grow::NONE))
@@ -2630,6 +2896,7 @@ fn perf() {
         current: Cell::new(None),
         map_marks: Some(0.0),
         preview: None,
+        pinned: false,
     };
     let started = Instant::now();
     for _ in 0..frames {

@@ -3,18 +3,19 @@ import { pieceText, type BlockPiece } from '../../model/blocks';
 import type { CadDocument } from '../../model/document';
 import type { TextRun } from '../../model/entities';
 import { dimensionMeasure, type DimensionLayout } from '../../model/geom/dimension';
-import { fillTemplate } from '../../model/ops/labelText';
 import { resolveColor, type CanvasPalette } from '../../render/color';
 import { DRAWING_FAMILY, type Face } from '../../render/drawingFaces';
 import type { DimensionLook } from '../../model/annotationStyles';
-import { DEFAULT_LABELS, DIMENSION_PREFIX, DIMENSION_UNIT, LABEL, LABEL_STRIDE } from '../../viewport/storeRecords';
+import type { LabelStyle } from '../../contracts/generated/LabelStyle';
+import { LABEL_STATE, labelStyleOf } from '../../viewport/placedLabels';
+import { DIMENSION_PREFIX, DIMENSION_UNIT, LABEL, LABEL_STRIDE } from '../../viewport/storeRecords';
 import type { VecPath } from './mapVectors';
 
 /**
  * A map frame's texts for the PDF (docs/sheet/design.md §9a): what the map
  * frames write over the drawing (viewport/overlay.ts `drawLabels`: text
- * objects, dimension values, leaders' notes, block texts, and the layers'
- * labels thinned where they would overlap), as texts on the ground with
+ * objects, dimension values, leaders' notes, block texts, and the objects'
+ * labels as the label engine placed them, docs/adr/0212), as texts on the ground with
  * their sizes on the paper. A label's size is CSS pixels on the paper (as on
  * the screen at 100 %): 25.4/96 mm each; the map frames' pictures draw them
  * the same size, so a vector map and its picture agree.
@@ -48,6 +49,8 @@ export interface LabelInput {
   readonly font: DrawingFont;
   /** The label records of the map's box (the geometry store's `labels`, at `pxPerM`). */
   readonly spots: Float64Array;
+  /** The texts the label records name (`ShownLabels.texts`). */
+  readonly texts: readonly string[];
   /** CSS px per ground metre on the paper: 96 px per inch over the scale. */
   readonly pxPerM: number;
   /** The map's box on the ground (its west and north edges, and its size in CSS px) for the thinning. */
@@ -64,36 +67,11 @@ export const PX_MM = 25.4 / 96;
 /** The halo's width as the map frames stroke it: 3 px. */
 const HALO_PX = 3;
 
-/** Where labels already are, in 8 px cells (the map frames' own thinning, viewport/overlay.ts `LabelRoom`). */
-class Room {
-  private static readonly CELL = 8;
-  private readonly cols: number;
-  private readonly rows: number;
-  private readonly taken: Uint8Array;
-  constructor(width: number, height: number) {
-    this.cols = Math.max(1, Math.ceil(width / Room.CELL));
-    this.rows = Math.max(1, Math.ceil(height / Room.CELL));
-    this.taken = new Uint8Array(this.cols * this.rows);
-  }
-  claim(x0: number, y0: number, x1: number, y1: number): boolean {
-    const C = Room.CELL;
-    const c0 = Math.max(0, Math.floor(x0 / C));
-    const c1 = Math.min(this.cols - 1, Math.floor(x1 / C));
-    const r0 = Math.max(0, Math.floor(y0 / C));
-    const r1 = Math.min(this.rows - 1, Math.floor(y1 / C));
-    if (c0 > c1 || r0 > r1) return true;
-    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (this.taken[r * this.cols + c]) return false;
-    for (let r = r0; r <= r1; r++) this.taken.fill(1, r * this.cols + c0, r * this.cols + c1 + 1);
-    return true;
-  }
-}
-
 /** The texts the map frames write, and the masks under text objects (as paths in the paper's colour). */
 export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: string; path: VecPath }[] } {
   const { doc, palette: pal, spots, pxPerM } = o;
   const texts: VecText[] = [];
   const masks: { layer: string; path: VecPath }[] = [];
-  const room = new Room(o.box.width, o.box.height);
   const ink = { fg: pal.fg, 'fg-dim': pal.fgDim, label: pal.label } as const;
   const halo = { color: pal.labelHalo, width: HALO_PX * PX_MM };
   const css = (weight: number, px: number, italic = false, family: DrawingFont = o.font) =>
@@ -106,9 +84,6 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
     f.font === undefined
       ? { family: o.font, weight: run?.bold ? 600 : legacy.weight, italic: legacy.italic || run?.italic === true }
       : { family: f.font, weight: f.bold || run?.bold ? 600 : 400, italic: f.italic === true || run?.italic === true };
-  // Ground metres to the paper's CSS px (y down from the map's north-west corner), and back.
-  const sx = (x: number) => (x - o.box.minX) * pxPerM;
-  const sy = (y: number) => (o.box.maxY - y) * pxPerM;
   const mm = (groundM: number) => (groundM * pxPerM) * PX_MM;
   const text = (layer: string, t: Omit<VecText, 'layer' | 'halo' | 'widthFactor'> & { widthFactor?: number; halo?: VecText['halo'] }) => texts.push({ layer, halo, widthFactor: 1, ...t });
   /** A text's mask (docs/adr/0145) from its baseline start, `w` ground metres along, `h` high, turned `deg`. */
@@ -158,6 +133,46 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
       k = j;
     }
   };
+  /**
+   * An object's label as the label engine placed it (docs/adr/0212 §3.8): its backdrop (its background, or a contour's
+   * mask), its lines or letters with its halo, its callout; records `from..to`.
+   */
+  const placed = (layer: string, st: LabelStyle, state: number, from: number, to: number) => {
+    const color = st.color ? resolveColor(st.color, pal) : ink[st.ink ?? 'label'];
+    const font = { family: o.font, weight: st.weight ?? 500, italic: st.italic === true };
+    const own = st.halo ? (st.halo.width > 0 ? { color: st.halo.color ? resolveColor(st.halo.color, pal) : pal.labelHalo, width: st.halo.width * 2 * PX_MM } : null) : halo;
+    const masked = (state & LABEL_STATE.masked) !== 0;
+    const bg = st.background ?? (masked ? { shape: 'rect' as const, fill: 'paper', padding: 1 } : undefined);
+    const pad = bg ? (bg.padding ?? 2) / pxPerM : 0;
+    const box = (cx: number, cy: number, deg: number, w: number, h: number) => {
+      if (!bg?.fill) return;
+      const [hw, hh] = [w / 2 / pxPerM + pad, h / 2 / pxPerM + pad];
+      fill(layer, cx, cy, deg, [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]], resolveColor(bg.fill, pal));
+    };
+    if (!(state & LABEL_STATE.curved)) box(spots[from + 2], spots[from + 3], spots[from + 4], spots[from + 5], spots[from + 6]);
+    const letters = new Map<number, string[]>();
+    for (let k = from + LABEL_STRIDE; k < to; k += LABEL_STRIDE) {
+      const what = spots[k + 1];
+      const [x, y, deg, px] = [spots[k + 2], spots[k + 3], spots[k + 4], spots[k + 5]];
+      if (what === LABEL.placedCallout) {
+        const width = (st.callout?.width ?? 1) * PX_MM;
+        const c = st.callout?.color ? resolveColor(st.callout.color, pal) : color;
+        const pts = st.callout?.kind === 'manhattan' ? [x, y, spots[k + 4], y, spots[k + 4], spots[k + 5]] : [x, y, spots[k + 4], spots[k + 5]];
+        masks.push({ layer, path: { parts: [{ points: pts, closed: false }], stroke: { color: c, opacity: 1, width, dash: null, dashOffset: 0, cap: 'butt', join: 'miter' } } });
+        continue;
+      }
+      let t = '';
+      if (what === LABEL.placedLine) t = o.texts[spots[k + 6]] ?? '';
+      else if (what === LABEL.placedLetter) {
+        const n = spots[k + 6];
+        let list = letters.get(n);
+        if (!list) letters.set(n, (list = Array.from(o.texts[n] ?? '')));
+        t = list[spots[k + 7]] ?? '';
+        box(x, y, deg, spots[k + 8], px);
+      }
+      if (t.trim()) text(layer, { text: t, x, y, size: px * PX_MM, rotation: deg, align: 'center', baseline: 'middle', font, color, halo: bg?.fill ? null : own });
+    }
+  };
   for (let i = 0; i < spots.length; i += LABEL_STRIDE) {
     const e = doc.get(spots[i]);
     if (!e) continue;
@@ -165,6 +180,15 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
     const what = spots[i + 1];
     const x = spots[i + 2];
     const y = spots[i + 3];
+    if (what === LABEL.placed) {
+      let end = i + LABEL_STRIDE;
+      while (end < spots.length && spots[end] === spots[i] && spots[end + 1] > LABEL.placed && spots[end + 1] <= LABEL.placedCallout) end += LABEL_STRIDE;
+      const st = labelStyleOf(doc, e, spots[i + 7]);
+      const state = spots[i + 8];
+      if (st && !(state & (LABEL_STATE.unplaced | LABEL_STATE.hidden))) placed(layer, st, state, i, end);
+      i = end - LABEL_STRIDE;
+      continue;
+    }
     // A multi-line text: its mask, then its lines (docs/adr/0182 §3); a block's own too.
     if (what === LABEL.paragraphMask) {
       const [w, h] = [spots[i + 5], spots[i + 6]];
@@ -229,40 +253,6 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
         text(layer, { text: t, x, y, size: mm(spots[i + 7]), rotation: spots[i + 4], align: 'center', baseline: 'alphabetic', font: { family, weight: 500, italic: false }, color: !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal) });
       }
       continue;
-    }
-    // A layer's label (parcel number, point name …): thinned where it would cover another.
-    const st = doc.layers.get(e.layerId)?.style.label ?? DEFAULT_LABELS[e.kind];
-    if (!st || !e.label) continue;
-    const size = Math.min(st.maxSize ?? st.size, st.size + (st.grow ?? 0) * pxPerM);
-    const t = fillTemplate(st.template, e.label);
-    const color = ink[st.ink ?? 'label'];
-    const weight = st.weight ?? 500;
-    const w = o.measure(css(weight, size), t);
-    const at = (dx: number, dy: number) => ({ x: x + dx / pxPerM, y: y - dy / pxPerM });
-    const font = { family: o.font, weight, italic: false };
-    switch (what) {
-      case LABEL.center:
-        if (room.claim(sx(x) - w / 2, sy(y) - size / 2, sx(x) + w / 2, sy(y) + size / 2)) text(layer, { text: t, x, y, size: size * PX_MM, rotation: 0, align: 'center', baseline: 'middle', font, color });
-        break;
-      case LABEL.corner:
-        if (room.claim(sx(x) + 8, sy(y) + 14 - size / 2, sx(x) + 8 + w, sy(y) + 14 + size / 2)) text(layer, { text: t, ...at(8, 14), size: size * PX_MM, rotation: 0, align: 'left', baseline: 'middle', font, color });
-        break;
-      case LABEL.beside:
-        if (room.claim(sx(x) + 7, sy(y) - 7 - size / 2, sx(x) + 7 + w, sy(y) - 7 + size / 2)) text(layer, { text: t, ...at(7, -7), size: size * PX_MM, rotation: 0, align: 'left', baseline: 'middle', font, color });
-        break;
-      case LABEL.along: {
-        // A third of the way along, kept upright (on the paper, y up).
-        const cx = spots[i + 4];
-        const cy = spots[i + 5];
-        let ang = Math.atan2(cy - y, cx - x);
-        if (ang > Math.PI / 2 || ang < -Math.PI / 2) ang += Math.PI;
-        const mx = (sx(x) + sx(cx)) / 2;
-        const my = (sy(y) + sy(cy)) / 2;
-        const hx = (Math.abs(Math.cos(ang)) * w + Math.abs(Math.sin(ang)) * size) / 2;
-        const hy = (Math.abs(Math.sin(ang)) * w + Math.abs(Math.cos(ang)) * size) / 2;
-        if (room.claim(mx - hx, my - hy, mx + hx, my + hy)) text(layer, { text: t, x: (x + cx) / 2, y: (y + cy) / 2, size: size * PX_MM, rotation: (ang * 180) / Math.PI, align: 'center', baseline: 'middle', font, color });
-        break;
-      }
     }
   }
   return { texts, masks };

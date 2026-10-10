@@ -1,7 +1,10 @@
 # ADR 0175: Etiketleri yazıya çevirme
 
 - **Durum:** kabul edildi (2026-10-05); dört adımı bitti (2026-10-05). Sıra sahibin kararıdır: TODOS.md §16.0'ın on sekizinci işi `HYB-18`. Ayrıntılar bu ADR'nin
-  varsayılanlarıdır.
+  varsayılanlarıdır. **10 Ekim eki:** yazıların yeri artık etiket motorunun yerleşimidir ([ADR 0212](0212-label-engine.md) §4):
+  paftanın 8 piksellik hücreli kuralı (§2) ve başvurusu (`label_text_cases.py`) kalktı; çok satırlı etiket çok satırlı yazı, kıvrık
+  etiket eğri boyunca yazı, çağrı çizgisi çizgi olur; bağlı yazının yeri motorun nesne için tek başına seçtiği adaydır. Araç, seçenekler
+  ve komut değişmedi.
 - **Bağlam belgesi:** TODOS.md `HYB-18`, `CAD-06` (ilişkilendirme), `GIS-16` (etiket motoru); [araştırma kaydı](../research/2026-10-01-netcad-arcgis-qgis.md);
   ADR 0055 (çizimin yazıları), ADR 0145 (yazı ekleri: hiza, genişlik, zemin), ADR 0164 (pafta: etiketlerin kağıttaki kuralı), ADR 0060
   (yazı nesnesi); Netcad Etiketleri Üret ve CAD'e Çevir, ArcGIS Convert Labels To Annotation ve feature-linked annotation, QGIS Extract

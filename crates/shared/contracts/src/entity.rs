@@ -49,6 +49,14 @@ pub struct EntityBase {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     pub line_weight: Option<f64>,
+    /// Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+    /// §3.7), one a class at most.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::labels::LabelPin>>", optional)
+    )]
+    pub label_pins: Vec<crate::labels::LabelPin>,
 }
 
 /// The heaviest line weight an object may have, mm: DXF's heaviest is 2.11,

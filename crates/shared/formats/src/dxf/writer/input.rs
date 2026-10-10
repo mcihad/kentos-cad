@@ -168,6 +168,7 @@ impl Fields {
             label: self.label,
             symbol: self.symbol,
             line_weight: self.line_weight,
+            label_pins: Vec::new(),
         };
         let rings = |holes: Option<Vec<Hole>>| -> Result<Option<Vec<RingGeometry>>, E> {
             holes

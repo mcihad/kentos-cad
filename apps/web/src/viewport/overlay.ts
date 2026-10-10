@@ -6,7 +6,6 @@ import type { DimensionLook } from '../model/annotationStyles';
 import type { DrawingFont } from '../model/projectSettings';
 import { dist, type Vec2 } from '../model/geometry';
 import { dimensionMeasure, type DimensionLayout } from '../model/geom/dimension';
-import { fillTemplate } from '../model/ops/labelText';
 import type { CoreEdge } from '../model/ops/topologyRules';
 import type { ProblemMark } from '../model/selection';
 import { resolveColor, type CanvasPalette } from '../render/color';
@@ -15,8 +14,9 @@ import type { ToolCursor } from '../tools/Tool';
 import type { Camera, ViewTransform } from './Camera';
 import { leaderLayout } from '../model/geom/leader';
 import type { TrackHit } from './objectTracking';
-import { SNAP_LABEL, type SnapHit } from './picking';
-import { DEFAULT_LABELS, DIMENSION_PREFIX, DIMENSION_UNIT, LABEL, LABEL_STRIDE, type GripSet } from './storeRecords';
+import { SNAP_LABEL, type ShownLabels, type SnapHit } from './picking';
+import { drawPlacedLabel, type PlacedOptions } from './placedLabels';
+import { DIMENSION_PREFIX, DIMENSION_UNIT, LABEL, LABEL_STRIDE, type GripSet } from './storeRecords';
 
 // Text that is part of the drawing (text objects, dimension values, labels) is drawn in the project's typeface
 // (CanvasPalette.drawingFont), whatever the interface's is; the overlay's own marks (snap names, scale bar,
@@ -48,38 +48,6 @@ function textWidth(g: CanvasRenderingContext2D, text: string): number {
   let w = widths.get(text);
   if (w === undefined) widths.set(text, (w = g.measureText(text).width));
   return w;
-}
-
-/**
- * Where labels already are on screen, in 8 px cells: a label that would
- * cover one is not drawn. Coarse on purpose (a cell or two of slack is
- * spacing between labels); the text's halo is inside it.
- */
-class LabelRoom {
-  private static readonly CELL = 8;
-  private readonly cols: number;
-  private readonly rows: number;
-  private readonly taken: Uint8Array;
-
-  constructor(width: number, height: number) {
-    this.cols = Math.max(1, Math.ceil(width / LabelRoom.CELL));
-    this.rows = Math.max(1, Math.ceil(height / LabelRoom.CELL));
-    this.taken = new Uint8Array(this.cols * this.rows);
-  }
-
-  /** Takes the box if nothing is there yet; false (and nothing taken) when a label is in the way. */
-  claim(x0: number, y0: number, x1: number, y1: number): boolean {
-    const C = LabelRoom.CELL;
-    const c0 = Math.max(0, Math.floor(x0 / C));
-    const c1 = Math.min(this.cols - 1, Math.floor(x1 / C));
-    const r0 = Math.max(0, Math.floor(y0 / C));
-    const r1 = Math.min(this.rows - 1, Math.floor(y1 / C));
-    // Wholly off screen: nothing to keep apart from (the store sends only labels near the view).
-    if (c0 > c1 || r0 > r1) return true;
-    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (this.taken[r * this.cols + c]) return false;
-    for (let r = r0; r <= r1; r++) this.taken.fill(1, r * this.cols + c0, r * this.cols + c1 + 1);
-    return true;
-  }
 }
 
 /**
@@ -250,10 +218,8 @@ export function paragraphRecords(
  * ./storeRecords); size, template and colour from the layer's LabelStyle,
  * so this function knows nothing about specific layers.
  *
- * Labels (parcel numbers, point names, contour heights) are thinned where
- * they would overlap on screen: the first one keeps its place and one that
- * would cover it is left out of this view (as GIS labelling does), so a
- * zoomed-out map stays readable and draws fewer letters. Text objects and
+ * The objects' labels (parcel numbers, point names, contour heights) are the label engine's (docs/adr/0212): placed
+ * around the texts, away from each other and from their obstacles; drawn by `drawPlacedLabel`. Text objects and
  * dimension values are part of the drawing and are always drawn.
  */
 /**
@@ -312,21 +278,26 @@ export function drawLabels(
   doc: CadDocument,
   view: ViewTransform,
   pal: CanvasPalette,
-  spots: Float64Array,
+  shown: ShownLabels,
   dimensionText: (l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>, look: DimensionLook) => string,
   pieces: (block: string) => readonly BlockPiece[] | null = () => null,
   stride: number = LABEL_STRIDE,
+  options: PlacedOptions = {},
 ): void {
   const layers = doc.layers;
-  const ink = { fg: pal.fg, 'fg-dim': pal.fgDim, label: pal.label } as const;
-  const room = new LabelRoom(view.width, view.height);
+  const spots = shown.records;
   g.save();
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   for (let i = 0; i < spots.length; i += stride) {
+    const what = spots[i + 1];
+    // An object's label as the label engine placed it (docs/adr/0212 §3.8): its frame, then its lines, letters and callout.
+    if (what === LABEL.placed) {
+      i = drawPlacedLabel(g, doc, view, pal, spots, shown.texts, i, stride, options) - stride;
+      continue;
+    }
     const e = doc.get(spots[i]);
     if (!e) continue;
-    const what = spots[i + 1];
     const x = spots[i + 2];
     const y = spots[i + 3];
     // A grown record: its factor and anchor after the record (docs/adr/0205 §5).
@@ -405,57 +376,6 @@ export function drawLabels(
         g.restore();
       }
       continue;
-    }
-    const st = layers.get(e.layerId)?.style.label ?? DEFAULT_LABELS[e.kind];
-    if (!st || !e.label) continue;
-    const size = Math.min(st.maxSize ?? st.size, st.size + (st.grow ?? 0) * cam.scale);
-    const text = fillTemplate(st.template, e.label);
-    const color = ink[st.ink ?? 'label'];
-    g.font = `${st.weight ?? 500} ${size.toFixed(1)}px ${pal.drawingFont}`;
-
-    const w = textWidth(g, text);
-    switch (what) {
-      case LABEL.center: {
-        const s = cam.worldToScreen({ x, y });
-        if (!room.claim(s.x - w / 2, s.y - size / 2, s.x + w / 2, s.y + size / 2)) break;
-        haloText(g, text, s.x, s.y, color, pal.labelHalo);
-        break;
-      }
-      case LABEL.corner: {
-        const tl = cam.worldToScreen({ x, y });
-        if (!room.claim(tl.x + 8, tl.y + 14 - size / 2, tl.x + 8 + w, tl.y + 14 + size / 2)) break;
-        g.textAlign = 'left';
-        haloText(g, text, tl.x + 8, tl.y + 14, color, pal.labelHalo);
-        g.textAlign = 'center';
-        break;
-      }
-      case LABEL.beside: {
-        const s = cam.worldToScreen({ x, y });
-        if (!room.claim(s.x + 7, s.y - 7 - size / 2, s.x + 7 + w, s.y - 7 + size / 2)) break;
-        g.textAlign = 'left';
-        haloText(g, text, s.x + 7, s.y - 7, color, pal.labelHalo);
-        g.textAlign = 'center';
-        break;
-      }
-      case LABEL.along: {
-        // Placed a third of the way along, kept upright.
-        const a = cam.worldToScreen({ x, y });
-        const c = cam.worldToScreen({ x: spots[i + 4], y: spots[i + 5] });
-        let ang = Math.atan2(c.y - a.y, c.x - a.x);
-        if (ang > Math.PI / 2 || ang < -Math.PI / 2) ang += Math.PI;
-        // The rotated text's box on screen.
-        const mx = (a.x + c.x) / 2;
-        const my = (a.y + c.y) / 2;
-        const hx = (Math.abs(Math.cos(ang)) * w + Math.abs(Math.sin(ang)) * size) / 2;
-        const hy = (Math.abs(Math.sin(ang)) * w + Math.abs(Math.cos(ang)) * size) / 2;
-        if (!room.claim(mx - hx, my - hy, mx + hx, my + hy)) break;
-        g.save();
-        g.translate((a.x + c.x) / 2, (a.y + c.y) / 2);
-        g.rotate(ang);
-        haloText(g, text, 0, 0, color, pal.labelHalo);
-        g.restore();
-        break;
-      }
     }
   }
   g.restore();

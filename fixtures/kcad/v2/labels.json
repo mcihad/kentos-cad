@@ -1,0 +1,340 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Etiket motoru",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#0090FF",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "labels": {
+          "mode": "rules",
+          "classes": [
+            {
+              "name": "Ada",
+              "when": "Ada <> ''",
+              "style": {
+                "placement": "center",
+                "size": 12.0,
+                "weight": 600,
+                "text": "Ada || '/' || Parsel",
+                "area": "parcel",
+                "stack": {
+                  "mode": "ifNeeded",
+                  "chars": 8,
+                  "at": " /"
+                },
+                "shrink": 0.7,
+                "priority": 8,
+                "abbreviate": {
+                  "words": [
+                    {
+                      "word": "Mahallesi",
+                      "short": "Mh."
+                    },
+                    {
+                      "word": "Caddesi",
+                      "short": "Cd."
+                    }
+                  ]
+                },
+                "halo": {
+                  "width": 2.0,
+                  "color": "paper"
+                },
+                "background": {
+                  "shape": "round",
+                  "fill": "#FFFFFFCC",
+                  "stroke": "fg-dim",
+                  "padding": 3.0
+                },
+                "callout": {
+                  "kind": "manhattan",
+                  "color": "fg-dim",
+                  "width": 1.0,
+                  "minLength": 8.0
+                },
+                "outside": true
+              }
+            },
+            {
+              "name": "Alan",
+              "style": {
+                "placement": "center",
+                "size": 9.0,
+                "text": "round($alan, 1) || ' m²'",
+                "area": "boundary",
+                "position": "above",
+                "repeat": 240.0,
+                "italic": true,
+                "color": "#5B6B7A",
+                "priority": 2,
+                "overlap": "ifNeeded"
+              }
+            }
+          ]
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F76B15",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "labels": {
+          "mode": "off",
+          "obstacle": {
+            "weight": 7,
+            "kind": "boundary"
+          }
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8C9AAA",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "label": {
+          "placement": "along",
+          "size": 10.0,
+          "line": "curved",
+          "maxAngle": 30.0,
+          "mergeLines": true,
+          "repeat": 400.0,
+          "duplicates": 150.0,
+          "align": "center",
+          "shadow": {
+            "dx": 1.0,
+            "dy": -1.0,
+            "color": "#000000",
+            "opacity": 0.4
+          }
+        },
+        "labels": {
+          "mode": "single",
+          "obstacle": {
+            "weight": 3
+          }
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "nokta",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5C07B",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "point": {
+          "symbol": "cross",
+          "size": 7.0
+        },
+        "label": {
+          "placement": "beside",
+          "size": 10.5,
+          "point": "around",
+          "distance": 3.0,
+          "inside": false
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "esyukselti",
+      "name": "Eşyükselti",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#C9955F",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "label": {
+          "placement": "along",
+          "size": 9.0,
+          "line": "contour",
+          "curved": true,
+          "minScale": 1.6
+        }
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1203",
+        "Parsel": "7"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500040.0,
+          "y": 4400030.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400030.0
+        }
+      ],
+      "labelPins": [
+        {
+          "class": "Ada",
+          "at": {
+            "x": 2.5,
+            "y": -3.0
+          },
+          "rotation": 15.0
+        },
+        {
+          "class": "Alan",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500010.0,
+          "y": 4400010.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400010.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400020.0
+        },
+        {
+          "x": 500010.0,
+          "y": 4400020.0
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {},
+      "label": "Atatürk Caddesi",
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400040.0
+        },
+        {
+          "x": 500100.0,
+          "y": 4400045.0
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "nokta",
+      "attrs": {},
+      "label": "P.101",
+      "p": {
+        "x": 500050.0,
+        "y": 4400010.0
+      },
+      "labelPins": [
+        {
+          "at": {
+            "x": 4.0,
+            "y": 4.0
+          }
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 5,
+      "layerId": "esyukselti",
+      "attrs": {},
+      "label": "1250",
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400060.0
+        },
+        {
+          "x": 500100.0,
+          "y": 4400070.0
+        }
+      ],
+      "zs": [
+        1250.0,
+        1250.0
+      ]
+    }
+  ],
+  "uids": [
+    "0192f5a1-7777-7000-8000-000000000701",
+    "0192f5a1-7777-7000-8000-000000000702",
+    "0192f5a1-7777-7000-8000-000000000703",
+    "0192f5a1-7777-7000-8000-000000000704",
+    "0192f5a1-7777-7000-8000-000000000705"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

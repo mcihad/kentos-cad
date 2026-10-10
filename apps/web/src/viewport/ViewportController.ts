@@ -30,7 +30,7 @@ import { ViewNavigation } from './viewHistory';
 import { NavigationCards } from './navigationCards';
 import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
 import type { ExprColumnData } from '../wasm/core';
-import { extensionAlong, extensionAt, PickIndex, type Extension, type PolygonMode, type SnapHit, type SnapKind } from './picking';
+import { extensionAlong, extensionAt, LABELS_HIDDEN, LABELS_KEEP, LABELS_UNPLACED, PickIndex, type Extension, type LabelHit, type PolygonMode, type SnapHit, type SnapKind } from './picking';
 import { LABEL_SHOWN_STRIDE } from './storeRecords';
 import { screenScale, snapInRange } from './snapRange';
 
@@ -191,6 +191,8 @@ export class ViewportController {
   private readonly labelView = new Camera();
   /** Bumped by whatever changes what the labels show (objects, layers, palette, typeface, editing). */
   private labelEpoch = 0;
+  /** Etiketi gizle's Göster (docs/adr/0212 §4): the hidden labels are drawn faint, to be clicked. */
+  private hiddenLabels = false;
   /** The camera change the last overlay frame drew (a new one means the view is moving). */
   private labelCamera = -1;
   private readonly d = new DisposableStore();
@@ -714,6 +716,28 @@ export class ViewportController {
     this.overlay?.focus({ preventScroll: true });
   }
 
+  /** Etiketi gizle's Göster (docs/adr/0212 §4): the hidden labels drawn faint, so that they can be clicked. */
+  showHiddenLabels(on: boolean): void {
+    if (this.hiddenLabels === on) return;
+    this.hiddenLabels = on;
+    this.requestOverlay();
+  }
+
+  /** The label under a world point in the drawing's last labels, within `tol` px; `all` the unplaced and hidden too. */
+  labelAt(p: Vec2, tol: number, all = false): LabelHit | null {
+    return this.picker.labelAt(p, tol, all);
+  }
+
+  /** The labels whose middle is in the box `a`–`b` among the drawing's last labels (docs/adr/0212 §4). */
+  labelsIn(a: Vec2, b: Vec2, all = false): LabelHit[] {
+    return this.picker.labelsIn(a, b, all);
+  }
+
+  /** Where an object's labels are pinned from: its anchor (world), null for none. */
+  labelAnchor(id: number): Vec2 | null {
+    return this.picker.labelAnchor(id);
+  }
+
   /** Re-read canvas colours from CSS (theme switch). */
   refreshPalette(): void {
     // The grid follows by itself: its extent records the palette it was drawn with.
@@ -894,6 +918,9 @@ export class ViewportController {
     const { prefs } = this.ctx;
     // The text's size on screen draws the labels again (docs/adr/0205 §5).
     d.add(prefs.annotationSize.subscribe(() => this.requestOverlay()));
+    // The label engine's views (docs/adr/0212 §4).
+    d.add(prefs.unplacedLabels.subscribe(() => this.requestOverlay()));
+    d.add(prefs.pinnedLabels.subscribe(() => this.requestOverlay()));
     for (const s of [prefs.symbolSize, prefs.lineWeights, prefs.colorMode, prefs.fills, prefs.areaEdges, prefs.transparency])
       d.add(
         s.subscribe(() => {
@@ -1569,7 +1596,11 @@ export class ViewportController {
     // How the text is sized on screen and the plot scale it is measured by (docs/adr/0205 §5).
     const size = this.ctx.prefs.annotationSize.value;
     const plot = this.ctx.doc.settings.plotScale.value;
-    const key = `${w}x${h}|${dpr}|${cam.scale}|${this.labelEpoch}|${this.ctx.doc.revision}|${mode}|${size}|${plot}`;
+    // The label engine's views (docs/adr/0212 §4): pinned labels outlined, unplaced ones red, hidden ones faint.
+    const prefs = this.ctx.prefs;
+    const flags = LABELS_KEEP | (prefs.unplacedLabels.value ? LABELS_UNPLACED : 0) | (this.hiddenLabels ? LABELS_HIDDEN : 0);
+    const pinned = prefs.pinnedLabels.value;
+    const key = `${w}x${h}|${dpr}|${cam.scale}|${this.labelEpoch}|${this.ctx.doc.revision}|${mode}|${size}|${plot}|${flags}|${pinned}`;
     const moving = cam.changed.value !== this.labelCamera;
     this.labelCamera = cam.changed.value;
     let cache = this.labelCache;
@@ -1594,10 +1625,11 @@ export class ViewportController {
         this.ctx.doc,
         view,
         modedPalette(this.palette, mode),
-        this.picker.labelsShown(view.visibleBounds(), view.scale, this.editingId, size, plot),
+        this.picker.labelsShown(view.visibleBounds(), view.scale, this.editingId, size, plot, flags),
         (l, look) => this.dimensionText(l, look),
         (b) => this.picker.blockPieces(b),
         LABEL_SHOWN_STRIDE,
+        { pinned },
       );
       cache.key = key;
       cache.center = view.center;

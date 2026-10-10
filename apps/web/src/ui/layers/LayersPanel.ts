@@ -524,6 +524,12 @@ export class LayersPanel extends Panel {
           icon: 'layerStyle',
           run: () => void import('../style/LayerStyleDialog').then((m) => m.openLayerStyle(this.ctx, n.id)),
         },
+        // Etiketler (docs/adr/0212 §4): how its objects are labelled.
+        {
+          label: n.style.labels?.mode === 'rules' ? 'Etiketler… (kurallı)' : n.style.labels?.mode === 'off' ? 'Etiketler… (etiketsiz)' : 'Etiketler…',
+          icon: 'layerLabels',
+          run: () => void this.ctx.commands.execute('layer.labels', n.id),
+        },
         // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
         { label: n.fields?.length ? `Alanlar… (${n.fields.length})` : 'Alanlar…', icon: 'layerFields', run: () => void this.ctx.commands.execute('layer.fields', n.id) },
         // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.

@@ -1,16 +1,17 @@
 import type { DrawingEntity, Entity, TextEntity } from './entities';
 import { DEFAULT_LABELS } from './labelDefaults';
 import type { LabelStyle } from './layers';
-import { labelTextOf } from './ops/labelText';
+import { fillTemplate, labelTextOf } from './ops/labelText';
 import { sameJson } from './sameJson';
 
 /**
  * Linked texts (docs/adr/0175 §4): a text that writes an object's label (`labelOf`, `labelScale`) keeps following
  * it. Before a step is recorded (`CadDocument`'s commit), its changes are read:
  *
- * - an object the step changed has its linked texts written again by the label rule (`labelTextOf`): from its label
- *   now, its layer's label style (or its kind's default), the project's typeface and the text's scale; a text the
- *   rule no longer writes (no label, out of the style's scale range, too small) stays where it is and loses its link;
+ * - an object the step changed has its linked texts written again where the label engine places its label alone
+ *   (`labelTextOf`, docs/adr/0212 §4): from its label now, its layer's label style (or its kind's default), the
+ *   project's typeface and the text's scale; a text the engine no longer writes (no label, out of the style's scale
+ *   range, too small) stays where it is and loses its link;
  * - an object the step removed takes its linked texts with it;
  * - a linked text the step itself edited (its place, text, height, turn or alignment) loses its link, unless its
  *   object changed in the same step (then the rule writes it).
@@ -35,6 +36,8 @@ export interface LinkedDrawing {
   linkedTo(uid: string): Iterable<number>;
   /** The layer's own label style, when it has one. */
   layerLabel(layerId: string): LabelStyle | null | undefined;
+  /** The layer's point symbol's size, px (0 without one). */
+  layerPoint(layerId: string): number;
   /** The project's drawing typeface (`DrawingFont`). */
   font: string;
 }
@@ -85,7 +88,7 @@ function rewritten(text: LinkedText, object: Entity, d: LinkedDrawing): LinkedTe
   if (!label) return undefined;
   const style = d.layerLabel(object.layerId) ?? DEFAULT_LABELS[object.kind];
   if (!style || text.labelScale === undefined) return undefined;
-  const t = labelTextOf(object, label, style, text.labelScale, d.font);
+  const t = labelTextOf(object, fillTemplate(style.template, label), style, text.labelScale, d.layerPoint(object.layerId), d.font);
   if (!t) return undefined;
   return { ...text, p: { x: t.p.x, y: t.p.y }, text: t.text, height: t.height, rotation: t.rotation, align: t.align };
 }

@@ -519,6 +519,7 @@ fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
         label: if keep_data { base.label.clone() } else { None },
         symbol: None,
         line_weight: base.line_weight,
+        label_pins: Vec::new(),
     }
 }
 

@@ -15,9 +15,10 @@ use crate::geometry::Bounds;
 use crate::jsmath::{PI, cos, js_max, js_min, sin};
 use crate::store::Store;
 use crate::store::labels::{
-    LABEL_ALONG, LABEL_BESIDE, LABEL_CELL, LABEL_CENTER, LABEL_CORNER, LABEL_PARAGRAPH_MASK,
-    LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_LINE, LABEL_PIECE_TEXT, LABEL_STRIDE,
+    LABEL_CELL, LABEL_PARAGRAPH_MASK, LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_LINE,
+    LABEL_PIECE_TEXT, LABEL_STRIDE,
 };
+use crate::store::placing::{PlaceOptions, Shown};
 use crate::text::width_em;
 use crate::vec2::Vec2;
 
@@ -79,7 +80,8 @@ impl Store {
         scale: f64,
         editing: Option<f64>,
         size: LabelSize,
-    ) -> Vec<f64> {
+        options: PlaceOptions,
+    ) -> Shown {
         let max_px = match size {
             LabelSize::Screen { .. } => f64::INFINITY,
             _ => TRUE_MAX_PX,
@@ -111,6 +113,8 @@ impl Store {
             keep_apart(&groups, view, scale)
         };
         let mut out = Vec::with_capacity(records.len() / LABEL_STRIDE * LABEL_SHOWN_STRIDE);
+        // The texts as shown keep the objects' labels off them (docs/adr/0212 §3.5).
+        let mut fixed: Vec<Vec<Vec2>> = Vec::new();
         for (g, keep) in groups.iter().zip(kept) {
             if !keep {
                 continue;
@@ -119,8 +123,29 @@ impl Store {
                 out.extend_from_slice(rec(i));
                 out.extend([g.k, g.anchor.x, g.anchor.y]);
             }
+            if !g.outline.is_empty() {
+                fixed.push(
+                    g.outline
+                        .iter()
+                        .map(|p| {
+                            Vec2::new(
+                                g.anchor.x + (p.x - g.anchor.x) * g.k,
+                                g.anchor.y + (p.y - g.anchor.y) * g.k,
+                            )
+                        })
+                        .collect(),
+                );
+            }
         }
-        out
+        let placed = self.place_labels(view, scale, &fixed, options);
+        for r in placed.records.chunks_exact(LABEL_STRIDE) {
+            out.extend_from_slice(r);
+            out.extend([1.0, r[2], r[3]]);
+        }
+        Shown {
+            records: out,
+            texts: placed.texts,
+        }
     }
 
     /// Which text a record belongs to: its object, and a block's piece (−1
@@ -138,13 +163,6 @@ impl Store {
                 Some(it) if it.expanded.is_some() => r[7] as i64,
                 _ => -1,
             },
-            k if k == LABEL_CENTER
-                || k == LABEL_CORNER
-                || k == LABEL_BESIDE
-                || k == LABEL_ALONG =>
-            {
-                -2
-            }
             _ => -1,
         };
         (r[0].to_bits(), piece)
@@ -169,13 +187,6 @@ impl Store {
             apart,
         };
         let kind = r[1];
-        if kind == LABEL_CENTER
-            || kind == LABEL_CORNER
-            || kind == LABEL_BESIDE
-            || kind == LABEL_ALONG
-        {
-            return Some(label(false));
-        }
         let item = self.get(r[0])?;
         let piece = (kind == LABEL_PIECE_TEXT
             || kind == LABEL_PIECE_DIMENSION
@@ -366,7 +377,8 @@ mod tests {
 
     /// The records as (id, kind, k, anchor x, anchor y).
     fn shown(s: &Store, scale: f64, size: LabelSize) -> Vec<(f64, f64, f64, f64, f64)> {
-        s.labels_shown(&view(), scale, None, size)
+        s.labels_shown(&view(), scale, None, size, PlaceOptions::default())
+            .records
             .chunks_exact(LABEL_SHOWN_STRIDE)
             .map(|r| (r[0], r[1], r[9], r[10], r[11]))
             .collect()

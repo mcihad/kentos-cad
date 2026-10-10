@@ -1,10 +1,11 @@
-//! Etiketleri yazıya çevir (docs/adr/0175 §3) through the session, over the
-//! native document: the labels taken when it starts, the finding shown
-//! first, the scale and the three options, the texts written in one step on
+//! Etiketleri yazıya çevir (docs/adr/0175 §3, 0212 §4) through the session,
+//! over the native document: the objects taken when it starts, the finding
+//! shown first, the scale and the options, the texts written in one step on
 //! the standard text layer (opened in that step) or the active one; as the
 //! web's `apps/web/src/tools/labelsToTextTool.test.ts` walks it, the same
-//! cases moved to (E, N). The places and sizes are the core's, checked
-//! against the independent reference in the core's `tests/all/label_text.rs`.
+//! cases moved to (E, N). The places and sizes are the label engine's,
+//! checked against the independent reference in the core's
+//! `tests/all/label_engine.rs`.
 
 use crate::common;
 
@@ -35,9 +36,10 @@ fn labelled(mut base: kentos_contracts::EntityBase, label: &str) -> kentos_contr
     base
 }
 
-/// Two parcels with numbers, a third whose label falls on the first's, a
-/// parcel too small to label at 1:1000, a named point and a street, each
-/// with its kind's default style (the drawing's).
+/// Two parcels with numbers, a third over the first (the engine finds its
+/// number another place in it), a parcel too small to label at 1:1000, a
+/// named point and a street, each with its kind's default style (the
+/// drawing's).
 fn drawing() -> Bench {
     let mut b = Bench::on(include_str!(
         "../../../../../fixtures/interaction/v1/empty.kcad"
@@ -104,13 +106,13 @@ fn writes_the_labels_as_a_sheet_would_in_one_step_on_the_text_layer_it_opens() {
         b.said(before),
         [(
             Level::Info,
-            format!("{LABEL}: bütün çizimde 6 etiket; 1:1000 ölçekte 4 yazı olacak, 1 örtüşen, 1 küçük etiket atlanacak. Enter ile yazın.").as_str()
+            format!("{LABEL}: bütün çizimde 6 nesne; 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak. Enter ile yazın.").as_str()
         )]
     );
     assert_eq!(
         b.session.prompt().text(),
         format!(
-            "{LABEL}: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen, 1 küçük etiket atlanacak {}",
+            "{LABEL}: 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak {}",
             options(1000, "kapalı", "kapalı", "Yazılar")
         )
     );
@@ -120,18 +122,21 @@ fn writes_the_labels_as_a_sheet_would_in_one_step_on_the_text_layer_it_opens() {
     assert_eq!(
         preview.tag.map(|t| t.lines),
         Some(vec![
-            "4 yazı, 1:1000".to_owned(),
-            "1 örtüşen atlanır".to_owned(),
+            "5 yazı, 1:1000".to_owned(),
             "1 küçük atlanır".to_owned(),
             "Enter: yaz".to_owned(),
         ])
     );
-    assert_eq!(preview.texts.len(), 4);
-    // Örtüşenler de: the third parcel's number too.
+    // A one-line label is one ghost.
+    assert_eq!(preview.texts.len(), 5);
+    // Örtüşenler de: every label has a place here; nothing more to write.
     assert!(b.type_text("R"));
     assert_eq!(
-        b.last_text(),
-        Some(format!("{LABEL}: 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak.").as_str())
+        b.session.prompt().text(),
+        format!(
+            "{LABEL}: 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak {}",
+            options(1000, "açık", "kapalı", "Yazılar")
+        )
     );
     // A typed scale: the parcels' labels grow to their 14 px cap.
     assert!(b.type_text("1:500"));
@@ -144,25 +149,41 @@ fn writes_the_labels_as_a_sheet_would_in_one_step_on_the_text_layer_it_opens() {
     );
     b.confirm();
     let made = texts(&b);
-    assert_eq!(
-        made.iter().map(|t| t.text.as_str()).collect::<Vec<_>>(),
-        ["101", "102", "104", "P1", "Cumhuriyet Cd."]
-    );
+    let by = |text: &str| made.iter().find(|t| t.text == text).expect(text).clone();
+    let mut names: Vec<&str> = made.iter().map(|t| t.text.as_str()).collect();
+    names.sort_unstable();
+    assert_eq!(names, ["101", "102", "104", "Cumhuriyet Cd.", "P1"]);
     assert!(made.iter().all(|t| t.base.layer_id == "yazi"));
     assert_eq!(
         b.doc.layers().get("yazi").map(|l| l.name.as_str()),
         Some("Yazılar")
     );
     let k = 96.0 / 0.0254 / 500.0;
-    assert_eq!(made[0].p, pt(10.0, 7.5));
-    assert_eq!(made[0].align, Some(TextAlign::MiddleCenter));
-    assert_eq!(made[0].rotation, 0.0);
-    assert!(near(made[0].height, 14.0 / k, 1e-12), "{}", made[0].height);
-    assert_eq!(made[3].align, Some(TextAlign::MiddleLeft));
-    assert!(near(made[3].p.x, E + 45.0 + 7.0 / k, 1e-9));
+    // A parcel's number at its pole, the middle of a rectangle.
+    let first = by("101");
+    assert!(
+        near(first.p.x, E + 10.0, 1e-6) && near(first.p.y, N + 7.5, 1e-6),
+        "{:?}",
+        first.p
+    );
+    assert_eq!(first.align, Some(TextAlign::MiddleCenter));
+    assert_eq!(first.rotation, 0.0);
+    assert!(near(first.height, 14.0 / k, 1e-12), "{}", first.height);
+    // The third parcel's number is not on the first's.
+    let third = by("104");
+    assert!((third.p.x - first.p.x).hypot(third.p.y - first.p.y) > 0.5);
+    // The point's name at its first place round it: to its top right.
+    let point = by("P1");
+    assert_eq!(point.align, Some(TextAlign::MiddleCenter));
+    assert!(point.p.x > E + 45.0 && point.p.y > N + 5.0, "{:?}", point.p);
     // The street runs west: its name turns half round to read.
-    assert_eq!(made[4].p, pt(25.0, 20.0));
-    assert_eq!(made[4].rotation, 0.0);
+    let street = by("Cumhuriyet Cd.");
+    assert!(
+        near(street.p.x, E + 25.0, 1e-6) && near(street.p.y, N + 20.0, 1e-6),
+        "{:?}",
+        street.p
+    );
+    assert_eq!(street.rotation, 0.0);
     assert!(made.iter().all(|t| !t.mask));
     assert_eq!(
         b.selected(),
@@ -204,7 +225,7 @@ fn takes_a_selections_labels_only_writes_masked_texts_on_the_active_layer_and_ke
         b.said(before),
         [(
             Level::Info,
-            format!("{LABEL}: seçimde 2 etiket; 1:1000 ölçekte 2 yazı olacak. Enter ile yazın.")
+            format!("{LABEL}: seçimde 2 nesne; 1:1000 ölçekte 2 yazı olacak. Enter ile yazın.")
                 .as_str()
         )]
     );
@@ -218,10 +239,11 @@ fn takes_a_selections_labels_only_writes_masked_texts_on_the_active_layer_and_ke
         )
     );
     b.confirm();
-    let made: Vec<(String, String, bool)> = texts(&b)
+    let mut made: Vec<(String, String, bool)> = texts(&b)
         .into_iter()
         .map(|t| (t.text, t.base.layer_id, t.mask))
         .collect();
+    made.sort();
     assert_eq!(
         made,
         [
@@ -241,16 +263,15 @@ fn writes_texts_linked_to_their_objects_which_they_follow_and_whose_labels_leave
     assert_eq!(
         b.session.prompt().text(),
         format!(
-            "{LABEL}: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen, 1 küçük etiket atlanacak {}",
+            "{LABEL}: 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak {}",
             linked_options(1000, "kapalı", "kapalı", "Yazılar", "açık")
         )
     );
     b.confirm();
     let made = texts(&b);
-    assert_eq!(
-        made.iter().map(|t| t.text.as_str()).collect::<Vec<_>>(),
-        ["101", "102", "P1", "Cumhuriyet Cd."]
-    );
+    let mut names: Vec<&str> = made.iter().map(|t| t.text.as_str()).collect();
+    names.sort_unstable();
+    assert_eq!(names, ["101", "102", "104", "Cumhuriyet Cd.", "P1"]);
     // Each knows its object (the label it writes) and the scale.
     let object = |t: &TextEntity| {
         let uid = kentos_domain::Uuid::from_bytes(t.label_of.expect("a link").0);
@@ -263,8 +284,9 @@ fn writes_texts_linked_to_their_objects_which_they_follow_and_whose_labels_leave
         );
         assert_eq!(t.label_scale, Some(1000.0));
     }
-    // The parcel moves: its text follows in the same step, and one undo takes both back.
-    let parcel = object(&made[1]);
+    // The parcel moves: its text follows in the same step (the engine's place for it alone), and one undo takes both back.
+    let second = made.iter().find(|t| t.text == "102").expect("102").clone();
+    let parcel = object(&second);
     let Some(Entity::Polygon(mut moved)) = b.doc.get(parcel).cloned() else {
         panic!("a parcel")
     };
@@ -272,23 +294,26 @@ fn writes_texts_linked_to_their_objects_which_they_follow_and_whose_labels_leave
         p.y -= 10.0;
     }
     assert!(b.doc.update(parcel, Entity::Polygon(moved)));
-    let Some(Entity::Text(text)) = b.doc.get(Slot(made[1].base.id)).cloned() else {
+    let Some(Entity::Text(text)) = b.doc.get(Slot(second.base.id)).cloned() else {
         panic!("a text")
     };
-    assert!(near(text.p.x, made[1].p.x, 1e-9));
-    assert!(near(text.p.y, made[1].p.y - 10.0, 1e-9));
-    assert_eq!(text.label_of, made[1].label_of);
+    assert!(near(text.p.x, E + 30.0, 1e-6), "{:?}", text.p);
+    assert!(near(text.p.y, N + 7.5 - 10.0, 1e-6), "{:?}", text.p);
+    assert_eq!(text.label_of, second.label_of);
     assert!(b.doc.undo().is_some());
-    assert_eq!(texts(&b)[1].p, made[1].p);
-    // Run again on the whole drawing: the linked objects' labels are texts now; 104's and the small 103's are left.
+    let Some(Entity::Text(back)) = b.doc.get(Slot(second.base.id)).cloned() else {
+        panic!("a text")
+    };
+    assert_eq!(back.p, second.p);
+    // Run again on the whole drawing: the linked objects' labels are texts now; the small 103's is left.
     b.selection.set(Vec::<Slot>::new());
     let before = b.log.len();
     b.start("labelsToText");
     assert_eq!(
         b.said(before),
         [(
-            Level::Info,
-            format!("{LABEL}: bütün çizimde 2 etiket; 1:1000 ölçekte 1 yazı olacak, 1 küçük etiket atlanacak. Enter ile yazın.").as_str()
+            Level::Warn,
+            format!("{LABEL}: bütün çizimde 1 nesne; 1:1000 ölçekte yazı olacak etiket yok, 1 küçük etiket atlanacak; başka bir ölçek yazın.").as_str()
         )]
     );
 }
@@ -304,18 +329,22 @@ fn an_object_whose_label_a_text_writes_shows_none_of_its_own() {
     // The parcels whose own label the drawing places at 3 px/m (103 is too small).
     let centred = |spatial: &mut Spatial, b: &Bench| -> Vec<u32> {
         spatial.sync(&b.doc);
-        spatial
+        let mut slots: Vec<u32> = spatial
             .labels(
                 kentos_interaction::Vec2::new(E - 100.0, N - 100.0),
                 kentos_interaction::Vec2::new(E + 200.0, N + 200.0),
                 3.0,
+                Default::default(),
             )
             .into_iter()
             .filter_map(|spot| match spot {
-                LabelSpot::Center { slot, .. } => Some(slot.0),
+                // The parcels' (slots 1–4); the point's and the street's are not asked.
+                LabelSpot::Placed { slot, .. } if slot.0 <= 4 => Some(slot.0),
                 _ => None,
             })
-            .collect()
+            .collect();
+        slots.sort_unstable();
+        slots
     };
     assert_eq!(centred(&mut spatial, &b), [1, 2, 3]);
     let parcel = b.doc.uid(Slot(1)).expect("a persistent id");

@@ -98,6 +98,7 @@ impl TablePlace {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         };
         let entity = entity_of(&geometry, base);
         let Some(layout) = layout_of(

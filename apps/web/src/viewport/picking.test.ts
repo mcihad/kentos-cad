@@ -62,7 +62,7 @@ function compare(g: Gen, doc: CadDocument, live: PickIndex, fresh: PickIndex): s
     ['enclosing', (s) => enc(s.enclosing(p))],
     ['overlapping', (s) => s.overlapping(r, except).map((e) => e.id)],
     ['edgesIn', (s) => s.edgesIn(r, except)],
-    ['labels', (s) => Array.from(s.labels(view, scale, editing))],
+    ['labels', (s) => { const shown = s.labels(view, scale, editing); return [Array.from(shown.records), shown.texts]; }],
     ['grips', (s) => s.grips(selected)],
     ['ghosts', (s) => Array.from(s.ghosts(selected, affines, 400))],
     ['transformEntities', (s) => s.transformEntities(selectedEntities, affines)],

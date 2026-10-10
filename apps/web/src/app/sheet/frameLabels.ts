@@ -12,9 +12,8 @@ import { LABEL, LABEL_STRIDE } from '../../viewport/storeRecords';
  *
  * A label's anchor is the point it is written from:
  * - a text object's own point (`p`, whatever its alignment);
- * - a line's name: the middle of the stretch it is written along;
- * - any other label (an area's or a point's name, a dimension's value, a
- *   leader's note, a block's text): its record's point.
+ * - an object's label (docs/adr/0212): its middle as the label engine placed it;
+ * - any other (a dimension's value, a leader's note, a block's text): its record's point.
  */
 
 /** Whether a ground point is inside a map frame's content: its view's centre, scale and turn over the frame's box. */
@@ -40,18 +39,25 @@ export function insideFrame(prim: Pick<MapPrim, 'clip' | 'view'>): (x: number, y
 export function labelAnchor(spots: Float64Array, i: number, e: Entity | undefined): [number, number] {
   const what = spots[i + 1];
   if (what === LABEL.text && e?.kind === 'text') return [e.p.x, e.p.y];
-  if (what === LABEL.along) return [(spots[i + 2] + spots[i + 4]) / 2, (spots[i + 3] + spots[i + 5]) / 2];
   return [spots[i + 2], spots[i + 3]];
 }
 
-/** The records a frame writes: those of the objects `keep` passes whose anchor `inside` passes. */
+/**
+ * The records a frame writes: those of the objects `keep` passes whose anchor `inside` passes. An object's label as the
+ * label engine placed it (docs/adr/0212 §3.8) goes whole or not at all, by its frame's middle.
+ */
 export function framedSpots(spots: Float64Array, object: (id: number) => Entity | undefined, inside: (x: number, y: number) => boolean, keep: (e: Entity) => boolean = () => true): Float64Array {
   const out: number[] = [];
   for (let i = 0; i + LABEL_STRIDE <= spots.length; i += LABEL_STRIDE) {
     const e = object(spots[i]);
-    if (!e || !keep(e)) continue;
-    const [x, y] = labelAnchor(spots, i, e);
-    if (inside(x, y)) for (let j = 0; j < LABEL_STRIDE; j++) out.push(spots[i + j]);
+    let end = i + LABEL_STRIDE;
+    if (spots[i + 1] === LABEL.placed)
+      while (end < spots.length && spots[end] === spots[i] && spots[end + 1] > LABEL.placed && spots[end + 1] <= LABEL.placedCallout) end += LABEL_STRIDE;
+    if (e && keep(e)) {
+      const [x, y] = labelAnchor(spots, i, e);
+      if (inside(x, y)) for (let j = i; j < end; j++) out.push(spots[j]);
+    }
+    i = end - LABEL_STRIDE;
   }
   return Float64Array.from(out);
 }

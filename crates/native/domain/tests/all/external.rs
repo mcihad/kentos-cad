@@ -34,6 +34,7 @@ fn point(layer: &str, x: f64) -> Entity {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         p: Vec2 { x, y: 0.0 },
         z: None,

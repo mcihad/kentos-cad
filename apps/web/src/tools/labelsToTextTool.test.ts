@@ -5,10 +5,10 @@ import { LabelsToTextTool, readScale } from './labelsToTextTool';
 import { at, canvasLog, pt, toolHarness } from './toolHarness';
 
 /**
- * Etiketleri yazıya çevir (docs/adr/0175 §3): the labels taken when it starts, the finding shown first, the scale
- * and the three options, the texts written in one step on the standard text layer (opened in that step) or the
- * active one. The places and sizes are the core's, checked against the independent reference in
- * model/ops/labelText.test.ts; here the tool's flow. The desktop walks the same in
+ * Etiketleri yazıya çevir (docs/adr/0175 §3, 0212 §4): the objects taken when it starts, the finding shown first, the
+ * scale and the options, the texts written in one step on the standard text layer (opened in that step) or the active
+ * one. The places and sizes are the label engine's, checked against the independent reference in
+ * viewport/labelEngine.test.ts; here the tool's flow. The desktop walks the same in
  * crates/native/interaction/tests/all/labels_to_text.rs.
  */
 
@@ -26,8 +26,8 @@ const OPTIONS = (scale = 1000, every = 'kapalı', mask = 'kapalı', layer = 'Yaz
   `[Ölçek (Ö): 1:${scale} / Örtüşenler de (R): ${every} / Zemin (Z): ${mask} / Katman (K): ${layer} / Nesneye bağlı (B): ${linked} / Uygula (Enter)]`;
 
 /**
- * Two parcels with numbers, a third whose label falls on the first's, a parcel too small to label at 1:1000, a
- * named point and a street, each with its kind's default style (the drawing's).
+ * Two parcels with numbers, a third over the first (the engine finds its number another place in it), a parcel too
+ * small to label at 1:1000, a named point and a street, each with its kind's default style (the drawing's).
  */
 function drawing() {
   const h = toolHarness();
@@ -52,30 +52,40 @@ describe('Etiketleri yazıya çevir', () => {
     const n0 = h.doc.size;
     const tool = h.use(new LabelsToTextTool(h.ctx));
     tool.activate();
-    expect(h.said()).toEqual([`${LABEL}: bütün çizimde 6 etiket; 1:1000 ölçekte 4 yazı olacak, 1 örtüşen, 1 küçük etiket atlanacak. Enter ile yazın.`]);
-    expect(tool.prompt.value).toBe(`${LABEL}: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen, 1 küçük etiket atlanacak ${OPTIONS()}`);
+    expect(h.said()).toEqual([`${LABEL}: bütün çizimde 6 nesne; 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak. Enter ile yazın.`]);
+    expect(tool.prompt.value).toBe(`${LABEL}: 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak ${OPTIONS()}`);
     tool.pointerMove(at(60, 10));
     const log = canvasLog();
     tool.draw(log.g, log.view);
-    expect(log.texts.slice(-4)).toEqual(['4 yazı, 1:1000', '1 örtüşen atlanır', '1 küçük atlanır', 'Enter: yaz']);
-    // Örtüşenler de: the third parcel's number too.
+    expect(log.texts.slice(-3)).toEqual(['5 yazı, 1:1000', '1 küçük atlanır', 'Enter: yaz']);
+    // Örtüşenler de: every label has a place here; nothing more to write.
     expect(tool.input('R')).toBe(true);
-    expect(h.said().at(-1)).toBe(`${LABEL}: 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak.`);
+    expect(tool.prompt.value).toBe(`${LABEL}: 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak ${OPTIONS(1000, 'açık')}`);
     // A typed scale: the parcels' labels grow to their 14 px cap.
     expect(tool.input('1:500')).toBe(true);
     expect(tool.prompt.value).toBe(`${LABEL}: 1:500 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak ${OPTIONS(500, 'açık')}`);
     tool.confirm();
     const made = texts(h);
-    expect(made.map((t) => t.text)).toEqual(['101', '102', '104', 'P1', 'Cumhuriyet Cd.']);
+    const by = (text: string) => made.find((t) => t.text === text)!;
+    expect(made.map((t) => t.text).sort()).toEqual(['101', '102', '104', 'Cumhuriyet Cd.', 'P1']);
     expect(made.every((t) => t.layerId === 'yazi')).toBe(true);
     expect(h.doc.layers.get('yazi')?.name).toBe('Yazılar');
     const k = 96 / 0.0254 / 500;
-    expect(made[0]).toMatchObject({ p: pt(10, 7.5), align: 'middleCenter', rotation: 0 });
-    expect(made[0].height).toBeCloseTo(14 / k, 12);
-    expect(made[3].align).toBe('middleLeft');
-    expect(made[3].p.x).toBeCloseTo(45 + 7 / k, 9);
+    // A parcel's number at its pole, the middle of a rectangle.
+    expect(by('101')).toMatchObject({ align: 'middleCenter', rotation: 0 });
+    expect(by('101').p.x).toBeCloseTo(10, 6);
+    expect(by('101').p.y).toBeCloseTo(7.5, 6);
+    expect(by('101').height).toBeCloseTo(14 / k, 12);
+    // The third parcel's number is not on the first's.
+    expect(Math.hypot(by('104').p.x - 10, by('104').p.y - 7.5)).toBeGreaterThan(0.5);
+    // The point's name at its first place round it: to its top right.
+    expect(by('P1').align).toBe('middleCenter');
+    expect(by('P1').p.x).toBeGreaterThan(45);
+    expect(by('P1').p.y).toBeGreaterThan(5);
     // The street runs west: its name turns half round to read.
-    expect(made[4]).toMatchObject({ p: pt(25, 20), rotation: 0, align: 'middleCenter' });
+    expect(by('Cumhuriyet Cd.')).toMatchObject({ rotation: 0, align: 'middleCenter' });
+    expect(by('Cumhuriyet Cd.').p.x).toBeCloseTo(25, 6);
+    expect(by('Cumhuriyet Cd.').p.y).toBeCloseTo(20, 6);
     expect(made.some((t) => t.mask)).toBe(false);
     expect([...h.ctx.selection.ids.value]).toEqual(made.map((t) => t.id));
     expect(h.said().slice(-2)).toEqual(['“Yazılar” katmanı çizimde yoktu; etiketlerin yazıları için açıldı.', `${LABEL}: 5 etiket yazıya çevrildi, 1 küçük etiket atlandı.`]);
@@ -91,13 +101,13 @@ describe('Etiketleri yazıya çevir', () => {
     h.ctx.selection.set(ids);
     const tool = h.use(new LabelsToTextTool(h.ctx));
     tool.activate();
-    expect(h.said()).toEqual([`${LABEL}: seçimde 2 etiket; 1:1000 ölçekte 2 yazı olacak. Enter ile yazın.`]);
+    expect(h.said()).toEqual([`${LABEL}: seçimde 2 nesne; 1:1000 ölçekte 2 yazı olacak. Enter ile yazın.`]);
     expect(tool.input('Z')).toBe(true);
     expect(tool.input('K')).toBe(true);
     expect(tool.prompt.value).toBe(`${LABEL}: 1:1000 ölçekte 2 yazı olacak ${OPTIONS(1000, 'kapalı', 'açık', 'Çizim')}`);
     tool.confirm();
     const made = texts(h);
-    expect(made.map((t) => [t.text, t.layerId, t.mask])).toEqual([
+    expect(made.map((t) => [t.text, t.layerId, t.mask]).sort()).toEqual([
       ['102', 'cizim', true],
       ['P1', 'cizim', true],
     ]);
@@ -110,32 +120,34 @@ describe('Etiketleri yazıya çevir', () => {
     const tool = h.use(new LabelsToTextTool(h.ctx));
     tool.activate();
     expect(tool.input('B')).toBe(true);
-    expect(tool.prompt.value).toBe(`${LABEL}: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen, 1 küçük etiket atlanacak ${OPTIONS(1000, 'kapalı', 'kapalı', 'Yazılar', 'açık')}`);
+    expect(tool.prompt.value).toBe(`${LABEL}: 1:1000 ölçekte 5 yazı olacak, 1 küçük etiket atlanacak ${OPTIONS(1000, 'kapalı', 'kapalı', 'Yazılar', 'açık')}`);
     tool.confirm();
     const made = texts(h);
-    expect(made.map((t) => t.text)).toEqual(['101', '102', 'P1', 'Cumhuriyet Cd.']);
+    expect(made.map((t) => t.text).sort()).toEqual(['101', '102', '104', 'Cumhuriyet Cd.', 'P1']);
     // Each knows its object (the label it writes) and the scale.
-    expect(made.map((t) => [h.doc.byUid(t.labelOf!)?.label, t.labelScale])).toEqual([
+    expect(made.map((t) => [h.doc.byUid(t.labelOf!)?.label, t.labelScale]).sort()).toEqual([
       ['101', 1000],
       ['102', 1000],
-      ['P1', 1000],
+      ['104', 1000],
       ['Cumhuriyet Cd.', 1000],
+      ['P1', 1000],
     ]);
-    // The parcel moves: its text follows in the same step, and one undo takes both back.
-    const parcel = h.doc.byUid(made[1].labelOf!)!;
+    // The parcel moves: its text follows in the same step (the engine's place for it alone), and one undo takes both back.
+    const text = made.find((t) => t.text === '102')!;
+    const parcel = h.doc.byUid(text.labelOf!)!;
     if (parcel.kind !== 'polygon') throw new Error('a parcel');
     h.doc.update(parcel.id, { pts: parcel.pts.map((p) => ({ x: p.x, y: p.y - 10 })) });
-    const moved = h.doc.get(made[1].id) as TextEntity;
-    expect(moved.p.x).toBeCloseTo(made[1].p.x, 9);
-    expect(moved.p.y).toBeCloseTo(made[1].p.y - 10, 9);
-    expect(moved.labelOf).toBe(made[1].labelOf);
+    const moved = h.doc.get(text.id) as TextEntity;
+    expect(moved.p.x).toBeCloseTo(30, 6);
+    expect(moved.p.y).toBeCloseTo(7.5 - 10, 6);
+    expect(moved.labelOf).toBe(text.labelOf);
     expect(h.doc.undo()).toBe('Değiştir');
-    expect((h.doc.get(made[1].id) as TextEntity).p).toEqual(made[1].p);
-    // Run again on the whole drawing: the linked objects' labels are texts now; 104's and the small 103's are left.
+    expect((h.doc.get(text.id) as TextEntity).p).toEqual(text.p);
+    // Run again on the whole drawing: the linked objects' labels are texts now; the small 103's is left.
     h.ctx.selection.set([]);
     const again = h.use(new LabelsToTextTool(h.ctx));
     again.activate();
-    expect(h.said().at(-1)).toBe(`${LABEL}: bütün çizimde 2 etiket; 1:1000 ölçekte 1 yazı olacak, 1 küçük etiket atlanacak. Enter ile yazın.`);
+    expect(h.said().at(-1)).toBe(`${LABEL}: bütün çizimde 1 nesne; 1:1000 ölçekte yazı olacak etiket yok, 1 küçük etiket atlanacak; başka bir ölçek yazın.`);
   });
 
   it('asks for the scale with Ö, says a wrong one, and leaves at once when there is no label', () => {
@@ -152,6 +164,9 @@ describe('Etiketleri yazıya çevir', () => {
     expect(tool.input('abc')).toBe(false);
 
     const empty = toolHarness();
+    const picker = new PickIndex(empty.doc);
+    pickers.push(picker);
+    (empty.ctx.view as unknown as { geometry: PickIndex }).geometry = picker;
     empty.add({ kind: 'line', a: pt(0, 0), b: pt(10, 0) });
     const none = empty.use(new LabelsToTextTool(empty.ctx));
     none.activate();

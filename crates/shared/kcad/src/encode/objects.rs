@@ -31,6 +31,8 @@ pub(super) fn width_factor_words(w: f64) -> String {
 /// One field of an object, before the fields are sorted by key.
 pub(super) enum Val<'d> {
     Text(&'d str),
+    /// An object's labels pinned by hand (docs/adr/0212 §2).
+    Pins(&'d [kentos_contracts::LabelPin]),
     Name(&'static str),
     Float(f64),
     Bool(bool),
@@ -146,6 +148,17 @@ impl<'d> Encoder<'d> {
         }
         if let Some(s) = &base.symbol {
             f.push(("symbol", Val::Text(s)));
+        }
+        // Labels pinned by hand (docs/adr/0212 §2): the drawing's objects only.
+        if !base.label_pins.is_empty() {
+            if uid.is_none() {
+                self.path.push(Seg::Name(kind));
+                return Err(self.fail(
+                    Code::BadValue,
+                    "blok tanımının nesnesinde etiket iğnesi olmaz",
+                ));
+            }
+            f.push(("labelPins", Val::Pins(&base.label_pins)));
         }
         if let Some(w) = base.line_weight {
             if !(0.0..=MAX_LINE_WEIGHT).contains(&w) {
@@ -925,6 +938,7 @@ impl<'d> Encoder<'d> {
     pub(super) fn val(&mut self, v: Val<'d>) -> Result<(), KcadError> {
         match v {
             Val::Text(t) => self.text(t),
+            Val::Pins(pins) => self.label_pins(pins),
             Val::Name(t) => {
                 self.w.text(t);
                 Ok(())

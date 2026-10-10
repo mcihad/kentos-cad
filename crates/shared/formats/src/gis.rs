@@ -254,6 +254,7 @@ impl Collect {
             label: label.map(str::to_string),
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         };
         self.entities.push(match shape {
             Shape::Point { p, z } => Entity::Point(PointEntity {

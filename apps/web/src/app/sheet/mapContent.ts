@@ -105,12 +105,13 @@ export function vectorMap(ctx: AppContext, prim: MapPrim): VectorMap | null {
   }
   // The texts, at the paper's CSS px per ground metre (96 dpi over the scale), thinned over the map's box as its picture is.
   const pxPerM = 96_000 / (25.4 * v.scale);
-  const spots = labelSpots(ctx, prim, box, pxPerM);
+  const shown = labelSpots(ctx, prim, box, pxPerM);
   const written = mapTexts({
     doc,
     palette,
     font: doc.settings.drawingFont.value,
-    spots,
+    spots: shown.records,
+    texts: shown.texts,
     pxPerM,
     box: { minX: box.minX, maxY: box.maxY, width: (box.maxX - box.minX) * pxPerM, height: (box.maxY - box.minY) * pxPerM },
     dimensionText: (m, look) => ctx.view.dimensionText(m, look),

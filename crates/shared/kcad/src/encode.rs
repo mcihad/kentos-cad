@@ -16,6 +16,7 @@
 mod blocks;
 mod crs;
 mod filter;
+mod labels;
 mod names;
 mod networks;
 mod objects;
@@ -25,8 +26,8 @@ mod temporal;
 
 use kentos_contracts::{
     AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
-    DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, LabelStyle, LayerField,
-    LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, MigrationSource,
+    DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, LayerField, LayerNode,
+    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, MigrationSource,
     ProjectSettings, SurveySettings, TopologySettings, Vec2, layer_fields_problem,
     layer_states_problem,
 };
@@ -38,7 +39,7 @@ use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS,
     SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
-    SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
+    SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
@@ -47,8 +48,7 @@ use crate::{
     SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
-    angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
-    point_symbol, workspace,
+    angle_unit, area_unit, drawing_font, drawing_unit, line_type, point_symbol, workspace,
 };
 
 /// The payload of a drawing; `watch` hears the objects as they are written
@@ -244,6 +244,11 @@ impl<'d> Encoder<'d> {
         }
         // Schema 35's tree rule (docs/adr/0211 §2), as a reader checks it.
         if let Some(problem) = kentos_contracts::filters_problem(&doc.layers) {
+            self.path.push(Seg::Name("layers"));
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        // Schema 36's tree rule (docs/adr/0212 §2), as a reader checks it.
+        if let Some(problem) = kentos_contracts::labels_problem(&doc.layers) {
             self.path.push(Seg::Name("layers"));
             return Err(self.fail(Code::BadValue, &problem));
         }
@@ -870,11 +875,12 @@ impl<'d> Encoder<'d> {
         let n = 3
             + usize::from(s.fill.is_some())
             + usize::from(s.label.is_some())
+            + usize::from(s.labels.is_some())
             + usize::from(s.point.is_some())
             + usize::from(s.renderer.is_some())
             + usize::from(s.pick_interior.is_some());
         self.open(n, true)?;
-        // fill (4), color label point (5), lineType renderer (8), lineWeight (10), pickInterior (12).
+        // fill (4), color label point (5), labels (6), lineType renderer (8), lineWeight (10), pickInterior (12).
         if let Some(fill) = &s.fill {
             self.key("fill");
             self.at(Seg::Name("fill"), |e| e.text(fill))?;
@@ -897,6 +903,10 @@ impl<'d> Encoder<'d> {
                 Ok(())
             })?;
         }
+        if let Some(labels) = &s.labels {
+            self.key("labels");
+            self.at(Seg::Name("labels"), |e| e.layer_labels(labels))?;
+        }
         self.key("lineType");
         self.w.text(line_type(s.line_type));
         if let Some(r) = &s.renderer {
@@ -908,61 +918,6 @@ impl<'d> Encoder<'d> {
         if let Some(pick) = s.pick_interior {
             self.key("pickInterior");
             self.w.bool(pick);
-        }
-        self.close();
-        Ok(())
-    }
-
-    fn label_style(&mut self, l: &'d LabelStyle) -> Result<(), KcadError> {
-        let n = 2 + [
-            l.ink.is_some(),
-            l.grow.is_some(),
-            l.weight.is_some(),
-            l.max_size.is_some(),
-            l.max_scale.is_some(),
-            l.min_scale.is_some(),
-            l.template.is_some(),
-            l.min_feature_px.is_some(),
-        ]
-        .iter()
-        .filter(|&&b| b)
-        .count();
-        self.open(n, true)?;
-        // ink (3), grow size (4), weight (6), maxSize (7), maxScale minScale template (8), placement (9), minFeaturePx (12).
-        if let Some(ink) = l.ink {
-            self.key("ink");
-            self.w.text(label_ink(ink));
-        }
-        let floats: [(&'static str, Option<f64>); 2] = [("grow", l.grow), ("size", Some(l.size))];
-        for (k, v) in floats {
-            if let Some(x) = v {
-                self.key(k);
-                self.at(Seg::Name(k), |e| e.float(x))?;
-            }
-        }
-        if let Some(w) = l.weight {
-            self.key("weight");
-            self.w.uint(u64::from(w));
-        }
-        for (k, v) in [
-            ("maxSize", l.max_size),
-            ("maxScale", l.max_scale),
-            ("minScale", l.min_scale),
-        ] {
-            if let Some(x) = v {
-                self.key(k);
-                self.at(Seg::Name(k), |e| e.float(x))?;
-            }
-        }
-        if let Some(t) = &l.template {
-            self.key("template");
-            self.at(Seg::Name("template"), |e| e.text(t))?;
-        }
-        self.key("placement");
-        self.w.text(label_placement(l.placement));
-        if let Some(x) = l.min_feature_px {
-            self.key("minFeaturePx");
-            self.at(Seg::Name("minFeaturePx"), |e| e.float(x))?;
         }
         self.close();
         Ok(())
@@ -1075,6 +1030,33 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.filter.is_some() || filters(&n.children))
+    }
+    fn labelled(nodes: &[LayerNode]) -> bool {
+        nodes.iter().any(|n| {
+            n.style.labels.is_some()
+                || n.style
+                    .label
+                    .as_ref()
+                    .is_some_and(labels::has_engine_fields)
+                || labelled(&n.children)
+        })
+    }
+    // Schema 36 (docs/adr/0212): the label engine's fields, a layer's labelling, an object's pins (a layer
+    // state's style counts too).
+    if labelled(&doc.layers)
+        || doc.entities.iter().any(|e| !e.base().label_pins.is_empty())
+        || doc
+            .settings
+            .layer_states
+            .iter()
+            .flat_map(|s| &s.nodes)
+            .any(|n| {
+                n.style.as_ref().is_some_and(|st| {
+                    st.labels.is_some() || st.label.as_ref().is_some_and(labels::has_engine_fields)
+                })
+            })
+    {
+        return SCHEMA_WITH_LABELS;
     }
     // Schema 35 (docs/adr/0211): a layer's filter.
     if filters(&doc.layers) {

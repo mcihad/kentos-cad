@@ -47,6 +47,7 @@ fn dimension() -> DimensionEntity {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         a: v(500000.0, 4400000.0),
         b: v(500010.0, 4400000.0),

@@ -647,12 +647,13 @@ pub async fn commit(
             (op, Some(s)) => {
                 let version: i64 = sqlx::query_scalar(
                     "insert into kentos.feature (tenant_id, project_id, id, layer_id, kind, source_kind, srid, geom, cad_definition, properties,
-                                                 label, color, symbol, line_weight, projection_version, created_by, updated_by, version)
-                     values ($1, $2, $3, $4, $5, $6, $7, public.st_geomfromewkb($8), $9, $10, $11, $12, $13, $17, $14, $15, $15, $16)
+                                                 label, color, symbol, line_weight, label_pins, projection_version, created_by, updated_by, version)
+                     values ($1, $2, $3, $4, $5, $6, $7, public.st_geomfromewkb($8), $9, $10, $11, $12, $13, $17, $18, $14, $15, $15, $16)
                      on conflict (tenant_id, project_id, id) do update set
                        layer_id = excluded.layer_id, kind = excluded.kind, source_kind = excluded.source_kind, srid = excluded.srid,
                        geom = excluded.geom, cad_definition = excluded.cad_definition, properties = excluded.properties,
                        label = excluded.label, color = excluded.color, symbol = excluded.symbol, line_weight = excluded.line_weight,
+                       label_pins = excluded.label_pins,
                        projection_version = excluded.projection_version, updated_by = excluded.updated_by,
                        updated_at = now(), version = kentos.feature.version + 1
                      returning version",
@@ -674,6 +675,7 @@ pub async fn commit(
                 .bind(actor)
                 .bind(created_version)
                 .bind(s.line_weight)
+                .bind(&s.label_pins)
                 .fetch_one(&mut *tx)
                 .await?;
                 versions.insert(p.id.to_string(), version.to_string());

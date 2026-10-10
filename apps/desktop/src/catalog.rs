@@ -624,6 +624,14 @@ pub const PORTED: &[&str] = &[
     "layer.filter",
     "layer.filterFromSelection",
     "layer.filterClear",
+    // docs/adr/0212: Etiket motoru (labelling/, kentos_interaction::label_tools).
+    "layer.labels",
+    "tool.labelMove",
+    "tool.labelRotate",
+    "tool.labelPin",
+    "tool.labelHide",
+    "view.pinnedLabels",
+    "view.unplacedLabels",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

@@ -5,15 +5,14 @@ import { LayerStore, type LabelStyle } from '../../model/layers';
 import type { LabelText } from '../../model/ops/labelText';
 import type { CanvasPalette } from '../../render/color';
 import { PickIndex } from '../../viewport/picking';
-import { DEFAULT_LABELS } from '../../viewport/storeRecords';
 import { mapTexts, PX_MM, type VecText } from './mapLabels';
 
 /**
- * Etiketleri yazıya çevir writes a label where the sheet writes it (docs/adr/0175 §1): for the same drawing at the
- * same scale, each layer label the sheet's map frame writes (app/sheet/mapLabels.ts) and the text the core makes of it
- * (`ops::label_text` through the geometry store) have the same text, place, height and rotation, and alignments that
- * match (the sheet's centre or left on the middle; the text's middle centre or middle left). The labels stand far
- * apart, so that neither thins any of them.
+ * Etiketleri yazıya çevir writes a label where the sheet writes it (docs/adr/0175 §1, 0212 §4): for the same drawing
+ * at the same scale, each label the label engine places for the sheet's map frame (app/sheet/mapLabels.ts) and the text
+ * the core makes of it (`ops::label_text` through the geometry store) have the same text, place, height and rotation,
+ * and alignments that match (the sheet's centre on the middle; the text's middle centre). A curved label is a text
+ * along its curve in the core and its letters on the sheet; the labels here are straight.
  */
 const disposables: PickIndex[] = [];
 afterEach(() => disposables.splice(0).forEach((p) => p.dispose()));
@@ -69,11 +68,13 @@ describe('Etiketleri yazıya çevir and the sheet', () => {
     it(`writes each label where the sheet writes it, 1:${scale}`, () => {
       const { doc, picker, box } = drawing();
       const pxPerM = 96_000 / (25.4 * scale);
+      const shown = picker.labels(box, pxPerM, null);
       const sheet = mapTexts({
         doc,
         palette,
         font: 'barlow',
-        spots: picker.labels(box, pxPerM, null),
+        spots: shown.records,
+        texts: shown.texts,
         pxPerM,
         box: { minX: box.minX, maxY: box.maxY, width: (box.maxX - box.minX) * pxPerM, height: (box.maxY - box.minY) * pxPerM },
         dimensionText: () => '',
@@ -81,11 +82,10 @@ describe('Etiketleri yazıya çevir and the sheet', () => {
         measure: (_font, text) => text.length * 6,
       }).texts;
       const all: Entity[] = [...doc.all()];
-      const wanted = all.map((e) => ({ id: e.id, label: e.label ?? '', style: (doc.layers.get(e.layerId)?.style.label ?? DEFAULT_LABELS[e.kind]) as LabelStyle }));
-      const core = picker.labelTexts(wanted, scale, true);
+      const core = picker.labelTexts(all.map((e) => e.id), scale, false);
       // At 1:2500 (1.5 px/m) the brook's default style (from 1.6 px/m) writes it on neither.
-      const shown = scale > 2000 ? 5 : 6;
-      expect([sheet.length, core.texts.length, core.outOfScale, core.small, core.overlapping]).toEqual([shown, shown, 6 - shown, 0, 0]);
+      const written = scale > 2000 ? 5 : 6;
+      expect([sheet.length, core.texts.length, core.outOfScale, core.small, core.overlapping]).toEqual([written, written, 6 - written, 0, 0]);
       expect(core.texts.map((t) => t.text).sort()).toEqual(sheet.map((t) => t.text).sort());
       const align = (t: VecText) => (t.align === 'center' ? 'middleCenter' : 'middleLeft');
       for (const t of core.texts as LabelText[]) {

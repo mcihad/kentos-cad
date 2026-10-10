@@ -86,6 +86,7 @@ fn point(input: PointCreate, id: u32) -> Entity {
             label: input.label,
             symbol: input.symbol,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         p: input.p,
         z: input.z,

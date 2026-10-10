@@ -333,6 +333,7 @@ pub(crate) fn base(
         label: None,
         symbol: None,
         line_weight,
+        label_pins: Vec::new(),
     }
 }
 

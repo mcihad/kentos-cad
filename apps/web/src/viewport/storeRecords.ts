@@ -1,5 +1,4 @@
 import type { Vec2 } from '../model/geometry';
-import type { LabelStyle } from '../model/layers';
 
 /**
  * What the geometry store hands the overlay (docs/adr/0008, S1): label
@@ -11,13 +10,28 @@ import type { LabelStyle } from '../model/layers';
 /** Labels a layer without a label style gets, by kind (the model's, docs/adr/0175 §4). */
 export { DEFAULT_LABELS } from '../model/labelDefaults';
 
-/** What decides whether and where a label is drawn, as the store reads it. */
-export function labelRule(st: LabelStyle): { placement: LabelStyle['placement']; minScale?: number; maxScale?: number; minFeaturePx?: number } {
-  return { placement: st.placement, minScale: st.minScale, maxScale: st.maxScale, minFeaturePx: st.minFeaturePx };
-}
 
 /** A label record's second number. */
-export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, along: 5, pieceText: 6, pieceDimension: 7, leader: 8, pieceLeader: 9, line: 10, paragraphMask: 11, pieceLine: 12, cell: 13 } as const;
+export const LABEL = {
+  dimension: 0,
+  text: 1,
+  pieceText: 6,
+  pieceDimension: 7,
+  leader: 8,
+  pieceLeader: 9,
+  line: 10,
+  paragraphMask: 11,
+  pieceLine: 12,
+  cell: 13,
+  // The label engine's (docs/adr/0212 §3.8): a label's frame (x, y its middle, a its turn, b and c its width and
+  // height in px, d its class, e its state), then its lines (x, y the middle, a the turn, b the size in px, c the
+  // text's index, d its width), a curved label's letters (c the text's index, d the letter's, e its advance) and its
+  // callout (x, y by the label to a, b at the object).
+  placed: 20,
+  placedLine: 21,
+  placedLetter: 22,
+  placedCallout: 23,
+} as const;
 /*
  * A table's cell (docs/adr/0184 §2; `cell`): x, y where its words' baseline starts, a the table's turn, b its row, c its
  * column, d 1 when bold (a heading row's, or the face's); its words and face are the table's.

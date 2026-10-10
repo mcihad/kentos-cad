@@ -18,9 +18,11 @@ kentos-domain = { path = "../domain" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 # Katman süzgeci (docs/adr/0211 §3): the expression language, evaluated as İfadeyle seç evaluates a condition.
 kentos-expression = { path = "../../shared/expression" }
+# Etiket motoru (docs/adr/0212 §3.1): the layers' labelling goes to the geometry core as the contract's JSON, as
+# the web sends it (one reader in the core for both).
+serde_json = { workspace = true }
 
 [dev-dependencies]
-serde_json = { workspace = true }
 # The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature, as
 # the server's catalog test does.
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }

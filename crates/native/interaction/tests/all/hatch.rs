@@ -282,6 +282,7 @@ fn too_dense_a_pattern_is_refused() {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         pts: vec![
             far(-50_000.0, -50_000.0),

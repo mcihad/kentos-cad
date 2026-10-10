@@ -1,0 +1,349 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "label-tools",
+  "title": "Etiket araçları (ADR 0212 §4), label-engine.kcad üzerinde, 4 numaralı parselin elle sabitlenmiş numarasıyla: Etiketi taşı yeni yerine sabitler, açısı kalır; Etiketi döndür yazılan 35°'yi verir, Ctrl+Z 20°'ye döndürür; Etiketi sabitle sabit etiketi değiştirmez, Çöz (Ç) iğneyi kaldırır, Ctrl+Z geri getirir; Etiketi gizle iğneyi yerinde gizler, Göster (G) açıkken soluk etikete tıklamak yeniden gösterir; Esc çıkar; Etiketler penceresinde Parsel Kurallı'dan Tek etiket'e geçer, Kaydet tek adımda yazar, Ctrl+Z geri alır",
+  "source": "docs/adr/0212",
+  "covers": [
+    "GIS-16"
+  ],
+  "document": "label-engine.kcad",
+  "view": {
+    "center": [
+      487030,
+      4420062.5
+    ],
+    "metresPerPixel": 0.125
+  },
+  "clickTolerance": 0.3,
+  "steps": [
+    {
+      "run": "tool.labelMove",
+      "note": "Etiketi taşı; 4 numaralı parselin numarası elle sabitlenmiş: çapasından (−8, 6) m ötede, 20°",
+      "expect": {
+        "tool": "labelMove",
+        "prompt": "Etiketi taşı: taşınacak etikete tıklayın",
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                -8,
+                6
+              ],
+              "rotation": 20
+            }
+          ],
+          "36": [
+            {
+              "hidden": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "click": [
+        -8,
+        6
+      ],
+      "note": "etiket alınır",
+      "expect": {
+        "points": 1,
+        "prompt": "Etiketi taşı: etiketin yeni yerine tıklayın ya da koordinat yazın"
+      }
+    },
+    {
+      "click": [
+        4,
+        -3
+      ],
+      "note": "yeni yerine taşınır ve sabitlenir; açısı kalır; araç sürer",
+      "expect": {
+        "tool": "labelMove",
+        "points": 0,
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                4,
+                -3
+              ],
+              "rotation": 20
+            }
+          ]
+        },
+        "canUndo": true,
+        "logged": [
+          "Etiket taşındı ve sabitlendi."
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "run": "tool.labelRotate",
+      "expect": {
+        "tool": "labelRotate",
+        "prompt": "Etiketi döndür: döndürülecek etikete tıklayın"
+      }
+    },
+    {
+      "click": [
+        4,
+        -3
+      ],
+      "note": "etiket alınır; açı imleçle ya da yazarak",
+      "expect": {
+        "points": 1
+      }
+    },
+    {
+      "text": "35"
+    },
+    {
+      "key": "Enter",
+      "note": "yazılan açı tam",
+      "expect": {
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                4,
+                -3
+              ],
+              "rotation": 35
+            }
+          ]
+        },
+        "logged": [
+          "Etiket döndürüldü ve sabitlendi."
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "etiket alınmamışken Ctrl+Z çizimi geri alır: 20° döner",
+      "expect": {
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                4,
+                -3
+              ],
+              "rotation": 20
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "run": "tool.labelPin",
+      "expect": {
+        "tool": "labelPin",
+        "options": [
+          "Ç"
+        ],
+        "prompt": "Etiketi sabitle: sabitlenecek etikete tıklayın ya da pencereyle seçin [Çöz (Ç)]"
+      }
+    },
+    {
+      "click": [
+        4,
+        -3
+      ],
+      "note": "zaten sabit: bir şey değişmez",
+      "expect": {
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                4,
+                -3
+              ],
+              "rotation": 20
+            }
+          ]
+        },
+        "logged": [
+          "Seçilen etiketler zaten sabit."
+        ]
+      }
+    },
+    {
+      "key": "Ç",
+      "expect": {
+        "prompt": "Etiketi sabitle: serbest bırakılacak etikete tıklayın ya da pencereyle seçin [Çöz (Ç): açık]"
+      }
+    },
+    {
+      "click": [
+        4,
+        -3
+      ],
+      "note": "iğne kalkar: etiket motora döner",
+      "expect": {
+        "labelPins": {
+          "7": []
+        },
+        "logged": [
+          "Etiket serbest bırakıldı."
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                4,
+                -3
+              ],
+              "rotation": 20
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "run": "tool.labelHide",
+      "expect": {
+        "tool": "labelHide",
+        "options": [
+          "G"
+        ],
+        "prompt": "Etiketi gizle: gizlenecek etikete tıklayın [Göster (G)]"
+      }
+    },
+    {
+      "click": [
+        4,
+        -3
+      ],
+      "note": "gizlenir; yeri kalır",
+      "expect": {
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                4,
+                -3
+              ],
+              "rotation": 20,
+              "hidden": true
+            }
+          ]
+        },
+        "logged": [
+          "Etiket gizlendi."
+        ]
+      }
+    },
+    {
+      "key": "G",
+      "note": "gizliler soluk çizilir",
+      "expect": {
+        "prompt": "Etiketi gizle: yeniden gösterilecek gizli etikete tıklayın [Göster (G): açık]"
+      }
+    },
+    {
+      "click": [
+        4,
+        -3
+      ],
+      "note": "yeniden gösterilir; yeri ve açısı kalır",
+      "expect": {
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                4,
+                -3
+              ],
+              "rotation": 20
+            }
+          ]
+        },
+        "logged": [
+          "Etiket yeniden gösteriliyor."
+        ]
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select",
+        "canUndo": true
+      }
+    },
+    {
+      "run": "layer.labels",
+      "note": "etkin katman Parsel: Kurallı, iki sınıf",
+      "expect": {
+        "dialog": "Etiketler"
+      }
+    },
+    {
+      "dialog": "Etiketler",
+      "press": "Tek etiket",
+      "expect": {
+        "dialog": "Etiketler"
+      }
+    },
+    {
+      "dialog": "Etiketler",
+      "press": "Kaydet",
+      "note": "cad.layers.labels, adım “Etiketler”",
+      "expect": {
+        "dialog": null,
+        "canUndo": true,
+        "logged": [
+          "“Parsel” katmanının etiketlemesi yazıldı."
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "labelPins": {
+          "7": [
+            {
+              "class": "No",
+              "at": [
+                4,
+                -3
+              ],
+              "rotation": 20
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

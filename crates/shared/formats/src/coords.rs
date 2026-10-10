@@ -471,6 +471,7 @@ fn point_entity(row: Row) -> Entity {
             label: (!row.name.is_empty()).then(|| row.name.clone()),
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         p: Vec2 { x: row.y, y: row.x },
         z: row.z.map(|(v, _)| v),

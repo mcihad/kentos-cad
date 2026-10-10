@@ -9,6 +9,7 @@
 mod blocks;
 mod crs;
 mod filter;
+mod labels;
 mod networks;
 mod objects;
 mod services;
@@ -18,11 +19,11 @@ mod temporal;
 use kentos_contracts::{
     AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
     DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit,
-    FieldChoice, LabelInk, LabelPlacement, LabelStyle, LayerField, LayerFieldKind, LayerNode,
-    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LineType, MAX_ANNOTATION_MM,
-    MigrationSource, PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles,
-    SurveySettings, TopologyException, TopologyRule, TopologyRuleKind, TopologySettings, Vec2,
-    Workspace, annotation_mm_holds, layer_fields_problem, layer_states_problem,
+    FieldChoice, LayerField, LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState,
+    LayerStateNode, LayerStyle, LineType, MAX_ANNOTATION_MM, MigrationSource, PointStyle,
+    PointSymbol, ProjectId, ProjectSettings, ProjectStyles, SurveySettings, TopologyException,
+    TopologyRule, TopologyRuleKind, TopologySettings, Vec2, Workspace, annotation_mm_holds,
+    layer_fields_problem, layer_states_problem,
 };
 
 use crate::SCHEMAS;
@@ -291,6 +292,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     service_links(r, &layers, &settings, &entities)?;
     scenario_tree(r, &layers)?;
     filter_tree(r, &layers)?;
+    label_tree(r, &layers)?;
     Ok(DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -326,6 +328,18 @@ fn scenario_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadErr
 /// a filter on a layer that holds objects.
 fn filter_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
     let Some(problem) = kentos_contracts::filters_problem(layers) else {
+        return Ok(());
+    };
+    r.push(Seg::Name("layers"));
+    let e = r.fail(Code::BadValue, &problem);
+    r.pop();
+    Err(e)
+}
+
+/// Schema 36's tree rule (docs/adr/0212 §2), as `labels_problem` says it:
+/// no group labels.
+fn label_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
+    let Some(problem) = kentos_contracts::labels_problem(layers) else {
         return Ok(());
     };
     r.push(Seg::Name("layers"));
@@ -442,7 +456,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
             "survey" if has.survey => survey = Some(survey_settings(r, has)?),
-            "layerStates" if has.layer_states => layer_states = layer_states_list(r)?,
+            "layerStates" if has.layer_states => layer_states = layer_states_list(r, has.labels)?,
             "topology" if has.topology => topology = Some(topology_settings(r)?),
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
@@ -639,7 +653,7 @@ fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> 
 /// a node its id, visibility and, when kept, its lock and a layer's style;
 /// checked whole (`layer_states_problem`): no empty or repeated id or name,
 /// no empty or repeated node in a state.
-fn layer_states_list(r: &mut Reader<'_>) -> Result<Vec<LayerState>, KcadError> {
+fn layer_states_list(r: &mut Reader<'_>, engine: bool) -> Result<Vec<LayerState>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
         let (mut id, mut name, mut nodes) = (None, None, None);
@@ -647,7 +661,7 @@ fn layer_states_list(r: &mut Reader<'_>) -> Result<Vec<LayerState>, KcadError> {
             match key {
                 "id" => id = Some(text(r)?),
                 "name" => name = Some(text(r)?),
-                "nodes" => nodes = Some(list(r, |r, _| layer_state_node(r))?),
+                "nodes" => nodes = Some(list(r, |r, _| layer_state_node(r, engine))?),
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -664,12 +678,12 @@ fn layer_states_list(r: &mut Reader<'_>) -> Result<Vec<LayerState>, KcadError> {
     }
 }
 
-fn layer_state_node(r: &mut Reader<'_>) -> Result<LayerStateNode, KcadError> {
+fn layer_state_node(r: &mut Reader<'_>, engine: bool) -> Result<LayerStateNode, KcadError> {
     let (mut node, mut visible, mut locked, mut style) = (None, None, None, None);
     map(r, |r, key| {
         match key {
             "node" => node = Some(text(r)?),
-            "style" => style = Some(layer_style(r)?),
+            "style" => style = Some(layer_style(r, engine)?),
             "locked" => locked = Some(r.bool()?),
             "visible" => visible = Some(r.bool()?),
             _ => return Err(unknown(r)),
@@ -810,7 +824,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                     ],
                 )?)
             }
-            "style" => style = Some(layer_style(r)?),
+            "style" => style = Some(layer_style(r, has.labels)?),
             "locked" => locked = Some(r.bool()?),
             "visible" => visible = Some(r.bool()?),
             "children" => children = Some(list(r, |r, _| layer(r, has))?),
@@ -1015,15 +1029,17 @@ pub(super) fn line_type_named(r: &mut Reader<'_>) -> Result<LineType, KcadError>
     )
 }
 
-fn layer_style(r: &mut Reader<'_>) -> Result<LayerStyle, KcadError> {
+fn layer_style(r: &mut Reader<'_>, engine: bool) -> Result<LayerStyle, KcadError> {
     let (mut fill, mut color, mut label, mut point_) = (None, None, None, None);
+    let mut labels = None;
     let (mut line_type, mut renderer, mut line_weight, mut pick_interior) =
         (None, None, None, None);
     map(r, |r, key| {
         match key {
             "fill" => fill = Some(text(r)?),
             "color" => color = Some(text(r)?),
-            "label" => label = Some(label_style(r)?),
+            "label" => label = Some(labels::label_style(r, engine)?),
+            "labels" if engine => labels = Some(labels::layer_labels(r)?),
             "point" => point_ = Some(point_style(r)?),
             "lineType" => line_type = Some(line_type_named(r)?),
             "renderer" => {
@@ -1050,6 +1066,7 @@ fn layer_style(r: &mut Reader<'_>) -> Result<LayerStyle, KcadError> {
         label,
         pick_interior,
         renderer,
+        labels,
     })
 }
 
@@ -1075,58 +1092,5 @@ fn point_style(r: &mut Reader<'_>) -> Result<PointStyle, KcadError> {
     Ok(PointStyle {
         symbol: required(r, symbol, "symbol")?,
         size: required(r, size, "size")?,
-    })
-}
-
-fn label_style(r: &mut Reader<'_>) -> Result<LabelStyle, KcadError> {
-    let (mut ink, mut grow, mut size, mut weight, mut max_size) = (None, None, None, None, None);
-    let (mut max_scale, mut min_scale, mut template, mut placement, mut min_feature_px) =
-        (None, None, None, None, None);
-    map(r, |r, key| {
-        match key {
-            "ink" => {
-                ink = Some(named(
-                    r,
-                    &[
-                        ("fg", LabelInk::Fg),
-                        ("fg-dim", LabelInk::FgDim),
-                        ("label", LabelInk::Label),
-                    ],
-                )?)
-            }
-            "grow" => grow = Some(r.float()?),
-            "size" => size = Some(r.float()?),
-            "weight" => weight = Some(r.uint(u64::from(u16::MAX))? as u16),
-            "maxSize" => max_size = Some(r.float()?),
-            "maxScale" => max_scale = Some(r.float()?),
-            "minScale" => min_scale = Some(r.float()?),
-            "template" => template = Some(text(r)?),
-            "placement" => {
-                placement = Some(named(
-                    r,
-                    &[
-                        ("center", LabelPlacement::Center),
-                        ("corner", LabelPlacement::Corner),
-                        ("beside", LabelPlacement::Beside),
-                        ("along", LabelPlacement::Along),
-                    ],
-                )?)
-            }
-            "minFeaturePx" => min_feature_px = Some(r.float()?),
-            _ => return Err(unknown(r)),
-        }
-        Ok(())
-    })?;
-    Ok(LabelStyle {
-        placement: required(r, placement, "placement")?,
-        size: required(r, size, "size")?,
-        grow,
-        max_size,
-        weight,
-        template,
-        min_feature_px,
-        min_scale,
-        max_scale,
-        ink,
     })
 }

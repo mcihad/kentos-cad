@@ -26,6 +26,7 @@ fn base(layer: &str) -> EntityBase {
         label: None,
         symbol: None,
         line_weight: None,
+        label_pins: Vec::new(),
     }
 }
 
@@ -336,4 +337,83 @@ fn layer_filter_on_a_large_layer() {
         spatial.sync(&doc);
     });
     println!("  bir parselin özniteliği değişince: ortalama {edit:.0} µs, en yavaşı {worst:.0} µs");
+}
+
+/// ADR 0212 §6: the texts of 100 000 parcels' labels worked out when their layer's labelling
+/// changes (Kurallı: the number by an expression, the owner's name by a condition and an
+/// expression), as the store follows the drawing (`Spatial::sync`). Budget 80 ms.
+#[test]
+#[ignore = "a measurement: run by hand in release"]
+fn label_texts_on_a_large_layer() {
+    use kentos_contracts::{LabelClass, LabelPlacement, LabelStyle, LabelsMode, LayerLabels};
+    let mut doc = drawing(316);
+    let slots: Vec<Slot> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == "parsel")
+        .map(|e| Slot(e.base().id))
+        .collect();
+    for (i, slot) in slots.iter().enumerate() {
+        let mut e = doc.get(*slot).expect("a parcel").clone();
+        let attrs = &mut e.base_mut().attrs;
+        attrs.insert("Ada".into(), format!("{}", 100 + i / 300));
+        attrs.insert("Parsel".into(), format!("{}", 1 + i % 300));
+        attrs.insert(
+            "Malik".into(),
+            if i % 3 == 0 {
+                "Ayşe Demir".into()
+            } else {
+                String::new()
+            },
+        );
+        doc.update(*slot, e);
+    }
+    let style = |text: &str| LabelStyle {
+        placement: LabelPlacement::Center,
+        size: 10.0,
+        text: Some(text.into()),
+        ..LabelStyle::default()
+    };
+    let labelled = LayerLabels {
+        mode: LabelsMode::Rules,
+        classes: vec![
+            LabelClass {
+                name: "No".into(),
+                when: None,
+                style: style("Ada || '/' || Parsel"),
+            },
+            LabelClass {
+                name: "Malik".into(),
+                when: Some("Malik <> ''".into()),
+                style: style("upper(Malik)"),
+            },
+        ],
+        obstacle: None,
+    };
+    let base = doc.layers().get("parsel").expect("the layer").style.clone();
+    let mut spatial = Spatial::of(&doc);
+    let mut runs = Vec::new();
+    for _ in 0..5 {
+        let mut plain = base.clone();
+        plain.labels = None;
+        doc.set_layer_style("parsel", plain, "Etiketler");
+        spatial.sync(&doc);
+        let mut ruled = base.clone();
+        ruled.labels = Some(labelled.clone());
+        doc.set_layer_style("parsel", ruled, "Etiketler");
+        let t = Instant::now();
+        spatial.sync(&doc);
+        runs.push(ms(t.elapsed()));
+    }
+    runs.sort_by(f64::total_cmp);
+    println!(
+        "\nEtiket metinleri, {} parsel, iki ifadeli sınıf: en iyi {:.1} ms, p50 {:.1} ms   bütçe 80 ms  {}",
+        slots.len(),
+        runs[0],
+        runs[runs.len() / 2],
+        if runs[runs.len() / 2] <= 80.0 {
+            "✓"
+        } else {
+            "✗"
+        }
+    );
 }

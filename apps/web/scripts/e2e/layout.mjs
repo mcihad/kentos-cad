@@ -213,6 +213,40 @@ const ITEMS = [
   // Katman süzgeci (docs/adr/0211 §4): the window over the parcels, with a condition that does not compile (its error
   // in place), and the layer tree with a filtered layer (its funnel and “geçen / bütün”; the step undone on closing).
   { id: 'layer-filter', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('layer.filter')), ready: '.dialog--layer-filter' },
+  // Etiketler (docs/adr/0212 §4): the parcels' labelling as a single label and in rules, each of the five tabs, a
+  // class's long condition and an expression that does not compile.
+  { id: 'labels', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('layer.labels')), ready: '.dialog--labels' },
+  ...[
+    ['labels-rules-text', 'Metin'],
+    ['labels-rules-place', 'Yerleşim'],
+    ['labels-rules-look', 'Biçim'],
+    ['labels-rules-fit', 'Sığdırma'],
+    ['labels-rules-order', 'Öncelik'],
+  ].map(([id, tab]) => ({
+    id,
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.layers.setActive('parsel')`);
+      await ui.run('layer.labels');
+      await ui.clickText('.dialog--labels .seg button', 'Kurallı');
+      await ui.eval(
+        `(() => { const f = document.querySelector('.dialog--labels input[aria-label="Sınıfın koşulu"]'); f.value = "Nitelik = 'Arsa' ve $alan > 500 ve Malik <> '' ve Ada içinde ('101', '102', '103')"; f.dispatchEvent(new Event('change', { bubbles: true })); })()`,
+      );
+      await ui.clickText('.dialog--labels .lbl-tabs .tab', tab);
+    },
+    ready: '.dialog--labels',
+  })),
+  {
+    id: 'labels-error',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.layers.setActive('parsel')`);
+      await ui.run('layer.labels');
+      await ui.clickText('.dialog--labels .seg button', 'İfade');
+      await ui.eval(
+        `(() => { const f = document.querySelector('.dialog--labels input[aria-label="İfade"]'); f.value = "Ada || '/' ||"; f.dispatchEvent(new Event('change', { bubbles: true })); })()`,
+      );
+    },
+    ready: '.dialog--labels',
+  },
   {
     id: 'layer-filter-error',
     open: async (ui) => {

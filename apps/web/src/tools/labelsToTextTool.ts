@@ -3,24 +3,25 @@ import type { EntityGeometry as NewGeometry } from '../contracts/generated/Entit
 import { Signal } from '../core/signal';
 import type { Entity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
-import type { LabelStyle } from '../model/layers';
-import type { LabelTexts, LabelWanted } from '../model/ops/labelText';
+import type { LabelText, LabelTexts } from '../model/ops/labelText';
 import { CREATE_LABEL, entitiesCreate } from '../product/entitiesCreate';
-import { DEFAULT_LABELS } from '../model/labelDefaults';
 import type { ViewTransform } from '../viewport/Camera';
+import { labelStyleOf } from '../viewport/placedLabels';
 import { drawTag, drawTextGhost } from './preview';
 import { standardLayerName, writeOnStandardLayer } from './standardLayer';
 import type { Tool, ToolPointer } from './Tool';
 
 /**
  * Etiketleri yazıya çevir (docs/adr/0175 §3; Netcad's Etiketleri CAD'e çevir, ArcGIS' Convert Labels To Annotation,
- * QGIS' Extract labels): the layers' labels written as text objects, as a sheet at 1:N writes them. The rule is the
- * shared core's (`ops::label_text`, through the geometry store's `labelTexts`); the desktop's tool is
- * `kentos_interaction::labels_to_text`, and both play `fixtures/interaction/v1/labels-to-text.json`.
+ * QGIS' Extract labels): the layers' labels written as objects where the label engine places them at 1:N, as a sheet
+ * writes them (docs/adr/0212 §4): a one-line label a text, a stacked one a multi-line text, a curved one a text along a
+ * curve, a callout a line. The placing is the shared core's (`ops::label_text`, through the geometry store's
+ * `labelTexts`); the desktop's tool is `kentos_interaction::labels_to_text`, and both play
+ * `fixtures/interaction/v1/labels-to-text.json`.
  *
- * - Scope, taken when it starts: the selection's labels, else every labelled object's on a visible layer; a label's
- *   style is its layer's, else its kind's default, as the drawing shows it. Texts, dimensions and leaders show none,
- *   and an object whose label a text writes already (docs/adr/0175 §4) has its text for a label.
+ * - Scope, taken when it starts: the selection's objects, else every object on a visible layer; their labels are the
+ *   drawing's (each layer's labelling, its classes' texts). Texts, dimensions and leaders show none, and an object
+ *   whose label a text writes already (docs/adr/0175 §4) has its text for a label.
  * - Options, as Topolojik temizlik's: a number typed is the scale (Ö asks for it; each run starts at the project's
  *   drawing scale); Örtüşenler de (R), Zemin (Z), Katman (K: the standard text layer or the active one) and Nesneye
  *   bağlı (B: the texts know their objects and follow them, `labelOf`, `labelScale`) are kept for the session.
@@ -48,8 +49,8 @@ export class LabelsToTextTool implements Tool {
   static active = false;
   static linked = false;
   private readonly ctx: AppContext;
-  /** The labels it converts, taken when it starts, in the drawing's order. */
-  private wanted: LabelWanted[] = [];
+  /** The objects whose labels it converts, taken when it starts, in the drawing's order. */
+  private wanted: number[] = [];
   private whole = true;
   /** The scale's denominator: the project's when the tool starts. */
   private scale = 1000;
@@ -71,7 +72,13 @@ export class LabelsToTextTool implements Tool {
     this.said = '';
     this.scale = this.ctx.doc.settings.plotScale.value;
     if (!this.takeScope()) return void queueMicrotask(() => this.ctx.tools.exit());
-    this.tell(`${this.whole ? 'bütün çizimde' : 'seçimde'} ${this.wanted.length} etiket`);
+    // Objects with no label at all (no text in any class): nothing to convert.
+    const r = this.current();
+    if (!(r.texts.length + r.outOfScale + r.small + r.overlapping)) {
+      this.ctx.log.warn(`${LABEL}: ${this.whole ? 'çizimde' : 'seçimde'} yazıya çevrilecek etiket yok.`);
+      return void queueMicrotask(() => this.ctx.tools.exit());
+    }
+    this.tell(`${this.whole ? 'bütün çizimde' : 'seçimde'} ${this.wanted.length} nesne`);
     this.refresh();
   }
 
@@ -80,11 +87,11 @@ export class LabelsToTextTool implements Tool {
     const { doc, selection } = this.ctx;
     this.whole = selection.size === 0;
     const chosen = this.whole ? [...doc.all()] : [...selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e);
-    this.wanted = chosen.flatMap((e): LabelWanted[] => {
-      // A text writes its label already (docs/adr/0175 §4).
-      if (!e.label || NO_LABEL.has(e.kind) || !doc.layers.isVisible(e.layerId) || doc.hasLinkedText(doc.uidOf(e.id) ?? '')) return [];
-      const style: LabelStyle | undefined = doc.layers.get(e.layerId)?.style.label ?? DEFAULT_LABELS[e.kind];
-      return style ? [{ id: e.id, label: e.label, style }] : [];
+    this.wanted = chosen.flatMap((e): number[] => {
+      // A text writes its label already (docs/adr/0175 §4); a layer labelled with nothing has none.
+      if (NO_LABEL.has(e.kind) || !doc.layers.isVisible(e.layerId) || doc.layers.get(e.layerId)?.style.labels?.mode === 'off') return [];
+      if (doc.hasLinkedText(doc.uidOf(e.id) ?? '')) return [];
+      return [e.id];
     });
     if (!this.wanted.length) this.ctx.log.warn(`${LABEL}: ${this.whole ? 'çizimde' : 'seçimde'} yazıya çevrilecek etiket yok.`);
     return this.wanted.length > 0;
@@ -94,7 +101,7 @@ export class LabelsToTextTool implements Tool {
   private current(): LabelTexts {
     const key = `${this.ctx.doc.revision}|${this.scale}|${+LabelsToTextTool.every}`;
     if (this.plan?.key === key) return this.plan.result;
-    const result = this.ctx.view.geometry.labelTexts(this.wanted, this.scale, !LabelsToTextTool.every);
+    const result = this.ctx.view.geometry.labelTexts(this.wanted, this.scale, LabelsToTextTool.every);
     this.plan = { key, result };
     return result;
   }
@@ -185,13 +192,33 @@ export class LabelsToTextTool implements Tool {
     const mask = LabelsToTextTool.mask;
     // Nesneye bağlı: each text knows its object and the scale (docs/adr/0175 §4).
     const linkOf = (item: number) => {
-      const uid = LabelsToTextTool.linked ? doc.uidOf(this.wanted[item]?.id ?? -1) : undefined;
+      const uid = LabelsToTextTool.linked ? doc.uidOf(this.wanted[item] ?? -1) : undefined;
       return uid ? { labelOf: uid, labelScale: this.scale } : {};
     };
-    const objects = r.texts.map((t) => ({
-      geometry: { kind: 'text', p: t.p, text: t.text, height: t.height, rotation: t.rotation, align: t.align, ...(mask && { mask: true }) } as NewGeometry,
-      ...linkOf(t.item),
-    }));
+    // The label's weight and slant go with its text; its colour stays the layer's.
+    const face = (t: LabelText) => {
+      const e = doc.get(this.wanted[t.item] ?? -1);
+      const st = e && labelStyleOf(doc, e, t.class);
+      return { ...((st?.weight ?? 500) >= 600 && { bold: true }), ...(st?.italic && { italic: true }) };
+    };
+    const objects = [
+      ...r.texts.map((t) => ({
+        geometry: {
+          kind: 'text',
+          p: t.p,
+          text: t.text,
+          height: t.height,
+          rotation: t.rotation,
+          align: t.align,
+          ...(mask && { mask: true }),
+          ...(t.lineSpacing != null && { lineSpacing: t.lineSpacing }),
+          ...(t.path && { path: { pts: t.path } }),
+          ...face(t),
+        } as NewGeometry,
+        ...linkOf(t.item),
+      })),
+      ...r.callouts.map((c) => ({ geometry: { kind: 'line', a: c.from, b: c.to } as NewGeometry })),
+    ];
     const layerId = LabelsToTextTool.active ? doc.layers.active.value : TEXT_LAYER;
     const write = () => entitiesCreate.execute({ doc }, { layerId, objects, operation: 'labels' });
     const result = LabelsToTextTool.active ? write() : writeOnStandardLayer(this.ctx, TEXT_LAYER, 'etiketlerin yazıları', write, CREATE_LABEL.labels);
@@ -211,9 +238,44 @@ export class LabelsToTextTool implements Tool {
     if (!r) return;
     const pal = this.ctx.view.palette;
     const mask = LabelsToTextTool.mask ? pal.paper : null;
-    for (const t of r.texts.slice(0, MAX_SHOWN)) drawTextGhost(g, view, t, { color: pal.accent, font: pal.drawingFont, mask });
+    for (const t of r.texts.slice(0, MAX_SHOWN)) for (const one of ghosts(t)) drawTextGhost(g, view, one, { color: pal.accent, font: pal.drawingFont, mask });
+    g.save();
+    g.strokeStyle = pal.accent;
+    g.globalAlpha = 0.65;
+    for (const c of r.callouts.slice(0, MAX_SHOWN)) {
+      const a = view.worldToScreen(c.from);
+      const b = view.worldToScreen(c.to);
+      g.beginPath();
+      g.moveTo(a.x, a.y);
+      g.lineTo(b.x, b.y);
+      g.stroke();
+    }
+    g.restore();
     if (this.hover) drawTag(g, view.worldToScreen(this.hover), tagLines(r, this.scale), pal.accent, pal.labelHalo);
   }
+}
+
+/**
+ * A text as its preview draws it: a one-line text itself, a multi-line text a line at a time (1.2 heights apart), a
+ * curved one a letter at a time on its curve's middles.
+ */
+function ghosts(t: LabelText): { p: { x: number; y: number }; text: string; height: number; rotation: number; align: string }[] {
+  if (t.path?.length) {
+    const letters = [...t.text];
+    const at = (i: number) => (i < 0 ? t.p : { x: t.p.x + t.path![i].x, y: t.p.y + t.path![i].y });
+    return letters.map((ch, i) => {
+      const a = at(i - 1);
+      const b = at(Math.min(i + 1, t.path!.length - 1));
+      return { p: at(i), text: ch, height: t.height, rotation: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI, align: 'middleCenter' };
+    });
+  }
+  const lines = t.text.split('\n');
+  if (lines.length === 1) return [t];
+  const r = (t.rotation * Math.PI) / 180;
+  return lines.map((line, i) => {
+    const up = ((lines.length - 1) / 2 - i) * 1.2 * t.height;
+    return { p: { x: t.p.x - up * Math.sin(r), y: t.p.y + up * Math.cos(r) }, text: line, height: t.height, rotation: t.rotation, align: t.align };
+  });
 }
 
 /** The letters that turn the options on and off. */

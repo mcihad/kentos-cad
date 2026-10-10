@@ -261,6 +261,9 @@ pub struct Draft {
     /// that may be selected, as [`crate::selectable::bit`]s; `None` while the
     /// filter is off.
     pub select_kinds: Option<u32>,
+    /// Yerleşmeyen etiketleri göster (`graphics.unplacedLabels`, docs/adr/0212
+    /// §4): the label tools take the unplaced labels it draws.
+    pub unplaced_labels: bool,
 }
 
 impl Default for Draft {
@@ -290,6 +293,7 @@ impl Default for Draft {
             line_weight: None,
             geographic: crate::second::Notation::Dms,
             select_kinds: None,
+            unplaced_labels: false,
         }
     }
 }
@@ -1509,5 +1513,10 @@ pub trait Tool {
     /// point it hands to that command once it has finished.
     fn computed(&self) -> Option<Vec2> {
         None
+    }
+    /// Whether the drawing shows the labels hidden by hand while it runs,
+    /// faint (Etiketi gizle's Göster, docs/adr/0212 §4).
+    fn shows_hidden_labels(&self) -> bool {
+        false
     }
 }

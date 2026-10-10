@@ -50,7 +50,7 @@ export function fakeApp(o: { account?: { id: string; name: string } } = {}) {
       inBox: () => [],
       measure: () => ({ length: 0, area: 0 }),
       palette: {},
-      geometry: { labels: () => new Float64Array(0), blockPieces: () => null },
+      geometry: { labels: () => ({ records: new Float64Array(0), texts: [] }), blockPieces: () => null },
       dimensionText: () => '',
     },
   };

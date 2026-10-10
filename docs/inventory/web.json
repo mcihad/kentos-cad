@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 508,
-      "implemented": 485,
+      "total": 515,
+      "implemented": 492,
       "partial": 0,
       "pending": 23
     },
     "tools": {
-      "total": 126,
-      "implemented": 124,
+      "total": 130,
+      "implemented": 128,
       "partial": 0,
       "pending": 2
     },
@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 93,
-      "implemented": 93,
+      "total": 95,
+      "implemented": 95,
       "partial": 0,
       "pending": 0
     },
@@ -61,14 +61,14 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 694,
-      "implemented": 694,
+      "total": 781,
+      "implemented": 781,
       "partial": 0,
       "pending": 0
     },
     "screens": {
-      "total": 131,
-      "implemented": 131,
+      "total": 132,
+      "implemented": 132,
       "partial": 0,
       "pending": 0
     },
@@ -102,20 +102,20 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 225,
-    "commandsOnDesktop": 438,
+    "commandsWithoutTests": 226,
+    "commandsOnDesktop": 445,
     "desktop": {
       "commands": {
-        "total": 508,
-        "implemented": 438,
+        "total": 515,
+        "implemented": 445,
         "partial": 0,
         "pending": 10,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 126,
-        "implemented": 124,
+        "total": 130,
+        "implemented": 128,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -146,8 +146,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 93,
-        "implemented": 89,
+        "total": 95,
+        "implemented": 91,
         "partial": 0,
         "pending": 0,
         "none": 3,
@@ -162,16 +162,16 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 694,
-        "implemented": 694,
+        "total": 781,
+        "implemented": 781,
         "partial": 0,
         "pending": 0,
         "none": 0,
         "n/a": 0
       },
       "screens": {
-        "total": 131,
-        "implemented": 111,
+        "total": 132,
+        "implemented": 112,
         "partial": 2,
         "pending": 0,
         "none": 17,
@@ -4679,6 +4679,40 @@
       },
       "tests": [
         "fixtures/interaction/v1/layer-filter.json"
+      ]
+    },
+    {
+      "id": "layer.labels",
+      "title": "Etiketler…",
+      "short": "Etiketler",
+      "category": "Katman",
+      "icon": "layerLabels",
+      "description": "Katmanın etiketlemesi: tek etiket, kurallı sınıflar (her biri kendi koşulu ve stiliyle) ya da etiketsiz; etiketin metni (şablon ya da ifade), yerleşimi (noktada çevresinde, çizgide kıvrık ya da eş yükselti, alanda parsel, sınır …), biçimi (hale, zemin, gölge, çağrı çizgisi), sığdırması (yığma, kısaltma, küçültme) ve önceliği; katmanın nesneleri öbür etiketlere engel olabilir.",
+      "aliases": [
+        "ETIKETLER",
+        "ETIKETLEME",
+        "LABELING",
+        "LABELS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Etiket"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/label-tools.json"
       ]
     },
     {
@@ -11770,6 +11804,134 @@
       ]
     },
     {
+      "id": "tool.labelHide",
+      "title": "Etiketi gizle",
+      "category": "Harita",
+      "icon": "labelHide",
+      "description": "Tek bir etiketi gizler; nesnesi ve katmanın öbür etiketleri kalır. Göster (G) gizlenenleri soluk çizer; tıklanan yeniden görünür.",
+      "aliases": [
+        "ETIKETGIZLE",
+        "HIDELABEL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Etiket"
+      ],
+      "ribbon": [
+        "CBS › Harita › Etiket"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/label-tools.json"
+      ]
+    },
+    {
+      "id": "tool.labelMove",
+      "title": "Etiketi taşı",
+      "category": "Harita",
+      "icon": "labelMove",
+      "description": "Etiketi elle başka bir yere taşır ve orada sabitler: etiket nesnesiyle gider, motor onu yeniden yerleştirmez. Yerleşmeyen etiketleri göster açıkken kırmızı çizilenler de taşınabilir.",
+      "aliases": [
+        "ETIKETTASI",
+        "MOVELABEL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Etiket"
+      ],
+      "ribbon": [
+        "CBS › Harita › Etiket"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/label-tools.json"
+      ]
+    },
+    {
+      "id": "tool.labelPin",
+      "title": "Etiketi sabitle",
+      "category": "Harita",
+      "icon": "labelPin",
+      "description": "Etiketleri motorun koyduğu yerde sabitler: sonra başka etiketler onlardan kaçar, kaydırınca ya da yakınlaştırınca yerleri değişmez. Çöz (Ç) sabit etiketleri motora geri verir.",
+      "aliases": [
+        "ETIKETSABITLE",
+        "PINLABEL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Etiket"
+      ],
+      "ribbon": [
+        "CBS › Harita › Etiket"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/label-tools.json"
+      ]
+    },
+    {
+      "id": "tool.labelRotate",
+      "title": "Etiketi döndür",
+      "category": "Harita",
+      "icon": "labelRotate",
+      "description": "Etiketi olduğu yerde elle döndürür ve sabitler: açı imleçle gösterilir (okunur yönde; Shift 15° adımlarla) ya da derece olarak yazılır.",
+      "aliases": [
+        "ETIKETDONDUR",
+        "ROTATELABEL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Harita › Etiket"
+      ],
+      "ribbon": [
+        "CBS › Harita › Etiket"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "cad"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/label-tools.json"
+      ]
+    },
+    {
       "id": "tool.labelsToText",
       "title": "Etiketleri yazıya çevir",
       "category": "Açıklama",
@@ -11787,7 +11949,7 @@
       ],
       "ribbon": [
         "CAD › Açıklama › Yazı",
-        "CBS › Harita › Etiket",
+        "CBS › Harita › Yazıya çevir",
         "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
@@ -14141,7 +14303,7 @@
       ],
       "ribbon": [
         "CAD › Açıklama › Yazı",
-        "CBS › Harita › Etiket",
+        "CBS › Harita › Yazıya çevir",
         "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
@@ -14173,7 +14335,7 @@
       ],
       "ribbon": [
         "CAD › Açıklama › Yazı",
-        "CBS › Harita › Etiket",
+        "CBS › Harita › Yazıya çevir",
         "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
@@ -15299,6 +15461,33 @@
       ]
     },
     {
+      "id": "view.pinnedLabels",
+      "title": "Sabit etiketleri vurgula",
+      "short": "Sabit etiketler",
+      "category": "Görünüm",
+      "icon": "labelsPinned",
+      "description": "Elle taşınmış, döndürülmüş ya da sabitlenmiş etiketlerin çevresine kesikli bir çerçeve çizer. Çizim değişmez.",
+      "aliases": [
+        "SABITETIKETLER",
+        "PINNEDLABELS"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Etiket"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "view.previous",
       "title": "Önceki görünüm",
       "category": "Görünüm",
@@ -15635,6 +15824,33 @@
       ]
     },
     {
+      "id": "view.unplacedLabels",
+      "title": "Yerleşmeyen etiketleri göster",
+      "short": "Yerleşmeyenler",
+      "category": "Görünüm",
+      "icon": "labelsUnplaced",
+      "description": "Boş yer bulamadığı için yazılmayan etiketleri en iyi yerlerinde kırmızı çizer: Etiketi taşı ile bir yere konabilirler. Çizim değişmez.",
+      "aliases": [
+        "YERLESMEYENETIKETLER",
+        "UNPLACEDLABELS"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CBS › Harita › Etiket"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "view.zoomExtents",
       "title": "Tümünü göster",
       "category": "Görünüm",
@@ -15851,7 +16067,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/cloud.mjs"
+      ]
     },
     {
       "id": "workspace.plan3d",
@@ -17257,6 +17475,106 @@
         "fixtures/interaction/v1/join-chain.json",
         "fixtures/interaction/v1/object-tools.json",
         "fixtures/interaction/v1/usage-join-chain.json"
+      ]
+    },
+    {
+      "id": "labelHide",
+      "label": "Etiketi gizle",
+      "icon": "labelHide",
+      "group": "map",
+      "section": "label",
+      "aliases": [
+        "ETIKETGIZLE",
+        "HIDELABEL"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Tek bir etiketi gizler; nesnesi ve katmanın öbür etiketleri kalır. Göster (G) gizlenenleri soluk çizer; tıklanan yeniden görünür.",
+      "productCommand": "cad.labels.pin",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/label-tools.json"
+      ]
+    },
+    {
+      "id": "labelMove",
+      "label": "Etiketi taşı",
+      "icon": "labelMove",
+      "group": "map",
+      "section": "label",
+      "aliases": [
+        "ETIKETTASI",
+        "MOVELABEL"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Etiketi elle başka bir yere taşır ve orada sabitler: etiket nesnesiyle gider, motor onu yeniden yerleştirmez. Yerleşmeyen etiketleri göster açıkken kırmızı çizilenler de taşınabilir.",
+      "productCommand": "cad.labels.pin",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/label-tools.json"
+      ]
+    },
+    {
+      "id": "labelPin",
+      "label": "Etiketi sabitle",
+      "icon": "labelPin",
+      "group": "map",
+      "section": "label",
+      "aliases": [
+        "ETIKETSABITLE",
+        "PINLABEL"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Etiketleri motorun koyduğu yerde sabitler: sonra başka etiketler onlardan kaçar, kaydırınca ya da yakınlaştırınca yerleri değişmez. Çöz (Ç) sabit etiketleri motora geri verir.",
+      "productCommand": "cad.labels.pin",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/label-tools.json"
+      ]
+    },
+    {
+      "id": "labelRotate",
+      "label": "Etiketi döndür",
+      "icon": "labelRotate",
+      "group": "map",
+      "section": "label",
+      "aliases": [
+        "ETIKETDONDUR",
+        "ROTATELABEL"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Etiketi olduğu yerde elle döndürür ve sabitler: açı imleçle gösterilir (okunur yönde; Shift 15° adımlarla) ya da derece olarak yazılır.",
+      "productCommand": "cad.labels.pin",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/label-tools.json"
       ]
     },
     {
@@ -24633,6 +24951,7 @@
           "map/parcel",
           "map/field",
           "map/time",
+          "map/label",
           "network"
         ],
         "commands": [
@@ -25679,6 +25998,20 @@
       }
     },
     {
+      "id": "user.pinnedLabels",
+      "key": "pinnedLabels",
+      "setting": "graphics.pinnedLabels",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "boolean",
+      "default": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "user.polarIncrement",
       "key": "polarIncrement",
       "setting": "drafting.polarIncrement",
@@ -26045,6 +26378,20 @@
         "desktop": "implemented"
       },
       "desktopWhere": "ayarlar.json appearance.uiFont: iki platformun ortak anahtarı, web'in yedi yüzü aynı kimliklerle (Görünüm sekmesi, ADR 0051, 0126; crates/ui/assets/fonts)"
+    },
+    {
+      "id": "user.unplacedLabels",
+      "key": "unplacedLabels",
+      "setting": "graphics.unplacedLabels",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "boolean",
+      "default": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
     }
   ],
   "storage": [
@@ -26381,6 +26728,19 @@
       }
     },
     {
+      "id": "ArcEntity.labelPins",
+      "contract": "ArcEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "ArcEntity.layerId",
       "contract": "ArcEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -26426,6 +26786,24 @@
       "field": "symbol",
       "type": "string",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "AreaLabelMode",
+      "contract": "AreaLabelMode",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "horizontal",
+        "free",
+        "perimeter",
+        "boundary",
+        "parcel",
+        "corner"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -26765,6 +27143,20 @@
       }
     },
     {
+      "id": "CalloutKind",
+      "contract": "CalloutKind",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "straight",
+        "manhattan"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "CellRange.col",
       "contract": "CellRange",
       "rust": "crates/shared/contracts/src/table.rs",
@@ -26874,6 +27266,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "label",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CircleEntity.labelPins",
+      "contract": "CircleEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -27103,6 +27508,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "label",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ConstructionEntity.labelPins",
+      "contract": "ConstructionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -27794,6 +28212,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "label",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.labelPins",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -28729,6 +29160,19 @@
       }
     },
     {
+      "id": "EllipseEntity.labelPins",
+      "contract": "EllipseEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "EllipseEntity.layerId",
       "contract": "EllipseEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -29366,6 +29810,19 @@
       }
     },
     {
+      "id": "HatchEntity.labelPins",
+      "contract": "HatchEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "HatchEntity.layerId",
       "contract": "HatchEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -29747,6 +30204,19 @@
       }
     },
     {
+      "id": "ImageEntity.labelPins",
+      "contract": "ImageEntity",
+      "rust": "crates/shared/contracts/src/image.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "ImageEntity.layerId",
       "contract": "ImageEntity",
       "rust": "crates/shared/contracts/src/image.rs",
@@ -29916,6 +30386,19 @@
       }
     },
     {
+      "id": "InsertEntity.labelPins",
+      "contract": "InsertEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "InsertEntity.layerId",
       "contract": "InsertEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -30074,6 +30557,216 @@
       }
     },
     {
+      "id": "LabelAbbreviate.always",
+      "contract": "LabelAbbreviate",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "always",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelAbbreviate.words",
+      "contract": "LabelAbbreviate",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "words",
+      "type": "Array<LabelWord>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelAlign",
+      "contract": "LabelAlign",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "left",
+        "center",
+        "right"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelBackground.fill",
+      "contract": "LabelBackground",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "fill",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelBackground.padding",
+      "contract": "LabelBackground",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "padding",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelBackground.shape",
+      "contract": "LabelBackground",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "shape",
+      "type": "LabelShape",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelBackground.stroke",
+      "contract": "LabelBackground",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "stroke",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelCallout.color",
+      "contract": "LabelCallout",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "color",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelCallout.kind",
+      "contract": "LabelCallout",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "kind",
+      "type": "CalloutKind",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelCallout.minLength",
+      "contract": "LabelCallout",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "minLength",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelCallout.width",
+      "contract": "LabelCallout",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "width",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelClass.name",
+      "contract": "LabelClass",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelClass.style",
+      "contract": "LabelClass",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "style",
+      "type": "LabelStyle",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelClass.when",
+      "contract": "LabelClass",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "when",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelHalo.color",
+      "contract": "LabelHalo",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "color",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelHalo.width",
+      "contract": "LabelHalo",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "width",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LabelInk",
       "contract": "LabelInk",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -30082,6 +30775,99 @@
         "fg-dim",
         "label"
       ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelObstacle.kind",
+      "contract": "LabelObstacle",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "kind",
+      "type": "ObstacleKind",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelObstacle.weight",
+      "contract": "LabelObstacle",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "weight",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelOverlap",
+      "contract": "LabelOverlap",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "never",
+        "ifNeeded",
+        "always"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelPin.at",
+      "contract": "LabelPin",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "at",
+      "type": "Vec2",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelPin.class",
+      "contract": "LabelPin",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "class",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelPin.hidden",
+      "contract": "LabelPin",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "hidden",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelPin.rotation",
+      "contract": "LabelPin",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "rotation",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -30105,6 +30891,245 @@
       }
     },
     {
+      "id": "LabelPosition",
+      "contract": "LabelPosition",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "on",
+        "above",
+        "below",
+        "sides"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelShadow.color",
+      "contract": "LabelShadow",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "color",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelShadow.dx",
+      "contract": "LabelShadow",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "dx",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelShadow.dy",
+      "contract": "LabelShadow",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "dy",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelShadow.opacity",
+      "contract": "LabelShadow",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "opacity",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelShape",
+      "contract": "LabelShape",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "rect",
+        "round",
+        "ellipse"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStack.at",
+      "contract": "LabelStack",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "at",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStack.chars",
+      "contract": "LabelStack",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "chars",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStack.mode",
+      "contract": "LabelStack",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "mode",
+      "type": "StackMode",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.abbreviate",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "abbreviate",
+      "type": "LabelAbbreviate",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.align",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "align",
+      "type": "LabelAlign",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.area",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "area",
+      "type": "AreaLabelMode",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.background",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "background",
+      "type": "LabelBackground",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.callout",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "callout",
+      "type": "LabelCallout",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.color",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "color",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.curved",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "curved",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.distance",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "distance",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.duplicates",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "duplicates",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LabelStyle.grow",
       "contract": "LabelStyle",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -30118,11 +31143,76 @@
       }
     },
     {
+      "id": "LabelStyle.halo",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "halo",
+      "type": "LabelHalo",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LabelStyle.ink",
       "contract": "LabelStyle",
       "rust": "crates/shared/contracts/src/layer.rs",
       "field": "ink",
       "type": "LabelInk",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.inside",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "inside",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.italic",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "italic",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.line",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "line",
+      "type": "LineLabelMode",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.maxAngle",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "maxAngle",
+      "type": "number",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -30157,6 +31247,19 @@
       }
     },
     {
+      "id": "LabelStyle.mergeLines",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "mergeLines",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LabelStyle.minFeaturePx",
       "contract": "LabelStyle",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -30183,12 +31286,116 @@
       }
     },
     {
+      "id": "LabelStyle.outside",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "outside",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.overlap",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "overlap",
+      "type": "LabelOverlap",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LabelStyle.placement",
       "contract": "LabelStyle",
       "rust": "crates/shared/contracts/src/layer.rs",
       "field": "placement",
       "type": "LabelPlacement",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.point",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "point",
+      "type": "PointLabelMode",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.position",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "position",
+      "type": "LabelPosition",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.priority",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "priority",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.repeat",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "repeat",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.shadow",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "shadow",
+      "type": "LabelShadow",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.shrink",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "shrink",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -30209,10 +31416,36 @@
       }
     },
     {
+      "id": "LabelStyle.stack",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "stack",
+      "type": "LabelStack",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LabelStyle.template",
       "contract": "LabelStyle",
       "rust": "crates/shared/contracts/src/layer.rs",
       "field": "template",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelStyle.text",
+      "contract": "LabelStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "text",
       "type": "string",
       "optional": true,
       "status": "implemented",
@@ -30228,6 +31461,47 @@
       "field": "weight",
       "type": "number",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelWord.short",
+      "contract": "LabelWord",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "short",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelWord.word",
+      "contract": "LabelWord",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "word",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LabelsMode",
+      "contract": "LabelsMode",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "single",
+        "rules",
+        "off"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -30400,6 +31674,45 @@
       "rust": "crates/shared/contracts/src/layer_filter.rs",
       "field": "objects",
       "type": "Array<EntityId>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerLabels.classes",
+      "contract": "LayerLabels",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "classes",
+      "type": "Array<LabelClass>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerLabels.mode",
+      "contract": "LayerLabels",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "mode",
+      "type": "LabelsMode",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerLabels.obstacle",
+      "contract": "LayerLabels",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "field": "obstacle",
+      "type": "LabelObstacle",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -30786,6 +32099,19 @@
       }
     },
     {
+      "id": "LayerStyle.labels",
+      "contract": "LayerStyle",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "labels",
+      "type": "LayerLabels",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LayerStyle.lineType",
       "contract": "LayerStyle",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -31019,6 +32345,19 @@
       }
     },
     {
+      "id": "LeaderEntity.labelPins",
+      "contract": "LeaderEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LeaderEntity.layerId",
       "contract": "LeaderEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -31188,6 +32527,19 @@
       }
     },
     {
+      "id": "LineEntity.labelPins",
+      "contract": "LineEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LineEntity.layerId",
       "contract": "LineEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -31246,6 +32598,22 @@
       "field": "zb",
       "type": "number",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LineLabelMode",
+      "contract": "LineLabelMode",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "parallel",
+        "curved",
+        "horizontal",
+        "contour"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -31662,6 +33030,20 @@
       }
     },
     {
+      "id": "ObstacleKind",
+      "contract": "ObstacleKind",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "interior",
+        "boundary"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "PathEntity.attrs",
       "contract": "PathEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -31732,6 +33114,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "label",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PathEntity.labelPins",
+      "contract": "PathEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -31940,6 +33335,19 @@
       "rust": "crates/shared/contracts/src/pointcloud.rs",
       "field": "label",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PointCloudEntity.labelPins",
+      "contract": "PointCloudEntity",
+      "rust": "crates/shared/contracts/src/pointcloud.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -32221,6 +33629,19 @@
       }
     },
     {
+      "id": "PointEntity.labelPins",
+      "contract": "PointEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "PointEntity.layerId",
       "contract": "PointEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -32292,6 +33713,20 @@
       "field": "z",
       "type": "number",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PointLabelMode",
+      "contract": "PointLabelMode",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "around",
+        "center"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -32813,6 +34248,19 @@
       "rust": "crates/shared/contracts/src/raster.rs",
       "field": "label",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RasterEntity.labelPins",
+      "contract": "RasterEntity",
+      "rust": "crates/shared/contracts/src/raster.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -33729,6 +35177,19 @@
       }
     },
     {
+      "id": "SplineEntity.labelPins",
+      "contract": "SplineEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "SplineEntity.layerId",
       "contract": "SplineEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -33774,6 +35235,20 @@
       "field": "symbol",
       "type": "string",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "StackMode",
+      "contract": "StackMode",
+      "rust": "crates/shared/contracts/src/labels.rs",
+      "values": [
+        "ifNeeded",
+        "always"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -34173,6 +35648,19 @@
       }
     },
     {
+      "id": "TableEntity.labelPins",
+      "contract": "TableEntity",
+      "rust": "crates/shared/contracts/src/table.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "TableEntity.layerId",
       "contract": "TableEntity",
       "rust": "crates/shared/contracts/src/table.rs",
@@ -34554,6 +36042,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "labelOf",
       "type": "EntityId",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.labelPins",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelPins",
+      "type": "Array<LabelPin>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -36181,6 +37682,18 @@
       }
     },
     {
+      "id": "apps/web/src/ui/labels/LabelsDialog.ts#openLabels",
+      "name": "openLabels",
+      "role": "window",
+      "source": "apps/web/src/ui/labels/LabelsDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/labelling/ (ADR 0212 §4)"
+    },
+    {
       "id": "apps/web/src/ui/layers/LayerFieldsDialog.ts#openLayerFields",
       "name": "openLayerFields",
       "role": "window",
@@ -37579,6 +39092,15 @@
             ]
           },
           {
+            "label": "Etiket",
+            "items": [
+              "tool.labelMove",
+              "tool.labelRotate",
+              "tool.labelPin",
+              "tool.labelHide"
+            ]
+          },
+          {
             "label": "Altlık",
             "items": [
               {
@@ -38770,6 +40292,42 @@
           },
           {
             "label": "Etiket",
+            "icon": "layerLabels",
+            "items": [
+              {
+                "command": "layer.labels",
+                "size": "small"
+              },
+              {
+                "command": "tool.labelMove",
+                "size": "small"
+              },
+              {
+                "command": "tool.labelRotate",
+                "size": "small"
+              },
+              {
+                "command": "tool.labelPin",
+                "size": "small"
+              },
+              {
+                "command": "tool.labelHide",
+                "size": "small"
+              },
+              {
+                "command": "view.pinnedLabels",
+                "size": "small"
+              },
+              {
+                "command": "view.unplacedLabels",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Yazıya çevir",
             "icon": "labelsToText",
             "items": [
               {
@@ -44223,6 +45781,42 @@
             },
             {
               "label": "Etiket",
+              "icon": "layerLabels",
+              "items": [
+                {
+                  "command": "layer.labels",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.labelMove",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.labelRotate",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.labelPin",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.labelHide",
+                  "size": "small"
+                },
+                {
+                  "command": "view.pinnedLabels",
+                  "size": "small"
+                },
+                {
+                  "command": "view.unplacedLabels",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yazıya çevir",
               "icon": "labelsToText",
               "items": [
                 {
@@ -47068,6 +48662,13 @@
     "layerFilterSelection": "<rect x=\"2.5\" y=\"3\" width=\"10\" height=\"9.5\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><rect x=\"4\" y=\"5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"7.699999999999999\" y=\"8\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z\"/>",
     "layerFilterClear": "<path d=\"M2.5 3.5h12l-4.6 5.4v6.2l-2.8-1.4V8.9z\"/><path d=\"m13 12 4.5 4.5m0-4.5L13 16.5\"/>",
     "funnel": "<path d=\"M3 4h14l-5.5 6.5V16l-3-1.5v-4z\" fill=\"currentColor\" fill-opacity=\".3\"/>",
+    "layerLabels": "<path d=\"M2.5 8.2 8.5 5l6 3.2-6 3.2z\"/><path d=\"m2.5 11.4 6 3.2 1.4-.75\"/><path d=\"M11 11.5h4.4l2.6 2.5-2.6 2.5H11z\"/><circle cx=\"12.9\" cy=\"14\" r=\".85\" fill=\"currentColor\" stroke=\"none\"/>",
+    "labelMove": "<path d=\"M2.5 3.5h6.6l2.5 2.6-2.5 2.6H2.5z\"/><circle cx=\"4.6\" cy=\"6.1\" r=\".85\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M14 10.5v7M10.5 14h7\"/><path d=\"M12.8 11.7 14 10.5l1.2 1.2M12.8 16.3l1.2 1.2 1.2-1.2M11.7 12.8 10.5 14l1.2 1.2M16.3 12.8l1.2 1.2-1.2 1.2\"/>",
+    "labelRotate": "<path d=\"M2.5 3.5h6.6l2.5 2.6-2.5 2.6H2.5z\"/><circle cx=\"4.6\" cy=\"6.1\" r=\".85\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M17.5 14a3.9 3.9 0 1 1-1.3-2.9\"/><path d=\"M16.6 8.6v2.6H14\"/>",
+    "labelPin": "<path d=\"M2.5 11.5h6.2l2.4 2.5-2.4 2.5H2.5z\"/><circle cx=\"4.5\" cy=\"14\" r=\".85\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m13.6 2.5 3.9 3.9-2 1.3-1.5 1.5-.4 2.2-5-5 2.2-.4 1.5-1.5z\"/><path d=\"m10.5 8.6-2.3 2.3\"/>",
+    "labelHide": "<path d=\"M3 6.6h9.4l3 3.2-3 3.2H3z\"/><circle cx=\"5.4\" cy=\"9.8\" r=\".85\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m3.2 3.2 13.6 13.6\"/>",
+    "labelsPinned": "<rect x=\"2\" y=\"5\" width=\"14.5\" height=\"10\" rx=\"1\" stroke-dasharray=\"2.2 1.6\"/><path d=\"M4.5 7.9h6.3l2.2 2.1-2.2 2.1H4.5z\"/><circle cx=\"16.6\" cy=\"4.9\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/>",
+    "labelsUnplaced": "<path d=\"M2.5 4h6.6l2.5 2.6-2.5 2.6H2.5z\"/><path d=\"M7.5 10.8h6.6l2.5 2.6-2.5 2.6H7.5z\" stroke-dasharray=\"2 1.5\"/><circle cx=\"4.6\" cy=\"6.6\" r=\".85\" fill=\"currentColor\" stroke=\"none\"/>",
     "sheetLayout": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\"1\"/><rect x=\"5.5\" y=\"4.5\" width=\"9\" height=\"6.5\"/><path d=\"M5.5 13h9v2.5h-9zM10.5 13v2.5\"/>",
     "sheetNew": "<path d=\"M11 2.5H4.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9\"/><path d=\"M14.5 1.8v5.4M11.8 4.5h5.4\"/>",
     "sheetTemplate": "<rect x=\"6.5\" y=\"2.5\" width=\"10\" height=\"12\" rx=\"1\"/><path d=\"M4 5.5v11a1 1 0 0 0 1 1h8.5\"/><path d=\"M8.7 5.5h5.6M8.7 8h5.6M8.7 10.5h3.4\"/>",

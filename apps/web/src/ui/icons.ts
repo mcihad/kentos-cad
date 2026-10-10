@@ -903,6 +903,21 @@ export const ICONS = {
   layerFilterSelection: `<rect x="2.5" y="3" width="10" height="9.5" rx="1" stroke-dasharray="2 1.6"/>${grip(5.5, 6.5)}${grip(9.2, 9.5)}<path d="M11 10.5h7.5l-2.9 3.4v3.7l-1.7-.9v-2.8z"/>`,
   layerFilterClear: '<path d="M2.5 3.5h12l-4.6 5.4v6.2l-2.8-1.4V8.9z"/><path d="m13 12 4.5 4.5m0-4.5L13 16.5"/>',
   funnel: '<path d="M3 4h14l-5.5 6.5V16l-3-1.5v-4z" fill="currentColor" fill-opacity=".3"/>',
+  // Etiket motoru (docs/adr/0212 §4): a label's tag (its hole a dot) with what is done to it.
+  layerLabels:
+    '<path d="M2.5 8.2 8.5 5l6 3.2-6 3.2z"/><path d="m2.5 11.4 6 3.2 1.4-.75"/><path d="M11 11.5h4.4l2.6 2.5-2.6 2.5H11z"/><circle cx="12.9" cy="14" r=".85" fill="currentColor" stroke="none"/>',
+  labelMove:
+    '<path d="M2.5 3.5h6.6l2.5 2.6-2.5 2.6H2.5z"/><circle cx="4.6" cy="6.1" r=".85" fill="currentColor" stroke="none"/><path d="M14 10.5v7M10.5 14h7"/><path d="M12.8 11.7 14 10.5l1.2 1.2M12.8 16.3l1.2 1.2 1.2-1.2M11.7 12.8 10.5 14l1.2 1.2M16.3 12.8l1.2 1.2-1.2 1.2"/>',
+  labelRotate:
+    '<path d="M2.5 3.5h6.6l2.5 2.6-2.5 2.6H2.5z"/><circle cx="4.6" cy="6.1" r=".85" fill="currentColor" stroke="none"/><path d="M17.5 14a3.9 3.9 0 1 1-1.3-2.9"/><path d="M16.6 8.6v2.6H14"/>',
+  labelPin:
+    '<path d="M2.5 11.5h6.2l2.4 2.5-2.4 2.5H2.5z"/><circle cx="4.5" cy="14" r=".85" fill="currentColor" stroke="none"/><path d="m13.6 2.5 3.9 3.9-2 1.3-1.5 1.5-.4 2.2-5-5 2.2-.4 1.5-1.5z"/><path d="m10.5 8.6-2.3 2.3"/>',
+  labelHide:
+    '<path d="M3 6.6h9.4l3 3.2-3 3.2H3z"/><circle cx="5.4" cy="9.8" r=".85" fill="currentColor" stroke="none"/><path d="m3.2 3.2 13.6 13.6"/>',
+  labelsPinned:
+    '<rect x="2" y="5" width="14.5" height="10" rx="1" stroke-dasharray="2.2 1.6"/><path d="M4.5 7.9h6.3l2.2 2.1-2.2 2.1H4.5z"/><circle cx="16.6" cy="4.9" r="1.7" fill="currentColor" stroke="none"/>',
+  labelsUnplaced:
+    '<path d="M2.5 4h6.6l2.5 2.6-2.5 2.6H2.5z"/><path d="M7.5 10.8h6.6l2.5 2.6-2.5 2.6H7.5z" stroke-dasharray="2 1.5"/><circle cx="4.6" cy="6.6" r=".85" fill="currentColor" stroke="none"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

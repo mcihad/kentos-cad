@@ -19,15 +19,15 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
-    EntitiesCreate, EntitiesSetProperties, LayersFilter, LayersService, LayersTime, NetworkDefine,
-    ScenariosEdit,
+    EntitiesCreate, EntitiesSetProperties, LabelsPin, LayersFilter, LayersLabels, LayersService,
+    LayersTime, NetworkDefine, ScenariosEdit,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, delete,
-    edit, layers_filter, layers_service, layers_time, line, network_define, point, polygon,
-    polyline, scenarios_edit, set, transform,
+    edit, labels_pin, layers_filter, layers_labels, layers_service, layers_time, line,
+    network_define, point, polygon, polyline, scenarios_edit, set, transform,
 };
 use serde_json::{Value, json};
 
@@ -341,6 +341,18 @@ impl Input for ScenariosEdit {
 }
 
 impl Input for LayersFilter {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for LayersLabels {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for LabelsPin {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -877,6 +889,8 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
         kentos_domain::contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         kentos_domain::contracts::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
+        kentos_domain::contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
+        kentos_domain::contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))

@@ -30,6 +30,7 @@ pub mod geodesy;
 pub mod geom;
 pub mod geometry;
 pub mod jsmath;
+pub mod labels;
 pub mod measure;
 pub mod numeric;
 pub mod ops;

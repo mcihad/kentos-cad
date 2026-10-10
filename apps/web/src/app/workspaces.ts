@@ -53,8 +53,8 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
     status: 'ready',
     hide: {
       menus: ['map', 'crs', 'processing'],
-      // Ağ analizi and Zaman are the CBS's (docs/adr/0209 §10, 0210 §10): Komut ara finds them.
-      tools: ['map/parcel', 'map/field', 'map/time', 'network'],
+      // Ağ analizi, Zaman and the label tools are the CBS's (docs/adr/0209 §10, 0210 §10, 0212 §4): Komut ara finds them.
+      tools: ['map/parcel', 'map/field', 'map/time', 'map/label', 'network'],
       commands: ['analysis.volume', 'network.manage'],
     },
   },

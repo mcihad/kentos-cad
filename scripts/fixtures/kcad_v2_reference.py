@@ -546,7 +546,41 @@ def survey(s):
 SIGMA_KEYS = ("sigmaDirection", "sigmaDistance", "sigmaPpm", "sigmaCentering", "sigmaZenith", "sigmaLevelling")
 
 
+# The label engine's fields of a label style (schema 36, docs/adr/0212 §2), each with its encoder.
+LABEL_ENGINE = {
+    "text": (text, False),
+    "color": (text, False),
+    "italic": (lambda b: boolean(b), False),
+    "align": (enum(("left", "center", "right")), False),
+    "point": (enum(("around", "center")), False),
+    "line": (enum(("parallel", "curved", "horizontal", "contour")), False),
+    "area": (enum(("horizontal", "free", "perimeter", "boundary", "parcel", "corner")), False),
+    "position": (enum(("on", "above", "below", "sides")), False),
+    "distance": (f64, False),
+    "repeat": (f64, False),
+    "maxAngle": (f64, False),
+    "curved": (lambda b: boolean(b), False),
+    "mergeLines": (lambda b: boolean(b), False),
+    "inside": (lambda b: boolean(b), False),
+    "outside": (lambda b: boolean(b), False),
+    "halo": (lambda h: cmap(fields(h, {"width": (f64, True), "color": (text, False)}, "halo")), False),
+    "background": (lambda b: cmap(fields(b, {"shape": (enum(("rect", "round", "ellipse")), True), "fill": (text, False),
+                                               "stroke": (text, False), "padding": (f64, False)}, "background")), False),
+    "shadow": (lambda h: cmap(fields(h, {"dx": (f64, True), "dy": (f64, True), "color": (text, False), "opacity": (f64, False)}, "shadow")), False),
+    "callout": (lambda c: cmap(fields(c, {"kind": (enum(("straight", "manhattan")), True), "color": (text, False), "width": (f64, False),
+                                            "minLength": (f64, False)}, "callout")), False),
+    "stack": (lambda k: cmap(fields(k, {"mode": (enum(("ifNeeded", "always")), True), "chars": (uint, True), "at": (text, False)}, "stack")), False),
+    "abbreviate": (lambda a: cmap(fields(a, {"always": (lambda b: boolean(b), False), "words": (
+        lambda ws: array([cmap(fields(w, {"word": (text, True), "short": (text, True)}, "word")) for w in ws]), True)}, "abbreviate")), False),
+    "shrink": (f64, False),
+    "priority": (uint, False),
+    "overlap": (enum(("never", "ifNeeded", "always")), False),
+    "duplicates": (f64, False),
+}
+
+
 def label_style(s):
+    """A label style: its first fields every schema writes; the label engine's (schema 36, docs/adr/0212 §2)."""
     return cmap(
         fields(
             s,
@@ -561,10 +595,29 @@ def label_style(s):
                 "minScale": (f64, False),
                 "maxScale": (f64, False),
                 "ink": (enum(("fg", "fg-dim", "label")), False),
+                **LABEL_ENGINE,
             },
             "label",
         )
     )
+
+
+def layer_labels(l):
+    """A layer style's labelling (schema 36, docs/adr/0212 §2): its mode, its rules' classes (an empty list not
+    written) and its objects as obstacles."""
+    assert l.get("classes", [None]), "boş sınıf listesi yazılmaz"
+    cls = lambda c: cmap(fields(c, {"name": (text, True), "when": (text, False), "style": (label_style, True)}, "class"))
+    return cmap(fields(l, {"mode": (enum(("single", "rules", "off")), True), "classes": (lambda cs: array([cls(c) for c in cs]), False),
+                           "obstacle": (lambda o: cmap(fields(o, {"weight": (uint, True), "kind": (enum(("interior", "boundary")), False)}, "obstacle")), False)},
+                       "labels"))
+
+
+def label_pins(ps):
+    """An object's labels pinned by hand (schema 36, docs/adr/0212 §2): an empty list not written, hidden only true."""
+    assert ps, "boş iğne listesi yazılmaz"
+    assert all(p.get("hidden", True) is True for p in ps), "hidden yalnız true yazılır"
+    return array([cmap(fields(p, {"class": (text, False), "at": (point, False), "rotation": (f64, False), "hidden": (lambda b: boolean(b), False)}, "pin"))
+                  for p in ps])
 
 
 def not_null(v):
@@ -583,6 +636,8 @@ def layer_style(s):
                 "fill": (text, False),
                 "point": (lambda p: cmap(fields(p, {"symbol": (enum(("ring", "cross", "triangle")), True), "size": (f64, True)}, "point")), False),
                 "label": (label_style, False),
+                # Schema 36 (docs/adr/0212 §2): the layer's labelling.
+                "labels": (layer_labels, False),
                 "pickInterior": (lambda b: b"\xf5" if b else b"\xf4", False),
                 "renderer": (not_null, False),
             },
@@ -1178,8 +1233,11 @@ def entity(e, uid, index):
         "symbol": (text, False),
         # Schema 3 (docs/adr/0139): an object's own line weight, mm.
         "lineWeight": (f64, False),
+        # Schema 36 (docs/adr/0212 §2): its labels pinned by hand; the drawing's objects only.
+        "labelPins": (label_pins, False),
         **KINDS[kind],
     }
+    assert "labelPins" not in e or uid is not None, "blok tanımının nesnesinde etiket iğnesi olmaz"
     if kind == "table":
         assert uid is not None, "blok tanımında tablo olamaz"
         table_shape(e)
@@ -1253,7 +1311,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 35 with a layer's filter (docs/adr/0211 §2), 34 with a layer's time
+    """The oldest schema that holds the drawing: 36 with the label engine's fields, a layer's labelling or an object's
+    labels pinned by hand (docs/adr/0212 §2), 35 with a layer's filter (docs/adr/0211 §2), 34 with a layer's time
     setting, a scenario or a scenario layer's base
     layer (docs/adr/0210 §2), 33 with the project's networks (docs/adr/0209 §2), 32 with a layer drawn
     from a map service or one whose objects came from
@@ -1323,6 +1382,15 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def filtered(nodes):
         return any("filter" in n or filtered(n["children"]) for n in nodes)
 
+    def engine(style):
+        return "labels" in style or any(k in LABEL_ENGINE for k in style.get("label", {}))
+
+    def labelled(nodes):
+        return any(engine(n["style"]) or labelled(n["children"]) for n in nodes)
+
+    if (labelled(layers) or any("labelPins" in e for e in entities)
+            or any("style" in n and engine(n["style"]) for st in (settings or {}).get("layerStates", []) for n in st["nodes"])):
+        return 36
     if filtered(layers):
         return 35
     if temporal(layers):
@@ -1586,7 +1654,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-36.kcad"] = container(root(cmap(parts), version=uint(36)))
+    files["schema-version-37.kcad"] = container(root(cmap(parts), version=uint(37)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1678,6 +1746,10 @@ def broken(minimal_content, minimal_file):
     # A block definition's text names no object: its objects have no persistent ids (docs/adr/0175 §4).
     block_text = cmap({"text": cmap({"attrs": cmap({}), "layerId": text("0"), "p": point({"x": 0.0, "y": 0.0}), "text": text("A"), "height": f64(1.0), "rotation": f64(0.0), "labelOf": of, "labelScale": f64(1000.0)})})
     files["block-text-label-of.kcad"] = with_blocks([block(1, "Pafta", [block_text])], version=18)
+    # Nor is a definition's object's label pinned (docs/adr/0212 §2): its objects have no persistent ids.
+    block_pinned = cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5),
+                                         "labelPins": array([cmap({"hidden": boolean(True)})])})})
+    files["label-pins-in-block.kcad"] = with_blocks([block(1, "Rögar", [block_pinned])], version=36)
     files["blocks-in-schema-5.kcad"] = with_blocks([block(1, "Rögar")], entities=[], version=5)
     files["insert-in-schema-5.kcad"] = in_schema(5, insert_of(1))
     files["unknown-block.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(2)])
@@ -2211,6 +2283,76 @@ def broken(minimal_content, minimal_file):
     files["filter-object-nil.kcad"] = on_layer({"filter": filtered_(objects=array([blob(bytes(16))]))}, schema=35)
     files["filter-unknown-field.kcad"] = on_layer({"filter": filtered_(scope=text("view"))}, schema=35)
 
+    # The label engine is schema 36's (docs/adr/0212 §2): in schema 35 a layer style's `labels`, a label style's engine
+    # fields and an object's `labelPins` are unknown fields; every rule of the contract's `style_problem`,
+    # `layer_labels_problem`, `pins_problem` and `labels_problem` broken one at a time.
+    def labelled_(labels=None, label=None, node_type="layer", schema=36, entities=None):
+        style = {**layer_style_parts(top["style"])}
+        if labels is not None:
+            style["labels"] = labels
+        if label is not None:
+            style["label"] = label
+        node = {
+            "id": text(top["id"]),
+            "name": text(top["name"]),
+            "type": text(node_type),
+            "visible": boolean(top["visible"]),
+            "locked": boolean(top["locked"]),
+            "expanded": boolean(top["expanded"]),
+            "style": cmap(style),
+            "children": array([]),
+        }
+        body = {**parts, "layers": array([cmap(node)])}
+        body["entities"] = array([]) if entities is None else entities
+        return container(root(cmap(body), version=uint(schema)))
+
+    def rules_(*classes, **more):
+        return cmap({"mode": text("rules"), "classes": array(list(classes)), **more})
+
+    def class_(name="Ada", **style):
+        st = {"placement": text("center"), "size": f64(10.0), **style}
+        return cmap({"name": text(name), "style": cmap(st)})
+
+    def style_(**engine):
+        return cmap({"placement": text("center"), "size": f64(10.0), **engine})
+
+    files["labels-in-schema-35.kcad"] = labelled_(cmap({"mode": text("off")}), schema=35)
+    files["label-engine-in-schema-35.kcad"] = labelled_(label=style_(text=text("Ada")), schema=35)
+    files["labels-on-group.kcad"] = labelled_(cmap({"mode": text("off")}), node_type="group")
+    files["labels-rules-empty.kcad"] = labelled_(rules_())
+    files["labels-rules-without-classes.kcad"] = labelled_(cmap({"mode": text("rules")}))
+    files["labels-classes-in-single.kcad"] = labelled_(cmap({"mode": text("single"), "classes": array([class_()])}))
+    files["labels-class-twice.kcad"] = labelled_(rules_(class_(), class_()))
+    files["labels-class-name-blank.kcad"] = labelled_(rules_(class_(" Ada")))
+    files["labels-class-when-blank.kcad"] = labelled_(rules_(cmap({"name": text("Ada"), "when": text(""), "style": style_()})))
+    files["labels-mode-unknown.kcad"] = labelled_(cmap({"mode": text("blocking")}))
+    files["labels-unknown-field.kcad"] = labelled_(cmap({"mode": text("off"), "z": uint(1)}))
+    files["labels-obstacle-weight.kcad"] = labelled_(cmap({"mode": text("off"), "obstacle": cmap({"weight": uint(0)})}))
+    files["label-size-out.kcad"] = labelled_(label=cmap({"placement": text("center"), "size": f64(0.5), "text": text("Ada")}))
+    files["label-color-bad.kcad"] = labelled_(label=style_(color=text("kırmızı")))
+    files["label-text-blank.kcad"] = labelled_(label=style_(text=text(" Ada")))
+    files["label-priority-high.kcad"] = labelled_(label=style_(priority=uint(11)))
+    files["label-shrink-out.kcad"] = labelled_(label=style_(shrink=f64(0.3)))
+    files["label-stack-chars.kcad"] = labelled_(label=style_(stack=cmap({"mode": text("always"), "chars": uint(1)})))
+    files["label-abbreviate-empty.kcad"] = labelled_(label=style_(abbreviate=cmap({"words": array([])})))
+    files["label-abbreviate-twice.kcad"] = labelled_(label=style_(abbreviate=cmap({"words": array(
+        [cmap({"word": text("Sokak"), "short": text("Sk.")}), cmap({"word": text("Sokak"), "short": text("S.")})])})))
+    files["label-halo-wide.kcad"] = labelled_(label=style_(halo=cmap({"width": f64(12.0)})))
+    files["label-unknown-engine-field.kcad"] = labelled_(label=style_(glow=f64(1.0)))
+    pinned_ = lambda pins, schema=36: labelled_(cmap({"mode": text("off")}), schema=schema, entities=array([cmap({"point": cmap({
+        "uid": blob(uid_bytes(m["uids"][0])), "attrs": cmap({}), "layerId": text(top["id"]), "p": point(m["entities"][0]["p"]),
+        "labelPins": pins})})]))
+    files["label-pins-in-schema-35.kcad"] = labelled_(None, schema=35, entities=array([cmap({"point": cmap({
+        "uid": blob(uid_bytes(m["uids"][0])), "attrs": cmap({}), "layerId": text(top["id"]), "p": point(m["entities"][0]["p"]),
+        "labelPins": array([cmap({"hidden": boolean(True)})])})})]))
+    files["label-pins-empty.kcad"] = pinned_(array([]))
+    files["label-pin-rotation-alone.kcad"] = pinned_(array([cmap({"rotation": f64(10.0), "hidden": boolean(True)})]))
+    files["label-pin-hidden-false.kcad"] = pinned_(array([cmap({"at": point({"x": 1.0, "y": 2.0}), "hidden": boolean(False)})]))
+    files["label-pin-nothing.kcad"] = pinned_(array([cmap({"class": text("Ada")})]))
+    files["label-pin-class-twice.kcad"] = pinned_(array([cmap({"hidden": boolean(True)}), cmap({"hidden": boolean(True)})]))
+    files["label-pin-far.kcad"] = pinned_(array([cmap({"at": point({"x": 2e7, "y": 0.0})})]))
+    files["label-pin-unknown-field.kcad"] = pinned_(array([cmap({"hidden": boolean(True), "size": f64(2.0)})]))
+
     def node_(nid, node_type="layer", children=(), **extra):
         return cmap({"id": text(nid), "name": text(nid), **extra, "type": text(node_type), "visible": boolean(True),
                      "locked": boolean(False), "expanded": boolean(True), "style": cmap(layer_style_parts(top["style"])),
@@ -2425,6 +2567,7 @@ def build():
     out["networks.kcad"] = container(document(load("networks.json")))
     out["scenarios.kcad"] = container(document(load("scenarios.json")))
     out["filters.kcad"] = container(document(load("filters.json")))
+    out["labels.kcad"] = container(document(load("labels.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

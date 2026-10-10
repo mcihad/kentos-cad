@@ -248,6 +248,7 @@ fn base(rng: &mut Rng, layer: &str) -> EntityBase {
         label: rng.chance(30).then(|| rng.text()),
         symbol: rng.chance(10).then(|| rng.text()),
         line_weight: None,
+        label_pins: Vec::new(),
     }
 }
 
@@ -296,6 +297,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         min_scale: rng.chance(50).then(|| rng.float()),
         max_scale: rng.chance(50).then(|| rng.float()),
         ink: rng.chance(50).then_some(LabelInk::FgDim),
+        ..LabelStyle::default()
     });
     LayerNode {
         id,
@@ -322,6 +324,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
             renderer: rng
                 .chance(30)
                 .then(|| json!({ "type": "single", "x": opaque(rng, 2) })),
+            labels: None,
         },
         children: if group {
             (0..1 + rng.below(3))
@@ -364,6 +367,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 label: None,
                 pick_interior: None,
                 renderer: None,
+                labels: None,
             },
             children: Vec::new(),
             snap: None,

@@ -423,6 +423,8 @@ pub struct Observation {
     pub layers: Vec<String>,
     /// The layer tree's counts by path, as its rows show them (docs/adr/0211 §4).
     pub layer_counts: std::collections::BTreeMap<String, String>,
+    /// Every object's label pins, by its id, where it has any (docs/adr/0212 §2).
+    pub label_pins: BTreeMap<u32, Vec<kentos_contracts::LabelPin>>,
     /// The colour and line weight new objects take now.
     pub current_color: Option<String>,
     pub current_weight: Option<f64>,
@@ -608,6 +610,7 @@ impl<'a> Player<'a> {
     }
 
     fn act(&mut self, step: &Step) -> Result<(), String> {
+        self.keep_labels();
         let done = self.act_step(step);
         let at = self.app.text_field.as_ref().map(|f| f.at);
         if at.is_some() && at != self.field_at {
@@ -615,6 +618,21 @@ impl<'a> Player<'a> {
         }
         self.field_at = at;
         done
+    }
+
+    /// The drawing area's labels placed and kept as drawing it does every frame (docs/adr/0212 §3.8):
+    /// the label tools find the label clicked among them, and the player draws no picture.
+    fn keep_labels(&self) {
+        let camera = &self.app.viewport.camera;
+        let view = camera.visible_bounds();
+        let _ = self.app.spatial.labels_shown(
+            kentos_interaction::Vec2::new(view.min_x, view.min_y),
+            kentos_interaction::Vec2::new(view.max_x, view.max_y),
+            camera.scale,
+            self.app.label_size(),
+            self.app.label_engine().options,
+            true,
+        );
     }
 
     fn act_step(&mut self, step: &Step) -> Result<(), String> {
@@ -1220,6 +1238,13 @@ impl<'a> Player<'a> {
                 .map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |n| n.locked)),
             layers: doc.map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |_| true)),
             layer_counts: doc.map_or_else(Default::default, |d| layer_counts(app, d)),
+            label_pins: doc.map_or_else(BTreeMap::new, |d| {
+                d.model
+                    .entities()
+                    .filter(|e| !e.base().label_pins.is_empty())
+                    .map(|e| (e.base().id, e.base().label_pins.clone()))
+                    .collect()
+            }),
             current_color: app.draft.color_text(),
             current_weight: app.draft.line_weight,
         }

@@ -1,15 +1,18 @@
 //! Etiketleri yazıya çevir (docs/adr/0175 §3; Netcad's Etiketleri CAD'e
 //! çevir, ArcGIS' Convert Labels To Annotation, QGIS' Extract labels): the
-//! layers' labels written as text objects, as a sheet at 1:N writes them.
-//! The rule is the shared core's (`ops::label_text`, through the store's
-//! `label_texts`); the web's tool is `apps/web/src/tools/labelsToTextTool.ts`,
-//! and both play `fixtures/interaction/v1/labels-to-text.json`.
+//! layers' labels written as objects where the label engine places them at
+//! 1:N, as a sheet writes them (docs/adr/0212 §4): a one-line label a text,
+//! a stacked one a multi-line text, a curved one a text along a curve, a
+//! callout a line. The placing is the shared core's (`ops::label_text`,
+//! through the store's `label_texts`); the web's tool is
+//! `apps/web/src/tools/labelsToTextTool.ts`, and both play
+//! `fixtures/interaction/v1/labels-to-text.json`.
 //!
-//! - **Scope**, taken when it starts: the selection's labels, else every
-//!   labelled object's on a visible layer; a label's style is its layer's,
-//!   else its kind's default, as the drawing shows it. Texts, dimensions and
-//!   leaders show none, and an object whose label a text writes already
-//!   (docs/adr/0175 §4) has its text for a label.
+//! - **Scope**, taken when it starts: the selection's objects, else every
+//!   object on a visible layer; their labels are the drawing's (each layer's
+//!   labelling, its classes' texts). Texts, dimensions and leaders show none,
+//!   and an object whose label a text writes already (docs/adr/0175 §4) has
+//!   its text for a label.
 //! - **Options**, as Topolojik temizlik's: a number typed is the scale (Ö
 //!   asks for it; each run starts at the project's drawing scale);
 //!   Örtüşenler de (R), Zemin (Z), Katman (K: the standard text layer or
@@ -23,12 +26,11 @@
 //!   Esc leaves.
 
 use kentos_contracts::{
-    CreateOperation, EntitiesCreate, Entity, EntityGeometry, LabelPlacement, LabelStyle, NewObject,
-    TextAlign,
+    CreateOperation, EntitiesCreate, Entity, EntityGeometry, LabelsMode, NewObject, TextAlign,
+    TextFace, TextPath,
 };
 use kentos_domain::Slot;
-use kentos_geometry_core::ops::label_text::LabelTexts;
-use kentos_geometry_core::store::labels::{LabelLook, LabelWanted, Placement};
+use kentos_geometry_core::ops::label_text::{LabelText, LabelTexts};
 use kentos_native_application::{ExecutionContext, create};
 
 use crate::Vec2;
@@ -36,7 +38,6 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
-use crate::spatial::default_label;
 use crate::standard_layer;
 use crate::tool::{Context, Cursor, Flow, Preview, Tag, TextGhost, Tool};
 
@@ -51,8 +52,8 @@ const MAX_SHOWN: usize = 2000;
 /// The tool.
 #[derive(Clone, Debug, Default)]
 pub struct LabelsToText {
-    /// The labels it converts, taken when it starts, in the drawing's order.
-    wanted: Vec<LabelWanted>,
+    /// The objects whose labels it converts, taken when it starts, in the drawing's order.
+    wanted: Vec<f64>,
     whole: bool,
     /// The scale's denominator: the project's when the tool starts.
     scale: u64,
@@ -101,25 +102,21 @@ impl LabelsToText {
             .into_iter()
             .filter_map(|e| {
                 let base = e.base();
-                let label = base.label.as_deref().filter(|l| !l.is_empty())?;
-                // A text writes its label already (docs/adr/0175 §4).
+                // A text writes its label already (docs/adr/0175 §4); a layer labelled with nothing has none.
+                let off = layers
+                    .get(&base.layer_id)
+                    .and_then(|l| l.style.labels.as_ref())
+                    .is_some_and(|l| l.mode == LabelsMode::Off);
                 if matches!(
                     e,
                     Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_)
-                ) || !layers.is_visible(&base.layer_id)
+                ) || off
+                    || !layers.is_visible(&base.layer_id)
                     || doc.has_linked_text(Slot(base.id))
                 {
                     return None;
                 }
-                let style = layers
-                    .get(&base.layer_id)
-                    .and_then(|l| l.style.label.clone())
-                    .or_else(|| default_label(e.kind()))?;
-                Some(LabelWanted {
-                    id: f64::from(base.id),
-                    label: label.to_owned(),
-                    style: look(&style),
-                })
+                Some(f64::from(base.id))
             })
             .collect();
         if self.wanted.is_empty() {
@@ -164,7 +161,7 @@ impl LabelsToText {
         let texts = cx
             .spatial
             .store()
-            .label_texts(&self.wanted, self.scale as f64, thin);
+            .label_texts(&self.wanted, self.scale as f64, !thin);
         self.plan = Some((generation, self.scale, thin, texts));
         true
     }
@@ -212,12 +209,23 @@ impl LabelsToText {
         // Nesneye bağlı: each text knows its object and the scale (docs/adr/0175 §4).
         let scale = self.scale as f64;
         let link = |item: usize| {
-            let slot = Slot(self.wanted.get(item)?.id as u32);
+            let slot = Slot(*self.wanted.get(item)? as u32);
             let uid = cx.doc.uid(slot)?.to_string();
             Some((uid, scale))
         };
         let linked = cx.memory.labels_linked;
-        let objects = r
+        let v = |p: Vec2| kentos_contracts::Vec2 { x: p.x, y: p.y };
+        let bare = |geometry: EntityGeometry| NewObject {
+            geometry,
+            color: None,
+            line_weight: None,
+            attrs: None,
+            label: None,
+            label_of: None,
+            label_scale: None,
+            symbol: None,
+        };
+        let mut objects: Vec<NewObject> = r
             .texts
             .iter()
             .map(|t| {
@@ -226,8 +234,10 @@ impl LabelsToText {
                     None => (None, None),
                 };
                 NewObject {
-                    geometry: EntityGeometry::Text {
-                        p: kentos_contracts::Vec2 { x: t.p.x, y: t.p.y },
+                    label_of,
+                    label_scale,
+                    ..bare(EntityGeometry::Text {
+                        p: v(t.p),
                         text: t.text.clone(),
                         height: t.height,
                         rotation: t.rotation,
@@ -235,21 +245,24 @@ impl LabelsToText {
                         width_factor: None,
                         mask,
                         box_width: None,
-                        line_spacing: None,
+                        line_spacing: t.line_spacing,
                         runs: Vec::new(),
-                        face: Default::default(),
-                        path: None,
-                    },
-                    color: None,
-                    line_weight: None,
-                    attrs: None,
-                    label: None,
-                    label_of,
-                    label_scale,
-                    symbol: None,
+                        face: face_of(cx, &self.wanted, t),
+                        path: t.path.as_ref().map(|pts| TextPath {
+                            pts: pts.iter().map(|p| v(*p)).collect(),
+                            bulges: None,
+                        }),
+                    })
                 }
             })
             .collect();
+        objects.extend(r.callouts.iter().map(|c| {
+            bare(EntityGeometry::Line {
+                a: v(c.from),
+                b: v(c.to),
+                zs: None,
+            })
+        }));
         let active = cx.memory.labels_active;
         let layer_id = if active {
             cx.doc.layers().active().to_owned()
@@ -296,23 +309,92 @@ impl LabelsToText {
     }
 }
 
-/// The label style's parts the store reads (docs/adr/0175 §1).
-fn look(s: &LabelStyle) -> LabelLook {
-    LabelLook {
-        placement: match s.placement {
-            LabelPlacement::Center => Placement::Center,
-            LabelPlacement::Corner => Placement::Corner,
-            LabelPlacement::Beside => Placement::Beside,
-            LabelPlacement::Along => Placement::Along,
-        },
-        size: s.size,
-        grow: s.grow,
-        max_size: s.max_size,
-        template: s.template.clone(),
-        min_feature_px: s.min_feature_px,
-        min_scale: s.min_scale,
-        max_scale: s.max_scale,
+/// A label's text's face: its class's weight and slant (its colour stays the layer's).
+fn face_of(cx: &Context<'_>, wanted: &[f64], t: &LabelText) -> TextFace {
+    let style = wanted
+        .get(t.item)
+        .and_then(|&id| cx.doc.get(Slot(id as u32)))
+        .and_then(|e| {
+            let node = cx.doc.layers().get(&e.base().layer_id)?;
+            match node
+                .style
+                .labels
+                .as_ref()
+                .filter(|l| l.mode == LabelsMode::Rules)
+            {
+                Some(l) => l.classes.get(t.class as usize).map(|c| c.style.clone()),
+                None => node.style.label.clone(),
+            }
+        });
+    TextFace {
+        bold: style
+            .as_ref()
+            .is_some_and(|s| s.weight.unwrap_or(500) >= 600),
+        italic: style.as_ref().is_some_and(|s| s.italic == Some(true)),
+        ..TextFace::default()
     }
+}
+
+/// A text as the preview draws it: a one-line text itself, a multi-line
+/// text a line at a time (1.2 heights apart), a curved one a letter at a
+/// time on its curve's middles.
+fn ghosts(t: &LabelText, mask: bool) -> Vec<TextGhost> {
+    let ghost = |p: Vec2,
+                 text: String,
+                 rotation: f64,
+                 align: kentos_geometry_core::text::TextAlign| TextGhost {
+        p,
+        text,
+        height: t.height,
+        rotation,
+        align: Some(align),
+        mask,
+        face: Default::default(),
+        width_factor: 1.0,
+    };
+    if let Some(path) = t.path.as_ref().filter(|p| !p.is_empty()) {
+        let at = |i: isize| {
+            if i < 0 {
+                t.p
+            } else {
+                let q = path[(i as usize).min(path.len() - 1)];
+                Vec2::new(t.p.x + q.x, t.p.y + q.y)
+            }
+        };
+        return t
+            .text
+            .chars()
+            .enumerate()
+            .map(|(i, ch)| {
+                let (a, b) = (at(i as isize - 1), at(i as isize + 1));
+                let deg = (b.y - a.y).atan2(b.x - a.x).to_degrees();
+                ghost(
+                    at(i as isize),
+                    ch.to_string(),
+                    deg,
+                    kentos_geometry_core::text::TextAlign::MiddleCenter,
+                )
+            })
+            .collect();
+    }
+    let lines: Vec<&str> = t.text.split('\n').collect();
+    if lines.len() == 1 {
+        return vec![ghost(t.p, t.text.clone(), t.rotation, t.align)];
+    }
+    let (c, s) = (t.rotation.to_radians().cos(), t.rotation.to_radians().sin());
+    lines
+        .iter()
+        .enumerate()
+        .map(|(i, line)| {
+            let up = ((lines.len() - 1) as f64 / 2.0 - i as f64) * 1.2 * t.height;
+            ghost(
+                Vec2::new(t.p.x - up * s, t.p.y + up * c),
+                (*line).to_owned(),
+                t.rotation,
+                t.align,
+            )
+        })
+        .collect()
 }
 
 /// The core's alignment as the contract names it (the same names).
@@ -438,12 +520,24 @@ impl Tool for LabelsToText {
             return Flow::Exit;
         }
         self.refresh(cx);
+        // Objects with no label at all (no text in any class): nothing to convert.
+        if self
+            .texts()
+            .is_some_and(|r| r.texts.len() + r.out_of_scale + r.small + r.overlapping == 0)
+        {
+            let place = if self.whole { "çizimde" } else { "seçimde" };
+            cx.say(
+                Level::Warn,
+                format!("{LABEL}: {place} yazıya çevrilecek etiket yok."),
+            );
+            return Flow::Exit;
+        }
         let place = if self.whole {
             "bütün çizimde"
         } else {
             "seçimde"
         };
-        self.tell(cx, Some(format!("{place} {} etiket", self.wanted.len())));
+        self.tell(cx, Some(format!("{place} {} nesne", self.wanted.len())));
         Flow::Stay
     }
 
@@ -538,16 +632,13 @@ impl Tool for LabelsToText {
                 .texts
                 .iter()
                 .take(MAX_SHOWN)
-                .map(|t| TextGhost {
-                    p: t.p,
-                    text: t.text.clone(),
-                    height: t.height,
-                    rotation: t.rotation,
-                    align: Some(t.align),
-                    mask,
-                    face: Default::default(),
-                    width_factor: 1.0,
-                })
+                .flat_map(|t| ghosts(t, mask))
+                .collect(),
+            guides: r
+                .callouts
+                .iter()
+                .take(MAX_SHOWN)
+                .map(|c| [c.from, c.to])
                 .collect(),
             tag: self.hover.map(|at| Tag {
                 at,

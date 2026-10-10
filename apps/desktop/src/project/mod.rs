@@ -487,6 +487,7 @@ mod tests {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         };
         let pts = [(0.0, 0.0), (0.12, 0.0), (0.12, 0.08), (0.0, 0.08)];
         let plate = Entity::Polygon(PathEntity {

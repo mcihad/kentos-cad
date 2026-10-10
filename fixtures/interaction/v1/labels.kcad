@@ -32,7 +32,8 @@
           "placement": "center",
           "size": 10,
           "grow": 1,
-          "maxSize": 14
+          "maxSize": 14,
+          "inside": true
         }
       },
       "children": []

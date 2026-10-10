@@ -116,6 +116,7 @@ impl Placing {
                     label: None,
                     symbol: None,
                     line_weight: None,
+                    label_pins: Vec::new(),
                 };
                 Some((
                     tag,
@@ -677,6 +678,7 @@ fn entity(s: &Shape) -> Option<Entity> {
         label: None,
         symbol: None,
         line_weight: None,
+        label_pins: Vec::new(),
     };
     let path =
         |base, pts: &[CoreVec2], bulges: &Option<Vec<f64>>, holes: &Option<Vec<Ring>>| PathEntity {

@@ -1,6 +1,8 @@
 import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
 import type { LayerField } from '../contracts/generated/LayerField';
+import type { LabelStyle } from '../contracts/generated/LabelStyle';
 import type { LayerFilter } from '../contracts/generated/LayerFilter';
+import type { LayerLabels } from '../contracts/generated/LayerLabels';
 import type { LayerTime } from '../contracts/generated/LayerTime';
 import type { ScenarioInfo } from '../contracts/generated/ScenarioInfo';
 import type { ServiceLayer } from '../contracts/generated/ServiceLayer';
@@ -14,24 +16,12 @@ export const LINE_TYPES: readonly LineType[] = ['continuous', 'dashed', 'dashdot
 
 export type PointSymbol = 'ring' | 'cross' | 'triangle';
 
-/** How entity labels on a layer are drawn. Screen sizes are CSS px. */
-export interface LabelStyle {
-  /** centre of a polygon, top-left of its bounds, beside a point, or along a line. */
-  placement: 'center' | 'corner' | 'beside' | 'along';
-  size: number;
-  /** Extra px per (px/m) of zoom, capped at maxSize. */
-  grow?: number;
-  maxSize?: number;
-  weight?: 400 | 500 | 600;
-  /** "{label}" is replaced with the entity label. */
-  template?: string;
-  /** Hide when the feature's smaller side is below this on screen. */
-  minFeaturePx?: number;
-  /** Visible zoom range in px per metre. */
-  minScale?: number;
-  maxScale?: number;
-  ink?: 'fg' | 'fg-dim' | 'label';
-}
+/**
+ * How entity labels on a layer are drawn (the contract's, docs/adr/0212 §2): sizes CSS px, scales px per metre. The
+ * old four placements (`center` …) and their fields, and the label engine's: the text as an expression, the kinds'
+ * placements, the format, the fitting, priority and overlap.
+ */
+export type { LabelStyle } from '../contracts/generated/LabelStyle';
 
 export interface LayerStyle {
   /** Hex colour, or a theme token: "fg" (main ink) / "fg-dim". */
@@ -44,6 +34,8 @@ export interface LayerStyle {
   /** Symbol and diameter (px) for point entities. */
   point?: { symbol: PointSymbol; size: number };
   label?: LabelStyle;
+  /** How the layer is labelled (docs/adr/0212 §2): rule-based classes, none, its objects as obstacles; absent, by `label`. */
+  labels?: LayerLabels;
   /**
    * Whether clicking inside a closed shape selects it (GIS-style area pick).
    * Off for frames and reference outlines that enclose everything.

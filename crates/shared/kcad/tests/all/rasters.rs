@@ -75,6 +75,7 @@ fn raster(fields: impl FnOnce(&mut RasterFields)) -> Entity {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         raster,
     })

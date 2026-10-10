@@ -575,6 +575,28 @@ export class CoreStyleProgram {
  * in as JSON; queries take numbers and give flat arrays (ids are numbers).
  * Every call reports a trap as `op` does.
  */
+
+/** A label the store placed (docs/adr/0212 §4): its object, class, state, middle (world), angle (degrees) and block (px). */
+export interface StoreLabelHit {
+  id: number;
+  cls: number;
+  state: number;
+  at: { x: number; y: number };
+  angle: number;
+  w: number;
+  h: number;
+}
+
+const labelHit = (r: ArrayLike<number>, i: number): StoreLabelHit => ({
+  id: r[i],
+  cls: r[i + 1],
+  state: r[i + 2],
+  at: { x: r[i + 3], y: r[i + 4] },
+  angle: r[i + 5],
+  w: r[i + 6],
+  h: r[i + 7],
+});
+
 export class CoreStore {
   private readonly raw: GeometryStore;
 
@@ -634,10 +656,70 @@ export class CoreStore {
     return typed(() => this.raw.explodeInsert(entityJson));
   }
 
+  /**
+   * The label engine alone (docs/adr/0212 §3; the shared cases' fixtures/labels/v1): the labels of a window at `scale`
+   * px/m around the drawing's texts' outlines `fixedJson` (`[[[x, y] …] …]`, world); `flags` as `labels`'. Their texts
+   * are `placedTexts`'.
+   */
+  placeLabels(x0: number, y0: number, x1: number, y1: number, scale: number, fixedJson: string, flags = 0): Float64Array {
+    return typed(() => this.raw.placeLabels(x0, y0, x1, y1, scale, fixedJson, flags));
+  }
+
+  /** The texts of the labels last asked, a line each. */
+  placedTextsOf(): string[] {
+    const t = typed(() => this.raw.placedTexts());
+    return t ? t.split('\n') : [];
+  }
+
   /** Label rules by kind for layers without a label style. */
   setLabelDefaults(json: string): void {
     typed(() => this.raw.setLabelDefaults(json));
   }
+
+  /** The label engine's layers (docs/adr/0212 §3.1): `[{ id, rank, point?, label?, labels? }]` as JSON. */
+  setLabelLayers(json: string): void {
+    typed(() => this.raw.setLabelLayers(json));
+  }
+
+  /**
+   * Objects' labels' texts (docs/adr/0212 §3.1): `ids[i]`'s are the entries `from[i]..from[i + 1]` of `classes` and
+   * `texts` (`lens` their UTF-16 lengths), its height `zs[i]` (NaN none). An object with none forgets its own.
+   */
+  setObjectLabels(ids: Float64Array, from: Uint32Array, classes: Uint16Array, texts: string, lens: Uint32Array, zs: Float64Array): void {
+    typed(() => this.raw.setObjectLabels(ids, from, classes, texts, lens, zs));
+  }
+
+  /** Objects' pins (docs/adr/0212 §3.7): `[[id, [LabelPin …]] …]` as JSON; an empty list forgets an object's. */
+  setLabelPins(json: string): void {
+    typed(() => this.raw.setLabelPins(json));
+  }
+
+  /** The texts of the labels last asked, a string each (`labels`' and `labelsShown`'s records name them by index). */
+  placedTexts(): string[] {
+    const t = typed(() => this.raw.placedTexts());
+    return t ? t.split('\n') : [];
+  }
+
+  /** The label under (x, y) among the main view's last labels within `tol` px; `all` counts the unplaced and hidden. */
+  labelAt(x: number, y: number, tol: number, all: boolean): StoreLabelHit | null {
+    const r = typed(() => this.raw.labelAt(x, y, tol, all));
+    return r.length ? labelHit(r, 0) : null;
+  }
+
+  /** The labels whose middle is in the box (x0, y0)–(x1, y1) among the main view's last labels (docs/adr/0212 §4). */
+  labelsIn(x0: number, y0: number, x1: number, y1: number, all: boolean): StoreLabelHit[] {
+    const r = typed(() => this.raw.labelsIn(x0, y0, x1, y1, all));
+    const out: StoreLabelHit[] = [];
+    for (let i = 0; i + 8 <= r.length; i += 8) out.push(labelHit(r, i));
+    return out;
+  }
+
+  /** Where an object's labels are pinned from: its anchor (world), null for none (docs/adr/0212 §2). */
+  labelAnchor(id: number): { x: number; y: number } | null {
+    const r = typed(() => this.raw.labelAnchor(id));
+    return r.length ? { x: r[0], y: r[1] } : null;
+  }
+
 
   /** The objects whose label a text writes (docs/adr/0175 §4): `labels` leaves their own out. */
   setTextLabelled(ids: Float64Array): void {
@@ -687,22 +769,26 @@ export class CoreStore {
     return typed(() => this.raw.viewMask(ids));
   }
 
-  /** What the overlay draws in the view: eight numbers per record (geometry-core store/labels.rs). */
-  labels(minX: number, minY: number, maxX: number, maxY: number, scale: number, editing: number | null): Float64Array {
-    return typed(() => this.raw.labels(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0));
+  /**
+   * What the overlay draws in the view: nine numbers per record (geometry-core store/labels.rs); the objects' labels
+   * placed by the label engine (docs/adr/0212 §3.8), their texts then `placedTexts`. `flags`: 1 the unplaced too,
+   * 2 the hidden, 4 kept for `labelAt`.
+   */
+  labels(minX: number, minY: number, maxX: number, maxY: number, scale: number, editing: number | null, flags = 0): Float64Array {
+    return typed(() => this.raw.labels(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0, flags));
   }
 
   /**
    * The same as the view shows them under `size` (`graphics.annotationSize`, docs/adr/0205 §5): each record, its factor
    * and the point it grows about (store/legible.rs, `LABEL_SHOWN_STRIDE` numbers a record).
    */
-  labelsShown(minX: number, minY: number, maxX: number, maxY: number, scale: number, editing: number | null, size: string, plotScale: number): Float64Array {
-    return typed(() => this.raw.labelsShown(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0, size, plotScale));
+  labelsShown(minX: number, minY: number, maxX: number, maxY: number, scale: number, editing: number | null, size: string, plotScale: number, flags = 0): Float64Array {
+    return typed(() => this.raw.labelsShown(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0, size, plotScale, flags));
   }
 
-  /** Etiketleri yazıya çevir (docs/adr/0175 §1): `[{ id, label, style }]` as JSON → `{ texts, outOfScale, small, overlapping }`. */
-  labelTexts(wantedJson: string, scale: number, thin: boolean): string {
-    return typed(() => this.raw.labelTexts(wantedJson, scale, thin));
+  /** Etiketleri yazıya çevir (docs/adr/0212 §4): the objects' ids → `{ texts, callouts, outOfScale, small, overlapping }` as JSON. */
+  labelTexts(ids: Float64Array, scale: number, every: boolean): string {
+    return typed(() => this.raw.labelTexts(ids, scale, every));
   }
 
   /** Grips of these objects: `id, count, vertices`, then `x, y, segment` per grip. */

@@ -742,6 +742,7 @@ impl App {
                     self.color_mode(),
                     self.label_size(),
                     lift,
+                    self.label_engine(),
                 );
                 let area = self.viewport.view(
                     doc,
@@ -850,6 +851,7 @@ impl App {
             self.paragraph_preview(),
             self.color_mode(),
             self.label_size(),
+            self.label_engine(),
         );
         stack![
             self.viewport.lens(camera, self.canvas()),
@@ -1657,6 +1659,7 @@ impl App {
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
+            Asking::Labelling => self.labelling_view(),
             Asking::Connections => self.connections_view(),
             Asking::ServiceAdd => self.service_window_view(),
             Asking::Feed => self.feed_window_view(),

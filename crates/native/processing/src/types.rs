@@ -140,7 +140,8 @@ pub struct NewLayerStyle {
     /// The areas' fill (hex with alpha).
     pub fill: Option<String>,
     pub point: Option<PointStyle>,
-    pub label: Option<LabelStyle>,
+    /// Boxed: the label engine's style is large (docs/adr/0212 §2), a parameter's kind stays small.
+    pub label: Option<Box<LabelStyle>>,
 }
 
 impl NewLayerStyle {
@@ -158,8 +159,8 @@ impl NewLayerStyle {
         if self.point.is_some() {
             base.point.clone_from(&self.point);
         }
-        if self.label.is_some() {
-            base.label.clone_from(&self.label);
+        if let Some(label) = &self.label {
+            base.label = Some(LabelStyle::clone(label));
         }
         base
     }

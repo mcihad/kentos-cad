@@ -75,16 +75,20 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.network.define",
         "cad.layers.time",
         "cad.scenarios.edit",
+        "cad.layers.labels",
+        "cad.labels.pin",
     ] {
         assert!(names.contains(&name), "{name}");
     }
     // A map service layer's command removes a layer too (docs/adr/0208 §15), a network's its definition (0209 §11),
-    // a layer's time its time and a scenario's apply its layers (0210 §11).
+    // a layer's time its time and a scenario's apply its layers (0210 §11), a labelling or a pin with null (0212 §5).
     for name in [
         "cad.layers.service",
         "cad.network.define",
         "cad.layers.time",
         "cad.scenarios.edit",
+        "cad.layers.labels",
+        "cad.labels.pin",
     ] {
         let tool = tools
             .iter()
@@ -724,4 +728,52 @@ fn a_desktop_handle_sends_the_tools_to_the_drawing_on_the_screen() {
     );
     assert_eq!(none["structuredContent"]["error"]["code"], "no_desktop");
     let _ = std::fs::remove_dir_all(dir);
+}
+
+/// The label engine's commands as tools (docs/adr/0212 §5): a layer's labelling written in rules, an
+/// object's label pinned by hand, a pin against the rules refused with its reason.
+#[test]
+fn a_layer_is_labelled_by_rules_and_a_label_pinned() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({ "srid": 5256 }));
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let layer = made["structuredContent"]["summary"]["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let written = call(
+        &mut server,
+        "cad.polygon.create",
+        json!({ "drawing": drawing, "layerId": layer, "pts": square() }),
+    );
+    let uid = written["structuredContent"]["output"]["uid"]
+        .as_str()
+        .expect("the object's id")
+        .to_owned();
+    let labelled = call(
+        &mut server,
+        "cad.layers.labels",
+        json!({ "drawing": drawing, "layer": layer, "labels": { "mode": "rules", "classes": [
+            { "name": "No", "style": { "placement": "center", "size": 10, "text": "$etiket" } }
+        ] } }),
+    );
+    assert_eq!(labelled["isError"], false, "{labelled}");
+    assert_eq!(labelled["structuredContent"]["output"]["changed"], true);
+    let pinned = call(
+        &mut server,
+        "cad.labels.pin",
+        json!({ "drawing": drawing, "pins": [{ "uid": uid, "class": "No", "pin": { "at": { "x": 3, "y": -2 }, "rotation": 15 } }] }),
+    );
+    assert_eq!(pinned["isError"], false, "{pinned}");
+    assert_eq!(pinned["structuredContent"]["output"]["changed"], 1);
+    let refused = call(
+        &mut server,
+        "cad.labels.pin",
+        json!({ "drawing": drawing, "pins": [{ "uid": uid, "pin": { "rotation": 15 } }] }),
+    );
+    assert_eq!(refused["isError"], true);
+    assert_eq!(refused["structuredContent"]["status"], "failed");
 }

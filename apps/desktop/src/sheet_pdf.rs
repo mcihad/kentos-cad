@@ -180,9 +180,35 @@ pub(crate) fn vector_content(
             Some(MapLayerContent {
                 id: l.id.clone(),
                 name: l.name.clone(),
+                // Placed labels' shadows and backgrounds, then the texts' masks, the underlines and
+                // the callouts and outlines (docs/adr/0212 §4), all under the texts.
                 paths: mine
                     .iter()
-                    .filter_map(|t| t.mask.as_deref().map(mask_of))
+                    .filter_map(|t| {
+                        t.fill.as_deref().map(|ring| MapPath {
+                            points: ring.to_vec(),
+                            closed: true,
+                            holes: Vec::new(),
+                            stroke: None,
+                            fill: Some(hex_of(t.color)),
+                        })
+                    })
+                    .chain(mine.iter().filter_map(|t| t.mask.as_deref().map(mask_of)))
+                    .chain(mine.iter().filter_map(|t| {
+                        t.stroke.as_ref().map(|(line, closed)| MapPath {
+                            points: line.clone(),
+                            closed: *closed,
+                            holes: Vec::new(),
+                            stroke: Some(kentos_sheet::pdf::MapStroke {
+                                color: hex_of(t.color),
+                                width: crate::sheet_pdf::PX_MM,
+                                dash: Vec::new(),
+                                cap: kentos_sheet::LineCap::Butt,
+                                join: kentos_sheet::LineJoin::Miter,
+                            }),
+                            fill: None,
+                        })
+                    }))
                     .chain(mine.iter().filter_map(|t| {
                         t.underline.as_deref().map(|bar| MapPath {
                             points: bar.to_vec(),

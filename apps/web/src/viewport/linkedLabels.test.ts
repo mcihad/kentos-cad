@@ -17,9 +17,9 @@ const view = { minX: -50, minY: -50, maxX: 150, maxY: 150 };
 
 /** The ids of the objects whose own label (not a text's) the store places at 3 px/m. */
 function labelled(index: PickIndex): number[] {
-  const records = index.labels(view, 3, null);
+  const { records } = index.labels(view, 3, null);
   const out: number[] = [];
-  for (let i = 0; i < records.length; i += LABEL_STRIDE) if (records[i + 1] === LABEL.center) out.push(records[i]);
+  for (let i = 0; i < records.length; i += LABEL_STRIDE) if (records[i + 1] === LABEL.placed) out.push(records[i]);
   return out;
 }
 

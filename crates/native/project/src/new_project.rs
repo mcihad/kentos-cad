@@ -238,6 +238,7 @@ fn label(placement: LabelPlacement, size: f64) -> LabelStyle {
         min_scale: None,
         max_scale: None,
         ink: None,
+        ..LabelStyle::default()
     }
 }
 

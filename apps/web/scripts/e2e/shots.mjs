@@ -2988,6 +2988,89 @@ SCENES.networks = [
   { id: 'aglar-serit', open: async (ui) => (await loadNetworks(ui), await ribbonOn(ui, { ribbonTab: 'analysis' }), await ui.sleep(300)), close: ribbonOff },
 ];
 
+// Etiket motoru (docs/adr/0212) on fixtures/interaction/v1/label-engine.kcad (scripts/fixtures/label_engine_scene.py): the
+// whole scene, closer in; Etiketler's window (Kurallı's classes, the five tabs, a layer that only blocks) and the label
+// tools (taşı, döndür, gizle; yerleşmeyen and sabit etiketler). The desktop's are `label_scenes` (arac-etiket-*).
+const LABEL_DRAWING = readFileSync(new URL('../../../../fixtures/interaction/v1/label-engine.kcad', import.meta.url), 'utf8');
+const loadLabels = async (ui, box = { minX: 486985, minY: 4419985, maxX: 487295, maxY: 4420180 }) => {
+  // The CBS ribbon's Harita, its Etiket panel in sight (the desktop's scenes open it too).
+  await ribbonOn(ui, { ribbonTab: 'map' });
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(LABEL_DRAWING)}, null))) throw new Error('label-engine.kcad did not load');
+    k.view.zoomToBox(${JSON.stringify(box)}, 24);
+    k.selection.clear();
+  })()`);
+  await ui.sleep(400);
+};
+const LABELS_CLOSE = { minX: 487000, minY: 4420000, maxX: 487150, maxY: 4420110 };
+/** Etiketler over a layer, a class chosen and a tab open (the desktop's `label_scenes::window`). */
+const labelsWindow = (layer, cls, tab) => async (ui) => {
+  await loadLabels(ui);
+  await ui.eval(`window.kentos.commands.execute('layer.labels', '${layer}')`);
+  await ui.waitFor(`!!document.querySelector('.dialog--labels')`);
+  if (cls > 0) await ui.eval(`document.querySelectorAll('.dialog--labels .lbl-class')[${cls}].click()`);
+  await ui.clickText('.dialog--labels .lbl-tabs .tab', tab);
+  await ui.sleep(250);
+};
+/** The page point of the widest placed label of a layer's objects on screen, as the view last drew it. */
+const LABEL_ON = (layer) => `(() => {
+  const k = window.kentos;
+  const b = k.view.camera.visibleBounds();
+  const dx = (b.maxX - b.minX) * 0.1, dy = (b.maxY - b.minY) * 0.1;
+  const hits = k.view.labelsIn({ x: b.minX + dx, y: b.minY + dy }, { x: b.maxX - dx, y: b.maxY - dy }).filter((h) => k.doc.get(h.id)?.layerId === '${layer}');
+  if (!hits.length) throw new Error('no label on ${layer}');
+  const h = hits.reduce((a, c) => (c.w > a.w ? c : a));
+  return [h.at.x, h.at.y];
+})()`;
+/** A label tool started, the widest label of a layer clicked, the pointer then `by` metres away. */
+const labelTool = (tool, layer, by) => async (ui) => {
+  await loadLabels(ui, LABELS_CLOSE);
+  await ui.eval(`window.kentos.commands.execute('tool.${tool}')`);
+  const [x, y] = await ui.eval(LABEL_ON(layer));
+  await ui.clickAt(...(await ui.eval(PAGE_AT(x, y))));
+  if (by) await hoverAt(ui, x + by[0], y + by[1]);
+  await ui.sleep(300);
+};
+SCENES.labels = [
+  { id: 'etiket-sahne', open: (ui) => loadLabels(ui), close: ribbonOff },
+  { id: 'etiket-yakin', open: (ui) => loadLabels(ui, LABELS_CLOSE), close: ribbonOff },
+  { id: 'etiket-pencere', open: labelsWindow('parsel', 1, 'Metin'), close: ribbonOff },
+  { id: 'etiket-pencere-yerlesim', open: labelsWindow('parsel', 0, 'Yerleşim'), close: ribbonOff },
+  { id: 'etiket-pencere-bicim', open: labelsWindow('parsel', 0, 'Biçim'), close: ribbonOff },
+  { id: 'etiket-pencere-sigdirma', open: labelsWindow('parsel', 1, 'Sığdırma'), close: ribbonOff },
+  { id: 'etiket-pencere-oncelik', open: labelsWindow('esyukselti', 0, 'Öncelik'), close: ribbonOff },
+  { id: 'etiket-pencere-engel', open: labelsWindow('bina', 0, 'Metin'), close: ribbonOff },
+  { id: 'etiket-tasi', open: labelTool('labelMove', 'parsel', [9, -6]), close: ribbonOff },
+  { id: 'etiket-dondur', open: labelTool('labelRotate', 'yol', [14, 9]), close: ribbonOff },
+  {
+    id: 'etiket-gizle',
+    open: async (ui) => {
+      await labelTool('labelHide', 'parsel', null)(ui);
+      await ui.key('g');
+      await ui.sleep(300);
+    },
+    close: ribbonOff,
+  },
+  {
+    id: 'etiket-yerlesmeyen',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.prefs.unplacedLabels.set(true)`);
+      await loadLabels(ui, { minX: 486940, minY: 4419955, maxX: 487350, maxY: 4420230 });
+    },
+    close: async (ui) => (await ui.eval(`window.kentos.prefs.unplacedLabels.set(false)`), await ribbonOff(ui)),
+  },
+  {
+    id: 'etiket-sabit',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.prefs.pinnedLabels.set(true)`);
+      await loadLabels(ui, LABELS_CLOSE);
+    },
+    close: async (ui) => (await ui.eval(`window.kentos.prefs.pinnedLabels.set(false)`), await ribbonOff(ui)),
+  },
+];
+
 // Zaman and Senaryo (docs/adr/0210) on fixtures/interaction/v1/temporal.kcad, the scenes the desktop's
 // `temporal_scenes` draws: the CBS ribbon's Harita with its Zaman and Senaryo panels; the slider at its last position
 // and back in 2015; Zaman ayarları; Senaryo oluştur; the scenario shown; Senaryoyu uygula's question; Zamanı

@@ -81,6 +81,8 @@ pub(crate) enum Target {
     Network(crate::networks::window::Field),
     /// Katman süzgeci's condition (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter,
+    /// Etiketler's class condition or label text (labelling/, docs/adr/0212 §4).
+    Labels(crate::labelling::Field),
 }
 
 /// A field's values listed in the help.
@@ -708,24 +710,50 @@ impl App {
 
     /// Katman süzgeci's ε: the builder on its condition, the layer's keys and objects.
     pub(crate) fn open_builder_for_layer_filter(&mut self) -> Task<Message> {
-        let (Some(doc), Some((layer, value))) = (&self.document, self.layer_filter_expression())
-        else {
+        let Some((layer, value)) = self.layer_filter_expression() else {
+            return Task::none();
+        };
+        let context = format!("{} · İfade", crate::layer_filters::TITLE);
+        self.open_builder_on_layer(Target::LayerFilter, context, &layer, &value)
+    }
+
+    /// Etiketler's ε (labelling/, docs/adr/0212 §4): the builder on a class's condition or a
+    /// label's text, the layer's keys and objects.
+    pub(crate) fn open_builder_for_labels(
+        &mut self,
+        field: crate::labelling::Field,
+        layer: &str,
+        value: &str,
+    ) -> Task<Message> {
+        let context = format!("{} · İfade", crate::labelling::TITLE);
+        self.open_builder_on_layer(Target::Labels(field), context, layer, value)
+    }
+
+    /// The builder on an expression over a layer: the layer's fields first, then its objects'
+    /// other keys; its objects to preview on.
+    fn open_builder_on_layer(
+        &mut self,
+        target: Target,
+        context: String,
+        layer: &str,
+        value: &str,
+    ) -> Task<Message> {
+        let Some(doc) = &self.document else {
             return Task::none();
         };
         let slots: Vec<Slot> = doc
             .model
-            .by_layer(&layer)
+            .by_layer(layer)
             .take(5000)
             .map(|e| Slot(e.base().id))
             .collect();
-        // The layer's fields first, then its objects' other keys.
         let mut counts: Vec<(String, usize)> = doc
             .model
             .layers()
-            .get(&layer)
+            .get(layer)
             .map(|n| n.fields.iter().map(|f| (f.name.clone(), 0)).collect())
             .unwrap_or_default();
-        for e in doc.model.by_layer(&layer).take(2000) {
+        for e in doc.model.by_layer(layer).take(2000) {
             for k in e.base().attrs.keys() {
                 match counts.iter_mut().find(|(n, _)| n == k) {
                     Some((_, c)) => *c += 1,
@@ -734,9 +762,9 @@ impl App {
             }
         }
         let mut builder = Builder::new(
-            Target::LayerFilter,
-            format!("{} · İfade", crate::layer_filters::TITLE),
-            &value,
+            target,
+            context,
+            value,
             attribute_fields(&counts),
             Objects { slots },
         );
@@ -1020,6 +1048,9 @@ impl App {
             }
             Target::LayerFilter => {
                 return self.layer_filter_event(crate::layer_filters::Event::Expression(text));
+            }
+            Target::Labels(field) => {
+                return self.labelling_event(crate::labelling::Event::Expression(field, text));
             }
         }
         Task::none()

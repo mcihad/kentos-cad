@@ -340,6 +340,9 @@ fn command_tool(c: &Value) -> Value {
             // layers and the base layers' objects (docs/adr/0210 §11).
             | "cad.layers.time"
             | "cad.scenarios.edit"
+            // Null takes a labelling or a label's pin away (docs/adr/0212 §5).
+            | "cad.layers.labels"
+            | "cad.labels.pin"
     );
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \

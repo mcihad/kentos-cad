@@ -240,6 +240,7 @@ fn go(
                 label: None,
                 symbol: None,
                 line_weight: None,
+                label_pins: Vec::new(),
             },
             cloud: PointCloudFields {
                 sources,

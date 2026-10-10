@@ -1326,6 +1326,38 @@
       "apply": "live"
     },
     {
+      "key": "graphics.pinnedLabels",
+      "type": "boolean",
+      "default": false,
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Sabit etiketleri vurgula",
+      "description": "Elle taşınan, döndürülen ya da sabitlenen etiketlerin çevresi vurgu rengiyle çizilir. Çizim değişmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.unplacedLabels",
+      "type": "boolean",
+      "default": false,
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Yerleşmeyen etiketleri göster",
+      "description": "Başka etiketlerle ya da engellerle çakıştığı için yer bulamayan etiketler en iyi yerlerinde kırmızı çizilir. Çizim değişmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "graphics.highlightColor",
       "type": "enum",
       "default": "accent",

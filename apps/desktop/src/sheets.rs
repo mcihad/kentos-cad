@@ -616,6 +616,7 @@ impl SheetPainter<'_> {
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
             camera.scale,
+            Default::default(),
         );
         // A map of some layers writes only their objects' text.
         if let MapLayers::List(layers) = r.layers {

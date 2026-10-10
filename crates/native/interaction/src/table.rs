@@ -184,6 +184,7 @@ pub fn fit(doc: &Document, geometry: &mut EntityGeometry) {
         label: None,
         symbol: None,
         line_weight: None,
+        label_pins: Vec::new(),
     };
     let Some(sizes) = rules::sizes(&shape(&entity_of(geometry, base)), font) else {
         return;

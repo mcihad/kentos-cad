@@ -41,6 +41,7 @@ fn text(label_of: Option<EntityId>, label_scale: Option<f64>) -> Entity {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         p: Vec2 { x: 1.0, y: 2.0 },
         text: "101".into(),

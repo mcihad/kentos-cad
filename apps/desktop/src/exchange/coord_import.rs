@@ -158,6 +158,7 @@ pub fn point_layer_style() -> LayerStyle {
             min_scale: Some(0.9),
             max_scale: None,
             ink: None,
+            ..LabelStyle::default()
         }),
         ..kentos_domain::default_style()
     }

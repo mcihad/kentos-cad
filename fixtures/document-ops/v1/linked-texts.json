@@ -2,7 +2,7 @@
   "format": "kentos.document-ops",
   "version": 1,
   "title": "Bağlı yazılar",
-  "note": "Etiketleri yazıya çevir'in nesneye bağlı yazısı (docs/adr/0175 §4): yazının labelOf'u nesnenin kalıcı kimliği, labelScale'i ölçeğin paydasıdır. Adım kaydedilmeden, adımın değiştirdiği nesnenin bağlı yazısı etiket kuralıyla yeniden yazılır (inceltmesiz), silinen nesnenin bağlı yazısı silinir, kendisi düzenlenen bağlı yazının bağı kopar; değişiklikler aynı adıma girer. \"$uid:ad\" captureUid'in aldığı kalıcı kimliktir. Yerler ve boylar kuraldan, çekirdeğin işlem sırasıyla: k = 96 / 0,0254 / N px/m, noktanın varsayılan etiketi yanda 10,5 px (en küçük ölçek 2 px/m), yer x + 7/k, y + 7/k, yükseklik 10,5/k.",
+  "note": "Etiketleri yazıya çevir'in nesneye bağlı yazısı (docs/adr/0175 §4): yazının labelOf'u nesnenin kalıcı kimliği, labelScale'i ölçeğin paydasıdır. Adım kaydedilmeden, adımın değiştirdiği nesnenin bağlı yazısı etiket kuralıyla yeniden yazılır (inceltmesiz), silinen nesnenin bağlı yazısı silinir, kendisi düzenlenen bağlı yazının bağı kopar; değişiklikler aynı adıma girer. \"$uid:ad\" captureUid'in aldığı kalıcı kimliktir. Yerler ve boylar etiket motorunun tek başına seçtiği adaydan (docs/adr/0212 §4), scripts/fixtures/label_engine_cases.py'nin kuralıyla: K = 96 / 0,0254 / N px/m, noktanın varsayılan etiketi çevresinde 10,5 px (en küçük ölçek 2 px/m), ilk aday sağ üst: orta x + (√2 + W/2)/K, y + (√2 + 10,5/2)/K (sembolsüz katman, uzaklık 2 px; W yazının Barlow'daki genişliği), ortası hizalı; yükseklik 10,5/K.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -87,13 +87,13 @@
             "kind": "text",
             "layerId": "y",
             "p": {
-              "x": 486601.85208333336,
-              "y": 4420101.852083334
+              "x": 486601.86603046337,
+              "y": 4420101.763239838
             },
             "text": "P7",
             "height": 2.778125,
             "rotation": 0,
-            "align": "middleLeft",
+            "align": "middleCenter",
             "attrs": {},
             "labelOf": "$uid:nokta",
             "labelScale": 1000
@@ -107,13 +107,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486601.85208333336,
-                  "y": 4420101.852083334
+                  "x": 486601.86603046337,
+                  "y": 4420101.763239838
                 },
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -150,13 +150,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486611.85208333336,
-                  "y": 4420106.852083334
+                  "x": 486611.86603046337,
+                  "y": 4420106.763239838
                 },
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -185,13 +185,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486601.85208333336,
-                  "y": 4420101.852083334
+                  "x": 486601.86603046337,
+                  "y": 4420101.763239838
                 },
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -209,13 +209,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486611.85208333336,
-                  "y": 4420106.852083334
+                  "x": 486611.86603046337,
+                  "y": 4420106.763239838
                 },
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -237,13 +237,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486611.85208333336,
-                  "y": 4420106.852083334
+                  "x": 486611.9299273384,
+                  "y": 4420106.763239838
                 },
                 "text": "P8",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -265,13 +265,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486611.85208333336,
-                  "y": 4420106.852083334
+                  "x": 486611.9299273384,
+                  "y": 4420106.763239838
                 },
                 "text": "P8",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {}
               }
             }
@@ -287,13 +287,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486611.85208333336,
-                  "y": 4420106.852083334
+                  "x": 486611.9299273384,
+                  "y": 4420106.763239838
                 },
                 "text": "P8",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -331,13 +331,13 @@
             "kind": "text",
             "layerId": "y",
             "p": {
-              "x": 486601.85208333336,
-              "y": 4420101.852083334
+              "x": 486601.86603046337,
+              "y": 4420101.763239838
             },
             "text": "P7",
             "height": 2.778125,
             "rotation": 0,
-            "align": "middleLeft",
+            "align": "middleCenter",
             "attrs": {},
             "labelOf": "$uid:nokta",
             "labelScale": 1000
@@ -387,13 +387,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486601.85208333336,
-                  "y": 4420101.852083334
+                  "x": 486601.86603046337,
+                  "y": 4420101.763239838
                 },
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -424,7 +424,7 @@
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {}
               }
             }
@@ -440,13 +440,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486601.85208333336,
-                  "y": 4420101.852083334
+                  "x": 486601.86603046337,
+                  "y": 4420101.763239838
                 },
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -487,13 +487,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486611.85208333336,
-                  "y": 4420106.852083334
+                  "x": 486611.86603046337,
+                  "y": 4420106.763239838
                 },
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000
@@ -522,13 +522,13 @@
                 "kind": "text",
                 "layerId": "y",
                 "p": {
-                  "x": 486601.85208333336,
-                  "y": 4420101.852083334
+                  "x": 486601.86603046337,
+                  "y": 4420101.763239838
                 },
                 "text": "P7",
                 "height": 2.778125,
                 "rotation": 0,
-                "align": "middleLeft",
+                "align": "middleCenter",
                 "attrs": {},
                 "labelOf": "$uid:nokta",
                 "labelScale": 1000

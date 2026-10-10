@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `35`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-36.kcad`) |
+| `version` | tam sayı | `2`'den `36`'ya bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-37.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -265,7 +265,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 35**, şema 34'ün kendisi ve katman süzgecidir (ADR 0211): katman düğümünün `filter`'ı (katmanın yalnız bir ifadeye ya da nesne listesine uyan nesneleri gösterilir, seçilir ve işlemlere girer) (§6.5). Yazıcı `35`'i **yalnız bir katmanın süzgeci varken** yazar. Başka her çizim şema 2–34'tür ve eskisiyle bayt bayt aynıdır. Şema 2–34 yükünde bu anahtar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/filter-in-schema-34.kcad`). Şema 35 şema 34'ü kapsar. Süzgeç görünümdür: dosya bütün nesneleri yazar; ifadenin derlenmesi dosya biçiminin kuralı değildir. Örnek dosya `filters.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 36**, şema 35'in kendisi ve etiket motorudur (ADR 0212): etiket stilinin motor anahtarları (metnin ifadesi, rengi, yerleşim kipleri, hale, zemin, gölge, çağrı çizgisi, yığma, kısaltma, küçültme, öncelik, çakışma, yinelenenler), katman stilinin `labels`'ı (katmanın etiketlemesi: tek etiket, kurallı sınıflar ya da etiketsiz; engel) (§6.5) ve nesnenin `labelPins`'i (elle taşınmış, döndürülmüş ya da gizlenmiş etiketleri; §6.6). Yazıcı `36`'yı **yalnız bunlardan biri varken** yazar; motor anahtarı olmayan etiket stili eskisiyle bayt bayt aynıdır. Başka her çizim şema 2–35'tir. Şema 2–35 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/label-engine-in-schema-35.kcad`, `labels-in-schema-35.kcad`, `label-pins-in-schema-35.kcad`): eski okuyucu etiketlemeyi sessizce bugünkü etikete indirmez, dosyayı açmaz. Şema 36 şema 35'i kapsar. Etiketlerin yerleşimi dosyaya yazılmaz (çizimin işidir); yalnız iğneler yazılır. İfadelerin derlenmesi dosya biçiminin kuralı değildir: komutlar derler. Örnek dosya `labels.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -627,6 +629,7 @@ Bir katmanda servis ve kaynak birlikte bulunmaz (`broken/service-and-feed.kcad`)
 | `fill` | metin | | dolgu rengi |
 | `color` | metin | evet | onaltılık renk ya da tema adı (`fg`, `fg-dim`, `ink`, `paper`) |
 | `label` | etiket stili | | |
+| `labels` | etiketleme | | yalnız şema 36 ve sonrası: katmanın etiketlemesi (aşağıda); grupta `bad_value` (`broken/labels-on-group.kcad`) |
 | `point` | nokta stili | | |
 | `lineType` | numaralı metin | evet | `continuous`, `dashed`, `dashdot`, `dotted` |
 | `renderer` | opak değer (§6.7), `null` olamaz | | stil motorunun çizicisi |
@@ -650,6 +653,45 @@ Bir katmanda servis ve kaynak birlikte bulunmaz (`broken/service-and-feed.kcad`)
 | `placement` | numaralı metin | evet | `center`, `corner`, `beside`, `along` |
 | `minFeaturePx` | float | | |
 
+**Etiket stilinin motor anahtarları** (yalnız şema 36 ve sonrası; ADR 0212 §2; hepsi isteğe bağlı, yoklukları bugünkü davranış):
+
+| Anahtar | Tür | Değerler |
+|---|---|---|
+| `text` | metin | metnin ifadesi (İfadeyle seç'in dili); varsa `template`'in yerine |
+| `color` | metin | yazının rengi: `#rrggbb`, `#rrggbbaa` ya da `fg`, `fg-dim`, `label`, `ink`, `paper` |
+| `italic` | bool | |
+| `align` | numaralı metin | `left`, `center`, `right` (çok satırda) |
+| `point` | numaralı metin | `around`, `center` |
+| `line` | numaralı metin | `parallel`, `curved`, `horizontal`, `contour` |
+| `area` | numaralı metin | `horizontal`, `free`, `perimeter`, `boundary`, `parcel`, `corner` |
+| `position` | numaralı metin | `on`, `above`, `below`, `sides` |
+| `distance` | float | px, 0–500 |
+| `repeat` | float | px, 20–100 000 |
+| `maxAngle` | float | derece, 5–90 |
+| `curved`, `mergeLines`, `inside`, `outside` | bool | |
+| `halo` | harita | `width` (float, evet; px, 0–10), `color` |
+| `background` | harita | `shape` (evet: `rect`, `round`, `ellipse`), `fill`, `stroke`, `padding` (px, 0–50) |
+| `shadow` | harita | `dx`, `dy` (float, evet; px, ±50), `color`, `opacity` (0–1) |
+| `callout` | harita | `kind` (evet: `straight`, `manhattan`), `color`, `width` (px, 0,1–10), `minLength` (px, 0–1000) |
+| `stack` | harita | `mode` (evet: `ifNeeded`, `always`), `chars` (u32, evet; 2–500), `at` (bölme karakterleri, 1–20 harf) |
+| `abbreviate` | harita | `always` (bool), `words` (evet: 1–500 harita, her biri `word` ve `short`, 1–100 harf, boşluksuz; sözcük bir kez) |
+| `shrink` | float | 0,5–1 |
+| `priority` | u8 | 0–10 |
+| `overlap` | numaralı metin | `never`, `ifNeeded`, `always` |
+| `duplicates` | float | px, 1–10 000 |
+
+Motor anahtarı olan stil bütün kurallarıyla denetlenir (`kentos_contracts::labels::style_problem`; boy 1–200, kalınlık 100–900, renkler ve aralıklar yukarıdaki gibi); kıran stil `bad_value`'dur (`broken/label-size-out.kcad`, `broken/label-color-bad.kcad`, `broken/label-halo-wide.kcad`, `broken/label-shrink-out.kcad`, `broken/label-priority-high.kcad`, `broken/label-stack-chars.kcad`, `broken/label-abbreviate-empty.kcad`, `broken/label-abbreviate-twice.kcad`, `broken/label-text-blank.kcad`). Haritalarda bilinmeyen anahtar `unknown_field`'dır (`broken/label-unknown-engine-field.kcad`).
+
+**Etiketleme** (yalnız şema 36 ve sonrası; ADR 0212 §2):
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `mode` | numaralı metin | evet | `single` (tek etiket: stilin `label`'ı ya da türün varsayılanı), `rules` (kurallı), `off` (etiketsiz) (`broken/labels-mode-unknown.kcad`) |
+| `classes` | dizi: sınıf | | kurallı etiketlemenin sıralı sınıfları, 1–64; yalnız `rules`'ta (`broken/labels-rules-without-classes.kcad`, `broken/labels-rules-empty.kcad`, `broken/labels-classes-in-single.kcad`) |
+| `obstacle` | harita | | katmanın nesneleri öbür etiketlere engel: `weight` (u8, evet; 1–10; `broken/labels-obstacle-weight.kcad`), `kind` (`interior` ya da `boundary`; yokluğu `interior`) |
+
+**Sınıf:** `name` (metin, evet; 1–100 harf, başında ve sonunda boşluk yok, katmanda bir kez: `broken/labels-class-name-blank.kcad`, `broken/labels-class-twice.kcad`), `when` (metin; koşulun ifadesi, 1–10 000 harf, boşluklu sınırsız: `broken/labels-class-when-blank.kcad`), `style` (etiket stili, evet). Başka anahtar `unknown_field`'dır (`broken/labels-unknown-field.kcad`).
+
 ### 6.6 Nesneler
 
 - Her nesne **tek anahtarlı bir haritadır**: anahtar nesnenin türü, değer türün alanlarını taşıyan haritadır: `{"polygon": {…}}`. Tür önce okunur, alanlar türe göre denetlenir.
@@ -668,6 +710,9 @@ Bir katmanda servis ve kaynak birlikte bulunmaz (`broken/service-and-feed.kcad`)
 | `symbol` | metin | | katman stilinin yerine kitaplık sembolü |
 | `layerId` | metin | evet | nesnenin katmanı |
 | `lineWeight` | float | | yalnız şema 3 ve sonrası: nesnenin kendi çizgi kalınlığı, kağıtta mm, `0` en ince çizgi; `0`…`100` dışı `bad_value`; yoksa katmana göre |
+| `labelPins` | dizi: iğne | | yalnız şema 36 ve sonrası ve yalnız belgenin nesnesinde: elle sabitlenmiş, döndürülmüş ya da gizlenmiş etiketleri (aşağıda) |
+
+**Etiket iğnesi** (şema 36; ADR 0212 §2): harita; `class` (metin: kurallı katmanın sınıfının adı, 1–100 harf; yokluğu nesnenin ilk etiketi), `at` (nokta: etiketin ortasının nesnenin çapasından uzaklığı, metre; çapa nesnenin etiket noktasıdır), `rotation` (float: derece, saat yönünün tersine; yalnız `at` ile), `hidden` (bool: yalnız `true`). İğne ya bir yerdir ya gizlidir (`broken/label-pin-nothing.kcad`); `rotation` `at`'sız (`broken/label-pin-rotation-alone.kcad`), `hidden: false` (`broken/label-pin-hidden-false.kcad`), aynı sınıfın iki iğnesi (`broken/label-pin-class-twice.kcad`), 10 000 km'den uzak yer (`broken/label-pin-far.kcad`), boş dizi (`broken/label-pins-empty.kcad`) `bad_value`, bilinmeyen anahtar `unknown_field`'dır (`broken/label-pin-unknown-field.kcad`). Dizide en çok 64 iğne bulunur. Bir blok tanımının nesnesinde iğne olmaz (`broken/label-pins-in-block.kcad`). Sınıfın adının katmanda bulunması denetlenmez: sınıfı kalmamış iğne hiçbir şey yapmaz. Anahtarların kodlanmış sırası `at` < `class` < `hidden` < `rotation`'dır.
 
 **Türlere göre alanlar** (ortak alanlarla birlikte aynı haritada, sıralı):
 

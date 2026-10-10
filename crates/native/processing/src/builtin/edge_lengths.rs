@@ -170,6 +170,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
                     label: None,
                     symbol: None,
                     line_weight: None,
+                    label_pins: Vec::new(),
                 },
                 p: l.p,
                 text: format!(

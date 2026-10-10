@@ -160,6 +160,7 @@ pub fn entities(placed: &[Placed]) -> Vec<Entity> {
                     label: Some(pt.name.clone()),
                     symbol: None,
                     line_weight: None,
+                    label_pins: Vec::new(),
                 },
                 p: Wire {
                     x: pt.p.x,

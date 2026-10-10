@@ -1874,6 +1874,101 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // Etiketler (docs/adr/0212 §5), held together by fixtures/commands/v1/cad.layers.labels.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_LABELS.into(),
+            version: crate::CAD_LAYERS_LABELS_VERSION,
+            title: "Etiketler".into(),
+            summary: "Katmanın etiketlemesini yazar: label tek etiketin stilidir (metin şablonu ya da ifadesi, boy, renk, hale, zemin, gölge, çağrı çizgisi; noktada çevresinde ya da üstünde, çizgide paralel, kıvrık, yatay ya da eş yükselti, alanda yatay, eğik, çevre boyunca, sınır, parsel ya da köşe; yığma, kısaltma sözlüğü, küçültme, dışarıda; öncelik 0–10, çakışma, yinelenenler), labels katmanın nasıl etiketlendiğidir: single (tek etiket), rules (sıralı sınıflar: adı, koşulu ve kendi stili; koşulu tutan her sınıf nesneyi etiketler) ya da off (etiketsiz), ve obstacle ile nesneleri öbür etiketlere engeldir (ağırlık 1–10; interior ya da boundary). \
+                      Verilmeyen değişmez, null kaldırır (label null: türün varsayılan etiketi; labels null: tek etiket). İfadeler İfadeyle seç'in dilidir; $sıra ve $ölçek kullanılamaz. \
+                      Katman ağacının değişikliğidir: tek geri alma adımı “Etiketler”; hepsi aynıysa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersLabels>(),
+            output: schema::<crate::LayersLabelled>(),
+            plan: Some(schema::<crate::LayersLabelsPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Parsel numarası ve maliki, kurallı".into(),
+                    input: json!({
+                        "layer": "parsel",
+                        "labels": {
+                            "mode": "rules",
+                            "classes": [
+                                { "name": "No", "style": { "placement": "center", "size": 11, "weight": 600, "text": "Parsel", "area": "parcel",
+                                                          "stack": { "mode": "ifNeeded", "chars": 6 }, "outside": true, "callout": { "kind": "straight" }, "priority": 7 } },
+                                { "name": "Malik", "when": "Malik <> ''", "style": { "placement": "center", "size": 9, "italic": true, "text": "Malik", "area": "free",
+                                                                                    "inside": true, "priority": 3,
+                                                                                    "abbreviate": { "words": [{ "word": "Arazisi", "short": "Ar." }] } } }
+                            ]
+                        }
+                    }),
+                    output: Some(json!({ "layer": "parsel", "changed": true, "revision": "29" })),
+                },
+                CommandExample {
+                    title: "Yol adları kıvrık, birleşik ve yinelenerek".into(),
+                    input: json!({
+                        "layer": "yol",
+                        "label": { "placement": "along", "size": 11, "line": "curved", "mergeLines": true, "repeat": 600, "duplicates": 250 }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Binalar etiketsiz, etiketlere engel".into(),
+                    input: json!({ "layer": "bina", "labels": { "mode": "off", "obstacle": { "weight": 7 } } }),
+                    output: None,
+                },
+            ],
+        },
+        // Etiket (docs/adr/0212 §5), held together by fixtures/commands/v1/cad.labels.pin.json.
+        CommandDescriptor {
+            id: crate::CAD_LABELS_PIN.into(),
+            version: crate::CAD_LABELS_PIN_VERSION,
+            title: "Etiketi sabitle".into(),
+            summary: "Nesnelerin etiketlerini elle sabitler, döndürür, gizler ya da serbest bırakır: her değişiklik bir nesnenin bir etiketidir (class: kurallı katmanın sınıfının adı; yoksa nesnenin ilk etiketi), pin etiketin ortasının nesnenin çapasından uzaklığı (at, metre), açısı (rotation, derece, saat yönünün tersine) ya da gizliliğidir (hidden: true); pin null etiketi serbest bırakır, motor yeniden yerleştirir. \
+                      Sabit etiket her zaman yerinde çizilir, öbür etiketler ondan kaçar; nesne taşınınca, kopyalanınca etiket onunla gider. \
+                      Tek geri alma adımı “Etiket”; hiçbir iğne değişmiyorsa hiçbir şey yazılmaz. Kilitli katmandaki nesnenin etiketi değişmez. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LabelsPin>(),
+            output: schema::<crate::LabelsPinned>(),
+            plan: Some(schema::<crate::LabelsPinPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Parselin numarasını taşı ve döndür".into(),
+                    input: json!({
+                        "pins": [{ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001", "class": "No", "pin": { "class": "No", "at": { "x": -8.0, "y": 6.0 }, "rotation": 20.0 } }]
+                    }),
+                    output: Some(json!({ "changed": 1, "revision": "30" })),
+                },
+                CommandExample {
+                    title: "Nokta adını gizle".into(),
+                    input: json!({ "pins": [{ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002", "pin": { "hidden": true } }] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Etiketi serbest bırak".into(),
+                    input: json!({ "pins": [{ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001", "class": "No", "pin": null }] }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -2064,6 +2159,12 @@ mod tests {
                     crate::CAD_LAYERS_FILTER => {
                         serde_json::from_value::<crate::LayersFilter>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_LABELS => {
+                        serde_json::from_value::<crate::LayersLabels>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LABELS_PIN => {
+                        serde_json::from_value::<crate::LabelsPin>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -2138,6 +2239,14 @@ mod tests {
                         }
                         crate::CAD_LAYERS_FILTER => {
                             serde_json::from_value::<crate::LayersFiltered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_LABELS => {
+                            serde_json::from_value::<crate::LayersLabelled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LABELS_PIN => {
+                            serde_json::from_value::<crate::LabelsPinned>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

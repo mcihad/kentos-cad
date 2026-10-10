@@ -9,8 +9,10 @@ import { entitiesDelete } from './entitiesDelete';
 import { entitiesEdit } from './entitiesEdit';
 import { entitiesSet } from './entitiesSet';
 import { entitiesTransform } from './entitiesTransform';
-import { layersService } from './layersService';
+import { labelsPin } from './labelsPin';
 import { layersFilter } from './layersFilter';
+import { layersLabels } from './layersLabels';
+import { layersService } from './layersService';
 import { layersTime } from './layersTime';
 import { lineCreate } from './lineCreate';
 import { networkDefine } from './networkDefine';
@@ -51,6 +53,9 @@ export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = 
   scenariosEdit,
   // Katman süzgeci (docs/adr/0211 §5).
   layersFilter,
+  // Etiketler and the label tools (docs/adr/0212 §5).
+  layersLabels,
+  labelsPin,
 ];
 
 /** The handler of a command id and version; undefined for one the web does not run (never guessed). */

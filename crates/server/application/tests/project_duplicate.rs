@@ -67,6 +67,89 @@ async fn stored(
     .unwrap()
 }
 
+/// An object's label pins (docs/adr/0212 §2) come back as written: a point's (its geometry the
+/// source, the pins a column of their own) and a leader's (an analytic kind the database takes
+/// since migration 0015); the project's `.kcad` image and a copy keep them.
+#[tokio::test]
+async fn label_pins_come_back_and_travel_with_a_copy() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 8)
+        .await
+        .unwrap();
+    let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
+    let project = new_project(&db, &pm, "Etiketler").await;
+    let owner = open(&db, &pm, project).await;
+    let objects: [serde_json::Value; 2] = [
+        json!({ "kind": "point", "id": 1, "layerId": "cizim", "attrs": {}, "label": "P.105",
+                "p": { "x": 487000.0, "y": 4420000.0 },
+                "labelPins": [{ "at": { "x": -8.0, "y": 6.0 }, "rotation": 20.0 }, { "class": "Kot", "hidden": true }] }),
+        json!({ "kind": "leader", "id": 2, "layerId": "cizim", "attrs": {},
+                "pts": [{ "x": 487000.0, "y": 4420000.0 }, { "x": 487004.0, "y": 4420003.0 }], "text": "Ø150 PVC",
+                "height": 2.0, "rotation": 0.0, "labelPins": [{ "hidden": true }] }),
+    ];
+    let ids: Vec<Uuid> = objects.iter().map(|_| Uuid::now_v7()).collect();
+    let entities: Vec<Entity> = objects
+        .iter()
+        .map(|e| serde_json::from_value(e.clone()).unwrap())
+        .collect();
+    let content = ProjectChanges {
+        blocks: Vec::new(),
+        features: entities
+            .iter()
+            .zip(&ids)
+            .map(|(e, id)| FeatureChange::Create {
+                id: id.to_string(),
+                entity: e.clone(),
+            })
+            .collect(),
+        project: None,
+    };
+    changes::commit(&db.app, &owner, envelope(&pm, project, content, &[]))
+        .await
+        .unwrap();
+    let pins = |list: &[kentos_contracts::FeatureRecord]| -> Vec<Vec<kentos_contracts::LabelPin>> {
+        list.iter()
+            .map(|f| f.entity.base().label_pins.clone())
+            .collect()
+    };
+    let want: Vec<_> = entities
+        .iter()
+        .map(|e| e.base().label_pins.clone())
+        .collect();
+    let page = projects::features(&db.app, &owner, None, 10).await.unwrap();
+    assert_eq!(pins(&page.features), want);
+    // The point's pins are the column's, not a definition's.
+    let column: Option<serde_json::Value> = sqlx::query_scalar(
+        "select label_pins from kentos.feature where project_id = $1 and kind = 'point'",
+    )
+    .bind(project)
+    .fetch_one(&db.owner)
+    .await
+    .unwrap();
+    assert_eq!(column, Some(objects[0]["labelPins"].clone()));
+    // The .kcad image holds them.
+    let image = kentos_kcad::decode(
+        &kentos_application::snapshot::snapshot(&db.app, &owner)
+            .await
+            .unwrap()
+            .bytes,
+    )
+    .unwrap();
+    let imaged: Vec<_> = image
+        .entities
+        .iter()
+        .map(|e| e.base().label_pins.clone())
+        .collect();
+    assert_eq!(imaged, want);
+    // A copy takes them too.
+    let copy = copied(run(&db, &owner, PROJECT_DUPLICATE, json!({})).await);
+    let mine = open(&db, &pm, Uuid::parse_str(&copy.project.id).unwrap()).await;
+    let page = projects::features(&db.app, &mine, None, 10).await.unwrap();
+    assert_eq!(pins(&page.features), want);
+}
+
 #[tokio::test]
 async fn a_copy_takes_the_content_and_ids_but_not_history_or_sharing() {
     let Some(db) = TestDb::create().await else {

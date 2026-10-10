@@ -247,6 +247,24 @@ pub struct Expect {
     /// when it is closed, and absent differ.
     #[serde(default, deserialize_with = "present")]
     pub(super) time: Option<Option<TimeExpect>>,
+    /// The label pins of the objects named, by id (docs/adr/0212 §2): each pin's class (`null` the
+    /// object's first label), place from the object's anchor (`clickTolerance`), turn (1e-9) and
+    /// whether it hides the label; `[]` none.
+    pub(super) label_pins: Option<std::collections::BTreeMap<String, Vec<PinExpect>>>,
+}
+
+/// A label pin as a step expects it (docs/adr/0212 §2): absent fields are absent in the pin.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PinExpect {
+    #[serde(default)]
+    pub(super) class: Option<String>,
+    #[serde(default)]
+    pub(super) at: Option<[f64; 2]>,
+    #[serde(default)]
+    pub(super) rotation: Option<f64>,
+    #[serde(default)]
+    pub(super) hidden: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]

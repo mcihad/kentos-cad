@@ -60,6 +60,28 @@ AngleUnitName = Literal["grad", "deg"]
 """The names of :class:`AngleUnit`, for a plain string."""
 
 
+class AreaLabelMode(_StrEnum):
+    """Where an area's label goes.
+
+    - ``horizontal``: Level, inside, away from the edges.
+    - ``free``: Level when it fits, else along the area's long side.
+    - ``perimeter``: Along its outline.
+    - ``boundary``: Along its outline, inside, repeated (Maplex's boundary labels).
+    - ``parcel``: Inside only: level, then along the long side, then fitted (Maplex's land parcels).
+    - ``corner``: By its box's top left corner (a sheet's frame).
+    """
+    HORIZONTAL = "horizontal"
+    FREE = "free"
+    PERIMETER = "perimeter"
+    BOUNDARY = "boundary"
+    PARCEL = "parcel"
+    CORNER = "corner"
+
+
+AreaLabelModeName = Literal["horizontal", "free", "perimeter", "boundary", "parcel", "corner"]
+"""The names of :class:`AreaLabelMode`, for a plain string."""
+
+
 class AreaUnit(_StrEnum):
     M2 = "m2"
     DONUM = "donum"
@@ -132,6 +154,20 @@ class BlockEditOperation(_StrEnum):
 
 BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes"]
 """The names of :class:`BlockEditOperation`, for a plain string."""
+
+
+class CalloutKind(_StrEnum):
+    """A callout's line.
+
+    - ``straight``
+    - ``manhattan``: Level, then upright.
+    """
+    STRAIGHT = "straight"
+    MANHATTAN = "manhattan"
+
+
+CalloutKindName = Literal["straight", "manhattan"]
+"""The names of :class:`CalloutKind`, for a plain string."""
 
 
 class CheckpointKind(_StrEnum):
@@ -588,6 +624,17 @@ JunctionRoleName = Literal["junction", "source", "valve"]
 """The names of :class:`JunctionRole`, for a plain string."""
 
 
+class LabelAlign(_StrEnum):
+    """How a label's lines line up."""
+    LEFT = "left"
+    CENTER = "center"
+    RIGHT = "right"
+
+
+LabelAlignName = Literal["left", "center", "right"]
+"""The names of :class:`LabelAlign`, for a plain string."""
+
+
 class LabelInk(_StrEnum):
     FG = "fg"
     FG_DIM = "fg-dim"
@@ -596,6 +643,22 @@ class LabelInk(_StrEnum):
 
 LabelInkName = Literal["fg", "fg-dim", "label"]
 """The names of :class:`LabelInk`, for a plain string."""
+
+
+class LabelOverlap(_StrEnum):
+    """Whether a label may cover another (QGIS's three).
+
+    - ``never``: Never: a label with no free place is not drawn.
+    - ``ifNeeded``: When no free place is left, at its best one.
+    - ``always``: Always at its best place.
+    """
+    NEVER = "never"
+    IF_NEEDED = "ifNeeded"
+    ALWAYS = "always"
+
+
+LabelOverlapName = Literal["never", "ifNeeded", "always"]
+"""The names of :class:`LabelOverlap`, for a plain string."""
 
 
 class LabelPlacement(_StrEnum):
@@ -607,6 +670,57 @@ class LabelPlacement(_StrEnum):
 
 LabelPlacementName = Literal["center", "corner", "beside", "along"]
 """The names of :class:`LabelPlacement`, for a plain string."""
+
+
+class LabelPosition(_StrEnum):
+    """A line label's side of its line; on an area's outline `above` is inside
+    and `below` outside.
+
+    - ``on``
+    - ``above``
+    - ``below``
+    - ``sides``: Above, else below.
+    """
+    ON = "on"
+    ABOVE = "above"
+    BELOW = "below"
+    SIDES = "sides"
+
+
+LabelPositionName = Literal["on", "above", "below", "sides"]
+"""The names of :class:`LabelPosition`, for a plain string."""
+
+
+class LabelShape(_StrEnum):
+    """A label's background's shape.
+
+    - ``rect``
+    - ``ellipse``
+    - ``round``: A rectangle with round corners.
+    """
+    RECT = "rect"
+    ELLIPSE = "ellipse"
+    ROUND = "round"
+
+
+LabelShapeName = Literal["rect", "ellipse", "round"]
+"""The names of :class:`LabelShape`, for a plain string."""
+
+
+class LabelsMode(_StrEnum):
+    """How a layer is labelled.
+
+    - ``single``: One label: the style's `label`, else its kind's default.
+    - ``rules``: The classes, in order: each whose condition holds labels an object.
+    - ``off``: None (its objects may still be obstacles).
+    """
+    SINGLE = "single"
+    RULES = "rules"
+    OFF = "off"
+
+
+LabelsModeName = Literal["single", "rules", "off"]
+"""The names of :class:`LabelsMode`, for a plain string."""
 
 
 class LayerFieldKind(_StrEnum):
@@ -689,6 +803,24 @@ LeaderArrowName = Literal["open", "dot", "none", "closed", "open30", "open90", "
 """The names of :class:`LeaderArrow`, for a plain string."""
 
 
+class LineLabelMode(_StrEnum):
+    """Where a line's label goes.
+
+    - ``parallel``: Straight, along the line.
+    - ``curved``: Letter by letter, following the line.
+    - ``horizontal``: Level, on the line.
+    - ``contour``: A contour's height: curved on the line, its top uphill.
+    """
+    PARALLEL = "parallel"
+    CURVED = "curved"
+    HORIZONTAL = "horizontal"
+    CONTOUR = "contour"
+
+
+LineLabelModeName = Literal["parallel", "curved", "horizontal", "contour"]
+"""The names of :class:`LineLabelMode`, for a plain string."""
+
+
 class LineType(_StrEnum):
     CONTINUOUS = "continuous"
     DASHED = "dashed"
@@ -748,6 +880,34 @@ class NetworkKind(_StrEnum):
 
 NetworkKindName = Literal["road", "utility"]
 """The names of :class:`NetworkKind`, for a plain string."""
+
+
+class ObstacleKind(_StrEnum):
+    """What of an obstacle area a label avoids.
+
+    - ``interior``: Its inside: a label covering any of it.
+    - ``boundary``: Its outline: a label crossing an edge.
+    """
+    INTERIOR = "interior"
+    BOUNDARY = "boundary"
+
+
+ObstacleKindName = Literal["interior", "boundary"]
+"""The names of :class:`ObstacleKind`, for a plain string."""
+
+
+class PointLabelMode(_StrEnum):
+    """Where a point's label goes (docs/adr/0212 §3.3).
+
+    - ``around``: Around it, QGIS's cartographic order (top right first).
+    - ``center``: On it.
+    """
+    AROUND = "around"
+    CENTER = "center"
+
+
+PointLabelModeName = Literal["around", "center"]
+"""The names of :class:`PointLabelMode`, for a plain string."""
 
 
 class PointShape(_StrEnum):
@@ -1033,6 +1193,20 @@ ServiceKindName = Literal["wms", "wmts", "xyz", "ogcTiles", "arcgis", "google", 
 """The names of :class:`ServiceKind`, for a plain string."""
 
 
+class StackMode(_StrEnum):
+    """When a label is cut into lines.
+
+    - ``always``
+    - ``ifNeeded``: Only when it does not fit on one line.
+    """
+    ALWAYS = "always"
+    IF_NEEDED = "ifNeeded"
+
+
+StackModeName = Literal["always", "ifNeeded"]
+"""The names of :class:`StackMode`, for a plain string."""
+
+
 class TableAlign(_StrEnum):
     """A column's alignment; its cells sit in the middle of their rows."""
     LEFT = "left"
@@ -1287,6 +1461,7 @@ class Entity(_Union):
         color: str | None | Unset
         id: int
         label: str | None | Unset
+        label_pins: list[LabelPin] | Unset
         layer_id: str
         line_weight: float | None | Unset
         symbol: str | None | Unset
@@ -1664,6 +1839,8 @@ class ArcEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -1680,6 +1857,7 @@ class ArcEntity(Entity):
     a1: float
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -1696,6 +1874,8 @@ class ArcEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -1714,6 +1894,7 @@ class ArcEntity(Entity):
             a1=float(data["a1"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -2541,6 +2722,8 @@ class CircleEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -2555,6 +2738,7 @@ class CircleEntity(Entity):
     r: float
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -2569,6 +2753,8 @@ class CircleEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -2585,6 +2771,7 @@ class CircleEntity(Entity):
             r=float(data["r"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -2699,6 +2886,8 @@ class ConstructionEntity(_Model):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -2712,6 +2901,7 @@ class ConstructionEntity(_Model):
     dir: Vec2
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -2726,6 +2916,8 @@ class ConstructionEntity(_Model):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -2742,6 +2934,7 @@ class ConstructionEntity(_Model):
             dir=Vec2.from_json(data["dir"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -2885,6 +3078,8 @@ class DimensionEntity(Entity):
         ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.
         ext_weight: The extension lines' weight, paper mm; absent: a hairline.
         font: The value's typeface; absent: the project's.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -2925,6 +3120,7 @@ class DimensionEntity(Entity):
     ext_weight: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     prefix: str | None | Unset = UNSET
@@ -2982,6 +3178,8 @@ class DimensionEntity(Entity):
             out["font"] = None if self.font is None else _enum_out(self.font)
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mask is not UNSET:
@@ -3037,6 +3235,7 @@ class DimensionEntity(Entity):
             ext_weight=UNSET if "extWeight" not in data else None if data["extWeight"] is None else float(data["extWeight"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
             prefix=data.get("prefix", UNSET),
@@ -3161,6 +3360,8 @@ class EllipseEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -3178,6 +3379,7 @@ class EllipseEntity(Entity):
     t1: float
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -3195,6 +3397,8 @@ class EllipseEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -3214,6 +3418,7 @@ class EllipseEntity(Entity):
             t1=float(data["t1"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -4321,6 +4526,8 @@ class HatchEntity(Entity):
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         assoc: The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -4337,6 +4544,7 @@ class HatchEntity(Entity):
     color: str | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -4355,6 +4563,8 @@ class HatchEntity(Entity):
             out["holes"] = None if self.holes is None else [[_vec2_out(e1) for e1 in e0] for e0 in self.holes]
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -4373,6 +4583,7 @@ class HatchEntity(Entity):
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -4501,6 +4712,8 @@ class ImageEntity(Entity):
             absent: the whole picture.
         color: Colour override; absent = the layer's colour ("katmana göre").
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -4522,6 +4735,7 @@ class ImageEntity(Entity):
     color: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mirror: bool | Unset = UNSET
     opacity: float | None | Unset = UNSET
@@ -4546,6 +4760,8 @@ class ImageEntity(Entity):
             out["file"] = self.file
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mirror is not UNSET:
@@ -4571,6 +4787,7 @@ class ImageEntity(Entity):
             color=data.get("color", UNSET),
             file=data.get("file", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mirror=data.get("mirror", UNSET),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
@@ -4653,6 +4870,8 @@ class InsertEntity(Entity):
         scale: Positive and finite; 1 is the definition's size.
         rotation: Radians, counter-clockwise from east.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -4670,6 +4889,7 @@ class InsertEntity(Entity):
     rotation: float
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mirror: bool | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -4687,6 +4907,8 @@ class InsertEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mirror is not UNSET:
@@ -4707,6 +4929,7 @@ class InsertEntity(Entity):
             rotation=float(data["rotation"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mirror=data.get("mirror", UNSET),
             symbol=data.get("symbol", UNSET),
@@ -4792,40 +5015,443 @@ class JunctionLayer(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LabelAbbreviate(_Model):
+    """Shortening a label's words (kısaltma).
+    Attributes:
+        always: Always; absent, only when the label does not fit.
+    """
+    words: list[LabelWord]
+    always: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["words"] = [e0.to_json() for e0 in self.words]
+        if self.always is not UNSET:
+            out["always"] = self.always
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelAbbreviate:
+        return cls(
+            words=[LabelWord.from_json(e0) for e0 in data["words"]],
+            always=data.get("always", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelBackground(_Model):
+    """A shape behind a label.
+    Attributes:
+        fill: Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.
+        padding: CSS px round the letters; absent, 2.
+        stroke: Its outline's colour; absent, none.
+    """
+    shape: LabelShape | LabelShapeName
+    fill: str | None | Unset = UNSET
+    padding: float | None | Unset = UNSET
+    stroke: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["shape"] = _enum_out(self.shape)
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.padding is not UNSET:
+            out["padding"] = None if self.padding is None else float(self.padding)
+        if self.stroke is not UNSET:
+            out["stroke"] = self.stroke
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelBackground:
+        return cls(
+            shape=_enum_in(LabelShape, data["shape"]),
+            fill=data.get("fill", UNSET),
+            padding=UNSET if "padding" not in data else None if data["padding"] is None else float(data["padding"]),
+            stroke=data.get("stroke", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelCallout(_Model):
+    """The line from a label placed away from its object to the object.
+    Attributes:
+        color: Absent, the label's.
+        min_length: A shorter one is not drawn, CSS px; absent, 6.
+        width: CSS px; absent, 1.
+    """
+    kind: CalloutKind | CalloutKindName
+    color: str | None | Unset = UNSET
+    min_length: float | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.min_length is not UNSET:
+            out["minLength"] = None if self.min_length is None else float(self.min_length)
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelCallout:
+        return cls(
+            kind=_enum_in(CalloutKind, data["kind"]),
+            color=data.get("color", UNSET),
+            min_length=UNSET if "minLength" not in data else None if data["minLength"] is None else float(data["minLength"]),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelClass(_Model):
+    """One class of a rule-based labelling: its name, the condition its objects
+    meet and its labels' style.
+    Attributes:
+        name: One of its kind on the layer; a pin names it.
+        when: İfadeyle seç's language; absent, every object.
+    """
+    name: str
+    style: LabelStyle
+    when: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["style"] = self.style.to_json()
+        if self.when is not UNSET:
+            out["when"] = self.when
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelClass:
+        return cls(
+            name=data["name"],
+            style=LabelStyle.from_json(data["style"]),
+            when=data.get("when", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelHalo(_Model):
+    """The halo round a label's letters.
+    Attributes:
+        width: CSS px; 0 none.
+        color: Hex or a theme name; absent, the drawing area's colour.
+    """
+    width: float
+    color: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["width"] = float(self.width)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelHalo:
+        return cls(
+            width=float(data["width"]),
+            color=data.get("color", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelObstacle(_Model):
+    """A layer's objects as obstacles to every label.
+    Attributes:
+        weight: 1 to 10: a label of a lower priority cannot cover them; another may, at a cost.
+        kind: An area's inside (absent) or its outline.
+    """
+    weight: int
+    kind: ObstacleKind | ObstacleKindName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["weight"] = self.weight
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelObstacle:
+        return cls(
+            weight=data["weight"],
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(ObstacleKind, data["kind"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelPin(_Model):
+    """A label moved, turned, pinned or hidden by hand (an object's
+    `labelPins`, docs/adr/0212 §3.7).
+    Attributes:
+        at: Where the label's middle is from the object's anchor, metres; absent, the engine places it.
+        class_: The class's name; absent, the object's first label.
+        hidden: Not drawn; written only as `true`.
+        rotation: Degrees counter-clockwise from east; only with `at`.
+    """
+    at: Vec2 | None | Unset = UNSET
+    class_: str | None | Unset = UNSET
+    hidden: bool | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.hidden is not UNSET:
+            out["hidden"] = self.hidden
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelPin:
+        return cls(
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            class_=data.get("class", UNSET),
+            hidden=data.get("hidden", UNSET),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelPinChange(_Model):
+    """One label pinned by hand, or freed.
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+        class_: Which of its labels: a rule-based layer's class (`LabelClass.name`);
+            absent, its first label (a single label's).
+        pin: Where the label stays (its middle from the object's anchor, metres),
+            turned (degrees, counter-clockwise), or hidden; its own `class` is the
+            change's (absent or the same). Null frees the label: it is placed again.
+    """
+    uid: str
+    class_: str | None | Unset = UNSET
+    pin: LabelPin | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.pin is not UNSET:
+            out["pin"] = None if self.pin is None else self.pin.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelPinChange:
+        return cls(
+            uid=data["uid"],
+            class_=data.get("class", UNSET),
+            pin=UNSET if "pin" not in data else None if data["pin"] is None else LabelPin.from_json(data["pin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelShadow(_Model):
+    """A label's shadow: the label again under it, moved.
+    Attributes:
+        dx: CSS px right.
+        dy: CSS px up.
+        color: Absent, black.
+        opacity: 0 to 1; absent, 0.5.
+    """
+    dx: float
+    dy: float
+    color: str | None | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelShadow:
+        return cls(
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            color=data.get("color", UNSET),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelStack(_Model):
+    """Cutting a label into lines (yığma).
+    Attributes:
+        chars: The most letters a line holds (a longer word stays whole).
+        at: The letters a line may end at; absent, the space.
+    """
+    mode: StackMode | StackModeName
+    chars: int
+    at: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mode"] = _enum_out(self.mode)
+        out["chars"] = self.chars
+        if self.at is not UNSET:
+            out["at"] = self.at
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelStack:
+        return cls(
+            mode=_enum_in(StackMode, data["mode"]),
+            chars=data["chars"],
+            at=data.get("at", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LabelStyle(_Model):
     """How entity labels on a layer are drawn; sizes in CSS px.
     Attributes:
+        abbreviate: Shortening its words.
+        align: How a label's lines line up; absent, centred.
+        area: Where an area's label goes; absent, by `placement`.
+        background: A shape behind the label.
+        callout: The line to the object from a label placed away from it.
+        color: The letters' colour (hex or a theme name): instead of `ink`.
+        curved: An outline's label (perimeter, boundary) letter by letter.
+        distance: CSS px between a label and its object; absent, 2.
+        duplicates: CSS px within which the same text is labelled once.
+        halo: The halo round the letters; absent, 1.5 px of the drawing area's colour.
+        inside: An area's label only where it fits inside.
+        italic: Leaning letters.
+        line: Where a line's label goes; absent, by `placement`.
+        max_angle: Degrees two neighbouring letters of a curved label may turn; absent, 25.
+        merge_lines: Lines meeting end to end with the same text labelled once.
+        outside: An area's label that fits nowhere inside, outside with a callout.
+        overlap: Whether it may cover another label; absent, never.
+        point: Where a point's label goes; absent, by `placement`.
+        position: A line label's side of its line (on an outline, `above` inside).
+        priority: 0 to 10; absent, 5: higher first.
+        repeat: CSS px between a line's repeated labels.
+        shadow: The label's shadow.
+        shrink: The smallest size a label is made when it does not fit, a factor 0.5–1.
+        stack: Cutting the label into lines.
+        text: The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.
         weight: 400, 500 or 600.
     """
     placement: LabelPlacement | LabelPlacementName
     size: float
+    abbreviate: LabelAbbreviate | None | Unset = UNSET
+    align: LabelAlign | LabelAlignName | None | Unset = UNSET
+    area: AreaLabelMode | AreaLabelModeName | None | Unset = UNSET
+    background: LabelBackground | None | Unset = UNSET
+    callout: LabelCallout | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    curved: bool | None | Unset = UNSET
+    distance: float | None | Unset = UNSET
+    duplicates: float | None | Unset = UNSET
     grow: float | None | Unset = UNSET
+    halo: LabelHalo | None | Unset = UNSET
     ink: LabelInk | LabelInkName | None | Unset = UNSET
+    inside: bool | None | Unset = UNSET
+    italic: bool | None | Unset = UNSET
+    line: LineLabelMode | LineLabelModeName | None | Unset = UNSET
+    max_angle: float | None | Unset = UNSET
     max_scale: float | None | Unset = UNSET
     max_size: float | None | Unset = UNSET
+    merge_lines: bool | None | Unset = UNSET
     min_feature_px: float | None | Unset = UNSET
     min_scale: float | None | Unset = UNSET
+    outside: bool | None | Unset = UNSET
+    overlap: LabelOverlap | LabelOverlapName | None | Unset = UNSET
+    point: PointLabelMode | PointLabelModeName | None | Unset = UNSET
+    position: LabelPosition | LabelPositionName | None | Unset = UNSET
+    priority: int | None | Unset = UNSET
+    repeat: float | None | Unset = UNSET
+    shadow: LabelShadow | None | Unset = UNSET
+    shrink: float | None | Unset = UNSET
+    stack: LabelStack | None | Unset = UNSET
     template: str | None | Unset = UNSET
+    text: str | None | Unset = UNSET
     weight: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["placement"] = _enum_out(self.placement)
         out["size"] = float(self.size)
+        if self.abbreviate is not UNSET:
+            out["abbreviate"] = None if self.abbreviate is None else self.abbreviate.to_json()
+        if self.align is not UNSET:
+            out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else _enum_out(self.area)
+        if self.background is not UNSET:
+            out["background"] = None if self.background is None else self.background.to_json()
+        if self.callout is not UNSET:
+            out["callout"] = None if self.callout is None else self.callout.to_json()
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.curved is not UNSET:
+            out["curved"] = self.curved
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        if self.duplicates is not UNSET:
+            out["duplicates"] = None if self.duplicates is None else float(self.duplicates)
         if self.grow is not UNSET:
             out["grow"] = None if self.grow is None else float(self.grow)
+        if self.halo is not UNSET:
+            out["halo"] = None if self.halo is None else self.halo.to_json()
         if self.ink is not UNSET:
             out["ink"] = None if self.ink is None else _enum_out(self.ink)
+        if self.inside is not UNSET:
+            out["inside"] = self.inside
+        if self.italic is not UNSET:
+            out["italic"] = self.italic
+        if self.line is not UNSET:
+            out["line"] = None if self.line is None else _enum_out(self.line)
+        if self.max_angle is not UNSET:
+            out["maxAngle"] = None if self.max_angle is None else float(self.max_angle)
         if self.max_scale is not UNSET:
             out["maxScale"] = None if self.max_scale is None else float(self.max_scale)
         if self.max_size is not UNSET:
             out["maxSize"] = None if self.max_size is None else float(self.max_size)
+        if self.merge_lines is not UNSET:
+            out["mergeLines"] = self.merge_lines
         if self.min_feature_px is not UNSET:
             out["minFeaturePx"] = None if self.min_feature_px is None else float(self.min_feature_px)
         if self.min_scale is not UNSET:
             out["minScale"] = None if self.min_scale is None else float(self.min_scale)
+        if self.outside is not UNSET:
+            out["outside"] = self.outside
+        if self.overlap is not UNSET:
+            out["overlap"] = None if self.overlap is None else _enum_out(self.overlap)
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else _enum_out(self.point)
+        if self.position is not UNSET:
+            out["position"] = None if self.position is None else _enum_out(self.position)
+        if self.priority is not UNSET:
+            out["priority"] = self.priority
+        if self.repeat is not UNSET:
+            out["repeat"] = None if self.repeat is None else float(self.repeat)
+        if self.shadow is not UNSET:
+            out["shadow"] = None if self.shadow is None else self.shadow.to_json()
+        if self.shrink is not UNSET:
+            out["shrink"] = None if self.shrink is None else float(self.shrink)
+        if self.stack is not UNSET:
+            out["stack"] = None if self.stack is None else self.stack.to_json()
         if self.template is not UNSET:
             out["template"] = self.template
+        if self.text is not UNSET:
+            out["text"] = self.text
         if self.weight is not UNSET:
             out["weight"] = self.weight
         return out
@@ -4835,14 +5461,144 @@ class LabelStyle(_Model):
         return cls(
             placement=_enum_in(LabelPlacement, data["placement"]),
             size=float(data["size"]),
+            abbreviate=UNSET if "abbreviate" not in data else None if data["abbreviate"] is None else LabelAbbreviate.from_json(data["abbreviate"]),
+            align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(LabelAlign, data["align"]),
+            area=UNSET if "area" not in data else None if data["area"] is None else _enum_in(AreaLabelMode, data["area"]),
+            background=UNSET if "background" not in data else None if data["background"] is None else LabelBackground.from_json(data["background"]),
+            callout=UNSET if "callout" not in data else None if data["callout"] is None else LabelCallout.from_json(data["callout"]),
+            color=data.get("color", UNSET),
+            curved=data.get("curved", UNSET),
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+            duplicates=UNSET if "duplicates" not in data else None if data["duplicates"] is None else float(data["duplicates"]),
             grow=UNSET if "grow" not in data else None if data["grow"] is None else float(data["grow"]),
+            halo=UNSET if "halo" not in data else None if data["halo"] is None else LabelHalo.from_json(data["halo"]),
             ink=UNSET if "ink" not in data else None if data["ink"] is None else _enum_in(LabelInk, data["ink"]),
+            inside=data.get("inside", UNSET),
+            italic=data.get("italic", UNSET),
+            line=UNSET if "line" not in data else None if data["line"] is None else _enum_in(LineLabelMode, data["line"]),
+            max_angle=UNSET if "maxAngle" not in data else None if data["maxAngle"] is None else float(data["maxAngle"]),
             max_scale=UNSET if "maxScale" not in data else None if data["maxScale"] is None else float(data["maxScale"]),
             max_size=UNSET if "maxSize" not in data else None if data["maxSize"] is None else float(data["maxSize"]),
+            merge_lines=data.get("mergeLines", UNSET),
             min_feature_px=UNSET if "minFeaturePx" not in data else None if data["minFeaturePx"] is None else float(data["minFeaturePx"]),
             min_scale=UNSET if "minScale" not in data else None if data["minScale"] is None else float(data["minScale"]),
+            outside=data.get("outside", UNSET),
+            overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else _enum_in(LabelOverlap, data["overlap"]),
+            point=UNSET if "point" not in data else None if data["point"] is None else _enum_in(PointLabelMode, data["point"]),
+            position=UNSET if "position" not in data else None if data["position"] is None else _enum_in(LabelPosition, data["position"]),
+            priority=data.get("priority", UNSET),
+            repeat=UNSET if "repeat" not in data else None if data["repeat"] is None else float(data["repeat"]),
+            shadow=UNSET if "shadow" not in data else None if data["shadow"] is None else LabelShadow.from_json(data["shadow"]),
+            shrink=UNSET if "shrink" not in data else None if data["shrink"] is None else float(data["shrink"]),
+            stack=UNSET if "stack" not in data else None if data["stack"] is None else LabelStack.from_json(data["stack"]),
             template=data.get("template", UNSET),
+            text=data.get("text", UNSET),
             weight=data.get("weight", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelWord(_Model):
+    """One word of an abbreviation dictionary."""
+    word: str
+    short: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["word"] = self.word
+        out["short"] = self.short
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelWord:
+        return cls(
+            word=data["word"],
+            short=data["short"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelsPin(_Model):
+    """Input of `cad.labels.pin` v1: labels moved, turned or hidden by hand, or
+    freed, as one undo step “Etiket”. A change that leaves a label's pin as
+    it is changes nothing; when none changes, nothing is written (`changed`
+    0).
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities` (no
+    change), `invalid_uid`, `invalid_pin` (a pin against its rules, a pin
+    whose `class` is not its change's, a label changed twice, the pins an
+    object would have against their rules: `labels::pins_problem`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `entity_not_found`, `layer_locked`, `unknown_class` (a class its object's
+    layer does not label with: a rule-based layer's names it, a single
+    label's names none).
+    Attributes:
+        pins: The changes, at least one.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    pins: list[LabelPinChange]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pins"] = [e0.to_json() for e0 in self.pins]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelsPin:
+        return cls(
+            pins=[LabelPinChange.from_json(e0) for e0 in data["pins"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelsPinPlan(_Model):
+    """What `cad.labels.pin` would write (plan mode); nothing is written.
+    Attributes:
+        objects: The objects whose pins would change, in the input's order.
+        revision: The document revision the plan was made against.
+    """
+    objects: list[PinnedObject]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["objects"] = [e0.to_json() for e0 in self.objects]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelsPinPlan:
+        return cls(
+            objects=[PinnedObject.from_json(e0) for e0 in data["objects"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelsPinned(_Model):
+    """Output of `cad.labels.pin` v1.
+    Attributes:
+        changed: The objects whose pins changed (an undo step was written when any did).
+        revision: The document's revision after the write, as decimal text.
+    """
+    changed: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelsPinned:
+        return cls(
+            changed=data["changed"],
+            revision=data["revision"],
         )
 
 
@@ -4934,6 +5690,34 @@ class LayerFilter(_Model):
         return cls(
             expression=data.get("expression", UNSET),
             objects=list(data["objects"]) if "objects" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerLabels(_Model):
+    """How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).
+    Attributes:
+        classes: The rules' classes, in order; only with `rules`.
+    """
+    mode: LabelsMode | LabelsModeName
+    classes: list[LabelClass] | Unset = UNSET
+    obstacle: LabelObstacle | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mode"] = _enum_out(self.mode)
+        if self.classes is not UNSET:
+            out["classes"] = [e0.to_json() for e0 in self.classes]
+        if self.obstacle is not UNSET:
+            out["obstacle"] = None if self.obstacle is None else self.obstacle.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerLabels:
+        return cls(
+            mode=_enum_in(LabelsMode, data["mode"]),
+            classes=[LabelClass.from_json(e0) for e0 in data["classes"]] if "classes" in data else UNSET,
+            obstacle=UNSET if "obstacle" not in data else None if data["obstacle"] is None else LabelObstacle.from_json(data["obstacle"]),
         )
 
 
@@ -5125,12 +5909,15 @@ class LayerStyle(_Model):
     Attributes:
         color: Hex colour or a theme token (fg, fg-dim, ink, paper).
         line_weight: Plot line weight in mm.
+        labels: How the layer is labelled (docs/adr/0212 §2): rule-based classes,
+            none, its objects as obstacles; absent, by `label` (one label).
     """
     color: str
     line_type: LineType | LineTypeName
     line_weight: float
     fill: str | None | Unset = UNSET
     label: LabelStyle | None | Unset = UNSET
+    labels: LayerLabels | None | Unset = UNSET
     pick_interior: bool | None | Unset = UNSET
     point: PointStyle | None | Unset = UNSET
     renderer: Any | Unset = UNSET
@@ -5144,6 +5931,8 @@ class LayerStyle(_Model):
             out["fill"] = self.fill
         if self.label is not UNSET:
             out["label"] = None if self.label is None else self.label.to_json()
+        if self.labels is not UNSET:
+            out["labels"] = None if self.labels is None else self.labels.to_json()
         if self.pick_interior is not UNSET:
             out["pickInterior"] = self.pick_interior
         if self.point is not UNSET:
@@ -5160,6 +5949,7 @@ class LayerStyle(_Model):
             line_weight=float(data["lineWeight"]),
             fill=data.get("fill", UNSET),
             label=UNSET if "label" not in data else None if data["label"] is None else LabelStyle.from_json(data["label"]),
+            labels=UNSET if "labels" not in data else None if data["labels"] is None else LayerLabels.from_json(data["labels"]),
             pick_interior=data.get("pickInterior", UNSET),
             point=UNSET if "point" not in data else None if data["point"] is None else PointStyle.from_json(data["point"]),
             renderer=data.get("renderer", UNSET),
@@ -5306,6 +6096,109 @@ class LayersFiltered(_Model):
             changed=data["changed"],
             passed=data["passed"],
             total=data["total"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersLabelled(_Model):
+    """Output of `cad.layers.labels` v1.
+    Attributes:
+        changed: Whether anything differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersLabelled:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersLabels(_Model):
+    """Input of `cad.layers.labels` v1: a layer's labelling written as one undo
+    step “Etiketler”: its single label's style (`label`, the layer style's
+    `label`) and how it is labelled (`labels`: a single label, rule-based
+    classes or none, and its objects as obstacles). Each one absent is left
+    as it is; null takes it away (no `label`: the kinds' default labels; no
+    `labels`: a single label). A layer that already has them as given is
+    left as it is (`changed` false, no step).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_labels`
+    (the style's or the labelling's rules, `labels::style_problem` and
+    `labels::layer_labels_problem`), `invalid_expression` (a label's text or
+    a class's condition does not compile, or reads `$sıra` or `$ölçek`; the
+    message says which); then `invalid_revision`, `revision_conflict` (status
+    `conflict`), `layer_not_found`, `not_a_layer` (a group), `service_layer`
+    (a layer drawn from a service: it has no objects to label).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        label: Its single label's style; null: the kinds' default labels. Absent: unchanged.
+        labels: How it is labelled; null: a single label. Absent: unchanged.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    label: LabelStyle | None | Unset = UNSET
+    labels: LayerLabels | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = None if self.label is None else self.label.to_json()
+        if self.labels is not UNSET:
+            out["labels"] = None if self.labels is None else self.labels.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersLabels:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=UNSET if "label" not in data else None if data["label"] is None else LabelStyle.from_json(data["label"]),
+            labels=UNSET if "labels" not in data else None if data["labels"] is None else LayerLabels.from_json(data["labels"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersLabelsPlan(_Model):
+    """What `cad.layers.labels` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersLabelsPlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
             revision=data["revision"],
         )
 
@@ -5557,6 +6450,8 @@ class LeaderEntity(Entity):
         arrow_size: The arrowhead's length, times the note's height (docs/adr/0205 §7);
             absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -5578,6 +6473,7 @@ class LeaderEntity(Entity):
     arrow_size: float | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -5599,6 +6495,8 @@ class LeaderEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mask is not UNSET:
@@ -5622,6 +6520,7 @@ class LeaderEntity(Entity):
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
             symbol=data.get("symbol", UNSET),
@@ -5745,6 +6644,8 @@ class LineEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -5761,6 +6662,7 @@ class LineEntity(Entity):
     b: Vec2
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     za: float | None | Unset = UNSET
@@ -5777,6 +6679,8 @@ class LineEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -5797,6 +6701,7 @@ class LineEntity(Entity):
             b=Vec2.from_json(data["b"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
@@ -6104,6 +7009,8 @@ class PathEntity(_Model):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -6123,6 +7030,7 @@ class PathEntity(_Model):
     color: str | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     parts: list[AreaPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -6142,6 +7050,8 @@ class PathEntity(_Model):
             out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.parts is not UNSET:
@@ -6163,6 +7073,7 @@ class PathEntity(_Model):
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
@@ -6202,6 +7113,26 @@ class PatternLine(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PinnedObject(_Model):
+    """An object's pins as `cad.labels.pin` would leave them."""
+    uid: str
+    label_pins: list[LabelPin]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PinnedObject:
+        return cls(
+            uid=data["uid"],
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointCloudEntity(_Model):
     """A point cloud (docs/adr/0207 §3).
     Attributes:
@@ -6210,6 +7141,8 @@ class PointCloudEntity(_Model):
         count: The members' points together.
         srid: The files' system; 0: they named none and the user took the project's.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -6227,6 +7160,7 @@ class PointCloudEntity(_Model):
     style: PointCloudStyle
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -6245,6 +7179,8 @@ class PointCloudEntity(_Model):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.opacity is not UNSET:
@@ -6266,6 +7202,7 @@ class PointCloudEntity(_Model):
             style=PointCloudStyle.from_json(data["style"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
             symbol=data.get("symbol", UNSET),
@@ -6479,6 +7416,8 @@ class PointEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -6494,6 +7433,7 @@ class PointEntity(Entity):
     p: Vec2
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     parts: list[PointPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -6509,6 +7449,8 @@ class PointEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.parts is not UNSET:
@@ -6528,6 +7470,7 @@ class PointEntity(Entity):
             p=Vec2.from_json(data["p"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [PointPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
@@ -7878,6 +8821,8 @@ class RasterEntity(Entity):
             `asset` and `file` is given.
         color: Colour override; absent = the layer's colour ("katmana göre").
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -7901,6 +8846,7 @@ class RasterEntity(Entity):
     color: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -7926,6 +8872,8 @@ class RasterEntity(Entity):
             out["file"] = self.file
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.opacity is not UNSET:
@@ -7953,6 +8901,7 @@ class RasterEntity(Entity):
             color=data.get("color", UNSET),
             file=data.get("file", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
             symbol=data.get("symbol", UNSET),
@@ -8532,6 +9481,8 @@ class SplineEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -8546,6 +9497,7 @@ class SplineEntity(Entity):
     closed: bool
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -8560,6 +9512,8 @@ class SplineEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -8576,6 +9530,7 @@ class SplineEntity(Entity):
             closed=data["closed"],
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -8705,6 +9660,8 @@ class TableEntity(Entity):
             inside it (Kalın çerçeve); absent: a line as the others.
         grid: Which of its lines are drawn; absent: all.
         header: The first row is its heading: bold, centred.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -8735,6 +9692,7 @@ class TableEntity(Entity):
     header: bool | Unset = UNSET
     italic: bool | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     merges: list[CellRange] | Unset = UNSET
     oblique: float | None | Unset = UNSET
@@ -8771,6 +9729,8 @@ class TableEntity(Entity):
             out["italic"] = self.italic
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.merges is not UNSET:
@@ -8806,6 +9766,7 @@ class TableEntity(Entity):
             header=data.get("header", UNSET),
             italic=data.get("italic", UNSET),
             label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             merges=[CellRange.from_json(e0) for e0 in data["merges"]] if "merges" in data else UNSET,
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
@@ -8834,6 +9795,8 @@ class TextEntity(Entity):
             “Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text
             follows the object as its label at `label_scale`; absent: a text of
             its own. Given with `label_scale` or not at all.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
         label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0.
         line_spacing: The distance between the lines' baselines in 5/3 of the height (DXF's
             group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.
@@ -8872,6 +9835,7 @@ class TextEntity(Entity):
     italic: bool | Unset = UNSET
     label: str | None | Unset = UNSET
     label_of: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
     label_scale: float | None | Unset = UNSET
     line_spacing: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
@@ -8908,6 +9872,8 @@ class TextEntity(Entity):
             out["label"] = self.label
         if self.label_of is not UNSET:
             out["labelOf"] = self.label_of
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.label_scale is not UNSET:
             out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
         if self.line_spacing is not UNSET:
@@ -8948,6 +9914,7 @@ class TextEntity(Entity):
             italic=data.get("italic", UNSET),
             label=data.get("label", UNSET),
             label_of=data.get("labelOf", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
             line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
@@ -11028,6 +11995,8 @@ __all__ = [
     "ArcEntity",
     "ArcEntityGeometry",
     "ArcPlan",
+    "AreaLabelMode",
+    "AreaLabelModeName",
     "AreaPart",
     "AreaUnit",
     "AreaUnitName",
@@ -11053,6 +12022,8 @@ __all__ = [
     "BlocksEdited",
     "BothNetworkDirection",
     "Bounds",
+    "CalloutKind",
+    "CalloutKindName",
     "CellRange",
     "Checkpoint",
     "CheckpointChange",
@@ -11166,15 +12137,40 @@ __all__ = [
     "JunctionLayer",
     "JunctionRole",
     "JunctionRoleName",
+    "LabelAbbreviate",
+    "LabelAlign",
+    "LabelAlignName",
+    "LabelBackground",
+    "LabelCallout",
+    "LabelClass",
+    "LabelHalo",
     "LabelInk",
     "LabelInkName",
+    "LabelObstacle",
+    "LabelOverlap",
+    "LabelOverlapName",
+    "LabelPin",
+    "LabelPinChange",
     "LabelPlacement",
     "LabelPlacementName",
+    "LabelPosition",
+    "LabelPositionName",
+    "LabelShadow",
+    "LabelShape",
+    "LabelShapeName",
+    "LabelStack",
     "LabelStyle",
+    "LabelWord",
+    "LabelsMode",
+    "LabelsModeName",
+    "LabelsPin",
+    "LabelsPinPlan",
+    "LabelsPinned",
     "LayerField",
     "LayerFieldKind",
     "LayerFieldKindName",
     "LayerFilter",
+    "LayerLabels",
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
@@ -11188,6 +12184,9 @@ __all__ = [
     "LayersFilter",
     "LayersFilterPlan",
     "LayersFiltered",
+    "LayersLabelled",
+    "LayersLabels",
+    "LayersLabelsPlan",
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",
@@ -11202,6 +12201,8 @@ __all__ = [
     "LineCreated",
     "LineEntity",
     "LineEntityGeometry",
+    "LineLabelMode",
+    "LineLabelModeName",
     "LinePlan",
     "LineType",
     "LineTypeName",
@@ -11224,9 +12225,12 @@ __all__ = [
     "NetworkKindName",
     "NetworkLayer",
     "NewObject",
+    "ObstacleKind",
+    "ObstacleKindName",
     "PathArrayLayout",
     "PathEntity",
     "PatternLine",
+    "PinnedObject",
     "PointCloudEntity",
     "PointCloudFields",
     "PointCloudStyle",
@@ -11234,6 +12238,8 @@ __all__ = [
     "PointCreated",
     "PointEntity",
     "PointEntityGeometry",
+    "PointLabelMode",
+    "PointLabelModeName",
     "PointPart",
     "PointPlan",
     "PointShape",
@@ -11333,6 +12339,8 @@ __all__ = [
     "SimilarityTransform",
     "SplineEntity",
     "SplineEntityGeometry",
+    "StackMode",
+    "StackModeName",
     "SurveySettings",
     "TableAlign",
     "TableAlignName",

@@ -98,6 +98,7 @@ pub fn default_style() -> LayerStyle {
         label: None,
         pick_interior: None,
         renderer: None,
+        labels: None,
     }
 }
 

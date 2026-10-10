@@ -1,3 +1,4 @@
+import type { LabelPin } from '../contracts/generated/LabelPin';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import type { HatchPattern } from '../contracts/generated/HatchPattern';
@@ -108,6 +109,15 @@ const LABEL = 2;
 const SYMBOL = 4;
 /** The object's own line weight: its first float (docs/adr/0139). */
 const WEIGHT = 8;
+/**
+ * An object's labels pinned by hand (docs/adr/0212 §2): after the symbol, how many, then each pin's bits (`PIN_CLASS`
+ * …) and its class (a text), place (two floats) and turn (a float) as it has them.
+ */
+const PINS = 16;
+const PIN_CLASS = 1;
+const PIN_AT = 2;
+const PIN_ROTATION = 4;
+const PIN_HIDDEN = 8;
 /**
  * A kind's optional fields from bit 8 up, in the order the Rust module's table
  * names them (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
@@ -381,6 +391,16 @@ class Packer {
     if (e.color !== undefined) (flags |= COLOR), this.text(e.color, 'color');
     if (e.label !== undefined) (flags |= LABEL), this.text(e.label, 'label');
     if (e.symbol !== undefined) (flags |= SYMBOL), this.text(e.symbol, 'symbol');
+    if (e.labelPins?.length) {
+      flags |= PINS;
+      this.int(e.labelPins.length);
+      for (const p of e.labelPins) {
+        this.int((p.class !== undefined ? PIN_CLASS : 0) | (p.at ? PIN_AT : 0) | (p.rotation !== undefined ? PIN_ROTATION : 0) | (p.hidden === true ? PIN_HIDDEN : 0));
+        if (p.class !== undefined) this.text(p.class, 'labelPins/class');
+        if (p.at) this.float(p.at.x, 'labelPins/at'), this.float(p.at.y, 'labelPins/at');
+        if (p.rotation !== undefined) this.float(p.rotation, 'labelPins/rotation');
+      }
+    }
     for (const key of keys) {
       this.text(key, 'attrs');
       this.text(attrs[key], `attrs/${key}`);
@@ -981,6 +1001,19 @@ export class ColumnsReader {
     if (flags & COLOR) e.color = this.readText();
     if (flags & LABEL) e.label = this.readText();
     if (flags & SYMBOL) e.symbol = this.readText();
+    if (flags & PINS) {
+      const pins: LabelPin[] = [];
+      for (let k = this.readInt(); k > 0; k--) {
+        const bits = this.readInt();
+        const pin: LabelPin = {};
+        if (bits & PIN_CLASS) pin.class = this.readText();
+        if (bits & PIN_AT) pin.at = { x: this.num(), y: this.num() };
+        if (bits & PIN_ROTATION) pin.rotation = this.num();
+        if (bits & PIN_HIDDEN) pin.hidden = true;
+        pins.push(pin);
+      }
+      e.labelPins = pins;
+    }
     const attrs: Record<string, string> = {};
     for (let k = 0; k < n; k++) {
       const key = this.readText();

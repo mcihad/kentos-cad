@@ -450,7 +450,7 @@ fn the_label_record_says_the_unit_the_prefix_and_the_mask() {
         max_x: 100.0,
         max_y: 100.0,
     };
-    let records = s.labels(&view, 10.0, None);
+    let records = s.texts_only(&view, 10.0, None);
     let said: Vec<(f64, &str, &str, f64)> = records
         .chunks_exact(LABEL_STRIDE)
         .map(|r| {

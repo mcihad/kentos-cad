@@ -48,7 +48,7 @@ pub fn compile_filter(filter: &LayerFilter) -> Result<CompiledFilter, String> {
 }
 
 /// The kind of object as the language names it (`$tür`; the web's `ENTITY_KIND_LABEL`).
-fn kind_label(e: &Entity) -> &'static str {
+pub(crate) fn kind_label(e: &Entity) -> &'static str {
     match e {
         Entity::Point(_) => "Nokta",
         Entity::Line(_) => "Çizgi",
@@ -73,7 +73,7 @@ fn kind_label(e: &Entity) -> &'static str {
 }
 
 /// Corners of a path or area, holes and every part's included (`$köşe`).
-fn vertex_count(e: &Entity) -> Option<f64> {
+pub(crate) fn vertex_count(e: &Entity) -> Option<f64> {
     let ring = |pts: usize, holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
         pts + holes.iter().flatten().map(|h| h.pts.len()).sum::<usize>()
     };

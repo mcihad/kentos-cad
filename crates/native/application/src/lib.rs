@@ -44,8 +44,11 @@ mod dimension;
 pub mod edit;
 pub mod elevation;
 pub mod geometry;
+pub mod label_texts;
+pub mod labels_pin;
 pub mod layer_filter;
 pub mod layers_filter;
+pub mod layers_labels;
 pub mod layers_service;
 pub mod layers_time;
 pub mod line;
@@ -125,5 +128,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LAYERS_FILTER,
         kentos_contracts::CAD_LAYERS_FILTER_VERSION,
+    ),
+    // Etiketler and the label tools ([`layers_labels`], [`labels_pin`], docs/adr/0212 §5).
+    (
+        kentos_contracts::CAD_LAYERS_LABELS,
+        kentos_contracts::CAD_LAYERS_LABELS_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_LABELS_PIN,
+        kentos_contracts::CAD_LABELS_PIN_VERSION,
     ),
 ];

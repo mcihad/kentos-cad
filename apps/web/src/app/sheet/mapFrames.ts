@@ -9,6 +9,7 @@ import { WebGL2Backend } from '../../render/webgl2/WebGL2Backend';
 import { LEGEND_PAPER } from '../../style/legend';
 import { Camera } from '../../viewport/Camera';
 import { drawLabels } from '../../viewport/overlay';
+import type { ShownLabels } from '../../viewport/picking';
 import type { AppContext } from '../context';
 import { framedSpots, insideFrame } from './frameLabels';
 
@@ -77,10 +78,11 @@ export function styleAt(ctx: AppContext, scale: number, palette: CanvasPalette, 
  * The label records a map frame writes, of a box at `pxPerM`: only of the map's layers when it shows a list of
  * them, and only those whose anchor is inside the frame (frameLabels.ts; screen, pictures and PDF alike).
  */
-export function labelSpots(ctx: AppContext, prim: Pick<MapPrim, 'layers' | 'clip' | 'view'>, bounds: Bounds, pxPerM: number): Float64Array {
-  const spots = ctx.view.geometry.labels(bounds, pxPerM, null);
+export function labelSpots(ctx: AppContext, prim: Pick<MapPrim, 'layers' | 'clip' | 'view'>, bounds: Bounds, pxPerM: number): ShownLabels {
+  const shown = ctx.view.geometry.labels(bounds, pxPerM, null);
   const layers = prim.layers;
-  return framedSpots(spots, (id) => ctx.doc.get(id), insideFrame(prim), layers.type === 'list' ? (e) => layers.layers.includes(e.layerId) : undefined);
+  const records = framedSpots(shown.records, (id) => ctx.doc.get(id), insideFrame(prim), layers.type === 'list' ? (e) => layers.layers.includes(e.layerId) : undefined);
+  return { records, texts: shown.texts };
 }
 
 /** The layers a map shows, bottom first (the backend's draw order). A theme is not a thing of this app yet: all visible ones. */

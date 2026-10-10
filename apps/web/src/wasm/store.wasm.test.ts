@@ -12,6 +12,17 @@ import { StoreScene, type StoreFile } from './calls/storeCases';
  * Rust runs the same files natively (crates/shared/geometry-core/tests/store.rs).
  */
 
+/**
+ * A recorded `labels` answer without the objects' label records (centre, corner, beside, along: 2–5), which the label
+ * engine places since docs/adr/0212 (its own cases, labelEngine.test.ts); tests/store.rs's `without_object_labels`.
+ */
+function withoutObjectLabels(v: unknown): unknown {
+  const list = v as number[];
+  const out: number[] = [];
+  for (let i = 0; i < list.length; i += 9) if (!(list[i + 1] >= 2 && list[i + 1] <= 5)) out.push(...list.slice(i, i + 9));
+  return out;
+}
+
 const files = import.meta.glob<string>('../../../../fixtures/geometry/v1/store-*.json', { query: '?raw', import: 'default', eager: true });
 
 for (const [path, text] of Object.entries(files)) {
@@ -24,7 +35,8 @@ for (const [path, text] of Object.entries(files)) {
     });
     it('every answer matches', () => {
       const scene = new StoreScene(file);
-      const failures = file.cases.map((c) => sameResult(toJson(scene.answer(c.op, c.args)), c.expect, file.tolerance, `${c.op} ${c.name}`)).filter(Boolean);
+      const expected = (c: (typeof file.cases)[number]) => (c.op === 'labels' ? withoutObjectLabels(c.expect) : c.expect);
+      const failures = file.cases.map((c) => sameResult(toJson(scene.answer(c.op, c.args)), expected(c), file.tolerance, `${c.op} ${c.name}`)).filter(Boolean);
       scene.dispose();
       expect(failures.slice(0, 5).join('\n')).toBe('');
     });

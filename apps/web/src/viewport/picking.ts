@@ -9,7 +9,7 @@ import type { LayerNode, LayerSnap, LayerStore } from '../model/layers';
 import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { ExprTable } from '../model/expression/expression';
-import type { LabelTexts, LabelWanted } from '../model/ops/labelText';
+import type { LabelTexts } from '../model/ops/labelText';
 import type { LayerTime } from '../contracts/generated/LayerTime';
 import type { LayerFilter } from '../contracts/generated/LayerFilter';
 import { IdMarks } from '../model/idMarks';
@@ -17,7 +17,8 @@ import { compileFilter, filterPasses, filterPassesIn, type CompiledFilter } from
 import type { TimeWindow } from '../model/time';
 import { CoreStore, op, type CoreStyleProgram, type ExprColumnData } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
-import { DEFAULT_LABELS, labelRule, readGrips, type GripSet } from './storeRecords';
+import { LABEL_DEFAULTS_JSON, labelLayers, layerTexts, objectTexts } from '../model/labelTexts';
+import { readGrips, type GripSet } from './storeRecords';
 
 export type SnapKind =
   | 'endpoint'
@@ -117,12 +118,26 @@ export const extensionAlong = op<(x: Extension, p: Vec2) => number | null>('exte
 /** The point `d` along an acquired extension from its end; null before the end or past an arc's remainder. */
 export const extensionAt = op<(x: Extension, d: number) => Vec2 | null>('extensionAt');
 
-type LayerRow = { id: string; visible: boolean; locked: boolean; pickInterior: boolean; label?: ReturnType<typeof labelRule>; snapKinds?: number };
+type LayerRow = { id: string; visible: boolean; locked: boolean; pickInterior: boolean; snapKinds?: number };
 
 /**
  * A layer's own snapping as the store's kinds (docs/adr/0163 §4): none when off; Uç nokta brings Çeyrek with it, as
  * the settings do. The desktop's is `layer_snap_mask` (crates/native/interaction/src/spatial.rs).
  */
+/** A window's labels (docs/adr/0212 §3.8): the records, and the texts their lines and curved labels name by index. */
+export interface ShownLabels {
+  records: Float64Array;
+  texts: string[];
+}
+
+/** A label under a point: its object, class, state, and its frame's middle and angle (degrees). */
+export type LabelHit = { id: number; cls: number; state: number; at: Vec2; angle: number; w: number; h: number };
+
+/** `labels`' and `labelsShown`'s flags (docs/adr/0212 §4). */
+export const LABELS_UNPLACED = 1;
+export const LABELS_HIDDEN = 2;
+export const LABELS_KEEP = 4;
+
 export function layerSnapMask(snap: LayerSnap): number {
   if (snap.off) return 0;
   const kinds = new Set(snap.kinds as SnapKind[]);
@@ -142,13 +157,11 @@ export function layerTable(layers: LayerStore): LayerRow[] {
   const out: LayerRow[] = [];
   const walk = (nodes: readonly LayerNode[]) => {
     for (const n of nodes) {
-      const label = n.style.label ? labelRule(n.style.label) : undefined;
       out.push({
         id: n.id,
         visible: layers.isVisible(n.id),
         locked: layers.isLocked(n.id),
         pickInterior: n.style.pickInterior !== false,
-        ...(label ? { label } : {}),
         ...(n.snap ? { snapKinds: layerSnapMask(n.snap) } : {}),
       });
       walk(n.children);
@@ -158,8 +171,6 @@ export function layerTable(layers: LayerStore): LayerRow[] {
   return out;
 }
 
-/** The label defaults by kind, as the store reads them. */
-const LABEL_DEFAULTS = JSON.stringify(Object.fromEntries(Object.entries(DEFAULT_LABELS).map(([kind, st]) => [kind, labelRule(st)])));
 
 /**
  * Spatial queries: picking, object snap, window selection, boundaries,
@@ -197,6 +208,9 @@ export class PickIndex {
    * once it was asked, its JSON (an undo gives back a copy of the same filter); compiled.
    */
   private sentFilters = new Map<string, { filter: LayerFilter; key?: string }>();
+  /** The label engine's layers as last sent (docs/adr/0212 §3.1), and each layer's texts' setting the texts were made with. */
+  private sentLabelLayers = '';
+  private sentTexts = new Map<string, string>();
   private filters = new Map<string, { compiled: CompiledFilter | null; error: string | null }>();
   /** The objects their layer's filter leaves out (the store holds the same marks for its queries). */
   private readonly left = new IdMarks();
@@ -207,7 +221,7 @@ export class PickIndex {
 
   constructor(doc: CadDocument) {
     this.doc = doc;
-    this.store.setLabelDefaults(LABEL_DEFAULTS);
+    this.store.setLabelDefaults(LABEL_DEFAULTS_JSON);
     // Text boxes (picking, window selection, extents) are measured in the project's drawing typeface.
     this.store.setFont(doc.settings.drawingFont.value);
     this.d.add(doc.settings.drawingFont.subscribe((f) => this.store.setFont(f)));
@@ -275,6 +289,7 @@ export class PickIndex {
       this.reload = false;
       this.pending.clear();
       this.store.clear();
+      this.sentTexts.clear();
       this.sentLinks = -1;
       this.sentRules.clear();
       this.timed = false;
@@ -300,10 +315,60 @@ export class PickIndex {
     }
     if (layersChanged || put.length) this.syncTimes(put, layersChanged);
     if (layersChanged || put.length || this.recount) this.syncFilters(put, layersChanged);
+    if (layersChanged || put.length) this.syncLabels(reloaded ? [...this.doc.all()] : put, layersChanged);
     // The objects whose label a text writes show none of their own (docs/adr/0175 §4).
     if (this.sentLinks !== this.doc.linksVersion) {
       this.sentLinks = this.doc.linksVersion;
       this.store.setTextLabelled(Float64Array.from(this.doc.textLabelled()));
+    }
+  }
+
+  /**
+   * The label engine's inputs (docs/adr/0212 §3.1): the layers' labelling when it changed; the texts of a layer whose
+   * texts' setting changed (its classes' texts, conditions and templates; its name, for `$katman`) whole, then those of
+   * the objects just put; the objects' pins (a put object lost its own).
+   */
+  private syncLabels(put: readonly Entity[], layersChanged: boolean): void {
+    const layers = this.doc.layers;
+    const whole: string[] = [];
+    if (layersChanged) {
+      const table = labelLayers(layers);
+      if (table !== this.sentLabelLayers) {
+        this.sentLabelLayers = table;
+        this.store.setLabelLayers(table);
+      }
+      const seen = new Set<string>();
+      for (const l of layers.leaves()) {
+        if (l.service) continue;
+        seen.add(l.id);
+        const key = JSON.stringify([l.name, l.style.label ?? null, l.style.labels?.mode ?? null, l.style.labels?.classes ?? null]);
+        if (this.sentTexts.get(l.id) !== key) {
+          if (this.sentTexts.has(l.id)) whole.push(l.id);
+          this.sentTexts.set(l.id, key);
+        }
+      }
+      for (const id of [...this.sentTexts.keys()]) if (!seen.has(id)) this.sentTexts.delete(id);
+    }
+    const name = (id: string) => layers.get(id)?.name ?? id;
+    const send = (list: readonly Entity[], id: string) => {
+      if (!list.length) return;
+      const t = objectTexts(list, layerTexts(layers.get(id)), name, this.store);
+      this.store.setObjectLabels(t.ids, t.from, t.classes, t.texts, t.lens, t.zs);
+    };
+    for (const id of whole) send(this.doc.byLayer(id), id);
+    if (put.length) {
+      const done = new Set(whole);
+      const byLayer = new Map<string, Entity[]>();
+      for (const e of put) {
+        if (done.has(e.layerId)) continue;
+        const list = byLayer.get(e.layerId);
+        if (list) list.push(e);
+        else byLayer.set(e.layerId, [e]);
+      }
+      for (const [id, list] of byLayer) send(list, id);
+      const pins: [number, unknown][] = [];
+      for (const e of put) if (e.labelPins?.length) pins.push([e.id, e.labelPins]);
+      if (pins.length) this.store.setLabelPins(JSON.stringify(pins));
     }
   }
 
@@ -539,25 +604,47 @@ export class PickIndex {
    * order (LABEL_STRIDE numbers per record, ./storeRecords); `editingId` is
    * left out (the inline editor draws it).
    */
-  labels(view: Bounds, scale: number, editingId: number | null): Float64Array {
+  labels(view: Bounds, scale: number, editingId: number | null, flags = 0): ShownLabels {
     this.sync();
-    return this.store.labels(view.minX, view.minY, view.maxX, view.maxY, scale, editingId);
-  }
-
-  /** The same as the view shows them under `size` (docs/adr/0205 §5): `LABEL_SHOWN_STRIDE` numbers a record. */
-  labelsShown(view: Bounds, scale: number, editingId: number | null, size: 'legible' | 'true' | 'screen', plotScale: number): Float64Array {
-    this.sync();
-    return this.store.labelsShown(view.minX, view.minY, view.maxX, view.maxY, scale, editingId, size, plotScale);
+    const records = this.store.labels(view.minX, view.minY, view.maxX, view.maxY, scale, editingId, flags);
+    return { records, texts: this.store.placedTexts() };
   }
 
   /**
-   * Etiketleri yazıya çevir (docs/adr/0175 §1): the texts `wanted` labels make at 1:`scale`, each object's label
-   * placed by the store as the drawing's are, the template filled and the text measured in the drawing's typeface; a
-   * text's `item` is its place in `wanted`.
+   * The same as the view shows them under `size` (docs/adr/0205 §5): `LABEL_SHOWN_STRIDE` numbers a record. `flags`
+   * (docs/adr/0212 §4): `LABELS_UNPLACED` the labels with no free place too, `LABELS_HIDDEN` the hidden ones,
+   * `LABELS_KEEP` the main view's, kept for `labelAt`.
    */
-  labelTexts(wanted: readonly LabelWanted[], scale: number, thin: boolean): LabelTexts {
+  labelsShown(view: Bounds, scale: number, editingId: number | null, size: 'legible' | 'true' | 'screen', plotScale: number, flags = 0): ShownLabels {
     this.sync();
-    return JSON.parse(this.store.labelTexts(JSON.stringify(wanted), scale, thin)) as LabelTexts;
+    const records = this.store.labelsShown(view.minX, view.minY, view.maxX, view.maxY, scale, editingId, size, plotScale, flags);
+    return { records, texts: this.store.placedTexts() };
+  }
+
+  /** The label under `p` among the main view's last labels, within `tol` px; `all` counts the unplaced and hidden. */
+  labelAt(p: Vec2, tol: number, all = false): LabelHit | null {
+    return this.store.labelAt(p.x, p.y, tol, all);
+  }
+
+  /** The labels whose middle is in the box `a`–`b` among the main view's last labels (Etiketi sabitle's window). */
+  labelsIn(a: Vec2, b: Vec2, all = false): LabelHit[] {
+    return this.store.labelsIn(a.x, a.y, b.x, b.y, all);
+  }
+
+  /** Where an object's labels are pinned from: its anchor (world), null for none. */
+  labelAnchor(id: number): Vec2 | null {
+    this.sync();
+    return this.store.labelAnchor(id);
+  }
+
+  /**
+   * Etiketleri yazıya çevir (docs/adr/0212 §4): the labels of the objects `ids` as the label engine places their window
+   * at 1:`scale` (as the sheet does), written as objects; `every` writes the unplaced ones too. A text's `item` is its
+   * object's place in `ids`.
+   */
+  labelTexts(ids: readonly number[], scale: number, every: boolean): LabelTexts {
+    this.sync();
+    return JSON.parse(this.store.labelTexts(Float64Array.from(ids), scale, every)) as LabelTexts;
   }
 
   /** Grips of these objects (unknown ids left out), in the given order. */

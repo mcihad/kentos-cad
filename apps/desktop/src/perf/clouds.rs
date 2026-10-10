@@ -271,6 +271,7 @@ fn drawing(cloud: PointCloudFields) -> DocumentSnapshotV2 {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
         cloud,
     }));

@@ -210,6 +210,11 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
     layer_move::MATCH_ID,
     layer_move::COPY_ID,
+    // docs/adr/0212 §4: the label tools.
+    crate::label_tools::MOVE_ID,
+    crate::label_tools::ROTATE_ID,
+    crate::label_tools::PIN_ID,
+    crate::label_tools::HIDE_ID,
     // docs/adr/0185: Koordinat yaz and Köşelere koordinat yaz.
     coordinate_labels::ID,
     coordinate_labels::VERTICES_ID,
@@ -397,6 +402,12 @@ impl Session {
             layer_tools::ACTIVE_ID => Box::new(layer_tools::LayerTool::make_active()),
             layer_move::MATCH_ID => Box::new(layer_move::LayerMove::layer_match()),
             layer_move::COPY_ID => Box::new(layer_move::LayerMove::copy_to_layer()),
+            crate::label_tools::MOVE_ID => Box::new(crate::label_tools::LabelTool::move_label()),
+            crate::label_tools::ROTATE_ID => {
+                Box::new(crate::label_tools::LabelTool::rotate_label())
+            }
+            crate::label_tools::PIN_ID => Box::new(crate::label_tools::LabelTool::pin_label()),
+            crate::label_tools::HIDE_ID => Box::new(crate::label_tools::LabelTool::hide_label()),
             sector::ID => Box::new(crate::sector::Sector::new()),
             between::ID => Box::new(crate::between::PointsBetween::new()),
             meeting::ID => Box::new(crate::meeting::IntersectPoint::new()),
@@ -613,6 +624,11 @@ impl Session {
             Some(Suspended::Grip) => "select",
             None => self.tool.as_ref().map_or("select", |t| t.id()),
         }
+    }
+
+    /// Whether the running tool shows the labels hidden by hand (docs/adr/0212 §4).
+    pub fn shows_hidden_labels(&self) -> bool {
+        self.tool.as_ref().is_some_and(|t| t.shows_hidden_labels())
     }
 
     /// The running tool's name (`Kapalı alan`).

@@ -14,7 +14,6 @@ use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::spatial_query::Relation;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
-use kentos_geometry_core::store::labels::LabelWanted;
 use kentos_geometry_core::store::overview::OverviewRequest;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras};
 use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
@@ -221,6 +220,10 @@ impl StyledBatches {
 #[wasm_bindgen]
 pub struct GeometryStore {
     inner: Store,
+    /// The texts of the last labels asked (`placedTexts`), a line each.
+    texts: String,
+    /// The main view's last labels (`labelAt`): its records, their stride and scale.
+    kept: (Vec<f64>, usize, f64),
 }
 
 impl Default for GeometryStore {
@@ -229,7 +232,30 @@ impl Default for GeometryStore {
     }
 }
 
+/// A placing's options from `labels`' flags.
+fn place_options(flags: u32) -> kentos_geometry_core::store::placing::PlaceOptions {
+    kentos_geometry_core::store::placing::PlaceOptions {
+        unplaced: flags & 1 != 0,
+        hidden: flags & 2 != 0,
+    }
+}
+
 impl GeometryStore {
+    /// A window's labels' texts kept for `placedTexts`, its records for `labelAt` when the flags say so.
+    fn keep(
+        &mut self,
+        shown: kentos_geometry_core::store::placing::Shown,
+        stride: usize,
+        scale: f64,
+        flags: u32,
+    ) -> Vec<f64> {
+        self.texts = shown.texts.join("\n");
+        if flags & 4 != 0 {
+            self.kept = (shown.records.clone(), stride, scale);
+        }
+        shown.records
+    }
+
     /// The store itself, for the crate's other classes (a network built from its objects).
     pub(crate) fn store(&self) -> &Store {
         &self.inner
@@ -247,6 +273,8 @@ impl GeometryStore {
     pub fn new() -> GeometryStore {
         GeometryStore {
             inner: Store::new(),
+            texts: String::new(),
+            kept: (Vec::new(), 0, 1.0),
         }
     }
 
@@ -332,7 +360,8 @@ impl GeometryStore {
         Ok(out)
     }
 
-    /// Label rules by kind for layers without a label style: `{ polygon, circle, point, polyline, line }`.
+    /// The label styles of objects whose layer has none, by kind: `{ polygon, circle, point, polyline, line }`
+    /// (`LabelStyle`s, docs/adr/0212 §2).
     #[wasm_bindgen(js_name = setLabelDefaults)]
     pub fn set_label_defaults(&mut self, defaults: &str) -> Result<(), JsError> {
         self.inner.set_label_defaults_json(defaults).map_err(|e| {
@@ -340,6 +369,151 @@ impl GeometryStore {
                 "Geometri deposu etiket varsayılanlarını okuyamadı: {e}"
             ))
         })
+    }
+
+    /// The label engine's layers (docs/adr/0212 §3.1): `[{ id, rank, point?, label?, labels? }]`.
+    #[wasm_bindgen(js_name = setLabelLayers)]
+    pub fn set_label_layers(&mut self, layers: &str) -> Result<(), JsError> {
+        self.inner.set_label_layers_json(layers).map_err(|e| {
+            JsError::new(&format!(
+                "Geometri deposu katmanların etiketlemesini okuyamadı: {e}"
+            ))
+        })
+    }
+
+    /// Objects' labels' texts (docs/adr/0212 §3.1): `ids[i]`'s are the entries `from[i]..from[i + 1]`
+    /// of `classes` and `texts` (`lens` their UTF-16 lengths), its height `zs[i]`.
+    #[wasm_bindgen(js_name = setObjectLabels)]
+    pub fn set_object_labels(
+        &mut self,
+        ids: &[f64],
+        from: &[u32],
+        classes: &[u16],
+        texts: &str,
+        lens: &[u32],
+        zs: &[f64],
+    ) -> Result<(), JsError> {
+        self.inner
+            .set_object_labels_packed(ids, from, classes, texts, lens, zs)
+            .map_err(|e| {
+                JsError::new(&format!(
+                    "Geometri deposu etiket metinlerini okuyamadı: {e}"
+                ))
+            })
+    }
+
+    /// Objects' pins (docs/adr/0212 §3.7): `[[id, [LabelPin …]] …]`; an empty list forgets an object's.
+    #[wasm_bindgen(js_name = setLabelPins)]
+    pub fn set_label_pins(&mut self, pins: &str) -> Result<(), JsError> {
+        self.inner
+            .set_label_pins_json(pins)
+            .map_err(|e| JsError::new(&format!("Geometri deposu etiket iğnelerini okuyamadı: {e}")))
+    }
+
+    /// The label engine alone (docs/adr/0212 §3; the shared cases'
+    /// `fixtures/labels/v1`): the labels of the window (x0, y0)–(x1, y1) at
+    /// `scale` px per metre around the drawing's texts' outlines `fixed`
+    /// (`[[[x, y] …] …]` as JSON, world), as `Store::place_labels` gives
+    /// them; `flags` as `labels`'. Their texts are `placedTexts`'.
+    #[wasm_bindgen(js_name = placeLabels)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn place_labels(
+        &mut self,
+        x0: f64,
+        y0: f64,
+        x1: f64,
+        y1: f64,
+        scale: f64,
+        fixed: &str,
+        flags: u32,
+    ) -> Result<Vec<f64>, JsError> {
+        let outlines = Json::parse(fixed)
+            .and_then(|v| Vec::<Vec<[f64; 2]>>::from_json(&v))
+            .map_err(|e| JsError::new(&format!("Yazıların çerçeveleri okunamadı: {e}")))?;
+        let fixed: Vec<Vec<Vec2>> = outlines
+            .iter()
+            .map(|o| o.iter().map(|p| Vec2::new(p[0], p[1])).collect())
+            .collect();
+        let window = Bounds {
+            min_x: x0,
+            min_y: y0,
+            max_x: x1,
+            max_y: y1,
+        };
+        let shown = self
+            .inner
+            .place_labels(&window, scale, &fixed, place_options(flags));
+        self.texts = shown.texts.join("\n");
+        Ok(shown.records)
+    }
+
+    /// The texts of the labels last asked (`labels`, `labelsShown`), a line each.
+    #[wasm_bindgen(js_name = placedTexts)]
+    pub fn placed_texts(&self) -> String {
+        self.texts.clone()
+    }
+
+    /// The label under (x, y) among the main view's last labels, within `tol` px: `[id, class, state, x, y,
+    /// angle, w, h]`, empty for none; `all` counts the unplaced and the hidden (docs/adr/0212 §4).
+    #[wasm_bindgen(js_name = labelAt)]
+    pub fn label_at(&self, x: f64, y: f64, tol: f64, all: bool) -> Vec<f64> {
+        let (records, stride, scale) = &self.kept;
+        kentos_geometry_core::store::placing::label_at(
+            records,
+            *stride,
+            *scale,
+            Vec2::new(x, y),
+            tol,
+            all,
+        )
+        .map_or_else(Vec::new, |h| {
+            vec![
+                h.id,
+                f64::from(h.class),
+                f64::from(h.state),
+                h.at.x,
+                h.at.y,
+                h.angle,
+                h.w,
+                h.h,
+            ]
+        })
+    }
+
+    /// The labels whose middle is in the box (x0, y0)–(x1, y1) among the main view's last labels: 8 numbers each, as
+    /// `labelAt` gives one; `all` counts the unplaced and the hidden (Etiketi sabitle's window, docs/adr/0212 §4).
+    #[wasm_bindgen(js_name = labelsIn)]
+    pub fn labels_in(&self, x0: f64, y0: f64, x1: f64, y1: f64, all: bool) -> Vec<f64> {
+        let (records, stride, _) = &self.kept;
+        kentos_geometry_core::store::placing::labels_in(
+            records,
+            *stride,
+            Vec2::new(x0, y0),
+            Vec2::new(x1, y1),
+            all,
+        )
+        .iter()
+        .flat_map(|h| {
+            [
+                h.id,
+                f64::from(h.class),
+                f64::from(h.state),
+                h.at.x,
+                h.at.y,
+                h.angle,
+                h.w,
+                h.h,
+            ]
+        })
+        .collect()
+    }
+
+    /// Where an object's labels are pinned from: its anchor `[x, y]` (world), empty for none (docs/adr/0212 §2).
+    #[wasm_bindgen(js_name = labelAnchor)]
+    pub fn label_anchor(&self, id: f64) -> Vec<f64> {
+        self.inner
+            .label_anchor(id)
+            .map_or_else(Vec::new, |p| vec![p.x, p.y])
     }
 
     /// The objects whose label a text writes (docs/adr/0175 §4): their own labels are left out.
@@ -651,11 +825,13 @@ impl GeometryStore {
             .map_or_else(Vec::new, |p| p.pixels))
     }
 
-    /// What the overlay draws in the view at `scale` px/m (eight numbers per
+    /// What the overlay draws in the view at `scale` px/m (nine numbers per
     /// record, see `Store::labels`); `editing` is left out when `has_editing`.
+    /// `flags`: 1 the unplaced labels too, 2 the hidden ones, 4 kept for `labelAt`
+    /// (docs/adr/0212 §4). The labels' texts are then `placedTexts`.
     #[allow(clippy::too_many_arguments)]
     pub fn labels(
-        &self,
+        &mut self,
         min_x: f64,
         min_y: f64,
         max_x: f64,
@@ -663,22 +839,30 @@ impl GeometryStore {
         scale: f64,
         has_editing: bool,
         editing: f64,
+        flags: u32,
     ) -> Vec<f64> {
-        self.inner.labels(
+        let shown = self.inner.labels(
             &rect(min_x, min_y, max_x, max_y),
             scale,
             has_editing.then_some(editing),
+            place_options(flags),
+        );
+        self.keep(
+            shown,
+            kentos_geometry_core::store::labels::LABEL_STRIDE,
+            scale,
+            flags,
         )
     }
 
     /// The same as the view shows them (docs/adr/0205 §5): each record and
     /// its factor and anchor, `LABEL_SHOWN_STRIDE` numbers (see
     /// `Store::labels_shown`); `size` is `graphics.annotationSize`'s value
-    /// (`legible`, `true`, `screen`), `plot_scale` the project's.
+    /// (`legible`, `true`, `screen`), `plot_scale` the project's; `flags` as `labels`'.
     #[allow(clippy::too_many_arguments)]
     #[wasm_bindgen(js_name = labelsShown)]
     pub fn labels_shown(
-        &self,
+        &mut self,
         min_x: f64,
         min_y: f64,
         max_x: f64,
@@ -688,26 +872,32 @@ impl GeometryStore {
         editing: f64,
         size: &str,
         plot_scale: f64,
+        flags: u32,
     ) -> Vec<f64> {
-        self.inner.labels_shown(
+        let shown = self.inner.labels_shown(
             &rect(min_x, min_y, max_x, max_y),
             scale,
             has_editing.then_some(editing),
             kentos_geometry_core::store::legible::LabelSize::of(size, plot_scale),
+            place_options(flags),
+        );
+        self.keep(
+            shown,
+            kentos_geometry_core::store::legible::LABEL_SHOWN_STRIDE,
+            scale,
+            flags,
         )
     }
 
-    /// Etiketleri yazıya çevir (docs/adr/0175 §1, `Store::label_texts`):
-    /// `wanted` as `[{ id, label, style }]` (the layer's `LabelStyle`), at
-    /// 1:`scale`; `{ texts, outOfScale, small, overlapping }` as JSON.
+    /// Etiketleri yazıya çevir (docs/adr/0212 §4, `Store::label_texts`): the
+    /// labels of the objects `ids` as the engine places their window at
+    /// 1:`scale`, written as objects; `every` writes the unplaced too.
+    /// `{ texts, callouts, outOfScale, small, overlapping }` as JSON.
     #[wasm_bindgen(js_name = labelTexts)]
-    pub fn label_texts(&self, wanted: &str, scale: f64, thin: bool) -> Result<String, JsError> {
-        let wanted = Json::parse(wanted)
-            .and_then(|v| Vec::<LabelWanted>::from_json(&v))
-            .map_err(|e| JsError::new(&format!("Çevrilecek etiketler okunamadı: {e}")))?;
+    pub fn label_texts(&self, ids: &[f64], scale: f64, every: bool) -> String {
         let mut out = String::new();
-        json::ToJson::write_json(&self.inner.label_texts(&wanted, scale, thin), &mut out);
-        Ok(out)
+        json::ToJson::write_json(&self.inner.label_texts(ids, scale, every), &mut out);
+        out
     }
 
     /// Grips of these objects (see `Store::grips`).

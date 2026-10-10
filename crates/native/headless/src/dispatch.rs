@@ -4,15 +4,15 @@
 
 use kentos_contracts::{
     ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, EntitiesArray, EntitiesCreate,
-    EntitiesDelete, EntitiesEdit, EntitiesSetProperties, EntitiesTransform, LayersFilter,
-    LayersService, LayersTime, LineCreate, NetworkDefine, PointCreate, PolygonCreate,
-    PolylineCreate, ScenariosEdit,
+    EntitiesDelete, EntitiesEdit, EntitiesSetProperties, EntitiesTransform, LabelsPin,
+    LayersFilter, LayersLabels, LayersService, LayersTime, LineCreate, NetworkDefine, PointCreate,
+    PolygonCreate, PolylineCreate, ScenariosEdit,
 };
 use kentos_domain::Document;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, create,
-    delete, edit, layers_filter, layers_service, layers_time, line, network_define, point, polygon,
-    polyline, scenarios_edit, set, transform,
+    delete, edit, labels_pin, layers_filter, layers_labels, layers_service, layers_time, line,
+    network_define, point, polygon, polyline, scenarios_edit, set, transform,
 };
 use serde_json::Value;
 
@@ -104,6 +104,8 @@ pub fn run(
         kentos_contracts::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
         kentos_contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         kentos_contracts::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
+        kentos_contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
+        kentos_contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
         other => return Err(refusal(other)),
     };
     answer.map_err(|e| {

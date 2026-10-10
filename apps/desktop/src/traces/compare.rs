@@ -349,6 +349,41 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    // The label pins (docs/adr/0212 §2): the objects named, each pin whole; places within the click's
+    // tolerance, turns within 1e-9.
+    if let Some(want) = &expect.label_pins {
+        let empty = Vec::new();
+        for (id, pins) in want {
+            let have = id
+                .parse::<u32>()
+                .ok()
+                .and_then(|id| got.label_pins.get(&id))
+                .unwrap_or(&empty);
+            let same = have.len() == pins.len()
+                && have.iter().zip(pins).all(|(h, w)| {
+                    h.class == w.class
+                        && h.hidden == w.hidden.filter(|h| *h)
+                        && match (h.rotation, w.rotation) {
+                            (None, None) => true,
+                            (Some(a), Some(b)) => (a - b).abs() <= 1e-9,
+                            _ => false,
+                        }
+                        && match (h.at, w.at) {
+                            (None, None) => true,
+                            (Some(a), Some(b)) => {
+                                (a.x - b[0]).hypot(a.y - b[1]) <= trace.click_tolerance
+                            }
+                            _ => false,
+                        }
+                });
+            check(
+                &format!("labelPins[{id}]"),
+                same,
+                format!("{have:?}"),
+                format!("{pins:?}"),
+            );
+        }
+    }
     // The layer tree's counts (docs/adr/0211 §4): only the rows the step names, exactly.
     if let Some(want) = &expect.layer_counts {
         for (path, count) in want {

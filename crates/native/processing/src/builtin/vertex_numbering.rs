@@ -174,7 +174,7 @@ pub fn tool() -> Tool {
                             symbol: PointSymbol::Cross,
                             size: 7.0,
                         }),
-                        label: Some(LabelStyle {
+                        label: Some(Box::new(LabelStyle {
                             placement: LabelPlacement::Beside,
                             size: 10.5,
                             grow: None,
@@ -185,7 +185,8 @@ pub fn tool() -> Tool {
                             min_scale: None,
                             max_scale: None,
                             ink: None,
-                        }),
+                            ..LabelStyle::default()
+                        })),
                         ..NewLayerStyle::default()
                     },
                     above: None,
@@ -229,6 +230,7 @@ fn base(layer: &str, label: Option<String>, attrs: &BTreeMap<String, String>) ->
         label,
         symbol: None,
         line_weight: None,
+        label_pins: Vec::new(),
     }
 }
 

@@ -33,8 +33,7 @@ use std::hash::BuildHasherDefault;
 use std::sync::Arc;
 
 use kentos_contracts::{
-    BlockDefinition, Entity, EntityId, LabelPlacement, LabelStyle, LayerFilter, LayerNode,
-    LayerSnap, LayerTime,
+    BlockDefinition, Entity, EntityId, LayerFilter, LayerNode, LayerSnap, LayerTime,
 };
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot, SlotHasher, Uuid};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
@@ -42,18 +41,24 @@ use kentos_geometry_core::geom::dimension::dimension_measure;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::holes::HoleAt;
 use kentos_geometry_core::store::labels::{
-    DIMENSION_PREFIXES, DIMENSION_UNITS, LABEL_ALONG, LABEL_BESIDE, LABEL_CELL, LABEL_CENTER,
-    LABEL_CORNER, LABEL_DIMENSION, LABEL_LEADER, LABEL_LINE, LABEL_PARAGRAPH_MASK,
-    LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_LINE, LABEL_PIECE_TEXT, LABEL_STRIDE,
-    LABEL_TEXT, LabelRule, Placement,
+    DIMENSION_PREFIXES, DIMENSION_UNITS, LABEL_CELL, LABEL_DIMENSION, LABEL_LEADER, LABEL_LINE,
+    LABEL_PARAGRAPH_MASK, LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_LINE,
+    LABEL_PIECE_TEXT, LABEL_STRIDE, LABEL_TEXT,
 };
 use kentos_geometry_core::store::legible::LABEL_SHOWN_STRIDE;
 pub use kentos_geometry_core::store::legible::LabelSize;
+use kentos_geometry_core::store::placing::{
+    LABEL_PLACED, LABEL_PLACED_CALLOUT, LABEL_PLACED_LETTER, LABEL_PLACED_LINE, LabelHit,
+    ObjectLabels, Pin, PlaceOptions, label_at,
+};
 use kentos_geometry_core::store::polygon::PolygonMode;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
 use kentos_native_application::blocks::{core_blocks, piece_entities};
 use kentos_native_application::geometry::{drawing_font, shape};
+use kentos_native_application::label_texts::{
+    label_defaults_json, label_layers_json, layer_texts, object_texts, texts_key,
+};
 use kentos_native_application::layer_filter::{CompiledFilter, compile_filter};
 
 use crate::Vec2;
@@ -83,6 +88,12 @@ pub struct Spatial {
     /// New objects their layer's filter left out since the app last asked, by layer, in the order met
     /// (docs/adr/0211 §3: said once for the change).
     hidden_new: Vec<(String, usize)>,
+    /// The label engine's layers as last sent (docs/adr/0212 §3.1), and each layer's texts' setting the
+    /// texts were made with.
+    label_layers: String,
+    label_keys: std::collections::HashMap<String, String>,
+    /// The main view's last labels (`label_at`): their records, stride and scale.
+    kept: std::cell::RefCell<(Vec<f64>, usize, f64)>,
 }
 
 /// A layer's filter as the store's marks were made with it: compiled (or why
@@ -113,9 +124,9 @@ impl Spatial {
     pub fn reload(&mut self, doc: &Document) {
         self.reloads += 1;
         self.store.clear();
-        self.store.set_label_defaults(
-            LABELLED_KINDS.map(|kind| default_label(kind).as_ref().map(label_rule)),
-        );
+        if let Err(e) = self.store.set_label_defaults_json(&label_defaults_json()) {
+            debug_assert!(false, "the kinds' label styles: {e}");
+        }
         self.store
             .set_font(drawing_font(doc.settings().drawing_font));
         self.blocks = doc.blocks().to_vec();
@@ -132,6 +143,10 @@ impl Spatial {
         self.sync_times(doc, &[]);
         self.filters.clear();
         self.sync_filters(doc, &[], false);
+        self.label_layers.clear();
+        self.label_keys.clear();
+        let all: Vec<&Entity> = doc.entities().collect();
+        self.sync_labels(doc, &all, true);
     }
 
     /// Brings the store up to date with `doc`: the block definitions and the
@@ -198,6 +213,7 @@ impl Spatial {
                 self.sync_layers(doc.layers());
                 self.sync_times(doc, &changed);
                 self.sync_filters(doc, &changed, !gone.is_empty());
+                self.sync_labels(doc, &changed, false);
                 for e in fresh {
                     if self.store.filter_shown(f64::from(e.base().id)) {
                         continue;
@@ -210,6 +226,110 @@ impl Spatial {
                 }
             }
         }
+    }
+
+    /// The label engine's inputs (docs/adr/0212 §3.1): the layers' labelling
+    /// when it changed; the texts of a layer whose texts' setting changed
+    /// (its classes' texts, conditions and templates; its name, for
+    /// `$katman`) whole, then those of the objects just put (`all`: every
+    /// object, after a reload); the objects' pins (a put object lost its own).
+    fn sync_labels(&mut self, doc: &Document, put: &[&Entity], all: bool) {
+        let leaves: Vec<&LayerNode> = doc
+            .layers()
+            .leaves()
+            .into_iter()
+            .filter(|l| l.service.is_none())
+            .collect();
+        let table = label_layers_json(&leaves);
+        if table != self.label_layers {
+            if let Err(e) = self.store.set_label_layers_json(&table) {
+                debug_assert!(false, "the layers' labelling: {e}");
+            }
+            self.label_layers = table;
+        }
+        let mut whole: Vec<String> = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+        for l in &leaves {
+            seen.insert(l.id.clone());
+            let key = texts_key(l);
+            if self.label_keys.get(&l.id) != Some(&key) {
+                if self.label_keys.contains_key(&l.id) && !all {
+                    whole.push(l.id.clone());
+                }
+                self.label_keys.insert(l.id.clone(), key);
+            }
+        }
+        self.label_keys.retain(|id, _| seen.contains(id));
+        let names = |id: &str| {
+            doc.layers()
+                .get(id)
+                .map_or_else(|| id.to_owned(), |n| n.name.clone())
+        };
+        let mut by_layer: Vec<(String, Vec<&Entity>)> = Vec::new();
+        for id in &whole {
+            by_layer.push((
+                id.clone(),
+                doc.layer_slots(id)
+                    .filter_map(|(_, s)| doc.get(s))
+                    .collect(),
+            ));
+        }
+        for e in put {
+            let layer = &e.base().layer_id;
+            if whole.contains(layer) {
+                continue;
+            }
+            match by_layer.iter_mut().find(|(id, _)| id == layer) {
+                Some((_, list)) => list.push(e),
+                None => by_layer.push((layer.clone(), vec![e])),
+            }
+        }
+        for (layer, list) in by_layer {
+            let t = layer_texts(doc.layers().get(&layer));
+            let store = &self.store;
+            let texts = object_texts(&list, &t, &names, &|i| {
+                store.get(f64::from(list[i].base().id)).map(|it| &it.shape)
+            });
+            for (e, (texts, z)) in list.iter().zip(texts) {
+                self.store
+                    .set_object_labels(f64::from(e.base().id), ObjectLabels { texts, z });
+            }
+        }
+        for e in put {
+            let pins = &e.base().label_pins;
+            if !pins.is_empty() {
+                self.store.set_label_pins(
+                    f64::from(e.base().id),
+                    pins.iter()
+                        .map(|p| Pin {
+                            class: p.class.clone(),
+                            at: p.at.map(|a| Vec2::new(a.x, a.y)),
+                            rotation: p.rotation.unwrap_or(0.0),
+                            hidden: p.hidden == Some(true),
+                        })
+                        .collect(),
+                );
+            }
+        }
+    }
+
+    /// The label under `at` among the main view's last labels, within `tol`
+    /// px; `all` counts the unplaced and hidden (docs/adr/0212 §4).
+    pub fn label_at(&self, at: Vec2, tol: f64, all: bool) -> Option<LabelHit> {
+        let kept = self.kept.borrow();
+        label_at(&kept.0, kept.1, kept.2, at, tol, all)
+    }
+
+    /// The labels whose middle is inside the box `from`–`to` among the main
+    /// view's last labels (Etiketi sabitle's window, docs/adr/0212 §4).
+    pub fn labels_in(&self, from: Vec2, to: Vec2, all: bool) -> Vec<LabelHit> {
+        let kept = self.kept.borrow();
+        kentos_geometry_core::store::placing::labels_in(&kept.0, kept.1, from, to, all)
+    }
+
+    /// Where an object's labels are pinned from: its anchor (docs/adr/0212 §2).
+    pub fn label_anchor(&self, slot: Slot) -> Option<Vec2> {
+        self.store.label_anchor(f64::from(slot.0))
     }
 
     /// The new objects their layer's filter left out since the last call, by layer id, with how many
@@ -735,29 +855,42 @@ impl Spatial {
     /// `drawLabels`): dimension values, text objects and object labels on
     /// visible layers, near the view, readable at this size and inside
     /// their label style's scale range.
-    pub fn labels(&self, min: Vec2, max: Vec2, scale: f64) -> Vec<LabelSpot> {
+    ///
+    /// The objects' labels are the label engine's (docs/adr/0212 §3.8): a
+    /// frame, then its lines, letters and callout.
+    pub fn labels(
+        &self,
+        min: Vec2,
+        max: Vec2,
+        scale: f64,
+        options: PlaceOptions,
+    ) -> Vec<LabelSpot> {
         let view = Bounds {
             min_x: min.x,
             min_y: min.y,
             max_x: max.x,
             max_y: max.y,
         };
-        self.store
-            .labels(&view, scale, None)
+        let shown = self.store.labels(&view, scale, None, options);
+        shown
+            .records
             .chunks_exact(LABEL_STRIDE)
-            .filter_map(|r| self.spot(r))
+            .filter_map(|r| self.spot(r, &shown.texts))
             .collect()
     }
 
     /// The labels as the view shows them under `size` (docs/adr/0205 §5):
     /// each with how it grows (its factor, 1 as it is, and the point it grows
-    /// about); a grown text that would cover another is left out.
+    /// about); a grown text that would cover another is left out. `keep`:
+    /// the main view's, kept for `label_at`.
     pub fn labels_shown(
         &self,
         min: Vec2,
         max: Vec2,
         scale: f64,
         size: LabelSize,
+        options: PlaceOptions,
+        keep: bool,
     ) -> Vec<(LabelSpot, Grow)> {
         let view = Bounds {
             min_x: min.x,
@@ -765,27 +898,69 @@ impl Spatial {
             max_x: max.x,
             max_y: max.y,
         };
-        self.store
-            .labels_shown(&view, scale, None, size)
+        let shown = self.store.labels_shown(&view, scale, None, size, options);
+        let out = shown
+            .records
             .chunks_exact(LABEL_SHOWN_STRIDE)
             .filter_map(|r| {
                 let grow = Grow {
                     k: r[LABEL_STRIDE],
                     anchor: Vec2::new(r[LABEL_STRIDE + 1], r[LABEL_STRIDE + 2]),
                 };
-                self.spot(&r[..LABEL_STRIDE]).map(|spot| (spot, grow))
+                self.spot(&r[..LABEL_STRIDE], &shown.texts)
+                    .map(|spot| (spot, grow))
             })
-            .collect()
+            .collect();
+        if keep {
+            *self.kept.borrow_mut() = (shown.records, LABEL_SHOWN_STRIDE, scale);
+        }
+        out
     }
 
     /// One label record, typed.
-    fn spot(&self, r: &[f64]) -> Option<LabelSpot> {
+    fn spot(&self, r: &[f64], texts: &[String]) -> Option<LabelSpot> {
         {
             {
                 let slot = slot(r[0])?;
                 let at = Vec2::new(r[2], r[3]);
                 let what = r[1];
-                Some(if what == LABEL_DIMENSION {
+                Some(if what == LABEL_PLACED {
+                    LabelSpot::Placed {
+                        slot,
+                        at,
+                        angle: r[4],
+                        width: r[5],
+                        height: r[6],
+                        class: r[7] as u16,
+                        state: r[8] as u32,
+                    }
+                } else if what == LABEL_PLACED_LINE {
+                    LabelSpot::PlacedLine {
+                        slot,
+                        at,
+                        angle: r[4],
+                        size: r[5],
+                        text: texts.get(r[6] as usize).cloned().unwrap_or_default(),
+                    }
+                } else if what == LABEL_PLACED_LETTER {
+                    LabelSpot::PlacedLetter {
+                        slot,
+                        at,
+                        angle: r[4],
+                        size: r[5],
+                        letter: texts
+                            .get(r[6] as usize)
+                            .and_then(|t| t.chars().nth(r[7] as usize))
+                            .unwrap_or(' '),
+                        advance: r[8],
+                    }
+                } else if what == LABEL_PLACED_CALLOUT {
+                    LabelSpot::PlacedCallout {
+                        slot,
+                        from: at,
+                        to: Vec2::new(r[4], r[5]),
+                    }
+                } else if what == LABEL_DIMENSION {
                     LabelSpot::Dimension {
                         slot,
                         at,
@@ -805,18 +980,6 @@ impl Spatial {
                         rotation: r[4],
                         width_factor: r[5],
                         mask: r[6],
-                    }
-                } else if what == LABEL_CENTER {
-                    LabelSpot::Center { slot, at }
-                } else if what == LABEL_CORNER {
-                    LabelSpot::Corner { slot, at }
-                } else if what == LABEL_BESIDE {
-                    LabelSpot::Beside { slot, at }
-                } else if what == LABEL_ALONG {
-                    LabelSpot::Along {
-                        slot,
-                        a: at,
-                        b: Vec2::new(r[4], r[5]),
                     }
                 } else if what == LABEL_PIECE_TEXT || what == LABEL_PIECE_LEADER {
                     let piece = self.piece(r[0], r[6])?;
@@ -1002,14 +1165,38 @@ pub enum LabelSpot {
         width_factor: f64,
         mask: f64,
     },
-    /// A label centred on its anchor.
-    Center { slot: Slot, at: Vec2 },
-    /// A label at the top left of the object's box.
-    Corner { slot: Slot, at: Vec2 },
-    /// A label beside a point.
-    Beside { slot: Slot, at: Vec2 },
-    /// A label along the edge from `a` to `b`.
-    Along { slot: Slot, a: Vec2, b: Vec2 },
+    /// An object's label as the label engine placed it (docs/adr/0212
+    /// §3.8): its block's middle, its turn (degrees), its width and height
+    /// (px), its class and its state (`PINNED` …); its lines, letters and
+    /// callout follow.
+    Placed {
+        slot: Slot,
+        at: Vec2,
+        angle: f64,
+        width: f64,
+        height: f64,
+        class: u16,
+        state: u32,
+    },
+    /// A placed label's line: its middle, turn (degrees), size (px) and words.
+    PlacedLine {
+        slot: Slot,
+        at: Vec2,
+        angle: f64,
+        size: f64,
+        text: String,
+    },
+    /// A curved label's letter: its middle, turn (degrees), size and advance (px).
+    PlacedLetter {
+        slot: Slot,
+        at: Vec2,
+        angle: f64,
+        size: f64,
+        letter: char,
+        advance: f64,
+    },
+    /// A placed label's callout: from by the label to the object.
+    PlacedCallout { slot: Slot, from: Vec2, to: Vec2 },
     /// A text among a block's pieces (docs/adr/0144), or a leader's note
     /// (docs/adr/0146): from where its placed baseline starts, turned by
     /// `rotation`, `height` as placed, its width factor and mask as a text's.
@@ -1235,7 +1422,6 @@ pub fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
                     visible: tree.is_visible(&node.id),
                     locked: tree.is_locked(&node.id),
                     pick_interior: node.style.pick_interior != Some(false),
-                    label: node.style.label.as_ref().map(label_rule),
                     snap: node.snap.as_ref().map_or(u32::MAX, layer_snap_mask),
                 },
             ));
@@ -1268,21 +1454,6 @@ pub const LABELLED_KINDS: [&str; 5] = ["polygon", "circle", "point", "polyline",
 /// `DEFAULT_LABELS`, in the contract (`kentos_contracts::default_label`) so
 /// the document's linked texts follow the same (docs/adr/0175 §4).
 pub use kentos_contracts::default_label;
-
-/// What of a label style decides whether and where a label is drawn (the web's `labelRule`).
-fn label_rule(style: &LabelStyle) -> LabelRule {
-    LabelRule {
-        placement: match style.placement {
-            LabelPlacement::Center => Placement::Center,
-            LabelPlacement::Corner => Placement::Corner,
-            LabelPlacement::Beside => Placement::Beside,
-            LabelPlacement::Along => Placement::Along,
-        },
-        min_scale: style.min_scale,
-        max_scale: style.max_scale,
-        min_feature_px: style.min_feature_px,
-    }
-}
 
 /// What a block's text piece shows on an insert with these attributes
 /// (docs/adr/0144 §7; the web's `pieceText`): an attribute's piece the

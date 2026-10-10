@@ -26,6 +26,7 @@ pub mod legible;
 pub mod overview;
 mod pack;
 pub mod pick;
+pub mod placing;
 pub mod polygon;
 pub mod processing;
 pub(crate) mod rtree;
@@ -48,14 +49,12 @@ use crate::text::Font;
 use rtree::{PackedTree, overlaps};
 
 /// What queries need from an object's layer (`LayerStore.isVisible`,
-/// `isLocked`, `style.pickInterior`, `style.label`), ancestors included.
+/// `isLocked`, `style.pickInterior`), ancestors included.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LayerFlags {
     pub visible: bool,
     pub locked: bool,
     pub pick_interior: bool,
-    /// The layer's label style; `None` takes the kind's default.
-    pub label: Option<labels::LabelRule>,
     /// The snap kinds its objects are snapped to (`SnapKind::bit`s; all of
     /// them unless the layer has its own, docs/adr/0163 §4).
     pub snap: u32,
@@ -66,7 +65,6 @@ const UNLISTED: LayerFlags = LayerFlags {
     visible: true,
     locked: false,
     pick_interior: true,
-    label: None,
     snap: u32::MAX,
 };
 
@@ -166,8 +164,6 @@ pub struct Store {
     /// layer, and ids only ever join `layer_ids`, so it stays right.
     last_layer: Option<(String, u32)>,
     flags: Vec<LayerFlags>,
-    /// Label rules by kind for layers without a label style (see `labels`).
-    label_defaults: [Option<labels::LabelRule>; 5],
     tree: Option<PackedTree>,
     /// Per slot: the tree holds its current object.
     in_tree: Vec<bool>,
@@ -197,6 +193,9 @@ pub struct Store {
     time_window: Option<crate::time::Window>,
     /// The objects their layer's filter leaves out (`set_filtered`, docs/adr/0211 §3).
     filtered: IdSet,
+    /// What the label engine reads (docs/adr/0212 §3.1): the layers' labelling, the kinds' defaults, the
+    /// objects' texts and pins.
+    labelling: placing::Labels,
 }
 
 /// An object read from the document's JSON: its id, layer, label and geometry.
@@ -270,6 +269,9 @@ impl Store {
         let layer = self.layer_index(layer_id);
         let (expanded, bounds) = self.expansion(&shape);
         let key = id.to_bits();
+        // Its labels' texts and pins come again with it (docs/adr/0212 §3.1).
+        self.labelling.objects.remove(&key);
+        self.labelling.pins.remove(&key);
         let slot = match self.by_id.get(&key) {
             Some(&s) => {
                 let order = self.slots[s as usize].as_ref().map_or(0, |it| it.order);
@@ -334,6 +336,8 @@ impl Store {
         for id in ids {
             self.times.remove(&id.to_bits());
             self.filtered.remove(&id.to_bits());
+            self.labelling.objects.remove(&id.to_bits());
+            self.labelling.pins.remove(&id.to_bits());
             if let Some(s) = self.by_id.remove(&id.to_bits()) {
                 if let Some(it) = &self.slots[s as usize] {
                     self.vacated.insert(id.to_bits(), it.order);
@@ -445,13 +449,17 @@ impl Store {
             std::mem::take(&mut self.layer_ids),
             std::mem::take(&mut self.flags),
         );
-        let defaults = self.label_defaults;
         let font = self.font;
         let blocks = std::mem::take(&mut self.blocks);
         let window = self.time_window;
+        let labelling = placing::Labels {
+            layers: std::mem::take(&mut self.labelling.layers),
+            defaults: std::mem::take(&mut self.labelling.defaults),
+            ..Default::default()
+        };
         *self = Store::default();
         (self.layer_ids, self.flags) = layers;
-        self.label_defaults = defaults;
+        self.labelling = labelling;
         self.font = font;
         self.blocks = blocks;
         self.time_window = window;
@@ -518,7 +526,7 @@ impl Store {
 
     /// Whether the object passes its layer's filter (always without one).
     pub fn filter_shown(&self, id: f64) -> bool {
-        !self.filtered.contains(&id.to_bits())
+        self.filtered.is_empty() || !self.filtered.contains(&id.to_bits())
     }
 
     /// Whether the view shows the object: it passes its layer's filter and
@@ -536,10 +544,12 @@ impl Store {
 
     /// Whether the object shows at the slider's window: always without a window or a time of its own.
     pub fn time_shown(&self, id: f64) -> bool {
-        match (&self.time_window, self.times.get(&id.to_bits())) {
-            (Some(w), Some(t)) => crate::time::shows(t, w),
-            _ => true,
-        }
+        let Some(w) = &self.time_window else {
+            return true;
+        };
+        self.times
+            .get(&id.to_bits())
+            .is_none_or(|t| crate::time::shows(t, w))
     }
 
     /// How many objects on shown layers have a time and the extent of their
@@ -592,10 +602,9 @@ impl Store {
         }
     }
 
-    /// Replaces the layer table: `[{ id, visible, locked, pickInterior, label?, snapKinds? }]`,
+    /// Replaces the layer table: `[{ id, visible, locked, pickInterior, snapKinds? }]`,
     /// the flags already resolved with the ancestors (every node of the
-    /// tree); `label` is the layer's label style, when it has one;
-    /// `snapKinds` the snap kinds its objects take (`SnapKind::bit`s), all
+    /// tree); `snapKinds` the snap kinds its objects take (`SnapKind::bit`s), all
     /// when absent (docs/adr/0163 §4). A table that does not read changes nothing.
     pub fn set_layers_json(&mut self, text: &str) -> Result<(), String> {
         let Json::Arr(list) = Json::parse(text)? else {
@@ -608,10 +617,6 @@ impl Store {
             };
             let Json::Str(id) = v.get("id") else {
                 return Err(format!("[{i}].id: metin bekleniyordu"));
-            };
-            let label = match v.get("label") {
-                Json::Null => None,
-                r => Some(labels::read_rule(r).map_err(|e| format!("[{i}].label: {e}"))?),
             };
             let snap = match v.get("snapKinds") {
                 Json::Null => u32::MAX,
@@ -627,7 +632,6 @@ impl Store {
                 visible: field("visible")?,
                 locked: field("locked")?,
                 pick_interior: field("pickInterior")?,
-                label,
                 snap,
             };
             rows.push((id.as_str(), flags));
@@ -1076,7 +1080,6 @@ mod tests {
             visible: false,
             locked: true,
             pick_interior: false,
-            label: None,
             snap: u32::MAX,
         };
         typed.set_layers([("a", hidden), ("b", UNLISTED)]);
@@ -1115,7 +1118,6 @@ mod tests {
                 visible: false,
                 locked: true,
                 pick_interior: false,
-                label: None,
                 snap: u32::MAX,
             }
         );

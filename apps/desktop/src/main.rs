@@ -61,6 +61,9 @@ mod image_scenes;
 mod input;
 mod keys;
 mod keytips;
+#[cfg(test)]
+mod label_scenes;
+mod labelling;
 mod labels;
 mod layer_fields;
 mod layer_filters;

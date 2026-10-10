@@ -336,7 +336,10 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'tools', sections: ['Stil'] },
       // The layers' labels as texts (docs/adr/0175 §3), beside the styles that draw them; a name along a creek or a
       // road (docs/adr/0196 §4).
-      { pick: 'Etiket', icon: 'labelsToText', commands: ['tool.labelsToText', 'tool.textAlong', 'tool.textCurve'] },
+      // Etiket motoru (docs/adr/0212 §4): the layers' labelling, the labels moved, turned, pinned and hidden by hand,
+      // and the two view aids; QGIS's Label toolbar.
+      { pick: 'Etiket', icon: 'layerLabels', commands: ['layer.labels', 'tool.labelMove', 'tool.labelRotate', 'tool.labelPin', 'tool.labelHide', 'view.pinnedLabels', 'view.unplacedLabels'] },
+      { pick: 'Yazıya çevir', icon: 'labelsToText', commands: ['tool.labelsToText', 'tool.textAlong', 'tool.textCurve'] },
       // Zaman and Senaryo (docs/adr/0210 §10): ArcGIS Pro's Time tab and QGIS's Temporal Controller; Netcad's
       // versioned editing; proposals kept apart from the field state.
       { pick: 'Zaman', icon: 'timeSlider', commands: ['time.slider', 'time.layer', 'tool.timeVersion', 'tool.timeEnd', 'time.compare'] },

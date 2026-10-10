@@ -198,6 +198,8 @@ try {
   await sleep(1200);
   await b.waitFor(ready, 20000);
   await b.waitFor(`window.kentos.server.state.value === 'online'`, 8000);
+  // The drawing a CBS project (docs/adr/0165): the projects made from it open without the type question.
+  await b.eval(`window.kentos.commands.execute('workspace.gis')`);
   await b.waitFor(`window.kentos.cloud.auth.value === 'signedOut'`, 5000);
   // Scrolled into view first, as a user would: a button below a pane's fold is clicked where it shows.
   const center = (sel, text = '') =>
@@ -225,7 +227,7 @@ try {
   const name = `E2E ${new Date().toISOString().slice(0, 19)}`;
   await b.eval(`(() => { const i = document.querySelector('.dialog--cloud input[aria-label="Proje adı"]'); i.value = ${JSON.stringify(name)}; i.dispatchEvent(new Event('input')); })()`);
   // The catalog's type and tags go with it (docs/adr/0028).
-  await b.eval(`(() => { const d = document.querySelector('.dialog--cloud'); const t = d.querySelector('select[aria-label="Proje türü"]'); t.value = 'subdivision'; t.dispatchEvent(new Event('change')); const g = d.querySelector('input[aria-label="Etiketler"]'); g.value = 'E2E, Kadıköy'; g.dispatchEvent(new Event('input')); })()`);
+  await b.eval(`(() => { const d = document.querySelector('.dialog--cloud'); const t = d.querySelector('select[aria-label="İş türü"]'); t.value = 'subdivision'; t.dispatchEvent(new Event('change')); const g = d.querySelector('input[aria-label="Etiketler"]'); g.value = 'E2E, Kadıköy'; g.dispatchEvent(new Event('input')); })()`);
   await b.shot('cloud-upload');
   const size = await b.eval('window.kentos.doc.size');
   await press('.dialog__foot .btn', 'Buluta yükle');
@@ -638,10 +640,10 @@ try {
     await b.shot(`cloud-catalog-search-${theme}`);
   }
   await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
-  await b.eval(`(() => { const t = document.querySelector('select[aria-label="Proje türü"]'); t.value = 'gis'; t.dispatchEvent(new Event('change')); })()`);
+  await b.eval(`(() => { const t = document.querySelector('select[aria-label="İş türü"]'); t.value = 'gis'; t.dispatchEvent(new Event('change')); })()`);
   await b.waitFor(`document.querySelector('.catalog-list')?.textContent.includes('Aramanıza uyan proje yok')`, 8000);
   check('the type filter leaves out what is not of that type', true);
-  await b.eval(`(() => { const i = document.querySelector('.catalog-search input'); i.value = ''; i.dispatchEvent(new Event('input')); const t = document.querySelector('select[aria-label="Proje türü"]'); t.value = ''; t.dispatchEvent(new Event('change')); })()`);
+  await b.eval(`(() => { const i = document.querySelector('.catalog-search input'); i.value = ''; i.dispatchEvent(new Event('input')); const t = document.querySelector('select[aria-label="İş türü"]'); t.value = ''; t.dispatchEvent(new Event('change')); })()`);
   await b.waitFor(`(${catalogReady}) && [...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent === ${JSON.stringify(renamedTo)})`, 8000);
 
   // Two copies: one archived, one moved to the trash. A copy keeps every object under its persistent id.
@@ -998,7 +1000,9 @@ try {
     await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1')`);
     await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
   };
-  // Ayşe again, in the browser: the drawing on screen saved to the cloud as a file project.
+  // Ayşe again, in the browser: the drawing on screen saved to the cloud as a file project (a CBS project: its
+  // revisions open without the type question, docs/adr/0165).
+  await b.eval(`window.kentos.commands.execute('workspace.gis')`);
   await b.eval(`window.kentos.commands.execute('cloud.signOut')`);
   await b.waitFor(`window.kentos.cloud.auth.value === 'signedOut'`, 5000);
   await b.eval(`window.kentos.commands.execute('cloud.uploadFile')`);

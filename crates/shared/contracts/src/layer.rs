@@ -131,6 +131,149 @@ pub struct LabelStyle {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ink: Option<LabelInk>,
+    /// The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text: Option<String>,
+    /// The letters' colour (hex or a theme name): instead of `ink`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    /// Leaning letters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub italic: Option<bool>,
+    /// How a label's lines line up; absent, centred.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub align: Option<crate::labels::LabelAlign>,
+    /// Where a point's label goes; absent, by `placement`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub point: Option<crate::labels::PointLabelMode>,
+    /// Where a line's label goes; absent, by `placement`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line: Option<crate::labels::LineLabelMode>,
+    /// Where an area's label goes; absent, by `placement`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub area: Option<crate::labels::AreaLabelMode>,
+    /// A line label's side of its line (on an outline, `above` inside).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub position: Option<crate::labels::LabelPosition>,
+    /// CSS px between a label and its object; absent, 2.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub distance: Option<f64>,
+    /// CSS px between a line's repeated labels.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub repeat: Option<f64>,
+    /// Degrees two neighbouring letters of a curved label may turn; absent, 25.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub max_angle: Option<f64>,
+    /// An outline's label (perimeter, boundary) letter by letter.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub curved: Option<bool>,
+    /// Lines meeting end to end with the same text labelled once.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub merge_lines: Option<bool>,
+    /// An area's label only where it fits inside.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub inside: Option<bool>,
+    /// An area's label that fits nowhere inside, outside with a callout.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub outside: Option<bool>,
+    /// The halo round the letters; absent, 1.5 px of the drawing area's colour.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub halo: Option<crate::labels::LabelHalo>,
+    /// A shape behind the label.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub background: Option<crate::labels::LabelBackground>,
+    /// The label's shadow.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shadow: Option<crate::labels::LabelShadow>,
+    /// The line to the object from a label placed away from it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub callout: Option<crate::labels::LabelCallout>,
+    /// Cutting the label into lines.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub stack: Option<crate::labels::LabelStack>,
+    /// Shortening its words.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub abbreviate: Option<crate::labels::LabelAbbreviate>,
+    /// The smallest size a label is made when it does not fit, a factor 0.5–1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shrink: Option<f64>,
+    /// 0 to 10; absent, 5: higher first.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub priority: Option<u8>,
+    /// Whether it may cover another label; absent, never.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub overlap: Option<crate::labels::LabelOverlap>,
+    /// CSS px within which the same text is labelled once.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub duplicates: Option<f64>,
+}
+
+impl Default for LabelStyle {
+    /// Centred, 10 px, nothing else.
+    fn default() -> Self {
+        LabelStyle {
+            placement: LabelPlacement::Center,
+            size: 10.0,
+            grow: None,
+            max_size: None,
+            weight: None,
+            template: None,
+            min_feature_px: None,
+            min_scale: None,
+            max_scale: None,
+            ink: None,
+            text: None,
+            color: None,
+            italic: None,
+            align: None,
+            point: None,
+            line: None,
+            area: None,
+            position: None,
+            distance: None,
+            repeat: None,
+            max_angle: None,
+            curved: None,
+            merge_lines: None,
+            inside: None,
+            outside: None,
+            halo: None,
+            background: None,
+            shadow: None,
+            callout: None,
+            stack: None,
+            abbreviate: None,
+            shrink: None,
+            priority: None,
+            overlap: None,
+            duplicates: None,
+        }
+    }
 }
 
 /// The label style of an object whose layer has none, by its kind: the
@@ -142,14 +285,7 @@ pub fn default_label(kind: &str) -> Option<LabelStyle> {
     let style = |placement, size| LabelStyle {
         placement,
         size,
-        grow: None,
-        max_size: None,
-        weight: None,
-        template: None,
-        min_feature_px: None,
-        min_scale: None,
-        max_scale: None,
-        ink: None,
+        ..LabelStyle::default()
     };
     Some(match kind {
         "polygon" => LabelStyle {
@@ -195,6 +331,11 @@ pub struct LayerStyle {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<LabelStyle>,
+    /// How the layer is labelled (docs/adr/0212 §2): rule-based classes,
+    /// none, its objects as obstacles; absent, by `label` (one label).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub labels: Option<crate::labels::LayerLabels>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pick_interior: Option<bool>,

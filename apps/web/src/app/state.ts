@@ -246,6 +246,10 @@ export interface PreferencesData {
   areaEdges: boolean;
   /** Fills and pictures drawn with their transparency; off, opaque. */
   transparency: boolean;
+  /** Sabit etiketleri vurgula (docs/adr/0212 §4): labels pinned by hand outlined. */
+  pinnedLabels: boolean;
+  /** Yerleşmeyen etiketleri göster (docs/adr/0212 §4): labels with no free place drawn red. */
+  unplacedLabels: boolean;
   /** The selection and hover highlight's colour: the theme's accent or a named one. */
   highlightColor: HighlightColor;
   /** The highlight's line width, px (1–5). */
@@ -302,6 +306,8 @@ export const PREF_KEYS = {
   fills: 'graphics.fills',
   areaEdges: 'graphics.areaEdges',
   transparency: 'graphics.transparency',
+  pinnedLabels: 'graphics.pinnedLabels',
+  unplacedLabels: 'graphics.unplacedLabels',
   highlightColor: 'graphics.highlightColor',
   highlightWidth: 'graphics.highlightWidth',
   startScreen: 'appearance.startScreen',

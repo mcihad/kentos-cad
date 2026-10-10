@@ -911,6 +911,8 @@ const observe = (mark) =>
       magnifier: k.view.navigationState.magnifier,
       // Zaman sürgüsü's words, position and last while it is open (docs/adr/0210 §5).
       time: k.time.open.value ? { label: k.time.label(), position: k.time.position.value, last: k.time.last.value } : null,
+      // Every object's label pins, by its id, where it has any (docs/adr/0212 §2).
+      labelPins: Object.fromEntries([...k.doc.all()].filter((e) => e.labelPins?.length).map((e) => [e.id, e.labelPins])),
     };
   })()`);
 
@@ -1058,6 +1060,21 @@ function compare(expect, got, t) {
       // The headers only when the step names them (docs/adr/0199 §4).
       const ok = have && have.count === want.count && same(have.rows, want.rows) && (want.columns === undefined || same(have.columns, want.columns));
       if (!ok) bad.push(`featureTable: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);
+    } else if (key === 'labelPins') {
+      // The objects named, each pin whole: places within the click's tolerance, turns within 1e-9 (docs/adr/0212 §2).
+      for (const [id, pins] of Object.entries(want)) {
+        const got = have[id] ?? [];
+        const same = (a, b) => (a === undefined || a === null ? b === undefined || b === null : a === b);
+        const ok =
+          got.length === pins.length &&
+          got.every((h, i) => {
+            const w = pins[i];
+            const at = h.at === undefined ? w.at === undefined : w.at !== undefined && Math.hypot(h.at.x - w.at[0], h.at.y - w.at[1]) <= t.clickTolerance;
+            const turn = h.rotation === undefined ? w.rotation === undefined : w.rotation !== undefined && Math.abs(h.rotation - w.rotation) <= 1e-9;
+            return same(h.class, w.class) && (h.hidden === true) === (w.hidden === true) && at && turn;
+          });
+        if (!ok) bad.push(`labelPins[${id}]: ${JSON.stringify(got)}, beklenen ${JSON.stringify(pins)} (±${t.clickTolerance} m)`);
+      }
     } else if (key === 'layerCounts') {
       // Only the rows the step names, each exactly (docs/adr/0211 §4).
       for (const [path, count] of Object.entries(want))

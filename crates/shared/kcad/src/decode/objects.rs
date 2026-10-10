@@ -38,7 +38,7 @@ use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS,
     SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
-    SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LAYER_FIELDS,
+    SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
@@ -167,6 +167,8 @@ pub(super) struct Features {
     pub(super) temporal: bool,
     /// Schema 35: a layer node's `filter` (docs/adr/0211 §2).
     pub(super) filters: bool,
+    /// Schema 36: the label engine's fields, a layer style's `labels`, an object's `labelPins` (docs/adr/0212 §2).
+    pub(super) labels: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -211,6 +213,7 @@ impl Features {
             networks: schema >= SCHEMA_WITH_NETWORKS,
             temporal: schema >= SCHEMA_WITH_TEMPORAL,
             filters: schema >= SCHEMA_WITH_FILTERS,
+            labels: schema >= SCHEMA_WITH_LABELS,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
             uids: true,
         }
@@ -230,6 +233,8 @@ impl Features {
 fn allowed(kind: Kind, key: &str, has: Features) -> bool {
     matches!(key, "attrs" | "color" | "label" | "symbol" | "layerId")
         || (has.uids && key == "uid")
+        // A label pinned by hand: the drawing's objects only (a definition's have no persistent id).
+        || (has.labels && has.uids && key == "labelPins")
         || (has.weights && key == "lineWeight")
         || match kind {
             Kind::Point => matches!(key, "p" | "z") || (has.line_parts && key == "parts"),
@@ -391,6 +396,7 @@ struct Fields {
     symbol: Option<String>,
     layer_id: Option<String>,
     line_weight: Option<f64>,
+    label_pins: Option<Vec<kentos_contracts::LabelPin>>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -630,6 +636,7 @@ pub(super) fn object(
             }
             "color" => f.color = Some(text(r)?),
             "label" => f.label = Some(text(r)?),
+            "labelPins" => f.label_pins = Some(super::labels::label_pins(r)?),
             "symbol" => f.symbol = Some(text(r)?),
             "layerId" => f.layer_id = Some(text(r)?),
             "lineWeight" => {
@@ -1146,6 +1153,7 @@ fn build(
         label: f.label.take(),
         symbol: f.symbol.take(),
         line_weight: f.line_weight.take(),
+        label_pins: f.label_pins.take().unwrap_or_default(),
     };
     Ok(match kind {
         Kind::Point => Entity::Point(PointEntity {

@@ -41,7 +41,7 @@ describe('the labels a map frame writes', () => {
     expect(thirty(...at(0, 25.1))).toBe(false);
   });
 
-  it('writes a label by its anchor: a text by its own point, a line’s name by the middle of its stretch', () => {
+  it('writes a label by its anchor: a text by its own point, an object’s label by the middle the engine placed it at', () => {
     const objects = new Map<number, Entity>([
       [1, { id: 1, kind: 'polygon', layerId: 'parsel', pts: [], label: '7' } as unknown as Entity],
       [2, { id: 2, kind: 'polygon', layerId: 'parsel', pts: [], label: '1244 ada' } as unknown as Entity],
@@ -51,24 +51,30 @@ describe('the labels a map frame writes', () => {
       [5, { id: 5, kind: 'polyline', layerId: 'yol', pts: [], label: '1434. Sokak' } as unknown as Entity],
       [6, { id: 6, kind: 'point', layerId: 'nokta', p: { x: 1000, y: 2030 }, label: '898.97' } as unknown as Entity],
     ]);
+    // An engine's label: its frame (middle, angle, size, class, state), then its line or letters.
+    const placed = (id: number, x: number, y: number, parts: number[][]): number[] => [id, LABEL.placed, x, y, 0, 20, 10, 0, 0, ...parts.flat()];
+    const line = (id: number, x: number, y: number) => [id, LABEL.placedLine, x, y, 0, 10, 0, 20, 0];
+    const letter = (id: number, x: number, y: number, i: number) => [id, LABEL.placedLetter, x, y, 0, 10, 0, i, 5];
     const spots = Float64Array.from([
-      ...record(1, LABEL.center, 1010, 2010),
-      // Its letters would reach in; its anchor is 3 m outside.
-      ...record(2, LABEL.center, 947, 2000),
+      ...placed(1, 1010, 2010, [line(1, 1010, 2010)]),
+      // Its letters would reach in; its middle is 3 m outside.
+      ...placed(2, 947, 2000, [line(2, 947, 2000)]),
       ...record(3, LABEL.text, 1060, 2000),
-      // Along from (930, 1990) to (980, 1990): it starts outside, its middle (955) is inside.
-      ...record(4, LABEL.along, 930, 1990, 980, 1990),
-      ...record(5, LABEL.along, 1040, 2010, 1080, 2010),
-      ...record(6, LABEL.beside, 1000, 2030),
+      // A curved name from (930, 1990) to (980, 1990): it starts outside, its letters' middle (955) is inside.
+      ...placed(4, 955, 1990, [letter(4, 930, 1990, 0), letter(4, 955, 1990, 1), letter(4, 980, 1990, 2)]),
+      ...placed(5, 1060, 2010, [line(5, 1060, 2010)]),
+      ...placed(6, 1000, 2030, [line(6, 1000, 2030)]),
     ]);
     const out = framedSpots(spots, (id) => objects.get(id), insideFrame(frame()));
-    const ids = Array.from({ length: out.length / LABEL_STRIDE }, (_, i) => out[i * LABEL_STRIDE]);
-    expect(ids).toEqual([1, 3, 4]);
-    expect(labelAnchor(spots, 2 * LABEL_STRIDE, objects.get(3))).toEqual([1049, 2000]);
-    expect(labelAnchor(spots, 3 * LABEL_STRIDE, objects.get(4))).toEqual([955, 1990]);
+    const frames = Array.from({ length: out.length / LABEL_STRIDE }, (_, i) => [out[i * LABEL_STRIDE], out[i * LABEL_STRIDE + 1]]).filter(([, what]) => what !== LABEL.placedLine && what !== LABEL.placedLetter);
+    expect(frames.map(([id]) => id)).toEqual([1, 3, 4]);
+    // A label goes whole: object 4's three letters with its frame, the one outside too.
+    expect(out.length / LABEL_STRIDE).toBe(2 + 1 + 4);
+    expect(labelAnchor(spots, 4 * LABEL_STRIDE, objects.get(3))).toEqual([1049, 2000]);
+    expect(labelAnchor(spots, 5 * LABEL_STRIDE, objects.get(4))).toEqual([955, 1990]);
     // A record is kept whole; the frame's layer list still decides first.
-    expect(Array.from(out.subarray(0, LABEL_STRIDE))).toEqual(record(1, LABEL.center, 1010, 2010));
+    expect(Array.from(out.subarray(0, LABEL_STRIDE))).toEqual(placed(1, 1010, 2010, []));
     const parcelsOnly = framedSpots(spots, (id) => objects.get(id), insideFrame(frame()), (e) => e.layerId === 'parsel');
-    expect(parcelsOnly.length / LABEL_STRIDE).toBe(1);
+    expect(parcelsOnly.length / LABEL_STRIDE).toBe(2);
   });
 });

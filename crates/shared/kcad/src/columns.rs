@@ -187,6 +187,13 @@ const COLOR: u32 = 1;
 const LABEL: u32 = 2;
 const SYMBOL: u32 = 4;
 const WEIGHT: u32 = 8;
+/// An object's labels pinned by hand (docs/adr/0212 §2): after the symbol, how many, then each pin's
+/// bits (`PIN_CLASS` …) and its class (a text), place (two floats) and turn (a float) as it has them.
+const PINS: u32 = 16;
+const PIN_CLASS: u32 = 1;
+const PIN_AT: u32 = 2;
+const PIN_ROTATION: u32 = 4;
+const PIN_HIDDEN: u32 = 8;
 /// A kind's optional fields, in the order the module's table names them.
 const OPT: [u32; 19] = [
     1 << 8,
@@ -437,6 +444,7 @@ impl Packer {
             label,
             symbol,
             line_weight,
+            label_pins,
         } = entity.base();
         let flags_at = self.out.ints.len() + 1;
         self.out.ints.extend([layer, 0, count(attrs.len())]);
@@ -449,6 +457,32 @@ impl Packer {
             if let Some(v) = value {
                 flags |= bit;
                 self.text(v);
+            }
+        }
+        if !label_pins.is_empty() {
+            flags |= PINS;
+            self.int(count(label_pins.len()));
+            for p in label_pins {
+                let bits = [
+                    (PIN_CLASS, p.class.is_some()),
+                    (PIN_AT, p.at.is_some()),
+                    (PIN_ROTATION, p.rotation.is_some()),
+                    (PIN_HIDDEN, p.hidden == Some(true)),
+                ]
+                .iter()
+                .filter(|(_, on)| *on)
+                .fold(0, |m, (b, _)| m | b);
+                self.int(bits);
+                if let Some(c) = &p.class {
+                    self.text(c);
+                }
+                if let Some(a) = p.at {
+                    self.float(a.x);
+                    self.float(a.y);
+                }
+                if let Some(r) = p.rotation {
+                    self.float(r);
+                }
             }
         }
         for (key, value) in attrs {
@@ -1503,6 +1537,36 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
     let symbol = (flags & SYMBOL != 0)
         .then(|| c.text(|| place("symbol")))
         .transpose()?;
+    let mut label_pins = Vec::new();
+    if flags & PINS != 0 {
+        let n = c.int()?;
+        for _ in 0..n {
+            let bits = c.int()?;
+            if bits & !(PIN_CLASS | PIN_AT | PIN_ROTATION | PIN_HIDDEN) != 0 {
+                return Err(broken(&format!(
+                    "{}. nesnenin etiket iğnesinin bayrakları {bits:#x}",
+                    i + 1
+                )));
+            }
+            let class = (bits & PIN_CLASS != 0)
+                .then(|| c.text(|| place("labelPins/class")))
+                .transpose()?;
+            let at = match bits & PIN_AT != 0 {
+                true => Some(kentos_contracts::Vec2 {
+                    x: c.float()?,
+                    y: c.float()?,
+                }),
+                false => None,
+            };
+            let rotation = (bits & PIN_ROTATION != 0).then(|| c.float()).transpose()?;
+            label_pins.push(kentos_contracts::LabelPin {
+                class,
+                at,
+                rotation,
+                hidden: (bits & PIN_HIDDEN != 0).then_some(true),
+            });
+        }
+    }
     let mut attrs = BTreeMap::new();
     for _ in 0..attr_count {
         let key = c.text(|| place("attrs"))?;
@@ -1517,8 +1581,9 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
         label,
         symbol,
         line_weight,
+        label_pins,
     };
-    let known = COLOR | LABEL | SYMBOL | WEIGHT | allowed(k);
+    let known = COLOR | LABEL | SYMBOL | WEIGHT | PINS | allowed(k);
     if flags & !known != 0 {
         return Err(broken(&format!(
             "{}. nesnenin bayrakları {flags:#x}",
@@ -2586,6 +2651,7 @@ mod tests {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         }
     }
 

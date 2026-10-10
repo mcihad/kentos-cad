@@ -70,6 +70,8 @@ pub enum Event {
     MergeInto(String),
     /// Alanlar… (docs/adr/0199 §3): the layer's fields.
     Fields(String),
+    /// Etiketler… (labelling/, docs/adr/0212 §4): how its objects are labelled.
+    Labels(String),
     /// Süzgeç…, Seçimden süzgeç and Süzgeci kaldır on this layer (layer_filters.rs, docs/adr/0211 §4).
     Filter(String),
     FilterFromSelection(String),
@@ -185,6 +187,10 @@ impl App {
             return self.open_layer_fields(&id);
         }
         match event {
+            Event::Labels(id) => {
+                self.open_labelling(Some(id));
+                return Task::none();
+            }
             Event::Filter(id) => return self.open_layer_filter(Some(id)),
             Event::FilterFromSelection(id) => {
                 self.filter_from_selection(Some(id));
@@ -224,6 +230,7 @@ impl App {
             Event::Duplicate(_)
             | Event::MergeInto(_)
             | Event::Fields(_)
+            | Event::Labels(_)
             | Event::Filter(_)
             | Event::FilterFromSelection(_)
             | Event::FilterClear(_) => {}
@@ -505,6 +512,16 @@ impl App {
                     Message::LayerStyle(crate::style::layer_style::Event::Open(Some(id.clone()))),
                 )
                 .icon(crate::icons::from_web(Some("layerStyle")))
+                // Etiketler (docs/adr/0212 §4): how its objects are labelled.
+                .item(
+                    match node.style.labels.as_ref().map(|l| l.mode) {
+                        Some(kentos_contracts::LabelsMode::Rules) => "Etiketler… (kurallı)",
+                        Some(kentos_contracts::LabelsMode::Off) => "Etiketler… (etiketsiz)",
+                        _ => "Etiketler…",
+                    },
+                    event(Event::Labels(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("layerLabels")))
                 // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
                 .item(
                     if node.fields.is_empty() {

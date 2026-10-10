@@ -270,6 +270,7 @@ mod tests {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         };
         for side in [32usize, 100, 316] {
             let sample = sample();

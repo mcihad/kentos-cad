@@ -77,6 +77,7 @@ pub fn new_object(s: Shape, layer_id: &str, attrs: BTreeMap<String, String>) -> 
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
     ))
 }
@@ -176,6 +177,7 @@ pub fn edit_object(
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         },
     ))
 }

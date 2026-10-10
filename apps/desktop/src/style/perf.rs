@@ -56,6 +56,7 @@ fn style(color: &str, line_type: LineType, weight: f64) -> LayerStyle {
         label: None,
         pick_interior: None,
         renderer: None,
+        labels: None,
     }
 }
 
@@ -73,6 +74,7 @@ fn drawing(n: usize) -> Document {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         }
     };
     for i in 0..n {
@@ -379,6 +381,7 @@ fn temporal_drawing(n: usize, in_order: bool) -> Document {
                     label: None,
                     symbol: None,
                     line_weight: None,
+                    label_pins: Vec::new(),
                 },
                 pts,
                 bulges: None,

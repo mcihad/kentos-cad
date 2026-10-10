@@ -1151,6 +1151,7 @@ export class CadDocument {
         byUid: (uid) => this.byUid(uid),
         linkedTo: (uid) => this.links.get(uid) ?? [],
         layerLabel: (layerId) => this.layers.get(layerId)?.style.label,
+        layerPoint: (layerId) => this.layers.get(layerId)?.style.point?.size ?? 0,
         font: this.settings.drawingFont.value,
       });
       if (follow.length) {

@@ -283,9 +283,7 @@ fn check(path: &std::path::Path) {
     store
         .set_layers_json(&serde_json::to_string(&file["layers"]).unwrap())
         .expect("layers");
-    store
-        .set_label_defaults_json(&serde_json::to_string(&file["labelDefaults"]).unwrap())
-        .expect("label defaults");
+    // The recorded label defaults were the objects' labels' rules: the label engine's now (docs/adr/0212).
     let entity_json: HashMap<u64, &Value> = file["entities"]
         .as_array()
         .expect("entities")
@@ -336,7 +334,8 @@ fn check(path: &std::path::Path) {
             "inRect" => json!(store.in_rect(&rect(&a[0]), a[1].as_bool().unwrap())),
             "overlapping" => json!(store.overlapping(&rect(&a[0]), except(&a[1])).iter().map(|it| it.id).collect::<Vec<_>>()),
             "edgesIn" => json!(store.edges_in(&rect(&a[0]), except(&a[1])).iter().map(edge).collect::<Vec<_>>()),
-            "labels" => json!(store.labels(&rect(&a[0]), num(&a[1]), a[2].as_f64())),
+            // The drawing's text; the objects' labels are the label engine's since docs/adr/0212 (its own cases).
+            "labels" => json!(store.texts_only(&rect(&a[0]), num(&a[1]), a[2].as_f64())),
             "grips" => json!(store.grips(&ids(&a[0]))),
             "trim" | "extend" => {
                 let id = num(&a[0]);
@@ -412,7 +411,12 @@ fn check(path: &std::path::Path) {
             )),
             op => panic!("unknown op {op}"),
         };
-        if let Err(e) = same(&got, &c["expect"], abs, rel, &label) {
+        let expect = if c["op"] == "labels" {
+            without_object_labels(&c["expect"])
+        } else {
+            c["expect"].clone()
+        };
+        if let Err(e) = same(&got, &expect, abs, rel, &label) {
             // KENTOS_DUMP_STORE=1 prints the answers that differ, whole, for reviewing a
             // deliberate change before the fixture is updated (docs/adr/0149 §5.3).
             if std::env::var_os("KENTOS_DUMP_STORE").is_some() {
@@ -437,4 +441,17 @@ fn check(path: &std::path::Path) {
             .collect::<Vec<_>>()
             .join("\n")
     );
+}
+
+/// A recorded `labels` answer without the objects' label records (centre,
+/// corner, beside, along: 2–5), which the label engine places since docs/adr/0212.
+fn without_object_labels(v: &Value) -> Value {
+    let list = v.as_array().expect("records");
+    Value::Array(
+        list.chunks(9)
+            .filter(|r| !(2.0..=5.0).contains(&r[1].as_f64().unwrap_or(0.0)))
+            .flatten()
+            .cloned()
+            .collect(),
+    )
 }

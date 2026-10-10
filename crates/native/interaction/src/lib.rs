@@ -145,6 +145,7 @@ pub mod holes;
 pub mod image_clip;
 pub mod image_insert;
 mod junctions;
+pub mod label_tools;
 pub mod labels_to_text;
 pub mod layer_move;
 pub mod layer_tools;

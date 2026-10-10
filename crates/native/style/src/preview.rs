@@ -208,6 +208,7 @@ pub fn preview(
         label: None,
         pick_interior: None,
         renderer: Some(json!({ "type": "single", "symbols": { kind.class().key(): symbol } })),
+        labels: None,
     };
     let opts = BuildOptions {
         origin: Vec2::new(0.0, 0.0),

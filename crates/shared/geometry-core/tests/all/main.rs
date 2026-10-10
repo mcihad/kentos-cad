@@ -24,7 +24,7 @@ mod geoprocess;
 mod golden;
 mod hatch;
 mod image;
-mod label_text;
+mod label_engine;
 mod leader;
 mod line_parts;
 mod locks;

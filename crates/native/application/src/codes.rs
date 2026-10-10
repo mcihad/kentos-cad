@@ -245,3 +245,12 @@ pub const SCENARIO_NOT_FOUND: &str = "scenario_not_found";
 pub const INVALID_FILTER: &str = "invalid_filter";
 /// A filter's condition that does not compile, or reads `$sıra` or `$ölçek`.
 pub const INVALID_EXPRESSION: &str = "invalid_expression";
+
+// ── cad.layers.labels and cad.labels.pin (docs/adr/0212 §5) ─────────────
+
+/// A label style or a layer's labelling against its rules (`style_problem`, `layer_labels_problem`).
+pub const INVALID_LABELS: &str = "invalid_labels";
+/// A pin against its rules (`pins_problem`), its class not its change's, a label changed twice.
+pub const INVALID_PIN: &str = "invalid_pin";
+/// A class the object's layer does not label with.
+pub const UNKNOWN_CLASS: &str = "unknown_class";

@@ -391,6 +391,7 @@ mod tests {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         };
         let at = |x: f64, y: f64| Wire {
             x: 487_000.0 + x,
@@ -455,6 +456,7 @@ mod tests {
             label: None,
             symbol: None,
             line_weight: None,
+            label_pins: Vec::new(),
         };
         let at = |x: f64, y: f64| Wire {
             x: 487_000.0 + x,
