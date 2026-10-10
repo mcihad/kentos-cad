@@ -6536,6 +6536,76 @@ function suitabilityScenes() {
   ];
 }
 
+// Mekânsal istatistik (docs/adr/0238) over a district's roads, blocks with a value per m² and traffic accidents by kind
+// (fixtures/interaction/v1/spatial-stats.kcad, scripts/fixtures/spatial_stats_scene.py): the CBS ribbon's Analiz with its
+// panel, Yön dağılımı's window and the ellipses with the mean centres by kind, Moran I's and En yakın komşu's tables after
+// their runs, the blocks' hot and cold spots and the accidents' DBSCAN clusters. The desktop's are `tools_screens`' ist-*
+// (apps/desktop/src/stats_scenes.rs), at the same places with the same values.
+const STATS_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/spatial-stats.kcad', import.meta.url), 'utf8');
+SCENES.stats = statsScenes();
+
+function statsScenes() {
+  const DISTRICT = [486960, 4419960, 488240, 4420940];
+  /** The district open, the CBS ribbon's Analiz on. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(STATS_SCENE)}, null))) throw new Error('spatial-stats.kcad did not load');
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'analysis', type: 'gis' });
+    const b = DISTRICT;
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  const settle = async (ui) => {
+    await ui.sleep(500);
+    await ui.eval(`window.kentos.view.requestRender()`);
+    await ui.sleep(300);
+  };
+  /** `tool`'s window with `values`. */
+  const windowOf = (tool, values) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await settle(ui);
+  };
+  /** Runs each [tool, values] to its end; the last window kept when `keep` (its table scrolled into view by the run). */
+  const ranIn = (runs, keep) => async (ui) => {
+    await opened(ui);
+    for (let i = 0; i < runs.length; i++) {
+      const [tool, values] = runs[i];
+      await ui.eval(openTool(tool, values));
+      await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+      await ui.sleep(300);
+      await ui.clickSel('.ptool__run');
+      await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+      if (!(keep && i === runs.length - 1)) await ui.escapeAll(2);
+    }
+    await ui.move(2, 2);
+    await settle(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const ELLIPSES = { input: L('kaza'), groupField: 'Tür' };
+  const MORAN = { input: L('ada'), valueField: 'Değer' };
+  const HOT = { input: L('ada'), valueField: 'Değer', concept: 'nearest', neighbors: 4 };
+  const CLUSTERS = { input: L('kaza'), radius: 30, minPoints: 5 };
+  return [
+    { id: 'ist-serit', open: async (ui) => (await opened(ui), await settle(ui)), close },
+    { id: 'ist-elips', open: windowOf('stats.directionalDistribution', ELLIPSES), close },
+    { id: 'ist-elips-cizim', open: ranIn([['stats.directionalDistribution', ELLIPSES], ['stats.meanCenter', ELLIPSES]], false), close },
+    { id: 'ist-moran', open: ranIn([['stats.moransI', MORAN]], true), close },
+    { id: 'ist-komsu', open: ranIn([['stats.nearestNeighbor', { input: L('kaza') }]], true), close },
+    { id: 'ist-sicak-cizim', open: ranIn([['stats.hotSpot', HOT]], false), close },
+    { id: 'ist-dbscan-cizim', open: ranIn([['stats.dbscan', CLUSTERS]], false), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

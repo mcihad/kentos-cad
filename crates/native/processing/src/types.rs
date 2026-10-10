@@ -142,6 +142,8 @@ pub struct NewLayerStyle {
     pub point: Option<PointStyle>,
     /// Boxed: the label engine's style is large (docs/adr/0212 §2), a parameter's kind stays small.
     pub label: Option<Box<LabelStyle>>,
+    /// The style engine's renderer, opaque JSON (Sıcak noktalar' classes, docs/adr/0238 §9).
+    pub renderer: Option<Value>,
 }
 
 impl NewLayerStyle {
@@ -161,6 +163,9 @@ impl NewLayerStyle {
         }
         if let Some(label) = &self.label {
             base.label = Some(LabelStyle::clone(label));
+        }
+        if self.renderer.is_some() {
+            base.renderer.clone_from(&self.renderer);
         }
         base
     }

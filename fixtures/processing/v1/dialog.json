@@ -10961,6 +10961,886 @@
     ]
    }
   },
+  "stats.meanCenter": {
+   "title": "Ortalama merkez",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Merkezi bulunacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weightField",
+     "label": "Ağırlık alanı",
+     "description": "Seçilirse her nesne bu alanın değeriyle ağırlıklıdır; okunamayan ve eksi değerli nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "groupField",
+     "label": "Grup alanı",
+     "description": "Seçilirse her grubun sonucu ayrı yazılır; boş değerliler “(boş)” grubudur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsMeanCenter",
+    "about": "Nesnelerin (isterseniz ağırlıklı) ortalama merkezini, gruplara göre de, nokta olarak yazar.",
+    "help": [
+     "Nesnenin yeri ağırlık merkezidir: noktanın kendisi (çok noktalının ortalaması), alanın, dairenin ve bütün elipsin ağırlık merkezi, çizginin ortası, çoklu çizginin ortadaki köşesi; ifadelerin $merkez_y ve $merkez_x’i.",
+     "Ağırlık alanı seçilirse değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayan, boş ve eksi değerli nesneler alınmaz ve söylenir. Grup alanı seçilirse gruplar adlarının doğal sırasıyla, boş değerliler “(boş)” grubu olarak en sonda yazılır.",
+     "Coğrafi koordinatlı projede çalışmaz: uzaklıklar metre olmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ORTALAMAMERKEZ",
+     "MEANCENTER"
+    ]
+   }
+  },
+  "stats.medianCenter": {
+   "title": "Ortanca merkez",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Merkezi bulunacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weightField",
+     "label": "Ağırlık alanı",
+     "description": "Seçilirse her nesne bu alanın değeriyle ağırlıklıdır; okunamayan ve eksi değerli nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "groupField",
+     "label": "Grup alanı",
+     "description": "Seçilirse her grubun sonucu ayrı yazılır; boş değerliler “(boş)” grubudur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsMedianCenter",
+    "about": "Nesnelere uzaklıklarının (isterseniz ağırlıklı) toplamını en küçük yapan noktayı, gruplara göre de, yazar.",
+    "help": [
+     "Ortanca merkez (geometrik ortanca) aykırı nesnelerden ortalama merkez kadar etkilenmez. Weiszfeld’in yinelemesiyle ortalama merkezden başlanarak bulunur; ortanca bir nesnenin yerindeyse o yer yazılır.",
+     "Nesnenin yeri ağırlık merkezidir: noktanın kendisi (çok noktalının ortalaması), alanın, dairenin ve bütün elipsin ağırlık merkezi, çizginin ortası, çoklu çizginin ortadaki köşesi; ifadelerin $merkez_y ve $merkez_x’i.",
+     "Ağırlık alanı seçilirse değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayan, boş ve eksi değerli nesneler alınmaz ve söylenir. Grup alanı seçilirse gruplar adlarının doğal sırasıyla, boş değerliler “(boş)” grubu olarak en sonda yazılır.",
+     "Coğrafi koordinatlı projede çalışmaz: uzaklıklar metre olmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ORTANCAMERKEZ",
+     "MEDIANCENTER"
+    ]
+   }
+  },
+  "stats.standardDistance": {
+   "title": "Standart uzaklık",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Yayılımı ölçülecek noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weightField",
+     "label": "Ağırlık alanı",
+     "description": "Seçilirse her nesne bu alanın değeriyle ağırlıklıdır; okunamayan ve eksi değerli nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "groupField",
+     "label": "Grup alanı",
+     "description": "Seçilirse her grubun sonucu ayrı yazılır; boş değerliler “(boş)” grubudur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "deviations",
+     "label": "Standart sapma",
+     "description": "Sonucun kaç standart sapma boyunda yazılacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "1",
+        "label": "1 kat",
+        "hint": "Noktaların yaklaşık %63’ü (elipste)"
+       },
+       {
+        "value": "2",
+        "label": "2 kat",
+        "hint": "Yaklaşık %98"
+       },
+       {
+        "value": "3",
+        "label": "3 kat",
+        "hint": "Yaklaşık %99,9"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsStandardDistance",
+    "about": "Nesnelerin ortalama merkezin çevresinde ne kadar yayıldığını, standart uzaklık yarıçaplı daire olarak yazar.",
+    "help": [
+     "Standart uzaklık, nesnelerin ortalama merkeze uzaklıklarının karelerinin (ağırlıklı) ortalamasının köküdür. Daire Standart sapma kadar katıyla çizilir; tek nesneli ya da çakışık nesneli grubunki sıfırdır, yazılmaz.",
+     "Nesnenin yeri ağırlık merkezidir: noktanın kendisi (çok noktalının ortalaması), alanın, dairenin ve bütün elipsin ağırlık merkezi, çizginin ortası, çoklu çizginin ortadaki köşesi; ifadelerin $merkez_y ve $merkez_x’i.",
+     "Ağırlık alanı seçilirse değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayan, boş ve eksi değerli nesneler alınmaz ve söylenir. Grup alanı seçilirse gruplar adlarının doğal sırasıyla, boş değerliler “(boş)” grubu olarak en sonda yazılır.",
+     "Coğrafi koordinatlı projede çalışmaz: uzaklıklar metre olmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "STANDARTUZAKLIK",
+     "STANDARDDISTANCE"
+    ]
+   }
+  },
+  "stats.directionalDistribution": {
+   "title": "Yön dağılımı",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Doğrultusu bulunacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weightField",
+     "label": "Ağırlık alanı",
+     "description": "Seçilirse her nesne bu alanın değeriyle ağırlıklıdır; okunamayan ve eksi değerli nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "groupField",
+     "label": "Grup alanı",
+     "description": "Seçilirse her grubun sonucu ayrı yazılır; boş değerliler “(boş)” grubudur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "deviations",
+     "label": "Standart sapma",
+     "description": "Sonucun kaç standart sapma boyunda yazılacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "1",
+        "label": "1 kat",
+        "hint": "Noktaların yaklaşık %63’ü (elipste)"
+       },
+       {
+        "value": "2",
+        "label": "2 kat",
+        "hint": "Yaklaşık %98"
+       },
+       {
+        "value": "3",
+        "label": "3 kat",
+        "hint": "Yaklaşık %99,9"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsEllipse",
+    "about": "Nesnelerin hangi doğrultuda yayıldığını standart sapma elipsi olarak yazar: büyük ve küçük yarı eksenleri, doğrultusu.",
+    "help": [
+     "Elipsin eksenleri koordinatların (ağırlıklı) kovaryansının özvektörleridir; yarı eksenler √2 düzeltmesiyle yazılır, bir standart sapmalık elips noktaların yaklaşık %63’ünü alır. Doğrultu büyük eksenin kuzeyden saat yönünde açısıdır (0–180°).",
+     "Nesneleri bir doğru üzerinde ya da çakışık olan grubun elipsi yazılmaz.",
+     "Nesnenin yeri ağırlık merkezidir: noktanın kendisi (çok noktalının ortalaması), alanın, dairenin ve bütün elipsin ağırlık merkezi, çizginin ortası, çoklu çizginin ortadaki köşesi; ifadelerin $merkez_y ve $merkez_x’i.",
+     "Ağırlık alanı seçilirse değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayan, boş ve eksi değerli nesneler alınmaz ve söylenir. Grup alanı seçilirse gruplar adlarının doğal sırasıyla, boş değerliler “(boş)” grubu olarak en sonda yazılır.",
+     "Coğrafi koordinatlı projede çalışmaz: uzaklıklar metre olmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "YONDAGILIMI",
+     "DIRECTIONALDISTRIBUTION"
+    ]
+   }
+  },
+  "stats.nearestNeighbor": {
+   "title": "En yakın komşu",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Deseni sınanacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "area",
+     "label": "Alan",
+     "description": "Çalışma alanı; boş bırakılırsa yerlerin kutusunun alanı.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²",
+      "placeholder": "Kutudan"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsNearest",
+    "about": "Nesnelerin en yakın komşularına ortalama uzaklığını rastgele dağılımınkiyle karşılaştırır: kümelenmiş mi, dağınık mı?",
+    "help": [
+     "Gözlenen ortalama en yakın komşu uzaklığı aynı alanda rastgele dağılmış aynı sayıda nesnenin beklenen uzaklığıyla (0,5 / √(n / A)) karşılaştırılır (Clark ve Evans 1954). Oran 1’den küçük ve z eksiyse kümelenme, büyük ve artıysa dağınıklık vardır; p 0,05’ten küçükse desen anlamlıdır.",
+     "Alan boş bırakılırsa nesnelerin yerlerini çevreleyen kutunun alanıdır; sonuç alana duyarlıdır, çalışma alanını biliyorsanız yazın. Çizim değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ENYAKINKOMSU",
+     "NEARESTNEIGHBOR"
+    ]
+   }
+  },
+  "stats.moransI": {
+   "title": "Moran I",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Değeri sınanacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "valueField",
+     "label": "Değer alanı",
+     "description": "Değerleri sayı olarak okunan alan; okunamayan nesne alınmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "concept",
+     "label": "Komşuluk",
+     "description": "Nesnelerin komşularının nasıl bulunacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "band",
+        "label": "Sabit bant",
+        "hint": "Bant içindeki her nesne komşu, ağırlığı 1"
+       },
+       {
+        "value": "inverse",
+        "label": "Ters uzaklık",
+        "hint": "Bant içinde ağırlık 1 / uzaklık; 1 m’den yakın 1 m sayılır"
+       },
+       {
+        "value": "nearest",
+        "label": "k en yakın",
+        "hint": "Her nesnenin en yakın k komşusu, ağırlığı 1"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Boş bırakılırsa en büyük en yakın komşu uzaklığı: her nesnenin en az bir komşusu olur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m",
+      "placeholder": "Kendiliğinden"
+     }
+    },
+    {
+     "name": "neighbors",
+     "label": "Komşu sayısı (k)",
+     "description": "Her nesnenin en yakın kaç komşusu; eşit uzaklıkta önce gelen.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "standardize",
+     "label": "Satır standartlaştırma",
+     "description": "Her nesnenin komşu ağırlıkları toplamına bölünür (önerilen).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsMoran",
+    "about": "Bir değerin komşu nesnelerde benzer olup olmadığını Moran I ile sınar: kümelenmiş mi, dağınık mı, rastgele mi?",
+    "help": [
+     "Moran I artıysa benzer değerler yan yana (kümelenme), eksiyse farklılar yan yana (dağınıklık); beklenen değer −1 / (n − 1). z ve p, rastgele dağıtım varsayımıyla bulunur (Cliff ve Ord); p 0,05’ten küçükse desen anlamlıdır.",
+     "Komşuluk: sabit uzaklık bandı, bant içinde ters uzaklık ya da k en yakın komşu. Bant boş bırakılırsa her nesnenin en az bir komşusu olacak en küçük uzaklık alınır. Satır standartlaştırma her nesnenin komşularının ağırlıklarını toplamına böler. Çizim değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "MORAN",
+     "MORANI"
+    ]
+   }
+  },
+  "stats.hotSpot": {
+   "title": "Sıcak nokta (Gi*)",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Değeri sınanacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "valueField",
+     "label": "Değer alanı",
+     "description": "Değerleri sayı olarak okunan alan; okunamayan nesne alınmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "concept",
+     "label": "Komşuluk",
+     "description": "Nesnelerin komşularının nasıl bulunacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "band",
+        "label": "Sabit bant",
+        "hint": "Bant içindeki her nesne komşu, ağırlığı 1"
+       },
+       {
+        "value": "nearest",
+        "label": "k en yakın",
+        "hint": "Her nesnenin en yakın k komşusu, ağırlığı 1"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Boş bırakılırsa en büyük en yakın komşu uzaklığı: her nesnenin en az bir komşusu olur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m",
+      "placeholder": "Kendiliğinden"
+     }
+    },
+    {
+     "name": "neighbors",
+     "label": "Komşu sayısı (k)",
+     "description": "Her nesnenin en yakın kaç komşusu; eşit uzaklıkta önce gelen.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsHotSpot",
+    "about": "Yüksek ve düşük değerlerin kümelendiği yerleri Getis-Ord Gi* ile bulur; her nesnenin kopyasını z, p ve güven sınıfıyla renkli yazar.",
+    "help": [
+     "Her nesnenin ve komşularının değer toplamı, bütün nesnelerden beklenenle karşılaştırılır (Ord ve Getis 1995); sonuç bir z puanıdır. Büyük artı z sıcak nokta (yüksek değerler kümesi), büyük eksi z soğuk noktadır.",
+     "Güven sınıfı z’nin işaretiyle 3 (%99), 2 (%95), 1 (%90) ya da 0’dır; kopyalar sınıflarının rengini alır (kırmızılar sıcak, maviler soğuk). Komşuluk sabit uzaklık bandı ya da k en yakın komşu; nesne kendi komşusudur. Bant boş bırakılırsa her nesnenin en az bir komşusu olacak en küçük uzaklık alınır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SICAKNOKTA",
+     "HOTSPOT",
+     "GISTAR"
+    ]
+   }
+  },
+  "stats.dbscan": {
+   "title": "DBSCAN kümeleme",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Kümelenecek noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "radius",
+     "label": "Yarıçap",
+     "description": "Komşuluğun yarıçapı (ε).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "minPoints",
+     "label": "En az nokta",
+     "description": "Çekirdek olmak için yarıçap içinde, kendisi dahil, gereken nesne sayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "borderNoise",
+     "label": "Sınır noktaları gürültü",
+     "description": "Açıkken yalnız çekirdekler kümelenir (DBSCAN*).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsDbscan",
+    "about": "Yakın nesneleri yoğunluklarına göre kümelere ayırır; seyrek kalanlar gürültüdür. Her nesnenin kopyası küme numarası ve kümenin rengiyle yazılır.",
+    "help": [
+     "Yarıçap içinde (kendisi dahil) en az nokta kadar nesnesi olan nesne çekirdektir; birbirine yarıçaptan yakın çekirdekler ve onlara yakın nesneler bir kümedir (Ester ve arkadaşları 1996). Nesneler çizimdeki sırasıyla gezilir; iki kümeye yakın sınır nesnesi ilk ulaşan kümeye girer.",
+     "Sınır noktaları gürültü açıkken (DBSCAN*) yalnız çekirdekler kümelenir. Gürültünün küme numarası 0’dır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DBSCAN"
+    ]
+   }
+  },
+  "stats.kMeans": {
+   "title": "k-ortalamalar kümeleme",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Kümelenecek noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "clusters",
+     "label": "Küme sayısı",
+     "description": "Kaç küme (k).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsKMeans",
+    "about": "Nesneleri yerlerine göre k kümeye ayırır: her nesne en yakın küme merkezine. Her nesnenin kopyası küme numarası ve kümenin rengiyle yazılır.",
+    "help": [
+     "Başlangıç merkezleri kendiliğinden ve hep aynı seçilir: ilki ortalama merkeze en yakın nesne, sonrakiler seçilmiş merkezlere en uzak nesneler. Ardından her nesne en yakın merkeze atanır ve merkezler üyelerinin ortalaması olur; atamalar değişmeyene dek (en çok 500 kez) sürer (Lloyd).",
+     "Farklı yer sayısı küme sayısından azsa çalışmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KORTALAMA",
+     "KMEANS"
+    ]
+   }
+  },
   "model:builtin.parcelSheet": {
    "title": "Parsel ölçü yazıları",
    "rows": [

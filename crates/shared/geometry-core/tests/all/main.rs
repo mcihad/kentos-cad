@@ -42,6 +42,8 @@ mod reshape;
 mod selection;
 mod snap;
 mod spatial_query;
+mod spatial_stats;
+mod spatial_stats_timing;
 mod stationing;
 mod template_members;
 mod text;

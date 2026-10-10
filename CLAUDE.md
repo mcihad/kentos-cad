@@ -184,6 +184,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   toplam) ve ROC ile doğrulama (AUC, eğrinin tablosu, en iyi eşik); çok rasterli araçlar girdilerin kesişiminde; İşlemler'in iki yeni
   parametre türü: rasterlere değer ve raster çiftleri, girdinin rasterlerinden tablolar; tablo veren çalıştırmadan sonra tablo görünür
   olur (ADR 0237);
+  mekânsal istatistik: İşlemler'in Mekânsal istatistik kategorisinde Ortalama ve Ortanca merkez (ağırlıklı, gruplara göre), Standart
+  uzaklık, Yön dağılımı (standart sapma elipsi), En yakın komşu (oran, z, p, desen), Moran I (sabit bant, ters uzaklık, k en yakın; satır
+  standartlaştırma), Sıcak nokta (Gi*: kopyalar z, p ve güven sınıfıyla, katman sınıflara göre kategorili), DBSCAN ve k-ortalamalar
+  (kopyalar küme numarasıyla, katman kümelere göre kategorili); nesnenin yeri `$merkez`, komşular k-d ağacıyla; sonuçlar girdinin
+  katmanının üstünde; çekirdek `ops::spatial_stats` metinleri de yazar; CBS'de Analiz › Mekânsal istatistik (ADR 0238);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -496,6 +501,10 @@ python3 scripts/fixtures/suitability_processing_cases.py --check   # uygunluk ar
 python3 scripts/fixtures/suitability_scene.py --check   # uygunluk resimlerinin çizimini ve ölçütlerini (fixtures/interaction/v1/suitability.kcad, suitability/: vadinin eğimi, yola uzaklık, arazi örtüsü, heyelan noktaları) denetle (ADR 0237)
 cargo test --release -p kentos-raster --test all suitability_timing -- --ignored --nocapture --test-threads=1   # 4096² dört ölçütte altı aracın süreleri ve 15 ölçütlü AHP (ADR 0237 §11; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only suitability))
 KENTOS_SHOTS_ONLY=uyg-serit,uyg-cakistirma,uyg-cakistirma-cizim,uyg-ahp,uyg-roc cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uygunluk analizinin resimleri, .run/shots/arac-uyg-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs suitability); ADR 0237)
+python3 scripts/fixtures/spatial_stats_cases.py --check   # mekânsal istatistiğin dokuz aracını (yerler, merkezler, ortanca, standart uzaklık, elips, en yakın komşu, komşuluklar, Moran I, Gi*, DBSCAN, k-ortalamalar ve yazılan metinler) ADR'den, KentOS kodu olmadan kesirler ve 40 basamaklı mpmath'le denetle; durumlar fixtures/spatial-stats/v1/cases.json (ADR 0238)
+python3 scripts/fixtures/spatial_stats_processing_cases.py --check; python3 scripts/fixtures/spatial_stats_scene.py --check   # mekânsal istatistik araçlarının İşlemler durumlarını (fixtures/processing/v1/spatial-stats.json, spatial-stats.kcad, spatial-stats-geo.kcad) ve resimlerin sahnesini (fixtures/interaction/v1/spatial-stats.kcad) denetle (ADR 0238)
+cargo test --release -p kentos-geometry-core --test all spatial_stats_timing -- --ignored --nocapture --test-threads=1   # 100 000 noktada dokuz aracın süreleri (ADR 0238 §12; web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; STATS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/spatialStats.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp)
+KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mekânsal istatistiğin resimleri, .run/shots/arac-ist-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs stats); ADR 0238)
 KENTOS_SHOTS_ONLY=hid-serit,hid-dere-cizim,hid-havza-cizim,hid-guzergah-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # hidrolojinin resimleri, .run/shots/arac-hid-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hydrology); ADR 0235)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
@@ -1438,7 +1447,13 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `rasterPairs`; masaüstünde `raster_rows`, web'de `fieldPlan.ts`'in satırları), tablo veren çalıştırmadan sonra tablo görünür olur;
   bağımsız başvuru `suitability_cases.py` (50 durum), ortak durumlar `fixtures/processing/v1/suitability.json`
   (`suitability_processing_cases.py`), resimlerin sahnesi `suitability.kcad` (`suitability_scene.py`); CBS'nin Raster sekmesinde Uygunluk
-  analizi paneli, sekme 1100 px'e sığsın diye İnterpolasyon ve Yoğunluk tek panelde. Dalda sıradaki `GIS-38`.
+  analizi paneli, sekme 1100 px'e sığsın diye İnterpolasyon ve Yoğunluk tek panelde. `GIS-38` mekânsal istatistik
+  ([ADR 0238](docs/adr/0238-spatial-statistics.md)) tek parçada bitti (10 Ekim): geometri çekirdeğinde `ops::spatial_stats` (`kdtree`,
+  `centers`, `nearest`, `weights`, `autocorrelation`, `clusters`, `calls`; bağımsız başvuru `spatial_stats_cases.py`, 68 durum); web'in
+  `model/ops/spatialStats.ts`'i; İşlemler'in `builtin/stats/`'u iki platformda; yeni katmanın görünüşünde kategorili görünüş
+  (`NewLayerStyle.renderer`); ortak durumlar `fixtures/processing/v1/spatial-stats.json` (`spatial_stats_processing_cases.py`; yeni
+  katmanın yeri `layerAbove`, karşılaştırıcılarda `r`, `major`, `ratio` geometri alanı), resimlerin sahnesi `spatial-stats.kcad`
+  (`spatial_stats_scene.py`); CBS'nin Analiz sekmesinde Mekânsal istatistik paneli. Dalda sıradaki `GIS-42`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

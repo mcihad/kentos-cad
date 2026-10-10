@@ -69,6 +69,7 @@ interface CaseFile {
 const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
+const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
 const SURFACE = JSON.parse(file('surface.json')) as CaseFile & { rasters: Record<string, string> };
 const INTERPOLATION = JSON.parse(file('interpolation.json')) as CaseFile;
@@ -163,7 +164,7 @@ function close(a: unknown, b: unknown, tol: number): boolean {
 }
 
 /** Numbers other than coordinates are exact: only objects' geometry fields get the tolerance. */
-const GEOMETRY_FIELDS = new Set(['p', 'a', 'b', 'c', 'pts', 'holes']);
+const GEOMETRY_FIELDS = new Set(['p', 'a', 'b', 'c', 'pts', 'holes', 'r', 'major', 'ratio']);
 function sameObject(have: Json, want: Json, tol: number): boolean {
   const keys = (o: Json) => JSON.stringify(Object.keys(o).sort());
   if (keys(have) !== keys(want)) return false;
@@ -315,6 +316,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
   for (const [name, d] of [
     ...Object.entries(CASES.documents),
     ...Object.entries(GEOMETRY.documents),
+    ...Object.entries(SPATIAL_STATS.documents),
     ...Object.entries(NETWORK.documents),
     ...Object.entries(SURFACE.documents),
     ...Object.entries(INTERPOLATION.documents),
@@ -353,6 +355,23 @@ describe.skipIf(!loader)('query cases (fixtures/processing/v1/queries.json, docs
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(QUERIES, c, 'client'), QUERIES.tolerance);
       check(c, await play(QUERIES, c, 'worker'), QUERIES.tolerance);
+    });
+  }
+});
+
+describe('spatial statistics cases (fixtures/processing/v1/spatial-stats.json, docs/adr/0238)', () => {
+  for (const c of SPATIAL_STATS.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      for (const target of ['client', 'worker'] as const) {
+        const seen = await play(SPATIAL_STATS, c, target);
+        // Each new layer right above its input's (its group, the place before it).
+        for (const [id, over] of Object.entries(((c.expect as Json).layerAbove ?? {}) as Record<string, string>)) {
+          const layers = seen.doc.layers;
+          const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+          expect(siblings(id).findIndex((n) => n.id === id) + 1, `${c.id}: ${id} above ${over}`).toBe(siblings(over).findIndex((n) => n.id === over));
+        }
+        check(c, seen, SPATIAL_STATS.tolerance);
+      }
     });
   }
 });

@@ -44,6 +44,8 @@ mod raster_ops_tests;
 #[cfg(test)]
 mod raster_vector_tests;
 #[cfg(test)]
+mod stats_tests;
+#[cfg(test)]
 mod suitability_tests;
 #[cfg(test)]
 pub(crate) mod surface_tests;

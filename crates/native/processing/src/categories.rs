@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 20] = [
+pub const CATEGORIES: [Category; 21] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -63,6 +63,13 @@ pub const CATEGORIES: [Category; 20] = [
         "Analiz",
         "measure",
         "Ölçüm, istatistik ve raporlar",
+    ),
+    // docs/adr/0238: where objects lie and how their values sit among their neighbours.
+    category(
+        "spatialStats",
+        "Mekânsal istatistik",
+        "statsHotSpot",
+        "Merkezler ve yayılım, en yakın komşu, Moran I, sıcak noktalar, kümeleme",
     ),
     category(
         "network",

@@ -129,7 +129,7 @@ fn close(a: &Value, b: &Value, tol: f64) -> bool {
 
 /// Numbers other than coordinates are exact: only geometry fields get the tolerance.
 fn same_object(have: &Value, want: &Value, tol: f64) -> bool {
-    const GEOMETRY: [&str; 6] = ["p", "a", "b", "c", "pts", "holes"];
+    const GEOMETRY: [&str; 9] = ["p", "a", "b", "c", "pts", "holes", "r", "major", "ratio"];
     let (Some(h), Some(w)) = (have.as_object(), want.as_object()) else {
         return false;
     };
@@ -747,6 +747,54 @@ fn the_geometry_cases_do_what_they_say() {
     );
 }
 
+/// Mekânsal istatistik's cases (docs/adr/0238): the same run here and on the
+/// drawing's reading copy; centres, circles, ellipses and copies.
+#[test]
+fn the_spatial_stats_cases_do_what_they_say() {
+    let file = case_file("spatial-stats.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = Vec::new();
+        for on_copy in [false, true] {
+            let seen = play(c, &registry, on_copy, &json!({}));
+            // Each new layer right above its input's (its group, the place before it).
+            for (new, at) in c["expect"]["layerAbove"]
+                .as_object()
+                .cloned()
+                .unwrap_or_default()
+            {
+                let layers = seen.host.doc.layers();
+                let (a, b) = (
+                    layers.place_of(&new),
+                    layers.place_of(at.as_str().unwrap_or("")),
+                );
+                if !matches!((&a, &b), (Some((g, i)), Some((h, j))) if g == h && i + 1 == *j) {
+                    found.push(format!("{}: “{new}” is at {a:?}, “{at}” at {b:?}", c["id"]));
+                }
+            }
+            found.extend(check(c, seen, tol));
+        }
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 18, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Ağ analizi's tools' cases (docs/adr/0209 §6, §7): the same run here and on the drawing's reading copy; new
 /// objects measured (the areas within the file's tolerance: shapely's against the core's exact arcs).
 #[test]
@@ -799,6 +847,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         hydrology,
         distance,
         suitability,
+        spatial_stats,
     ) = (
         cases(),
         case_file("geometry.json"),
@@ -810,6 +859,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         case_file("hydrology.json"),
         case_file("distance.json"),
         case_file("suitability.json"),
+        case_file("spatial-stats.json"),
     );
     let registry = Registry::builtin();
     let lookup = |id: &str| registry.tool(id);
@@ -825,7 +875,8 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         .chain(raster_vector["documents"].as_object().expect("documents"))
         .chain(hydrology["documents"].as_object().expect("documents"))
         .chain(distance["documents"].as_object().expect("documents"))
-        .chain(suitability["documents"].as_object().expect("documents"));
+        .chain(suitability["documents"].as_object().expect("documents"))
+        .chain(spatial_stats["documents"].as_object().expect("documents"));
     for (name, d) in documents {
         let doc = load(name);
         let defaults = Defaults::of(&doc);

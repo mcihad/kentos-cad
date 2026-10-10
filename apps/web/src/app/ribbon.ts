@@ -403,7 +403,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     sources: [
       // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10), the raster analysis's in the Raster
       // tab (docs/adr/0231 §10).
-      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network'] },
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'spatialStats'] },
       // The terrain's work in one panel: Aplikasyon and Kot noktası, profiles and the volume (Arazi and Arazi analizi were
       // two; docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels). The contours and the slope are Yüzey analizi's
       // tools in the Raster tab (docs/adr/0231 §10).
@@ -424,6 +424,21 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
           'processing.run.network.odMatrix',
           'processing.run.network.serviceAreas',
         ],
+      },
+      // Mekânsal istatistik (docs/adr/0238 §11): six tools on the panel, the centre's other two and k-means under ▾, so
+      // Analiz keeps under 3200 px when wide.
+      {
+        pick: 'Mekânsal istatistik',
+        icon: 'statsHotSpot',
+        commands: [
+          'processing.run.stats.meanCenter',
+          'processing.run.stats.directionalDistribution',
+          'processing.run.stats.nearestNeighbor',
+          'processing.run.stats.moransI',
+          'processing.run.stats.hotSpot',
+          'processing.run.stats.dbscan',
+        ],
+        under: ['processing.run.stats.medianCenter', 'processing.run.stats.standardDistance', 'processing.run.stats.kMeans'],
       },
       { menu: 'tools', sections: ['Komut'] },
     ],

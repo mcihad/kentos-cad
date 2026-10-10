@@ -18,6 +18,7 @@ pub mod raster_ops;
 pub mod raster_vector;
 pub mod select_by_expression;
 pub mod select_by_location;
+pub mod stats;
 pub mod suitability;
 pub mod summary_statistics;
 pub mod surface;
@@ -119,6 +120,16 @@ pub fn tools() -> Vec<Tool> {
         suitability::weighted_overlay(),
         suitability::pairwise(),
         suitability::roc(),
+        // Mekânsal istatistik (docs/adr/0238): both platforms.
+        stats::tools::mean_center(),
+        stats::tools::median_center(),
+        stats::tools::standard_distance(),
+        stats::tools::directional_distribution(),
+        stats::tools::nearest_neighbor(),
+        stats::tools::morans(),
+        stats::tools::hot_spot(),
+        stats::tools::dbscan_tool(),
+        stats::tools::k_means_tool(),
     ]
 }
 
