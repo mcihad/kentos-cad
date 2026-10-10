@@ -324,6 +324,18 @@ impl StyledCache {
         let window = store.time_window();
         if window != self.window {
             self.window = window;
+            // A raster following the slider shows another step (docs/adr/0243 §7): its part again.
+            if !all {
+                for e in doc.entities() {
+                    if let Entity::Raster(r) = e
+                        && r.raster.dataset.as_ref().is_some_and(|d| d.follow_time)
+                        && self.layers.contains_key(e.base().layer_id.as_str())
+                        && let Some(place) = doc.place(Slot(e.base().id))
+                    {
+                        dirty_part(&mut dirty, &e.base().layer_id, place / PART_PLACES);
+                    }
+                }
+            }
             if !all {
                 for node in doc.layers().leaves() {
                     if node.time.is_none() || !self.layers.contains_key(node.id.as_str()) {

@@ -347,7 +347,7 @@ export interface LibraryAsset {
   readonly name: string;
   readonly path: readonly string[];
   /** A raster's file embedded (docs/adr/0204 §2) is `tiff` too, or the PNG or JPEG it was. */
-  readonly format: 'svg' | 'png' | 'jpeg' | 'tiff';
+  readonly format: 'svg' | 'png' | 'jpeg' | 'tiff' | 'netcdf';
   /** SVG text, or a data: URL for rasters. */
   readonly data: string;
   /** Natural size in px (rasters) or the SVG's viewBox size. */

@@ -85,6 +85,7 @@ pub fn run_raster(
                         srid: first.srid,
                         style,
                         opacity: None,
+                        dataset: None,
                     },
                 })
             })

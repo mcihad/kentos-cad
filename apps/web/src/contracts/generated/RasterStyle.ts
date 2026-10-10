@@ -38,4 +38,8 @@ zFactor?: number,
 /**
  * The value shown as nothing, in place of the file's.
  */
-nodata?: number, resampling?: RasterResampling, };
+nodata?: number, resampling?: RasterResampling, 
+/**
+ * A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).
+ */
+edges?: string, };

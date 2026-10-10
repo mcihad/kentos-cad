@@ -40,7 +40,7 @@ use crate::{
     SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
     SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
@@ -169,6 +169,8 @@ pub(super) struct Features {
     pub(super) filters: bool,
     /// Schema 36: the label engine's fields, a layer style's `labels`, an object's `labelPins` (docs/adr/0212 §2).
     pub(super) labels: bool,
+    /// Schema 37: a raster's `dataset` and its look's `edges` (docs/adr/0243 §6).
+    multidim: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -213,6 +215,7 @@ impl Features {
             networks: schema >= SCHEMA_WITH_NETWORKS,
             temporal: schema >= SCHEMA_WITH_TEMPORAL,
             filters: schema >= SCHEMA_WITH_FILTERS,
+            multidim: schema >= SCHEMA_WITH_MULTIDIM,
             labels: schema >= SCHEMA_WITH_LABELS,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
             uids: true,
@@ -354,6 +357,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                         | "style"
                         | "opacity"
                 ) || (has.point_clouds && key == "url")
+                    || (has.multidim && key == "dataset")
             }
             Kind::PointCloud => matches!(
                 key,
@@ -373,6 +377,7 @@ struct RasterRead {
     sample: Option<RasterSample>,
     srid: Option<u32>,
     style: Option<RasterStyle>,
+    dataset: Option<kentos_contracts::RasterDataset>,
 }
 
 /// A point cloud's own fields (docs/adr/0207 §3).
@@ -712,7 +717,10 @@ pub(super) fn object(
                 })?;
                 f.raster.affine = Some(affine);
             }
-            "style" if kind == Kind::Raster => f.raster.style = Some(raster_style(r)?),
+            "style" if kind == Kind::Raster => {
+                f.raster.style = Some(raster_style(r, has.multidim)?)
+            }
+            "dataset" => f.raster.dataset = Some(raster_dataset(r)?),
             "style" if kind == Kind::PointCloud => f.cloud.style = Some(cloud_style(r)?),
             "sources" => f.cloud.sources = Some(cloud_sources(r)?),
             "bounds" => f.cloud.bounds = Some(bounds6(r)?),
@@ -1410,6 +1418,7 @@ fn build(
                 srid: required(r, f.raster.srid, "srid")?,
                 style: required(r, f.raster.style.take(), "style")?,
                 opacity: f.opacity,
+                dataset: f.raster.dataset.take(),
             };
             // Its place, size, bands, one source, look and opacity hold together (docs/adr/0204 §2).
             if let Some(words) = raster.problem() {
@@ -1574,7 +1583,7 @@ fn cloud_style(r: &mut Reader<'_>) -> Result<PointCloudStyle, KcadError> {
 /// A raster's look (§6.6, docs/adr/0204 §4): `render` and `bands` always, the
 /// rest only when not their default (one spelling: no `stretch` "none", no
 /// `resampling` "bilinear", no `invert` false).
-fn raster_style(r: &mut Reader<'_>) -> Result<RasterStyle, KcadError> {
+fn raster_style(r: &mut Reader<'_>, multidim: bool) -> Result<RasterStyle, KcadError> {
     let (mut render, mut bands) = (None, None);
     let mut st = RasterStyle {
         render: RasterRender::Rgb,
@@ -1589,6 +1598,7 @@ fn raster_style(r: &mut Reader<'_>) -> Result<RasterStyle, KcadError> {
         z_factor: None,
         nodata: None,
         resampling: RasterResampling::Bilinear,
+        edges: None,
     };
     map(r, |r, key| {
         match key {
@@ -1648,6 +1658,8 @@ fn raster_style(r: &mut Reader<'_>) -> Result<RasterStyle, KcadError> {
             "altitude" => st.altitude = Some(r.float()?),
             "zFactor" => st.z_factor = Some(r.float()?),
             "nodata" => st.nodata = Some(r.float()?),
+            // Schema 37: a mesh's lines (docs/adr/0243 §5).
+            "edges" if multidim => st.edges = Some(text(r)?),
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -1655,6 +1667,78 @@ fn raster_style(r: &mut Reader<'_>) -> Result<RasterStyle, KcadError> {
     st.render = required(r, render, "render")?;
     st.bands = required(r, bands, "bands")?;
     Ok(st)
+}
+
+/// A raster's NetCDF variable and slice (§6.6, docs/adr/0243 §6): `variable`
+/// always; `vector`, `mesh`, `dims` and `followTime` only when given (no empty
+/// list, no false).
+fn raster_dataset(r: &mut Reader<'_>) -> Result<kentos_contracts::RasterDataset, KcadError> {
+    let mut d = kentos_contracts::RasterDataset {
+        variable: String::new(),
+        vector: None,
+        mesh: None,
+        dims: Vec::new(),
+        follow_time: false,
+    };
+    let mut variable = None;
+    map(r, |r, key| {
+        match key {
+            "variable" => variable = Some(text(r)?),
+            "vector" => d.vector = Some(text(r)?),
+            "mesh" => d.mesh = Some(text(r)?),
+            "followTime" => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(Code::BadValue, at, "followTime false yazılmaz"));
+                }
+                d.follow_time = true;
+            }
+            "dims" => {
+                let at = r.position();
+                d.dims = list(r, |r, _| dataset_dim(r))?;
+                if d.dims.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş dilim boyutu listesi yazılmaz"));
+                }
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    d.variable = required(r, variable, "variable")?;
+    Ok(d)
+}
+
+/// A dataset's slice dimension: `name`, `index`, `values`; `time` and `units` when given.
+fn dataset_dim(r: &mut Reader<'_>) -> Result<kentos_contracts::DatasetDim, KcadError> {
+    let (mut name, mut index, mut values) = (None, None, None);
+    let mut dim = kentos_contracts::DatasetDim {
+        name: String::new(),
+        index: 0,
+        values: Vec::new(),
+        time: false,
+        units: None,
+    };
+    map(r, |r, key| {
+        match key {
+            "name" => name = Some(text(r)?),
+            "index" => index = Some(r.uint(u64::from(u32::MAX))? as u32),
+            "values" => values = Some(floats(r)?),
+            "time" => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(Code::BadValue, at, "time false yazılmaz"));
+                }
+                dim.time = true;
+            }
+            "units" => dim.units = Some(text(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    dim.name = required(r, name, "name")?;
+    dim.index = required(r, index, "index")?;
+    dim.values = required(r, values, "values")?;
+    Ok(dim)
 }
 
 /// A table's merged range (§6.6): its `row`, `col`, `rows` and `cols`.

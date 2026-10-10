@@ -954,6 +954,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DatumTransform": {
             "description": "The project's choice for a pair of the registry's datums instead of\nEPSG's way (docs/adr/0168 §3); the pair's other way is its reverse. It\nshifts by seven parameters (`helmert`) or an NTv2 grid (`grid`); exactly\none.",
             "properties": {
@@ -5159,6 +5195,44 @@
             ],
             "type": "object"
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -5197,6 +5271,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -5405,6 +5490,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -11868,6 +11960,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DatumTransform": {
             "description": "The project's choice for a pair of the registry's datums instead of\nEPSG's way (docs/adr/0168 §3); the pair's other way is its reverse. It\nshifts by seven parameters (`helmert`) or an NTv2 grid (`grid`); exactly\none.",
             "properties": {
@@ -16097,6 +16225,44 @@
             ],
             "type": "object"
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -16135,6 +16301,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -16343,6 +16520,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -23945,6 +24129,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -25923,6 +26143,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -25961,6 +26219,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -26169,6 +26438,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -27625,6 +27901,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -29603,6 +29915,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -29641,6 +29991,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -29849,6 +30210,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -31266,6 +31634,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -33244,6 +33648,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -33282,6 +33724,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -33490,6 +33943,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -35042,6 +35502,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -37020,6 +37516,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -37058,6 +37592,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -37266,6 +37811,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -38668,6 +39220,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -40646,6 +41234,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -40684,6 +41310,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -40892,6 +41529,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -42304,6 +42948,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -44282,6 +44962,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -44320,6 +45038,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -44528,6 +45257,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -46214,6 +46950,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -48192,6 +48964,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -48230,6 +49040,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -48438,6 +49259,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -49553,6 +50381,42 @@
               "format",
               "count",
               "bounds"
+            ],
+            "type": "object"
+          },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
             ],
             "type": "object"
           },
@@ -51626,6 +52490,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterFields": {
             "description": "What places and shows a raster: the raster object's own fields, and its\ngeometry in the commands (`EntityGeometry::Raster`).",
             "properties": {
@@ -51650,6 +52552,17 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -51817,6 +52730,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -52626,6 +53546,42 @@
               "attrs",
               "p",
               "dir"
+            ],
+            "type": "object"
+          },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
             ],
             "type": "object"
           },
@@ -54607,6 +55563,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -54645,6 +55639,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -54853,6 +55858,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -56387,6 +57399,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -58365,6 +59413,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -58403,6 +59489,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -58611,6 +59708,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -59867,6 +60971,42 @@
                 "type": "string"
               }
             ]
+          },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
           },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
@@ -61579,6 +62719,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterFields": {
             "description": "What places and shows a raster: the raster object's own fields, and its\ngeometry in the commands (`EntityGeometry::Raster`).",
             "properties": {
@@ -61603,6 +62781,17 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -61770,6 +62959,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -62584,6 +63780,42 @@
               "attrs",
               "p",
               "dir"
+            ],
+            "type": "object"
+          },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
             ],
             "type": "object"
           },
@@ -64565,6 +65797,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -64603,6 +65873,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -64811,6 +66092,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -66355,6 +67643,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -68333,6 +69657,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -68371,6 +69733,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -68579,6 +69952,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -70110,6 +71490,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -72088,6 +73504,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -72126,6 +73580,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -72334,6 +73799,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",
@@ -74029,6 +75501,42 @@
             ],
             "type": "object"
           },
+          "DatasetDim": {
+            "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments.",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "index",
+              "values"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -76007,6 +77515,44 @@
               }
             ]
           },
+          "RasterDataset": {
+            "description": "A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a\nUGRID mesh's dataset, one slice of its other dimensions.",
+            "properties": {
+              "dims": {
+                "description": "Its slice dimensions in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/DatasetDim"
+                },
+                "type": "array"
+              },
+              "followTime": {
+                "description": "The step shown follows the time slider (docs/adr/0243 §7).",
+                "type": "boolean"
+              },
+              "mesh": {
+                "description": "The mesh topology it lies on (a UGRID file); absent: a CF grid.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable's name in the file (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component: its magnitude is shown.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
           "RasterEntity": {
             "description": "A raster (docs/adr/0204 §2).",
             "properties": {
@@ -76045,6 +77591,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "dataset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RasterDataset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A NetCDF file's variable and slice it shows (docs/adr/0243 §6)."
               },
               "file": {
                 "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
@@ -76253,6 +77810,13 @@
                   "type": "integer"
                 },
                 "type": "array"
+              },
+              "edges": {
+                "description": "A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "invert": {
                 "description": "The ramp turned round.",

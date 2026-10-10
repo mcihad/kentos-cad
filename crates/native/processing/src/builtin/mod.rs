@@ -10,6 +10,7 @@ pub mod info_from_inside;
 pub mod interpolation;
 pub mod join_by_field;
 pub mod models;
+pub mod multidim;
 pub mod network;
 pub mod numbering;
 pub mod pointcloud;
@@ -140,6 +141,10 @@ pub fn tools() -> Vec<Tool> {
         remote::tools::accuracy(),
         remote::tools::change(),
         remote::tools::pansharpen(),
+        // Çok boyutlu veri (docs/adr/0243): both platforms.
+        multidim::tools::profile(),
+        multidim::tools::series(),
+        multidim::tools::calculator(),
     ]
 }
 

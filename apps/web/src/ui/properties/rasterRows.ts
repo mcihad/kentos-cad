@@ -1,7 +1,9 @@
 import type { AppContext } from '../../app/context';
 import { fixed } from '../../core/displayNumber';
 import { crsBySrid, crsTitle } from '../../geo/crs';
+import { dimLabels } from '../../model/datasetLabels';
 import type { RasterEntity, RasterRender, RasterStretch } from '../../model/entities';
+import { rasterKey } from '../../model/rasterRules';
 import { hasRaster } from '../../product/entitiesEdit';
 import { sha256Hex, toBase64 } from '../../product/sheet/store';
 import { rasterService } from '../../render/rasterService';
@@ -55,6 +57,7 @@ export function rasterRows(ctx: AppContext, e: RasterEntity, locked: boolean): P
     { label: 'Bantlar', value: `${e.bands} bant, ${sampleLabel(e.sample)}` },
     { label: 'Piksel boyu', value: `${f.length(Math.hypot(a, c), false)} × ${f.length(Math.hypot(b, d), false)}`, numeric: true, unit: f.lengthUnitLabel },
     { label: 'Sistem', value: system },
+    ...datasetRows(ctx, e),
     {
       label: 'Görünüş',
       value: RENDER_NAME[e.style.render],
@@ -81,6 +84,24 @@ export function rasterRows(ctx: AppContext, e: RasterEntity, locked: boolean): P
   return rows;
 }
 
+/** A NetCDF dataset's rows (docs/adr/0243 §11): its variable, each slice dimension's value shown, a mesh's nodes and faces. */
+function datasetRows(ctx: AppContext, e: RasterEntity): PropRow[] {
+  const d = e.dataset;
+  if (!d) return [];
+  const rows: PropRow[] = [{ label: 'Veri seti', value: d.vector ? `${d.variable} / ${d.vector} (vektör)` : d.variable }];
+  for (const x of d.dims ?? []) {
+    const shown = dimLabels(x.values, !!x.time, x.units)[x.index] ?? '';
+    rows.push(x.time ? { label: 'Zaman', value: `${shown}${d.followTime ? ' (zaman sürgüsünü izler)' : ''}` } : { label: x.name, value: shown });
+  }
+  if (d.mesh) {
+    const url = e.asset ? ((ctx.doc.styles.value.items.find((it) => it.id === e.asset) as { data?: string } | undefined)?.data ?? null) : null;
+    const counts = rasterService().meshCounts(rasterKey(e), url);
+    const n = (v: number) => v.toLocaleString('tr-TR');
+    rows.push({ label: 'Ağ', value: counts ? `“${d.mesh}”: ${n(counts[0])} düğüm, ${n(counts[1])} yüz` : `“${d.mesh}”` });
+  }
+  return rows;
+}
+
 /** Kaynak: an embedded raster's name and size, a linked one's file and whether this session has it. */
 function sourceWords(ctx: AppContext, e: RasterEntity): string {
   if (e.asset !== undefined) {
@@ -97,7 +118,7 @@ function sourceWords(ctx: AppContext, e: RasterEntity): string {
 /** Kaynağı yeniden seç: the session's file for a linked raster (the browser never keeps a path). */
 async function reselect(ctx: AppContext, e: RasterEntity): Promise<void> {
   const files = await ctx.files.pickFilesForImport(RASTER_FILES);
-  const file = files?.find((f) => /\.(tiff?|png|jpe?g)$/i.test(f.name));
+  const file = files?.find((f) => /\.(tiff?|png|jpe?g|nc)$/i.test(f.name));
   if (!file || e.file === undefined) return;
   rasterService().setFile(e.file, file);
   ctx.log.info(`“${file.name}” bu oturum boyunca “${e.file}” rasterinin dosyası.`);
@@ -108,17 +129,18 @@ async function embed(ctx: AppContext, e: RasterEntity): Promise<void> {
   let file: File | undefined;
   if (e.file !== undefined) {
     const files = await ctx.files.pickFilesForImport(RASTER_FILES);
-    file = files?.find((f) => /\.(tiff?|png|jpe?g)$/i.test(f.name));
+    file = files?.find((f) => /\.(tiff?|png|jpe?g|nc)$/i.test(f.name));
   }
   if (!file) return;
   if (file.size > MOST_EMBEDDED) return void ctx.log.warn(`“${file.name}” ${Math.floor(file.size / (1 << 20))} MB; gömülü raster en çok ${MOST_EMBEDDED >> 20} MB olabilir. Rasteri bağlı bırakın.`);
   const bytes = new Uint8Array(await file.arrayBuffer());
   const tiff = (bytes[0] === 0x49 && bytes[1] === 0x49) || (bytes[0] === 0x4d && bytes[1] === 0x4d);
-  const format = tiff ? 'tiff' : bytes[0] === 0x89 ? 'png' : 'jpeg';
+  const netcdf = bytes[0] === 0x43 && bytes[1] === 0x44 && bytes[2] === 0x46;
+  const format = netcdf ? 'netcdf' : tiff ? 'tiff' : bytes[0] === 0x89 ? 'png' : 'jpeg';
   const id = `raster-${(await sha256Hex(bytes)).slice(0, 16)}`;
   const doc = ctx.doc;
   if (!hasRaster(doc, id))
-    doc.styles.set({ ...doc.styles.value, items: [...doc.styles.value.items, { kind: 'asset', id, name: file.name.replace(/\.[^.]*$/, ''), path: ['Rasterler'], format, data: `data:image/${format};base64,${toBase64(bytes)}`, width: e.width, height: e.height } as never] });
+    doc.styles.set({ ...doc.styles.value, items: [...doc.styles.value.items, { kind: 'asset', id, name: file.name.replace(/\.[^.]*$/, ''), path: ['Rasterler'], format, data: `data:${netcdf ? 'application/x-netcdf' : `image/${format}`};base64,${toBase64(bytes)}`, width: e.width, height: e.height } as never] });
   const now = doc.get(e.id);
   if (now?.kind === 'raster') setGeometry(ctx, now, { asset: id, file: undefined });
 }

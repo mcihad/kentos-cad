@@ -517,6 +517,10 @@ pub fn core_raster(r: &RasterFields) -> Shape {
         srid: f64::from(r.srid),
         style: Json::parse(&r.style.to_json_text()).unwrap_or(Json::Null),
         opacity: r.opacity,
+        dataset: r
+            .dataset
+            .as_ref()
+            .and_then(|d| Json::parse(&d.to_json_text()).ok()),
     }
 }
 
@@ -535,9 +539,16 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
         srid,
         style,
         opacity,
+        dataset,
     } = shape
     else {
         return None;
+    };
+    let dataset = match dataset {
+        Some(d) => Some(kentos_contracts::RasterDataset::from_json_text(
+            &kentos_geometry_core::api::json::to_string(&d),
+        )?),
+        None => None,
     };
     let whole =
         |v: f64| (v >= 0.0 && v.fract() == 0.0 && v <= f64::from(u32::MAX)).then_some(v as u32);
@@ -555,6 +566,7 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
             &kentos_geometry_core::api::json::to_string(&style),
         )?,
         opacity,
+        dataset,
     })
 }
 

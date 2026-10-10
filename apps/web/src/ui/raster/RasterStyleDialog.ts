@@ -4,8 +4,9 @@ import type { EditOperation } from '../../contracts/generated/EditOperation';
 import type { EntityGeometry as EditGeometry } from '../../contracts/generated/EntityGeometry';
 import { fixed } from '../../core/displayNumber';
 import type { BandStats } from '../../io/rasterProtocol';
-import type { RasterEntity, RasterRender, RasterStretch, RasterStyle } from '../../model/entities';
-import { cleanRasterStyle, RASTER_RAMPS, rasterProblem } from '../../model/rasterRules';
+import { dimLabels } from '../../model/datasetLabels';
+import type { RasterDataset, RasterEntity, RasterRender, RasterStretch, RasterStyle } from '../../model/entities';
+import { cleanRasterStyle, RASTER_RAMPS, rasterKey, rasterProblem } from '../../model/rasterRules';
 import { rasterService } from '../../render/rasterService';
 import { uidOf, writeEdit } from '../../tools/editCommand';
 import { h, replaceChildren } from '../dom';
@@ -20,7 +21,8 @@ import { rampCss } from './ramps';
  * its bands, the stretch with the bands' statistics, the ramp among wide samples of each, the light of the relief,
  * nodata, the transparency and the sampling. The drawing shows the look while the window is open, inside an undo group
  * that is let go (nothing recorded); Uygula writes it through `cad.entities.edit`'s `rasterStyle` as one undo step
- * (Raster stili), Vazgeç leaves the raster as it was.
+ * (Raster stili), Vazgeç leaves the raster as it was. A NetCDF dataset's raster has its Veri seti section (docs/adr/0243
+ * §11): each slice dimension's value, Zaman sürgüsünü izle, a mesh's lines and their colour.
  */
 export function openRasterStyle(ctx: AppContext): void {
   const raster = [...ctx.selection.ids.value].map((id) => ctx.doc.get(id)).find((e): e is RasterEntity & { uid: string } => e?.kind === 'raster');
@@ -61,6 +63,9 @@ class RasterStyleDialog {
   private readonly ctx: AppContext;
   private readonly original: RasterEntity;
   private style: RasterStyle;
+  /** The dataset being edited (a NetCDF raster's). */
+  private dataset: RasterDataset | undefined;
+  private edgesText: string;
   private readonly texts: Record<Typed, string>;
   private stats: BandStats[] | null | 'loading' = 'loading';
   private preview: { end(): void; cancel(): void } | null = null;
@@ -74,6 +79,8 @@ class RasterStyleDialog {
     this.ctx = ctx;
     this.original = raster;
     this.style = { ...raster.style, bands: [...raster.style.bands] };
+    this.dataset = raster.dataset ? (structuredClone(raster.dataset) as RasterDataset) : undefined;
+    this.edgesText = raster.style.edges ?? '#2B3440';
     const s = raster.style;
     this.texts = {
       min: num(s.min),
@@ -99,7 +106,7 @@ class RasterStyleDialog {
     cancel.addEventListener('click', () => this.dialog.close());
     this.primary.addEventListener('click', () => this.apply());
     this.render();
-    const key = raster.asset ? `asset:${raster.asset}` : `file:${raster.file ?? ''}`;
+    const key = rasterKey(raster);
     const url = raster.asset ? (ctx.doc.styles.value.items.find((it) => it.id === raster.asset) as { data?: string } | undefined)?.data ?? null : null;
     void rasterService()
       .stats(key, url)
@@ -114,6 +121,7 @@ class RasterStyleDialog {
     if (!(Number.isFinite(clear) && clear >= 0 && clear <= 90)) return null;
     const opacity = 1 - clear / 100;
     const out: RasterEntity = { ...this.original, style: cleanRasterStyle(this.style) };
+    if (this.dataset) out.dataset = this.dataset;
     if (opacity < 1) out.opacity = opacity;
     else delete out.opacity;
     return rasterProblem(out) === null ? out : null;
@@ -123,7 +131,7 @@ class RasterStyleDialog {
     const clear = read(this.texts.clear) ?? 0;
     if (!(Number.isFinite(clear) && clear >= 0 && clear <= 90)) return 'Saydamlık %0 ile %90 arasında olmalı.';
     if ((['min', 'max', 'azimuth', 'altitude', 'zFactor', 'nodata'] as const).some((k) => Number.isNaN(read(this.texts[k])))) return 'Sayı olmayan bir değer var; düzeltin ya da boş bırakın.';
-    const f = { ...this.original, style: cleanRasterStyle(this.style) };
+    const f = { ...this.original, style: cleanRasterStyle(this.style), ...(this.dataset ? { dataset: this.dataset } : {}) };
     return rasterProblem(f);
   }
 
@@ -135,7 +143,7 @@ class RasterStyleDialog {
     if (!f) return;
     const doc = this.ctx.doc;
     this.preview = doc.beginGroup('Raster stili');
-    doc.update(this.original.id, { style: f.style, opacity: f.opacity } as never);
+    doc.update(this.original.id, { style: f.style, opacity: f.opacity, ...(f.dataset ? { dataset: f.dataset } : {}) } as never);
   }
 
   private apply(): void {
@@ -144,7 +152,10 @@ class RasterStyleDialog {
     this.preview?.cancel();
     this.preview = null;
     this.applied = true;
-    const same = JSON.stringify(cleanRasterStyle(this.original.style)) === JSON.stringify(f.style) && (this.original.opacity ?? 1) === (f.opacity ?? 1);
+    const same =
+      JSON.stringify(cleanRasterStyle(this.original.style)) === JSON.stringify(f.style) &&
+      (this.original.opacity ?? 1) === (f.opacity ?? 1) &&
+      JSON.stringify(this.original.dataset ?? null) === JSON.stringify(f.dataset ?? null);
     this.dialog.close();
     if (same) return;
     const geometry = {
@@ -158,6 +169,7 @@ class RasterStyleDialog {
       srid: f.srid,
       style: f.style,
       ...(f.opacity !== undefined && { opacity: f.opacity }),
+      ...(f.dataset && { dataset: f.dataset }),
     } as unknown as EditGeometry;
     const out = writeEdit(this.ctx, 'rasterStyle' as EditOperation, [{ kind: 'update', uid: uidOf(this.ctx, f.id), geometry }]);
     if (out) {
@@ -216,7 +228,9 @@ class RasterStyleDialog {
       });
       return field(label, i);
     };
-    const parts: HTMLElement[] = [h('div', { class: 'io-row' }, field('Görünüş', render), bandRow)];
+    const parts: HTMLElement[] = [];
+    if (this.dataset) parts.push(this.datasetPart(this.dataset));
+    parts.push(h('div', { class: 'io-row' }, field('Görünüş', render), bandRow));
     if (st.render !== 'hillshade' && st.render !== 'palette') {
       const stretch = segmented<RasterStretch>({
         label: 'Gerdirme',
@@ -289,6 +303,61 @@ class RasterStyleDialog {
     replaceChildren(this.body, parts);
     this.renderStatus();
     if (focus) this.body.querySelector<HTMLElement>(`[data-key="${focus}"]`)?.focus();
+  }
+
+  /** Veri seti (docs/adr/0243 §11): each slice dimension's value, Zaman sürgüsünü izle, a mesh's lines. */
+  private datasetPart(d: RasterDataset): HTMLElement {
+    const dims = d.dims ?? [];
+    const rows: HTMLElement[] = [h('p', { class: 'io-value' }, d.vector ? `${d.variable} / ${d.vector} (vektör)` : d.variable)];
+    if (dims.length)
+      rows.push(
+        h(
+          'div',
+          { class: 'io-row' },
+          dims.map((x, k) => {
+            const s = h(
+              'select',
+              { class: 'field', 'aria-label': x.time ? 'Zaman' : x.name, dataset: { key: `dim-${k}` } },
+              dimLabels(x.values, !!x.time, x.units).map((l, i) => h('option', { value: String(i), selected: i === x.index }, l)),
+            );
+            s.addEventListener('change', () => {
+              x.index = Number(s.value);
+              this.changed();
+            });
+            return field(x.time ? 'Zaman' : x.name, s, undefined, 'grow');
+          }),
+        ),
+      );
+    if (dims.some((x) => x.time))
+      rows.push(
+        checkField('', 'Zaman sürgüsünü izle', !!d.followTime, (v) => {
+          if (v) d.followTime = true;
+          else delete d.followTime;
+          this.changed();
+        }, 'follow'),
+      );
+    if (d.mesh) {
+      const colour = h('input', { class: 'field raster-style__num', value: this.edgesText, placeholder: '#2B3440', 'aria-label': 'Ağ çizgilerinin rengi', dataset: { key: 'edges-colour' } });
+      colour.addEventListener('input', () => {
+        this.edgesText = colour.value;
+        if (this.style.edges != null) this.style.edges = colour.value.trim();
+        this.showPreview();
+        this.renderStatus();
+      });
+      rows.push(
+        h(
+          'div',
+          { class: 'io-row' },
+          checkField('', 'Ağ çizgileri', this.style.edges != null, (v) => {
+            if (v) this.style.edges = this.edgesText.trim();
+            else delete this.style.edges;
+            this.changed();
+          }, 'edges'),
+          field('Renk', colour),
+        ),
+      );
+    }
+    return field('Veri seti', h('div', { class: 'io-stack' }, rows), 'Dilimin değerleri ve zaman sürgüsünü izleme çizimde hemen görünür; ağ çizgileri yüzlerin kenarlarıdır.');
   }
 
   private readonly statusLine = h('div', { class: 'io-summary' });

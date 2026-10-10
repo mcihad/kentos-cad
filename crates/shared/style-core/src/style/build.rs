@@ -487,6 +487,10 @@ pub fn build_layer_with(
         plot_scale,
         aspects: &program.aspects,
         screen,
+        moment: store.time_window().map(|w| match w {
+            kentos_geometry_core::time::Window::Instant(a) => a,
+            kentos_geometry_core::time::Window::Range(_, b) => b - 1.0,
+        }),
     };
     let mut sink = BatchSink::new(origin);
     let mut buf = Vec::new();
@@ -566,7 +570,7 @@ fn draw_object(
         return;
     }
     if mode == MODE_RASTER {
-        draw_raster(shape, &parts, color, program, sink);
+        draw_raster(shape, &parts, color, program, env.moment, sink);
         return;
     }
     if mode == MODE_POINTCLOUD {
@@ -814,11 +818,104 @@ fn draw_pointcloud(
     }
 }
 
+/// The name a raster's tiles go by (docs/adr/0204 §5, 0243 §5): its file
+/// (`asset:<id>`, `file:<path>` or `url:<address>`) and, for a NetCDF variable,
+/// `#` and the JSON of what the host opens: the variable, vector and mesh, the
+/// slice shown at the slider's `moment`, a mesh's sanal grid (its affine and
+/// size). None without a file, or before a followed time dimension's first step.
+pub fn raster_key(shape: &Shape, moment: Option<f64>) -> Option<String> {
+    let Shape::Raster {
+        affine,
+        width,
+        height,
+        asset,
+        file,
+        url,
+        dataset,
+        ..
+    } = shape
+    else {
+        return None;
+    };
+    let base = match (asset, file, url) {
+        (Some(a), _, _) => format!("asset:{a}"),
+        (None, Some(f), _) => format!("file:{f}"),
+        (None, None, Some(u)) => format!("url:{u}"),
+        (None, None, None) => return None,
+    };
+    match dataset {
+        None => Some(base),
+        Some(d) => {
+            let grid = matches!(d.get("mesh"), Json::Str(_)).then_some((affine, [*width, *height]));
+            dataset_key(d, moment, grid).map(|part| format!("{base}#{part}"))
+        }
+    }
+}
+
+/// A raster's dataset as its key's part (docs/adr/0243 §5, §7): the JSON of its
+/// variable, vector, mesh and the slice shown at the slider's `moment` (a time
+/// dimension followed: its last step at or before the moment; none before the first).
+fn dataset_key(
+    d: &Json,
+    moment: Option<f64>,
+    grid: Option<(&[f64; 6], [f64; 2])>,
+) -> Option<String> {
+    let dims: &[Json] = match d.get("dims") {
+        Json::Arr(a) => a,
+        _ => &[],
+    };
+    let follow = matches!(d.get("followTime"), Json::Bool(true));
+    let mut slice = Vec::with_capacity(dims.len());
+    for dim in dims {
+        let mut index = match dim.get("index") {
+            Json::Num(n) => *n,
+            _ => 0.0,
+        };
+        if let (true, Json::Bool(true), Some(t)) = (follow, dim.get("time"), moment) {
+            let values: &[Json] = match dim.get("values") {
+                Json::Arr(a) => a,
+                _ => &[],
+            };
+            let at = values
+                .iter()
+                .take_while(|v| matches!(v, Json::Num(x) if *x <= t))
+                .count();
+            index = at.checked_sub(1)? as f64;
+        }
+        slice.push(Json::Num(index));
+    }
+    let mut part = vec![("variable".to_owned(), d.get("variable").clone())];
+    for key in ["vector", "mesh"] {
+        if let s @ Json::Str(_) = d.get(key) {
+            part.push((key.to_owned(), s.clone()));
+        }
+    }
+    part.push(("slice".to_owned(), Json::Arr(slice)));
+    if let Some((affine, size)) = grid {
+        part.push((
+            "affine".to_owned(),
+            Json::Arr(affine.iter().map(|&v| Json::Num(v)).collect()),
+        ));
+        part.push((
+            "size".to_owned(),
+            Json::Arr(size.iter().map(|&v| Json::Num(v)).collect()),
+        ));
+    }
+    Some(kentos_geometry_core::api::json::to_string(&Json::Obj(part)))
+}
+
 /// A raster (docs/adr/0204 §5): its frame filled with the raster paint,
 /// which the raster pass draws as the tiles in view, in the order of the
 /// drawing; its frame as a hairline in the object's colour. The paint names
 /// its file (`asset:`, `file:` or `url:`) and look; equal ones share their tiles.
-fn draw_raster(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sink: &mut BatchSink) {
+fn draw_raster(
+    shape: &Shape,
+    parts: &[Geom],
+    color: i32,
+    program: &Program,
+    moment: Option<f64>,
+    sink: &mut BatchSink,
+) {
     let Shape::Raster {
         affine,
         width,
@@ -833,29 +930,32 @@ fn draw_raster(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sin
     else {
         return;
     };
-    let raster = match (asset, file, url) {
-        (Some(a), _, _) => format!("asset:{a}"),
-        (None, Some(f), _) => format!("file:{f}"),
-        (None, None, Some(u)) => format!("url:{u}"),
-        (None, None, None) => return,
-    };
+    if asset.is_none() && file.is_none() && url.is_none() {
+        return;
+    }
+    // Before its first step the slider shows nothing of a dataset but its frame.
+    let raster = raster_key(shape, moment);
     let look = kentos_geometry_core::api::json::to_string(style);
     let nearest = matches!(style.get("resampling"), Json::Str(r) if r == "nearest");
     sink.set_scale(Scale::default());
     for part in parts {
         match part {
-            Geom::Fill(rings) => sink.fill(
-                &FillPaint::Raster {
-                    raster: raster.clone(),
-                    look: look.clone(),
-                    affine: *affine,
-                    size: [*width, *height],
-                    nearest,
-                    opacity: opacity.unwrap_or(1.0),
-                    level: LEVEL_FILL,
-                },
-                rings,
-            ),
+            Geom::Fill(rings) => {
+                if let Some(raster) = &raster {
+                    sink.fill(
+                        &FillPaint::Raster {
+                            raster: raster.clone(),
+                            look: look.clone(),
+                            affine: *affine,
+                            size: [*width, *height],
+                            nearest,
+                            opacity: opacity.unwrap_or(1.0),
+                            level: LEVEL_FILL,
+                        },
+                        rings,
+                    )
+                }
+            }
             Geom::Line(paths) => {
                 let ink = usize::try_from(color)
                     .ok()
@@ -1129,8 +1229,45 @@ pub fn compile_one(v: &Json) -> Result<String, String> {
         plot_scale: values.scale,
         aspects: &aspects,
         screen: false,
+        moment: None,
     };
     let sink: &mut dyn Sink = &mut out;
     compile_symbol(&symbol, &geom, &values, &env, sink, 0.0);
     Ok(out.json())
+}
+
+#[cfg(test)]
+mod raster_key_tests {
+    use super::dataset_key;
+    use kentos_geometry_core::api::json::Json;
+
+    /// The key's part as the web writes it too (`apps/web/src/model/rasterRules.ts`
+    /// `rasterKey`, its test `rasterKey.test.ts`): the same text for the same slice.
+    #[test]
+    fn a_datasets_part_is_its_variable_mesh_and_slice() {
+        let grid = Json::parse(
+            r#"{"variable":"t2m","dims":[{"name":"time","index":1,"values":[0,3600000,7200000],"time":true},{"name":"level","index":0,"values":[850,500]}],"followTime":true}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            dataset_key(&grid, None, None).unwrap(),
+            r#"{"variable":"t2m","slice":[1,0]}"#
+        );
+        // Following the slider: the last step at or before the moment; none before the first.
+        assert_eq!(
+            dataset_key(&grid, Some(7_199_999.0), None).unwrap(),
+            r#"{"variable":"t2m","slice":[1,0]}"#
+        );
+        assert_eq!(
+            dataset_key(&grid, Some(7_200_000.0), None).unwrap(),
+            r#"{"variable":"t2m","slice":[2,0]}"#
+        );
+        assert!(dataset_key(&grid, Some(-1.0), None).is_none());
+        let mesh = Json::parse(r#"{"variable":"ucx","vector":"ucy","mesh":"mesh","dims":[{"name":"time","index":0,"values":[0,1800000],"time":true}]}"#).unwrap();
+        let affine = [500000.0, 0.125, 0.0, 4420040.0, 0.0, -0.125];
+        assert_eq!(
+            dataset_key(&mesh, None, Some((&affine, [320.0, 320.0]))).unwrap(),
+            r#"{"variable":"ucx","vector":"ucy","mesh":"mesh","slice":[0],"affine":[500000,0.125,0,4420040,0,-0.125],"size":[320,320]}"#
+        );
+    }
 }

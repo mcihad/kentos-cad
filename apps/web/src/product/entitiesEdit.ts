@@ -139,7 +139,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'arrowSize', 'mask'],
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', ...FACE_FIELDS, 'source'],
   image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
-  raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'url', 'srid', 'style', 'opacity'],
+  raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'url', 'srid', 'style', 'opacity', 'dataset'],
   // A point cloud's files, bounds, points, system, look and opacity (docs/adr/0207 §3), carried as they are.
   pointcloud: ['sources', 'bounds', 'count', 'srid', 'style', 'opacity'],
 };
@@ -446,7 +446,7 @@ export function checkStyles(doc: CadDocument, geometries: readonly (EntityGeomet
 
 /** Whether the project's library has the GeoTIFF, PNG or JPEG raster `id` (docs/adr/0204 §2). */
 export function hasRaster(doc: CadDocument, id: string): boolean {
-  return doc.styles.value.items.some((it) => it.kind === 'asset' && it.id === id && (it.format === 'tiff' || it.format === 'png' || it.format === 'jpeg'));
+  return doc.styles.value.items.some((it) => it.kind === 'asset' && it.id === id && (it.format === 'tiff' || it.format === 'png' || it.format === 'jpeg' || it.format === 'netcdf'));
 }
 
 /** Whether the project's library has the LAS, LAZ, COPC or XYZ cloud `id` (docs/adr/0207 §3). */
@@ -481,7 +481,7 @@ export function checkBlocks(doc: CadDocument, geometries: readonly (EntityGeomet
       return failed(
         error(
           'unknown_asset',
-          `“${g.asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG ya da JPEG'in kimliğini verin.`,
+          `“${g.asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG, JPEG ya da NetCDF'in kimliğini verin.`,
           `${list}[${i}].geometry.asset`,
         ),
       );

@@ -856,6 +856,18 @@ export const ICONS = {
     '<rect x="2.3" y="2.3" width="10" height="10" rx="1" stroke-dasharray="1.7 1.3" stroke-width="1.1"/><rect x="7.7" y="7.7" width="10" height="10" rx="1" fill="currentColor" fill-opacity=".14" stroke-width="1.3"/><path d="m12.7 10.3 2.9 4.9H9.8z" stroke-width="1.15" stroke-linejoin="round"/>',
   pansharpen:
     '<rect x="2.5" y="2.5" width="15" height="15" rx="1" stroke-width="1.1"/><rect x="2.5" y="2.5" width="7.5" height="7.5" fill="currentColor" fill-opacity="0.5" stroke="none"/><rect x="2.5" y="10" width="7.5" height="7.5" fill="currentColor" fill-opacity="0.2" stroke="none"/><path d="M10 2.5v15" stroke-width="1"/><path d="M13.75 2.5v15M10 6.25h7.5M10 10h7.5M10 13.75h7.5" stroke-width=".7" stroke-opacity=".7"/><rect x="10" y="2.5" width="3.75" height="3.75" fill="currentColor" fill-opacity="0.55" stroke="none"/><rect x="13.75" y="6.25" width="3.75" height="3.75" fill="currentColor" fill-opacity="0.4" stroke="none"/><rect x="10" y="10" width="3.75" height="3.75" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="13.75" y="13.75" width="3.75" height="3.75" fill="currentColor" fill-opacity="0.15" stroke="none"/>',
+  // Mesh ve çok boyutlu veri (docs/adr/0243): Mesh ekle a triangle mesh and a plus; Kesit a profile above a grid crossed by
+  // its line; Zaman serisi a line through dots over time; Mesh hesaplayıcı a mesh and an equals sign; the category a data
+  // cube in layers.
+  meshAdd:
+    '<path d="M2.5 12.5 5 3.5l3 6.5z" fill="currentColor" fill-opacity=".2" stroke-linejoin="round" stroke-width="1.2"/><path d="m5 3.5 7.5.5L8 10z" fill="currentColor" fill-opacity=".45" stroke-linejoin="round" stroke-width="1.2"/><path d="m2.5 12.5 5.5-2.5 2.5 3.5z" fill="currentColor" fill-opacity=".1" stroke-linejoin="round" stroke-width="1.2"/><path d="M16 12.5v6M13 15.5h6" stroke-width="1.6"/>',
+  multidimProfile:
+    '<path d="M2.5 8.5 6 6l3 2 3.5-4.5 5 3.5" stroke-width="1.4" stroke-linejoin="round"/><rect x="2.5" y="11" width="15" height="6.5" rx=".8" stroke-width="1.1"/><path d="M7.5 11v6.5M12.5 11v6.5M2.5 14.25h15" stroke-width=".8" stroke-opacity=".6"/><path d="M3.5 16.5 16.5 12.3" stroke-width="1.2" stroke-dasharray="1.6 1.2"/>',
+  timeSeries: `<path d="M2.5 2.5v15h15" stroke-width="1.1"/><path d="m5 13 3-4 3 2.5 3-6 3 3" stroke-width="1.2" stroke-linejoin="round"/>${dot(5, 13, 1.1)}${dot(8, 9, 1.1)}${dot(11, 11.5, 1.1)}${dot(14, 5.5, 1.1)}${dot(17, 8.5, 1.1)}`,
+  meshCalculator:
+    '<path d="M2.5 11.5 6 2.5l4 7z" fill="currentColor" fill-opacity=".3" stroke-linejoin="round" stroke-width="1.2"/><path d="m6 2.5 6.5 1.5-2.5 5.5" stroke-linejoin="round" stroke-width="1.2"/><path d="m2.5 11.5 7.5-2 2.5 5" stroke-linejoin="round" stroke-width="1.2"/><path d="M13 14h5M13 17h5" stroke-width="1.6"/>',
+  multidimData:
+    '<path d="M10 2.5 17 6l-7 3.5L3 6z" fill="currentColor" fill-opacity=".25" stroke="none"/><path d="M10 2.5 17 6v8.5L10 18l-7-3.5V6z" stroke-width="1.2" stroke-linejoin="round"/><path d="m3 6 7 3.5L17 6M10 9.5V18" stroke-width="1.1"/><path d="m3 8.8 7 3.5 7-3.5M3 11.6l7 3.5 7-3.5" stroke-width=".8" stroke-opacity=".6"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',
   cloud: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1"/>',
   cloudUpload: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1"/>',

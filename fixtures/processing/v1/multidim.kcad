@@ -1,0 +1,562 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: çok boyutlu veri",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 500000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizgiler",
+   "name": "Çizgiler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#37474F",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "mesh-cizgiler",
+   "name": "Mesh çizgileri",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#37474F",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "noktalar",
+   "name": "Noktalar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "mesh-noktalar",
+   "name": "Mesh noktaları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "bant-noktalar",
+   "name": "Bant noktaları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "dem",
+   "name": "DEM",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "derinlik",
+   "name": "Derinlik",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "hesap",
+   "name": "Hesap",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "bantlar",
+   "name": "Bantlar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "tek",
+   "name": "Tek bant",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizgiler",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    20.0,
+    0.0,
+    4420060.0,
+    0.0,
+    -20.0
+   ],
+   "width": 5,
+   "height": 3,
+   "bands": 1,
+   "sample": "f64",
+   "file": "grid-cdf2.nc",
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Spektral"
+   },
+   "dataset": {
+    "variable": "dem",
+    "dims": [
+     {
+      "name": "t",
+      "index": 0,
+      "values": [
+       946717200000.0,
+       946760400000.0
+      ],
+      "time": true
+     }
+    ]
+   },
+   "srid": 5254,
+   "id": 1,
+   "layerId": "dem",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    0.125,
+    0.0,
+    4420040.0,
+    0.0,
+    -0.125
+   ],
+   "width": 320,
+   "height": 320,
+   "bands": 1,
+   "sample": "f32",
+   "file": "ugrid.nc",
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Viridis"
+   },
+   "dataset": {
+    "variable": "depth",
+    "mesh": "mesh",
+    "dims": [
+     {
+      "name": "time",
+      "index": 1,
+      "values": [
+       1714543200000.0,
+       1714545000000.0,
+       1714546800000.0
+      ],
+      "time": true
+     }
+    ]
+   },
+   "srid": 5254,
+   "id": 2,
+   "layerId": "derinlik",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    0.125,
+    0.0,
+    4420040.0,
+    0.0,
+    -0.125
+   ],
+   "width": 320,
+   "height": 320,
+   "bands": 1,
+   "sample": "f32",
+   "file": "ugrid-calc.nc",
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Viridis"
+   },
+   "dataset": {
+    "variable": "depth",
+    "mesh": "mesh",
+    "dims": [
+     {
+      "name": "time",
+      "index": 0,
+      "values": [
+       1714543200000.0,
+       1714545000000.0,
+       1714546800000.0
+      ],
+      "time": true
+     }
+    ]
+   },
+   "srid": 5254,
+   "id": 3,
+   "layerId": "hesap",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500100.0,
+    10.0,
+    0.0,
+    4420030.0,
+    0.0,
+    -10.0
+   ],
+   "width": 4,
+   "height": 3,
+   "bands": 3,
+   "sample": "f32",
+   "file": "bantlar.tif",
+   "style": {
+    "render": "rgb",
+    "bands": [
+     3,
+     2,
+     1
+    ],
+    "stretch": "minMax",
+    "nodata": -9999
+   },
+   "srid": 5254,
+   "id": 4,
+   "layerId": "bantlar",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500100.0,
+    10.0,
+    0.0,
+    4420030.0,
+    0.0,
+    -10.0
+   ],
+   "width": 4,
+   "height": 3,
+   "bands": 1,
+   "sample": "f32",
+   "file": "tek.tif",
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "nodata": -9999
+   },
+   "srid": 5254,
+   "id": 5,
+   "layerId": "tek",
+   "attrs": {}
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 500005.0,
+     "y": 4420045.0
+    },
+    {
+     "x": 500095.0,
+     "y": 4420045.0
+    }
+   ],
+   "id": 6,
+   "layerId": "cizgiler",
+   "attrs": {}
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 499990.0,
+     "y": 4420025.0
+    },
+    {
+     "x": 500050.0,
+     "y": 4420025.0
+    },
+    {
+     "x": 500050.0,
+     "y": 4419990.0
+    }
+   ],
+   "id": 7,
+   "layerId": "cizgiler",
+   "attrs": {}
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 500001.0,
+     "y": 4420003.0
+    },
+    {
+     "x": 500039.0,
+     "y": 4420017.0
+    }
+   ],
+   "id": 8,
+   "layerId": "mesh-cizgiler",
+   "attrs": {}
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 500003.0,
+     "y": 4420019.0
+    },
+    {
+     "x": 500019.0,
+     "y": 4420001.0
+    }
+   ],
+   "id": 9,
+   "layerId": "mesh-cizgiler",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500010.0,
+    "y": 4420050.0
+   },
+   "id": 10,
+   "layerId": "noktalar",
+   "attrs": {
+    "ad": "K1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500070.0,
+    "y": 4420030.0
+   },
+   "id": 11,
+   "layerId": "noktalar",
+   "attrs": {
+    "ad": "K2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500090.0,
+    "y": 4420010.0
+   },
+   "id": 12,
+   "layerId": "noktalar",
+   "attrs": {
+    "ad": "K3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500010.0,
+    "y": 4420006.0
+   },
+   "id": 13,
+   "layerId": "mesh-noktalar",
+   "attrs": {
+    "ad": "P1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500028.0,
+    "y": 4420004.0
+   },
+   "id": 14,
+   "layerId": "mesh-noktalar",
+   "attrs": {
+    "ad": "P2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500037.0,
+    "y": 4420014.0
+   },
+   "id": 15,
+   "layerId": "mesh-noktalar",
+   "attrs": {
+    "ad": "P3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500012.0,
+    "y": 4420031.0
+   },
+   "id": 16,
+   "layerId": "mesh-noktalar",
+   "attrs": {
+    "ad": "P4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 499990.0,
+    "y": 4420010.0
+   },
+   "id": 17,
+   "layerId": "mesh-noktalar",
+   "attrs": {
+    "ad": "P5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500105.0,
+    "y": 4420025.0
+   },
+   "id": 18,
+   "layerId": "bant-noktalar",
+   "attrs": {
+    "ad": "B1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500125.0,
+    "y": 4420015.0
+   },
+   "parts": [
+    {
+     "p": {
+      "x": 500135.0,
+      "y": 4420005.0
+     }
+    }
+   ],
+   "id": 19,
+   "layerId": "bant-noktalar",
+   "attrs": {
+    "ad": "B2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500095.0,
+    "y": 4420025.0
+   },
+   "id": 20,
+   "layerId": "bant-noktalar",
+   "attrs": {}
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

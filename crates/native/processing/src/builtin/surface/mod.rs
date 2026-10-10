@@ -259,6 +259,7 @@ fn raster_object(
             srid: f.srid,
             style,
             opacity: None,
+            dataset: None,
         },
     })
 }

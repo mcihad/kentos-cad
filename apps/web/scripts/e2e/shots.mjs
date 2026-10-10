@@ -6693,6 +6693,127 @@ function remoteScenes() {
   ];
 }
 
+// Mesh ve çok boyutlu veri (docs/adr/0243) over the shared valley: its hourly rain as a NetCDF grid and its stream's flood
+// as a UGRID mesh, both following the time slider, a section across the stream and three gauges
+// (fixtures/interaction/v1/multidim.kcad, scripts/fixtures/multidim_scene.py): the CBS ribbon's Raster with Mesh ekle,
+// Raster ekle's NetCDF window, Mesh ekle's window, the flood at a later step of the slider, Raster stili's Veri seti, Kesit's
+// table, Zaman serisi's table and Mesh hesaplayıcı's largest depth. The desktop's are `tools_screens`' md-*
+// (apps/desktop/src/multidim_scenes.rs), at the same places with the same values.
+const MULTIDIM_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/multidim.kcad', import.meta.url), 'utf8');
+const MULTIDIM_FILES = Object.fromEntries(
+  ['yagis.nc', 'taskin.nc'].map((f) => [f, readFileSync(new URL(`../../../../fixtures/interaction/v1/multidim/${f}`, import.meta.url)).toString('base64')]),
+);
+SCENES.multidim = multidimScenes();
+
+function multidimScenes() {
+  const VALLEY = [487200, 4420081.6, 487968, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  /** The valley's rain and flood, the section and the gauges open, the CBS ribbon's Raster on. */
+  const opened = async (ui, hide = []) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const file = (b64, name) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
+      const files = ${JSON.stringify(MULTIDIM_FILES)};
+      for (const [name, b64] of Object.entries(files)) rasterService().setFile('multidim/' + name, file(b64, name));
+      if (!(await k.files.load(${JSON.stringify(MULTIDIM_SCENE)}, null))) throw new Error('multidim.kcad did not load');
+      for (const id of ${JSON.stringify(hide)}) k.doc.layers.setVisible(id, false);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${VALLEY[0]}, minY: ${VALLEY[1]}, maxX: ${VALLEY[2]}, maxY: ${VALLEY[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** A window of the multidim dialog opened with the scene's file `name`. */
+  const fileWindow = (fn, name, after = '') => async (ui) => {
+    await opened(ui);
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const m = await import('/src/ui/raster/MultidimDialog.ts');
+      const b64 = ${JSON.stringify(MULTIDIM_FILES)}[${JSON.stringify(name)}];
+      const f = new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], ${JSON.stringify(name)});
+      m.${fn}(k, ${fn === 'openMeshFiles' ? '[f]' : 'f'});
+    })()`);
+    await ui.waitFor(`!!document.querySelector('.dialog--io [data-key="variable"]')`, 10000);
+    if (after) await ui.eval(after);
+    await ui.sleep(800);
+    await tiles(ui);
+  };
+  const ranIn = (runs, keep, hide = []) => async (ui) => {
+    await opened(ui, hide);
+    for (const [k, [tool, values]] of runs.entries()) {
+      await ui.eval(openTool(tool, values));
+      await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+      await ui.sleep(300);
+      await ui.clickSel('.ptool__run');
+      await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind && document.querySelector('.ptool__status')?.dataset.kind !== 'running'`, 60000);
+      const status = await ui.eval(`document.querySelector('.ptool__status')?.dataset.kind + ': ' + document.querySelector('.ptool__status')?.textContent`);
+      if (!String(status).startsWith('ok')) {
+        const why = await ui.eval(`[...document.querySelectorAll('.dialog--ptool [class*="issue"], .dialog--ptool [class*="error"], .dialog--ptool [aria-invalid="true"]')].map((e) => (e.getAttribute('aria-label') || '') + ' ' + e.textContent).join(' | ')`);
+        throw new Error(`${tool}: ${status} — ${why}`);
+      }
+      if (keep && k === runs.length - 1) {
+        await ui.eval(`(() => { const m = document.querySelector('.dialog--ptool .ptool__main'); m.scrollTop = m.scrollHeight; })()`);
+      } else {
+        await ui.escapeAll(2);
+      }
+    }
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(`(() => { const t = window.kentos.time; if (t.open.value) t.close(); })()`);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const PROFILE = { input: L('taskin'), lines: L('kesit'), step: 10, draw: true };
+  const SERIES = { input: L('taskin'), points: L('istasyonlar') };
+  const LARGEST = { input: L('taskin'), expression: 'derinlik', summary: 'max', name: 'En büyük derinlik' };
+  // Su derinliği (the list's second), its step and following the slider, the mesh's lines on.
+  const DEPTH = `(() => {
+    const s = document.querySelector('.dialog--io [data-key="variable"]');
+    s.value = '1';
+    s.dispatchEvent(new Event('change'));
+    setTimeout(() => document.querySelector('.dialog--io [data-key="edges"] input, .dialog--io input[data-key="edges"]')?.click(), 300);
+  })()`;
+  return [
+    { id: 'md-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'md-ekle', open: fileWindow('openNetcdf', 'yagis.nc'), close },
+    { id: 'md-mesh-ekle', open: fileWindow('openMeshFiles', 'taskin.nc', DEPTH), close },
+    {
+      id: 'md-zaman',
+      open: async (ui) => {
+        await opened(ui);
+        await ui.eval(`(() => { const t = window.kentos.time; t.show(); t.go(8); })()`);
+        await ui.sleep(400);
+        await tiles(ui);
+      },
+      close,
+    },
+    {
+      id: 'md-stil',
+      open: async (ui) => {
+        await opened(ui);
+        await ui.eval(`(() => { const k = window.kentos; const r = [...k.doc.all()].find((e) => e.kind === 'raster' && e.layerId === 'taskin'); k.selection.set([r.id]); })()`);
+        await ui.eval(`window.kentos.commands.execute('raster.style')`);
+        await ui.waitFor(`!!document.querySelector('.raster-ramps')`);
+        await tiles(ui);
+      },
+      close,
+    },
+    { id: 'md-kesit', open: ranIn([['multidim.profile', PROFILE]], true), close },
+    { id: 'md-seri', open: ranIn([['multidim.series', SERIES]], true), close },
+    { id: 'md-hesap-cizim', open: ranIn([['multidim.meshCalculator', LARGEST]], false, ['yagis']), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

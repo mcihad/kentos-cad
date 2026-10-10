@@ -1,7 +1,7 @@
 import { fixed } from '../../../core/displayNumber';
 import { STOPPED, type OpsResult } from '../../../io/rasterAnalysisProtocol';
 import type { Entity, NewEntity, RasterEntity, RasterSample, RasterStyle } from '../../../model/entities';
-import { rasterRunHost, type RasterRunHost } from '../../rasterHost';
+import { rasterPart, rasterRunHost, type RasterRunHost } from '../../rasterHost';
 import type { Feedback, FeatureSet, RunContext, RunResult, Shown, TargetLayer } from '../../types';
 import { rasterRun } from '../../features';
 import { meanScale, withAttr } from '../attributeWrites';
@@ -143,7 +143,7 @@ export async function analyze(list: readonly RasterEntity[], spec: string, shape
         return feedback.canceled;
       },
     };
-    return { ok: true, host, result: await host.analyzeOps(sources, spec, objects, watch) };
+    return { ok: true, host, result: await host.analyzeOps(sources, spec, objects, watch, list.map(rasterPart)) };
   } catch (e) {
     const why = e instanceof Error ? e.message : String(e);
     return { ok: false, end: why === STOPPED ? {} : { refused: why } };

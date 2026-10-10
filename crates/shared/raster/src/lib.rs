@@ -39,6 +39,7 @@ pub mod inputs;
 pub mod insolation;
 pub mod interp;
 pub mod job;
+pub mod multidim;
 pub mod ops;
 pub mod out;
 pub mod par;

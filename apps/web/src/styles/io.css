@@ -12,6 +12,13 @@
   flex-shrink: 0;
 }
 
+/* A column of parts with the body's rhythm (Mesh ekle's and Raster stili's sections, docs/adr/0243 §11). */
+.io-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* The picked file: name, facts, and a way to pick another. */
 .io-file {
   display: flex;

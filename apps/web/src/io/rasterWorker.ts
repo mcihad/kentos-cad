@@ -22,6 +22,7 @@ const scope = self as unknown as {
 
 type FormatsModule = typeof import('./pkg/kentos_formats_wasm.js');
 type RasterFile = import('./pkg/kentos_formats_wasm.js').RasterFile;
+type NetcdfFile = import('./pkg/kentos_formats_wasm.js').NetcdfFile;
 
 let wasm: Promise<FormatsModule> | null = null;
 function formats(): Promise<FormatsModule> {
@@ -58,6 +59,14 @@ interface Opened {
 }
 
 const opened = new Map<string, Opened>();
+/** NetCDF files' cubes by their file's key: the header, coordinates and meshes read once for every slice (docs/adr/0243 §5). */
+const cubes = new Map<string, NetcdfFile>();
+
+/** A scene key split at its dataset (`#{…}`, the style core's `raster_key`): the file's key and the part's JSON. */
+function splitKey(key: string): { file: string; part: string | null } {
+  const at = key.lastIndexOf('#{');
+  return at < 0 ? { file: key, part: null } : { file: key.slice(0, at), part: key.slice(at + 1) };
+}
 
 async function bytes(blob: Blob, at: number, len: number): Promise<Uint8Array> {
   return new Uint8Array(await blob.slice(at, at + len).arrayBuffer());
@@ -99,11 +108,37 @@ async function openBlob(m: FormatsModule, blob: Blob, world: string | null): Pro
   throw new Error('Dosya GeoTIFF, TIFF, PNG ya da JPEG değil.');
 }
 
+/** A NetCDF file's cube (kept by `fileKey`) with what `part` needs read; `part` empty: what the file lists. */
+async function cubeOf(m: FormatsModule, fileKey: string | null, blob: Blob, part: string): Promise<NetcdfFile> {
+  let c = fileKey ? cubes.get(fileKey) : undefined;
+  if (!c) {
+    const why = m.NetcdfFile.refusal(await bytes(blob, 0, 16));
+    if (why) throw new Error(why);
+    c = new m.NetcdfFile(blob.size);
+    if (fileKey) cubes.set(fileKey, c);
+  }
+  return fillCube(c, blob, part);
+}
+
+/** What `part` needs of the file read into the cube (its header first). */
+async function fillCube(c: NetcdfFile, blob: Blob, part: string): Promise<NetcdfFile> {
+  for (let round = 0; round < 64; round++) {
+    const needs = c.needs(part);
+    if (!needs.length) return c;
+    for (let i = 0; 2 * i < needs.length; i++) {
+      if (needs[2 * i + 1] > 1024 * 1024 * 1024) throw new Error("NetCDF'in bir değişkeni 1 GB'tan büyük; okunmuyor.");
+      c.put(needs[2 * i], await bytes(blob, needs[2 * i], needs[2 * i + 1]));
+    }
+  }
+  throw new Error('NetCDF okunamadı: başlığı çok parçalı.');
+}
+
 async function open(key: string, blob: Blob, name: string): Promise<Opened> {
   const kept = opened.get(key);
   if (kept) return kept;
   const m = await formats();
-  const file = await openBlob(m, blob, null);
+  const { file: fileKey, part } = splitKey(key);
+  const file = part ? (await cubeOf(m, fileKey, blob, part)).open(part, BUDGET) : await openBlob(m, blob, null);
   const info = JSON.parse(file.info()) as Opened['info'];
   const o: Opened = { file, blob, name, info, pyramid: null, building: false, declined: false, stats: false };
   opened.set(key, o);
@@ -328,10 +363,101 @@ async function run(job: Job): Promise<void> {
           o.file.free();
           opened.delete(key);
         }
+      for (const [key, c] of cubes)
+        if (!job.keep.some((k) => splitKey(k).file === key)) {
+          c.free();
+          cubes.delete(key);
+        }
       return;
     case 'drop': {
-      opened.get(job.key)?.file.free();
-      opened.delete(job.key);
+      // The file given again: every slice of it goes, and its cube.
+      for (const [key, o] of opened)
+        if (key === job.key || splitKey(key).file === job.key) {
+          o.file.free();
+          opened.delete(key);
+        }
+      cubes.get(job.key)?.free();
+      cubes.delete(job.key);
+      return;
+    }
+    case 'cube': {
+      try {
+        const m = await formats();
+        const c = await cubeOf(m, null, job.file, '');
+        try {
+          scope.postMessage({ type: 'done', id: job.id, value: JSON.parse(c.info()) });
+        } finally {
+          c.free();
+        }
+      } catch (e) {
+        scope.postMessage({ type: 'done', id: job.id, error: err(e) });
+      }
+      return;
+    }
+    case 'cubePlace': {
+      try {
+        const m = await formats();
+        const c = await cubeOf(m, null, job.file, '');
+        try {
+          // A mesh's slice is drawn in a virtual grid over its box (docs/adr/0243 §5): the core's rule.
+          const p = JSON.parse(job.part) as { mesh?: string; affine?: number[]; size?: number[] };
+          if (p.mesh) {
+            const mesh = (JSON.parse(c.info()) as { meshes: { name: string; bbox: number[]; cell: number }[] }).meshes.find((x) => x.name === p.mesh);
+            if (!mesh) throw new Error(`NetCDF'te “${p.mesh}” ağı yok.`);
+            const grid = Array.from(m.meshGrid(Float64Array.from(mesh.bbox), job.cell ?? mesh.cell));
+            if (!grid.length) throw new Error('Hücre boyu sıfırdan büyük bir sayı olmalı ve ızgaranın kenarı 65 536 hücreyi aşmamalı.');
+            p.affine = grid.slice(0, 6);
+            p.size = [grid[6], grid[7]];
+          }
+          const part = JSON.stringify(p);
+          await fillCube(c, job.file, part);
+          const file = c.open(part, BUDGET);
+          try {
+            const view = Float64Array.from(job.view);
+            const info = JSON.parse(file.info()) as { sample: string };
+            scope.postMessage({
+              type: 'done',
+              id: job.id,
+              value: {
+                info,
+                placement: JSON.parse(file.placement(job.srid, job.confirmed, view)),
+                confirmedPlacement: JSON.parse(file.placement(job.srid, true, view)),
+                style: JSON.parse(m.datasetStyle(info.sample, Boolean(p.mesh), job.edges)),
+                part,
+              },
+            });
+          } finally {
+            file.free();
+          }
+        } finally {
+          c.free();
+        }
+      } catch (e) {
+        scope.postMessage({ type: 'done', id: job.id, error: err(e) });
+      }
+      return;
+    }
+    case 'sms': {
+      try {
+        const m = await formats();
+        const mesh = new Uint8Array(await job.mesh.arrayBuffer());
+        const parts = await Promise.all(job.dats.map(async (f) => new Uint8Array(await f.arrayBuffer())));
+        const all = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+        let at = 0;
+        for (const p of parts) {
+          all.set(p, at);
+          at += p.length;
+        }
+        const out = m.smsToUgrid(mesh, all, Uint32Array.from(parts.map((p) => p.length)), job.dats.map((f) => f.name).join('\n'), job.start, job.epsg, false);
+        try {
+          const file = out.bytes();
+          scope.postMessage({ type: 'done', id: job.id, value: JSON.parse(out.report()), bytes: file }, [file.buffer]);
+        } finally {
+          out.free();
+        }
+      } catch (e) {
+        scope.postMessage({ type: 'done', id: job.id, error: err(e) });
+      }
       return;
     }
     case 'inspect': {
@@ -385,6 +511,16 @@ async function run(job: Job): Promise<void> {
         const o = await open(job.key, job.blob, job.name);
         const s = await statsOf(o);
         scope.postMessage({ type: 'done', id: job.id, value: s ? JSON.parse(s) : null });
+      } catch (e) {
+        scope.postMessage({ type: 'done', id: job.id, error: err(e) });
+      }
+      return;
+    }
+    case 'meshCounts': {
+      try {
+        const o = await open(job.key, job.blob, job.name);
+        const c = o.file.meshCounts();
+        scope.postMessage({ type: 'done', id: job.id, value: c.length === 2 ? [c[0], c[1]] : null });
       } catch (e) {
         scope.postMessage({ type: 'done', id: job.id, error: err(e) });
       }

@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 22] = [
+pub const CATEGORIES: [Category; 23] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -169,5 +169,12 @@ pub const CATEGORIES: [Category; 22] = [
         "Uzaktan algılama",
         "spectralIndex",
         "Bant birleştirme, spektral indisler, sınıflandırma, doğruluk, değişim ve görüntü birleştirme",
+    ),
+    // docs/adr/0243: NetCDF slices and meshes read along lines, at points over time, and worked into new datasets.
+    category(
+        "multidim",
+        "Çok boyutlu veri",
+        "multidimData",
+        "Kesit, zaman serisi ve mesh hesaplayıcı",
     ),
 ];

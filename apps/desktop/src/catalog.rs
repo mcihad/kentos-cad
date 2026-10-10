@@ -517,6 +517,8 @@ pub const PORTED: &[&str] = &[
     "raster.add",
     "raster.style",
     "raster.georef",
+    // docs/adr/0243: Mesh ekle (rasters/multidim.rs); Raster ekle reads NetCDF there too.
+    "mesh.add",
     // docs/adr/0207: Nokta bulutu (pointclouds/) and İşlemler's point cloud tools; the desktop's
     // only for now (the owner's decision, 8 October): the web shows them waiting.
     "pointcloud.add",
@@ -627,6 +629,10 @@ pub const PORTED: &[&str] = &[
     "processing.run.remote.accuracy",
     "processing.run.remote.change",
     "processing.run.remote.pansharpen",
+    // docs/adr/0243: Çok boyutlu veri (kentos-processing's builtin/multidim/).
+    "processing.run.multidim.profile",
+    "processing.run.multidim.series",
+    "processing.run.multidim.meshCalculator",
     // docs/adr/0209: Ağlar and the network tools (networks/, kentos_interaction::network).
     "network.manage",
     "tool.netRoute",

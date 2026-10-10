@@ -189,6 +189,8 @@ const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 's
 
 /** Raster katmanları (docs/adr/0204 §8): CAD's Ekle › Raster, CBS's Veri › Raster and its Raster tab (docs/adr/0231 §10). */
 const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
+/** CBS's rasters with Mesh ekle beside Raster ekle (docs/adr/0243 §11). */
+const GIS_RASTERS = ['raster.add', 'mesh.add', 'raster.style', 'raster.georef'];
 /**
  * İşlemler's categories of raster analysis (docs/adr/0231 §10): CBS's Raster tab rather than Analiz, which they would
  * crowd past 1100 px; GIS-32 to GIS-37 and Uzaktan algılama (GIS-42, docs/adr/0242 §11) add theirs here.
@@ -205,6 +207,7 @@ const RASTER_ANALYSIS = [
   'Uzaklık ve maliyet',
   'Uygunluk analizi',
   'Uzaktan algılama',
+  'Çok boyutlu veri',
 ];
 /**
  * İnterpolasyon's and Yoğunluk's tools (docs/adr/0232) in one panel of the Raster tab: surfaces from points both, and
@@ -256,6 +259,17 @@ const REMOTE_PANEL = {
     'processing.run.remote.pansharpen',
   ],
   under: ['processing.run.remote.composite', 'processing.run.remote.split'],
+} as const;
+/**
+ * The Raster tab's Raster panel (docs/adr/0243 §11): Raster ekle, Mesh ekle and Raster stili; Raster oturt and Çok boyutlu
+ * veri's tools (Kesit, Zaman serisi, Mesh hesaplayıcı) under its ▾, so that the tab keeps its ten panels within 1100 px and
+ * under 3200 px wide.
+ */
+const RASTER_PANEL = {
+  pick: 'Raster',
+  icon: 'rasterAdd',
+  commands: ['raster.add', 'mesh.add', 'raster.style'],
+  under: ['raster.georef', 'processing.run.multidim.profile', 'processing.run.multidim.series', 'processing.run.multidim.meshCalculator'],
 } as const;
 /** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
 const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
@@ -426,8 +440,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression')] },
       // The drawing's block definitions are its library, as its layers and attributes are; its pictures beside them (docs/adr/0192 §5).
       { menu: 'draw', sections: ['Blok', 'Resim'] },
-      // Raster katmanları (docs/adr/0204 §8): QGIS's Add Raster Layer and Georeferencer.
-      { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
+      // Raster katmanları (docs/adr/0204 §8): QGIS's Add Raster Layer and Georeferencer; Mesh ekle (docs/adr/0243 §11), its Add Mesh Layer.
+      { pick: 'Raster', icon: 'rasterAdd', commands: GIS_RASTERS },
       // Nokta bulutu (docs/adr/0207 §9): QGIS's Add Point Cloud Layer and its PDAL tools.
       POINT_CLOUD_PANEL,
     ],
@@ -495,7 +509,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     id: 'raster',
     label: 'Raster',
     sources: [
-      { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
+      RASTER_PANEL,
       { menu: 'processing', sections: ['Yüzey analizi'] },
       POINT_SURFACES,
       { menu: 'processing', sections: ['Raster işlemleri', 'Raster istatistiği'] },

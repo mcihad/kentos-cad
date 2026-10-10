@@ -16,6 +16,7 @@ use serde_json::{Value, json};
 pub mod add;
 pub mod jobs;
 pub mod look;
+pub mod multidim;
 pub mod pyramid;
 #[cfg(test)]
 mod tests;
@@ -31,9 +32,15 @@ pub fn raster_id(bytes: &[u8]) -> String {
     format!("raster-{}", &hex[..16])
 }
 
-/// The library's format of a raster file: `tiff`, `png` or `jpeg`; none for another.
+/// The library's format of a raster file: `tiff`, `png`, `jpeg` or `netcdf`
+/// (a classic NetCDF, docs/adr/0243); none for another.
 pub fn format_of(bytes: &[u8]) -> Option<&'static str> {
-    if kentos_formats::raster::tiff::sniff(bytes) {
+    if matches!(
+        kentos_formats::multidim::netcdf::sniff(bytes),
+        kentos_formats::multidim::netcdf::Sniff::Classic(_)
+    ) {
+        Some("netcdf")
+    } else if kentos_formats::raster::tiff::sniff(bytes) {
         Some("tiff")
     } else if bytes.starts_with(&[0x89, b'P', b'N', b'G']) {
         Some("png")
@@ -62,7 +69,7 @@ pub fn library_item(
     }
     let Some(format) = format_of(bytes) else {
         return Err(format!(
-            "“{name}” GeoTIFF, PNG ya da JPEG değil; gömülemez."
+            "“{name}” GeoTIFF, PNG, JPEG ya da NetCDF değil; gömülemez."
         ));
     };
     let id = raster_id(bytes);
@@ -75,7 +82,11 @@ pub fn library_item(
         "name": stem,
         "path": ["Rasterler"],
         "format": format,
-        "data": format!("data:image/{format};base64,{}", kentos_sheet::template::base64_encode(bytes)),
+        "data": format!(
+            "data:{};base64,{}",
+            if format == "netcdf" { "application/x-netcdf".to_owned() } else { format!("image/{format}") },
+            kentos_sheet::template::base64_encode(bytes)
+        ),
         "width": width,
         "height": height,
     });
@@ -143,10 +154,23 @@ pub fn embed(model: &mut Model, slot: Slot, folder: Option<&Path>) -> Vec<String
     kentos_interaction::properties::set_geometry(model, slot, &Entity::Raster(raster))
 }
 
+/// A raster's key split at its dataset (docs/adr/0243 §5): the file's part and
+/// what of the NetCDF file it shows (the style core's `raster_key`), when any.
+pub fn split_key(key: &str) -> (&str, Option<kentos_formats::multidim::cube::Part>) {
+    kentos_formats::multidim::cube::split_key(key)
+}
+
+/// What of a NetCDF file a raster shows (docs/adr/0243 §5): its dataset's
+/// variable and slice, a mesh's sanal grid; none for another raster.
+pub fn part_of(r: &RasterFields) -> Option<kentos_formats::multidim::cube::Part> {
+    kentos_formats::multidim::cube::Part::of(r)
+}
+
 /// Where the scene's raster `key` (`file:<path>`, `asset:<id>`, `url:<address>`)
 /// reads its bytes: a linked file beside the drawing (`folder`), an embedded
 /// one's from the library, an address by HTTP ranges (docs/adr/0207 §1).
 pub fn origin_of(key: &str, model: &Model, folder: Option<&Path>) -> Option<tiles::Origin> {
+    let (key, _) = split_key(key);
     if let Some(file) = key.strip_prefix("file:") {
         Some(tiles::Origin::File(crate::pictures::resolve(file, folder)))
     } else if let Some(id) = key.strip_prefix("asset:") {
@@ -157,14 +181,12 @@ pub fn origin_of(key: &str, model: &Model, folder: Option<&Path>) -> Option<tile
     }
 }
 
-/// The scene's name of a raster's file: `asset:<id>`, `file:<path>` or `url:<address>`.
+/// The scene's name of a raster's tiles (the style core's `raster_key`, the
+/// slider closed): `asset:<id>`, `file:<path>` or `url:<address>`, and a
+/// NetCDF variable's slice after `#` (docs/adr/0243 §5).
 pub fn key_of(r: &RasterFields) -> String {
-    match (&r.asset, &r.file, &r.url) {
-        (Some(a), _, _) => format!("asset:{a}"),
-        (None, Some(f), _) => format!("file:{f}"),
-        (None, None, Some(u)) => format!("url:{u}"),
-        (None, None, None) => String::new(),
-    }
+    kentos_native_style::raster_key(&kentos_native_application::geometry::core_raster(r), None)
+        .unwrap_or_default()
 }
 
 /// The raster windows' state while the app runs.
@@ -172,6 +194,8 @@ pub fn key_of(r: &RasterFields) -> String {
 pub struct Windows {
     pub add: Option<add::State>,
     pub look: Option<look::State>,
+    /// Mesh ekle, and Raster ekle's NetCDF (docs/adr/0243 §11).
+    pub multidim: Option<multidim::State>,
 }
 
 /// What the raster windows and the pyramids' panel ask for.
@@ -179,6 +203,7 @@ pub struct Windows {
 pub enum Event {
     Add(add::Event),
     Look(look::Event),
+    Multidim(multidim::Event),
     /// Durdur on a pyramid's line, by its raster's key.
     StopPyramid(String),
     /// Durdur on Raster oturt's resampling.
@@ -205,6 +230,7 @@ impl crate::app::App {
         match e {
             Event::Add(e) => self.raster_add_event(e),
             Event::Look(e) => self.raster_look_event(e),
+            Event::Multidim(e) => self.multidim_event(e),
             Event::StopPyramid(key) => {
                 pyramid::stop(&key);
                 Task::none()

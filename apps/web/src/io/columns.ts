@@ -78,6 +78,8 @@ const LOOK_NUMBERS = [
 const LOOK_RAMP = 4;
 const LOOK_INVERT = 8;
 const LOOK_NEAREST = 256;
+/** A mesh's lines' colour (docs/adr/0243 §5): a text after the ramp. */
+const LOOK_EDGES = 512;
 const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
 /** The dimension's kinds in the contract's order (`DimensionStyle::ALL`); KCAD schema 9 added the last five (docs/adr/0147). */
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
@@ -705,6 +707,7 @@ class Packer {
         if (st.ramp !== undefined) look |= LOOK_RAMP;
         if (st.invert === true) look |= LOOK_INVERT;
         if (st.resampling === 'nearest') look |= LOOK_NEAREST;
+        if (st.edges !== undefined) look |= LOOK_EDGES;
         this.int(look);
         const affine = Array.isArray(e.affine) ? e.affine : [];
         if (affine.length !== 6) throw unwritable('bad_value', `${this.where}/affine`, `rasterin dönüşümü 6 sayı olmalı, ${affine.length} var`);
@@ -712,10 +715,30 @@ class Packer {
         if (e.opacity !== undefined) (flags |= OPT[2]), this.float(e.opacity, 'opacity');
         for (const [k] of LOOK_NUMBERS) if (st[k] !== undefined) this.float(st[k] as number, `style/${k}`);
         if (st.ramp !== undefined) this.text(st.ramp as string, 'style/ramp');
+        if (st.edges !== undefined) this.text(st.edges as string, 'style/edges');
         if (e.asset !== undefined) (flags |= OPT[0]), this.text(e.asset, 'asset');
         if (e.file !== undefined) (flags |= OPT[1]), this.text(e.file, 'file');
         // An address read by ranges (docs/adr/0207 §1).
         if (e.url !== undefined) (flags |= OPT[3]), this.text(e.url, 'url');
+        // A NetCDF variable and its slice (docs/adr/0243 §6), as the Rust side writes it.
+        if (e.dataset !== undefined) {
+          flags |= OPT[4];
+          const d = e.dataset;
+          const dims = d.dims ?? [];
+          this.int(dims.length);
+          this.int((d.followTime ? 1 : 0) | (d.vector !== undefined ? 2 : 0) | (d.mesh !== undefined ? 4 : 0));
+          this.text(d.variable, 'dataset/variable');
+          if (d.vector !== undefined) this.text(d.vector, 'dataset/vector');
+          if (d.mesh !== undefined) this.text(d.mesh, 'dataset/mesh');
+          for (const dim of dims) {
+            this.int(dim.index);
+            this.int(dim.values.length);
+            this.int((dim.time ? 1 : 0) | (dim.units !== undefined ? 2 : 0));
+            for (const v of dim.values) this.float(v, 'dataset/dims/values');
+            this.text(dim.name, 'dataset/dims/name');
+            if (dim.units !== undefined) this.text(dim.units, 'dataset/dims/units');
+          }
+        }
         break;
       }
       // docs/adr/0207: the system, the files' count, the look's kind, flags and hidden classes, each file's format and
@@ -1251,10 +1274,34 @@ export class ColumnsReader {
         if (look & LOOK_INVERT) st.invert = true;
         for (const k of ['azimuth', 'altitude', 'zFactor', 'nodata'] as const) if (numbers[k] !== undefined) st[k] = numbers[k];
         if (look & LOOK_NEAREST) st.resampling = 'nearest';
+        if (look & LOOK_EDGES) st.edges = this.readText();
         e.style = st;
         if (has(0)) e.asset = this.readText();
         if (has(1)) e.file = this.readText();
         if (has(3)) e.url = this.readText();
+        if (has(4)) {
+          const n = this.readInt();
+          if (n > 8) throw broken('rasterin veri setinin boyutları');
+          const flags = this.readInt();
+          const d: Record<string, unknown> = { variable: this.readText() };
+          if (flags & 2) d.vector = this.readText();
+          if (flags & 4) d.mesh = this.readText();
+          const dims: Record<string, unknown>[] = [];
+          for (let k = 0; k < n; k++) {
+            const index = this.readInt();
+            const count = this.readInt();
+            if (count > 100_000) throw broken('rasterin veri setinin boyutunun değerleri');
+            const dh = this.readInt();
+            const values = Array.from({ length: count }, () => this.num());
+            const dim: Record<string, unknown> = { name: this.readText(), index, values };
+            if (dh & 1) dim.time = true;
+            if (dh & 2) dim.units = this.readText();
+            dims.push(dim);
+          }
+          if (dims.length) d.dims = dims;
+          if (flags & 1) d.followTime = true;
+          e.dataset = d;
+        }
         break;
       }
       // docs/adr/0207: as the packer writes it.

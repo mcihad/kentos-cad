@@ -1416,7 +1416,7 @@ cases.append({
          "result": failed("invalid_raster", "Rasterin donukluğu 0.1 ile 1 arasında olmalı; 0 verildi.", "changes[0].geometry"), "expect": R_NOTHING},
         {"op": "execute", "input": {"operation": "rasterGeoref", "changes": [{"kind": "update", "uid": uid(1),
                                                                              "geometry": {**{k: v for k, v in RASTER.items() if k != "file"}, "asset": "raster-ffffffffffffffff"}}]},
-         "result": failed("unknown_asset", "“raster-ffffffffffffffff” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG ya da JPEG'in kimliğini verin.",
+         "result": failed("unknown_asset", "“raster-ffffffffffffffff” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG, JPEG ya da NetCDF'in kimliğini verin.",
                           "changes[0].geometry.asset"), "expect": R_NOTHING},
         {"op": "execute", "input": {"operation": "rasterGeoref", "changes": [{"kind": "update", "uid": uid(1), "geometry": PLACED}]},
          "nonFinite": {"changes[0].geometry.affine[2]": "NaN"}, "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": R_NOTHING},

@@ -14,6 +14,7 @@ mod field_sdr;
 mod field_sniff;
 mod field_write;
 mod gnss;
+mod multidim;
 mod raster;
 mod raster_georef;
 mod raster_pyramid;

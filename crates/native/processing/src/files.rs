@@ -107,6 +107,7 @@ impl Beside<'_> {
             ".png",
             ".jpg",
             ".jpeg",
+            ".nc",
         ]
         .iter()
         .find(|e| lower.ends_with(*e))
@@ -134,6 +135,19 @@ pub struct RasterOpen<'f> {
     pub reader: Reader,
     pub block: ReadBlock<'f>,
     pub jpeg: DecodeJpeg<'f>,
+}
+
+/// Reads `len` bytes of a file from `offset`.
+pub type ReadRun<'f> = Box<dyn Fn(u64, u64) -> Result<Vec<u8>, String> + 'f>;
+
+/// A NetCDF raster's file opened as a cube for a tool that reads it value by
+/// value (Zaman serisi, Mesh hesaplayıcı; docs/adr/0243 §9, §10): its
+/// header and what the raster's dataset needs (coordinates, its mesh) read,
+/// the dataset's part, and how more of the file is read.
+pub struct CubeOpen<'f> {
+    pub cube: kentos_formats::multidim::cube::Cube,
+    pub part: kentos_formats::multidim::cube::Part,
+    pub read: ReadRun<'f>,
 }
 
 /// The host's files for a run.
@@ -171,6 +185,11 @@ pub trait Files: Send + Sync {
         let _ = raster;
         Err(NO_RASTER_FILES.to_owned())
     }
+    /// A NetCDF raster's file opened as a cube (docs/adr/0243 §9, §10).
+    fn open_cube(&self, raster: &RasterFields) -> Result<CubeOpen<'_>, String> {
+        let _ = raster;
+        Err(NO_RASTER_FILES.to_owned())
+    }
 }
 
 /// Why a tool that needs files does not run here.
@@ -187,7 +206,7 @@ pub fn with_extension(path: &str, ext: &str) -> String {
         return path.to_owned();
     }
     let lower = path.to_ascii_lowercase();
-    let cut = [".copc.laz", ".laz", ".las", ".tif", ".tiff", ".vpc"]
+    let cut = [".copc.laz", ".laz", ".las", ".tif", ".tiff", ".vpc", ".nc"]
         .iter()
         .find(|e| lower.ends_with(*e))
         .map_or(path.len(), |e| path.len() - e.len());

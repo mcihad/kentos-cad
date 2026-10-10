@@ -11,6 +11,8 @@ mod host;
 mod hydro_timing;
 mod hydrology;
 mod interpolation;
+mod multidim;
+mod multidim_timing;
 mod ops_timing;
 mod point_timing;
 mod raster_ops;

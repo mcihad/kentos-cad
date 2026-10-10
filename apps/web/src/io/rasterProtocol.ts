@@ -17,10 +17,21 @@ export interface RasterRef {
 export type RasterRequest =
   /** Raster ekle: the chosen files (the image and its world file), read for the window. */
   | { type: 'inspect'; id: number; files: File[]; srid: number; confirmed: boolean; view: number[] }
+  /** Raster ekle's and Mesh ekle's NetCDF (docs/adr/0243 §11): what the file holds (`CubeInfo` JSON). */
+  | { type: 'cube'; id: number; file: Blob }
+  /**
+   * A slice's placement (the core's rule), its reader's facts and its first look: `part` the raster key's part JSON
+   * (a mesh's grid made here from its box and `cell`, the mesh's own cell when null; `edges` its lines drawn).
+   */
+  | { type: 'cubePlace'; id: number; file: Blob; part: string; cell: number | null; edges: boolean; srid: number; confirmed: boolean; view: number[] }
+  /** Mesh ekle's 2DM and DATs made one UGRID file: its bytes, the report (JSON) as the value. */
+  | { type: 'sms'; id: number; mesh: Blob; dats: File[]; start: number; epsg: number }
   /** A tile's colours by `look` (the contract's JSON) for a raster placed by `affine`. */
   | ({ type: 'tile'; id: number; look: string; affine: number[]; level: number; tx: number; ty: number } & RasterRef)
   /** The bands' statistics (Raster stili). */
   | ({ type: 'stats'; id: number } & RasterRef)
+  /** A mesh slice's node and face count (Öznitelikler, docs/adr/0243 §11): `[nodes, faces]` or null. */
+  | ({ type: 'meshCounts'; id: number } & RasterRef)
   /** The bands' values at pixel (i, j) of level 0 (Koordinat oku). */
   | ({ type: 'values'; id: number; i: number; j: number } & RasterRef)
   /** Raster oturt's resampling: `points` five numbers each (column, row, x, y, used). */
@@ -79,6 +90,66 @@ export type RasterPlacement = ({ rule: 'same'; srid: number } | { rule: 'unknown
   affine?: number[];
   srid?: number;
 };
+
+/** What a NetCDF file holds (the formats core's `CubeInfo`). */
+export interface CubeInfo {
+  version: number;
+  grids: CubeGrid[];
+  meshes: CubeMesh[];
+  notes: string[];
+}
+
+/** A slice dimension of a variable: its values, whether CF time, units, each value as the windows say it. */
+export interface CubeDim {
+  name: string;
+  values: number[];
+  time: boolean;
+  units?: string;
+  labels: string[];
+}
+
+export interface CubeGrid {
+  variable: string;
+  longName?: string;
+  units?: string;
+  width: number;
+  height: number;
+  affine?: number[];
+  epsg?: number;
+  geographic: boolean;
+  sample: import('../model/entities').RasterSample;
+  dims: CubeDim[];
+}
+
+export interface CubeDataset {
+  variable: string;
+  vector?: string;
+  longName?: string;
+  units?: string;
+  location: 'node' | 'face';
+  sample: import('../model/entities').RasterSample;
+  dims: CubeDim[];
+}
+
+export interface CubeMesh {
+  name: string;
+  nodes: number;
+  faces: number;
+  bbox: [number, number, number, number];
+  cell: number;
+  epsg?: number;
+  geographic: boolean;
+  datasets: CubeDataset[];
+}
+
+/** A slice placed: its reader's facts, the core's rule, its first look and its part (a mesh's with its grid). */
+export interface CubePlaced {
+  info: RasterFileInfo;
+  placement: RasterPlacement;
+  confirmedPlacement: RasterPlacement;
+  style: import('../model/entities').RasterStyle;
+  part: string;
+}
 
 /** A band's statistics (Raster stili). */
 export interface BandStats {

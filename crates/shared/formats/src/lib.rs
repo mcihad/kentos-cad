@@ -35,6 +35,7 @@ pub mod gnss;
 pub mod import;
 pub mod json;
 pub mod math;
+pub mod multidim;
 pub mod num;
 pub mod nurbs;
 pub mod raster;

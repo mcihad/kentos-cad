@@ -196,6 +196,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   tespiti (fark, oran, normalize fark; sınıf değişiminin “neden neye” matrisi) ve Görüntü birleştirme (ağırlıklı Brovey ya da basit
   ortalama, pankromatiğin ızgarasında); iki geçişli araçlar aynı işin geçişleri; tablolar, özetler ve uyarılar raster çekirdeğinin; raster
   okuyucusunda ExtraSamples'ın 0'ı veri, alfa değil; CBS'de Raster › Uzaktan algılama (ADR 0242);
+  mesh ve çok boyutlu veri: kendi NetCDF klasik okuyucu ve yazıcımız (CDF-1, 2, 5; dosyanın gereken parçaları; `vsize` işaretsiz), CF
+  düzenli ızgaranın değişkeni ve dilimi Raster ekle'den, UGRID 1.0 ve 2DM ile ASCII DAT (tek UGRID dosyasına çevrilir) Mesh ekle'den
+  (`mesh.add`); mesh sanal ızgarada, karoları ağdan rasterleştirilir, ağ çizgileri (`edges`); rasterin `dataset`'i (`.kcad` şema 37),
+  Zaman sürgüsünü izleyen rasterler, Raster stili'nde Veri seti, Öznitelikler'de boyutlar ve Ağ; İşlemler'in Çok boyutlu veri kategorisi
+  (Kesit, Zaman serisi, Mesh hesaplayıcı), raster çözümleme araçları gösterilen dilimde; çekirdek `kentos_formats::multidim` ve
+  `kentos_raster::multidim`; CBS'de Raster › Raster ▾ (ADR 0243);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -516,6 +522,10 @@ python3 scripts/fixtures/remote_cases.py --check   # uzaktan algılamanın sekiz
 python3 scripts/fixtures/remote_processing_cases.py --check; python3 scripts/fixtures/remote_scene.py --check   # uzaktan algılama araçlarının İşlemler durumlarını (fixtures/processing/v1/remote.json, remote.kcad, remote/) ve resimlerin sahnesini (fixtures/interaction/v1/remote.kcad ve remote/: vadinin dört bantlı uydu görüntüsü, iki yıl sonrası, çok bantlı ve pankromatik çifti) denetle (ADR 0242)
 cargo test --release -p kentos-raster --test all remote_timing -- --ignored --nocapture --test-threads=1   # 4096² dört bantlı 16 bit görüntüde sekiz aracın süreleri (ADR 0242 §12; web'inkiler: (cd apps/web && node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs --only remote))
 KENTOS_SHOTS_ONLY=ua-serit,ua-indis,ua-indis-cizim,ua-denetimli,ua-denetimli-cizim,ua-dogruluk,ua-degisim-cizim,ua-birlestirme-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uzaktan algılamanın resimleri, .run/shots/arac-ua-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs remote); ADR 0242)
+python3 scripts/fixtures/multidim_cases.py --check   # mesh ve çok boyutlu veriyi (NetCDF klasik okuma ve yazma, CF ızgaraları ve zamanı, UGRID, 2DM ve DAT'ın UGRID'e çevrilmesi bayt bayt, rasterleştirme kesirlerle, Kesit, Zaman serisi, Mesh hesaplayıcı, 2,9 ve 4,8 GiB'lık başlıklar) KentOS kodu ve libnetcdf olmadan kendi NetCDF yazıcısıyla (netcdf_classic.py) denetle; GDAL'ın netCDF sürücüsü ve QGIS'in MDAL'ıyla çapraz denetim (yoksa atlanır); durumlar fixtures/multidim/v1 (ADR 0243)
+python3 scripts/fixtures/multidim_processing_cases.py --check; python3 scripts/fixtures/multidim_scene.py --check   # Çok boyutlu veri araçlarının İşlemler durumlarını (fixtures/processing/v1/multidim.json, multidim.kcad, multidim/) ve resimlerin sahnesini (fixtures/interaction/v1/multidim.kcad ve multidim/: vadinin saatlik yağışı NetCDF ızgarası, derenin taşkını UGRID mesh'i, kesitler ve istasyonlar) denetle (ADR 0243)
+cargo test --release -p kentos-raster --test all multidim_timing -- --ignored --nocapture --test-threads=1   # 1 000 değişkenli başlık, bir milyon yüzlü mesh'in açılışı ve karoları, zaman adımının ilk görünümü, 2DM ve DAT, Kesit, 3 GB'lık ızgarada Zaman serisi ve Mesh hesaplayıcı; KENTOS_PERF_FILES=klasör dosyaları web için de yazar (ADR 0243 §12; web'inkiler: (cd apps/web && node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs --only multidim))
+KENTOS_SHOTS_ONLY=md-serit,md-ekle,md-mesh-ekle,md-zaman,md-stil,md-kesit,md-seri,md-hesap-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mesh ve çok boyutlu verinin resimleri, .run/shots/arac-md-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs multidim); ADR 0243)
 KENTOS_SHOTS_ONLY=hid-serit,hid-dere-cizim,hid-havza-cizim,hid-guzergah-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # hidrolojinin resimleri, .run/shots/arac-hid-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hydrology); ADR 0235)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
@@ -1470,8 +1480,17 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `remote_cases.py` (46 durum, Brovey GDAL'la bire bir); raster okuyucusunda ExtraSamples'ın 0'ı artık alfa değil (`raster_cases.py`'ye
   GDAL'ın alfa okuması ve iki dosya); İşlemler'in `builtin/remote/`'u iki platformda; ortak durumlar `fixtures/processing/v1/remote.json`
   (`remote_processing_cases.py`, `remoteOf`), resimlerin sahnesi `remote.kcad` (`remote_scene.py`); CBS'nin Raster sekmesinde Uzaktan
-  algılama paneli (altı araç, ikisi ▾'de), sekme 1100 px'e sığsın diye Raster ve vektör ile Taranmış harita tek panelde. Dalda sıradaki
-  `GIS-43`.
+  algılama paneli (altı araç, ikisi ▾'de), sekme 1100 px'e sığsın diye Raster ve vektör ile Taranmış harita tek panelde. `GIS-43` mesh ve
+  çok boyutlu veri ([ADR 0243](docs/adr/0243-mesh-and-multidimensional-data.md); sahibin sözü “o tamamen bitecek”) tek parçada bitti
+  (10 Ekim): sözleşmenin `RasterDataset`'i ve görünüşün `edges`'i, `.kcad` şema 37 (`FORMATS_VERSION` 47); biçim çekirdeğinde
+  `multidim` (`netcdf`, `cf`, `ugrid`, `sms`, `mesh`, `cube`, `series`, `write`; bağımsız başvuru `multidim_cases.py` kendi NetCDF yazıcısı
+  `netcdf_classic.py`'yle, GDAL ve QGIS'in MDAL'ıyla çapraz denetim), raster çekirdeğinde `multidim` (`points`, `profile`, `series`,
+  `calc`); WASM `NetcdfFile`, `smsToUgrid`, `CubeOpening`, `MultidimAnalysis`; İşlemler'in `builtin/multidim/`'i iki platformda,
+  `Files::open_cube`; masaüstünde `rasters/multidim.rs`, web'de `ui/raster/MultidimDialog.ts` ve çözümleme işçisinin birleştirilmiş
+  okumaları (`readRuns`); ortak durumlar `fixtures/processing/v1/multidim.json` (`multidim_processing_cases.py`), resimlerin sahnesi
+  `multidim.kcad` (`multidim_scene.py`). Yolda düzelenler: NetCDF okuyucusu `vsize`'ı işaretli okuyup 2–4 GiB'lık değişkeni reddediyordu;
+  zaman sürgüsünün yazıları çekirdekten ve çubuk kendi genişliğine sığar (ADR 0210'un eki). Dal 10 Ekim'de `main`'e birleşti (sahibin
+  sözü: “Görevin bitince github main ile birleştir ve main üzerine push yap”).
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

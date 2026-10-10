@@ -116,6 +116,7 @@ fn raster_entity(
             srid,
             style,
             opacity: None,
+            dataset: None,
         },
     })
 }

@@ -12937,6 +12937,311 @@
     ]
    }
   },
+  "multidim.profile": {
+   "title": "Kesit",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Değerleri okunan raster: ızgara, NetCDF dilimi ya da mesh.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "lines",
+     "label": "Çizgiler",
+     "description": "Kesitin çizgileri: çizgi, çoklu çizgi, yay, daire, elips ya da eğri; her biri başından yürünür.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "step",
+     "label": "Adım",
+     "description": "Çizginin başından bu aralıklarla ve sonunda nokta; boşsa rasterin hücre boyu.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m",
+      "placeholder": "Hücre boyu"
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Çok bantlı rasterde değerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "draw",
+     "label": "Kotlu çizgi",
+     "description": "Değerler köşe kotu olan çoklu çizgiler yeni katmana eklenir; değersiz noktalar çizgiyi böler.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "multidimData",
+     "text": "Çok boyutlu veri"
+    },
+    "icon": "multidimProfile",
+    "about": "Rasterin değerlerini çizgiler boyunca, Adım aralıklarla okur: tablo ve isteğe bağlı kotlu çizgiler.",
+    "help": [
+     "Her çizginin başından Adım aralıklarla ve sonunda bir nokta; yay, daire, elips ve eğri kendi eğrileriyle yürünür. Değer noktanın düştüğü hücrenin değeridir; mesh rasterde ağdan enterpolasyondur (pikselin değil). NetCDF ve mesh rasterde gösterilen dilim okunur.",
+     "Tablo: Çizgi, Uzaklık (m), koordinatlar ve Değer; panoya kopyalanır ya da CSV olarak kaydedilir. Kotlu çizgi açıksa değerler köşe kotu olan çoklu çizgiler rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KESIT",
+     "PROFIL",
+     "BOYKESIT"
+    ]
+   }
+  },
+  "multidim.series": {
+   "title": "Zaman serisi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Zaman boyutlu veri seti (NetCDF ya da mesh) ya da çok bantlı raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "points",
+     "label": "Noktalar",
+     "description": "Değerlerin okunduğu noktalar; çok noktalı nesnenin her noktası. Sütunun adı noktanın ad özniteliği.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "multidimData",
+     "text": "Çok boyutlu veri"
+    },
+    "icon": "timeSeries",
+    "about": "Noktalardaki değerleri veri setinin her zaman adımında (ya da rasterin her bandında) okur: tablo.",
+    "help": [
+     "Zaman boyutlu veri setinde öbür boyutlar rasterin gösterdiği değerlerde kalır; yalnız noktaların değerleri okunur. Zaman boyutu olmayan çok bantlı rasterde her bant bir satırdır. Değer hücrenin değeridir; mesh rasterde ağdan enterpolasyondur.",
+     "Tablo: satırlar adımlar (Adım ve Zaman, ya da Bant), sütunlar noktalar; panoya kopyalanır ya da CSV olarak kaydedilir. Çizim değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ZAMANSERISI",
+     "ZSERI"
+    ]
+   }
+  },
+  "multidim.meshCalculator": {
+   "title": "Mesh hesaplayıcı",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Mesh ekle ile eklenen mesh raster; ifadenin veri setleri onun ağındandır.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "expression",
+     "label": "İfade",
+     "description": "Veri setleri değişken adlarıyla ya da gösterilen adlarıyla ([Su derinliği]); vektörün adı büyüklüğü.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "value",
+      "placeholder": "[depth] * 2"
+     }
+    },
+    {
+     "name": "summary",
+     "label": "Zaman özeti",
+     "description": "Yok: her zaman adımı yazılır; öbürleri adımları birleştirir (değersizler atlanır).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "none",
+        "label": "Yok"
+       },
+       {
+        "value": "max",
+        "label": "En büyük"
+       },
+       {
+        "value": "min",
+        "label": "En küçük"
+       },
+       {
+        "value": "mean",
+        "label": "Ortalama"
+       },
+       {
+        "value": "sum",
+        "label": "Toplam"
+       }
+      ]
+     }
+    },
+    {
+     "name": "name",
+     "label": "Veri setinin adı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 256,
+      "placeholder": "Hesap"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Boş bırakılırsa kaynağın adının sonuna -hesap eklenir (UGRID NetCDF).",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-hesap.nc"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "multidimData",
+     "text": "Çok boyutlu veri"
+    },
+    "icon": "meshCalculator",
+    "about": "Mesh'in veri setlerinden ifadeyle yeni veri seti yazar: aynı ağda, yeni UGRID dosyasında.",
+    "help": [
+     "İfadenin andığı veri setleri aynı konumda (düğümlerde ya da yüzlerde) olmalı; zamanlı olanlar aynı zaman adımlarında, zamansızlar her adımda geçerlidir; katmanlı veri seti okunmaz. Değersiz girdi değersiz sonuç verir; etkin olmayan yüzün değeri yoktur.",
+     "Örnekler: [depth] * 2; [Su derinliği] + bed; durum eğer depth > 0,5 ise 1 yoksa 0 son. Matematik işlevleri Raster hesaplayıcı'nınkiler.",
+     "Sonuç kaynağın ağı, zamanı (özetle yok olur) ve yeni veri setiyle 32 bit ondalık UGRID NetCDF'tir; web'de 32 MB'a kadar olanı projeye gömülür, büyüğü indirilir. Çizime ekle açıksa onu gösteren mesh raster kaynağın katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "MESHHESAP",
+     "AGHESAP"
+    ]
+   }
+  },
   "model:builtin.parcelSheet": {
    "title": "Parsel ölçü yazıları",
    "rows": [

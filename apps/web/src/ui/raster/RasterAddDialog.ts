@@ -28,13 +28,23 @@ import { zoomToImported } from '../io/zoom';
  * may be embedded instead, its bytes in the project's library.
  */
 export function openRasterAdd(ctx: AppContext): void {
-  void pick(ctx).then((files) => files && new RasterAddDialog(ctx, files));
+  void pick(ctx).then((files) => files && openFiles(ctx, files));
+}
+
+/** The window for the files: a NetCDF's variables and slices in their own (docs/adr/0243 §11). */
+function openFiles(ctx: AppContext, files: File[]): RasterAddDialog | null {
+  if (/\.nc$/i.test(files[0].name)) {
+    void import('./MultidimDialog').then((m) => m.openNetcdf(ctx, files[0]));
+    return null;
+  }
+  return new RasterAddDialog(ctx, files);
 }
 
 /** The files Raster ekle offers: rasters and their world files. */
 export const RASTER_FILES: FileKind = {
-  description: 'Raster (GeoTIFF, TIFF, PNG, JPEG) ve dünya dosyası',
+  description: 'Raster (GeoTIFF, TIFF, PNG, JPEG, NetCDF) ve dünya dosyası',
   accept: {
+    'application/x-netcdf': ['.nc'],
     'image/tiff': ['.tif', '.tiff'],
     'image/png': ['.png'],
     'image/jpeg': ['.jpg', '.jpeg'],
@@ -49,9 +59,9 @@ async function pick(ctx: AppContext): Promise<File[] | null> {
   if (!ctx.doc) return null;
   const files = await ctx.files.pickFilesForImport(RASTER_FILES);
   if (!files?.length) return null;
-  const image = files.find((f) => /\.(tiff?|png|jpe?g)$/i.test(f.name));
+  const image = files.find((f) => /\.(tiff?|png|jpe?g|nc)$/i.test(f.name));
   if (!image) {
-    ctx.log.warn('Seçilen dosyalar arasında GeoTIFF, TIFF, PNG ya da JPEG yok; rasteri dünya dosyasıyla birlikte seçin.');
+    ctx.log.warn('Seçilen dosyalar arasında GeoTIFF, TIFF, PNG, JPEG ya da NetCDF yok; rasteri dünya dosyasıyla birlikte seçin.');
     return null;
   }
   return [image, ...files.filter((f) => f !== image)];
@@ -163,6 +173,11 @@ class RasterAddDialog {
   private async pickAnother(): Promise<void> {
     const files = await pick(this.ctx);
     if (!files || this.closed) return;
+    if (/\.nc$/i.test(files[0].name)) {
+      this.dialog.close();
+      openFiles(this.ctx, files);
+      return;
+    }
     this.files = files;
     this.nameInput.value = stem(files[0].name);
     this.confirmed = false;

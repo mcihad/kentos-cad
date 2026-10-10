@@ -19,6 +19,11 @@ pub const MAX_RASTER_SIDE: u32 = 4_000_000;
 pub const MAX_RASTER_BANDS: u32 = 255;
 /// The longest a linked file's path may be, in letters.
 pub const MAX_RASTER_PATH: usize = 4096;
+/// The longest a NetCDF variable's name may be, in letters (docs/adr/0243 §6).
+pub const MAX_DATASET_NAME: usize = 256;
+/// The most slice dimensions a dataset may have, and values a dimension.
+pub const MAX_DATASET_DIMS: usize = 8;
+pub const MAX_DIM_VALUES: usize = 100_000;
 /// The ramps a single band may be coloured with (docs/adr/0204 §4), in the menu's order.
 pub const RASTER_RAMPS: [&str; 6] = [
     "Gri",
@@ -242,6 +247,10 @@ pub struct RasterStyle {
     #[serde(default, skip_serializing_if = "is_default")]
     #[cfg_attr(feature = "ts", ts(as = "Option<RasterResampling>", optional))]
     pub resampling: RasterResampling,
+    /// A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub edges: Option<String>,
 }
 
 fn is_default<T: Default + PartialEq>(v: &T) -> bool {
@@ -324,6 +333,157 @@ impl RasterStyle {
         if self.nodata.is_some_and(|v| !v.is_finite()) {
             return Some("Nodata değeri sonlu bir sayı olmalı.".to_owned());
         }
+        if let Some(c) = &self.edges
+            && !(c.len() == 7
+                && c.starts_with('#')
+                && c[1..].chars().all(|h| h.is_ascii_hexdigit()))
+        {
+            return Some(format!(
+                "Ağ çizgilerinin rengi #RRGGBB olmalı; “{c}” verildi."
+            ));
+        }
+        None
+    }
+}
+
+/// One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the
+/// index shown, its values (coordinates; moments in milliseconds since 1970
+/// when `time`) and units.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DatasetDim {
+    pub name: String,
+    pub index: u32,
+    pub values: Vec<f64>,
+    /// The values are a CF time axis's moments.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub time: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub units: Option<String>,
+}
+
+/// A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a
+/// UGRID mesh's dataset, one slice of its other dimensions.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RasterDataset {
+    /// The variable's name in the file (a vector's x component).
+    pub variable: String,
+    /// A vector's y component: its magnitude is shown.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub vector: Option<String>,
+    /// The mesh topology it lies on (a UGRID file); absent: a CF grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mesh: Option<String>,
+    /// Its slice dimensions in the file's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DatasetDim>>", optional))]
+    pub dims: Vec<DatasetDim>,
+    /// The step shown follows the time slider (docs/adr/0243 §7).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub follow_time: bool,
+}
+
+impl RasterDataset {
+    /// The dataset as the contract's JSON text (the geometry core carries it so).
+    pub fn to_json_text(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+
+    /// A dataset from the contract's JSON text; none when it is not one.
+    pub fn from_json_text(text: &str) -> Option<RasterDataset> {
+        serde_json::from_str(text).ok()
+    }
+
+    /// The slice: each dimension's index.
+    pub fn slice(&self) -> Vec<u32> {
+        self.dims.iter().map(|d| d.index).collect()
+    }
+
+    /// Its time dimension, when it has one.
+    pub fn time_dim(&self) -> Option<usize> {
+        self.dims.iter().position(|d| d.time)
+    }
+
+    /// The slice shown at moment `t` of the time slider (§7): the time
+    /// dimension's last step at or before `t`; none before its first step.
+    /// Without `followTime` or a moment: the slice as it is.
+    pub fn slice_at(&self, t: Option<f64>) -> Option<Vec<u32>> {
+        let mut out = self.slice();
+        let (Some(k), true, Some(t)) = (self.time_dim(), self.follow_time, t) else {
+            return Some(out);
+        };
+        let values = &self.dims[k].values;
+        let n = values.partition_point(|&v| v <= t);
+        out[k] = u32::try_from(n.checked_sub(1)?).ok()?;
+        Some(out)
+    }
+
+    /// Why the dataset does not make a raster's, in the commands' words; none when it does.
+    pub fn problem(&self) -> Option<String> {
+        let name_ok = |s: &str| {
+            !s.trim().is_empty()
+                && s.chars().count() <= MAX_DATASET_NAME
+                && !s.chars().any(char::is_control)
+        };
+        if !name_ok(&self.variable)
+            || self.vector.as_deref().is_some_and(|v| !name_ok(v))
+            || self.mesh.as_deref().is_some_and(|v| !name_ok(v))
+        {
+            return Some(format!(
+                "Veri setinin değişken adları 1 ile {MAX_DATASET_NAME} harf arasında olmalı ve denetim karakteri içermemeli."
+            ));
+        }
+        if self.dims.len() > MAX_DATASET_DIMS {
+            return Some(format!(
+                "Veri setinin en çok {MAX_DATASET_DIMS} dilim boyutu olabilir."
+            ));
+        }
+        for d in &self.dims {
+            if !name_ok(&d.name) {
+                return Some("Dilim boyutunun adı boş olamaz.".into());
+            }
+            if d.values.is_empty()
+                || d.values.len() > MAX_DIM_VALUES
+                || !d.values.iter().all(|v| v.is_finite())
+            {
+                return Some(format!(
+                    "“{}” boyutunun 1 ile {MAX_DIM_VALUES} arasında sonlu değeri olmalı.",
+                    d.name
+                ));
+            }
+            if d.index as usize >= d.values.len() {
+                return Some(format!(
+                    "“{}” boyutunun {} değeri var; gösterilen {}. değer yok.",
+                    d.name,
+                    d.values.len(),
+                    u64::from(d.index) + 1
+                ));
+            }
+            if d.time && d.values.windows(2).any(|w| w[1] < w[0]) {
+                return Some(format!(
+                    "“{}” zaman boyutunun değerleri azalmamalı.",
+                    d.name
+                ));
+            }
+        }
+        if self.dims.iter().filter(|d| d.time).count() > 1 {
+            return Some("Veri setinin en çok bir zaman boyutu olabilir.".into());
+        }
+        if self.follow_time && self.time_dim().is_none() {
+            return Some("Zaman sürgüsünü izlemek için veri setinin zaman boyutu olmalı.".into());
+        }
         None
     }
 }
@@ -380,6 +540,10 @@ pub struct RasterFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub opacity: Option<f64>,
+    /// A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dataset: Option<RasterDataset>,
 }
 
 impl RasterFields {
@@ -479,6 +643,17 @@ impl RasterFields {
         }
         if let Some(p) = self.style.problem(self.bands) {
             return Some(p);
+        }
+        if let Some(d) = &self.dataset {
+            if let Some(p) = d.problem() {
+                return Some(p);
+            }
+            if self.bands != 1 {
+                return Some("Veri setini gösteren rasterin tek bandı olur.".into());
+            }
+        }
+        if self.style.edges.is_some() && self.dataset.as_ref().is_none_or(|d| d.mesh.is_none()) {
+            return Some("Ağ çizgileri yalnız mesh'te çizilir.".into());
         }
         if let Some(o) = self.opacity
             && !(o.is_finite() && (MIN_RASTER_OPACITY..=MAX_RASTER_OPACITY).contains(&o))

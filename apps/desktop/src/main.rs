@@ -156,6 +156,8 @@ mod distance_scenes;
 mod hydrology_scenes;
 #[cfg(test)]
 mod interpolation_scenes;
+#[cfg(test)]
+mod multidim_scenes;
 mod networks;
 #[cfg(test)]
 mod raster_ops_scenes;

@@ -1,0 +1,175 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Çok boyutlu veri",
+  "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "iklim",
+      "name": "Sıcaklık (ERA5)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#5B6B7F",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    },
+    {
+      "id": "taskin",
+      "name": "Taşkın modeli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3B6BAF",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "taskin",
+  "entities": [
+    {
+      "kind": "raster",
+      "id": 1,
+      "layerId": "iklim",
+      "attrs": {},
+      "affine": [
+        31.875,
+        0.25,
+        0.0,
+        36.625,
+        0.0,
+        -0.25
+      ],
+      "width": 4,
+      "height": 3,
+      "bands": 1,
+      "sample": "f32",
+      "file": "iklim/t2m.nc",
+      "srid": 4326,
+      "style": {
+        "render": "ramp",
+        "bands": [
+          1
+        ],
+        "stretch": "minMax",
+        "ramp": "Sıcaklık"
+      },
+      "dataset": {
+        "variable": "t2m",
+        "dims": [
+          {
+            "name": "time",
+            "index": 1,
+            "values": [
+              1714521600000.0,
+              1714543200000.0,
+              1714566600000.0
+            ],
+            "time": true
+          },
+          {
+            "name": "level",
+            "index": 0,
+            "values": [
+              850.0,
+              500.0
+            ],
+            "units": "hPa"
+          }
+        ],
+        "followTime": true
+      }
+    },
+    {
+      "kind": "raster",
+      "id": 2,
+      "layerId": "taskin",
+      "attrs": {},
+      "affine": [
+        500000.0,
+        0.125,
+        0.0,
+        4420040.0,
+        0.0,
+        -0.125
+      ],
+      "width": 320,
+      "height": 320,
+      "bands": 1,
+      "sample": "f32",
+      "file": "taskin/sonuc.nc",
+      "srid": 5254,
+      "style": {
+        "render": "ramp",
+        "bands": [
+          1
+        ],
+        "stretch": "manual",
+        "min": 0.0,
+        "max": 3.0,
+        "ramp": "Viridis",
+        "edges": "#203040"
+      },
+      "opacity": 0.8,
+      "dataset": {
+        "variable": "ucx",
+        "vector": "ucy",
+        "mesh": "mesh",
+        "dims": [
+          {
+            "name": "time",
+            "index": 2,
+            "values": [
+              1714543200000.0,
+              1714545000000.0,
+              1714546800000.0
+            ],
+            "time": true
+          }
+        ]
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3701",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3702"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

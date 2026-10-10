@@ -10,9 +10,10 @@
 //! the same file (apps/web/src/processing/surface.test.ts).
 
 use kentos_contracts::{CloudSource, RasterFields};
+use kentos_formats::multidim::cube::{Cube, Part, Want};
 use kentos_formats::raster::source::{Reader, open_bytes};
 use kentos_processing::files::{
-    Beside, CloudRead, RASTER_READER_BUDGET, RasterOpen, Sink, with_extension,
+    Beside, CloudRead, CubeOpen, RASTER_READER_BUDGET, RasterOpen, Sink, with_extension,
 };
 
 use super::*;
@@ -94,7 +95,14 @@ impl Files for FixtureFiles {
             .rasters
             .get(name)
             .ok_or_else(|| format!("{name}: not among the cases' rasters"))?;
-        let reader = open_bytes(bytes, None, RASTER_READER_BUDGET).map_err(|e| e.0)?;
+        // A NetCDF raster's slice, as the desktop opens it (docs/adr/0243 §5).
+        let reader = match Part::of(raster) {
+            Some(part) => {
+                let mut cube = cube_of(bytes, &part)?;
+                cube.open(&part, RASTER_READER_BUDGET).map_err(|e| e.0)?
+            }
+            None => open_bytes(bytes, None, RASTER_READER_BUDGET).map_err(|e| e.0)?,
+        };
         Ok(RasterOpen {
             reader,
             block: Box::new(move |n| {
@@ -103,6 +111,32 @@ impl Files for FixtureFiles {
             jpeg: Box::new(|_| Err("no JPEG here".into())),
         })
     }
+
+    fn open_cube(&self, raster: &RasterFields) -> Result<CubeOpen<'_>, String> {
+        let name = raster.file.as_deref().ok_or("a linked raster")?;
+        let bytes = self
+            .rasters
+            .get(name)
+            .ok_or_else(|| format!("{name}: not among the cases' rasters"))?;
+        let part = Part::of(raster).ok_or("not a NetCDF raster")?;
+        Ok(CubeOpen {
+            cube: cube_of(bytes, &part)?,
+            part,
+            read: Box::new(move |at, len| Ok(bytes[at as usize..(at + len) as usize].to_vec())),
+        })
+    }
+}
+
+/// A NetCDF file's cube with what `part` needs read.
+fn cube_of(bytes: &[u8], part: &Part) -> Result<Cube, String> {
+    let mut cube = Cube::from_bytes(bytes).map_err(|e| e.0)?;
+    for n in cube.needs(Want::Part(part)) {
+        cube.put(
+            n.offset,
+            bytes[n.offset as usize..(n.offset + n.len) as usize].to_vec(),
+        );
+    }
+    Ok(cube)
 }
 
 /// The units in the last place between two 32-bit values (NaN only with NaN).
@@ -246,6 +280,24 @@ fn raster_cases(name: &str, least: usize) {
         found.extend(placed);
         let id = c["id"].as_str().unwrap_or("?");
         let kept = written.lock().unwrap_or_else(PoisonError::into_inner);
+        // Mesh hesaplayıcı's file: the reference's UGRID writer's byte for byte (docs/adr/0243 §10).
+        let multidim = c["expect"]["multidimOf"]
+            .as_object()
+            .cloned()
+            .unwrap_or_default();
+        for (name, of) in &multidim {
+            let want =
+                surface_fixture(&format!("../../multidim/v1/files/{}", of.as_str().unwrap()));
+            match kept.get(name) {
+                Some(got) if *got == want => {}
+                Some(got) => found.push(format!(
+                    "{id}: “{name}” differs from {of} ({} bytes for {})",
+                    got.len(),
+                    want.len()
+                )),
+                None => found.push(format!("{id}: “{name}” was not written")),
+            }
+        }
         let mut wanted: Vec<(String, Value, &str)> = Vec::new();
         for (key, kind) in [
             ("rasterOf", "terrain"),
@@ -261,7 +313,7 @@ fn raster_cases(name: &str, least: usize) {
                 wanted.push((name, of, kind));
             }
         }
-        if kept.len() != wanted.len() {
+        if kept.len() != wanted.len() + multidim.len() {
             found.push(format!(
                 "{id}: written {:?}, expected {:?}",
                 kept.keys().collect::<Vec<_>>(),
@@ -475,6 +527,13 @@ fn the_distance_cases_do_what_they_say() {
 #[test]
 fn the_suitability_cases_do_what_they_say() {
     raster_cases("suitability.json", 21);
+}
+
+/// Çok boyutlu veri's shared cases (fixtures/processing/v1/multidim.json,
+/// scripts/fixtures/multidim_processing_cases.py; docs/adr/0243).
+#[test]
+fn the_multidim_cases_do_what_they_say() {
+    raster_cases("multidim.json", 9);
 }
 
 /// Uzaktan algılama's shared cases (fixtures/processing/v1/remote.json,

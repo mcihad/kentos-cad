@@ -48,4 +48,6 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
     icon: 'spectralIndex',
     description: 'Bant birleştirme, spektral indisler, sınıflandırma, doğruluk, değişim ve görüntü birleştirme',
   },
+  // docs/adr/0243: NetCDF slices and meshes read along lines, at points over time, and worked into new datasets.
+  { id: 'multidim', label: 'Çok boyutlu veri', icon: 'multidimData', description: 'Kesit, zaman serisi ve mesh hesaplayıcı' },
 ];

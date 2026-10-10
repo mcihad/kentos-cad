@@ -1,4 +1,5 @@
 import type { LabelPin } from '../contracts/generated/LabelPin';
+import type { RasterDataset } from '../contracts/generated/RasterDataset';
 import { op } from '../wasm/core';
 import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
@@ -600,7 +601,13 @@ export interface RasterStyle {
   /** The value shown as nothing, in place of the file's. */
   nodata?: number;
   resampling?: 'bilinear' | 'nearest';
+  /** A mesh's lines drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5). */
+  edges?: string;
 }
+
+/** A NetCDF variable a raster shows and its slice (docs/adr/0243 §6; the contract's `RasterDataset`). */
+export type { DatasetDim } from '../contracts/generated/DatasetDim';
+export type { RasterDataset };
 
 /**
  * A raster (docs/adr/0204 §2): an orthophoto, a scanned sheet or an elevation model whose pixels lie where `affine`
@@ -622,6 +629,8 @@ export interface RasterEntity extends EntityBase {
   srid: number;
   style: RasterStyle;
   opacity?: number;
+  /** A NetCDF file's variable and slice it shows (docs/adr/0243 §6). */
+  dataset?: RasterDataset;
 }
 
 /** A point cloud file's format (docs/adr/0207 §2). */

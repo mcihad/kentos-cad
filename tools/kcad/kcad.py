@@ -134,6 +134,13 @@ SCHEMA_WITH_FILTERS = 35
 # Schema 36: schema 35 and the label engine (docs/adr/0212 §2): a label style's engine fields, a layer style's
 # `labels`, an object's `labelPins`.
 SCHEMA_WITH_LABELS = 36
+# Schema 37: schema 36 and multidimensional rasters (docs/adr/0243 §6): a raster's `dataset` (a NetCDF variable and its
+# slice) and its look's `edges` (a mesh's lines).
+SCHEMA_WITH_MULTIDIM = 37
+# A dataset's bounds (kentos_contracts::raster).
+MAX_DATASET_NAME = 256
+MAX_DATASET_DIMS = 8
+MAX_DIM_VALUES = 100_000
 # The label engine's bounds (kentos_contracts::labels).
 LABEL_CLASSES_MAX = 64
 LABEL_EXPRESSION_MAX = 10_000
@@ -262,7 +269,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_MULTIDIM)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1488,6 +1495,7 @@ class _Schema:
         self.images = version >= SCHEMA_WITH_IMAGES
         self.rasters = version >= SCHEMA_WITH_RASTERS
         self.point_clouds = version >= SCHEMA_WITH_POINT_CLOUDS
+        self.multidim = version >= SCHEMA_WITH_MULTIDIM
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2785,6 +2793,50 @@ class _Schema:
                 "zFactor": (self.float, False),
                 "nodata": (self.float, False),
                 "resampling": (resampling, False),
+                # Schema 37 (docs/adr/0243 §5): a mesh's lines.
+                **({"edges": (self.text, False)} if self.multidim else {}),
+            }
+        )(v)
+
+    def raster_dataset(self, v):
+        """A raster's NetCDF variable and slice (§6.6, docs/adr/0243 §6): `variable`; `vector`, `mesh`, `dims` and
+        `followTime` only when given (no empty list, no false)."""
+        def dims(v):
+            d = self.array(self.dataset_dim)(v)
+            if not d:
+                self.fail("bad_value", "boş dilim boyutu listesi yazılmaz")
+            return d
+
+        def flag(words):
+            def check(v):
+                if self.bool(v) is not True:
+                    self.fail("bad_value", words)
+                return True
+            return check
+
+        return self.fields(
+            {
+                "variable": (self.text, True),
+                "vector": (self.text, False),
+                "mesh": (self.text, False),
+                "dims": (dims, False),
+                "followTime": (flag("followTime false yazılmaz"), False),
+            }
+        )(v)
+
+    def dataset_dim(self, v):
+        def flag(v):
+            if self.bool(v) is not True:
+                self.fail("bad_value", "time false yazılmaz")
+            return True
+
+        return self.fields(
+            {
+                "name": (self.text, True),
+                "index": (self.uint(32), True),
+                "values": (self.array(self.float), True),
+                "time": (flag, False),
+                "units": (self.text, False),
             }
         )(v)
 
@@ -2828,9 +2880,45 @@ class _Schema:
         az, alt, z = st.get("azimuth", 315.0), st.get("altitude", 45.0), st.get("zFactor", 1.0)
         if not (0.0 <= az <= 360.0 and 0.0 <= alt <= 90.0 and z > 0.0):
             self.fail("bad_value", "Gölgeli kabartmanın ışığı 0–360° doğrultudan, 0–90° yükseklikten gelmeli; yükseklik çarpanı sıfırdan büyük olmalı.")
+        if "edges" in st:
+            c = st["edges"]
+            if not (len(c) == 7 and c[0] == "#" and all(ch in "0123456789abcdefABCDEF" for ch in c[1:])):
+                self.fail("bad_value", f"Ağ çizgilerinin rengi #RRGGBB olmalı; “{c}” verildi.")
+        d = r.get("dataset")
+        if d is not None:
+            self.dataset_rules(d)
+            if r["bands"] != 1:
+                self.fail("bad_value", "Veri setini gösteren rasterin tek bandı olur.")
+        if "edges" in st and (d is None or "mesh" not in d):
+            self.fail("bad_value", "Ağ çizgileri yalnız mesh'te çizilir.")
         o = r.get("opacity")
         if o is not None and not (MIN_RASTER_OPACITY <= o <= MAX_RASTER_OPACITY):
             self.fail("bad_value", f"Rasterin donukluğu {MIN_RASTER_OPACITY} ile {MAX_RASTER_OPACITY} arasında olmalı; {o} verildi.")
+
+    def dataset_rules(self, d):
+        """The contract's `RasterDataset::problem` (kentos_contracts::raster), in its order."""
+        def name_ok(t):
+            return t.strip() != "" and len(t) <= MAX_DATASET_NAME and not any(unicodedata.category(ch) == "Cc" for ch in t)
+
+        if not name_ok(d["variable"]) or ("vector" in d and not name_ok(d["vector"])) or ("mesh" in d and not name_ok(d["mesh"])):
+            self.fail("bad_value", f"Veri setinin değişken adları 1 ile {MAX_DATASET_NAME} harf arasında olmalı ve denetim karakteri içermemeli.")
+        dims = d.get("dims", [])
+        if len(dims) > MAX_DATASET_DIMS:
+            self.fail("bad_value", f"Veri setinin en çok {MAX_DATASET_DIMS} dilim boyutu olabilir.")
+        for dim in dims:
+            if not name_ok(dim["name"]):
+                self.fail("bad_value", "Dilim boyutunun adı boş olamaz.")
+            vals = dim["values"]
+            if not vals or len(vals) > MAX_DIM_VALUES or not all(math.isfinite(x) for x in vals):
+                self.fail("bad_value", f"“{dim['name']}” boyutunun 1 ile {MAX_DIM_VALUES} arasında sonlu değeri olmalı.")
+            if dim["index"] >= len(vals):
+                self.fail("bad_value", f"“{dim['name']}” boyutunun {len(vals)} değeri var; gösterilen {dim['index'] + 1}. değer yok.")
+            if dim.get("time") and any(vals[k + 1] < vals[k] for k in range(len(vals) - 1)):
+                self.fail("bad_value", f"“{dim['name']}” zaman boyutunun değerleri azalmamalı.")
+        if sum(1 for dim in dims if dim.get("time")) > 1:
+            self.fail("bad_value", "Veri setinin en çok bir zaman boyutu olabilir.")
+        if d.get("followTime") and not any(dim.get("time") for dim in dims):
+            self.fail("bad_value", "Zaman sürgüsünü izlemek için veri setinin zaman boyutu olmalı.")
 
     def url_rule(self, u):
         """The contract's `url_problem`: an HTTP or HTTPS address, its letters few and printable."""
@@ -3401,6 +3489,8 @@ ENTITY_KINDS = {
         "srid": (s.uint(32), True),
         "style": (s.raster_style, True),
         "opacity": (s.float, False),
+        # Schema 37 (docs/adr/0243 §6): a NetCDF variable and its slice.
+        **({"dataset": (s.raster_dataset, False)} if s.multidim else {}),
     },
     # Schema 31 (docs/adr/0207 §3): a point cloud's files, their bounds and points together, the files' system, its
     # look and opacity; only in the drawing.

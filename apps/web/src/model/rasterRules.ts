@@ -7,7 +7,7 @@
  * the command's to check (`unknown_asset`).
  */
 
-import type { RasterStyle } from './entities';
+import type { RasterDataset, RasterStyle } from './entities';
 
 export const MIN_RASTER_OPACITY = 0.1;
 export const MAX_RASTER_OPACITY = 1;
@@ -35,6 +35,8 @@ export interface RasterShape {
   readonly url?: string | null;
   readonly style: RasterStyle;
   readonly opacity?: number | null;
+  /** A NetCDF variable's slice (docs/adr/0243 §6). */
+  readonly dataset?: RasterDataset | null;
 }
 
 // Unicode's control letters (Rust's `char::is_control`).
@@ -60,6 +62,31 @@ export function rasterStyleProblem(st: RasterStyle, bands: number): string | nul
   const lit = Number.isFinite(az) && az >= 0 && az <= 360 && Number.isFinite(alt) && alt >= 0 && alt <= 90 && Number.isFinite(z) && z > 0;
   if (!lit) return 'Gölgeli kabartmanın ışığı 0–360° doğrultudan, 0–90° yükseklikten gelmeli; yükseklik çarpanı sıfırdan büyük olmalı.';
   if (st.nodata != null && !Number.isFinite(st.nodata)) return 'Nodata değeri sonlu bir sayı olmalı.';
+  if (st.edges != null && !/^#[0-9a-fA-F]{6}$/.test(st.edges)) return `Ağ çizgilerinin rengi #RRGGBB olmalı; “${st.edges}” verildi.`;
+  return null;
+}
+
+/** A NetCDF variable's name, a mesh's and a dimension's: their longest (docs/adr/0243 §6). */
+export const MAX_DATASET_NAME = 256;
+export const MAX_DATASET_DIMS = 8;
+export const MAX_DIM_VALUES = 100_000;
+
+/** Why a dataset does not make a raster's (the contract's `RasterDataset::problem`); null when it does. */
+export function datasetProblem(d: RasterDataset): string | null {
+  const nameOk = (s: string) => s.trim() !== '' && [...s].length <= MAX_DATASET_NAME && !CONTROL.test(s);
+  if (!nameOk(d.variable) || (d.vector != null && !nameOk(d.vector)) || (d.mesh != null && !nameOk(d.mesh)))
+    return `Veri setinin değişken adları 1 ile ${MAX_DATASET_NAME} harf arasında olmalı ve denetim karakteri içermemeli.`;
+  const dims = d.dims ?? [];
+  if (dims.length > MAX_DATASET_DIMS) return `Veri setinin en çok ${MAX_DATASET_DIMS} dilim boyutu olabilir.`;
+  for (const x of dims) {
+    if (!nameOk(x.name)) return 'Dilim boyutunun adı boş olamaz.';
+    if (!x.values.length || x.values.length > MAX_DIM_VALUES || !x.values.every(Number.isFinite))
+      return `“${x.name}” boyutunun 1 ile ${MAX_DIM_VALUES} arasında sonlu değeri olmalı.`;
+    if (x.index >= x.values.length) return `“${x.name}” boyutunun ${x.values.length} değeri var; gösterilen ${x.index + 1}. değer yok.`;
+    if (x.time && x.values.some((v, k) => k > 0 && v < x.values[k - 1])) return `“${x.name}” zaman boyutunun değerleri azalmamalı.`;
+  }
+  if (dims.filter((x) => x.time).length > 1) return 'Veri setinin en çok bir zaman boyutu olabilir.';
+  if (d.followTime && !dims.some((x) => x.time)) return 'Zaman sürgüsünü izlemek için veri setinin zaman boyutu olmalı.';
   return null;
 }
 
@@ -95,6 +122,12 @@ export function rasterProblem(g: RasterShape): string | null {
     return `Bağlı dosyanın yolu en çok ${MAX_RASTER_PATH} harf olmalı ve denetim karakteri içermemeli.`;
   const style = rasterStyleProblem(g.style, g.bands);
   if (style) return style;
+  if (g.dataset) {
+    const d = datasetProblem(g.dataset);
+    if (d) return d;
+    if (g.bands !== 1) return 'Veri setini gösteren rasterin tek bandı olur.';
+  }
+  if (g.style.edges != null && !g.dataset?.mesh) return "Ağ çizgileri yalnız mesh'te çizilir.";
   const o = g.opacity;
   if (o != null && !(Number.isFinite(o) && o >= MIN_RASTER_OPACITY && o <= MAX_RASTER_OPACITY))
     return `Rasterin donukluğu ${MIN_RASTER_OPACITY} ile ${MAX_RASTER_OPACITY} arasında olmalı; ${o} verildi.`;
@@ -113,6 +146,30 @@ export function cleanRasterStyle(st: RasterStyle): RasterStyle {
   if (out.stretch === 'none') delete out.stretch;
   if (out.invert !== true) delete out.invert;
   if (out.resampling === 'bilinear') delete out.resampling;
-  for (const k of ['min', 'max', 'ramp', 'azimuth', 'altitude', 'zFactor', 'nodata'] as const) if (out[k] == null) delete out[k];
+  for (const k of ['min', 'max', 'ramp', 'azimuth', 'altitude', 'zFactor', 'nodata', 'edges'] as const) if (out[k] == null) delete out[k];
   return out;
+}
+
+/**
+ * What of its NetCDF file a raster shows (docs/adr/0243 §5), as its scene key carries it after `#` (the style core's
+ * `raster_key`, the same JSON): its variable, vector, mesh, the slice in the drawing and, for a mesh, its own grid; null
+ * for a raster without a dataset.
+ */
+export function rasterPart(r: Pick<RasterShape, 'affine' | 'width' | 'height' | 'dataset'>): string | null {
+  const d = r.dataset;
+  if (!d) return null;
+  return JSON.stringify({
+    variable: d.variable,
+    ...(d.vector ? { vector: d.vector } : {}),
+    ...(d.mesh ? { mesh: d.mesh } : {}),
+    slice: (d.dims ?? []).map((x) => x.index),
+    ...(d.mesh ? { affine: [...r.affine], size: [r.width, r.height] } : {}),
+  });
+}
+
+/** A raster's scene key (`asset:`, `file:` or `url:`, a NetCDF's dataset after `#`), as the style core makes it. */
+export function rasterKey(r: RasterShape): string {
+  const base = r.asset ? `asset:${r.asset}` : r.file != null ? `file:${r.file}` : `url:${r.url ?? ''}`;
+  const part = rasterPart(r);
+  return part ? `${base}#${part}` : base;
 }

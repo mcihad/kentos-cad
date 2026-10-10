@@ -32,6 +32,18 @@ pub struct Layout {
     pub offsets: Vec<u64>,
     pub counts: Vec<u64>,
     pub jpeg_tables: Option<Vec<u8>>,
+    /// A NetCDF variable's blocks (docs/adr/0243 §5): their stored type,
+    /// unpacking and whether their rows run south to north.
+    pub cube: Option<CubeDecode>,
+}
+
+/// How a NetCDF block's bytes become samples: big-endian values of the
+/// stored type, unpacked (packed values, fills and the invalid made
+/// nothing), the rows turned round when the file runs them south to north.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CubeDecode {
+    pub unpack: crate::multidim::cf::Unpack,
+    pub flip: bool,
 }
 
 impl Layout {
@@ -48,6 +60,10 @@ impl Layout {
 
     /// The bytes its decoded block `index` takes.
     fn expected(&self, index: u32) -> usize {
+        if let Some(c) = &self.cube {
+            let rows = self.rows(index % self.down.max(1));
+            return self.block_w as usize * rows as usize * c.unpack.raw.size() as usize;
+        }
         let per_plane = self.across * self.down;
         let by = (index % per_plane) / self.across;
         let rows = if self.across == 1 && self.block_w == self.width {
@@ -200,12 +216,16 @@ pub fn layout(file: u8, ifd_index: usize, ifd: &Ifd, little: bool) -> Result<Lay
         offsets: ifd.offsets.clone(),
         counts: ifd.counts.clone(),
         jpeg_tables: ifd.jpeg_tables.clone(),
+        cube: None,
     })
 }
 
 /// A block's bytes made samples, or its JPEG stream.
 pub fn decode_block(l: &Layout, index: u32, bytes: &[u8]) -> Result<Put2, RasterError> {
     let expected = l.expected(index);
+    if let Some(c) = &l.cube {
+        return Ok(Put2::Samples(decode_cube(l, c, index, bytes, expected)));
+    }
     let mut buf = match l.compression {
         1 => {
             let mut v = bytes
@@ -256,6 +276,29 @@ pub fn decode_block(l: &Layout, index: u32, bytes: &[u8]) -> Result<Put2, Raster
         }
     }
     Ok(Put2::Samples(samples))
+}
+
+/// A NetCDF block's samples (`expected` stored bytes; short bytes read as nothing).
+fn decode_cube(l: &Layout, c: &CubeDecode, index: u32, bytes: &[u8], expected: usize) -> Samples {
+    let mut raw = Vec::new();
+    crate::multidim::netcdf::decode(
+        c.unpack.raw,
+        bytes.get(..expected.min(bytes.len())).unwrap_or(&[]),
+        &mut raw,
+    );
+    let want = expected / c.unpack.raw.size() as usize;
+    raw.resize(want, f64::NAN);
+    let w = l.block_w as usize;
+    let rows = want / w.max(1);
+    let mut out = Samples::filled(l.sample, want, 0.0);
+    let _ = index;
+    for r in 0..rows {
+        let from = if c.flip { rows - 1 - r } else { r };
+        for i in 0..w {
+            out.set(r * w + i, c.unpack.value(raw[from * w + i]));
+        }
+    }
+    out
 }
 
 /// A decoded block: samples, or a JPEG stream still to decode.

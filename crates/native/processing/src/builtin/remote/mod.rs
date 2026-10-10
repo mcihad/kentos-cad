@@ -111,6 +111,7 @@ fn raster_entity(ran: &Ran, path: &str, srid: u32, layer: &str) -> Result<Entity
             srid,
             style,
             opacity: None,
+            dataset: None,
         },
     }))
 }

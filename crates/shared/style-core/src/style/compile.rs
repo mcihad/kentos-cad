@@ -76,6 +76,9 @@ pub struct Env<'a> {
     /// of drawn sizes (widths, dashes, marker and hatch sizes) become CSS px for the shader, so they stay
     /// the same while the view zooms; lengths that place geometry still follow `plot_scale` (the view's).
     pub screen: bool,
+    /// The time slider's moment (ms since 1970) a raster following it shows (docs/adr/0243 §7): an
+    /// instant window's moment, a ranged one's end (exclusive); none while the slider is closed.
+    pub moment: Option<f64>,
 }
 
 // ── Data-defined values ────────────────────────────────────────────────

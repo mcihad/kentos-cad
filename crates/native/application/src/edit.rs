@@ -1004,14 +1004,14 @@ pub fn has_cloud(doc: &Document, id: &str) -> bool {
     })
 }
 
-/// Whether the project's library has the GeoTIFF, PNG or JPEG raster `id` (docs/adr/0204 §2).
+/// Whether the project's library has the GeoTIFF, PNG, JPEG or NetCDF (docs/adr/0243) raster `id` (docs/adr/0204 §2).
 pub fn has_raster(doc: &Document, id: &str) -> bool {
     doc.styles().items.iter().any(|it| {
         it.get("kind").and_then(|k| k.as_str()) == Some("asset")
             && it.get("id").and_then(|k| k.as_str()) == Some(id)
             && matches!(
                 it.get("format").and_then(|k| k.as_str()),
-                Some("tiff" | "png" | "jpeg")
+                Some("tiff" | "png" | "jpeg" | "netcdf")
             )
     })
 }
@@ -1061,7 +1061,7 @@ pub(crate) fn check_blocks<'a>(
             return Err(Stop::Failed(error(
                 codes::UNKNOWN_ASSET,
                 format!(
-                    "“{asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG ya da JPEG'in kimliğini verin."
+                    "“{asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG, JPEG ya da NetCDF'in kimliğini verin."
                 ),
                 Some(format!("{list}[{i}].geometry.asset")),
             )));

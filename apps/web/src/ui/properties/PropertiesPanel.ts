@@ -20,6 +20,7 @@ import { cornerRows, holeRows } from './pathRows';
 import { dimensionRows } from './dimensionRows';
 import { hatchRows } from './hatchRows';
 import { imageRows } from './imageRows';
+import { rasterService } from '../../render/rasterService';
 import { rasterRows } from './rasterRows';
 import { leaderRows } from './leaderRows';
 import { textRows } from './textRows';
@@ -53,6 +54,8 @@ export class PropertiesPanel extends Panel {
     this.d.add(watchAll([ctx.selection.ids, ctx.doc.layers.version, ctx.doc.layers.active, ctx.doc.settings.changed, ctx.format.changed, chosenLayer], refresh));
     // A map service failed or came back: the layer's Durum, when its section is on screen.
     this.d.add(serviceHub().listen(() => this.empty.hidden || this.schedule()));
+    // A mesh's node and face count arrives from its raster's worker (docs/adr/0243 §11).
+    this.d.add(rasterService().listenFacts(() => this.empty.hidden || this.schedule()));
     this.d.add(ctx.doc.events.on('changed', refresh));
     this.d.add(ctx.doc.events.on('attrs', refresh));
     this.render();

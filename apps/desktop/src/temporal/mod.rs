@@ -77,6 +77,38 @@ impl Default for Slider {
 
 /// The reason the slider does not open over a drawing without temporal objects.
 pub const NOTHING: &str = "Görünen zamansal katmanlarda zamanı olan nesne yok. Bir katmana Zaman ayarları’ndan başlangıç alanı verin.";
+
+/// The shown rasters that follow the slider (docs/adr/0243 §7): their count and
+/// their steps' range, joined to the temporal objects' (`count`, `extent`).
+pub fn with_rasters(
+    (count, extent): (usize, Option<(f64, f64)>),
+    model: &kentos_domain::Document,
+) -> (usize, Option<(f64, f64)>) {
+    let layers = model.layers();
+    let mut out = (count, extent);
+    for e in model.entities() {
+        let kentos_contracts::Entity::Raster(r) = e else {
+            continue;
+        };
+        let Some(d) = r.raster.dataset.as_ref().filter(|d| d.follow_time) else {
+            continue;
+        };
+        let Some(k) = d.time_dim() else { continue };
+        if !layers.is_visible(&e.base().layer_id) {
+            continue;
+        }
+        let v = &d.dims[k].values;
+        let (Some(&a), Some(&b)) = (v.first(), v.last()) else {
+            continue;
+        };
+        out.0 += 1;
+        out.1 = Some(match out.1 {
+            Some((lo, hi)) => (lo.min(a), hi.max(b)),
+            None => (a, b),
+        });
+    }
+    out
+}
 /// The reason a step is refused.
 pub const TOO_MANY: &str =
     "Zaman aralığı bu adımla 100 000 konumdan fazla; daha büyük bir adım seçin.";
@@ -103,17 +135,18 @@ impl Slider {
         time::show(self.moment_at(k), self.step.unit)
     }
 
-    /// What the position shows: its date, or a period's two.
+    /// What the position shows: its date, or a period's two (its date once
+    /// when inside one day).
     pub fn label(&self) -> String {
-        match self.window() {
-            Some(Window::Instant(a)) => time::show(a, self.step.unit),
-            Some(Window::Range(a, b)) => format!(
-                "{} – {}",
-                time::show(a, self.step.unit),
-                time::show(b, self.step.unit)
-            ),
-            None => String::new(),
-        }
+        self.window()
+            .map(|w| time::show_window(&w, self.step.unit))
+            .unwrap_or_default()
+    }
+
+    /// The slider's ends: their clocks when both lie in one day under a
+    /// day's step, else their dates (docs/adr/0210 §5).
+    pub fn ends(&self) -> [String; 2] {
+        time::show_ends(self.moment_at(0), self.moment_at(self.last), self.step.unit)
     }
 
     /// The positions for the range and the step; the position at `at`'s
@@ -292,7 +325,7 @@ impl App {
     pub(crate) fn time_show(&mut self) -> Option<&'static str> {
         let doc = self.document.as_ref()?;
         self.spatial.sync(&doc.model);
-        let (count, extent) = self.spatial.time_summary();
+        let (count, extent) = with_rasters(self.spatial.time_summary(), &doc.model);
         let (true, Some(extent)) = (count > 0, extent) else {
             return Some(NOTHING);
         };
@@ -361,7 +394,11 @@ impl App {
         if !self.time.slider.open {
             return;
         }
-        let (count, extent) = self.spatial.time_summary();
+        let summary = self.spatial.time_summary();
+        let (count, extent) = match self.document.as_ref() {
+            Some(doc) => with_rasters(summary, &doc.model),
+            None => summary,
+        };
         let (true, Some(extent)) = (count > 0, extent) else {
             self.time_close();
             return;

@@ -29,6 +29,8 @@ use kentos_raster::contours::Line;
 use kentos_raster::job::{Finished, Job, READER_BUDGET, Spec};
 use wasm_bindgen::prelude::*;
 
+mod multidim;
+
 fn fail(e: impl std::fmt::Display) -> JsError {
     JsError::new(&e.to_string())
 }

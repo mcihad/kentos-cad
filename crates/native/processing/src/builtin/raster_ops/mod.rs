@@ -259,6 +259,7 @@ pub fn run_raster_op(
                         srid: first.srid,
                         style,
                         opacity: None,
+                        dataset: None,
                     },
                 })
             })

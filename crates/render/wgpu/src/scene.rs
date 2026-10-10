@@ -1226,20 +1226,25 @@ fn shape(entity: &Entity) -> Shape {
             opacity: i.image.opacity,
         },
         // A raster (docs/adr/0204): its frame, the raster pass's paint.
-        Entity::Raster(r) => Shape::Raster {
-            affine: r.raster.affine,
-            width: f64::from(r.raster.width),
-            height: f64::from(r.raster.height),
-            bands: f64::from(r.raster.bands),
-            sample: r.raster.sample.name().to_owned(),
-            asset: r.raster.asset.clone(),
-            file: r.raster.file.clone(),
-            url: r.raster.url.clone(),
-            srid: f64::from(r.raster.srid),
-            style: kentos_geometry_core::api::json::Json::parse(&r.raster.style.to_json_text())
-                .unwrap_or(kentos_geometry_core::api::json::Json::Null),
-            opacity: r.raster.opacity,
-        },
+        Entity::Raster(r) => {
+            Shape::Raster {
+                affine: r.raster.affine,
+                width: f64::from(r.raster.width),
+                height: f64::from(r.raster.height),
+                bands: f64::from(r.raster.bands),
+                sample: r.raster.sample.name().to_owned(),
+                asset: r.raster.asset.clone(),
+                file: r.raster.file.clone(),
+                url: r.raster.url.clone(),
+                srid: f64::from(r.raster.srid),
+                style: kentos_geometry_core::api::json::Json::parse(&r.raster.style.to_json_text())
+                    .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+                opacity: r.raster.opacity,
+                dataset: r.raster.dataset.as_ref().and_then(|d| {
+                    kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
+                }),
+            }
+        }
         // A point cloud (docs/adr/0207): its plan, the points pass's paint.
         Entity::PointCloud(c) => Shape::PointCloud {
             bounds: c.cloud.bounds,

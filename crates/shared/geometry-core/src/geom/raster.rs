@@ -228,6 +228,7 @@ mod tests {
             srid: 5256.0,
             style: crate::api::json::Json::Null,
             opacity: None,
+            dataset: None,
         }
     }
 

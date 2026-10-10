@@ -8,6 +8,8 @@
 export interface AnalysisRequest {
   type: 'run';
   blob: Blob;
+  /** A NetCDF raster's dataset (the raster key's part JSON, docs/adr/0243 §5): the slice it shows is read. */
+  part?: string | null;
   /** `kentos_raster::job::Spec` as JSON. */
   spec: string;
 }
@@ -69,8 +71,38 @@ export interface OpsRequest {
   type: 'ops';
   /** Each input's file in the run's order, or why it cannot be read (said only when the run reads it). */
   sources: (Blob | string)[];
+  /** Each NetCDF input's dataset (its key's part JSON), null for another raster. */
+  parts?: (string | null)[];
   spec: string;
   shapes: string;
+}
+
+/**
+ * A Çok boyutlu veri tool (docs/adr/0243 §8–§10): Kesit and Zaman serisi over bands on any raster's file, Zaman serisi
+ * over time steps and Mesh hesaplayıcı on a NetCDF dataset's; the raster's place and nodata, the objects as JSON (the
+ * lines, the points with their `ad`), and the tool's settings.
+ */
+export interface MultidimRequest {
+  type: 'multidim';
+  kind: 'profile' | 'bandSeries' | 'timeSeries' | 'meshCalc';
+  blob: Blob;
+  part: string | null;
+  affine: number[];
+  nodata: number | null;
+  objects: string;
+  step?: number;
+  band?: number;
+  /** The axes' names, east's first, a comma between. */
+  axes?: string;
+  /** Mesh hesaplayıcı's `CalcSpec` JSON. */
+  spec?: string;
+}
+
+/** What a Çok boyutlu veri tool gave: the core's JSON (table, pieces, summary, warnings), Mesh hesaplayıcı's file and new dataset. */
+export interface MultidimResult {
+  result: string;
+  file?: Uint8Array;
+  output?: string;
 }
 
 /**
@@ -115,7 +147,7 @@ export interface AnalysisFeatures {
 
 export type AnalysisReply =
   | { type: 'progress'; share: number }
-  | { type: 'done'; raster?: AnalysisRaster; lines?: AnalysisLines; points?: PointResult; ops?: OpsResult; error?: string };
+  | { type: 'done'; raster?: AnalysisRaster; lines?: AnalysisLines; points?: PointResult; ops?: OpsResult; multidim?: MultidimResult; error?: string };
 
 export type AnalysisResult = { raster: AnalysisRaster } | { lines: AnalysisLines };
 

@@ -1,0 +1,23 @@
+DATASET
+OBJTYPE "mesh2d"
+BEGVEC
+ND 6
+NC 3
+NAME "Hız"
+TIMEUNITS Minutes
+RT_JULIAN 2460431.75
+TS 0 0
+1.0 0.0
+0.0 2.0
+3.0 4.0
+-1.0 -1.0
+0.5 0.5
+2.0 -2.0
+TS 0 30
+2.0 0.0
+0.0 3.0
+3.0 -4.0
+1.0 1.0
+0.0 0.0
+1.0 1.0
+ENDDS

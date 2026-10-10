@@ -12,12 +12,14 @@
 // (docs/adr/0236 §8, distance_timing.rs's work): each tool over its 4096² cost raster with lakes, the sources' raster and
 // hydrology's DEM as the surface, Uzaklık yüzeyi from 2000 points and 100 lines; then suitability (docs/adr/0237 §11,
 // suitability_timing.rs's work): four 4096² criteria, each tool's run and ROC with 10 000 presence cells; then remote sensing
-// (docs/adr/0242 §12, remote_timing.rs's work): a 4096² four-band 16-bit image and its kin, each tool's run. Starts its own Vite dev
+// (docs/adr/0242 §12, remote_timing.rs's work): a 4096² four-band 16-bit image and its kin, each tool's run; then mesh and
+// multidimensional data (docs/adr/0243 §12, multidim_timing.rs's files): the raster workers' listing, placing, tiles and a time
+// step's first view, 2DM and DAT made UGRID, Kesit, Zaman serisi over a sparse 3 GB grid and Mesh hesaplayıcı. Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
 //
-//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance|suitability|remote]
+//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance|suitability|remote|multidim]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -203,6 +205,18 @@ write(paths[8], pan, 5.0)
 `;
   execFileSync('python3', ['-c', script], { stdio: 'inherit' });
   return names;
+}
+
+/** multidim_timing.rs's files (docs/adr/0243 §12), written by it once into .run/perf/multidim (the 3 GB grid sparse). */
+function multidimFiles() {
+  const d = `${dir}multidim/`;
+  const names = ['md-1000.nc', 'md-mesh-708.nc', 'md-mesh-1000.nc', 'md-708.2dm', 'md-708.dat', 'md-era5.nc'];
+  if (!names.every((n) => existsSync(d + n))) {
+    const root = fileURLToPath(new URL('../../../../', import.meta.url));
+    const test = ['test', '--release', '-q', '-p', 'kentos-raster', '--test', 'all', 'multidim_timing', '--', '--ignored', '--nocapture', '--test-threads=1'];
+    execFileSync('cargo', test, { stdio: 'inherit', cwd: root, env: { ...process.env, KENTOS_PERF_FILES: d } });
+  }
+  return names.map((n) => d + n);
 }
 
 /** A raster of n × n cells of 2 m written by `body` (numpy: `img`, uint8, `n`), tiled 256, Deflate, at `path`, unless it is there. */
@@ -644,6 +658,92 @@ img[np.broadcast_to(contour, (n, n))] = (150, 80, 30)`);
       }
       times.sort((a, c) => a - c);
       console.log(`${job.name.padEnd(44)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
+  }
+  // Mesh ve çok boyutlu veri (docs/adr/0243 §12): the files given as a user gives them (a file input's Files, read from the
+  // disk as asked; the 3 GB grid a sparse file), each job through the worker the page sends it to: the raster workers for
+  // the listing, Mesh ekle's placing, tiles and a step's first view, 2DM and DAT; the analysis worker for the three tools.
+  if (part('multidim')) {
+    const paths = multidimFiles();
+    await b.eval(`(() => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.id = 'perf-files'; i.style.display = 'none'; document.body.append(i); })()`);
+    const { root } = await b.send('DOM.getDocument', { depth: 0 });
+    const { nodeId } = await b.send('DOM.querySelector', { nodeId: root.nodeId, selector: '#perf-files' });
+    await b.send('DOM.setFileInputFiles', { nodeId, files: paths });
+    const PRE = `const files = Object.fromEntries([...document.getElementById('perf-files').files].map((x) => [x.name, x]));
+      const svc = (await import('/src/render/rasterService.ts')).rasterService();
+      const { analyzeMultidim } = await import('/src/io/rasterAnalysis.ts');
+      const watch = { progress() {}, canceled: false };
+      const place = (name, slice) => svc.cubePlace(files[name], name, { part: JSON.stringify({ variable: 'depth', mesh: 'Mesh2d', slice: [slice] }), cell: null, edges: true, srid: 5254, confirmed: true, view: [500000, 4420000, 510000, 4430000] });
+      const look = (style, edges) => { const st = { ...style, stretch: 'manual', min: 0, max: 3 }; if (!edges) delete st.edges; return JSON.stringify(st); };
+      const tile = (name, p, st, level, tx, ty) => svc.ask('file:' + name + '#' + p.part, { type: 'tile', key: 'file:' + name + '#' + p.part, blob: files[name], name, look: st, affine: JSON.parse(p.part).affine, level, tx, ty });`;
+    const lines = Array.from({ length: 10 }, (_, k) => ({ kind: 'polyline', pts: [{ x: 500100, y: 4420300 + 600 * k }, { x: 506900, y: 4420380 + 600 * k }] }));
+    const points = Array.from({ length: 100 }, (_, k) => ({ kind: 'point', p: { x: -170 + 3.37 * k, y: -60 + 1.21 * k }, attrs: { ad: `N${k}` } }));
+    const mdJobs = [
+      { name: 'NetCDF başlığı ve listesi (1 000 değişken)', budget: 0.2, body: `const t0 = performance.now(); const info = await svc.cube(files['md-1000.nc'], 'md-1000.nc'); if (info.grids.length !== 1000) throw new Error(String(info.grids.length)); return performance.now() - t0;` },
+      { name: "Mesh'in açılışı (Mesh ekle, 10⁶ yüz)", budget: 3, body: `const t0 = performance.now(); await place('md-mesh-708.nc', 0); return performance.now() - t0;` },
+      {
+        name: 'Mesh karosu, en ince düzey',
+        budget: 0.1,
+        body: `const p = await place('md-mesh-708.nc', 0); const st = look(p.style, false); await tile('md-mesh-708.nc', p, st, 0, 0, 0);
+          const [w, h] = JSON.parse(p.part).size; const t0 = performance.now(); await tile('md-mesh-708.nc', p, st, 0, Math.floor(w / 512), Math.floor(h / 512)); return performance.now() - t0;`,
+      },
+      {
+        name: 'Mesh karosu, en kaba düzey',
+        budget: 0.1,
+        body: `const p = await place('md-mesh-708.nc', 0); const st = look(p.style, false); await tile('md-mesh-708.nc', p, st, 0, 0, 0);
+          const t0 = performance.now(); await tile('md-mesh-708.nc', p, st, p.info.levels - 1, 0, 0); return performance.now() - t0;`,
+      },
+      {
+        name: 'Ağ çizgili karo (2. düzey)',
+        budget: 0.15,
+        body: `const p = await place('md-mesh-708.nc', 0); const st = look(p.style, true); await tile('md-mesh-708.nc', p, st, 0, 0, 0);
+          const [w, h] = JSON.parse(p.part).size; const t0 = performance.now(); await tile('md-mesh-708.nc', p, st, 2, Math.floor((w >> 2) / 512), Math.floor((h >> 2) / 512)); return performance.now() - t0;`,
+      },
+      {
+        name: 'Zaman adımı değişince ilk görünüm (10⁶ düğüm)',
+        budget: 1.5,
+        body: `const name = 'md-mesh-1000.nc'; const p0 = await place(name, 0); const st = look(p0.style, false);
+          const [w, h] = JSON.parse(p0.part).size; const levels = p0.info.levels;
+          let level = 0; while (level < levels - 1 && (w >> level) > 1536) level++;
+          const view = async (p) => { const all = []; for (let ty = 0; ty < Math.ceil(Math.max(1, h >> level) / 256); ty++) for (let tx = 0; tx < Math.ceil(Math.max(1, w >> level) / 256); tx++) all.push(tile(name, p, st, level, tx, ty)); await Promise.all(all); };
+          await view(p0);
+          const slice = 1 + RUN;
+          const p7 = { ...p0, part: p0.part.replace('"slice":[0]', '"slice":[' + slice + ']') };
+          const t0 = performance.now(); await view(p7); return performance.now() - t0;`,
+      },
+      {
+        name: '2DM ve DAT içe aktarma (10⁶ yüz, 24 adım)',
+        budget: 15,
+        body: `const t0 = performance.now(); const out = await svc.sms(files['md-708.2dm'], [files['md-708.dat']], Date.UTC(2024, 0, 1), 5254); if (!out.bytes.length) throw new Error('no file'); return performance.now() - t0;`,
+      },
+      {
+        name: 'Kesit (10 çizgi, 10 000 nokta, mesh)',
+        budget: 2,
+        body: `const p = await place('md-mesh-708.nc', 0); const t0 = performance.now();
+          const r = await analyzeMultidim({ kind: 'profile', blob: files['md-mesh-708.nc'], part: p.part, affine: JSON.parse(p.part).affine, nodata: null, objects: ${JSON.stringify(JSON.stringify(lines))}, step: 6.8, band: 1, axes: 'Y,X' }, watch);
+          if (!JSON.parse(r.result).table) throw new Error('no table'); return performance.now() - t0;`,
+      },
+      {
+        name: 'Zaman serisi (100 nokta, 744 adım, 1440 × 721)',
+        budget: 10,
+        body: `const t0 = performance.now();
+          const r = await analyzeMultidim({ kind: 'timeSeries', blob: files['md-era5.nc'], part: JSON.stringify({ variable: 't2m', slice: [0] }), affine: [-180.125, 0.25, 0, 90.125, 0, -0.25], nodata: null, objects: ${JSON.stringify(JSON.stringify(points))} }, watch);
+          if (JSON.parse(r.result).table.rows.length !== 744) throw new Error('rows'); return performance.now() - t0;`,
+      },
+      {
+        name: 'Mesh hesaplayıcı (10⁶ düğüm, 24 adım, En büyük)',
+        budget: 10,
+        body: `const p = await place('md-mesh-1000.nc', 0); const t0 = performance.now();
+          const r = await analyzeMultidim({ kind: 'meshCalc', blob: files['md-mesh-1000.nc'], part: p.part, affine: JSON.parse(p.part).affine, nodata: null, objects: '[]', spec: JSON.stringify({ expression: 'depth * 2', summary: 'max', name: 'En büyük' }) }, watch);
+          if (!r.file?.length) throw new Error('no file'); return performance.now() - t0;`,
+      },
+    ];
+    for (const job of mdJobs) {
+      const times = [];
+      // RUN: each run's own time step, so that no run finds the step's reader kept from another.
+      for (let r = 0; r < runs; r++) times.push((await b.eval(`(async () => { const RUN = ${r}; ${PRE} ${job.body} })()`)) / 1000);
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(48)} p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
     }
   }
 } finally {

@@ -78,6 +78,7 @@ const HYDROLOGY = JSON.parse(file('hydrology.json')) as CaseFile & { rasters: Re
 const DISTANCE = JSON.parse(file('distance.json')) as CaseFile & { rasters: Record<string, string> };
 const SUITABILITY = JSON.parse(file('suitability.json')) as CaseFile & { rasters: Record<string, string> };
 const REMOTE = JSON.parse(file('remote.json')) as CaseFile & { rasters: Record<string, string> };
+const MULTIDIM = JSON.parse(file('multidim.json')) as CaseFile & { rasters: Record<string, string> };
 const RASTER_OPS = JSON.parse(file('raster-ops.json')) as CaseFile & {
   rasters: Record<string, string>;
   /** The names an expression field offers on an input (docs/adr/0233 §3). */
@@ -327,6 +328,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
     ...Object.entries(DISTANCE.documents),
     ...Object.entries(SUITABILITY.documents),
     ...Object.entries(REMOTE.documents),
+    ...Object.entries(MULTIDIM.documents),
   ]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
@@ -807,6 +809,46 @@ describe('network cases (fixtures/processing/v1/network.json, docs/adr/0209)', (
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(NETWORK, c, 'client'), NETWORK.tolerance, NETWORK.measureTolerance);
       check(c, await play(NETWORK, c, 'worker'), NETWORK.tolerance, NETWORK.measureTolerance);
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('multidimensional data cases (fixtures/processing/v1/multidim.json, docs/adr/0243)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(MULTIDIM.rasters).map(([name, rel]) => [name, read(rel)]));
+
+  it('is a v1 case file', () => {
+    expect([MULTIDIM.format, MULTIDIM.version]).toEqual(['kentos.processing-cases', 1]);
+    expect(MULTIDIM.cases.length).toBeGreaterThanOrEqual(9);
+  });
+
+  for (const c of MULTIDIM.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { multidimOf?: Record<string, string>; layerAbove?: Record<string, string> };
+        const seen = await play(MULTIDIM, c, 'client');
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        check(c, seen, MULTIDIM.tolerance);
+        // Mesh hesaplayıcı's file is the reference's UGRID writer's, byte for byte.
+        const of = want.multidimOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, refName] of Object.entries(of)) {
+          const ref = read(`../../multidim/v1/files/${refName}`);
+          const got = written.get(name)!;
+          const same = got.length === ref.length && got.every((x, i) => x === ref[i]);
+          expect(same, `${c.id}: ${name} is ${refName}`).toBe(true);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
     });
   }
 });

@@ -654,8 +654,8 @@ fn validate_item(it: &Value, i: usize) -> Vec<String> {
         )),
         Some("asset") => {
             let format = js_str(g("format"));
-            // A raster's file may be a GeoTIFF too (docs/adr/0204 §2).
-            if !matches!(format.as_str(), "svg" | "png" | "jpeg" | "tiff") {
+            // A raster's file may be a GeoTIFF too (docs/adr/0204 §2), or a NetCDF (docs/adr/0243 §6).
+            if !matches!(format.as_str(), "svg" | "png" | "jpeg" | "tiff" | "netcdf") {
                 issues.push(format!("{w}: bilinmeyen varlık biçimi"));
             }
             match g("data").and_then(Value::as_str) {

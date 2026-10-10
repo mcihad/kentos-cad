@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { NewEntity } from '../model/entities';
-import { autoStep, floorTime, layerTimes, readTime, showTime, shownIn, timePosition, timePositions, writeTime, type TimeUnit, type TimeWindow } from '../model/time';
+import { autoStep, floorTime, layerTimes, readTime, showEnds, showTime, showWindow, shownIn, timePosition, timePositions, writeTime, type TimeUnit, type TimeWindow } from '../model/time';
 import { layerDocument } from '../style/cases';
 import { PickIndex } from '../viewport/picking';
 
@@ -24,6 +24,8 @@ const file = JSON.parse(fs.readFileSync(new URL('../../../../fixtures/temporal/v
   reads: { text: string; expect: N | 'empty' | 'unreadable' }[];
   writes: { ms: N; dateOnly: boolean; expect: string }[];
   shows: { ms: N; unit: TimeUnit; expect: string }[];
+  showWindows: { window: { instant: N } | { range: [N, N] }; unit: TimeUnit; expect: string }[];
+  showEnds: { first: N; last: N; unit: TimeUnit; expect: [string, string] }[];
   floors: { ms: N; unit: TimeUnit; expect: N }[];
   steps: { anchor: N; n: number; unit: TimeUnit; k: number; expect: N }[];
   positions: { extent: [N, N]; n: number; unit: TimeUnit; expect: { anchor: N; k: number } | null }[];
@@ -52,6 +54,11 @@ describe('temporal values through the core (docs/adr/0210 §3–§5)', () => {
     }
     for (const c of file.writes) expect(writeTime(num(c.ms), c.dateOnly), String(c.ms)).toBe(c.expect);
     for (const c of file.shows) expect(showTime(num(c.ms), c.unit), `${c.ms} ${c.unit}`).toBe(c.expect);
+    for (const c of file.showWindows) {
+      const w: TimeWindow = 'instant' in c.window ? { kind: 'instant', a: num(c.window.instant) } : { kind: 'range', a: num(c.window.range[0]), b: num(c.window.range[1]) };
+      expect(showWindow(w, c.unit), JSON.stringify(c)).toBe(c.expect);
+    }
+    for (const c of file.showEnds) expect(showEnds(num(c.first), num(c.last), c.unit), JSON.stringify(c)).toEqual(c.expect);
     for (const c of file.floors) expect(floorTime(num(c.ms), c.unit), `${c.ms} ${c.unit}`).toBe(num(c.expect));
   });
 

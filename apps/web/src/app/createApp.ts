@@ -35,6 +35,7 @@ import { ServerStatus } from './server';
 import { registerDefaultKeybindings } from './keybindings';
 import { createProcessing, registerProcessingCommands } from './processing';
 import { NetworkService, type NetworkWorkerLike } from './networks';
+import { withRasterTimes } from '../model/rasterTimes';
 import { TimeSlider } from './timeSlider';
 import { registerTimeCommands } from './timeCommands';
 import { registerLabelCommands } from './labelCommands';
@@ -123,7 +124,8 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
       (text) => ctx.log.warn(text),
     ),
     // Zaman sürgüsü (docs/adr/0210 §5): its range is read from the geometry store, which the viewport holds.
-    time: new TimeSlider(doc, () => ctx.view.geometry.timeSummary()),
+    // The shown temporal layers' times and the rasters following the slider (docs/adr/0243 §7).
+    time: new TimeSlider(doc, () => withRasterTimes(ctx.view.geometry.timeSummary(), doc)),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };
   ctx.tools = new ToolManager(ctx);
   ctx.view = new ViewportController(ctx);

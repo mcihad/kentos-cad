@@ -315,3 +315,16 @@ tablosu, İşlemler, komutlar ve Veri karşılaştır (tarafın tarihi boşken) 
   zamanlar artık değerlerden depoya tek çağrıda yazılır (`setLayerTimes`), dizi geri dönüp yeniden gönderilmez.
 - **Bilinen sınırlar:** web zamansal katmanı bütün olarak yeniden kurar (parça yok); 100 000 nesneli bir zamansal katmanın web'deki adımı
   bütçelenmedi. §1'in kapsam dışısı.
+
+## Ek (10 Ekim): sürgünün yazıları ve çubuğun sığması
+
+Tarihli-saatli veriyle (ADR 0243'ün NetCDF'i ve mesh'i) iki kusur çıktı: web'de bitiş ucu “Adım”ın üstüne taşıyordu; masaüstünde çubuğa
+pencerenin genişliği veriliyordu (çubuk yalnız çizim sütunundadır), sürgünün izi tarihli-saatli yazılarla 1440 px'te, yıllı yazılarla
+1100 px'te sıfıra iniyordu.
+
+- **Yazılar çekirdekten:** `time::show_window` (bir gün içindeki aralık, gün altı adımda tarihi bir kez yazar: “01.05.2024 14:00 – 15:00”)
+  ve `time::show_ends` (uçlar gün altı adımda bir gün içindeyse yalnız saat, değilse yalnız tarih; gün ve üstü adımda `show`); web'e
+  `timeShowWindow`, `timeShowEnds`. Durumlar `temporal_cases.py`'nin `showWindows` ve `showEnds`'i, iki platformda.
+- **Çubuk kendi genişliğine sığar:** dar çubukta uçlar, sözcükler (Adım, Hız), Hız ve Döngü bu sırayla çekilir; iz en az 80 px kalır.
+  Masaüstü yazıları ölçer (`temporal/bar.rs`'in `shown`'ı, çubuğa çizim alanının genişliği), web taşmayı ölçer (`TimeBar.fit`,
+  `data-tight` 0–4; uç “…”yla kesilirse o da sığmamış sayılır). Ucun bütün anı başlığında (web) kalır.

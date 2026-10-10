@@ -785,11 +785,16 @@ export class ViewportController {
       }),
     );
     // Zaman sürgüsü (docs/adr/0210 §6): the store takes the window, the temporal layers are built again with what it
-    // shows, the labels are found again; the slider's range follows the drawing.
+    // shows, the labels are found again; the slider's range follows the drawing. The layers of rasters following it
+    // (docs/adr/0243 §7) are built again too: their slice is the window's (kept until the drawing changes).
+    let following: Set<string> | null = null;
+    d.add(doc.events.on('changed', () => (following = null)));
     d.add(
       this.ctx.time.window.subscribe((w) => {
         this.picker.setTimeWindow(w);
         for (const l of doc.layers.leaves()) if (l.time) this.dirtyLayers.add(l.id);
+        following ??= new Set([...doc.all()].filter((e) => e.kind === 'raster' && e.dataset?.followTime).map((e) => e.layerId));
+        for (const id of following) this.dirtyLayers.add(id);
         stale();
         this.requestRender();
       }),

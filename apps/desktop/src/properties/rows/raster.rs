@@ -1,7 +1,9 @@
 //! A raster's rows of docs/adr/0204 §8 in Öznitelikler: its file (embedded
 //! or linked, and whether it was found), its size, bands and samples, its
 //! pixel's size, its file's system, its look, nodata and transparency; Göm
-//! for a linked one and the look's and the transparency's editors.
+//! for a linked one and the look's and the transparency's editors. A NetCDF
+//! dataset's raster (docs/adr/0243 §11) adds its variable, each slice
+//! dimension's value shown and, for a mesh, its nodes and faces.
 
 use kentos_contracts::{RasterEntity, RasterRender, RasterStretch};
 use kentos_domain::Slot;
@@ -97,8 +99,51 @@ pub(super) fn rows(
         Row::text("Bantlar", format!("{} bant, {}", x.bands, x.sample.label())),
         Row::figure("Piksel boyu", pixel).unit(f.length_unit_label()),
         Row::text("Sistem", system),
-        Row::text("Görünüş", render_name(x.style.render)).editor(style),
     ];
+    if let Some(d) = &x.dataset {
+        let mut name = d.variable.clone();
+        if let Some(v) = &d.vector {
+            name = format!("{name} / {v} (vektör)");
+        }
+        out.push(Row::text("Veri seti", name));
+        for dim in &d.dims {
+            let labels = kentos_formats::multidim::cube::dim_labels(
+                &dim.values,
+                dim.time,
+                dim.units.as_deref(),
+            );
+            let shown = labels.get(dim.index as usize).cloned().unwrap_or_default();
+            let (label, text) = if dim.time {
+                let follow = if d.follow_time {
+                    " (zaman sürgüsünü izler)"
+                } else {
+                    ""
+                };
+                ("Zaman".to_owned(), format!("{shown}{follow}"))
+            } else {
+                (dim.name.clone(), shown)
+            };
+            out.push(Row::text(label, text));
+        }
+        if let Some(mesh) = &d.mesh {
+            let key = crate::rasters::key_of(x);
+            let counts = crate::rasters::tiles::service().mesh_counts(&key);
+            out.push(Row::text(
+                "Ağ",
+                counts.map_or_else(
+                    || format!("“{mesh}”"),
+                    |(n, f)| {
+                        format!(
+                            "“{mesh}”: {} düğüm, {} yüz",
+                            crate::crs::grouped(n as f64),
+                            crate::crs::grouped(f as f64)
+                        )
+                    },
+                ),
+            ));
+        }
+    }
+    out.push(Row::text("Görünüş", render_name(x.style.render)).editor(style));
     if x.style.stretch != RasterStretch::None {
         out.push(Row::text("Gerdirme", stretch_name(x.style.stretch)));
     }

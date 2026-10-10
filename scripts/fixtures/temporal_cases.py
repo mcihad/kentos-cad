@@ -120,6 +120,43 @@ def show(t, unit):
     return day
 
 
+def clock(t, unit):
+    """A moment's clock for a step under a day; none for a day or more."""
+    _, into = split(t)
+    h, rest = divmod(into, HOUR)
+    mi, rest = divmod(rest, MINUTE)
+    sec = rest // SECOND
+    if unit == 'second':
+        return f'{h:02}:{mi:02}:{sec:02}'
+    if unit in ('minute', 'hour'):
+        return f'{h:02}:{mi:02}'
+    return None
+
+
+def date_shown(t):
+    d, _ = split(t)
+    return f'{d.day:02}.{d.month:02}.{d.year:04}'
+
+
+def show_window(w, unit):
+    """What the slider's position shows (§5): a period inside one day, under a day's step, writes its date once."""
+    if 'instant' in w:
+        return show(w['instant'], unit)
+    a, b = w['range']
+    if clock(b, unit) is not None and split(a)[0] == split(b)[0]:
+        return f'{show(a, unit)} – {clock(b, unit)}'
+    return f'{show(a, unit)} – {show(b, unit)}'
+
+
+def show_ends(first, last, unit):
+    """The slider's ends (§5): under a day's step their clocks within one day, else their dates; a day or more as shown."""
+    if clock(first, unit) is None:
+        return [show(first, unit), show(last, unit)]
+    if split(first)[0] == split(last)[0]:
+        return [clock(first, unit), clock(last, unit)]
+    return [date_shown(first), date_shown(last)]
+
+
 def floor_to(t, unit):
     d, into = split(t)
     start = (d.toordinal() - EPOCH) * DAY
@@ -262,6 +299,29 @@ SHOWS = [
     ('2024-03-05T12:30:45', 'year'), ('1969-12-31T23:59:59.999', 'second'), ('0001-01-01', 'year'),
 ]
 
+# The slider's position and ends (§5): within a day and across one, at midnight, under and over a day's step, before 1970.
+SHOW_WINDOWS = [
+    ({'range': ['2024-05-01T14:00', '2024-05-01T15:00']}, 'hour'),
+    ({'range': ['2024-05-01T23:00', '2024-05-02T00:00']}, 'hour'),
+    ({'range': ['2024-05-01T14:00:30', '2024-05-01T14:00:40']}, 'second'),
+    ({'range': ['2024-05-01T14:00', '2024-05-01T14:30']}, 'minute'),
+    ({'range': ['2024-05-01', '2024-05-02']}, 'day'),
+    ({'range': ['2015-01-01', '2016-01-01']}, 'year'),
+    ({'range': ['1969-12-31T22:00', '1969-12-31T23:00']}, 'hour'),
+    ({'instant': '2024-05-01T14:00'}, 'hour'),
+    ({'instant': '2024-05-01T14:00'}, 'day'),
+]
+SHOW_ENDS = [
+    ('2024-05-01T06:00', '2024-05-01T17:00', 'hour'),
+    ('2024-05-01T06:00', '2024-05-01T17:00:15', 'second'),
+    ('2024-01-01T00:00', '2024-01-31T23:00', 'hour'),
+    ('2024-05-01T06:00', '2024-05-02T00:00', 'minute'),
+    ('2024-05-01', '2024-05-01', 'hour'),
+    ('2010-01-01', '2020-01-01', 'year'),
+    ('2024-05-01', '2024-06-01', 'day'),
+    ('1969-12-31T01:00', '1969-12-31T23:00', 'hour'),
+]
+
 FLOORS = [(t, u) for t in ('2024-03-05T12:34:56.789', '2024-01-01', '1969-12-31T23:59:59.999', '2024-03-04T00:00',
                             '2024-03-10T23:59', '1970-01-01T00:00:00.001')
           for u in ('second', 'minute', 'hour', 'day', 'week', 'month', 'year')]
@@ -311,6 +371,8 @@ def cases():
     out['reads'] = [{'text': t, 'expect': read(t)} for t in READS]
     out['writes'] = [{'ms': read(t), 'dateOnly': d, 'expect': write(read(t), d)} for t, d in WRITES]
     out['shows'] = [{'ms': read(t), 'unit': u, 'expect': show(read(t), u)} for t, u in SHOWS]
+    out['showWindows'] = [{'window': window_of(w), 'unit': u, 'expect': show_window(window_of(w), u)} for w, u in SHOW_WINDOWS]
+    out['showEnds'] = [{'first': read(a), 'last': read(b), 'unit': u, 'expect': show_ends(read(a), read(b), u)} for a, b, u in SHOW_ENDS]
     out['floors'] = [{'ms': read(t), 'unit': u, 'expect': floor_to(read(t), u)} for t, u in FLOORS]
     out['steps'] = [{'anchor': read(t), 'n': n, 'unit': u, 'k': k, 'expect': position(read(t), n, u, k)}
                     for t, n, u, k in STEPS]
