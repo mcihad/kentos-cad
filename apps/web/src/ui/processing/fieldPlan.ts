@@ -5,7 +5,7 @@ import type { LayerStore } from '../../model/layers';
 import type { InputSummary } from '../../processing/features';
 import { fieldNames, fileTable, scopesOf } from '../../processing/parameters';
 import { sameNamedLayer } from '../../processing/runner';
-import type { FeaturesValue, FileValue, LayerValue, ParamDef } from '../../processing/types';
+import type { FeaturesValue, FileValue, LayerValue, ParamDef, RasterPairs, RasterValues } from '../../processing/types';
 import { DIALOG_TEXTS as T } from './dialogTexts';
 
 /**
@@ -260,4 +260,108 @@ export function expressionView(fields: InputSummary['fields'], preview: string |
     more: extra.length ? { label: T.expression.more(extra.length), items: extra.map((f) => ({ name: f.name, hint: String(f.count), token: fieldToken(f.name) })) } : null,
     preview: preview ? { icon: previewIcon(preview), text: preview } : null,
   };
+}
+
+// ── Rasterlere değer and Raster çiftleri (docs/adr/0237 §9) ──────────────
+
+type RasterValuesParam = Extract<ParamDef, { type: 'rasterValues' }>;
+
+/** A raster's row: its name, its value as the field shows it, and whether the input holds it (else faint, with ×). */
+export interface RasterRow {
+  name: string;
+  text: string;
+  listed: boolean;
+}
+
+export interface RasterValuesView {
+  rows: RasterRow[];
+  /** What to do when there are no rows to fill: choose rasters, or name them (a model's step). */
+  note: string | null;
+  /** The raster names are not known (a model's step): a name can be added. */
+  adds: boolean;
+}
+
+/** A row's value as its field shows it: a number as JavaScript writes it, a text as it is. */
+const cellText = (v: number | string | undefined): string => (v === undefined ? '' : typeof v === 'number' ? (Number.isNaN(v) ? '' : String(v)) : v);
+
+/**
+ * The rows: the input's rasters in the run's order, then the names the value holds that the input does not (in their
+ * names' order); `rasters` undefined when they are not known (a model's step), when the value's names are the rows.
+ */
+export function rasterValuesView(value: RasterValues | null | undefined, rasters: readonly string[] | undefined): RasterValuesView {
+  const o = value ?? {};
+  const listed = rasters ?? [];
+  const rows: RasterRow[] = listed.map((name) => ({ name, text: cellText(o[name]), listed: true }));
+  for (const name of Object.keys(o).sort()) if (!listed.includes(name)) rows.push({ name, text: cellText(o[name]), listed: rasters === undefined });
+  const note = rows.length ? null : rasters === undefined ? T.rasters.later : T.rasters.none;
+  return { rows, note, adds: rasters === undefined };
+}
+
+/**
+ * A row's field typed: a number cell reads the text as a number field does (NaN: the check calls it invalid), a text
+ * cell keeps it; an empty field takes the raster's value away.
+ */
+export function withRasterValue(def: Pick<RasterValuesParam, 'cell'>, value: RasterValues | null | undefined, name: string, text: string): RasterValues {
+  const { [name]: _old, ...rest } = value ?? {};
+  if (!text.trim()) return rest;
+  return { ...rest, [name]: def.cell === 'number' ? numberOfText(text) : text };
+}
+
+/** A name's row taken away (×), or a new name's row added empty (a model's step). */
+export function withoutRaster(value: RasterValues | null | undefined, name: string): RasterValues {
+  const { [name]: _old, ...rest } = value ?? {};
+  return rest;
+}
+
+/** The comparisons offered for a pair, the first raster's strongest first: 9 … 2, 1 (even), −2 … −9. */
+export const PAIR_VALUES = [9, 8, 7, 6, 5, 4, 3, 2, 1, -2, -3, -4, -5, -6, -7, -8, -9] as const;
+
+/** A comparison as its list writes it: “Eğim 3 kat”, “Eşit”, “Yol 5 kat”. */
+export const pairLabel = (a: string, b: string, v: number): string => (v === 1 ? T.rasters.even : v > 0 ? `${a} ${T.rasters.times(v)}` : `${b} ${T.rasters.times(-v)}`);
+
+/** A pair's comparison in the value: (a, b, v) as given, (b, a, v) turned round; the first given counts; none: even. */
+export function pairValue(value: RasterPairs | null | undefined, a: string, b: string): number {
+  for (const [x, y, v] of value ?? []) {
+    if (x === a && y === b) return v;
+    if (x === b && y === a) return v === 1 ? 1 : -v;
+  }
+  return 1;
+}
+
+export interface PairRow {
+  a: string;
+  b: string;
+  value: number;
+  text: string;
+  listed: boolean;
+}
+
+export interface RasterPairsView {
+  rows: PairRow[];
+  note: string | null;
+}
+
+/** The rows: each pair of the input's rasters (the earlier first), then the pairs the value holds that are not among them. */
+export function rasterPairsView(value: RasterPairs | null | undefined, rasters: readonly string[] | undefined): RasterPairsView {
+  const listed = rasters ?? [];
+  const rows: PairRow[] = [];
+  for (let i = 0; i < listed.length; i++)
+    for (let j = i + 1; j < listed.length; j++) {
+      const v = pairValue(value, listed[i], listed[j]);
+      rows.push({ a: listed[i], b: listed[j], value: v, text: pairLabel(listed[i], listed[j], v), listed: true });
+    }
+  const seen = new Set(rows.map((r) => `${r.a}\u0000${r.b}`));
+  for (const [a, b, v] of value ?? []) {
+    if (seen.has(`${a}\u0000${b}`) || seen.has(`${b}\u0000${a}`)) continue;
+    seen.add(`${a}\u0000${b}`);
+    rows.push({ a, b, value: v, text: pairLabel(a, b, v), listed: rasters === undefined });
+  }
+  const note = rows.length ? null : rasters === undefined ? T.rasters.later : T.rasters.none;
+  return { rows, note };
+}
+
+/** A pair's comparison chosen: its earlier entries go, an even one is not kept (a pair not given is even). */
+export function withPair(value: RasterPairs | null | undefined, a: string, b: string, v: number): RasterPairs {
+  const rest = (value ?? []).filter(([x, y]) => !((x === a && y === b) || (x === b && y === a)));
+  return v === 1 ? rest : [...rest, [a, b, v] as const];
 }

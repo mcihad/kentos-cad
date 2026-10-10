@@ -6,7 +6,7 @@
 
 use kentos_geometry_core::time::{
     Mode, Read, Rule, Step, Time, Unit, Window, auto_step, floor_to, layer_times, object_time,
-    position, positions, read, show, shows, write,
+    position, positions, read, show, show_ends, show_window, shows, write,
 };
 use serde_json::Value;
 
@@ -85,6 +85,23 @@ fn moments_are_written_shown_and_rounded_as_the_reference_does() {
             c["expect"].as_str().expect("text"),
             "{c}"
         );
+    }
+    for c in file["showWindows"].as_array().expect("showWindows") {
+        assert_eq!(
+            show_window(&window(&c["window"]), unit(&c["unit"])),
+            c["expect"].as_str().expect("text"),
+            "{c}"
+        );
+    }
+    for c in file["showEnds"].as_array().expect("showEnds") {
+        let got = show_ends(num(&c["first"]), num(&c["last"]), unit(&c["unit"]));
+        let want: Vec<&str> = c["expect"]
+            .as_array()
+            .expect("two")
+            .iter()
+            .map(|v| v.as_str().expect("text"))
+            .collect();
+        assert_eq!(got.to_vec(), want, "{c}");
     }
     for c in file["floors"].as_array().expect("floors") {
         assert_eq!(

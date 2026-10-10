@@ -29,6 +29,8 @@ use kentos_raster::contours::Line;
 use kentos_raster::job::{Finished, Job, READER_BUDGET, Spec};
 use wasm_bindgen::prelude::*;
 
+mod multidim;
+
 fn fail(e: impl std::fmt::Display) -> JsError {
     JsError::new(&e.to_string())
 }
@@ -649,6 +651,7 @@ impl OpsOpening {
             zones: Vec::new(),
             histogram: String::new(),
             features: None,
+            roc: String::new(),
         })
     }
 }
@@ -683,6 +686,7 @@ pub struct OpsAnalysis {
     zones: Vec<f64>,
     histogram: String,
     features: Option<kentos_raster::vector::Features>,
+    roc: String,
 }
 
 impl OpsAnalysis {
@@ -765,6 +769,10 @@ impl OpsAnalysis {
             .job
             .take()
             .ok_or_else(|| JsError::new("Çözümleme bitti."))?;
+        // The look as the run left it (Değişim tespiti's is stretched by its values).
+        if let Some(s) = job.style() {
+            self.style = serde_json::to_string(&s).unwrap_or_default();
+        }
         let n = job.notes().clone();
         let h = &n.hydro;
         self.notes = serde_json::json!({
@@ -789,6 +797,28 @@ impl OpsAnalysis {
                 "least": n.distance.least,
                 "most": n.distance.most,
                 "cells": n.distance.cells,
+            },
+            // Uygunluk analizi (docs/adr/0237): what the run met; İkili karşılaştırma's weights (null otherwise).
+            "suit": {
+                "unmatched": n.suit.unmatched,
+                "outside": n.suit.outside,
+                "restricted": n.suit.restricted,
+                "invalid": n.suit.invalid,
+                "pairwise": n.suit.pairwise.as_ref().map(|p| serde_json::json!({
+                    "weights": p.weights,
+                    "lambda": p.lambda,
+                    "ci": p.ci,
+                    "ri": p.ri,
+                    "cr": p.cr,
+                })),
+            },
+            // Uzaktan algılama (docs/adr/0242): the table, the summary's tail, the warnings; Doğruluk analizi's figures.
+            "remote": {
+                "table": n.remote.table.as_ref().map(|t| serde_json::json!({ "columns": t.columns, "rows": t.rows })),
+                "tail": n.remote.tail,
+                "warnings": n.remote.warnings,
+                "overall": n.remote.overall,
+                "kappa": n.remote.kappa,
             },
         })
         .to_string();
@@ -828,6 +858,22 @@ impl OpsAnalysis {
                 self.features = Some(f);
                 Ok(Vec::new())
             }
+            OpsFinished::Roc(r) => {
+                self.roc = serde_json::json!({
+                    "presence": r.presence,
+                    "background": r.background,
+                    "allCells": r.all_cells,
+                    "auc": r.auc,
+                    "rows": r.rows.iter().map(|x| serde_json::json!([x.threshold, x.tp, x.fp])).collect::<Vec<_>>(),
+                    "best": r.best,
+                    "skipped": r.skipped,
+                    "outside": r.outside,
+                    "both": r.both,
+                })
+                .to_string();
+                Ok(Vec::new())
+            }
+            OpsFinished::Weights | OpsFinished::Report => Ok(Vec::new()),
         }
     }
 
@@ -875,6 +921,13 @@ impl OpsAnalysis {
     /// The histogram (JSON: lo, hi, counts, below, above, valid, empty).
     pub fn histogram(&self) -> String {
         self.histogram.clone()
+    }
+
+    /// ROC ile doğrulama's figures (docs/adr/0237 §8; JSON: presence,
+    /// background, allCells, auc, rows as [threshold, tp, fp], best, skipped,
+    /// outside, both); empty for any other run.
+    pub fn roc(&self) -> String {
+        self.roc.clone()
     }
 
     /// A vectorizing run's features (docs/adr/0234): `polygons`, `lines` or

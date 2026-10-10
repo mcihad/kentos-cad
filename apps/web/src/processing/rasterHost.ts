@@ -1,5 +1,7 @@
-import type { AnalysisResult, AnalysisWatch, OpsResult, PointResult } from '../io/rasterAnalysisProtocol';
+import type { AnalysisResult, AnalysisWatch, MultidimRequest, MultidimResult, OpsResult, PointResult } from '../io/rasterAnalysisProtocol';
 import type { RasterEntity } from '../model/entities';
+
+export { rasterPart } from '../model/rasterRules';
 
 /**
  * Where the raster tools (Yüzey analizi, docs/adr/0231 §2) read a raster, run their job and keep their result on the
@@ -9,8 +11,8 @@ import type { RasterEntity } from '../model/entities';
 export interface RasterRunHost {
   /** The raster object's bytes this session; a reason when there are none (a linked file not given again). */
   source(raster: RasterEntity): Blob | { refused: string };
-  /** Runs a job (`kentos_raster::job::Spec` JSON) in a worker of its own; rejects with `STOPPED` when stopped. */
-  analyze(blob: Blob, spec: string, watch: AnalysisWatch): Promise<AnalysisResult>;
+  /** Runs a job (`kentos_raster::job::Spec` JSON; a NetCDF raster's slice `part`) in a worker of its own; rejects with `STOPPED` when stopped. */
+  analyze(blob: Blob, spec: string, watch: AnalysisWatch, part?: string | null): Promise<AnalysisResult>;
   /**
    * Makes a raster from points or lines (docs/adr/0232): the objects' JSON, their value texts' JSON, the
    * `PointSpec` JSON; in a worker of its own, rejecting with `STOPPED` when stopped.
@@ -21,13 +23,15 @@ export interface RasterRunHost {
    * be read, refused only when the run reads it), the `OpsSpec` JSON and the mask's or the zones' objects as JSON; in a
    * worker of its own, rejecting with `STOPPED` when stopped.
    */
-  analyzeOps(sources: (Blob | string)[], spec: string, shapes: string, watch: AnalysisWatch): Promise<OpsResult>;
+  analyzeOps(sources: (Blob | string)[], spec: string, shapes: string, watch: AnalysisWatch, parts?: (string | null)[]): Promise<OpsResult>;
+  /** Runs a Çok boyutlu veri tool (docs/adr/0243 §8–§10) in a worker of its own, rejecting with `STOPPED` when stopped. */
+  analyzeMultidim(request: Omit<MultidimRequest, 'type'>, watch: AnalysisWatch): Promise<MultidimResult>;
   /**
    * Keeps a result GeoTIFF named `name` (`width` × `height`): embedded in the project's library when it is small
    * enough, else the session's file of that name, downloaded. What the raster object names, and a line for the log
    * (none when empty).
    */
-  keep(bytes: Uint8Array, name: string, width: number, height: number): Promise<{ asset?: string; file?: string; note: string }>;
+  keep(bytes: Uint8Array, name: string, width: number, height: number, format?: 'tiff' | 'netcdf'): Promise<{ asset?: string; file?: string; note: string }>;
 }
 
 let host: RasterRunHost | null = null;

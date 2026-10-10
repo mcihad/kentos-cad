@@ -20,11 +20,11 @@ use kentos_pointcloud::source::{Cloud, Opening, Run};
 use kentos_pointcloud::{Step, text};
 use kentos_processing::Feedback;
 use kentos_processing::files::{
-    Beside, CloudRead, Files, RASTER_READER_BUDGET, RasterOpen, Sink, with_extension,
+    Beside, CloudRead, CubeOpen, Files, RASTER_READER_BUDGET, RasterOpen, Sink, with_extension,
 };
 
 use super::bytes::{Bytes, Remote};
-use crate::rasters::tiles::{Origin, jpeg_pixels, open_reader};
+use crate::rasters::tiles::{Origin, jpeg_pixels};
 
 /// A text cloud is read in pieces of this size.
 const PIECE: u64 = 4 * 1024 * 1024;
@@ -377,7 +377,9 @@ impl Files for DesktopFiles {
             (None, None, Some(u)) => Origin::Url(u.clone()),
             (None, None, None) => return Err("Rasterin dosyası yok.".to_owned()),
         };
-        let open = open_reader(&origin, RASTER_READER_BUDGET)?;
+        let part = crate::rasters::part_of(raster);
+        let open =
+            crate::rasters::tiles::open_reader_part(&origin, part.as_ref(), RASTER_READER_BUDGET)?;
         let source = open.source;
         Ok(RasterOpen {
             reader: open.reader,
@@ -386,6 +388,24 @@ impl Files for DesktopFiles {
                 _ => Err("Rasterin bu bloğu okunamadı.".to_owned()),
             }),
             jpeg: Box::new(jpeg_pixels),
+        })
+    }
+
+    fn open_cube(&self, raster: &RasterFields) -> Result<CubeOpen<'_>, String> {
+        let origin = match (&raster.asset, &raster.file, &raster.url) {
+            (Some(id), _, _) => Origin::Bytes(self.asset_bytes(id, "raster")?),
+            (None, Some(f), _) => Origin::File(crate::pictures::resolve(f, self.folder.as_deref())),
+            (None, None, Some(u)) => Origin::Url(u.clone()),
+            (None, None, None) => return Err("Rasterin dosyası yok.".to_owned()),
+        };
+        let Some(part) = crate::rasters::part_of(raster) else {
+            return Err("Bu raster NetCDF veri seti göstermiyor.".to_owned());
+        };
+        let (cube, source) = crate::rasters::tiles::fresh_cube(&origin, &part)?;
+        Ok(CubeOpen {
+            cube,
+            part,
+            read: Box::new(move |offset, len| source.read(offset, len)),
         })
     }
 }

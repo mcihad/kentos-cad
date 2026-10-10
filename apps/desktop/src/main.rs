@@ -152,7 +152,6 @@ mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
 // Map services (docs/adr/0208): their tiles, connections' secrets and the device's cache.
-mod networks;
 #[cfg(test)]
 mod distance_scenes;
 #[cfg(test)]
@@ -160,9 +159,14 @@ mod hydrology_scenes;
 #[cfg(test)]
 mod interpolation_scenes;
 #[cfg(test)]
+mod multidim_scenes;
+mod networks;
+#[cfg(test)]
 mod raster_ops_scenes;
 #[cfg(test)]
 mod raster_vector_scenes;
+#[cfg(test)]
+mod remote_scenes;
 #[cfg(test)]
 mod service_scenes;
 mod services;
@@ -179,9 +183,13 @@ mod sources;
 mod start;
 #[cfg(test)]
 mod stationing_scenes;
+#[cfg(test)]
+mod stats_scenes;
 mod style;
 #[cfg(test)]
 mod style_scenes;
+#[cfg(test)]
+mod suitability_scenes;
 #[cfg(test)]
 mod surface_scenes;
 #[cfg(test)]

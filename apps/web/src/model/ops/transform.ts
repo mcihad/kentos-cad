@@ -55,7 +55,7 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   // A picture's frame, source, clip and opacity (docs/adr/0192 §1).
   image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
   // A raster's affine, size, bands, samples, source, system, look and opacity (docs/adr/0204 §2).
-  raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'url', 'srid', 'style', 'opacity'],
+  raster: ['affine', 'width', 'height', 'bands', 'sample', 'asset', 'file', 'url', 'srid', 'style', 'opacity', 'dataset'],
   // A point cloud: its plan, carried through (docs/adr/0207 §3).
   pointcloud: ['bounds', 'count', 'sources', 'srid', 'style', 'opacity'],
 };

@@ -371,6 +371,7 @@ pub fn default_style(bands: u32, sample: RasterSample, palette: bool) -> RasterS
         z_factor: None,
         nodata: None,
         resampling: kentos_contracts::RasterResampling::Bilinear,
+        edges: None,
     };
     if palette {
         return base(RasterRender::Palette, vec![1], RasterStretch::None);
@@ -387,4 +388,20 @@ pub fn default_style(bands: u32, sample: RasterSample, palette: bool) -> RasterS
             ..base(RasterRender::RampShade, vec![1], RasterStretch::MinMax)
         },
     }
+}
+
+/// Mesh lines' colour when a dataset's raster draws them (Raster stili changes it).
+pub const MESH_EDGES: &str = "#2B3440";
+
+/// The look a NetCDF dataset's raster starts with (docs/adr/0243 §11): its
+/// one band through a ramp stretched over its values (Spektral a grid's,
+/// Viridis a mesh's), a mesh's lines when asked.
+pub fn dataset_style(sample: RasterSample, mesh: bool, edges: bool) -> RasterStyle {
+    let mut st = default_style(1, sample, false);
+    st.render = kentos_contracts::RasterRender::Ramp;
+    st.bands = vec![1];
+    st.stretch = kentos_contracts::RasterStretch::MinMax;
+    st.ramp = Some(if mesh { "Viridis" } else { "Spektral" }.to_owned());
+    st.edges = (edges && mesh).then(|| MESH_EDGES.to_owned());
+    st
 }

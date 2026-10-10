@@ -1,0 +1,1330 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Uzaktan algılama: vadinin uydu görüntüsü",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 487500.0,
+  "y": 4420300.0
+ },
+ "layers": [
+  {
+   "id": "egitim",
+   "name": "Eğitim alanları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#FFD54F",
+    "lineType": "continuous",
+    "lineWeight": 0.35,
+    "fill": "#FFD54F40"
+   },
+   "children": []
+  },
+  {
+   "id": "referans",
+   "name": "Referans",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E53935",
+    "lineType": "continuous",
+    "lineWeight": 0.35,
+    "point": {
+     "symbol": "ring",
+     "size": 5
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "goruntu",
+   "name": "Görüntü (2024)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "sonraki",
+   "name": "Görüntü (2026)",
+   "type": "layer",
+   "visible": false,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "cok-bantli",
+   "name": "Çok bantlı (3,2 m)",
+   "type": "layer",
+   "visible": false,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "pankromatik",
+   "name": "Pankromatik (1,6 m)",
+   "type": "layer",
+   "visible": false,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "egitim",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 4,
+   "sample": "u16",
+   "file": "remote/goruntu.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     3,
+     2,
+     1
+    ],
+    "stretch": "percent"
+   },
+   "id": 1,
+   "layerId": "goruntu",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 4,
+   "sample": "u16",
+   "file": "remote/sonraki.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     3,
+     2,
+     1
+    ],
+    "stretch": "percent"
+   },
+   "id": 2,
+   "layerId": "sonraki",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    3.2,
+    0.0,
+    4420600.0,
+    0.0,
+    -3.2
+   ],
+   "width": 240,
+   "height": 162,
+   "bands": 4,
+   "sample": "u16",
+   "file": "remote/cok-bantli.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     3,
+     2,
+     1
+    ],
+    "stretch": "percent"
+   },
+   "id": 3,
+   "layerId": "cok-bantli",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "u16",
+   "file": "remote/pankromatik.tif",
+   "srid": 5256,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ],
+    "stretch": "percent"
+   },
+   "id": 4,
+   "layerId": "pankromatik",
+   "attrs": {}
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487443.2,
+     "y": 4420577.6
+    },
+    {
+     "x": 487459.2,
+     "y": 4420577.6
+    },
+    {
+     "x": 487459.2,
+     "y": 4420593.6
+    },
+    {
+     "x": 487443.2,
+     "y": 4420593.6
+    }
+   ],
+   "id": 5,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Orman"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487942.4,
+     "y": 4420228.8
+    },
+    {
+     "x": 487958.4,
+     "y": 4420228.8
+    },
+    {
+     "x": 487958.4,
+     "y": 4420244.8
+    },
+    {
+     "x": 487942.4,
+     "y": 4420244.8
+    }
+   ],
+   "id": 6,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Orman"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487539.2,
+     "y": 4420193.600000001
+    },
+    {
+     "x": 487548.8,
+     "y": 4420193.600000001
+    },
+    {
+     "x": 487548.8,
+     "y": 4420203.2
+    },
+    {
+     "x": 487539.2,
+     "y": 4420203.2
+    }
+   ],
+   "id": 7,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Mera"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487574.4,
+     "y": 4420187.2
+    },
+    {
+     "x": 487584.0,
+     "y": 4420187.2
+    },
+    {
+     "x": 487584.0,
+     "y": 4420196.8
+    },
+    {
+     "x": 487574.4,
+     "y": 4420196.8
+    }
+   ],
+   "id": 8,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Mera"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487356.8,
+     "y": 4420577.6
+    },
+    {
+     "x": 487372.8,
+     "y": 4420577.6
+    },
+    {
+     "x": 487372.8,
+     "y": 4420593.6
+    },
+    {
+     "x": 487356.8,
+     "y": 4420593.6
+    }
+   ],
+   "id": 9,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Tarım"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487942.4,
+     "y": 4420091.2
+    },
+    {
+     "x": 487958.4,
+     "y": 4420091.2
+    },
+    {
+     "x": 487958.4,
+     "y": 4420107.2
+    },
+    {
+     "x": 487942.4,
+     "y": 4420107.2
+    }
+   ],
+   "id": 10,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Tarım"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487564.8,
+     "y": 4420260.8
+    },
+    {
+     "x": 487580.8,
+     "y": 4420260.8
+    },
+    {
+     "x": 487580.8,
+     "y": 4420276.8
+    },
+    {
+     "x": 487564.8,
+     "y": 4420276.8
+    }
+   ],
+   "id": 11,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Yerleşim"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487942.4,
+     "y": 4420200.0
+    },
+    {
+     "x": 487958.4,
+     "y": 4420200.0
+    },
+    {
+     "x": 487958.4,
+     "y": 4420216.0
+    },
+    {
+     "x": 487942.4,
+     "y": 4420216.0
+    }
+   ],
+   "id": 12,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Yerleşim"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487206.4,
+     "y": 4420305.6
+    },
+    {
+     "x": 487222.4,
+     "y": 4420305.6
+    },
+    {
+     "x": 487222.4,
+     "y": 4420321.6
+    },
+    {
+     "x": 487206.4,
+     "y": 4420321.6
+    }
+   ],
+   "id": 13,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Su"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 487260.8,
+     "y": 4420267.2
+    },
+    {
+     "x": 487276.8,
+     "y": 4420267.2
+    },
+    {
+     "x": 487276.8,
+     "y": 4420283.2
+    },
+    {
+     "x": 487260.8,
+     "y": 4420283.2
+    }
+   ],
+   "id": 14,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Su"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487445.6,
+    "y": 4420596.0
+   },
+   "id": 15,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487730.4,
+    "y": 4420397.6
+   },
+   "id": 16,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487692.0,
+    "y": 4420388.0
+   },
+   "id": 17,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487640.8,
+    "y": 4420383.2
+   },
+   "id": 18,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487524.0,
+    "y": 4420344.8
+   },
+   "id": 19,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487684.0,
+    "y": 4420341.6
+   },
+   "id": 20,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487429.6,
+    "y": 4420311.2
+   },
+   "id": 21,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487276.0,
+    "y": 4420309.6
+   },
+   "id": 22,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487760.8,
+    "y": 4420269.6
+   },
+   "id": 23,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487375.2,
+    "y": 4420244.0
+   },
+   "id": 24,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487381.6,
+    "y": 4420236.0
+   },
+   "id": 25,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487450.4,
+    "y": 4420184.8
+   },
+   "id": 26,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487416.8,
+    "y": 4420162.4
+   },
+   "id": 27,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487492.0,
+    "y": 4420127.2
+   },
+   "id": 28,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487562.4,
+    "y": 4420207.2
+   },
+   "id": 29,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487572.0,
+    "y": 4420205.6
+   },
+   "id": 30,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487546.4,
+    "y": 4420204.0
+   },
+   "id": 31,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487536.8,
+    "y": 4420202.4
+   },
+   "id": 32,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487544.8,
+    "y": 4420202.4
+   },
+   "id": 33,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487560.8,
+    "y": 4420202.4
+   },
+   "id": 34,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487580.0,
+    "y": 4420199.2
+   },
+   "id": 35,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487551.2,
+    "y": 4420197.6
+   },
+   "id": 36,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487568.8,
+    "y": 4420197.6
+   },
+   "id": 37,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487578.4,
+    "y": 4420197.6
+   },
+   "id": 38,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487584.8,
+    "y": 4420196.0
+   },
+   "id": 39,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487584.8,
+    "y": 4420191.2
+   },
+   "id": 40,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487581.6,
+    "y": 4420188.0
+   },
+   "id": 41,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487570.4,
+    "y": 4420183.2
+   },
+   "id": 42,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487813.6,
+    "y": 4420576.8
+   },
+   "id": 43,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487492.0,
+    "y": 4420575.2
+   },
+   "id": 44,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487623.2,
+    "y": 4420567.2
+   },
+   "id": 45,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487522.4,
+    "y": 4420562.4
+   },
+   "id": 46,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487690.4,
+    "y": 4420528.8
+   },
+   "id": 47,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487223.2,
+    "y": 4420525.6
+   },
+   "id": 48,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487738.4,
+    "y": 4420484.0
+   },
+   "id": 49,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487344.8,
+    "y": 4420469.6
+   },
+   "id": 50,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487605.6,
+    "y": 4420448.8
+   },
+   "id": 51,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487823.2,
+    "y": 4420408.8
+   },
+   "id": 52,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487754.4,
+    "y": 4420340.0
+   },
+   "id": 53,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487317.6,
+    "y": 4420164.0
+   },
+   "id": 54,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487341.6,
+    "y": 4420098.4
+   },
+   "id": 55,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487876.0,
+    "y": 4420092.0
+   },
+   "id": 56,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487620.0,
+    "y": 4420263.2
+   },
+   "id": 57,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487567.2,
+    "y": 4420242.4
+   },
+   "id": 58,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487604.0,
+    "y": 4420239.2
+   },
+   "id": 59,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487536.8,
+    "y": 4420237.6
+   },
+   "id": 60,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487618.4,
+    "y": 4420236.0
+   },
+   "id": 61,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487567.2,
+    "y": 4420228.0
+   },
+   "id": 62,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487567.2,
+    "y": 4420223.2
+   },
+   "id": 63,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487922.4,
+    "y": 4420223.2
+   },
+   "id": 64,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487888.8,
+    "y": 4420220.0
+   },
+   "id": 65,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487951.2,
+    "y": 4420216.8
+   },
+   "id": 66,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487964.0,
+    "y": 4420212.0
+   },
+   "id": 67,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487221.6,
+    "y": 4420194.4
+   },
+   "id": 68,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487797.6,
+    "y": 4420189.6
+   },
+   "id": 69,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487287.2,
+    "y": 4420181.6
+   },
+   "id": 70,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487200.8,
+    "y": 4420330.4
+   },
+   "id": 71,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487205.6,
+    "y": 4420324.0
+   },
+   "id": 72,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487216.8,
+    "y": 4420324.0
+   },
+   "id": 73,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487208.8,
+    "y": 4420319.2
+   },
+   "id": 74,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487221.6,
+    "y": 4420304.8
+   },
+   "id": 75,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487224.8,
+    "y": 4420301.6
+   },
+   "id": 76,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487228.0,
+    "y": 4420301.6
+   },
+   "id": 77,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487239.2,
+    "y": 4420292.0
+   },
+   "id": 78,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487276.0,
+    "y": 4420282.4
+   },
+   "id": 79,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487245.6,
+    "y": 4420271.2
+   },
+   "id": 80,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487240.8,
+    "y": 4420268.0
+   },
+   "id": 81,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487239.2,
+    "y": 4420263.2
+   },
+   "id": 82,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487244.0,
+    "y": 4420263.2
+   },
+   "id": 83,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487223.2,
+    "y": 4420261.6
+   },
+   "id": 84,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

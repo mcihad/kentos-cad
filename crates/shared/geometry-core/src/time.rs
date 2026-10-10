@@ -290,13 +290,56 @@ impl Unit {
 
 /// A moment shown (§3): `GG.AA.YYYY`, with ` SS:DD` for a step under a day and ` SS:DD:ss` for seconds.
 pub fn show(t: f64, unit: Unit) -> String {
-    let (y, m, d, into) = parts(t as i64);
-    let day = format!("{d:02}.{m:02}.{y:04}");
+    match clock_shown(t, unit) {
+        Some(c) => format!("{} {c}", day_of(t)),
+        None => day_of(t),
+    }
+}
+
+/// A moment's date, `GG.AA.YYYY`.
+fn day_of(t: f64) -> String {
+    let (y, m, d, _) = parts(t as i64);
+    format!("{d:02}.{m:02}.{y:04}")
+}
+
+/// A moment's clock for a step under a day (`SS:DD`, `SS:DD:ss` for seconds); none for a day or more.
+fn clock_shown(t: f64, unit: Unit) -> Option<String> {
+    let (_, _, _, into) = parts(t as i64);
     let (h, mi, s) = (into / HOUR, into % HOUR / MINUTE, into % MINUTE / SECOND);
     match unit {
-        Unit::Second => format!("{day} {h:02}:{mi:02}:{s:02}"),
-        Unit::Minute | Unit::Hour => format!("{day} {h:02}:{mi:02}"),
-        _ => day,
+        Unit::Second => Some(format!("{h:02}:{mi:02}:{s:02}")),
+        Unit::Minute | Unit::Hour => Some(format!("{h:02}:{mi:02}")),
+        _ => None,
+    }
+}
+
+fn same_day(a: f64, b: f64) -> bool {
+    let (ya, ma, da, _) = parts(a as i64);
+    let (yb, mb, db, _) = parts(b as i64);
+    (ya, ma, da) == (yb, mb, db)
+}
+
+/// What the slider's position shows (§5): an instant's moment, or a period's
+/// two; a period inside one day, under a day's step, writes its date once
+/// (`01.05.2024 14:00 – 15:00`).
+pub fn show_window(w: &Window, unit: Unit) -> String {
+    match *w {
+        Window::Instant(a) => show(a, unit),
+        Window::Range(a, b) => match clock_shown(b, unit) {
+            Some(c) if same_day(a, b) => format!("{} – {c}", show(a, unit)),
+            _ => format!("{} – {}", show(a, unit), show(b, unit)),
+        },
+    }
+}
+
+/// The slider's ends shown (§5): under a day's step only their clocks when
+/// both lie in one day (`06:00`, `17:00`) and only their dates when not, the
+/// position's own text telling the rest; a day's step or more as [`show`].
+pub fn show_ends(first: f64, last: f64, unit: Unit) -> [String; 2] {
+    match (clock_shown(first, unit), clock_shown(last, unit)) {
+        (Some(a), Some(b)) if same_day(first, last) => [a, b],
+        (Some(_), Some(_)) => [day_of(first), day_of(last)],
+        _ => [show(first, unit), show(last, unit)],
     }
 }
 
@@ -580,6 +623,21 @@ pub static OPS: &[crate::api::Op] = &[
     crate::op!("timeWrite", |t: f64, date_only: bool| write(t, date_only)),
     crate::op!("timeShow", |t: f64, unit: String| unit_named(&unit)
         .map(|u| show(t, u))),
+    // A period (`b` its end) or, `b` NaN, an instant: what the slider's position shows.
+    crate::op!("timeShowWindow", |a: f64, b: f64, unit: String| unit_named(
+        &unit
+    )
+    .map(|u| show_window(
+        &if b.is_nan() {
+            Window::Instant(a)
+        } else {
+            Window::Range(a, b)
+        },
+        u
+    ))),
+    crate::op!("timeShowEnds", |first: f64, last: f64, unit: String| {
+        unit_named(&unit).map(|u| show_ends(first, last, u).to_vec())
+    }),
     crate::op!("timeFloor", |t: f64, unit: String| unit_named(&unit)
         .map(|u| floor_to(t, u))),
     // [n, the unit's index in `Unit::ALL`].

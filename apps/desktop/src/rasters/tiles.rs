@@ -23,6 +23,8 @@ use std::sync::{Arc, Condvar, Mutex, OnceLock, PoisonError};
 
 use iced::futures::{SinkExt, Stream};
 use kentos_contracts::{RasterRender, RasterSample, RasterStretch, RasterStyle};
+use kentos_formats::multidim::cube::{Cube, CubeInfo, Part, Want as CubeWant};
+use kentos_formats::multidim::netcdf;
 use kentos_formats::raster::source::{BlockNeed, PYRAMID_FIRST, Put, Reader, decode_block};
 use kentos_formats::raster::stats::Stats;
 use kentos_formats::raster::{ByteStore, Step, tiff};
@@ -298,9 +300,9 @@ fn file_identity(path: &std::path::Path) -> Option<String> {
     Some(format!("{}|{}|{changed}", path.display(), meta.len()))
 }
 
-/// A raster opened from where its bytes are; why not when it cannot be.
-pub(super) fn open(origin: &Origin) -> Result<Opened, String> {
-    let read = open_reader(origin, READER_BUDGET)?;
+/// A raster opened from where its bytes are (a NetCDF file's `part`); why not when it cannot be.
+pub(super) fn open(origin: &Origin, part: Option<&Part>) -> Result<Opened, String> {
+    let read = open_reader_part(origin, part, READER_BUDGET)?;
     Ok(Opened {
         reader: Mutex::new(read.reader),
         source: read.source,
@@ -322,9 +324,159 @@ pub(crate) struct ReaderOpen {
     pub(crate) identity: Option<String>,
 }
 
-/// A raster's reader from where its bytes are (the scene's, an analysis's
-/// own with its own budget, docs/adr/0231 §2); why not when it cannot be.
-pub(crate) fn open_reader(origin: &Origin, budget: usize) -> Result<ReaderOpen, String> {
+/// The NetCDF files opened lately (docs/adr/0243 §5): a slice's reader is made
+/// from its file's header and mesh, read once, kept for the next slice.
+/// NetCDF files' cubes by their name, the least recently used first.
+type Cubes = Mutex<Vec<(String, Arc<Mutex<Cube>>)>>;
+
+fn cubes() -> &'static Cubes {
+    static CUBES: OnceLock<Cubes> = OnceLock::new();
+    CUBES.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+/// The most NetCDF files kept open (a large mesh's nodes and faces take memory).
+const CUBES_KEPT: usize = 4;
+
+/// A NetCDF file's cube by what names it, its header read once.
+fn cube_of(name: &str, source: &Bytes, size: u64) -> Result<Arc<Mutex<Cube>>, String> {
+    {
+        let mut kept = cubes().lock().unwrap_or_else(PoisonError::into_inner);
+        if let Some(k) = kept.iter().position(|(n, _)| n == name) {
+            let c = kept.remove(k);
+            let cube = c.1.clone();
+            kept.push(c);
+            return Ok(cube);
+        }
+    }
+    let mut store = ByteStore::new();
+    let mut taken = 0u64;
+    let cube = loop {
+        match Cube::parse(&store, size).map_err(|e| e.0)? {
+            Step::Done(c) => break c,
+            Step::Need(n) => {
+                taken += n.len;
+                if taken > HEADER_MOST * 2 {
+                    return Err("NetCDF'in başlığı çok büyük.".into());
+                }
+                store.put(n.offset, source.read(n.offset, n.len)?);
+            }
+        }
+    };
+    let cube = Arc::new(Mutex::new(cube));
+    let mut kept = cubes().lock().unwrap_or_else(PoisonError::into_inner);
+    kept.push((name.to_owned(), cube.clone()));
+    if kept.len() > CUBES_KEPT {
+        kept.remove(0);
+    }
+    Ok(cube)
+}
+
+/// The name a NetCDF file's cube is kept by: a linked file's path, size and
+/// change time; an address's; an embedded file's content.
+fn cube_name(identity: Option<&str>, source: &Bytes, size: u64) -> Result<String, String> {
+    Ok(match identity {
+        Some(id) => id.to_owned(),
+        None => {
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            source.read(0, size)?.hash(&mut h);
+            format!("bytes|{size}|{:016x}", h.finish())
+        }
+    })
+}
+
+/// A NetCDF file's cube of its own (not the tiles' kept one: a tool steps
+/// it alone) with what `part` needs read, and the file to read more of it.
+pub(crate) fn fresh_cube(origin: &Origin, part: &Part) -> Result<(Cube, Bytes), String> {
+    let source = match origin {
+        Origin::File(path) => Bytes::file(path)?,
+        Origin::Bytes(b) => Bytes::Memory(b.clone()),
+        Origin::Url(_) => return Err("NetCDF adresten okunmaz; dosyayı indirip ekleyin.".into()),
+    };
+    let size = source.size();
+    let mut store = ByteStore::new();
+    let mut taken = 0u64;
+    let mut cube = loop {
+        match Cube::parse(&store, size).map_err(|e| e.0)? {
+            Step::Done(c) => break c,
+            Step::Need(n) => {
+                taken += n.len;
+                if taken > HEADER_MOST * 2 {
+                    return Err("NetCDF'in başlığı çok büyük.".into());
+                }
+                store.put(n.offset, source.read(n.offset, n.len)?);
+            }
+        }
+    };
+    for n in cube.needs(CubeWant::Part(part)) {
+        if n.len > 1 << 30 {
+            return Err("NetCDF'in bir değişkeni 1 GB'tan büyük; okunmuyor.".into());
+        }
+        let bytes = source.read(n.offset, n.len)?;
+        cube.put(n.offset, bytes);
+    }
+    Ok((cube, source))
+}
+
+/// What a NetCDF file holds (Raster ekle, Mesh ekle; docs/adr/0243 §11) and its size; why not.
+pub(crate) fn cube_info(origin: &Origin) -> Result<(CubeInfo, u64), String> {
+    let (source, identity) = match origin {
+        Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
+        Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
+        Origin::Url(_) => return Err("NetCDF adresten okunmaz; dosyayı indirip ekleyin.".into()),
+    };
+    let size = source.size();
+    // The header's parser says why a NetCDF-4, GRIB or other file is not read.
+    let name = cube_name(identity.as_deref(), &source, size)?;
+    let cube = cube_of(&name, &source, size)?;
+    let mut c = cube.lock().unwrap_or_else(PoisonError::into_inner);
+    for _ in 0..2 {
+        let needs = c.needs(CubeWant::Inspect);
+        if needs.is_empty() {
+            break;
+        }
+        for n in needs {
+            if n.len > 1 << 30 {
+                return Err("NetCDF'in bir değişkeni 1 GB'tan büyük; okunmuyor.".into());
+            }
+            let bytes = source.read(n.offset, n.len)?;
+            c.put(n.offset, bytes);
+        }
+    }
+    Ok((c.info().map_err(|e| e.0)?, size))
+}
+
+/// What a NetCDF slice's reader needs from the file (coordinates, a mesh) read, the reader made.
+fn cube_reader(
+    cube: &Mutex<Cube>,
+    source: &Bytes,
+    part: &Part,
+    budget: usize,
+) -> Result<Reader, String> {
+    let mut c = cube.lock().unwrap_or_else(PoisonError::into_inner);
+    for _ in 0..2 {
+        let needs = c.needs(CubeWant::Part(part));
+        if needs.is_empty() {
+            break;
+        }
+        for n in needs {
+            if n.len > 1 << 30 {
+                return Err("NetCDF'in bir değişkeni 1 GB'tan büyük; okunmuyor.".into());
+            }
+            let bytes = source.read(n.offset, n.len)?;
+            c.put(n.offset, bytes);
+        }
+    }
+    c.open(part, budget).map_err(|e| e.0)
+}
+
+/// A raster's reader from where its bytes are (the scene's, an analysis's own
+/// with its own budget, docs/adr/0231 §2), a NetCDF file's `part` shown
+/// (docs/adr/0243 §5); why not when it cannot be.
+pub(crate) fn open_reader_part(
+    origin: &Origin,
+    part: Option<&Part>,
+    budget: usize,
+) -> Result<ReaderOpen, String> {
     let (source, identity) = match origin {
         Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
         Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
@@ -341,6 +493,26 @@ pub(crate) fn open_reader(origin: &Origin, budget: usize) -> Result<ReaderOpen, 
     };
     let size = source.size();
     let head = source.read(0, size.min(16))?;
+    match netcdf::sniff(&head) {
+        netcdf::Sniff::Classic(_) => {
+            let Some(part) = part else {
+                return Err("NetCDF dosyası bir veri seti seçilmeden gösterilmez; rasteri Raster ekle ya da Mesh ekle ile ekleyin.".into());
+            };
+            let name = cube_name(identity.as_deref(), &source, size)?;
+            let cube = cube_of(&name, &source, size)?;
+            let reader = cube_reader(&cube, &source, part, budget)?;
+            // A slice's pyramid file is its own.
+            let identity = identity.map(|id| format!("{id}|{}|{:?}", part.variable, part.slice));
+            return Ok(ReaderOpen {
+                reader,
+                source: Some(source),
+                size,
+                identity,
+            });
+        }
+        netcdf::Sniff::Hdf5 => return Err(netcdf::HDF5_REFUSED.into()),
+        _ => {}
+    }
     let remote = matches!(origin, Origin::Url(_));
     if remote && !tiff::sniff(&head) {
         return Err(
@@ -422,6 +594,8 @@ pub(super) fn jpeg_size(data: &[u8]) -> Result<(u32, u32), String> {
 /// A raster the scene draws: where it is and, once a worker opened it, the opened one.
 pub(super) struct Source {
     pub(super) origin: Origin,
+    /// What of a NetCDF file it shows (docs/adr/0243 §5).
+    pub(super) part: Option<Part>,
     pub(super) opened: Mutex<Option<Result<Arc<Opened>, String>>>,
     /// Its pyramid file is being made: its coarse levels wait.
     pub(super) building: AtomicBool,
@@ -434,7 +608,7 @@ impl Source {
     pub(super) fn opened(&self) -> Result<Arc<Opened>, String> {
         let mut o = self.opened.lock().unwrap_or_else(PoisonError::into_inner);
         if o.is_none() {
-            *o = Some(open(&self.origin).map(Arc::new));
+            *o = Some(open(&self.origin, self.part.as_ref()).map(Arc::new));
         }
         o.clone().unwrap_or_else(|| Err("Raster açılamadı.".into()))
     }
@@ -517,6 +691,33 @@ pub fn service() -> &'static Service {
 }
 
 impl Service {
+    /// A mesh's node and face count (Öznitelikler, docs/adr/0243 §11), once
+    /// the scene opened one of its slices; none before (nothing is opened here).
+    pub fn mesh_counts(&self, key: &str) -> Option<(u64, u64)> {
+        let (file, part) = super::split_key(key);
+        let mesh = part?.mesh?;
+        let sources = self
+            .shared
+            .sources
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        sources.iter().find_map(|(k, s)| {
+            let (f, p) = super::split_key(k);
+            if f != file || p.and_then(|p| p.mesh).as_deref() != Some(mesh.as_str()) {
+                return None;
+            }
+            let opened = s
+                .opened
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .clone()?
+                .ok()?;
+            let reader = opened.reader.lock().unwrap_or_else(PoisonError::into_inner);
+            let m = reader.mesh_levels()?;
+            Some((m.mesh.x.len() as u64, u64::from(m.mesh.faces)))
+        })
+    }
+
     /// The scene draws the raster `key` from `origin`: registered, or its
     /// tiles let go when it now comes from elsewhere.
     pub fn register(&self, key: &str, origin: impl FnOnce() -> Option<Origin>) {
@@ -546,6 +747,7 @@ impl Service {
                 key.to_owned(),
                 Arc::new(Source {
                     origin,
+                    part: super::split_key(key).1,
                     opened: Mutex::new(None),
                     building: AtomicBool::new(false),
                     declined: AtomicBool::new(false),
@@ -811,7 +1013,7 @@ fn make(service: &Service, want: &Want, key: TileKey) -> Option<Vec<u8>> {
         .reader
         .lock()
         .unwrap_or_else(PoisonError::into_inner)
-        .tile_parts(level, key.tx, key.ty, &want.affine)?;
+        .tile_parts_with(level, key.tx, key.ty, &want.affine, style.edges.is_some())?;
     let mut out = Vec::new();
     parts.render(&style, stats.as_ref(), &mut out);
     Some(out)

@@ -2,6 +2,7 @@ import type { AppContext } from '../app/context';
 import { pointUnreached, SecondCrs } from '../model/secondCrs';
 import { Signal } from '../core/signal';
 import type { Vec2 } from '../model/geometry';
+import { rasterKey } from '../model/rasterRules';
 import { elevationAt } from '../product/elevationValues';
 import { rasterService } from '../render/rasterService';
 import type { ViewTransform } from '../viewport/Camera';
@@ -85,7 +86,7 @@ export class CoordinateReadTool implements Tool {
       const [i, j] = [(d * dx - b * dy) / det, (a * dy - c * dx) / det];
       if (!(i >= 0 && j >= 0 && i < r.width && j < r.height)) continue;
       const layer = doc.layers.get(r.layerId)?.name ?? '';
-      const key = r.asset ? `asset:${r.asset}` : `file:${r.file ?? ''}`;
+      const key = rasterKey(r);
       const url = r.asset ? ((doc.styles.value.items.find((it) => it.id === r.asset) as { data?: string } | undefined)?.data ?? null) : null;
       void rasterService()
         .values(key, url, i, j)

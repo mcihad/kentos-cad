@@ -55,6 +55,11 @@
   min-width: 120px;
 }
 .timebar__end {
+  /* An end gives way before the slider does: it shortens with “…”, its whole moment its title. */
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--c-text-3);
   font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
@@ -86,16 +91,13 @@
   height: calc(22px * var(--ui-scale));
   padding: 0 10px;
 }
-/* A narrow bar: the ends' dates go first, then the words beside the fields, then the gaps and the slider shrink. */
-@container (max-width: 1060px) {
-  .timebar__end {
-    display: none;
-  }
-}
-@container (max-width: 960px) {
-  .timebar__word {
-    display: none;
-  }
+/* A narrow bar (TimeBar.fit measures it): the ends' dates go first, then the words beside the fields, then Hız, then
+   Döngü; below 820 pixels the gaps and the slider shrink too. */
+.timebar:is([data-tight='1'], [data-tight='2'], [data-tight='3'], [data-tight='4']) .timebar__end,
+.timebar:is([data-tight='2'], [data-tight='3'], [data-tight='4']) .timebar__word,
+.timebar:is([data-tight='3'], [data-tight='4']) .timebar__speed,
+.timebar[data-tight='4'] .timebar__loop {
+  display: none;
 }
 @container (max-width: 820px) {
   .timebar__nav,

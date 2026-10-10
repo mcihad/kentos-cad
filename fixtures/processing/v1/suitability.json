@@ -1,0 +1,1456 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "rasters": {
+  "egim.tif": "suitability/egim.tif",
+  "yol.tif": "suitability/yol.tif",
+  "toprak.tif": "suitability/toprak.tif",
+  "sinif.tif": "suitability/sinif.tif",
+  "egim-sinifi.tif": "suitability/egim-sinifi.tif",
+  "ortu.tif": "suitability/ortu.tif",
+  "deger.tif": "suitability/deger.tif",
+  "uyelik-a.tif": "suitability/uyelik-a.tif",
+  "uyelik-b.tif": "suitability/uyelik-b.tif",
+  "uyelik-c.tif": "suitability/uyelik-c.tif",
+  "duyarlilik.tif": "suitability/duyarlilik.tif"
+ },
+ "documents": {
+  "suitability.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "heyelan",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "suitability.fuzzyMembership": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "function": "linear",
+     "low": 0,
+     "high": 100,
+     "exponent": 2,
+     "midpoint": 1,
+     "spread": 0.1,
+     "steep": 5,
+     "sample": "f32",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Üyelik"
+     }
+    },
+    "suitability.fuzzyOverlay": {
+     "input": {
+      "scope": "visible"
+     },
+     "band": 1,
+     "op": "and",
+     "gamma": 0.9,
+     "sample": "f32",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Bulanık çakıştırma"
+     }
+    },
+    "suitability.weightedSum": {
+     "input": {
+      "scope": "visible"
+     },
+     "band": 1,
+     "weights": {},
+     "sample": "f32",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Ağırlıklı toplam"
+     }
+    },
+    "suitability.weightedOverlay": {
+     "input": {
+      "scope": "visible"
+     },
+     "band": 1,
+     "low": 1,
+     "high": 9,
+     "influence": {},
+     "classes": {},
+     "bounds": "upperClosed",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Ağırlıklı çakıştırma"
+     }
+    },
+    "suitability.pairwise": {
+     "input": {
+      "scope": "visible"
+     },
+     "comparisons": [],
+     "write": true,
+     "band": 1,
+     "sample": "f32",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Ağırlıklı toplam (AHP)"
+     }
+    },
+    "suitability.roc": {
+     "input": {
+      "scope": "selection"
+     },
+     "band": 1,
+     "presence": {
+      "scope": "layer",
+      "layerId": "heyelan"
+     },
+     "background": "cells",
+     "absence": {
+      "scope": "layer",
+      "layerId": "heyelan"
+     },
+     "higher": true
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "membership-linear",
+   "title": "Bulanık üyelik, Doğrusal 0–20; katman rasterin hemen üstünde",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "deger"
+    },
+    "function": "linear",
+    "low": 0,
+    "high": 20
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık üyelik",
+    "summary": "6 × 5 hücrelik raster; “deger-uyelik.tif” yazıldı.",
+    "outputs": {
+     "file": "deger-uyelik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uyelik",
+      "name": "Üyelik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uyelik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "deger-uyelik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uyelik": "deger"
+    },
+    "suitabilityOf": {
+     "deger-uyelik.tif": "uyelik-dogrusal"
+    }
+   }
+  },
+  {
+   "id": "membership-gauss",
+   "title": "Bulanık üyelik, Gauss: orta nokta 10, yayılım 0,05",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "deger"
+    },
+    "function": "gaussian",
+    "midpoint": 10,
+    "spread": 0.05
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık üyelik",
+    "summary": "6 × 5 hücrelik raster; “deger-uyelik.tif” yazıldı.",
+    "outputs": {
+     "file": "deger-uyelik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uyelik",
+      "name": "Üyelik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uyelik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "deger-uyelik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uyelik": "deger"
+    },
+    "suitabilityOf": {
+     "deger-uyelik.tif": "uyelik-gauss"
+    }
+   }
+  },
+  {
+   "id": "membership-large",
+   "title": "Bulanık üyelik, Büyük: orta nokta 10, diklik 5; 0 ve altı 0",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "deger"
+    },
+    "function": "large",
+    "midpoint": 10,
+    "steep": 5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık üyelik",
+    "summary": "6 × 5 hücrelik raster; “deger-uyelik.tif” yazıldı.",
+    "outputs": {
+     "file": "deger-uyelik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uyelik",
+      "name": "Üyelik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uyelik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "deger-uyelik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uyelik": "deger"
+    },
+    "suitabilityOf": {
+     "deger-uyelik.tif": "uyelik-buyuk"
+    }
+   }
+  },
+  {
+   "id": "fuzzy-and",
+   "title": "Bulanık çakıştırma, Ve: üç üyelik; 0–1 dışındaki üyelik söylenir",
+   "document": "suitability.kcad",
+   "selection": [
+    8,
+    9,
+    10
+   ],
+   "run": {
+    "tool": "suitability.fuzzyOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "op": "and"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık çakıştırma",
+    "summary": "6 × 5 hücrelik raster; “uyelik-a-bulanik.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "uyelik-a-bulanik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-bulanik-cakistirma",
+      "name": "Bulanık çakıştırma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-bulanik-cakistirma",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "uyelik-a-bulanik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-bulanik-cakistirma": "uyelik-a"
+    },
+    "suitabilityOf": {
+     "uyelik-a-bulanik.tif": "bulanik-and"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 hücrede üyelik 0–1 aralığının dışında; o hücreler değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "fuzzy-gamma",
+   "title": "Bulanık çakıştırma, Gamma 0,9",
+   "document": "suitability.kcad",
+   "selection": [
+    8,
+    9,
+    10
+   ],
+   "run": {
+    "tool": "suitability.fuzzyOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "op": "gamma",
+    "gamma": 0.9
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık çakıştırma",
+    "summary": "6 × 5 hücrelik raster; “uyelik-a-bulanik.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "uyelik-a-bulanik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-bulanik-cakistirma",
+      "name": "Bulanık çakıştırma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-bulanik-cakistirma",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "uyelik-a-bulanik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-bulanik-cakistirma": "uyelik-a"
+    },
+    "suitabilityOf": {
+     "uyelik-a-bulanik.tif": "bulanik-gamma"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 hücrede üyelik 0–1 aralığının dışında; o hücreler değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "weighted-sum",
+   "title": "Ağırlıklı toplam: ağırlıklar 0,5, −0,02, 1,25",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "suitability.weightedSum"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "weights": {
+     "Eğim": 0.5,
+     "Yol": -0.02,
+     "Toprak": 1.25
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Ağırlıklı toplam",
+    "summary": "6 × 5 hücrelik raster; “egim-agirlikli.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "egim-agirlikli.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-agirlikli-toplam",
+      "name": "Ağırlıklı toplam",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-agirlikli-toplam",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "egim-agirlikli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-agirlikli-toplam": "egim"
+    },
+    "suitabilityOf": {
+     "egim-agirlikli.tif": "agirlikli-toplam"
+    }
+   }
+  },
+  {
+   "id": "weighted-sum-default",
+   "title": "Ağırlıklı toplam: yazılmayan ağırlıklar 1",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "suitability.weightedSum"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "weights": {
+     "Yol": 0.1
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Ağırlıklı toplam",
+    "summary": "6 × 5 hücrelik raster; “egim-agirlikli.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "egim-agirlikli.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-agirlikli-toplam",
+      "name": "Ağırlıklı toplam",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-agirlikli-toplam",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "egim-agirlikli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-agirlikli-toplam": "egim"
+    },
+    "suitabilityOf": {
+     "egim-agirlikli.tif": "agirlikli-toplam-varsayilan"
+    }
+   }
+  },
+  {
+   "id": "weighted-overlay",
+   "title": "Ağırlıklı çakıştırma 1–9: etkiler %33,3333, %33,3333, %33,3334; iki sınıf tablosu, kısıt ve boş",
+   "document": "suitability.kcad",
+   "selection": [
+    4,
+    5,
+    6
+   ],
+   "run": {
+    "tool": "suitability.weightedOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "low": 1,
+    "high": 9,
+    "influence": {
+     "Sınıf": 33.3333,
+     "Eğim sınıfı": 33.3333,
+     "Örtü": 33.3334
+    },
+    "classes": {
+     "Eğim sınıfı": "* 5 9; 5 15 6; 15 30 3; 30 * kısıt",
+     "Örtü": "1 9; 2 7; 3 5; 4 boş"
+    },
+    "bounds": "upperClosed"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Ağırlıklı çakıştırma",
+    "summary": "6 × 5 hücrelik raster; “sinif-cakistirma.tif” yazıldı. 3 raster birleşti. Kısıtlı 5 hücre.",
+    "outputs": {
+     "file": "sinif-cakistirma.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-agirlikli-cakistirma",
+      "name": "Ağırlıklı çakıştırma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-agirlikli-cakistirma",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "i32",
+      "file": "sinif-cakistirma.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 9.0,
+       "ramp": "Spektral",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-agirlikli-cakistirma": "sinif"
+    },
+    "suitabilityOf": {
+     "sinif-cakistirma.tif": "cakistirma-tablolu"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "Sınıf tablosunun hiçbir kuralının tutmadığı 5 hücre değersiz bırakıldı."
+     },
+     {
+      "level": "warn",
+      "text": "Ölçeğin dışında (ya da tam sayı olmayan) değerli 6 hücre değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "pairwise-raster",
+   "title": "İkili karşılaştırma: tutarlı üç ölçüt, ağırlıklı toplam yazılır",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "suitability.pairwise"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "comparisons": [
+     [
+      "Eğim",
+      "Yol",
+      2.0
+     ],
+     [
+      "Eğim",
+      "Toprak",
+      4.0
+     ],
+     [
+      "Toprak",
+      "Yol",
+      -2.0
+     ]
+    ],
+    "write": true
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "İkili karşılaştırma (AHP)",
+    "summary": "6 × 5 hücrelik raster; “egim-ahp.tif” yazıldı. Ağırlıklar tabloda; λ 3.0000; CI 0.0000; RI 0.58; CR 0.0000 (tutarlı).",
+    "outputs": {
+     "file": "egim-ahp.tif",
+     "table": {
+      "columns": [
+       "Ölçüt",
+       "Ağırlık",
+       "Yüzde (%)"
+      ],
+      "rows": [
+       [
+        "Eğim",
+        "0.571429",
+        "57.14"
+       ],
+       [
+        "Yol",
+        "0.285714",
+        "28.57"
+       ],
+       [
+        "Toprak",
+        "0.142857",
+        "14.29"
+       ]
+      ]
+     }
+    },
+    "layers": [
+     {
+      "id": "islem-agirlikli-toplam-ahp-",
+      "name": "Ağırlıklı toplam (AHP)",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-agirlikli-toplam-ahp-",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "egim-ahp.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-agirlikli-toplam-ahp-": "egim"
+    },
+    "suitabilityOf": {
+     "egim-ahp.tif": "ahp-tutarli-raster"
+    }
+   }
+  },
+  {
+   "id": "pairwise-four",
+   "title": "İkili karşılaştırma, dört ölçüt, yalnız ağırlıklar",
+   "document": "suitability.kcad",
+   "selection": [
+    4,
+    5,
+    6,
+    7
+   ],
+   "run": {
+    "tool": "suitability.pairwise"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "comparisons": [
+     [
+      "Sınıf",
+      "Eğim sınıfı",
+      3.0
+     ],
+     [
+      "Sınıf",
+      "Örtü",
+      5.0
+     ],
+     [
+      "Sınıf",
+      "Değer",
+      7.0
+     ],
+     [
+      "Eğim sınıfı",
+      "Örtü",
+      3.0
+     ],
+     [
+      "Eğim sınıfı",
+      "Değer",
+      5.0
+     ],
+     [
+      "Örtü",
+      "Değer",
+      3.0
+     ]
+    ],
+    "write": false
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "4 ölçütün ağırlıkları tabloda; λ 4.1170; CI 0.0390; RI 0.90; CR 0.0433 (tutarlı).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçüt",
+       "Ağırlık",
+       "Yüzde (%)"
+      ],
+      "rows": [
+       [
+        "Sınıf",
+        "0.565009",
+        "56.50"
+       ],
+       [
+        "Eğim sınıfı",
+        "0.262201",
+        "26.22"
+       ],
+       [
+        "Örtü",
+        "0.117504",
+        "11.75"
+       ],
+       [
+        "Değer",
+        "0.055286",
+        "5.53"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "pairwise-inconsistent",
+   "title": "İkili karşılaştırma, döngülü karşılaştırmalar: tutarsız, söylenir",
+   "document": "suitability.kcad",
+   "selection": [
+    4,
+    5,
+    6
+   ],
+   "run": {
+    "tool": "suitability.pairwise"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "comparisons": [
+     [
+      "Sınıf",
+      "Eğim sınıfı",
+      9.0
+     ],
+     [
+      "Eğim sınıfı",
+      "Örtü",
+      9.0
+     ],
+     [
+      "Örtü",
+      "Sınıf",
+      9.0
+     ]
+    ],
+    "write": false
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "3 ölçütün ağırlıkları tabloda; λ 10.1111; CI 3.5556; RI 0.58; CR 6.1303 (tutarsız).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçüt",
+       "Ağırlık",
+       "Yüzde (%)"
+      ],
+      "rows": [
+       [
+        "Sınıf",
+        "0.333333",
+        "33.33"
+       ],
+       [
+        "Eğim sınıfı",
+        "0.333333",
+        "33.33"
+       ],
+       [
+        "Örtü",
+        "0.333333",
+        "33.33"
+       ]
+      ]
+     }
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "Karşılaştırmalar tutarsız (CR 6.13 > 0.10); en çelişkili çiftleri yeniden gözden geçirin."
+     }
+    ]
+   }
+  },
+  {
+   "id": "roc-cells",
+   "title": "ROC, bütün hücreler: noktalar; değersiz hücredeki ve rasterin dışındaki söylenir",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.roc"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "duyarlilik"
+    },
+    "presence": {
+     "scope": "layer",
+     "layerId": "heyelan"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "AUC 0.7026 (5 varlık hücresi, 78 değerli hücre). En iyi eşik 4 (doğru pozitif %100.0, alan %61.5).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Eşik",
+       "Doğru pozitif",
+       "Doğru pozitif oranı (%)",
+       "Hücre",
+       "Alan oranı (%)"
+      ],
+      "rows": [
+       [
+        "9",
+        "1",
+        "20.00",
+        "8",
+        "10.26"
+       ],
+       [
+        "8",
+        "2",
+        "40.00",
+        "16",
+        "20.51"
+       ],
+       [
+        "7",
+        "3",
+        "60.00",
+        "24",
+        "30.77"
+       ],
+       [
+        "5",
+        "4",
+        "80.00",
+        "40",
+        "51.28"
+       ],
+       [
+        "4",
+        "5",
+        "100.00",
+        "48",
+        "61.54"
+       ]
+      ]
+     },
+     "auc": 0.7025641025641025
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "Değersiz hücreye düşen 2 örnek atlandı."
+     },
+     {
+      "level": "warn",
+      "text": "Rasterin dışında kalan 1 nokta atlandı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "roc-absence",
+   "title": "ROC, yokluk nesneleriyle: hem varlık hem yokluk olan hücreler söylenir",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.roc"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "duyarlilik"
+    },
+    "presence": {
+     "scope": "layer",
+     "layerId": "heyelan-bes"
+    },
+    "background": "absence",
+    "absence": {
+     "scope": "layer",
+     "layerId": "yokluk"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "AUC 0.6636 (5 varlık hücresi, 11 yokluk hücresi). En iyi eşik 4 (doğru pozitif %100.0, yanlış pozitif %63.6).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Eşik",
+       "Doğru pozitif",
+       "Doğru pozitif oranı (%)",
+       "Yanlış pozitif",
+       "Yanlış pozitif oranı (%)"
+      ],
+      "rows": [
+       [
+        "9",
+        "1",
+        "20.00",
+        "1",
+        "9.09"
+       ],
+       [
+        "8",
+        "2",
+        "40.00",
+        "4",
+        "36.36"
+       ],
+       [
+        "7",
+        "3",
+        "60.00",
+        "4",
+        "36.36"
+       ],
+       [
+        "5",
+        "4",
+        "80.00",
+        "6",
+        "54.55"
+       ],
+       [
+        "4",
+        "5",
+        "100.00",
+        "7",
+        "63.64"
+       ]
+      ]
+     },
+     "auc": 0.6636363636363637
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "Değersiz hücreye düşen 1 örnek atlandı."
+     },
+     {
+      "level": "warn",
+      "text": "2 hücre hem varlık hem yokluk; ikisinde de sayıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "roc-lower",
+   "title": "ROC, düşük değer daha olası",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.roc"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "duyarlilik"
+    },
+    "presence": {
+     "scope": "layer",
+     "layerId": "heyelan"
+    },
+    "higher": false
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "AUC 0.2974 (5 varlık hücresi, 78 değerli hücre). En iyi eşik 9 (doğru pozitif %100.0, alan %100.0).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Eşik",
+       "Doğru pozitif",
+       "Doğru pozitif oranı (%)",
+       "Hücre",
+       "Alan oranı (%)"
+      ],
+      "rows": [
+       [
+        "4",
+        "1",
+        "20.00",
+        "38",
+        "48.72"
+       ],
+       [
+        "5",
+        "2",
+        "40.00",
+        "46",
+        "58.97"
+       ],
+       [
+        "7",
+        "3",
+        "60.00",
+        "62",
+        "79.49"
+       ],
+       [
+        "8",
+        "4",
+        "80.00",
+        "70",
+        "89.74"
+       ],
+       [
+        "9",
+        "5",
+        "100.00",
+        "78",
+        "100.00"
+       ]
+      ]
+     },
+     "auc": 0.29743589743589743
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "Değersiz hücreye düşen 2 örnek atlandı."
+     },
+     {
+      "level": "warn",
+      "text": "Rasterin dışında kalan 1 nokta atlandı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "weighted-overlay-sum",
+   "title": "Ağırlıklı çakıştırma, etkilerin toplamı 90: ret",
+   "document": "suitability.kcad",
+   "selection": [
+    4,
+    5,
+    6
+   ],
+   "run": {
+    "tool": "suitability.weightedOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "influence": {
+     "Sınıf": 50,
+     "Eğim sınıfı": 30,
+     "Örtü": 10
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Etkilerin toplamı 100 olmalı; şimdi 90."
+   }
+  },
+  {
+   "id": "weighted-overlay-missing",
+   "title": "Ağırlıklı çakıştırma, bir rasterin etkisi yazılmamış: ret",
+   "document": "suitability.kcad",
+   "selection": [
+    4,
+    5,
+    6
+   ],
+   "run": {
+    "tool": "suitability.weightedOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "influence": {
+     "Sınıf": 50,
+     "Eğim sınıfı": 50
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Örtü: etkisi yazılmadı."
+   }
+  },
+  {
+   "id": "pairwise-one",
+   "title": "İkili karşılaştırma, tek raster: ret",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.pairwise"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "egim"
+    },
+    "write": false
+   },
+   "expect": {
+    "status": "error",
+    "message": "İkili karşılaştırma 2 ile 15 arasında ölçüt (raster) ister; 1 raster seçili."
+   }
+  },
+  {
+   "id": "membership-two",
+   "title": "Bulanık üyelik, iki raster: ret",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2
+   ],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "2 raster seçili; bu araç tek raster ister."
+   }
+  },
+  {
+   "id": "fuzzy-one",
+   "title": "Bulanık çakıştırma, tek raster: ret",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "uyelik-a"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Bulanık çakıştırma en az iki raster ister."
+   }
+  },
+  {
+   "id": "roc-off",
+   "title": "ROC, varlık rasterin dışında: ret",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.roc"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "duyarlilik"
+    },
+    "presence": {
+     "scope": "layer",
+     "layerId": "uzak"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Rasterin değerli hücrelerine düşen varlık yok: varlık nesneleri rasterin üstünde olmalı."
+   }
+  },
+  {
+   "id": "weighted-sum-bounds",
+   "title": "Ağırlıklı toplam, sınırın dışında ağırlık: çalışmaz, alanın sorunu söylenir",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2
+   ],
+   "run": {
+    "tool": "suitability.weightedSum"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "weights": {
+     "Eğim": 2000000000.0
+    }
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "weights",
+      "message": "“Ağırlıklar”: Eğim -1000000000 ile 1000000000 arasında olmalı."
+     }
+    ]
+   }
+  }
+ ]
+}

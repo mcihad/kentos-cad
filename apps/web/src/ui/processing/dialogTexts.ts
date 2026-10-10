@@ -112,6 +112,17 @@ export const DIALOG_TEXTS = {
     chipTitle: (n: number) => `${n} nesnede var; ifadeye ekle`,
     more: (n: number) => `+${n}`,
   },
+  /** A value for each raster and a comparison for each pair (docs/adr/0237 §9). */
+  rasters: {
+    none: 'Önce rasterleri seçin.',
+    later: 'Rasterler çalışınca belli olur; adlarıyla ekleyin.',
+    missing: 'Girdide yok',
+    remove: 'Kaldır',
+    add: 'Raster adı',
+    addButton: 'Ekle',
+    even: 'Eşit',
+    times: (n: number) => `${n} kat`,
+  },
 } as const;
 
 /** The scopes' names on the features field's segmented control. */

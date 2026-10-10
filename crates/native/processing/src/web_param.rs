@@ -136,6 +136,16 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
                 _ => kentos_contracts::NetworkKind::Road,
             },
         },
+        "rasterValues" => ParamKind::RasterValues {
+            of: text(o, "of").unwrap_or_default(),
+            number: text(o, "cell").as_deref() != Some("text"),
+            min: o.get("min").and_then(Value::as_f64),
+            max: o.get("max").and_then(Value::as_f64),
+            placeholder: text(o, "placeholder"),
+        },
+        "rasterPairs" => ParamKind::RasterPairs {
+            of: text(o, "of").unwrap_or_default(),
+        },
         _ => return None,
     };
     let mut def = ParamDef::new(name, label, kind);

@@ -116,7 +116,7 @@ pub struct RasterFile {
 }
 
 impl RasterFile {
-    fn of(reader: Reader) -> RasterFile {
+    pub(crate) fn of(reader: Reader) -> RasterFile {
         RasterFile {
             reader,
             needs: Vec::new(),
@@ -311,6 +311,14 @@ impl RasterFile {
         } else {
             Ok(Vec::new())
         }
+    }
+
+    /// A mesh slice's node and face count (docs/adr/0243 §11); empty for another raster.
+    #[wasm_bindgen(js_name = meshCounts)]
+    pub fn mesh_counts(&self) -> Vec<f64> {
+        self.reader.mesh_levels().map_or_else(Vec::new, |m| {
+            vec![m.mesh.x.len() as f64, f64::from(m.mesh.faces)]
+        })
     }
 
     /// The bands' values at pixel (`i`, `j`) of level 0 (its block kept); none outside or while missing.

@@ -10,12 +10,16 @@
 // yakala and Alan kapat on an 8192² scanned sheet, Eğrilere kot ver over 10 000 curves (in the page); then hydrology
 // (docs/adr/0235 §12, hydro_timing.rs's work): every tool over its 4096² DEM with pits and flats; then distance and cost
 // (docs/adr/0236 §8, distance_timing.rs's work): each tool over its 4096² cost raster with lakes, the sources' raster and
-// hydrology's DEM as the surface, Uzaklık yüzeyi from 2000 points and 100 lines. Starts its own Vite dev
+// hydrology's DEM as the surface, Uzaklık yüzeyi from 2000 points and 100 lines; then suitability (docs/adr/0237 §11,
+// suitability_timing.rs's work): four 4096² criteria, each tool's run and ROC with 10 000 presence cells; then remote sensing
+// (docs/adr/0242 §12, remote_timing.rs's work): a 4096² four-band 16-bit image and its kin, each tool's run; then mesh and
+// multidimensional data (docs/adr/0243 §12, multidim_timing.rs's files): the raster workers' listing, placing, tiles and a time
+// step's first view, 2DM and DAT made UGRID, Kesit, Zaman serisi over a sparse 3 GB grid and Mesh hesaplayıcı. Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
 //
-//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance]
+//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance|suitability|remote|multidim]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -114,6 +118,105 @@ for path, z in ((${JSON.stringify(cost)}, cost), (${JSON.stringify(wells)}, well
 `;
   execFileSync('python3', ['-c', script], { stdio: 'inherit' });
   return { cost, wells };
+}
+
+/** suitability_timing.rs's criteria of n × n cells of 5 m: a slope with holes, a distance, classes and a membership. */
+function suitabilityRasters(n) {
+  const names = ['egim', 'uzaklik', 'ortu', 'uyelik'].map((k) => `${dir}olcut-${k}-${n}.tif`);
+  if (names.every((f) => existsSync(f))) return names;
+  const script = `
+import numpy as np
+from osgeo import gdal, osr
+gdal.UseExceptions()
+n = ${n}
+def hash(i, j):
+    h = (i * np.uint32(0x9e3779b9)) ^ (j * np.uint32(0x85ebca6b))
+    h ^= h >> np.uint32(15)
+    h = h * np.uint32(0x2c1b3c6d)
+    return h ^ (h >> np.uint32(12))
+i = np.arange(n, dtype=np.uint32)[None, :]
+j = np.arange(n, dtype=np.uint32)[:, None]
+x = np.arange(n, dtype=np.float64)[None, :]
+y = np.arange(n, dtype=np.float64)[:, None]
+hole = np.sin(x / 97.0) * np.cos(y / 131.0) + 0.3 * np.sin((x + y) / 41.0) > 1.15
+slope = 40.0 * np.abs(np.sin(x / 230.0) * np.cos(y / 310.0)) + (hash(i, j) % np.uint32(100)).astype(np.float64) / 20.0
+slope = np.where(hole, np.nan, slope)
+dist = 5.0 * (np.hypot(x - 1800.0, y - 2300.0) % 900.0)
+cls = (1 + (i // np.uint32(37) + j // np.uint32(53) + hash(i // np.uint32(37), j // np.uint32(53))) % np.uint32(5)).astype(np.float64)
+mem = (hash(j, i) % np.uint32(1001)).astype(np.float64) / 1000.0
+for path, z in zip(${JSON.stringify(names)}, (slope, dist + 0 * y, cls, mem)):
+    d = gdal.GetDriverByName('GTiff').Create(path, n, n, 1, gdal.GDT_Float32, ['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256', 'COMPRESS=DEFLATE', 'ZLEVEL=1'])
+    d.SetGeoTransform([500000.0, 5.0, 0.0, 4420000.0, 0.0, -5.0])
+    s = osr.SpatialReference(); s.ImportFromEPSG(5254); d.SetProjection(s.ExportToWkt())
+    d.GetRasterBand(1).SetNoDataValue(float('nan'))
+    d.GetRasterBand(1).WriteArray(z.astype(np.float32))
+    d = None
+`;
+  execFileSync('python3', ['-c', script], { stdio: 'inherit' });
+  return names;
+}
+
+/** remote_timing.rs's rasters of 5 m: the four-band image, two years on, its bands, its classes, a 2048² multispectral and a 4096² panchromatic. */
+function remoteRasters(n) {
+  const names = ['goruntu', 'sonraki', 'b1', 'b2', 'b3', 'b4', 'siniflar', 'cok-bantli', 'pankromatik'].map((k) => `${dir}uzaktan-${k}-${n}.tif`);
+  if (names.every((f) => existsSync(f))) return names;
+  const script = `
+import numpy as np
+from osgeo import gdal, osr
+gdal.UseExceptions()
+n = ${n}
+def hash(i, j, b):
+    h = (i * np.uint32(0x9e3779b9)) ^ (j * np.uint32(0x85ebca6b)) ^ np.uint32((b * 0xc2b2ae35) & 0xFFFFFFFF)
+    h ^= h >> np.uint32(15)
+    h = h * np.uint32(0x2c1b3c6d)
+    return h ^ (h >> np.uint32(12))
+SIG = np.array([[600, 520, 330, 180], [300, 560, 380, 3400], [520, 820, 760, 2700], [980, 1250, 1600, 2150], [420, 900, 560, 4100], [1250, 1330, 1420, 1850]], dtype=np.float64)
+i = np.arange(n, dtype=np.uint32)[None, :] * np.ones((n, 1), np.uint32)
+j = np.arange(n, dtype=np.uint32)[:, None] * np.ones((1, n), np.uint32)
+bi, bj = i // np.uint32(256), j // np.uint32(256)
+cover = ((bi + np.uint32(3) * bj + hash(bi, bj, 9) % np.uint32(2)) % np.uint32(6)).astype(np.int64)
+empty = (i < 40) & (j < 40)
+img = np.stack([np.maximum(SIG[cover, b] + (hash(i, j, b) % np.uint32(201)).astype(np.float64) - 100.0, 1.0) for b in range(4)], axis=-1)
+img[empty] = 0
+later = img * 1.02
+fell = (i >= 1024) & (i < 1536) & (j >= 2048) & (j < 2560)
+later[fell] = SIG[3]
+later[empty] = 0
+def write(path, z, cell):
+    m = z.shape[0]
+    bands = 1 if z.ndim == 2 else z.shape[2]
+    d = gdal.GetDriverByName('GTiff').Create(path, m, m, bands, gdal.GDT_UInt16, ['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256', 'COMPRESS=DEFLATE', 'ZLEVEL=1'])
+    d.SetGeoTransform([500000.0, cell, 0.0, 4420000.0, 0.0, -cell])
+    s = osr.SpatialReference(); s.ImportFromEPSG(5254); d.SetProjection(s.ExportToWkt())
+    for k in range(bands):
+        d.GetRasterBand(k + 1).SetNoDataValue(0)
+        d.GetRasterBand(k + 1).WriteArray(np.round(z if bands == 1 else z[:, :, k]).astype(np.uint16))
+    d = None
+paths = ${JSON.stringify(names)}
+write(paths[0], img, 5.0)
+write(paths[1], later, 5.0)
+for b in range(4):
+    write(paths[2 + b], img[:, :, b], 5.0)
+write(paths[6], np.where(empty, 0, cover + 1).astype(np.float64), 5.0)
+write(paths[7], img[::2, ::2], 10.0)
+pan = img[:, :, :3].mean(axis=2)
+pan[empty] = 0
+write(paths[8], pan, 5.0)
+`;
+  execFileSync('python3', ['-c', script], { stdio: 'inherit' });
+  return names;
+}
+
+/** multidim_timing.rs's files (docs/adr/0243 §12), written by it once into .run/perf/multidim (the 3 GB grid sparse). */
+function multidimFiles() {
+  const d = `${dir}multidim/`;
+  const names = ['md-1000.nc', 'md-mesh-708.nc', 'md-mesh-1000.nc', 'md-708.2dm', 'md-708.dat', 'md-era5.nc'];
+  if (!names.every((n) => existsSync(d + n))) {
+    const root = fileURLToPath(new URL('../../../../', import.meta.url));
+    const test = ['test', '--release', '-q', '-p', 'kentos-raster', '--test', 'all', 'multidim_timing', '--', '--ignored', '--nocapture', '--test-threads=1'];
+    execFileSync('cargo', test, { stdio: 'inherit', cwd: root, env: { ...process.env, KENTOS_PERF_FILES: d } });
+  }
+  return names.map((n) => d + n);
 }
 
 /** A raster of n × n cells of 2 m written by `body` (numpy: `img`, uint8, `n`), tiled 256, Deflate, at `path`, unless it is there. */
@@ -438,6 +541,210 @@ img[np.broadcast_to(contour, (n, n))] = (150, 80, 30)`);
     }
     times.sort((a, c) => a - c);
     console.log(`${'Uzaklık yüzeyi, 2000 nokta, 100 çizgi'.padEnd(34)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe 4 s`);
+  }
+  // Uygunluk analizi (docs/adr/0237 §11): suitability_timing.rs's jobs, the whole worker run each.
+  if (part('suitability')) {
+    const [slope, dist, cls, mem] = suitabilityRasters(4096);
+    const names = ['Eğim', 'Uzaklık', 'Örtü', 'Üyelik'];
+    const square = [{ kind: 'polygon', pts: [[505000.1, 4413500.2], [505499.9, 4413500.2], [505499.9, 4413999.9], [505000.1, 4413999.9]].map(([x, y]) => ({ x, y })) }];
+    const suitJobs = [
+      { name: 'Bulanık üyelik, Gauss', budget: 3, files: [slope], names: ['Eğim'], tool: { kind: 'fuzzyMembership', band: 1, function: 'gaussian', midpoint: 10, spread: 0.01, sample: 'f32' } },
+      { name: 'Bulanık çakıştırma, dört raster, Gamma', budget: 6, files: [mem, mem, mem, mem], names: ['A', 'B', 'C', 'D'], tool: { kind: 'fuzzyOverlay', band: 1, op: 'gamma', gamma: 0.9, sample: 'f32' } },
+      {
+        name: 'Ağırlıklı toplam, dört raster',
+        budget: 6,
+        files: [slope, dist, cls, mem],
+        names,
+        tool: { kind: 'weightedSum', band: 1, weights: { Eğim: -0.4, Uzaklık: 0.001, Örtü: 0.5, Üyelik: 2 }, sample: 'f32' },
+      },
+      {
+        name: 'Ağırlıklı çakıştırma, sınıf tablolarıyla',
+        budget: 6,
+        files: [slope, dist, cls, mem],
+        names,
+        tool: {
+          kind: 'weightedOverlay',
+          band: 1,
+          low: 1,
+          high: 9,
+          influence: { Eğim: 40, Uzaklık: 25, Örtü: 20, Üyelik: 15 },
+          classes: { Eğim: '* 5 9; 5 15 6; 15 30 3; 30 * kısıt', Uzaklık: '* 500 9; 500 1500 5; 1500 * 1', Örtü: '1 9; 2 7; 3 5; 4 3; 5 kısıt', Üyelik: '* 0,25 1; 0,25 0,5 4; 0,5 0,75 7; 0,75 * 9' },
+          bounds: 'upperClosed',
+        },
+      },
+      { name: 'ROC, bütün hücreler, 10 000 varlık', budget: 6, files: [slope], names: ['Eğim'], tool: { kind: 'roc', band: 1, first: 1, absence: false, higher: true }, shapes: square },
+    ];
+    for (const job of suitJobs) {
+      const times = [];
+      for (let r = 0; r < runs; r++) {
+        const ms = await b.eval(`(async () => {
+          const { analyzeOps } = await import('/src/io/rasterAnalysis.ts');
+          const files = ${JSON.stringify(job.files)};
+          const names = ${JSON.stringify(job.names)};
+          const blobs = await Promise.all(files.map(async (f) => (await fetch('/@fs' + f)).blob()));
+          const spec = JSON.stringify({ tool: ${JSON.stringify(job.tool)}, inputs: files.map((_, k) => ({ affine: [500000, 5, 0, 4420000, 0, -5], name: names[k] })), epsg: 5254 });
+          const t0 = performance.now();
+          const out = await analyzeOps(blobs, spec, ${JSON.stringify(JSON.stringify(job.shapes ?? []))}, { progress() {}, canceled: false });
+          const ms = performance.now() - t0;
+          if (!out.bytes && !out.roc) throw new Error('no result');
+          return ms;
+        })()`);
+        times.push(ms / 1000);
+      }
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(40)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
+  }
+  // Uzaktan algılama (docs/adr/0242 §12): remote_timing.rs's jobs, the whole worker run each.
+  if (part('remote')) {
+    const [img, later, b1, b2, b3, b4, classes, ms, pan] = remoteRasters(4096);
+    const hash = (i, j, k) => {
+      let h = (Math.imul(i, 0x9e3779b9) ^ Math.imul(j, 0x85ebca6b) ^ Math.imul(k, 0xc2b2ae35)) >>> 0;
+      h = (h ^ (h >>> 15)) >>> 0;
+      h = Math.imul(h, 0x2c1b3c6d) >>> 0;
+      return (h ^ (h >>> 12)) >>> 0;
+    };
+    const cover = (i, j) => (Math.floor(i / 256) + 3 * Math.floor(j / 256) + (hash(Math.floor(i / 256), Math.floor(j / 256), 9) % 2)) % 6;
+    const A = [500000, 5, 0, 4420000, 0, -5];
+    const C = [500000, 10, 0, 4420000, 0, -10];
+    const square = (i0, j0, k) => {
+      const [x0, y0] = [500000 + 5 * i0 + 0.5, 4420000 - 5 * j0 - 0.5];
+      const [x1, y1] = [x0 + 5 * k - 1, y0 - 5 * k + 1];
+      return { kind: 'polygon', pts: [[x0, y1], [x1, y1], [x1, y0], [x0, y0]].map(([x, y]) => ({ x, y })) };
+    };
+    const training = [];
+    const texts = [];
+    for (let c = 0; c < 6; c++) {
+      let at = null;
+      for (let bj = 0; bj < 16 && !at; bj++) for (let bi = 0; bi < 16 && !at; bi++) if (cover(bi * 256, bj * 256) === c && bi * 256 >= 64) at = [bi, bj];
+      training.push(square(at[0] * 256 + 96, at[1] * 256 + 96, 64));
+      texts.push(`Örtü ${c + 1}`);
+    }
+    const points = [];
+    const refs = [];
+    for (let k = 0; k < 10000; k++) {
+      const [i, j] = [hash(k, 1, 2) % 4096, hash(k, 3, 4) % 4096];
+      points.push({ kind: 'point', p: { x: 500000 + 5 * (i + 0.5), y: 4420000 - 5 * (j + 0.5) } });
+      refs.push(String(1 + cover(i, j)));
+    }
+    const INDEX = { kind: 'index', index: 'ndvi', bands: { blue: 1, green: 2, red: 3, nir: 4, swir: 1, a: 4, b: 3 }, scale: 1, offset: 0, saviL: 0.5, g: 2.5, c1: 6, c2: 7.5, eviL: 1 };
+    const remoteJobs = [
+      { name: 'Bant birleştir, dört tek bantlı', budget: 6, files: [[b1, A], [b2, A], [b3, A], [b4, A]], tool: { kind: 'composite', sampling: 'nearest' } },
+      { name: 'NDVI', budget: 4, files: [[img, A]], tool: INDEX },
+      { name: 'Denetimli, en büyük olabilirlik, 6 sınıf', budget: 8, files: [[img, A]], tool: { kind: 'supervised', method: 'likelihood', texts }, shapes: training },
+      { name: 'Denetimsiz, 8 küme, 20 yineleme', budget: 8, files: [[img, A]], tool: { kind: 'unsupervised', clusters: 8, iterations: 20 } },
+      { name: 'Doğruluk analizi, 10 000 nokta', budget: 2, files: [[classes, A]], tool: { kind: 'accuracy', band: 1, reference: refs }, shapes: points },
+      { name: 'Değişim tespiti, fark', budget: 4, files: [[img, A], [later, A]], tool: { kind: 'change', band: 4, method: 'difference' } },
+      { name: 'Görüntü birleştirme, Brovey, 2048² → 4096²', budget: 8, files: [[ms, C], [pan, A]], tool: { kind: 'pansharpen', method: 'brovey', sampling: 'cubic' } },
+      { name: 'Bantlara ayır, dört bant', budget: 8, files: [[img, A]], tools: [1, 2, 3, 4].map((band) => ({ kind: 'band', band })) },
+    ];
+    for (const job of remoteJobs) {
+      const times = [];
+      for (let r = 0; r < runs; r++) {
+        const ms = await b.eval(`(async () => {
+          const { analyzeOps } = await import('/src/io/rasterAnalysis.ts');
+          const files = ${JSON.stringify(job.files)};
+          const tools = ${JSON.stringify(job.tools ?? [job.tool])};
+          const blobs = await Promise.all(files.map(async ([f]) => (await fetch('/@fs' + f)).blob()));
+          const t0 = performance.now();
+          for (const tool of tools) {
+            const spec = JSON.stringify({ tool, inputs: files.map(([, a], k) => ({ affine: a, name: 'R' + k })), epsg: 5254 });
+            const out = await analyzeOps(blobs, spec, ${JSON.stringify(JSON.stringify(job.shapes ?? []))}, { progress() {}, canceled: false });
+            if (!out.bytes && !JSON.parse(out.notes).remote?.table) throw new Error('no result');
+          }
+          return performance.now() - t0;
+        })()`);
+        times.push(ms / 1000);
+      }
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(44)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
+  }
+  // Mesh ve çok boyutlu veri (docs/adr/0243 §12): the files given as a user gives them (a file input's Files, read from the
+  // disk as asked; the 3 GB grid a sparse file), each job through the worker the page sends it to: the raster workers for
+  // the listing, Mesh ekle's placing, tiles and a step's first view, 2DM and DAT; the analysis worker for the three tools.
+  if (part('multidim')) {
+    const paths = multidimFiles();
+    await b.eval(`(() => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.id = 'perf-files'; i.style.display = 'none'; document.body.append(i); })()`);
+    const { root } = await b.send('DOM.getDocument', { depth: 0 });
+    const { nodeId } = await b.send('DOM.querySelector', { nodeId: root.nodeId, selector: '#perf-files' });
+    await b.send('DOM.setFileInputFiles', { nodeId, files: paths });
+    const PRE = `const files = Object.fromEntries([...document.getElementById('perf-files').files].map((x) => [x.name, x]));
+      const svc = (await import('/src/render/rasterService.ts')).rasterService();
+      const { analyzeMultidim } = await import('/src/io/rasterAnalysis.ts');
+      const watch = { progress() {}, canceled: false };
+      const place = (name, slice) => svc.cubePlace(files[name], name, { part: JSON.stringify({ variable: 'depth', mesh: 'Mesh2d', slice: [slice] }), cell: null, edges: true, srid: 5254, confirmed: true, view: [500000, 4420000, 510000, 4430000] });
+      const look = (style, edges) => { const st = { ...style, stretch: 'manual', min: 0, max: 3 }; if (!edges) delete st.edges; return JSON.stringify(st); };
+      const tile = (name, p, st, level, tx, ty) => svc.ask('file:' + name + '#' + p.part, { type: 'tile', key: 'file:' + name + '#' + p.part, blob: files[name], name, look: st, affine: JSON.parse(p.part).affine, level, tx, ty });`;
+    const lines = Array.from({ length: 10 }, (_, k) => ({ kind: 'polyline', pts: [{ x: 500100, y: 4420300 + 600 * k }, { x: 506900, y: 4420380 + 600 * k }] }));
+    const points = Array.from({ length: 100 }, (_, k) => ({ kind: 'point', p: { x: -170 + 3.37 * k, y: -60 + 1.21 * k }, attrs: { ad: `N${k}` } }));
+    const mdJobs = [
+      { name: 'NetCDF başlığı ve listesi (1 000 değişken)', budget: 0.2, body: `const t0 = performance.now(); const info = await svc.cube(files['md-1000.nc'], 'md-1000.nc'); if (info.grids.length !== 1000) throw new Error(String(info.grids.length)); return performance.now() - t0;` },
+      { name: "Mesh'in açılışı (Mesh ekle, 10⁶ yüz)", budget: 3, body: `const t0 = performance.now(); await place('md-mesh-708.nc', 0); return performance.now() - t0;` },
+      {
+        name: 'Mesh karosu, en ince düzey',
+        budget: 0.1,
+        body: `const p = await place('md-mesh-708.nc', 0); const st = look(p.style, false); await tile('md-mesh-708.nc', p, st, 0, 0, 0);
+          const [w, h] = JSON.parse(p.part).size; const t0 = performance.now(); await tile('md-mesh-708.nc', p, st, 0, Math.floor(w / 512), Math.floor(h / 512)); return performance.now() - t0;`,
+      },
+      {
+        name: 'Mesh karosu, en kaba düzey',
+        budget: 0.1,
+        body: `const p = await place('md-mesh-708.nc', 0); const st = look(p.style, false); await tile('md-mesh-708.nc', p, st, 0, 0, 0);
+          const t0 = performance.now(); await tile('md-mesh-708.nc', p, st, p.info.levels - 1, 0, 0); return performance.now() - t0;`,
+      },
+      {
+        name: 'Ağ çizgili karo (2. düzey)',
+        budget: 0.15,
+        body: `const p = await place('md-mesh-708.nc', 0); const st = look(p.style, true); await tile('md-mesh-708.nc', p, st, 0, 0, 0);
+          const [w, h] = JSON.parse(p.part).size; const t0 = performance.now(); await tile('md-mesh-708.nc', p, st, 2, Math.floor((w >> 2) / 512), Math.floor((h >> 2) / 512)); return performance.now() - t0;`,
+      },
+      {
+        name: 'Zaman adımı değişince ilk görünüm (10⁶ düğüm)',
+        budget: 1.5,
+        body: `const name = 'md-mesh-1000.nc'; const p0 = await place(name, 0); const st = look(p0.style, false);
+          const [w, h] = JSON.parse(p0.part).size; const levels = p0.info.levels;
+          let level = 0; while (level < levels - 1 && (w >> level) > 1536) level++;
+          const view = async (p) => { const all = []; for (let ty = 0; ty < Math.ceil(Math.max(1, h >> level) / 256); ty++) for (let tx = 0; tx < Math.ceil(Math.max(1, w >> level) / 256); tx++) all.push(tile(name, p, st, level, tx, ty)); await Promise.all(all); };
+          await view(p0);
+          const slice = 1 + RUN;
+          const p7 = { ...p0, part: p0.part.replace('"slice":[0]', '"slice":[' + slice + ']') };
+          const t0 = performance.now(); await view(p7); return performance.now() - t0;`,
+      },
+      {
+        name: '2DM ve DAT içe aktarma (10⁶ yüz, 24 adım)',
+        budget: 15,
+        body: `const t0 = performance.now(); const out = await svc.sms(files['md-708.2dm'], [files['md-708.dat']], Date.UTC(2024, 0, 1), 5254); if (!out.bytes.length) throw new Error('no file'); return performance.now() - t0;`,
+      },
+      {
+        name: 'Kesit (10 çizgi, 10 000 nokta, mesh)',
+        budget: 2,
+        body: `const p = await place('md-mesh-708.nc', 0); const t0 = performance.now();
+          const r = await analyzeMultidim({ kind: 'profile', blob: files['md-mesh-708.nc'], part: p.part, affine: JSON.parse(p.part).affine, nodata: null, objects: ${JSON.stringify(JSON.stringify(lines))}, step: 6.8, band: 1, axes: 'Y,X' }, watch);
+          if (!JSON.parse(r.result).table) throw new Error('no table'); return performance.now() - t0;`,
+      },
+      {
+        name: 'Zaman serisi (100 nokta, 744 adım, 1440 × 721)',
+        budget: 10,
+        body: `const t0 = performance.now();
+          const r = await analyzeMultidim({ kind: 'timeSeries', blob: files['md-era5.nc'], part: JSON.stringify({ variable: 't2m', slice: [0] }), affine: [-180.125, 0.25, 0, 90.125, 0, -0.25], nodata: null, objects: ${JSON.stringify(JSON.stringify(points))} }, watch);
+          if (JSON.parse(r.result).table.rows.length !== 744) throw new Error('rows'); return performance.now() - t0;`,
+      },
+      {
+        name: 'Mesh hesaplayıcı (10⁶ düğüm, 24 adım, En büyük)',
+        budget: 10,
+        body: `const p = await place('md-mesh-1000.nc', 0); const t0 = performance.now();
+          const r = await analyzeMultidim({ kind: 'meshCalc', blob: files['md-mesh-1000.nc'], part: p.part, affine: JSON.parse(p.part).affine, nodata: null, objects: '[]', spec: JSON.stringify({ expression: 'depth * 2', summary: 'max', name: 'En büyük' }) }, watch);
+          if (!r.file?.length) throw new Error('no file'); return performance.now() - t0;`,
+      },
+    ];
+    for (const job of mdJobs) {
+      const times = [];
+      // RUN: each run's own time step, so that no run finds the step's reader kept from another.
+      for (let r = 0; r < runs; r++) times.push((await b.eval(`(async () => { const RUN = ${r}; ${PRE} ${job.body} })()`)) / 1000);
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(48)} p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
   }
 } finally {
   b.close();

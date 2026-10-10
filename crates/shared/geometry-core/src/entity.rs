@@ -358,6 +358,8 @@ pub enum Shape {
         srid: f64,
         style: crate::api::json::Json,
         opacity: Option<f64>,
+        /// A NetCDF variable and its slice (the contract's JSON; docs/adr/0243 §6).
+        dataset: Option<crate::api::json::Json>,
     },
     /// A point cloud (docs/adr/0207 §3): its files' bounds together
     /// (`[x₁, y₁, z₁, x₂, y₂, z₂]`), its points, its files (the contract's
@@ -391,7 +393,7 @@ crate::json_tagged!(Shape, "kind",
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
-    Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity },
+    Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity, dataset },
     PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },
 );
 

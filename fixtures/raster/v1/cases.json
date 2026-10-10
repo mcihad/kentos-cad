@@ -27,7 +27,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 2
+    "overviews": 2,
+    "alpha": false
    },
    "levels": [
     {
@@ -139,7 +140,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -214,7 +216,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -275,7 +278,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": -32768.0,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -385,7 +389,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": -9999.0,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -495,7 +500,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -558,7 +564,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -618,7 +625,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -1383,7 +1391,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -1453,7 +1462,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -1509,7 +1519,8 @@
     "epsg": 4326,
     "geographic": true,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -1614,7 +1625,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -1670,7 +1682,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -1726,7 +1739,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -1772,6 +1786,195 @@
    ]
   },
   {
+   "file": "rgba-alpha.tif",
+   "info": {
+    "width": 64,
+    "height": 48,
+    "bands": 4,
+    "sample": "u8",
+    "affine": [
+     487000.0,
+     0.25,
+     0.0,
+     4420100.0,
+     0.0,
+     -0.25
+    ],
+    "epsg": 5256,
+    "geographic": false,
+    "nodata": null,
+    "overviews": 0,
+    "alpha": true
+   },
+   "levels": [
+    {
+     "width": 64,
+     "height": 48,
+     "fnv": "751337a514659a08"
+    }
+   ],
+   "stats": {
+    "level": 0,
+    "bands": [
+     {
+      "count": 3072,
+      "min": 56.0,
+      "max": 255.0,
+      "low": 69.0,
+      "high": 245.0
+     },
+     {
+      "count": 3072,
+      "min": 67.0,
+      "max": 242.0,
+      "low": 79.0,
+      "high": 231.0
+     },
+     {
+      "count": 3072,
+      "min": 90.0,
+      "max": 246.0,
+      "low": 106.0,
+      "high": 239.0
+     },
+     {
+      "count": 3072,
+      "min": 130.0,
+      "max": 251.0,
+      "low": 139.0,
+      "high": 244.0
+     }
+    ]
+   },
+   "tiles": [
+    {
+     "style": {
+      "render": "rgb",
+      "bands": [
+       1,
+       2,
+       3
+      ]
+     },
+     "level": 0,
+     "tx": 0,
+     "ty": 0,
+     "fnv": "754a5853d8b3039a",
+     "opaque": 66564
+    },
+    {
+     "style": {
+      "render": "rgb",
+      "bands": [
+       3,
+       2,
+       1
+      ],
+      "stretch": "percent"
+     },
+     "level": 0,
+     "tx": 0,
+     "ty": 0,
+     "fnv": "a59331fa18e30074",
+     "opaque": 66564
+    },
+    {
+     "style": {
+      "render": "rgb",
+      "bands": [
+       1,
+       2,
+       3,
+       4
+      ]
+     },
+     "level": 0,
+     "tx": 0,
+     "ty": 0,
+     "fnv": "21d11bca98608129",
+     "opaque": 66564
+    }
+   ]
+  },
+  {
+   "file": "u16-four-bands.tif",
+   "info": {
+    "width": 64,
+    "height": 48,
+    "bands": 4,
+    "sample": "u16",
+    "affine": [
+     487000.0,
+     0.25,
+     0.0,
+     4420100.0,
+     0.0,
+     -0.25
+    ],
+    "epsg": 5256,
+    "geographic": false,
+    "nodata": null,
+    "overviews": 0,
+    "alpha": false
+   },
+   "levels": [
+    {
+     "width": 64,
+     "height": 48,
+     "fnv": "7674bd6a89bb11f6"
+    }
+   ],
+   "stats": {
+    "level": 0,
+    "bands": [
+     {
+      "count": 3072,
+      "min": 14297.0,
+      "max": 65000.0,
+      "low": 17892.0,
+      "high": 62140.0
+     },
+     {
+      "count": 3072,
+      "min": 17113.0,
+      "max": 62296.0,
+      "low": 19890.0,
+      "high": 58894.0
+     },
+     {
+      "count": 3072,
+      "min": 23282.0,
+      "max": 63099.0,
+      "low": 27352.0,
+      "high": 60713.0
+     },
+     {
+      "count": 3072,
+      "min": 33142.0,
+      "max": 63732.0,
+      "low": 35527.0,
+      "high": 62002.0
+     }
+    ]
+   },
+   "tiles": [
+    {
+     "style": {
+      "render": "gray",
+      "bands": [
+       2
+      ],
+      "stretch": "minMax"
+     },
+     "level": 0,
+     "tx": 0,
+     "ty": 0,
+     "fnv": "4aa1aa923ee93256",
+     "opaque": 66564
+    }
+   ]
+  },
+  {
    "file": "no-place.tif",
    "info": {
     "width": 40,
@@ -1782,7 +1985,8 @@
     "epsg": null,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {
@@ -1852,7 +2056,8 @@
     "epsg": 5256,
     "geographic": false,
     "nodata": null,
-    "overviews": 0
+    "overviews": 0,
+    "alpha": false
    },
    "levels": [
     {

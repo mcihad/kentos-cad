@@ -70,12 +70,16 @@ const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const PROXIMITY = JSON.parse(file('proximity.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
+const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
 const SURFACE = JSON.parse(file('surface.json')) as CaseFile & { rasters: Record<string, string> };
 const INTERPOLATION = JSON.parse(file('interpolation.json')) as CaseFile;
 const RASTER_VECTOR = JSON.parse(file('raster-vector.json')) as CaseFile & { rasters: Record<string, string> };
 const HYDROLOGY = JSON.parse(file('hydrology.json')) as CaseFile & { rasters: Record<string, string> };
 const DISTANCE = JSON.parse(file('distance.json')) as CaseFile & { rasters: Record<string, string> };
+const SUITABILITY = JSON.parse(file('suitability.json')) as CaseFile & { rasters: Record<string, string> };
+const REMOTE = JSON.parse(file('remote.json')) as CaseFile & { rasters: Record<string, string> };
+const MULTIDIM = JSON.parse(file('multidim.json')) as CaseFile & { rasters: Record<string, string> };
 const RASTER_OPS = JSON.parse(file('raster-ops.json')) as CaseFile & {
   rasters: Record<string, string>;
   /** The names an expression field offers on an input (docs/adr/0233 §3). */
@@ -163,7 +167,7 @@ function close(a: unknown, b: unknown, tol: number): boolean {
 }
 
 /** Numbers other than coordinates are exact: only objects' geometry fields get the tolerance. */
-const GEOMETRY_FIELDS = new Set(['p', 'a', 'b', 'c', 'pts', 'holes']);
+const GEOMETRY_FIELDS = new Set(['p', 'a', 'b', 'c', 'pts', 'holes', 'r', 'major', 'ratio']);
 function sameObject(have: Json, want: Json, tol: number): boolean {
   const keys = (o: Json) => JSON.stringify(Object.keys(o).sort());
   if (keys(have) !== keys(want)) return false;
@@ -315,6 +319,7 @@ describe('processing cases (fixtures/processing/v1)', () => {
   for (const [name, d] of [
     ...Object.entries(CASES.documents),
     ...Object.entries(GEOMETRY.documents),
+    ...Object.entries(SPATIAL_STATS.documents),
     ...Object.entries(NETWORK.documents),
     ...Object.entries(SURFACE.documents),
     ...Object.entries(INTERPOLATION.documents),
@@ -322,6 +327,9 @@ describe('processing cases (fixtures/processing/v1)', () => {
     ...Object.entries(RASTER_VECTOR.documents),
     ...Object.entries(HYDROLOGY.documents),
     ...Object.entries(DISTANCE.documents),
+    ...Object.entries(SUITABILITY.documents),
+    ...Object.entries(REMOTE.documents),
+    ...Object.entries(MULTIDIM.documents),
   ]) {
     it(`${name}: the defaults the tools take from the drawing`, () => {
       const runner = new ProcessingRunner({ doc: load(name), selectedIds: () => [], visibleBounds: () => null });
@@ -365,6 +373,23 @@ describe('proximity cases (fixtures/processing/v1/proximity.json, docs/adr/0215)
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(PROXIMITY, c, 'client'), PROXIMITY.tolerance);
       check(c, await play(PROXIMITY, c, 'worker'), PROXIMITY.tolerance);
+    });
+  }
+});
+
+describe('spatial statistics cases (fixtures/processing/v1/spatial-stats.json, docs/adr/0238)', () => {
+  for (const c of SPATIAL_STATS.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      for (const target of ['client', 'worker'] as const) {
+        const seen = await play(SPATIAL_STATS, c, target);
+        // Each new layer right above its input's (its group, the place before it).
+        for (const [id, over] of Object.entries(((c.expect as Json).layerAbove ?? {}) as Record<string, string>)) {
+          const layers = seen.doc.layers;
+          const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+          expect(siblings(id).findIndex((n) => n.id === id) + 1, `${c.id}: ${id} above ${over}`).toBe(siblings(over).findIndex((n) => n.id === over));
+        }
+        check(c, seen, SPATIAL_STATS.tolerance);
+      }
     });
   }
 });
@@ -687,6 +712,108 @@ describe.skipIf(!surfaceModulesBuilt)('distance and cost cases (fixtures/process
   }
 });
 
+describe.skipIf(!surfaceModulesBuilt)('suitability cases (fixtures/processing/v1/suitability.json, docs/adr/0237)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(SUITABILITY.rasters).map(([name, rel]) => [name, read(rel)]));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../suitability/v1/cases.json'))) as {
+    cases: { name: string; expect: { raster?: { rule: string; values: (number | null)[] } } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([SUITABILITY.format, SUITABILITY.version]).toEqual(['kentos.processing-cases', 1]);
+    expect(SUITABILITY.cases.length).toBeGreaterThanOrEqual(21);
+  });
+
+  for (const c of SUITABILITY.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { suitabilityOf?: Record<string, string>; layerAbove?: Record<string, string> };
+        const seen = await play(SUITABILITY, c, 'client');
+        // Each new layer right above the layer it names: its group, the place before it.
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        check(c, seen, SUITABILITY.tolerance);
+        // Each written raster's level 0 is the suitability reference's case of that name, by its rule; Ağırlıklı
+        // çakıştırma's 32-bit integer nodata is no value.
+        const of = want.suitabilityOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
+          const got = (await level0(written.get(name)!)).map((v) => (v === -2147483648 ? NaN : v));
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => {
+            const w = ref.values[k] ?? NaN;
+            if (Number.isNaN(g) || Number.isNaN(w)) return !(Number.isNaN(g) && Number.isNaN(w));
+            return ref.rule === 'exact' ? g !== w : ulps(g, w) > 1;
+          });
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('remote sensing cases (fixtures/processing/v1/remote.json, docs/adr/0242)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(REMOTE.rasters).map(([name, rel]) => [name, read(rel)]));
+  const reference = JSON.parse(new TextDecoder().decode(read('../../remote/v1/cases.json'))) as {
+    cases: { name: string; expect: { raster?: { rule: string; sample: string; values: (number | null)[] } } }[];
+  };
+
+  it('is a v1 case file', () => {
+    expect([REMOTE.format, REMOTE.version]).toEqual(['kentos.processing-cases', 1]);
+    expect(REMOTE.cases.length).toBeGreaterThanOrEqual(21);
+  });
+
+  for (const c of REMOTE.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { remoteOf?: Record<string, string>; layerAbove?: Record<string, string> };
+        const seen = await play(REMOTE, c, 'client');
+        // Each new layer right above the layer it names: its group, the place before it.
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        check(c, seen, REMOTE.tolerance);
+        // Each written raster's level 0 (bands interleaved) is the remote sensing reference's case of that name, by its
+        // rule; an integer result's “sum” within one unit.
+        const of = want.remoteOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, caseName] of Object.entries(of)) {
+          const ref = reference.cases.find((t) => t.name === caseName)!.expect.raster!;
+          const whole = ref.sample !== 'f32' && ref.sample !== 'f64';
+          const got = await level0(written.get(name)!);
+          expect(got.length, `${c.id}: ${name}`).toBe(ref.values.length);
+          const off = got.findIndex((g, k) => {
+            const w = ref.values[k] ?? NaN;
+            if (Number.isNaN(g) || Number.isNaN(w)) return !(Number.isNaN(g) && Number.isNaN(w));
+            if (ref.rule === 'exact') return g !== w;
+            return whole ? Math.abs(g - w) > 1 : ulps(g, w) > 1;
+          });
+          expect(off, `${c.id}: ${name} sample ${off}: ${got[off]} for ${ref.values[off]}`).toBe(-1);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
+    });
+  }
+});
+
 describe('network cases (fixtures/processing/v1/network.json, docs/adr/0209)', () => {
   it('is a v1 case file', () => {
     expect([NETWORK.format, NETWORK.version]).toEqual(['kentos.processing-cases', 1]);
@@ -696,6 +823,46 @@ describe('network cases (fixtures/processing/v1/network.json, docs/adr/0209)', (
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(NETWORK, c, 'client'), NETWORK.tolerance, NETWORK.measureTolerance);
       check(c, await play(NETWORK, c, 'worker'), NETWORK.tolerance, NETWORK.measureTolerance);
+    });
+  }
+});
+
+describe.skipIf(!surfaceModulesBuilt)('multidimensional data cases (fixtures/processing/v1/multidim.json, docs/adr/0243)', () => {
+  const read = (rel: string) => fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${rel}`, import.meta.url));
+  const rasters = new Map(Object.entries(MULTIDIM.rasters).map(([name, rel]) => [name, read(rel)]));
+
+  it('is a v1 case file', () => {
+    expect([MULTIDIM.format, MULTIDIM.version]).toEqual(['kentos.processing-cases', 1]);
+    expect(MULTIDIM.cases.length).toBeGreaterThanOrEqual(9);
+  });
+
+  for (const c of MULTIDIM.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const { host, written } = fixtureRasterHost(rasters);
+      setRasterRunHost(host);
+      try {
+        const want = c.expect as Json & { multidimOf?: Record<string, string>; layerAbove?: Record<string, string> };
+        const seen = await play(MULTIDIM, c, 'client');
+        const layers = seen.doc.layers;
+        const siblings = (id: string) => layers.parentOf(id)?.children ?? layers.tree;
+        const at = (id: string) => siblings(id).findIndex((n) => n.id === id);
+        for (const [id, over] of Object.entries(want.layerAbove ?? {})) {
+          expect(layers.parentOf(id)?.id ?? null, `${c.id}: ${id}`).toBe(layers.parentOf(over)?.id ?? null);
+          expect(at(id) + 1, `${c.id}: ${id} above ${over}`).toBe(at(over));
+        }
+        check(c, seen, MULTIDIM.tolerance);
+        // Mesh hesaplayıcı's file is the reference's UGRID writer's, byte for byte.
+        const of = want.multidimOf ?? {};
+        expect([...written.keys()].sort(), c.id).toEqual(Object.keys(of).sort());
+        for (const [name, refName] of Object.entries(of)) {
+          const ref = read(`../../multidim/v1/files/${refName}`);
+          const got = written.get(name)!;
+          const same = got.length === ref.length && got.every((x, i) => x === ref[i]);
+          expect(same, `${c.id}: ${name} is ${refName}`).toBe(true);
+        }
+      } finally {
+        setRasterRunHost(null);
+      }
     });
   }
 });

@@ -1252,7 +1252,7 @@ URL_RASTER = {**{k: v for k, v in RASTER.items() if k != "file"}, "url": "https:
 
 
 def unknown_raster(asset):
-    return f"“{asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG ya da JPEG'in kimliğini verin."
+    return f"“{asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG, JPEG ya da NetCDF'in kimliğini verin."
 
 
 def raster_with(**style):
@@ -1321,6 +1321,71 @@ cases.append({
          "result": failed("unknown_asset", unknown_raster("raster-ffffffffffffffff"), "objects[1].geometry.asset"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**{k: v for k, v in RASTER.items() if k != "file"}, "asset": "cizim-1"})]},
          "result": failed("unknown_asset", unknown_raster("cizim-1"), "objects[0].geometry.asset"), "expect": NOTHING},
+    ],
+})
+
+
+# ── NetCDF veri seti ve mesh (docs/adr/0243 §6) ─────────────────────────
+
+HOURS = [1714528800000.0, 1714539600000.0, 1714550400000.0]
+DS_GRID = {"kind": "raster", "affine": [32.875, 0.25, 0, 36.625, 0, -0.25], "width": 4, "height": 3, "bands": 1, "sample": "f32",
+           "file": "iklim.nc", "srid": 5256, "style": {"render": "ramp", "bands": [1], "stretch": "minMax", "ramp": "Spektral"},
+           "dataset": {"variable": "t2m", "dims": [{"name": "time", "index": 1, "values": HOURS, "time": True},
+                                                    {"name": "level", "index": 0, "values": [850, 500], "units": "hPa"}], "followTime": True}}
+DS_MESH = {"kind": "raster", "affine": [500000, 0.125, 0, 4420040, 0, -0.125], "width": 320, "height": 320, "bands": 1, "sample": "f32",
+           "file": "taskin.nc", "srid": 5256, "style": {"render": "ramp", "bands": [1], "stretch": "minMax", "ramp": "Viridis", "edges": "#2B3440"},
+           "dataset": {"variable": "ucx", "vector": "ucy", "mesh": "mesh", "dims": [{"name": "time", "index": 0, "values": HOURS, "time": True}]}}
+datasets = [O(DS_GRID), O(DS_MESH)]
+
+
+def with_dataset(base=DS_GRID, **change):
+    return {**base, "dataset": {**base["dataset"], **change}}
+
+
+def with_dims(*dims, base=DS_GRID):
+    return with_dataset(base, dims=list(dims))
+
+
+TIME = {"name": "time", "index": 0, "values": HOURS, "time": True}
+
+cases.append({
+    "name": "NetCDF ızgarasının ve mesh'in rasteri veri setiyle (değişken, vektör, ağ, dilim boyutları, zaman sürgüsünü izleme) ve ağ çizgileriyle tek adımda yazılır (ADR 0243 §6)",
+    "setup": R_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "raster", "objects": datasets}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(datasets)},
+                    "uids": {"3": "new", "4": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Raster ekle", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+    ],
+})
+cases.append({
+    "name": "veri setinin kuralları sırayla, invalid_raster ile: adlar, boyut sayısı, boyutun adı ve değerleri, gösterilen değer, azalmayan zaman, tek zaman boyutu, izlemek için zaman; tek bant; ağ çizgileri yalnız mesh'te ve #RRGGBB (ADR 0243 §6)",
+    "setup": R_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dataset(variable=" "))]},
+         "result": failed("invalid_raster", "Veri setinin değişken adları 1 ile 256 harf arasında olmalı ve denetim karakteri içermemeli.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dataset(DS_MESH, mesh="a\tb"))]},
+         "result": failed("invalid_raster", "Veri setinin değişken adları 1 ile 256 harf arasında olmalı ve denetim karakteri içermemeli.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dims(*[{"name": f"d{k}", "index": 0, "values": [k]} for k in range(9)]))]},
+         "result": failed("invalid_raster", "Veri setinin en çok 8 dilim boyutu olabilir.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dims({"name": "", "index": 0, "values": [1]}))]},
+         "result": failed("invalid_raster", "Dilim boyutunun adı boş olamaz.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dims(TIME, {"name": "level", "index": 0, "values": []}))]},
+         "result": failed("invalid_raster", "“level” boyutunun 1 ile 100000 arasında sonlu değeri olmalı.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dims({**TIME, "index": 3}))]},
+         "result": failed("invalid_raster", "“time” boyutunun 3 değeri var; gösterilen 4. değer yok.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dims({**TIME, "values": [HOURS[1], HOURS[0]]}))]},
+         "result": failed("invalid_raster", "“time” zaman boyutunun değerleri azalmamalı.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dims(TIME, {**TIME, "name": "valid_time"}))]},
+         "result": failed("invalid_raster", "Veri setinin en çok bir zaman boyutu olabilir.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(with_dims({"name": "level", "index": 0, "values": [850, 500]}))]},
+         "result": failed("invalid_raster", "Zaman sürgüsünü izlemek için veri setinin zaman boyutu olmalı.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DS_GRID, "bands": 3, "style": RGB})]},
+         "result": failed("invalid_raster", "Veri setini gösteren rasterin tek bandı olur.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DS_GRID, "style": {**DS_GRID["style"], "edges": "#2B3440"}})]},
+         "result": failed("invalid_raster", "Ağ çizgileri yalnız mesh'te çizilir.", "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DS_MESH, "style": {**DS_MESH["style"], "edges": "#2B34"}})]},
+         "result": failed("invalid_raster", "Ağ çizgilerinin rengi #RRGGBB olmalı; “#2B34” verildi.", "objects[0].geometry"), "expect": NOTHING},
     ],
 })
 

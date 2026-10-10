@@ -1,5 +1,5 @@
 import { Signal } from '../core/signal';
-import type { BandStats, RasterInspected, RasterReply, RasterRequest } from '../io/rasterProtocol';
+import type { BandStats, CubeInfo, CubePlaced, RasterInspected, RasterReply, RasterRequest } from '../io/rasterProtocol';
 
 /**
  * The rasters' tiles on the web (docs/adr/0204 §3, §5, §11), twin of the
@@ -65,10 +65,17 @@ function dataBlob(url: string): Blob | null {
   }
 }
 
-/** A string's hash, to keep a raster in one worker. */
+/** A scene key's file: a NetCDF raster's key carries its dataset after `#{` (the style core's `raster_key`). */
+export function fileKey(raster: string): string {
+  const at = raster.lastIndexOf('#{');
+  return at < 0 ? raster : raster.slice(0, at);
+}
+
+/** A string's hash, to keep a raster in one worker (a NetCDF file's every slice in the same one: its cube is kept there). */
 function hash(s: string): number {
+  const f = fileKey(s);
   let h = 2166136261;
-  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  for (let i = 0; i < f.length; i++) h = Math.imul(h ^ f.charCodeAt(i), 16777619);
   return h >>> 0;
 }
 
@@ -108,7 +115,7 @@ export class RasterService {
   setFile(name: string, file: File): void {
     this.files.set(name, file);
     const key = `file:${name}`;
-    this.failed.delete(key);
+    for (const k of [...this.failed]) if (fileKey(k) === key) this.failed.delete(k);
     this.forgetTiles();
     if (this.workers.length) this.post(hash(key) % 2, { type: 'drop', key });
     this.changed();
@@ -119,7 +126,8 @@ export class RasterService {
   }
 
   /** A raster's bytes: the session's file or the library's data; none for a linked file not given this session. */
-  source(raster: string, url: string | null): { blob: Blob; name: string } | null {
+  source(key: string, url: string | null): { blob: Blob; name: string } | null {
+    const raster = fileKey(key);
     if (raster.startsWith('file:')) {
       const name = raster.slice(5);
       const f = this.files.get(name);
@@ -270,6 +278,54 @@ export class RasterService {
   async inspect(files: File[], srid: number, confirmed: boolean, view: readonly number[]): Promise<RasterInspected> {
     const r = await this.ask(files[0]?.name ?? '', { type: 'inspect', files, srid, confirmed, view: [...view] });
     return r.value as RasterInspected;
+  }
+
+  /** Mesh slices' node and face counts by their key, once asked (Öznitelikler, docs/adr/0243 §11). */
+  private readonly counts = new Map<string, [number, number] | 'asking' | null>();
+  private readonly factListeners = new Set<() => void>();
+
+  /** Told when a raster's facts (a mesh's counts) arrive. */
+  listenFacts(fn: () => void): () => void {
+    this.factListeners.add(fn);
+    return () => this.factListeners.delete(fn);
+  }
+
+  /** A mesh's node and face count when known; asked for (the listeners told) when not. */
+  meshCounts(key: string, url: string | null): [number, number] | null {
+    const kept = this.counts.get(key);
+    if (kept !== undefined) return Array.isArray(kept) ? kept : null;
+    const src = this.source(key, url);
+    if (!src) return null;
+    this.counts.set(key, 'asking');
+    void this.ask(key, { type: 'meshCounts', key, blob: src.blob, name: src.name })
+      .then((r) => {
+        this.counts.set(key, (r.value as [number, number] | null) ?? null);
+        for (const fn of this.factListeners) fn();
+      })
+      .catch(() => this.counts.set(key, null));
+    return null;
+  }
+
+  /** Raster ekle's and Mesh ekle's NetCDF: what it holds (the core's `CubeInfo`). */
+  async cube(file: Blob, name: string): Promise<CubeInfo> {
+    const r = await this.ask(name, { type: 'cube', file });
+    return r.value as CubeInfo;
+  }
+
+  /** A NetCDF slice placed for the window: `part` the raster key's part JSON, a mesh's grid of cells of `cell`. */
+  async cubePlace(
+    file: Blob,
+    name: string,
+    job: { part: string; cell: number | null; edges: boolean; srid: number; confirmed: boolean; view: readonly number[] },
+  ): Promise<CubePlaced> {
+    const r = await this.ask(name, { type: 'cubePlace', file, ...job, view: [...job.view] });
+    return r.value as CubePlaced;
+  }
+
+  /** Mesh ekle's 2DM and DATs made one UGRID file: its bytes and what the conversion said. */
+  async sms(mesh: File, dats: File[], start: number, epsg: number): Promise<{ bytes: Uint8Array; report: { nodes: number; faces: number; datasets: string[]; notes: string[] } }> {
+    const r = await this.ask(mesh.name, { type: 'sms', mesh, dats, start, epsg });
+    return { bytes: r.bytes!, report: r.value as { nodes: number; faces: number; datasets: string[]; notes: string[] } };
   }
 
   /** The bands' statistics of a raster (Raster stili); null when it cannot be read. */

@@ -1,4 +1,4 @@
-import { analyzeOps, analyzePoints, analyzeRaster } from '../io/rasterAnalysis';
+import { analyzeMultidim, analyzeOps, analyzePoints, analyzeRaster } from '../io/rasterAnalysis';
 import type { RasterEntity } from '../model/entities';
 import { hasRaster } from '../product/entitiesEdit';
 import { setRasterRunHost } from '../processing/rasterHost';
@@ -41,7 +41,10 @@ export function installRasterAnalysis(ctx: AppContext): void {
     analyze: analyzeRaster,
     analyzePoints,
     analyzeOps,
-    async keep(bytes, name, width, height) {
+    analyzeMultidim,
+    async keep(bytes, name, width, height, format = 'tiff') {
+      // A GeoTIFF, or Mesh hesaplayıcı's UGRID NetCDF (docs/adr/0243 §10).
+      const mime = format === 'netcdf' ? 'application/x-netcdf' : 'image/tiff';
       if (bytes.length <= MOST_EMBEDDED) {
         const { sha256Hex, toBase64 } = await import('../product/sheet/store');
         const id = `raster-${(await sha256Hex(bytes)).slice(0, 16)}`;
@@ -49,12 +52,15 @@ export function installRasterAnalysis(ctx: AppContext): void {
         if (!hasRaster(doc, id))
           doc.styles.set({
             ...doc.styles.value,
-            items: [...doc.styles.value.items, { kind: 'asset', id, name: name.replace(/\.tif$/i, ''), path: ['Rasterler'], format: 'tiff', data: `data:image/tiff;base64,${toBase64(bytes)}`, width, height } as never],
+            items: [
+              ...doc.styles.value.items,
+              { kind: 'asset', id, name: name.replace(/\.(tif|nc)$/i, ''), path: ['Rasterler'], format, data: `data:${mime};base64,${toBase64(bytes)}`, width, height } as never,
+            ],
           });
         return { asset: id, note: `“${name}” projeye gömüldü.` };
       }
-      rasterService().setFile(name, new File([bytes as Uint8Array<ArrayBuffer>], name, { type: 'image/tiff' }));
-      download(new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'image/tiff' }), name);
+      rasterService().setFile(name, new File([bytes as Uint8Array<ArrayBuffer>], name, { type: mime }));
+      download(new Blob([bytes as Uint8Array<ArrayBuffer>], { type: mime }), name);
       return { file: name, note: `“${name}” 32 MB'tan büyük: indirildi; çizim onu bu oturumda bağlı tutar.` };
     },
   });

@@ -1,0 +1,544 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Uygunluk",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 487580.0,
+  "y": 4420340.0
+ },
+ "layers": [
+  {
+   "id": "heyelan",
+   "name": "Heyelan",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Mevcut yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#1F2933",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "egim",
+   "name": "Eğim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol-uzakligi",
+   "name": "Yola uzaklık",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "ortu",
+   "name": "Arazi örtüsü",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "dem",
+   "name": "Yükseklik modeli",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#7A6B5B",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "egim",
+ "entities": [
+  {
+   "kind": "point",
+   "p": {
+    "x": 487300.0,
+    "y": 4420599.2
+   },
+   "id": 1,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487365.6,
+    "y": 4420498.4
+   },
+   "id": 2,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487436.0,
+    "y": 4420450.4
+   },
+   "id": 3,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487471.2,
+    "y": 4420416.8
+   },
+   "id": 4,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487416.8,
+    "y": 4420396.0
+   },
+   "id": 5,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H5"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487698.4,
+    "y": 4420383.2
+   },
+   "id": 6,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H6"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487263.2,
+    "y": 4420370.4
+   },
+   "id": 7,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H7"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487668.0,
+    "y": 4420360.8
+   },
+   "id": 8,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H8"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487218.4,
+    "y": 4420351.2
+   },
+   "id": 9,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H9"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487812.0,
+    "y": 4420346.4
+   },
+   "id": 10,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H10"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487925.6,
+    "y": 4420341.6
+   },
+   "id": 11,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H11"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487879.2,
+    "y": 4420336.8
+   },
+   "id": 12,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H12"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487525.6,
+    "y": 4420332.0
+   },
+   "id": 13,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H13"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487863.2,
+    "y": 4420328.8
+   },
+   "id": 14,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H14"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487322.4,
+    "y": 4420324.0
+   },
+   "id": 15,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H15"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487586.4,
+    "y": 4420320.8
+   },
+   "id": 16,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H16"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487850.4,
+    "y": 4420317.6
+   },
+   "id": 17,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H17"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487437.6,
+    "y": 4420312.8
+   },
+   "id": 18,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H18"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487232.8,
+    "y": 4420308.0
+   },
+   "id": 19,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H19"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487668.0,
+    "y": 4420304.8
+   },
+   "id": 20,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H20"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487636.0,
+    "y": 4420300.0
+   },
+   "id": 21,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H21"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487754.4,
+    "y": 4420295.2
+   },
+   "id": 22,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H22"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487476.0,
+    "y": 4420288.8
+   },
+   "id": 23,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H23"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487703.2,
+    "y": 4420284.0
+   },
+   "id": 24,
+   "layerId": "heyelan",
+   "attrs": {
+    "Ad": "H24"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 487210.0,
+     "y": 4420230.0
+    },
+    {
+     "x": 487380.0,
+     "y": 4420210.0
+    },
+    {
+     "x": 487560.0,
+     "y": 4420250.0
+    },
+    {
+     "x": 487760.0,
+     "y": 4420200.0
+    },
+    {
+     "x": 487960.0,
+     "y": 4420240.0
+    }
+   ],
+   "id": 25,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Mevcut yol"
+   }
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "f32",
+   "file": "suitability/egim.tif",
+   "srid": 5256,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "percent",
+    "ramp": "Sıcaklık"
+   },
+   "id": 26,
+   "layerId": "egim",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "f32",
+   "file": "suitability/yol.tif",
+   "srid": 5256,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Viridis"
+   },
+   "id": 27,
+   "layerId": "yol-uzakligi",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "u8",
+   "file": "suitability/ortu.tif",
+   "srid": 5256,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "manual",
+    "min": 1.0,
+    "max": 5.0,
+    "ramp": "Spektral",
+    "resampling": "nearest"
+   },
+   "id": 28,
+   "layerId": "ortu",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.6,
+    0.0,
+    4420600.0,
+    0.0,
+    -1.6
+   ],
+   "width": 480,
+   "height": 324,
+   "bands": 1,
+   "sample": "f32",
+   "file": "rasters/dem.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rampShade",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 29,
+   "layerId": "dem",
+   "attrs": {}
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

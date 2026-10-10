@@ -1,0 +1,1076 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "rasters": {
+  "grid-cdf2.nc": "multidim/grid-cdf2.nc",
+  "ugrid.nc": "multidim/ugrid.nc",
+  "ugrid-calc.nc": "multidim/ugrid-calc.nc",
+  "bantlar.tif": "multidim/bantlar.tif",
+  "tek.tif": "multidim/tek.tif"
+ },
+ "documents": {
+  "multidim.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "cizgiler",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "multidim.profile": {
+     "input": {
+      "scope": "selection"
+     },
+     "lines": {
+      "scope": "selection"
+     },
+     "step": null,
+     "band": 1,
+     "draw": false,
+     "layer": {
+      "newName": "Kesit"
+     }
+    },
+    "multidim.series": {
+     "input": {
+      "scope": "selection"
+     },
+     "points": {
+      "scope": "selection"
+     }
+    },
+    "multidim.meshCalculator": {
+     "input": {
+      "scope": "selection"
+     },
+     "expression": "",
+     "summary": "none",
+     "name": "Hesap",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Mesh hesabı"
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "profile-dem",
+   "title": "Kesit, NetCDF ızgarası: iki çizgi, 7 m adım; değersiz hücreler ve rasterin dışı boş, kotlu çizgiler orada bölünür",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.profile"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "dem"
+    },
+    "lines": {
+     "scope": "layer",
+     "layerId": "cizgiler"
+    },
+    "step": 7.0,
+    "draw": true,
+    "layer": {
+     "newName": "Kesit"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 çizgi, 29 nokta (7 değersiz).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Çizgi",
+       "Uzaklık (m)",
+       "Y",
+       "X",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "1",
+        "0.000",
+        "500005.000",
+        "4420045.000",
+        "100.250"
+       ],
+       [
+        "1",
+        "7.000",
+        "500012.000",
+        "4420045.000",
+        "100.250"
+       ],
+       [
+        "1",
+        "14.000",
+        "500019.000",
+        "4420045.000",
+        "100.250"
+       ],
+       [
+        "1",
+        "21.000",
+        "500026.000",
+        "4420045.000",
+        "101.250"
+       ],
+       [
+        "1",
+        "28.000",
+        "500033.000",
+        "4420045.000",
+        "101.250"
+       ],
+       [
+        "1",
+        "35.000",
+        "500040.000",
+        "4420045.000",
+        "102.250"
+       ],
+       [
+        "1",
+        "42.000",
+        "500047.000",
+        "4420045.000",
+        "102.250"
+       ],
+       [
+        "1",
+        "49.000",
+        "500054.000",
+        "4420045.000",
+        "102.250"
+       ],
+       [
+        "1",
+        "56.000",
+        "500061.000",
+        "4420045.000",
+        ""
+       ],
+       [
+        "1",
+        "63.000",
+        "500068.000",
+        "4420045.000",
+        ""
+       ],
+       [
+        "1",
+        "70.000",
+        "500075.000",
+        "4420045.000",
+        ""
+       ],
+       [
+        "1",
+        "77.000",
+        "500082.000",
+        "4420045.000",
+        "104.250"
+       ],
+       [
+        "1",
+        "84.000",
+        "500089.000",
+        "4420045.000",
+        "104.250"
+       ],
+       [
+        "1",
+        "90.000",
+        "500095.000",
+        "4420045.000",
+        "104.250"
+       ],
+       [
+        "2",
+        "0.000",
+        "499990.000",
+        "4420025.000",
+        ""
+       ],
+       [
+        "2",
+        "7.000",
+        "499997.000",
+        "4420025.000",
+        ""
+       ],
+       [
+        "2",
+        "14.000",
+        "500004.000",
+        "4420025.000",
+        "110.250"
+       ],
+       [
+        "2",
+        "21.000",
+        "500011.000",
+        "4420025.000",
+        "110.250"
+       ],
+       [
+        "2",
+        "28.000",
+        "500018.000",
+        "4420025.000",
+        "110.250"
+       ],
+       [
+        "2",
+        "35.000",
+        "500025.000",
+        "4420025.000",
+        "111.250"
+       ],
+       [
+        "2",
+        "42.000",
+        "500032.000",
+        "4420025.000",
+        "111.250"
+       ],
+       [
+        "2",
+        "49.000",
+        "500039.000",
+        "4420025.000",
+        "111.250"
+       ],
+       [
+        "2",
+        "56.000",
+        "500046.000",
+        "4420025.000",
+        "112.250"
+       ],
+       [
+        "2",
+        "63.000",
+        "500050.000",
+        "4420022.000",
+        "112.250"
+       ],
+       [
+        "2",
+        "70.000",
+        "500050.000",
+        "4420015.000",
+        "122.250"
+       ],
+       [
+        "2",
+        "77.000",
+        "500050.000",
+        "4420008.000",
+        "122.250"
+       ],
+       [
+        "2",
+        "84.000",
+        "500050.000",
+        "4420001.000",
+        "122.250"
+       ],
+       [
+        "2",
+        "91.000",
+        "500050.000",
+        "4419994.000",
+        ""
+       ],
+       [
+        "2",
+        "95.000",
+        "500050.000",
+        "4419990.000",
+        ""
+       ]
+      ]
+     }
+    },
+    "undo": "Kesit",
+    "layers": [
+     {
+      "id": "islem-kesit",
+      "name": "Kesit",
+      "style": {
+       "color": "#B4572E",
+       "lineType": "continuous",
+       "lineWeight": 0.35
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-kesit",
+      "attrs": {
+       "Çizgi": "1"
+      },
+      "pts": [
+       {
+        "x": 500005.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500012.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500019.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500026.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500033.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500047.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500054.0,
+        "y": 4420045.0
+       }
+      ],
+      "zs": [
+       100.25,
+       100.25,
+       100.25,
+       101.25,
+       101.25,
+       102.25,
+       102.25,
+       102.25
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-kesit",
+      "attrs": {
+       "Çizgi": "1"
+      },
+      "pts": [
+       {
+        "x": 500082.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500089.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 500095.0,
+        "y": 4420045.0
+       }
+      ],
+      "zs": [
+       104.25,
+       104.25,
+       104.25
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-kesit",
+      "attrs": {
+       "Çizgi": "2"
+      },
+      "pts": [
+       {
+        "x": 500004.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 500011.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 500018.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 500025.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 500032.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 500039.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 500046.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4420022.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4420008.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4420001.0
+       }
+      ],
+      "zs": [
+       110.25,
+       110.25,
+       110.25,
+       111.25,
+       111.25,
+       111.25,
+       112.25,
+       112.25,
+       122.25,
+       122.25,
+       122.25
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-kesit": "dem"
+    }
+   }
+  },
+  {
+   "id": "profile-mesh",
+   "title": "Kesit, mesh: ağdan enterpolasyon, etkin olmayan yüz ve değersiz düğüm boş",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.profile"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "derinlik"
+    },
+    "lines": {
+     "scope": "layer",
+     "layerId": "mesh-cizgiler"
+    },
+    "step": 3.0,
+    "draw": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 çizgi, 25 nokta (8 değersiz).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Çizgi",
+       "Uzaklık (m)",
+       "Y",
+       "X",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "1",
+        "0.000",
+        "500001.000",
+        "4420003.000",
+        ""
+       ],
+       [
+        "1",
+        "3.000",
+        "500003.815",
+        "4420004.037",
+        ""
+       ],
+       [
+        "1",
+        "6.000",
+        "500006.630",
+        "4420005.074",
+        "1.273"
+       ],
+       [
+        "1",
+        "9.000",
+        "500009.445",
+        "4420006.111",
+        "1.347"
+       ],
+       [
+        "1",
+        "12.000",
+        "500012.260",
+        "4420007.148",
+        "1.421"
+       ],
+       [
+        "1",
+        "15.000",
+        "500015.075",
+        "4420008.186",
+        "1.495"
+       ],
+       [
+        "1",
+        "18.000",
+        "500017.890",
+        "4420009.223",
+        "1.569"
+       ],
+       [
+        "1",
+        "21.000",
+        "500020.705",
+        "4420010.260",
+        "1.644"
+       ],
+       [
+        "1",
+        "24.000",
+        "500023.520",
+        "4420011.297",
+        "1.718"
+       ],
+       [
+        "1",
+        "27.000",
+        "500026.335",
+        "4420012.334",
+        "1.792"
+       ],
+       [
+        "1",
+        "30.000",
+        "500029.150",
+        "4420013.371",
+        "1.866"
+       ],
+       [
+        "1",
+        "33.000",
+        "500031.965",
+        "4420014.408",
+        "1.940"
+       ],
+       [
+        "1",
+        "36.000",
+        "500034.780",
+        "4420015.445",
+        "2.014"
+       ],
+       [
+        "1",
+        "39.000",
+        "500037.595",
+        "4420016.483",
+        ""
+       ],
+       [
+        "1",
+        "40.497",
+        "500039.000",
+        "4420017.000",
+        ""
+       ],
+       [
+        "2",
+        "0.000",
+        "500003.000",
+        "4420019.000",
+        ""
+       ],
+       [
+        "2",
+        "3.000",
+        "500004.993",
+        "4420016.758",
+        ""
+       ],
+       [
+        "2",
+        "6.000",
+        "500006.986",
+        "4420014.516",
+        ""
+       ],
+       [
+        "2",
+        "9.000",
+        "500008.979",
+        "4420012.273",
+        ""
+       ],
+       [
+        "2",
+        "12.000",
+        "500010.972",
+        "4420010.031",
+        "1.513"
+       ],
+       [
+        "2",
+        "15.000",
+        "500012.965",
+        "4420007.789",
+        "1.454"
+       ],
+       [
+        "2",
+        "18.000",
+        "500014.959",
+        "4420005.547",
+        "1.395"
+       ],
+       [
+        "2",
+        "21.000",
+        "500016.952",
+        "4420003.304",
+        "1.336"
+       ],
+       [
+        "2",
+        "24.000",
+        "500018.945",
+        "4420001.062",
+        "1.277"
+       ],
+       [
+        "2",
+        "24.083",
+        "500019.000",
+        "4420001.000",
+        "1.275"
+       ]
+      ]
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "series-dem",
+   "title": "Zaman serisi, NetCDF ızgarası: iki zaman adımı, üç nokta",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.series"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "dem"
+    },
+    "points": {
+     "scope": "layer",
+     "layerId": "noktalar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "3 nokta, 2 adım.",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Adım",
+       "Zaman",
+       "K1",
+       "K2",
+       "K3"
+      ],
+      "rows": [
+       [
+        "1",
+        "01.01.2000 09:00",
+        "100.250",
+        "113.250",
+        "124.250"
+       ],
+       [
+        "2",
+        "01.01.2000 21:00",
+        "1100.250",
+        "1113.250",
+        "1124.250"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "series-mesh",
+   "title": "Zaman serisi, mesh: üç adım, etkin olmayan yüz ve ağın dışındaki nokta boş",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.series"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "derinlik"
+    },
+    "points": {
+     "scope": "layer",
+     "layerId": "mesh-noktalar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "5 nokta, 3 adım.",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Adım",
+       "Zaman",
+       "P1",
+       "P2",
+       "P3",
+       "P4",
+       "P5"
+      ],
+      "rows": [
+       [
+        "1",
+        "01.05.2024 06:00",
+        "0.350",
+        "0.500",
+        "0.988",
+        "1.313",
+        ""
+       ],
+       [
+        "2",
+        "01.05.2024 06:30",
+        "1.350",
+        "",
+        "",
+        "",
+        ""
+       ],
+       [
+        "3",
+        "01.05.2024 07:00",
+        "2.350",
+        "2.500",
+        "2.988",
+        "",
+        ""
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "series-bands",
+   "title": "Zaman serisi, zamansız üç bantlı raster: her bant bir satır; çok noktalı nesnenin her noktası, adsız nokta sırasıyla, rasterin dışındaki nokta boş",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.series"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "bantlar"
+    },
+    "points": {
+     "scope": "layer",
+     "layerId": "bant-noktalar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "4 nokta, 3 adım.",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Bant",
+       "B1",
+       "B2",
+       "B2 (2)",
+       "Nokta 4"
+      ],
+      "rows": [
+       [
+        "1",
+        "10.500",
+        "16.500",
+        "21.500",
+        ""
+       ],
+       [
+        "2",
+        "20.500",
+        "",
+        "31.500",
+        ""
+       ],
+       [
+        "3",
+        "30.500",
+        "36.500",
+        "41.500",
+        ""
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "calc-max",
+   "title": "Mesh hesaplayıcı, En büyük: zamanlı ve zamansız veri seti, kaynağın yanına",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.meshCalculator"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hesap"
+    },
+    "expression": "[Su derinliği] + bed",
+    "summary": "max",
+    "name": "En büyük kot",
+    "output": "",
+    "add": true,
+    "layer": {
+     "newName": "Mesh hesabı"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Mesh hesaplayıcı",
+    "summary": "“En büyük kot”: 10 düğüm, 3 adımın en büyüğü. “ugrid-calc-hesap.nc” yazıldı.",
+    "outputs": {
+     "file": "ugrid-calc-hesap.nc"
+    },
+    "layers": [
+     {
+      "id": "islem-mesh-hesabi",
+      "name": "Mesh hesabı",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-mesh-hesabi",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       0.125,
+       0.0,
+       4420040.0,
+       0.0,
+       -0.125
+      ],
+      "width": 320,
+      "height": 320,
+      "bands": 1,
+      "sample": "f32",
+      "file": "ugrid-calc-hesap.nc",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      },
+      "dataset": {
+       "variable": "En_buyuk_kot",
+       "mesh": "Mesh2d"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-mesh-hesabi": "hesap"
+    },
+    "multidimOf": {
+     "ugrid-calc-hesap.nc": "calc-2.nc"
+    }
+   }
+  },
+  {
+   "id": "calc-steps",
+   "title": "Mesh hesaplayıcı, zaman özeti yok: her adım yazılır, adı verilen dosyaya",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.meshCalculator"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hesap"
+    },
+    "expression": "depth * 2 + 1",
+    "summary": "none",
+    "name": "Derinlik × 2 + 1",
+    "output": "derinlik.nc",
+    "add": true,
+    "layer": {
+     "newName": "Mesh hesabı"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Mesh hesaplayıcı",
+    "summary": "“Derinlik × 2 + 1”: 10 düğüm, 3 adım (1 değersiz). “derinlik.nc” yazıldı.",
+    "outputs": {
+     "file": "derinlik.nc"
+    },
+    "layers": [
+     {
+      "id": "islem-mesh-hesabi",
+      "name": "Mesh hesabı",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-mesh-hesabi",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       0.125,
+       0.0,
+       4420040.0,
+       0.0,
+       -0.125
+      ],
+      "width": 320,
+      "height": 320,
+      "bands": 1,
+      "sample": "f32",
+      "file": "derinlik.nc",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      },
+      "dataset": {
+       "variable": "Derinlik___2___1",
+       "mesh": "Mesh2d",
+       "dims": [
+        {
+         "name": "time",
+         "index": 0,
+         "values": [
+          1714543200000.0,
+          1714545000000.0,
+          1714546800000.0
+         ],
+         "time": true
+        }
+       ]
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-mesh-hesabi": "hesap"
+    },
+    "multidimOf": {
+     "derinlik.nc": "calc-1.nc"
+    }
+   }
+  },
+  {
+   "id": "calc-places",
+   "title": "Mesh hesaplayıcı, düğüm ve yüz veri setleri birlikte: ret",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.meshCalculator"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hesap"
+    },
+    "expression": "depth + level",
+    "summary": "none",
+    "name": "x"
+   },
+   "expect": {
+    "status": "error",
+    "message": "İfadenin andığı veri setleri aynı konumda olmalı: “depth” düğümlerde, “level” yüzlerde."
+   }
+  },
+  {
+   "id": "series-one-band",
+   "title": "Zaman serisi, tek bantlı ve zamansız raster: ret",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.series"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "tek"
+    },
+    "points": {
+     "scope": "layer",
+     "layerId": "bant-noktalar"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Raster tek bantlı ve zaman boyutu yok: Zaman serisi zaman boyutlu veri seti ya da çok bantlı raster ister."
+   }
+  }
+ ]
+}

@@ -201,6 +201,7 @@ fn raster_object(
             srid,
             style,
             opacity: None,
+            dataset: None,
         },
     })
 }

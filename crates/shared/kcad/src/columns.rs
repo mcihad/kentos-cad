@@ -45,7 +45,7 @@
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
-//! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`) | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any | the look's ramp if any, asset if any, file if any, url if any |
+//! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units |
 //! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
@@ -147,6 +147,8 @@ const LOOK_ALTITUDE: u32 = 32;
 const LOOK_Z_FACTOR: u32 = 64;
 const LOOK_NODATA: u32 = 128;
 const LOOK_NEAREST: u32 = 256;
+/// A mesh's lines' colour (docs/adr/0243 §5): a text after the ramp.
+const LOOK_EDGES: u32 = 512;
 
 /// A point cloud's look's flags (docs/adr/0207 §5).
 const CLOUD_MIN: u32 = 1;
@@ -989,6 +991,7 @@ impl Packer {
                         srid,
                         style,
                         opacity,
+                        dataset,
                     },
             }) => {
                 let place = RASTER_SAMPLES.iter().position(|s| s == sample).unwrap_or(0);
@@ -1029,6 +1032,9 @@ impl Packer {
                 if style.resampling == kentos_contracts::RasterResampling::Nearest {
                     look |= LOOK_NEAREST;
                 }
+                if style.edges.is_some() {
+                    look |= LOOK_EDGES;
+                }
                 self.out.ints.extend([count(stretch), look]);
                 self.out.floats.extend(affine);
                 if let Some(o) = opacity {
@@ -1043,6 +1049,9 @@ impl Packer {
                 if let Some(r) = &style.ramp {
                     self.text(r);
                 }
+                if let Some(e) = &style.edges {
+                    self.text(e);
+                }
                 if let Some(a) = asset {
                     flags |= OPT[0];
                     self.text(a);
@@ -1054,6 +1063,36 @@ impl Packer {
                 if let Some(u) = url {
                     flags |= OPT[3];
                     self.text(u);
+                }
+                // A NetCDF variable and its slice (docs/adr/0243 §6): its dimensions' count and
+                // what it has, each dimension's index, value count and what it has; their values;
+                // the names and units.
+                if let Some(d) = dataset {
+                    flags |= OPT[4];
+                    let has = u32::from(d.follow_time)
+                        | (u32::from(d.vector.is_some()) << 1)
+                        | (u32::from(d.mesh.is_some()) << 2);
+                    self.out.ints.extend([count(d.dims.len()), has]);
+                    self.text(&d.variable);
+                    if let Some(v) = &d.vector {
+                        self.text(v);
+                    }
+                    if let Some(m) = &d.mesh {
+                        self.text(m);
+                    }
+                    for dim in &d.dims {
+                        let has = u32::from(dim.time) | (u32::from(dim.units.is_some()) << 1);
+                        self.out
+                            .ints
+                            .extend([dim.index, count(dim.values.len()), has]);
+                        for &v in &dim.values {
+                            self.float(v);
+                        }
+                        self.text(&dim.name);
+                        if let Some(u) = &dim.units {
+                            self.text(u);
+                        }
+                    }
                 }
             }
             Entity::PointCloud(kentos_contracts::PointCloudEntity {
@@ -1616,8 +1655,8 @@ fn allowed(kind: u8) -> u32 {
         15 => OPT[..11].iter().fold(0, |m, b| m | b),
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
         16 => OPT[..5].iter().fold(0, |m, b| m | b),
-        // A raster: asset, file, opacity (docs/adr/0204), url (docs/adr/0207).
-        17 => OPT[..4].iter().fold(0, |m, b| m | b),
+        // A raster: asset, file, opacity (docs/adr/0204), url (docs/adr/0207), dataset (docs/adr/0243).
+        17 => OPT[..5].iter().fold(0, |m, b| m | b),
         // A point cloud: opacity (docs/adr/0207).
         18 => OPT[0],
         _ => 0,
@@ -2331,6 +2370,11 @@ fn geometry(
             } else {
                 None
             };
+            let edges = if look & LOOK_EDGES != 0 {
+                Some(c.text(|| place("style.edges"))?)
+            } else {
+                None
+            };
             let style = kentos_contracts::RasterStyle {
                 render,
                 bands: look_bands,
@@ -2348,6 +2392,7 @@ fn geometry(
                 } else {
                     kentos_contracts::RasterResampling::Bilinear
                 },
+                edges,
             };
             let asset = if has(0) {
                 Some(c.text(|| place("asset"))?)
@@ -2361,6 +2406,59 @@ fn geometry(
             };
             let url = if has(3) {
                 Some(c.text(|| place("url"))?)
+            } else {
+                None
+            };
+            let dataset = if has(4) {
+                let n = c.usize()?;
+                if n > kentos_contracts::MAX_DATASET_DIMS {
+                    return Err(broken("rasterin veri setinin boyutları"));
+                }
+                let has = c.int()?;
+                let variable = c.text(|| place("dataset.variable"))?;
+                let vector = if has & 2 != 0 {
+                    Some(c.text(|| place("dataset.vector"))?)
+                } else {
+                    None
+                };
+                let mesh = if has & 4 != 0 {
+                    Some(c.text(|| place("dataset.mesh"))?)
+                } else {
+                    None
+                };
+                let mut dims = Vec::with_capacity(n);
+                for _ in 0..n {
+                    let index = c.int()?;
+                    let k = c.usize()?;
+                    if k > kentos_contracts::MAX_DIM_VALUES {
+                        return Err(broken("rasterin veri setinin boyutunun değerleri"));
+                    }
+                    let dh = c.int()?;
+                    let mut values = Vec::with_capacity(k);
+                    for _ in 0..k {
+                        values.push(c.float()?);
+                    }
+                    let name = c.text(|| place("dataset.dims.name"))?;
+                    let units = if dh & 2 != 0 {
+                        Some(c.text(|| place("dataset.dims.units"))?)
+                    } else {
+                        None
+                    };
+                    dims.push(kentos_contracts::DatasetDim {
+                        name,
+                        index,
+                        values,
+                        time: dh & 1 != 0,
+                        units,
+                    });
+                }
+                Some(kentos_contracts::RasterDataset {
+                    variable,
+                    vector,
+                    mesh,
+                    dims,
+                    follow_time: has & 1 != 0,
+                })
             } else {
                 None
             };
@@ -2378,6 +2476,7 @@ fn geometry(
                     srid,
                     style,
                     opacity,
+                    dataset,
                 },
             })
         }

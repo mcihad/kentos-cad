@@ -130,6 +130,10 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::raster_vector_scenes::pointed());
     all.extend(crate::hydrology_scenes::pointed());
     all.extend(crate::distance_scenes::pointed());
+    all.extend(crate::suitability_scenes::pointed());
+    all.extend(crate::stats_scenes::pointed());
+    all.extend(crate::remote_scenes::pointed());
+    all.extend(crate::multidim_scenes::pointed());
     all.extend(crate::label_scenes::pointed());
     all.extend(crate::renderer_scenes::pointed());
     let menus: Vec<Pointed> = vec![

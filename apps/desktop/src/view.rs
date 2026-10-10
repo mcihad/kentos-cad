@@ -90,7 +90,7 @@ impl App {
                 column![
                     self.drawing_area(),
                     // Zaman sürgüsü's bar while it is open (temporal/bar.rs, docs/adr/0210 §10).
-                    self.time_bar(self.window_size.width),
+                    self.time_bar(self.viewport.bounds.width),
                     self.sheets.tabs().map(Message::Sheet),
                     self.bottom()
                 ],
@@ -1675,6 +1675,7 @@ impl App {
             Asking::DataCompare => self.data_compare_view(),
             Asking::RasterAdd => self.raster_add_view(),
             Asking::RasterStyle => self.raster_look_view(),
+            Asking::Multidim => self.multidim_view(),
             Asking::PointCloudAdd => self.cloud_add_view(),
             Asking::PointCloudStyle => self.cloud_look_view(),
             Asking::Cogo => self.cogo_view(),

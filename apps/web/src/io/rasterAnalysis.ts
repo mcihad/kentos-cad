@@ -4,6 +4,8 @@ import {
   type AnalysisRequest,
   type AnalysisResult,
   type AnalysisWatch,
+  type MultidimRequest,
+  type MultidimResult,
   type OpsRequest,
   type OpsResult,
   type PointRequest,
@@ -17,7 +19,7 @@ import {
  */
 
 /** Runs `request` in a worker of its own: its `done` reply, or why not. */
-function inWorker(request: AnalysisRequest | PointRequest | OpsRequest, watch: AnalysisWatch): Promise<Extract<AnalysisReply, { type: 'done' }>> {
+function inWorker(request: AnalysisRequest | PointRequest | OpsRequest | MultidimRequest, watch: AnalysisWatch): Promise<Extract<AnalysisReply, { type: 'done' }>> {
   const worker = new Worker(new URL('./rasterAnalysisWorker.ts', import.meta.url), { type: 'module', name: 'KentOS raster çözümleme' });
   return new Promise((resolve, reject) => {
     // Durdur is heard between the worker's messages and a few times a second besides.
@@ -51,9 +53,9 @@ function inWorker(request: AnalysisRequest | PointRequest | OpsRequest, watch: A
   });
 }
 
-/** Runs `spec` (`kentos_raster::job::Spec` JSON) over the raster's bytes `blob` in a worker of its own. */
-export async function analyzeRaster(blob: Blob, spec: string, watch: AnalysisWatch): Promise<AnalysisResult> {
-  const r = await inWorker({ type: 'run', blob, spec }, watch);
+/** Runs `spec` (`kentos_raster::job::Spec` JSON) over the raster's bytes `blob` (a NetCDF's slice `part`) in a worker of its own. */
+export async function analyzeRaster(blob: Blob, spec: string, watch: AnalysisWatch, part: string | null = null): Promise<AnalysisResult> {
+  const r = await inWorker({ type: 'run', blob, spec, part }, watch);
   if (r.raster) return { raster: r.raster };
   if (r.lines) return { lines: r.lines };
   throw new Error('Çözümleme bir sonuç vermedi.');
@@ -70,8 +72,21 @@ export async function analyzePoints(objects: string, values: string, spec: strin
  * Runs a raster operation (docs/adr/0233) over the inputs' files `sources` (the run's order; a text says why one cannot
  * be read) in a worker of its own.
  */
-export async function analyzeOps(sources: (Blob | string)[], spec: string, shapes: string, watch: AnalysisWatch): Promise<OpsResult> {
-  const r = await inWorker({ type: 'ops', sources, spec, shapes }, watch);
+export async function analyzeOps(
+  sources: (Blob | string)[],
+  spec: string,
+  shapes: string,
+  watch: AnalysisWatch,
+  parts: (string | null)[] = [],
+): Promise<OpsResult> {
+  const r = await inWorker({ type: 'ops', sources, parts, spec, shapes }, watch);
   if (r.ops) return r.ops;
+  throw new Error('Çözümleme bir sonuç vermedi.');
+}
+
+/** Runs a Çok boyutlu veri tool (docs/adr/0243 §8–§10) in a worker of its own. */
+export async function analyzeMultidim(request: Omit<MultidimRequest, 'type'>, watch: AnalysisWatch): Promise<MultidimResult> {
+  const r = await inWorker({ type: 'multidim', ...request }, watch);
+  if (r.multidim) return r.multidim;
   throw new Error('Çözümleme bir sonuç vermedi.');
 }

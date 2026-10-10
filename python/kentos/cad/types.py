@@ -3036,6 +3036,42 @@ class CustomDatum(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DatasetDim(_Model):
+    """One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the
+    index shown, its values (coordinates; moments in milliseconds since 1970
+    when `time`) and units.
+    Attributes:
+        time: The values are a CF time axis's moments.
+    """
+    name: str
+    index: int
+    values: list[float]
+    time: bool | Unset = UNSET
+    units: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["index"] = self.index
+        out["values"] = [float(e0) for e0 in self.values]
+        if self.time is not UNSET:
+            out["time"] = self.time
+        if self.units is not UNSET:
+            out["units"] = self.units
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetDim:
+        return cls(
+            name=data["name"],
+            index=data["index"],
+            values=[float(e0) for e0 in data["values"]],
+            time=data.get("time", UNSET),
+            units=data.get("units", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DatumTransform(_Model):
     """The project's choice for a pair of the registry's datums instead of
     EPSG's way (docs/adr/0168 §3); the pair's other way is its reverse. It
@@ -8965,6 +9001,47 @@ class ProjectVariable(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RasterDataset(_Model):
+    """A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a
+    UGRID mesh's dataset, one slice of its other dimensions.
+    Attributes:
+        variable: The variable's name in the file (a vector's x component).
+        dims: Its slice dimensions in the file's order.
+        follow_time: The step shown follows the time slider (docs/adr/0243 §7).
+        mesh: The mesh topology it lies on (a UGRID file); absent: a CF grid.
+        vector: A vector's y component: its magnitude is shown.
+    """
+    variable: str
+    dims: list[DatasetDim] | Unset = UNSET
+    follow_time: bool | Unset = UNSET
+    mesh: str | None | Unset = UNSET
+    vector: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["variable"] = self.variable
+        if self.dims is not UNSET:
+            out["dims"] = [e0.to_json() for e0 in self.dims]
+        if self.follow_time is not UNSET:
+            out["followTime"] = self.follow_time
+        if self.mesh is not UNSET:
+            out["mesh"] = self.mesh
+        if self.vector is not UNSET:
+            out["vector"] = self.vector
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RasterDataset:
+        return cls(
+            variable=data["variable"],
+            dims=[DatasetDim.from_json(e0) for e0 in data["dims"]] if "dims" in data else UNSET,
+            follow_time=data.get("followTime", UNSET),
+            mesh=data.get("mesh", UNSET),
+            vector=data.get("vector", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RasterEntity(Entity):
     """A raster (docs/adr/0204 §2).
     Attributes:
@@ -8977,6 +9054,7 @@ class RasterEntity(Entity):
         asset: The project library's asset its file is (embedded); exactly one of
             `asset` and `file` is given.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        dataset: A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -9001,6 +9079,7 @@ class RasterEntity(Entity):
     style: RasterStyle
     asset: str | None | Unset = UNSET
     color: str | None | Unset = UNSET
+    dataset: RasterDataset | None | Unset = UNSET
     file: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -9025,6 +9104,8 @@ class RasterEntity(Entity):
             out["asset"] = self.asset
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.dataset is not UNSET:
+            out["dataset"] = None if self.dataset is None else self.dataset.to_json()
         if self.file is not UNSET:
             out["file"] = self.file
         if self.label is not UNSET:
@@ -9056,6 +9137,7 @@ class RasterEntity(Entity):
             style=RasterStyle.from_json(data["style"]),
             asset=data.get("asset", UNSET),
             color=data.get("color", UNSET),
+            dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else RasterDataset.from_json(data["dataset"]),
             file=data.get("file", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -9078,6 +9160,7 @@ class RasterFields(_Model):
         srid: The file's coordinate system; 0: the file named none and the user took the project's.
         asset: The project library's asset its file is (embedded); exactly one of
             `asset` and `file` is given.
+        dataset: A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         opacity: 0.1 to 1; absent: opaque.
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
@@ -9090,6 +9173,7 @@ class RasterFields(_Model):
     srid: int
     style: RasterStyle
     asset: str | None | Unset = UNSET
+    dataset: RasterDataset | None | Unset = UNSET
     file: str | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
     url: str | None | Unset = UNSET
@@ -9105,6 +9189,8 @@ class RasterFields(_Model):
         out["style"] = self.style.to_json()
         if self.asset is not UNSET:
             out["asset"] = self.asset
+        if self.dataset is not UNSET:
+            out["dataset"] = None if self.dataset is None else self.dataset.to_json()
         if self.file is not UNSET:
             out["file"] = self.file
         if self.opacity is not UNSET:
@@ -9124,6 +9210,7 @@ class RasterFields(_Model):
             srid=data["srid"],
             style=RasterStyle.from_json(data["style"]),
             asset=data.get("asset", UNSET),
+            dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else RasterDataset.from_json(data["dataset"]),
             file=data.get("file", UNSET),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
             url=data.get("url", UNSET),
@@ -9137,6 +9224,7 @@ class RasterStyle(_Model):
         bands: The bands drawn, from 1: three or four for `rgb`, one otherwise.
         altitude: Its height above the horizon, degrees (0–90).
         azimuth: Gölgeli kabartma's light: degrees from north, clockwise (0–360).
+        edges: A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).
         invert: The ramp turned round.
         min: `manual`'s least and most value.
         nodata: The value shown as nothing, in place of the file's.
@@ -9147,6 +9235,7 @@ class RasterStyle(_Model):
     bands: list[int]
     altitude: float | None | Unset = UNSET
     azimuth: float | None | Unset = UNSET
+    edges: str | None | Unset = UNSET
     invert: bool | Unset = UNSET
     max: float | None | Unset = UNSET
     min: float | None | Unset = UNSET
@@ -9164,6 +9253,8 @@ class RasterStyle(_Model):
             out["altitude"] = None if self.altitude is None else float(self.altitude)
         if self.azimuth is not UNSET:
             out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
+        if self.edges is not UNSET:
+            out["edges"] = self.edges
         if self.invert is not UNSET:
             out["invert"] = self.invert
         if self.max is not UNSET:
@@ -9189,6 +9280,7 @@ class RasterStyle(_Model):
             bands=list(data["bands"]),
             altitude=UNSET if "altitude" not in data else None if data["altitude"] is None else float(data["altitude"]),
             azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
+            edges=data.get("edges", UNSET),
             invert=data.get("invert", UNSET),
             max=UNSET if "max" not in data else None if data["max"] is None else float(data["max"]),
             min=UNSET if "min" not in data else None if data["min"] is None else float(data["min"]),
@@ -12213,6 +12305,7 @@ __all__ = [
     "CrsPlane",
     "CrsSystem",
     "CustomDatum",
+    "DatasetDim",
     "DatumTransform",
     "DeleteBlockChange",
     "DeleteFeatureChange",
@@ -12461,6 +12554,7 @@ __all__ = [
     "ProjectiveTransform",
     "PropertiesOperation",
     "PropertiesOperationName",
+    "RasterDataset",
     "RasterEntity",
     "RasterEntityGeometry",
     "RasterFields",

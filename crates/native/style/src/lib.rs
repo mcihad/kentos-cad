@@ -56,6 +56,6 @@ pub use batches::{
 };
 pub use color::StylePalette;
 /// What Görünüm kipleri leave out of a layer build (docs/adr/0195).
-pub use kentos_style_core::style::build::View;
+pub use kentos_style_core::style::build::{View, raster_key};
 pub use library::{Item, ItemKind, Source, StyleLibrary};
 pub use program::{BuildOptions, LayerCall, symbol_scale_of};

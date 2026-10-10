@@ -6,13 +6,15 @@
 //! the transparency and the sampling. The drawing shows the look while the
 //! window is open, inside an undo group that is let go (nothing recorded);
 //! Uygula writes it through `cad.entities.edit`'s `rasterStyle` as one
-//! undo step (Raster stili), Vazgeç leaves the raster as it was.
+//! undo step (Raster stili), Vazgeç leaves the raster as it was. A NetCDF
+//! dataset's raster has its Veri seti section (docs/adr/0243 §11): each
+//! slice dimension's value, Zaman sürgüsünü izle, a mesh's lines and colour.
 
 use iced::widget::{Column, Row, button, column, container, row, space, text_input};
 use iced::{Center, Color, Element, Fill, Length, Task};
 use kentos_contracts::{
     CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, EntityGeometry, RASTER_RAMPS,
-    RasterFields, RasterRender, RasterResampling, RasterStretch, RasterStyle,
+    RasterDataset, RasterFields, RasterRender, RasterResampling, RasterStretch, RasterStyle,
 };
 use kentos_domain::{Group, Slot};
 use kentos_formats::raster::stats::Stats;
@@ -53,6 +55,10 @@ pub struct State {
     /// The bands' statistics, once worked out; why not.
     stats: Option<Result<Stats, String>>,
     has_palette: bool,
+    /// The dataset being edited (a NetCDF raster's): its slice and following.
+    pub dataset: Option<RasterDataset>,
+    /// A mesh's lines' colour as typed.
+    edges_text: String,
     /// The drawing's preview: an undo group let go when the window closes.
     preview: Option<Group>,
 }
@@ -73,6 +79,11 @@ pub enum Event {
     Invert,
     Type(Typed, String),
     Resampling(RasterResampling),
+    /// Slice dimension `k` shows its `i`-th value.
+    Slice(usize, u32),
+    Follow,
+    Edges,
+    EdgesColour(String),
     Stats(Result<Stats, String>),
     Apply,
     Close,
@@ -222,6 +233,12 @@ impl App {
         self.rasters.look = Some(State {
             slot,
             style: fields.style.clone(),
+            dataset: fields.dataset.clone(),
+            edges_text: fields
+                .style
+                .edges
+                .clone()
+                .unwrap_or_else(|| kentos_formats::raster::style::MESH_EDGES.to_owned()),
             original: fields,
             texts,
             stats: None,
@@ -284,6 +301,28 @@ impl App {
             Event::Ramp(name) => s.style.ramp = Some(name.to_owned()),
             Event::Invert => s.style.invert = !s.style.invert,
             Event::Resampling(r) => s.style.resampling = r,
+            Event::Slice(k, i) => {
+                if let Some(d) = s.dataset.as_mut().and_then(|d| d.dims.get_mut(k)) {
+                    d.index = i;
+                }
+            }
+            Event::Follow => {
+                if let Some(d) = s.dataset.as_mut() {
+                    d.follow_time = !d.follow_time;
+                }
+            }
+            Event::Edges => {
+                s.style.edges = match s.style.edges {
+                    Some(_) => None,
+                    None => Some(s.edges_text.trim().to_owned()),
+                };
+            }
+            Event::EdgesColour(text) => {
+                if s.style.edges.is_some() {
+                    s.style.edges = Some(text.trim().to_owned());
+                }
+                s.edges_text = text;
+            }
             Event::Type(field, text) => {
                 let v = read(&text);
                 match field {
@@ -310,6 +349,7 @@ impl App {
             (clear.is_finite() && (0.0..=90.0).contains(&clear)).then_some(1.0 - clear / 100.0)?;
         let mut f = s.original.clone();
         f.style = s.style.clone();
+        f.dataset = s.dataset.clone();
         f.opacity = (opacity < 1.0).then_some(opacity);
         (f.problem().is_none() && edit::raster_finite(&f)).then_some(f)
     }
@@ -335,7 +375,10 @@ impl App {
             let _ = i;
             return Some("Sayı olmayan bir değer var; düzeltin ya da boş bırakın.".to_owned());
         }
-        s.style.problem(s.original.bands)
+        let mut f = s.original.clone();
+        f.style = s.style.clone();
+        f.dataset = s.dataset.clone();
+        s.style.problem(s.original.bands).or_else(|| f.problem())
     }
 
     /// The drawing shows the window's look: the last preview let go, the new one written in its group.
@@ -508,6 +551,9 @@ impl App {
             )
         };
         let mut body = Column::new().spacing(14);
+        if let Some(d) = &s.dataset {
+            body = body.push(self.raster_look_dataset(s, d));
+        }
         body = body.push(row![words::field("Görünüş", render, None), band_row].spacing(16));
         if !matches!(st.render, RasterRender::Hillshade | RasterRender::Palette) {
             let mut part = column![words::field("Gerdirme", stretch, None)].spacing(6);
@@ -599,6 +645,67 @@ impl App {
                 ))
                 .width(620.0)
                 .max_height(820.0),
+        )
+    }
+
+    /// Veri seti (docs/adr/0243 §11): each slice dimension's value, Zaman sürgüsünü izle, a mesh's lines.
+    fn raster_look_dataset<'a>(&self, s: &'a State, d: &'a RasterDataset) -> Element<'a, Message> {
+        let mut name = d.variable.clone();
+        if let Some(v) = &d.vector {
+            name = format!("{name} / {v} (vektör)");
+        }
+        let mut part = Column::new().spacing(8).push(label::body(name));
+        if !d.dims.is_empty() {
+            let mut line = row![].spacing(12);
+            for (k, dim) in d.dims.iter().enumerate() {
+                let labels = kentos_formats::multidim::cube::dim_labels(
+                    &dim.values,
+                    dim.time,
+                    dim.units.as_deref(),
+                );
+                let choice = Select::new(
+                    labels.into_iter().map(Choice::new).collect::<Vec<_>>(),
+                    Some(dim.index as usize),
+                    move |i| msg(Event::Slice(k, i as u32)),
+                );
+                let title = if dim.time { "Zaman" } else { dim.name.as_str() };
+                line = line.push(container(words::field(title, choice, None)).width(Fill));
+            }
+            part = part.push(line);
+        }
+        if d.dims.iter().any(|x| x.time) {
+            part = part.push(words::check(
+                d.follow_time,
+                "Zaman sürgüsünü izle",
+                Some(msg(Event::Follow)),
+            ));
+        }
+        if d.mesh.is_some() {
+            let colour = kentos_ui::widget::focus_ring(
+                text_input("#2B3440", &s.edges_text)
+                    .on_input(|v| msg(Event::EdgesColour(v)))
+                    .padding([5, 8])
+                    .width(110.0)
+                    .size(kentos_ui::theme::typography::body())
+                    .style(kentos_ui::style::field::input),
+            );
+            part = part.push(
+                row![
+                    words::check(
+                        s.style.edges.is_some(),
+                        "Ağ çizgileri",
+                        Some(msg(Event::Edges))
+                    ),
+                    words::field("Renk", colour, None),
+                ]
+                .spacing(16)
+                .align_y(Center),
+            );
+        }
+        words::field(
+            "Veri seti",
+            part,
+            Some("Dilimin değerleri ve zaman sürgüsünü izleme çizimde hemen görünür; ağ çizgileri yüzlerin kenarlarıdır.".to_owned()),
         )
     }
 

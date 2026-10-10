@@ -92,7 +92,7 @@ fn run(
     stop: &AtomicBool,
 ) -> Result<Warped, String> {
     use std::io::{Seek, SeekFrom, Write};
-    let opened = open(&origin)?;
+    let opened = open(&origin, None)?;
     let (mut job, header) = {
         let r = opened.reader.lock().unwrap_or_else(PoisonError::into_inner);
         make(&r)?

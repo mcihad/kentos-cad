@@ -144,6 +144,8 @@ pub struct NewLayerStyle {
     pub point: Option<PointStyle>,
     /// Boxed: the label engine's style is large (docs/adr/0212 §2), a parameter's kind stays small.
     pub label: Option<Box<LabelStyle>>,
+    /// The style engine's renderer, opaque JSON (Sıcak noktalar' classes, docs/adr/0238 §9).
+    pub renderer: Option<Value>,
 }
 
 impl NewLayerStyle {
@@ -163,6 +165,9 @@ impl NewLayerStyle {
         }
         if let Some(label) = &self.label {
             base.label = Some(LabelStyle::clone(label));
+        }
+        if self.renderer.is_some() {
+            base.renderer.clone_from(&self.renderer);
         }
         base
     }
@@ -246,6 +251,21 @@ pub enum ParamKind {
     /// network's id and the cost's name; `prefers`: the kind offered first.
     Network {
         prefers: kentos_contracts::NetworkKind,
+    },
+    /// A value for each raster of the features parameter `of` (docs/adr/0237 §9): `{ name: value }`, the
+    /// rasters by their names in an expression; a number (`min`, `max`) or a text a row; `placeholder` in an
+    /// empty row. What a row left empty means is the tool's.
+    RasterValues {
+        of: String,
+        number: bool,
+        min: Option<f64>,
+        max: Option<f64>,
+        placeholder: Option<String>,
+    },
+    /// A comparison for each pair of the features parameter `of`'s rasters (docs/adr/0237 §9): `[[a, b, v]]`,
+    /// v 9 … 2 a over b, 1 even, −2 … −9 b over a.
+    RasterPairs {
+        of: String,
     },
 }
 
@@ -366,6 +386,8 @@ impl ParamDef {
             ParamKind::File { .. } => "file",
             ParamKind::SaveFile { .. } => "saveFile",
             ParamKind::Network { .. } => "network",
+            ParamKind::RasterValues { .. } => "rasterValues",
+            ParamKind::RasterPairs { .. } => "rasterPairs",
         }
     }
 }

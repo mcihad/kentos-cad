@@ -42,7 +42,7 @@ use crate::{
     SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_NETWORKS,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
     SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
@@ -1047,6 +1047,13 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                     .is_some_and(labels::has_engine_fields)
                 || labelled(&n.children)
         })
+    }
+    // Schema 38 (docs/adr/0243): a raster showing a NetCDF variable, or a mesh's lines.
+    if doc.entities.iter().any(|e| match e {
+        Entity::Raster(r) => r.raster.dataset.is_some() || r.raster.style.edges.is_some(),
+        _ => false,
+    }) {
+        return SCHEMA_WITH_MULTIDIM;
     }
     // Schema 37 (docs/adr/0214): the project's variables.
     if !doc.settings.variables.is_empty() {

@@ -140,6 +140,24 @@ fn world_beside(path: &Path) -> Option<(String, String)> {
     None
 }
 
+/// Whether a file is a NetCDF (classic or NetCDF-4), by its first bytes.
+fn is_netcdf(path: &Path) -> bool {
+    use std::io::Read as _;
+    let mut head = [0u8; 8];
+    let n = std::fs::File::open(path)
+        .and_then(|mut f| f.read(&mut head))
+        .unwrap_or(0);
+    use kentos_formats::multidim::netcdf::{Sniff, sniff};
+    match sniff(&head[..n]) {
+        Sniff::Classic(_) => true,
+        // A NetCDF-4 by its name: the window says why it is not read.
+        Sniff::Hdf5 => path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("nc")),
+        Sniff::Grib | Sniff::Other => false,
+    }
+}
+
 /// The header read: what the window shows, its look, the world file that placed it.
 pub fn inspect(path: &Path) -> Result<Read, String> {
     inspect_origin(&super::tiles::Origin::File(path.to_path_buf()))
@@ -147,7 +165,7 @@ pub fn inspect(path: &Path) -> Result<Read, String> {
 
 /// [`inspect`] of a file or an address (an address has no world file).
 pub fn inspect_origin(origin: &super::tiles::Origin) -> Result<Read, String> {
-    let opened = super::tiles::open(origin)?;
+    let opened = super::tiles::open(origin, None)?;
     let bytes = opened.size;
     let reader = opened
         .reader
@@ -276,8 +294,8 @@ impl App {
                 rfd::AsyncFileDialog::new()
                     .set_title(TITLE)
                     .add_filter(
-                        "Raster (GeoTIFF, TIFF, PNG, JPEG)",
-                        &["tif", "tiff", "png", "jpg", "jpeg"],
+                        "Raster (GeoTIFF, TIFF, PNG, JPEG, NetCDF)",
+                        &["tif", "tiff", "png", "jpg", "jpeg", "nc"],
                     )
                     .pick_file()
                     .await
@@ -292,6 +310,10 @@ impl App {
             // The dialog closed: the window stays, for another file or an address.
             Event::Picked(None) => return Task::none(),
             Event::Picked(Some(path)) => {
+                // A NetCDF's variables and slices are chosen in their own window (docs/adr/0243 §11).
+                if is_netcdf(&path) {
+                    return self.multidim_from_raster_add(path);
+                }
                 let id = self.raster_add_open(From::File, path.clone(), String::new());
                 return super::off_thread(move || msg(Event::Read(id, Box::new(inspect(&path)))));
             }
@@ -456,6 +478,7 @@ impl App {
             srid,
             style: read.style.clone(),
             opacity: None,
+            dataset: None,
         };
         let Some(doc) = &mut self.document else {
             return;

@@ -11,6 +11,7 @@
 //! stream for the host's decoder, whose pixels go to [`Reader::put_pixels`].
 
 use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
 
 use kentos_contracts::RasterSample;
 use serde::Serialize;
@@ -22,8 +23,10 @@ use super::layout::{compression_name, layout};
 use super::stats::{self, STATS_SIDE, Stats};
 use super::style::{self, Look};
 use super::tiff::{Ifd, Tiff};
-use super::{RasterError, Samples, TILE, geotiff};
+use super::{RasterError, Samples, TILE, TILE_APRON, geotiff};
 use crate::math;
+use crate::multidim::mesh::{Data, Mesh};
+use crate::multidim::ugrid::Location;
 
 /// A block of a level: which file and directory, and its index there.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -74,8 +77,13 @@ impl Region {
     }
 }
 
-/// What a level's samples come from.
+/// A mesh slice's values read: the dataset's (a vector's x), its y and its face mask.
+type MeshSlab = (Arc<Samples>, Option<Arc<Samples>>, Option<Arc<Samples>>);
+
+/// What a level's samples come from. (A reader has a handful of levels,
+/// each looked at for every block: its layout is kept in place, not boxed.)
 #[derive(Clone, Debug, PartialEq)]
+#[allow(clippy::large_enum_variant)]
 pub enum LevelFrom {
     /// A directory's blocks.
     File(Layout),
@@ -83,6 +91,43 @@ pub enum LevelFrom {
     Image,
     /// Worked out from the level below, in 256 × 256 tiles.
     Computed,
+    /// A mesh's slice drawn at the level, in 256 × 256 tiles (docs/adr/0243 §5).
+    Mesh(Arc<MeshLevels>),
+}
+
+/// A mesh's slice as a raster's levels (docs/adr/0243 §5): the mesh, where
+/// its values lie, the blocks of its values (a vector's two components) and
+/// of its face mask, and the sanal grid's affine.
+#[derive(Debug)]
+pub struct MeshLevels {
+    pub mesh: Arc<Mesh>,
+    pub location: Location,
+    pub blocks: Vec<Layout>,
+    pub mask: Option<Layout>,
+    pub affine: [f64; 6],
+}
+
+impl PartialEq for MeshLevels {
+    fn eq(&self, other: &MeshLevels) -> bool {
+        Arc::ptr_eq(&self.mesh, &other.mesh)
+            && self.blocks == other.blocks
+            && self.mask == other.mask
+    }
+}
+
+impl MeshLevels {
+    /// Its value and mask blocks' layouts, the mask last.
+    fn layouts(&self) -> impl Iterator<Item = &Layout> {
+        self.blocks.iter().chain(self.mask.iter())
+    }
+}
+
+/// A mesh slice's values once read: one block a component, the mask.
+#[derive(Debug, Default)]
+struct MeshValues {
+    x: Option<Arc<Samples>>,
+    y: Option<Arc<Samples>>,
+    mask: Option<Arc<Samples>>,
 }
 
 /// A level of the pyramid.
@@ -193,6 +238,8 @@ pub struct Reader {
     image: Option<Samples>,
     blocks: Lru,
     jpeg_waiting: Vec<BlockKey>,
+    /// A mesh slice's values, kept outside the blocks' budget (every tile needs them).
+    mesh_values: MeshValues,
 }
 
 /// The level-0 block of a TIFF directory's palette, by its colour map (r…, g…, b…).
@@ -261,7 +308,14 @@ impl Reader {
             6 => "ycbcr",
             _ => "gray",
         };
-        let alpha = !ifd.extra.is_empty() || photometric == 2 && base.bands >= 4;
+        // ExtraSamples: 1 associated and 2 unassociated alpha; 0 is data
+        // (GDAL's extra bands of a multi-band raster: a satellite image's
+        // near infrared is no mask). Without the tag an RGB raster's fourth
+        // sample is alpha, as writers that leave it out mean.
+        let alpha = match ifd.extra.last() {
+            Some(&e) => e == 1 || e == 2,
+            None => photometric == 2 && base.bands >= 4,
+        };
         let (affine, placed_by) = match (geo.affine, world) {
             (Some(a), _) => (Some(a), "geotiff"),
             (None, Some(w)) => (Some(w), "world"),
@@ -302,7 +356,118 @@ impl Reader {
                 ..Lru::default()
             },
             jpeg_waiting: Vec::new(),
+            mesh_values: MeshValues::default(),
         })
+    }
+
+    /// A NetCDF grid's reader (docs/adr/0243 §5): level 0 its rows of a
+    /// slice, the coarser worked out (or a pyramid file's past 4096).
+    pub fn grid(
+        mut info: RasterInfo,
+        layout: Layout,
+        budget: usize,
+    ) -> Result<Reader, RasterError> {
+        let (w, h) = (layout.width, layout.height);
+        let mut levels = vec![Level {
+            width: w,
+            height: h,
+            from: LevelFrom::File(layout),
+        }];
+        for &(lw, lh) in level_sizes(w, h).iter().skip(1) {
+            levels.push(Level {
+                width: lw,
+                height: lh,
+                from: LevelFrom::Computed,
+            });
+        }
+        info.levels = levels.len() as u32;
+        info.needs_pyramid = (w > PYRAMID_FROM || h > PYRAMID_FROM) && levels.len() > PYRAMID_FIRST;
+        let nodata = info.nodata;
+        Ok(Reader {
+            info,
+            levels,
+            palette: None,
+            nodata,
+            image: None,
+            blocks: Lru {
+                budget,
+                ..Lru::default()
+            },
+            jpeg_waiting: Vec::new(),
+            mesh_values: MeshValues::default(),
+        })
+    }
+
+    /// A mesh slice's reader (docs/adr/0243 §5): every level drawn from the mesh.
+    pub fn mesh(
+        mut info: RasterInfo,
+        mesh: MeshLevels,
+        budget: usize,
+    ) -> Result<Reader, RasterError> {
+        let (w, h) = (info.width, info.height);
+        if w == 0 || h == 0 {
+            return Err(RasterError::new("Mesh'in ızgarası boş."));
+        }
+        let m = Arc::new(mesh);
+        let levels: Vec<Level> = level_sizes(w, h)
+            .into_iter()
+            .map(|(lw, lh)| Level {
+                width: lw,
+                height: lh,
+                from: LevelFrom::Mesh(m.clone()),
+            })
+            .collect();
+        info.levels = levels.len() as u32;
+        info.needs_pyramid = false;
+        Ok(Reader {
+            info,
+            levels,
+            palette: None,
+            nodata: None,
+            image: None,
+            blocks: Lru {
+                budget,
+                ..Lru::default()
+            },
+            jpeg_waiting: Vec::new(),
+            mesh_values: MeshValues::default(),
+        })
+    }
+
+    /// The mesh a mesh slice's reader draws.
+    pub fn mesh_levels(&self) -> Option<&Arc<MeshLevels>> {
+        self.levels.first().and_then(|l| match &l.from {
+            LevelFrom::Mesh(m) => Some(m),
+            _ => None,
+        })
+    }
+
+    /// A mesh slice's values, once read.
+    fn mesh_data(&self, m: &MeshLevels) -> Option<MeshSlab> {
+        let x = self.mesh_values.x.clone()?;
+        let y = match m.blocks.len() > 1 {
+            true => Some(self.mesh_values.y.clone()?),
+            false => None,
+        };
+        let mask = match m.mask.is_some() {
+            true => Some(self.mesh_values.mask.clone()?),
+            false => None,
+        };
+        Some((x, y, mask))
+    }
+
+    /// The value of a mesh slice at a point of the drawing (interpolated on
+    /// the mesh, not a pixel's; docs/adr/0243 §8); none while its values are not read.
+    pub fn mesh_value(&self, x: f64, y: f64) -> Option<f64> {
+        let m = self.mesh_levels()?;
+        let (vx, vy, mask) = self.mesh_data(m)?;
+        let data = Data {
+            location: m.location,
+            x: &vx,
+            y: vy.as_deref(),
+            mask: mask.as_deref(),
+        };
+        Some(m.mesh.value_at(&data, x, y))
     }
 
     /// A whole decoded image's reader (a PNG or JPEG), placed by `world`.
@@ -361,6 +526,7 @@ impl Reader {
                 ..Lru::default()
             },
             jpeg_waiting: Vec::new(),
+            mesh_values: MeshValues::default(),
         })
     }
 
@@ -435,6 +601,25 @@ impl Reader {
                     }
                 }
             }
+            LevelFrom::Mesh(m) => {
+                let m = m.clone();
+                for l in m.layouts() {
+                    let slot = match l.ifd {
+                        100 => &self.mesh_values.x,
+                        101 => &self.mesh_values.y,
+                        _ => &self.mesh_values.mask,
+                    };
+                    if slot.is_none() {
+                        out.push(BlockNeed {
+                            file: l.file,
+                            ifd: l.ifd,
+                            index: 0,
+                            offset: l.offsets[0],
+                            len: l.counts[0],
+                        });
+                    }
+                }
+            }
             LevelFrom::Computed => {
                 // Its tiles that are not kept need the level below's region.
                 for ty in y0 / TILE..=(y1 - 1) / TILE {
@@ -467,6 +652,7 @@ impl Reader {
             index: need.index,
         };
         match decode_block(&l, need.index, bytes)? {
+            Put2::Samples(s) if self.keep_mesh(need.ifd, &s) => Ok(Put::Done),
             Put2::Samples(s) => {
                 self.blocks.put(key, s);
                 Ok(Put::Done)
@@ -493,6 +679,7 @@ impl Reader {
             index: need.index,
         };
         match decoded {
+            Put2::Samples(s) if self.keep_mesh(need.ifd, &s) => Put::Done,
             Put2::Samples(s) => {
                 self.blocks.put(key, s);
                 Put::Done
@@ -546,8 +733,27 @@ impl Reader {
     fn layout_of(&self, file: u8, ifd: u16) -> Option<Layout> {
         self.levels.iter().find_map(|lv| match &lv.from {
             LevelFrom::File(l) if l.file == file && l.ifd == ifd => Some(l.clone()),
+            LevelFrom::Mesh(m) => m
+                .layouts()
+                .find(|l| l.file == file && l.ifd == ifd)
+                .cloned(),
             _ => None,
         })
+    }
+
+    /// Keeps a mesh slice's block in its slot; false for any other block.
+    fn keep_mesh(&mut self, ifd: u16, s: &Samples) -> bool {
+        if self.mesh_levels().is_none() {
+            return false;
+        }
+        let slot = match ifd {
+            100 => &mut self.mesh_values.x,
+            101 => &mut self.mesh_values.y,
+            102 => &mut self.mesh_values.mask,
+            _ => return false,
+        };
+        *slot = Some(Arc::new(s.clone()));
+        true
     }
 
     /// The samples of a region of `level`, the level's edge repeated past
@@ -590,12 +796,19 @@ impl Reader {
                         }
                     }
                 }
-                LevelFrom::Computed => {
+                LevelFrom::Computed | LevelFrom::Mesh(_) => {
+                    let mesh = match &lv.from {
+                        LevelFrom::Mesh(m) => Some(m.clone()),
+                        _ => None,
+                    };
                     for ty in y0 / TILE..=(y1 - 1) / TILE {
                         for tx in x0 / TILE..=(x1 - 1) / TILE {
                             let key = computed_key(level, tx, ty);
                             if !self.blocks.contains(&key) {
-                                let tile = self.compute_tile(level, tx, ty)?;
+                                let tile = match &mesh {
+                                    Some(m) => self.mesh_tile(m, level, tx, ty)?,
+                                    None => self.compute_tile(level, tx, ty)?,
+                                };
                                 self.blocks.put(key, tile);
                             }
                             let tw = TILE.min(lv.width - tx * TILE);
@@ -610,6 +823,34 @@ impl Reader {
                 }
             }
             replicate_edges(&mut out, lv.width, lv.height);
+        }
+        Some(out)
+    }
+
+    /// Level `level`'s tile (`tx`, `ty`) of a mesh slice: each pixel's centre
+    /// sampled on the mesh (docs/adr/0243 §5); none while its values are not read.
+    fn mesh_tile(&self, m: &MeshLevels, level: usize, tx: u32, ty: u32) -> Option<Samples> {
+        let lv = self.levels.get(level)?;
+        let tw = TILE.min(lv.width - tx * TILE);
+        let th = TILE.min(lv.height - ty * TILE);
+        let (vx, vy, mask) = self.mesh_data(m)?;
+        let data = Data {
+            location: m.location,
+            x: &vx,
+            y: vy.as_deref(),
+            mask: mask.as_deref(),
+        };
+        let f = f64::from(1u32 << level.min(31));
+        let [x0, a, b, y0, c, d] = m.affine;
+        let mut out = Samples::filled(self.info.sample, tw as usize * th as usize, f64::NAN);
+        for j in 0..th {
+            let v = (f64::from(ty * TILE + j) + 0.5) * f;
+            for i in 0..tw {
+                let u = (f64::from(tx * TILE + i) + 0.5) * f;
+                let px = x0 + a * u + b * v;
+                let py = y0 + c * u + d * v;
+                out.set((j * tw + i) as usize, m.mesh.value_at(&data, px, py));
+            }
         }
         Some(out)
     }
@@ -695,12 +936,29 @@ impl Reader {
         ty: u32,
         affine: &[f64; 6],
     ) -> Option<TileParts> {
+        self.tile_parts_with(level, tx, ty, affine, false)
+    }
+
+    /// [`Reader::tile_parts`], with a mesh's edges in the tile when `edges`
+    /// (docs/adr/0243 §5: none while the mean edge is under four pixels).
+    pub fn tile_parts_with(
+        &mut self,
+        level: usize,
+        tx: u32,
+        ty: u32,
+        affine: &[f64; 6],
+        edges: bool,
+    ) -> Option<TileParts> {
         let (x, y, w, h) = Reader::tile_region(tx, ty);
         let region = self.region(level, x, y, w, h)?;
         let f = f64::from(1u32 << level.min(31));
         let [_, a, b, _, c, d] = *affine;
         let ewres = math::hypot(a, c) * f;
         let ns = math::hypot(b, d) * f;
+        let lines = match (edges, self.mesh_levels()) {
+            (true, Some(m)) => mesh_lines(m, level, tx, ty),
+            _ => Vec::new(),
+        };
         Some(TileParts {
             region,
             palette: self.palette.clone(),
@@ -708,6 +966,7 @@ impl Reader {
             sample: self.info.sample,
             ewres,
             nsres: if d < 0.0 { -ns } else { ns },
+            lines,
         })
     }
 
@@ -725,7 +984,7 @@ impl Reader {
         affine: &[f64; 6],
         out: &mut Vec<u8>,
     ) -> bool {
-        match self.tile_parts(level, tx, ty, affine) {
+        match self.tile_parts_with(level, tx, ty, affine, style.edges.is_some()) {
             Some(parts) => {
                 parts.render(style, stats, out);
                 true
@@ -771,6 +1030,8 @@ pub struct TileParts {
     pub sample: RasterSample,
     pub ewres: f64,
     pub nsres: f64,
+    /// A mesh's edges in the tile (its output's pixels: x₁, y₁, x₂, y₂).
+    pub lines: Vec<[f32; 4]>,
 }
 
 impl TileParts {
@@ -786,6 +1047,123 @@ impl TileParts {
             nsres: self.nsres,
         };
         style::render(&self.region, &look, out);
+        if let Some(color) = style.edges.as_deref().and_then(edge_color) {
+            draw_lines(&self.lines, color, out);
+        }
+    }
+}
+
+/// `#RRGGBB` as its three channels.
+fn edge_color(text: &str) -> Option<[u8; 3]> {
+    let h = text.strip_prefix('#')?;
+    if h.len() != 6 || !h.is_ascii() {
+        return None;
+    }
+    let ch = |k: usize| u8::from_str_radix(&h[k..k + 2], 16).ok();
+    Some([ch(0)?, ch(2)?, ch(4)?])
+}
+
+/// A mesh's edges in tile (`tx`, `ty`) of `level`, in its output's pixels;
+/// none when the mean edge is under four of the level's pixels (§5).
+fn mesh_lines(m: &MeshLevels, level: usize, tx: u32, ty: u32) -> Vec<[f32; 4]> {
+    let f = f64::from(1u32 << level.min(31));
+    let [x0, a, b, y0, c, d] = m.affine;
+    let det = a * d - b * c;
+    let pixel = math::hypot(a, c).max(math::hypot(b, d)) * f;
+    if !(det != 0.0 && det.is_finite()) || m.mesh.mean_edge < 4.0 * pixel {
+        return Vec::new();
+    }
+    // The output's pixel (0, 0) is the level's (tx·256 − 1, ty·256 − 1).
+    let (ox, oy) = (f64::from(tx * TILE) - 1.0, f64::from(ty * TILE) - 1.0);
+    let side = f64::from(TILE_APRON);
+    let to_pixel = |px: f64, py: f64| {
+        let (dx, dy) = (px - x0, py - y0);
+        (
+            (d * dx - b * dy) / det / f - ox,
+            (a * dy - c * dx) / det / f - oy,
+        )
+    };
+    let at = |u: f64, v: f64| {
+        let (uu, vv) = ((u + ox) * f, (v + oy) * f);
+        (x0 + a * uu + b * vv, y0 + c * uu + d * vv)
+    };
+    let corners = [at(0.0, 0.0), at(side, 0.0), at(0.0, side), at(side, side)];
+    let bbox = [
+        corners.iter().map(|p| p.0).fold(f64::INFINITY, f64::min),
+        corners.iter().map(|p| p.1).fold(f64::INFINITY, f64::min),
+        corners
+            .iter()
+            .map(|p| p.0)
+            .fold(f64::NEG_INFINITY, f64::max),
+        corners
+            .iter()
+            .map(|p| p.1)
+            .fold(f64::NEG_INFINITY, f64::max),
+    ];
+    let mut ids = Vec::new();
+    m.mesh.edges_in(bbox, &mut ids);
+    ids.iter()
+        .map(|&e| {
+            let [p, q] = m.mesh.edges[e as usize];
+            let (u1, v1) = to_pixel(m.mesh.x[p as usize], m.mesh.y[p as usize]);
+            let (u2, v2) = to_pixel(m.mesh.x[q as usize], m.mesh.y[q as usize]);
+            [u1 as f32, v1 as f32, u2 as f32, v2 as f32]
+        })
+        .collect()
+}
+
+/// Draws lines a pixel wide into a tile's output (`TILE_APRON`² RGBA): each
+/// line clipped to the tile, then the pixels it passes through stepping
+/// along its longer axis.
+fn draw_lines(lines: &[[f32; 4]], color: [u8; 3], out: &mut [u8]) {
+    let side = TILE_APRON as i64;
+    let edge = side as f64;
+    for l in lines {
+        let (x1, y1, x2, y2) = (
+            f64::from(l[0]),
+            f64::from(l[1]),
+            f64::from(l[2]),
+            f64::from(l[3]),
+        );
+        let (dx, dy) = (x2 - x1, y2 - y1);
+        // Liang–Barsky: the part of the line inside [0, side]².
+        let (mut t0, mut t1) = (0.0f64, 1.0f64);
+        let mut inside = true;
+        for (p, q) in [(-dx, x1), (dx, edge - x1), (-dy, y1), (dy, edge - y1)] {
+            if p == 0.0 {
+                if q < 0.0 {
+                    inside = false;
+                }
+            } else {
+                let r = q / p;
+                if p < 0.0 {
+                    t0 = t0.max(r);
+                } else {
+                    t1 = t1.min(r);
+                }
+            }
+        }
+        if !inside || t0 > t1 {
+            continue;
+        }
+        let (ax, ay) = (x1 + dx * t0, y1 + dy * t0);
+        let (bx, by) = (x1 + dx * t1, y1 + dy * t1);
+        let steps = (bx - ax).abs().max((by - ay).abs()).ceil() as i64;
+        for k in 0..=steps {
+            let t = if steps == 0 {
+                0.0
+            } else {
+                k as f64 / steps as f64
+            };
+            let (x, y) = (
+                (ax + (bx - ax) * t).floor() as i64,
+                (ay + (by - ay) * t).floor() as i64,
+            );
+            if x >= 0 && y >= 0 && x < side && y < side {
+                let i = ((y * side + x) * 4) as usize;
+                out[i..i + 4].copy_from_slice(&[color[0], color[1], color[2], 255]);
+            }
+        }
     }
 }
 

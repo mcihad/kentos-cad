@@ -336,6 +336,7 @@ mod tests {
             srid: 5254.0,
             style: Json::parse(r#"{"render":"ramp","bands":[1]}"#).unwrap(),
             opacity: None,
+            dataset: None,
         };
         let mut out = Packer::default();
         out.object(1.0, "a", false, &cloud);

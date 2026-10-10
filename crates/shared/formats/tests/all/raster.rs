@@ -123,6 +123,12 @@ fn every_file_reads_and_draws_as_the_reference_says() {
         if !same_nodata {
             off.push(format!("{name}: nodata {:?} ≠ {nodata:?}", got.nodata));
         }
+        // GDAL's reading of the last band (the TIFFs'): a mask or data (docs/adr/0242's fix).
+        if let Some(alpha) = info["alpha"].as_bool()
+            && got.alpha != alpha
+        {
+            off.push(format!("{name}: alfa {} ≠ {alpha}", got.alpha));
+        }
         if u64::from(got.overviews) != info["overviews"].as_u64().unwrap_or(0) {
             off.push(format!(
                 "{name}: önizleme {} ≠ {}",

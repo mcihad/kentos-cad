@@ -49,6 +49,8 @@ pub fn default_value(def: &ParamDef, d: &Defaults) -> Value {
         ParamKind::Choice { options } => options.first().map_or(Value::Null, |o| json!(o.value)),
         ParamKind::Layer { .. } => json!({ "layerId": d.active_layer }),
         ParamKind::Point | ParamKind::File { .. } => Value::Null,
+        ParamKind::RasterValues { .. } => json!({}),
+        ParamKind::RasterPairs { .. } => json!([]),
         ParamKind::Network { prefers } => d
             .networks
             .iter()
@@ -199,7 +201,31 @@ pub fn fits(def: &ParamDef, v: &Value) -> bool {
             v.get("network").is_some_and(Value::is_string)
                 && v.get("cost").is_some_and(Value::is_string)
         }
+        ParamKind::RasterValues { number, .. } => v.as_object().is_some_and(|o| {
+            o.values().all(|x| {
+                if *number {
+                    x.as_f64().is_some_and(f64::is_finite)
+                } else {
+                    x.is_string()
+                }
+            })
+        }),
+        ParamKind::RasterPairs { .. } => v.as_array().is_some_and(|rows| {
+            rows.iter().all(|r| {
+                r.as_array().is_some_and(|t| {
+                    t.len() == 3
+                        && t[0].is_string()
+                        && t[1].is_string()
+                        && t[2].as_f64().is_some_and(f64::is_finite)
+                })
+            })
+        }),
     }
+}
+
+/// A comparison of two rasters as the pairs hold it (docs/adr/0237 §9): 9 … 2, 1, −2 … −9.
+pub fn is_comparison(v: f64) -> bool {
+    v.fract() == 0.0 && (v == 1.0 || (2.0..=9.0).contains(&v.abs()))
 }
 
 /// Stored values over the defaults, keeping only those that still fit.
@@ -368,6 +394,32 @@ fn check_param(
                 )),
             }
         }
+        ParamKind::RasterValues { min, max, .. } => {
+            let o = v.as_object()?;
+            o.iter().find_map(|(raster, x)| {
+                let n = x.as_f64()?;
+                if min.is_some_and(|m| n < m) || max.is_some_and(|m| n > m) {
+                    Some(format!(
+                        "{name}: {raster} {} ile {} arasında olmalı.",
+                        js_number(min.unwrap_or(f64::MIN)),
+                        js_number(max.unwrap_or(f64::MAX))
+                    ))
+                } else {
+                    None
+                }
+            })
+        }
+        ParamKind::RasterPairs { .. } => v.as_array()?.iter().find_map(|r| {
+            let t = r.as_array()?;
+            let n = t.get(2)?.as_f64()?;
+            (!is_comparison(n)).then(|| {
+                format!(
+                    "{name}: {} — {} 1, 2 … 9 ya da −2 … −9 olmalı.",
+                    t[0].as_str().unwrap_or(""),
+                    t[1].as_str().unwrap_or("")
+                )
+            })
+        }),
         ParamKind::Network { .. } => {
             let id = v.get("network").and_then(Value::as_str).unwrap_or("");
             let cost = v.get("cost").and_then(Value::as_str).unwrap_or("");

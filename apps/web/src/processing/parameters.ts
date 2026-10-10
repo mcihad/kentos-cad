@@ -1,7 +1,7 @@
 import { compileExpression, expressionError } from '../model/expression/expression';
 import type { NetworkDef } from '../contracts/generated/NetworkDef';
 import { costNames as networkCostNames, LENGTH_COST } from '../model/networkRules';
-import type { DefaultsContext, FeaturesValue, FieldParam, FileValue, LayerValue, NetworkValue, ParamDef, ProcessingTool } from './types';
+import type { DefaultsContext, FeaturesValue, FieldParam, FileValue, LayerValue, NetworkValue, ParamDef, ProcessingTool, RasterPairs, RasterValues } from './types';
 
 /**
  * Parameter bookkeeping shared by the dialog, the runner and models:
@@ -49,8 +49,15 @@ export function defaultValue(def: ParamDef, ctx: DefaultsContext): unknown {
       const n = list.find((x) => x.kind === def.prefers) ?? list[0];
       return n ? ({ network: n.id, cost: LENGTH_COST } satisfies NetworkValue) : null;
     }
+    case 'rasterValues':
+      return {} satisfies RasterValues;
+    case 'rasterPairs':
+      return [] satisfies RasterPairs;
   }
 }
+
+/** A comparison of two rasters as the pairs hold it (docs/adr/0237 §9): 9 … 2, 1, −2 … −9. */
+export const isComparison = (v: number): boolean => Number.isInteger(v) && (v === 1 || (Math.abs(v) >= 2 && Math.abs(v) <= 9));
 
 export function defaultValues(tool: ProcessingTool, ctx: DefaultsContext): Values {
   return Object.fromEntries(tool.parameters.map((p) => [p.name, defaultValue(p, ctx)]));
@@ -130,6 +137,18 @@ export function fits(def: ParamDef, v: unknown): boolean {
       const n = v as NetworkValue;
       return !!n && typeof n === 'object' && typeof n.network === 'string' && typeof n.cost === 'string';
     }
+    case 'rasterValues':
+      return (
+        !!v &&
+        typeof v === 'object' &&
+        !Array.isArray(v) &&
+        Object.values(v).every((x) => (def.cell === 'number' ? typeof x === 'number' && Number.isFinite(x) : typeof x === 'string'))
+      );
+    case 'rasterPairs':
+      return (
+        Array.isArray(v) &&
+        v.every((r) => Array.isArray(r) && r.length === 3 && typeof r[0] === 'string' && typeof r[1] === 'string' && typeof r[2] === 'number' && Number.isFinite(r[2]))
+      );
   }
 }
 
@@ -222,6 +241,21 @@ function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null 
       if (!def) return `${name}: “${n.network}” ağı projede yok; Ağlar penceresinden tanımlayın ya da başka ağ seçin.`;
       if (!networkCostNames(def).includes(n.cost)) return `${name}: “${n.cost}” maliyeti “${def.name}” ağında yok.`;
       return null;
+    }
+    case 'rasterValues': {
+      // The rasters in their names' order (as the desktop's map holds them), the first out of bounds said.
+      const o = v as RasterValues;
+      for (const raster of Object.keys(o).sort()) {
+        const n = o[raster];
+        if (typeof n !== 'number') continue;
+        if ((p.min !== undefined && n < p.min) || (p.max !== undefined && n > p.max))
+          return `${name}: ${raster} ${p.min ?? -Number.MAX_VALUE} ile ${p.max ?? Number.MAX_VALUE} arasında olmalı.`;
+      }
+      return null;
+    }
+    case 'rasterPairs': {
+      const bad = (v as RasterPairs).find((r) => !isComparison(r[2]));
+      return bad ? `${name}: ${bad[0]} — ${bad[1]} 1, 2 … 9 ya da −2 … −9 olmalı.` : null;
     }
     case 'layer': {
       const l = v as LayerValue;

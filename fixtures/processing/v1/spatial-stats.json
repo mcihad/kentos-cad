@@ -1,0 +1,6231 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-06,
+ "documents": {
+  "spatial-stats.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "cizim",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "stats.meanCenter": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "weightField": "",
+     "groupField": "",
+     "layer": {
+      "newName": "Ortalama merkez"
+     }
+    },
+    "stats.medianCenter": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "weightField": "",
+     "groupField": "",
+     "layer": {
+      "newName": "Ortanca merkez"
+     }
+    },
+    "stats.standardDistance": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "weightField": "",
+     "groupField": "",
+     "layer": {
+      "newName": "Standart uzaklık"
+     },
+     "deviations": "1"
+    },
+    "stats.directionalDistribution": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "weightField": "",
+     "groupField": "",
+     "layer": {
+      "newName": "Yön dağılımı"
+     },
+     "deviations": "1"
+    },
+    "stats.nearestNeighbor": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "area": null
+    },
+    "stats.moransI": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "valueField": "",
+     "concept": "band",
+     "band": null,
+     "neighbors": 8,
+     "standardize": true
+    },
+    "stats.hotSpot": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "valueField": "",
+     "concept": "band",
+     "band": null,
+     "neighbors": 8,
+     "layer": {
+      "newName": "Sıcak noktalar"
+     }
+    },
+    "stats.dbscan": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "radius": 50,
+     "minPoints": 5,
+     "borderNoise": false,
+     "layer": {
+      "newName": "Kümeler (DBSCAN)"
+     }
+    },
+    "stats.kMeans": {
+     "input": {
+      "scope": "layer",
+      "layerId": "cizim"
+     },
+     "clusters": 5,
+     "layer": {
+      "newName": "Kümeler (k-ortalamalar)"
+     }
+    }
+   }
+  },
+  "spatial-stats-geo.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "cizim",
+    "measureHeightMm": 2
+   },
+   "tools": {}
+  }
+ },
+ "cases": [
+  {
+   "id": "mean",
+   "title": "Ortalama merkez: Kazalar'ın 27 nesnesinin merkezi",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.meanCenter"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesnenin ortalama merkezi yazıldı.",
+    "undo": "Ortalama merkez",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-ortalama-merkez",
+      "name": "Ortalama merkez",
+      "style": {
+       "color": "#D6336C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#D6336C26",
+       "point": {
+        "symbol": "cross",
+        "size": 12
+       }
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-ortalama-merkez": "kaza"
+    },
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-ortalama-merkez",
+      "attrs": {
+       "Nesne sayısı": "27"
+      },
+      "p": {
+       "x": 487069.6203703704,
+       "y": 4420069.277777778
+      }
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "mean-weighted-grouped",
+   "title": "Ortalama merkez, Ağırlık ve Tür'e göre: okunamayan ve olmayan ağırlık söylenir, Tür'ü olmayan (boş) grubunda",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.meanCenter"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "weightField": "Ağırlık",
+    "groupField": "Tür"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 grubun ortalama merkezi yazıldı (25 nesne).",
+    "undo": "Ortalama merkez",
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 nesnenin ağırlığı “Ağırlık” alanından sayı olarak okunamadı; alınmadı."
+     }
+    ],
+    "layers": [
+     {
+      "id": "islem-ortalama-merkez",
+      "name": "Ortalama merkez",
+      "style": {
+       "color": "#D6336C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#D6336C26",
+       "point": {
+        "symbol": "cross",
+        "size": 12
+       }
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-ortalama-merkez": "kaza"
+    },
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-ortalama-merkez",
+      "attrs": {
+       "Grup": "Araç",
+       "Nesne sayısı": "14",
+       "Ağırlık toplamı": "35"
+      },
+      "p": {
+       "x": 487082.77142857143,
+       "y": 4420085.664285715
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-ortalama-merkez",
+      "attrs": {
+       "Grup": "Bisiklet",
+       "Nesne sayısı": "3",
+       "Ağırlık toplamı": "3"
+      },
+      "p": {
+       "x": 487108.3333333333,
+       "y": 4420103.333333333
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-ortalama-merkez",
+      "attrs": {
+       "Grup": "Yaya",
+       "Nesne sayısı": "7",
+       "Ağırlık toplamı": "16"
+      },
+      "p": {
+       "x": 487020.03125,
+       "y": 4420033.46875
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-ortalama-merkez",
+      "attrs": {
+       "Grup": "(boş)",
+       "Nesne sayısı": "1",
+       "Ağırlık toplamı": "4"
+      },
+      "p": {
+       "x": 487116.25,
+       "y": 4420049
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4
+    }
+   }
+  },
+  {
+   "id": "median-grouped",
+   "title": "Ortanca merkez, Tür'e göre",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.medianCenter"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "groupField": "Tür"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 grubun ortanca merkezi yazıldı (27 nesne).",
+    "undo": "Ortanca merkez",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-ortanca-merkez",
+      "name": "Ortanca merkez",
+      "style": {
+       "color": "#7048E8",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#7048E826",
+       "point": {
+        "symbol": "cross",
+        "size": 12
+       }
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-ortanca-merkez": "kaza"
+    },
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-ortanca-merkez",
+      "attrs": {
+       "Grup": "Araç",
+       "Nesne sayısı": "15"
+      },
+      "p": {
+       "x": 487065.3862886593,
+       "y": 4420110.612155226
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-ortanca-merkez",
+      "attrs": {
+       "Grup": "Bisiklet",
+       "Nesne sayısı": "3"
+      },
+      "p": {
+       "x": 487129.5075690547,
+       "y": 4420126.256476129
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-ortanca-merkez",
+      "attrs": {
+       "Grup": "Yaya",
+       "Nesne sayısı": "8"
+      },
+      "p": {
+       "x": 487024.98022895644,
+       "y": 4420031.2321213335
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-ortanca-merkez",
+      "attrs": {
+       "Grup": "(boş)",
+       "Nesne sayısı": "1"
+      },
+      "p": {
+       "x": 487116.25,
+       "y": 4420049.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4
+    }
+   }
+  },
+  {
+   "id": "distance-two",
+   "title": "Standart uzaklık, 2 standart sapma",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.standardDistance"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "deviations": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesnenin standart uzaklığı yazıldı: 63.216 m.",
+    "undo": "Standart uzaklık",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-standart-uzaklik",
+      "name": "Standart uzaklık",
+      "style": {
+       "color": "#1C7ED6",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#1C7ED626"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-standart-uzaklik": "kaza"
+    },
+    "added": [
+     {
+      "kind": "circle",
+      "layerId": "islem-standart-uzaklik",
+      "attrs": {
+       "Nesne sayısı": "27",
+       "Standart uzaklık": "63.216",
+       "Kat": "2"
+      },
+      "c": {
+       "x": 487069.6203703704,
+       "y": 4420069.277777778
+      },
+      "r": 126.4325836829069
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "ellipse-grouped",
+   "title": "Yön dağılımı, Tür'e göre: Bisiklet'in üç yeri de elips verir, (boş) grubunun tek yeri vermez",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.directionalDistribution"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "groupField": "Tür"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 grubun yön dağılımı elipsi yazıldı (26 nesne).",
+    "undo": "Yön dağılımı",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 grubun yerleri bir doğru üzerinde ya da çakışık; elips yazılmadı."
+     }
+    ],
+    "layers": [
+     {
+      "id": "islem-yon-dagilimi",
+      "name": "Yön dağılımı",
+      "style": {
+       "color": "#0CA678",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0CA67826"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-yon-dagilimi": "kaza"
+    },
+    "added": [
+     {
+      "kind": "ellipse",
+      "layerId": "islem-yon-dagilimi",
+      "attrs": {
+       "Grup": "Araç",
+       "Nesne sayısı": "15",
+       "Büyük yarı eksen": "64.444",
+       "Küçük yarı eksen": "7.278",
+       "Doğrultu": "144.93",
+       "Kat": "1"
+      },
+      "c": {
+       "x": 487084.38333333336,
+       "y": 4420083.766666667
+      },
+      "major": {
+       "x": 37.0310728990932,
+       "y": -52.74261989727074
+      },
+      "ratio": 0.1129365985372885,
+      "t0": 0,
+      "t1": 6.283185307179586
+     },
+     {
+      "kind": "ellipse",
+      "layerId": "islem-yon-dagilimi",
+      "attrs": {
+       "Grup": "Bisiklet",
+       "Nesne sayısı": "3",
+       "Büyük yarı eksen": "124.947",
+       "Küçük yarı eksen": "62.534",
+       "Doğrultu": "129.83",
+       "Kat": "1"
+      },
+      "c": {
+       "x": 487108.3333333333,
+       "y": 4420103.333333333
+      },
+      "major": {
+       "x": 95.95178419445948,
+       "y": -80.0307121805502
+      },
+      "ratio": 0.5004896181460823,
+      "t0": 0,
+      "t1": 6.283185307179586
+     },
+     {
+      "kind": "ellipse",
+      "layerId": "islem-yon-dagilimi",
+      "attrs": {
+       "Grup": "Yaya",
+       "Nesne sayısı": "8",
+       "Büyük yarı eksen": "7.953",
+       "Küçük yarı eksen": "6.984",
+       "Doğrultu": "115.72",
+       "Kat": "1"
+      },
+      "c": {
+       "x": 487021.59375,
+       "y": 4420031.875
+      },
+      "major": {
+       "x": 7.16541029387636,
+       "y": -3.4517710845658867
+      },
+      "ratio": 0.8780632027746336,
+      "t0": 0,
+      "t1": 6.283185307179586
+     }
+    ],
+    "outputs": {
+     "count": 3
+    }
+   }
+  },
+  {
+   "id": "nearest",
+   "title": "En yakın komşu: kümelenmiş, tablo; çizim değişmez",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.7636 (z -2.3497, p 0.018787): kümelenmiş.",
+    "undo": null,
+    "log": [],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "27"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "11.168"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "14.625"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.7636"
+       ],
+       [
+        "z",
+        "-2.3497"
+       ],
+       [
+        "p",
+        "0.018787"
+       ],
+       [
+        "Alan (m²)",
+        "23100.00"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "nearest-area",
+   "title": "En yakın komşu, 250 000 m²'lik alanla",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "area": 250000
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.2321 (z -7.6332, p 0.000000): kümelenmiş.",
+    "undo": null,
+    "log": [],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "27"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "11.168"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "48.113"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.2321"
+       ],
+       [
+        "z",
+        "-7.6332"
+       ],
+       [
+        "p",
+        "0.000000"
+       ],
+       [
+        "Alan (m²)",
+        "250000.00"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "moran-band",
+   "title": "Moran I, kendiliğinden bant: kümelenmiş; okunamayan değer söylenir",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.moransI"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "valueField": "Değer"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "Moran I 0.864645 (z 6.2362, p 0.000000): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri “Değer” alanından sayı olarak okunamadı; alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "29"
+       ],
+       [
+        "Moran I",
+        "0.864645"
+       ],
+       [
+        "Beklenen I",
+        "-0.035714"
+       ],
+       [
+        "Varyans",
+        "0.02084461"
+       ],
+       [
+        "z",
+        "6.2362"
+       ],
+       [
+        "p",
+        "0.000000"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ],
+       [
+        "Komşuluk",
+        "Sabit uzaklık bandı, 20.000 m"
+       ],
+       [
+        "Komşusu olmayan",
+        "0"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "moran-nearest",
+   "title": "Moran I, 4 en yakın komşu, satır standartlaştırmasız",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.moransI"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "valueField": "Değer",
+    "concept": "nearest",
+    "neighbors": 4,
+    "standardize": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "Moran I 0.800850 (z 7.2145, p 0.000000): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri “Değer” alanından sayı olarak okunamadı; alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "29"
+       ],
+       [
+        "Moran I",
+        "0.800850"
+       ],
+       [
+        "Beklenen I",
+        "-0.035714"
+       ],
+       [
+        "Varyans",
+        "0.01344564"
+       ],
+       [
+        "z",
+        "7.2145"
+       ],
+       [
+        "p",
+        "0.000000"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ],
+       [
+        "Komşuluk",
+        "4 en yakın komşu"
+       ],
+       [
+        "Komşusu olmayan",
+        "0"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "hot-band",
+   "title": "Sıcak nokta, kendiliğinden bant: parsellerin kopyaları z, p, güven sınıfı ve sınıfın rengiyle",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.hotSpot"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "valueField": "Değer"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "29 nesne yazıldı: 6 sıcak, 7 soğuk nokta (%90 ve üstü güvenle).",
+    "undo": "Sıcak nokta (Gi*)",
+    "log": [
+     {
+      "level": "info",
+      "text": "Sıcak: %99 4, %95 1, %90 1; soğuk: %99 3, %95 2, %90 2."
+     },
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri “Değer” alanından sayı olarak okunamadı; alınmadı."
+     }
+    ],
+    "layers": [
+     {
+      "id": "islem-sicak-noktalar",
+      "name": "Sıcak noktalar",
+      "style": {
+       "color": "#E03131",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E0313126",
+       "renderer": {
+        "type": "categorized",
+        "expr": "[Güven sınıfı]",
+        "categories": [
+         {
+          "value": "3",
+          "label": "Sıcak nokta, %99 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#B2182B"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#B2182B",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#B2182B",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "2",
+          "label": "Sıcak nokta, %95 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#EF8A62"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#EF8A62",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#EF8A62",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "1",
+          "label": "Sıcak nokta, %90 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#FDDBC7"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#FDDBC7",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#FDDBC7",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "0",
+          "label": "Anlamlı değil",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#D9D9D9"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#D9D9D9",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#D9D9D9",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-1",
+          "label": "Soğuk nokta, %90 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#D1E5F0"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#D1E5F0",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#D1E5F0",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-2",
+          "label": "Soğuk nokta, %95 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#67A9CF"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#67A9CF",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#67A9CF",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-3",
+          "label": "Soğuk nokta, %99 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#2166AC"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#2166AC",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#2166AC",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-sicak-noktalar": "parsel"
+    },
+    "added": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420200
+       },
+       {
+        "x": 487020,
+        "y": 4420200
+       },
+       {
+        "x": 487020,
+        "y": 4420220
+       },
+       {
+        "x": 487000,
+        "y": 4420220
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "100",
+       "Parsel": "1",
+       "Değer": "1000",
+       "z puanı": "-3.0420",
+       "p değeri": "0.002350",
+       "Güven sınıfı": "-3"
+      },
+      "color": "#2166AC"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420200
+       },
+       {
+        "x": 487040,
+        "y": 4420200
+       },
+       {
+        "x": 487040,
+        "y": 4420220
+       },
+       {
+        "x": 487020,
+        "y": 4420220
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "100",
+       "Parsel": "2",
+       "Değer": "1195.00",
+       "z puanı": "-3.0173",
+       "p değeri": "0.002550",
+       "Güven sınıfı": "-3"
+      },
+      "color": "#2166AC"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420200
+       },
+       {
+        "x": 487060,
+        "y": 4420200
+       },
+       {
+        "x": 487060,
+        "y": 4420220
+       },
+       {
+        "x": 487040,
+        "y": 4420220
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "100",
+       "Parsel": "3",
+       "Değer": "1285.00",
+       "z puanı": "-1.7750",
+       "p değeri": "0.075898",
+       "Güven sınıfı": "-1"
+      },
+      "color": "#D1E5F0"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420200
+       },
+       {
+        "x": 487080,
+        "y": 4420200
+       },
+       {
+        "x": 487080,
+        "y": 4420220
+       },
+       {
+        "x": 487060,
+        "y": 4420220
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "100",
+       "Parsel": "4",
+       "Değer": "1375",
+       "z puanı": "-0.8114",
+       "p değeri": "0.417149",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420200
+       },
+       {
+        "x": 487100,
+        "y": 4420200
+       },
+       {
+        "x": 487100,
+        "y": 4420220
+       },
+       {
+        "x": 487080,
+        "y": 4420220
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "100",
+       "Parsel": "5",
+       "Değer": "1570.00",
+       "z puanı": "0.1797",
+       "p değeri": "0.857393",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420200
+       },
+       {
+        "x": 487120,
+        "y": 4420200
+       },
+       {
+        "x": 487120,
+        "y": 4420220
+       },
+       {
+        "x": 487100,
+        "y": 4420220
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "100",
+       "Parsel": "6",
+       "Değer": "1660.00",
+       "z puanı": "0.7951",
+       "p değeri": "0.426539",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420220
+       },
+       {
+        "x": 487020,
+        "y": 4420220
+       },
+       {
+        "x": 487020,
+        "y": 4420240
+       },
+       {
+        "x": 487000,
+        "y": 4420240
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Değer": "1135.00",
+       "z puanı": "-3.1772",
+       "p değeri": "0.001487",
+       "Güven sınıfı": "-3"
+      },
+      "color": "#2166AC"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420220
+       },
+       {
+        "x": 487040,
+        "y": 4420220
+       },
+       {
+        "x": 487040,
+        "y": 4420240
+       },
+       {
+        "x": 487020,
+        "y": 4420240
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Değer": "1225.00",
+       "z puanı": "-2.5697",
+       "p değeri": "0.010178",
+       "Güven sınıfı": "-2"
+      },
+      "color": "#67A9CF"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420220
+       },
+       {
+        "x": 487080,
+        "y": 4420220
+       },
+       {
+        "x": 487080,
+        "y": 4420240
+       },
+       {
+        "x": 487060,
+        "y": 4420240
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "4",
+       "Değer": "1510.00",
+       "z puanı": "-0.2039",
+       "p değeri": "0.838395",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420220
+       },
+       {
+        "x": 487100,
+        "y": 4420220
+       },
+       {
+        "x": 487100,
+        "y": 4420240
+       },
+       {
+        "x": 487080,
+        "y": 4420240
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "5",
+       "Değer": "1600.00",
+       "z puanı": "0.8836",
+       "p değeri": "0.376919",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420220
+       },
+       {
+        "x": 487120,
+        "y": 4420220
+       },
+       {
+        "x": 487120,
+        "y": 4420240
+       },
+       {
+        "x": 487100,
+        "y": 4420240
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "6",
+       "Değer": "1690",
+       "z puanı": "1.3946",
+       "p değeri": "0.163150",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420240
+       },
+       {
+        "x": 487020,
+        "y": 4420240
+       },
+       {
+        "x": 487020,
+        "y": 4420260
+       },
+       {
+        "x": 487000,
+        "y": 4420260
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "1",
+       "Değer": "1270.00",
+       "z puanı": "-2.2500",
+       "p değeri": "0.024447",
+       "Güven sınıfı": "-2"
+      },
+      "color": "#67A9CF"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420240
+       },
+       {
+        "x": 487040,
+        "y": 4420240
+       },
+       {
+        "x": 487040,
+        "y": 4420260
+       },
+       {
+        "x": 487020,
+        "y": 4420260
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "2",
+       "Değer": "1360",
+       "z puanı": "-1.8598",
+       "p değeri": "0.062920",
+       "Güven sınıfı": "-1"
+      },
+      "color": "#D1E5F0"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420240
+       },
+       {
+        "x": 487060,
+        "y": 4420240
+       },
+       {
+        "x": 487060,
+        "y": 4420260
+       },
+       {
+        "x": 487040,
+        "y": 4420260
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "3",
+       "Değer": "1450.00",
+       "z puanı": "-0.3958",
+       "p değeri": "0.692277",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420240
+       },
+       {
+        "x": 487080,
+        "y": 4420240
+       },
+       {
+        "x": 487080,
+        "y": 4420260
+       },
+       {
+        "x": 487060,
+        "y": 4420260
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Değer": "1540.00",
+       "z puanı": "0.5042",
+       "p değeri": "0.614129",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420240
+       },
+       {
+        "x": 487100,
+        "y": 4420240
+       },
+       {
+        "x": 487100,
+        "y": 4420260
+       },
+       {
+        "x": 487080,
+        "y": 4420260
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "5",
+       "Değer": "1735",
+       "z puanı": "1.5840",
+       "p değeri": "0.113190",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420240
+       },
+       {
+        "x": 487120,
+        "y": 4420240
+       },
+       {
+        "x": 487120,
+        "y": 4420260
+       },
+       {
+        "x": 487100,
+        "y": 4420260
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "6",
+       "Değer": "1825.00",
+       "z puanı": "2.3217",
+       "p değeri": "0.020250",
+       "Güven sınıfı": "2"
+      },
+      "color": "#EF8A62"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420260
+       },
+       {
+        "x": 487020,
+        "y": 4420260
+       },
+       {
+        "x": 487020,
+        "y": 4420280
+       },
+       {
+        "x": 487000,
+        "y": 4420280
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "1",
+       "Değer": "1300",
+       "z puanı": "-1.5467",
+       "p değeri": "0.121938",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420260
+       },
+       {
+        "x": 487040,
+        "y": 4420260
+       },
+       {
+        "x": 487040,
+        "y": 4420280
+       },
+       {
+        "x": 487020,
+        "y": 4420280
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "2",
+       "Değer": "1390.00",
+       "z puanı": "-0.9550",
+       "p değeri": "0.339558",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420260
+       },
+       {
+        "x": 487060,
+        "y": 4420260
+       },
+       {
+        "x": 487060,
+        "y": 4420280
+       },
+       {
+        "x": 487040,
+        "y": 4420280
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "3",
+       "Değer": "1585.00",
+       "z puanı": "0.1248",
+       "p değeri": "0.900691",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420260
+       },
+       {
+        "x": 487080,
+        "y": 4420260
+       },
+       {
+        "x": 487080,
+        "y": 4420280
+       },
+       {
+        "x": 487060,
+        "y": 4420280
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "4",
+       "Değer": "1675",
+       "z puanı": "1.4089",
+       "p değeri": "0.158862",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420260
+       },
+       {
+        "x": 487100,
+        "y": 4420260
+       },
+       {
+        "x": 487100,
+        "y": 4420280
+       },
+       {
+        "x": 487080,
+        "y": 4420280
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "5",
+       "Değer": "1765.00",
+       "z puanı": "2.6930",
+       "p değeri": "0.007081",
+       "Güven sınıfı": "3"
+      },
+      "color": "#B2182B"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420260
+       },
+       {
+        "x": 487120,
+        "y": 4420260
+       },
+       {
+        "x": 487120,
+        "y": 4420280
+       },
+       {
+        "x": 487100,
+        "y": 4420280
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "6",
+       "Değer": "1960.00",
+       "z puanı": "3.0250",
+       "p değeri": "0.002486",
+       "Güven sınıfı": "3"
+      },
+      "color": "#B2182B"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420280
+       },
+       {
+        "x": 487020,
+        "y": 4420280
+       },
+       {
+        "x": 487020,
+        "y": 4420300
+       },
+       {
+        "x": 487000,
+        "y": 4420300
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "104",
+       "Parsel": "1",
+       "Değer": "1435.00",
+       "z puanı": "-0.7976",
+       "p değeri": "0.425088",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420280
+       },
+       {
+        "x": 487040,
+        "y": 4420280
+       },
+       {
+        "x": 487040,
+        "y": 4420300
+       },
+       {
+        "x": 487020,
+        "y": 4420300
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "104",
+       "Parsel": "2",
+       "Değer": "1525.00",
+       "z puanı": "-0.3318",
+       "p değeri": "0.740020",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420280
+       },
+       {
+        "x": 487060,
+        "y": 4420280
+       },
+       {
+        "x": 487060,
+        "y": 4420300
+       },
+       {
+        "x": 487040,
+        "y": 4420300
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "104",
+       "Parsel": "3",
+       "Değer": "1615",
+       "z puanı": "0.8830",
+       "p değeri": "0.377217",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420280
+       },
+       {
+        "x": 487080,
+        "y": 4420280
+       },
+       {
+        "x": 487080,
+        "y": 4420300
+       },
+       {
+        "x": 487060,
+        "y": 4420300
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "104",
+       "Parsel": "4",
+       "Değer": "1810.00",
+       "z puanı": "1.8741",
+       "p değeri": "0.060916",
+       "Güven sınıfı": "1"
+      },
+      "color": "#FDDBC7"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487080,
+        "y": 4420280
+       },
+       {
+        "x": 487100,
+        "y": 4420280
+       },
+       {
+        "x": 487100,
+        "y": 4420300
+       },
+       {
+        "x": 487080,
+        "y": 4420300
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "104",
+       "Parsel": "5",
+       "Değer": "1900.00",
+       "z puanı": "2.8652",
+       "p değeri": "0.004168",
+       "Güven sınıfı": "3"
+      },
+      "color": "#B2182B"
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420280
+       },
+       {
+        "x": 487120,
+        "y": 4420280
+       },
+       {
+        "x": 487120,
+        "y": 4420300
+       },
+       {
+        "x": 487100,
+        "y": 4420300
+       }
+      ],
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "Ada": "104",
+       "Parsel": "6",
+       "Değer": "1990",
+       "z puanı": "3.0395",
+       "p değeri": "0.002370",
+       "Güven sınıfı": "3"
+      },
+      "color": "#B2182B"
+     }
+    ],
+    "outputs": {
+     "count": 29,
+     "hot": 6,
+     "cold": 7
+    }
+   }
+  },
+  {
+   "id": "hot-nearest",
+   "title": "Sıcak nokta, kazaların ağırlıkları, 5 en yakın komşu",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.hotSpot"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "valueField": "Ağırlık",
+    "concept": "nearest",
+    "neighbors": 5
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "25 nesne yazıldı: 3 sıcak, 0 soğuk nokta (%90 ve üstü güvenle).",
+    "undo": "Sıcak nokta (Gi*)",
+    "log": [
+     {
+      "level": "info",
+      "text": "Sıcak: %99 0, %95 0, %90 3; soğuk: %99 0, %95 0, %90 0."
+     },
+     {
+      "level": "warn",
+      "text": "2 nesnenin değeri “Ağırlık” alanından sayı olarak okunamadı; alınmadı."
+     }
+    ],
+    "layers": [
+     {
+      "id": "islem-sicak-noktalar",
+      "name": "Sıcak noktalar",
+      "style": {
+       "color": "#E03131",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E0313126",
+       "renderer": {
+        "type": "categorized",
+        "expr": "[Güven sınıfı]",
+        "categories": [
+         {
+          "value": "3",
+          "label": "Sıcak nokta, %99 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#B2182B"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#B2182B",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#B2182B",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "2",
+          "label": "Sıcak nokta, %95 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#EF8A62"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#EF8A62",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#EF8A62",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "1",
+          "label": "Sıcak nokta, %90 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#FDDBC7"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#FDDBC7",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#FDDBC7",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "0",
+          "label": "Anlamlı değil",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#D9D9D9"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#D9D9D9",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#D9D9D9",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-1",
+          "label": "Soğuk nokta, %90 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#D1E5F0"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#D1E5F0",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#D1E5F0",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-2",
+          "label": "Soğuk nokta, %95 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#67A9CF"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#67A9CF",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#67A9CF",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-3",
+          "label": "Soğuk nokta, %99 güven",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#2166AC"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#2166AC",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 8,
+              "unit": "px",
+              "fill": "#2166AC",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-sicak-noktalar": "kaza"
+    },
+    "added": [
+     {
+      "kind": "point",
+      "p": {
+       "x": 487012.25,
+       "y": 4420036
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K1",
+       "Ağırlık": "4",
+       "Tür": "Yaya",
+       "z puanı": "0.0327",
+       "p değeri": "0.973888",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487028,
+       "y": 4420032.75
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K2",
+       "Ağırlık": "3",
+       "Tür": "Yaya",
+       "z puanı": "-0.7856",
+       "p değeri": "0.432121",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487027.5,
+       "y": 4420030.5
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K3",
+       "Ağırlık": "2",
+       "Tür": "Yaya",
+       "z puanı": "-0.7856",
+       "p değeri": "0.432121",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487025,
+       "y": 4420028.75
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K4",
+       "Ağırlık": "1",
+       "Tür": "Yaya",
+       "z puanı": "-0.7856",
+       "p değeri": "0.432121",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487015.5,
+       "y": 4420033.75
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K6",
+       "Ağırlık": "3",
+       "Tür": "Yaya",
+       "z puanı": "-0.3764",
+       "p değeri": "0.706607",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487021.75,
+       "y": 4420040.25
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K7",
+       "Ağırlık": "2",
+       "Tür": "Yaya",
+       "z puanı": "0.4419",
+       "p değeri": "0.658575",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487017.5,
+       "y": 4420021.75
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K8",
+       "Ağırlık": "1",
+       "Tür": "Yaya",
+       "z puanı": "0.0327",
+       "p değeri": "0.973888",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487116.25,
+       "y": 4420049
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K9",
+       "Ağırlık": "4",
+       "z puanı": "1.6693",
+       "p değeri": "0.095052",
+       "Güven sınıfı": "1"
+      },
+      "color": "#FDDBC7"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487118,
+       "y": 4420047.5
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K10",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "z puanı": "1.6693",
+       "p değeri": "0.095052",
+       "Güven sınıfı": "1"
+      },
+      "color": "#FDDBC7"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487117,
+       "y": 4420043
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K11",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "z puanı": "1.6693",
+       "p değeri": "0.095052",
+       "Güven sınıfı": "1"
+      },
+      "color": "#FDDBC7"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487110.5,
+       "y": 4420036.5
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K13",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "z puanı": "0.4419",
+       "p değeri": "0.658575",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487109.25,
+       "y": 4420039.75
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K14",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "z puanı": "0.8510",
+       "p değeri": "0.394752",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487113.25,
+       "y": 4420049.75
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K15",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "z puanı": "0.4419",
+       "p değeri": "0.658575",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487102.25,
+       "y": 4420043.5
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K16",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "z puanı": "0.8510",
+       "p değeri": "0.394752",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487062.25,
+       "y": 4420110.75
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K17",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "z puanı": "0.8510",
+       "p değeri": "0.394752",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487053.5,
+       "y": 4420115
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K18",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "z puanı": "0.0327",
+       "p değeri": "0.973888",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487063.25,
+       "y": 4420122.75
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K19",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "z puanı": "0.8510",
+       "p değeri": "0.394752",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487051.5,
+       "y": 4420119
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K20",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "z puanı": "-0.7856",
+       "p değeri": "0.432121",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487064.5,
+       "y": 4420120.25
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K21",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "z puanı": "0.8510",
+       "p değeri": "0.394752",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487058,
+       "y": 4420125
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K22",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "z puanı": "-0.3764",
+       "p değeri": "0.706607",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487064,
+       "y": 4420117.5
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K23",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "z puanı": "0.8510",
+       "p değeri": "0.394752",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487063,
+       "y": 4420118
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K24",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "z puanı": "0.8510",
+       "p değeri": "0.394752",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487170,
+       "y": 4420010
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K25",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "z puanı": "1.2602",
+       "p değeri": "0.207604",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487005,
+       "y": 4420150
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K26",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "z puanı": "-1.1947",
+       "p değeri": "0.232198",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487150,
+       "y": 4420150
+      },
+      "layerId": "islem-sicak-noktalar",
+      "attrs": {
+       "No": "K27",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "z puanı": "-0.3764",
+       "p değeri": "0.706607",
+       "Güven sınıfı": "0"
+      },
+      "color": "#D9D9D9"
+     }
+    ],
+    "outputs": {
+     "count": 25,
+     "hot": 3,
+     "cold": 0
+    }
+   }
+  },
+  {
+   "id": "dbscan",
+   "title": "DBSCAN, 7,5 m ve 4 nokta: üç küme ve gürültü",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.dbscan"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "radius": 7.5,
+    "minPoints": 4
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesne 3 kümeye ayrıldı; 12 nesne gürültü.",
+    "undo": "DBSCAN kümeleme",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-kumeler-dbscan-",
+      "name": "Kümeler (DBSCAN)",
+      "style": {
+       "color": "#F08C00",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#F08C0026",
+       "renderer": {
+        "type": "categorized",
+        "expr": "([Küme] - 1) % 10",
+        "categories": [
+         {
+          "value": "0",
+          "label": "Küme 1, 11, 21 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#1F77B4"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#1F77B4",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#1F77B4",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "1",
+          "label": "Küme 2, 12, 22 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#FF7F0E"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#FF7F0E",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#FF7F0E",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "2",
+          "label": "Küme 3, 13, 23 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#2CA02C"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#2CA02C",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#2CA02C",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "3",
+          "label": "Küme 4, 14, 24 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#D62728"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#D62728",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#D62728",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "4",
+          "label": "Küme 5, 15, 25 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#9467BD"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#9467BD",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#9467BD",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "5",
+          "label": "Küme 6, 16, 26 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#8C564B"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#8C564B",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#8C564B",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "6",
+          "label": "Küme 7, 17, 27 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#E377C2"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#E377C2",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#E377C2",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "7",
+          "label": "Küme 8, 18, 28 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#17BECF"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#17BECF",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#17BECF",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "8",
+          "label": "Küme 9, 19, 29 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#BCBD22"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#BCBD22",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#BCBD22",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "9",
+          "label": "Küme 10, 20, 30 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#7F7F7F"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#7F7F7F",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#7F7F7F",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-1",
+          "label": "Gürültü",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#BDBDBD"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#BDBDBD",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#BDBDBD",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-kumeler-dbscan-": "kaza"
+    },
+    "added": [
+     {
+      "kind": "point",
+      "p": {
+       "x": 487012.25,
+       "y": 4420036
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K1",
+       "Ağırlık": "4",
+       "Tür": "Yaya",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487028,
+       "y": 4420032.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K2",
+       "Ağırlık": "3",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "4"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487027.5,
+       "y": 4420030.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K3",
+       "Ağırlık": "2",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "4"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487025,
+       "y": 4420028.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K4",
+       "Ağırlık": "1",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "4"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487025.25,
+       "y": 4420031.25
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K5",
+       "Ağırlık": "bilinmiyor",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "4"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487015.5,
+       "y": 4420033.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K6",
+       "Ağırlık": "3",
+       "Tür": "Yaya",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487021.75,
+       "y": 4420040.25
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K7",
+       "Ağırlık": "2",
+       "Tür": "Yaya",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487017.5,
+       "y": 4420021.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K8",
+       "Ağırlık": "1",
+       "Tür": "Yaya",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487116.25,
+       "y": 4420049
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K9",
+       "Ağırlık": "4",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487118,
+       "y": 4420047.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K10",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487117,
+       "y": 4420043
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K11",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487115.5,
+       "y": 4420048.25
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K12",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487110.5,
+       "y": 4420036.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K13",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487109.25,
+       "y": 4420039.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K14",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487113.25,
+       "y": 4420049.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K15",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487102.25,
+       "y": 4420043.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K16",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487062.25,
+       "y": 4420110.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K17",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "6"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487053.5,
+       "y": 4420115
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K18",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487063.25,
+       "y": 4420122.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K19",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "6"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487051.5,
+       "y": 4420119
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K20",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487064.5,
+       "y": 4420120.25
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K21",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "6"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487058,
+       "y": 4420125
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K22",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "6"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487064,
+       "y": 4420117.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K23",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "6"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487063,
+       "y": 4420118
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K24",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "6"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487170,
+       "y": 4420010
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K25",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487005,
+       "y": 4420150
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K26",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487150,
+       "y": 4420150
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K27",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     }
+    ],
+    "outputs": {
+     "count": 27,
+     "clusters": 3
+    }
+   }
+  },
+  {
+   "id": "dbscan-star",
+   "title": "DBSCAN*: sınır noktaları gürültü",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.dbscan"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "radius": 7.5,
+    "minPoints": 4,
+    "borderNoise": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesne 3 kümeye ayrıldı; 14 nesne gürültü.",
+    "undo": "DBSCAN kümeleme",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-kumeler-dbscan-",
+      "name": "Kümeler (DBSCAN)",
+      "style": {
+       "color": "#F08C00",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#F08C0026",
+       "renderer": {
+        "type": "categorized",
+        "expr": "([Küme] - 1) % 10",
+        "categories": [
+         {
+          "value": "0",
+          "label": "Küme 1, 11, 21 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#1F77B4"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#1F77B4",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#1F77B4",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "1",
+          "label": "Küme 2, 12, 22 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#FF7F0E"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#FF7F0E",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#FF7F0E",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "2",
+          "label": "Küme 3, 13, 23 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#2CA02C"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#2CA02C",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#2CA02C",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "3",
+          "label": "Küme 4, 14, 24 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#D62728"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#D62728",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#D62728",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "4",
+          "label": "Küme 5, 15, 25 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#9467BD"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#9467BD",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#9467BD",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "5",
+          "label": "Küme 6, 16, 26 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#8C564B"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#8C564B",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#8C564B",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "6",
+          "label": "Küme 7, 17, 27 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#E377C2"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#E377C2",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#E377C2",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "7",
+          "label": "Küme 8, 18, 28 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#17BECF"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#17BECF",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#17BECF",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "8",
+          "label": "Küme 9, 19, 29 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#BCBD22"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#BCBD22",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#BCBD22",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "9",
+          "label": "Küme 10, 20, 30 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#7F7F7F"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#7F7F7F",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#7F7F7F",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-1",
+          "label": "Gürültü",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#BDBDBD"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#BDBDBD",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#BDBDBD",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-kumeler-dbscan-": "kaza"
+    },
+    "added": [
+     {
+      "kind": "point",
+      "p": {
+       "x": 487012.25,
+       "y": 4420036
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K1",
+       "Ağırlık": "4",
+       "Tür": "Yaya",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487028,
+       "y": 4420032.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K2",
+       "Ağırlık": "3",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "4"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487027.5,
+       "y": 4420030.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K3",
+       "Ağırlık": "2",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "4"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487025,
+       "y": 4420028.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K4",
+       "Ağırlık": "1",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "4"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487025.25,
+       "y": 4420031.25
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K5",
+       "Ağırlık": "bilinmiyor",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "4"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487015.5,
+       "y": 4420033.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K6",
+       "Ağırlık": "3",
+       "Tür": "Yaya",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487021.75,
+       "y": 4420040.25
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K7",
+       "Ağırlık": "2",
+       "Tür": "Yaya",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487017.5,
+       "y": 4420021.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K8",
+       "Ağırlık": "1",
+       "Tür": "Yaya",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487116.25,
+       "y": 4420049
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K9",
+       "Ağırlık": "4",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487118,
+       "y": 4420047.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K10",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487117,
+       "y": 4420043
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K11",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487115.5,
+       "y": 4420048.25
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K12",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487110.5,
+       "y": 4420036.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K13",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487109.25,
+       "y": 4420039.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K14",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487113.25,
+       "y": 4420049.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K15",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "5"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487102.25,
+       "y": 4420043.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K16",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487062.25,
+       "y": 4420110.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K17",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487053.5,
+       "y": 4420115
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K18",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487063.25,
+       "y": 4420122.75
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K19",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "4"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487051.5,
+       "y": 4420119
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K20",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487064.5,
+       "y": 4420120.25
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K21",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "4"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487058,
+       "y": 4420125
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K22",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487064,
+       "y": 4420117.5
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K23",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "4"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487063,
+       "y": 4420118
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K24",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "3",
+       "Küme boyu": "4"
+      },
+      "color": "#2CA02C"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487170,
+       "y": 4420010
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K25",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487005,
+       "y": 4420150
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K26",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487150,
+       "y": 4420150
+      },
+      "layerId": "islem-kumeler-dbscan-",
+      "attrs": {
+       "No": "K27",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "0",
+       "Küme boyu": ""
+      },
+      "color": "#BDBDBD"
+     }
+    ],
+    "outputs": {
+     "count": 27,
+     "clusters": 3
+    }
+   }
+  },
+  {
+   "id": "kmeans",
+   "title": "k-ortalamalar, 3 küme",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.kMeans"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "clusters": 3
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesne 3 kümeye ayrıldı (1 yineleme).",
+    "undo": "k-ortalamalar kümeleme",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-kumeler-k-ortalamalar-",
+      "name": "Kümeler (k-ortalamalar)",
+      "style": {
+       "color": "#F08C00",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#F08C0026",
+       "renderer": {
+        "type": "categorized",
+        "expr": "([Küme] - 1) % 10",
+        "categories": [
+         {
+          "value": "0",
+          "label": "Küme 1, 11, 21 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#1F77B4"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#1F77B4",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#1F77B4",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "1",
+          "label": "Küme 2, 12, 22 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#FF7F0E"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#FF7F0E",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#FF7F0E",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "2",
+          "label": "Küme 3, 13, 23 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#2CA02C"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#2CA02C",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#2CA02C",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "3",
+          "label": "Küme 4, 14, 24 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#D62728"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#D62728",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#D62728",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "4",
+          "label": "Küme 5, 15, 25 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#9467BD"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#9467BD",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#9467BD",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "5",
+          "label": "Küme 6, 16, 26 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#8C564B"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#8C564B",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#8C564B",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "6",
+          "label": "Küme 7, 17, 27 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#E377C2"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#E377C2",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#E377C2",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "7",
+          "label": "Küme 8, 18, 28 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#17BECF"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#17BECF",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#17BECF",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "8",
+          "label": "Küme 9, 19, 29 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#BCBD22"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#BCBD22",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#BCBD22",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "9",
+          "label": "Küme 10, 20, 30 …",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#7F7F7F"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#7F7F7F",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#7F7F7F",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "-1",
+          "label": "Gürültü",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f",
+              "type": "simpleFill",
+              "color": "#BDBDBD"
+             },
+             {
+              "id": "o",
+              "type": "simpleLine",
+              "color": "#FFFFFF",
+              "width": 0.13,
+              "unit": "mm"
+             }
+            ]
+           },
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l",
+              "type": "simpleLine",
+              "color": "#BDBDBD",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "round",
+              "join": "round"
+             }
+            ]
+           },
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "id": "p",
+              "type": "shape",
+              "shape": "circle",
+              "size": 7,
+              "unit": "px",
+              "fill": "#BDBDBD",
+              "stroke": "#FFFFFF",
+              "strokeWidth": 0.8
+             }
+            ]
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-kumeler-k-ortalamalar-": "kaza"
+    },
+    "added": [
+     {
+      "kind": "point",
+      "p": {
+       "x": 487012.25,
+       "y": 4420036
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K1",
+       "Ağırlık": "4",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487028,
+       "y": 4420032.75
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K2",
+       "Ağırlık": "3",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487027.5,
+       "y": 4420030.5
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K3",
+       "Ağırlık": "2",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487025,
+       "y": 4420028.75
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K4",
+       "Ağırlık": "1",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487025.25,
+       "y": 4420031.25
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K5",
+       "Ağırlık": "bilinmiyor",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487015.5,
+       "y": 4420033.75
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K6",
+       "Ağırlık": "3",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487021.75,
+       "y": 4420040.25
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K7",
+       "Ağırlık": "2",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487017.5,
+       "y": 4420021.75
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K8",
+       "Ağırlık": "1",
+       "Tür": "Yaya",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487116.25,
+       "y": 4420049
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K9",
+       "Ağırlık": "4",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487118,
+       "y": 4420047.5
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K10",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487117,
+       "y": 4420043
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K11",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487115.5,
+       "y": 4420048.25
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K12",
+       "Tür": "Araç",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487110.5,
+       "y": 4420036.5
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K13",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487109.25,
+       "y": 4420039.75
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K14",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487113.25,
+       "y": 4420049.75
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K15",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487102.25,
+       "y": 4420043.5
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K16",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487062.25,
+       "y": 4420110.75
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K17",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487053.5,
+       "y": 4420115
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K18",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487063.25,
+       "y": 4420122.75
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K19",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487051.5,
+       "y": 4420119
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K20",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487064.5,
+       "y": 4420120.25
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K21",
+       "Ağırlık": "4",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487058,
+       "y": 4420125
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K22",
+       "Ağırlık": "3",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487064,
+       "y": 4420117.5
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K23",
+       "Ağırlık": "2",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487063,
+       "y": 4420118
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K24",
+       "Ağırlık": "1",
+       "Tür": "Araç",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487170,
+       "y": 4420010
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K25",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "1",
+       "Küme boyu": "17"
+      },
+      "color": "#1F77B4"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487005,
+       "y": 4420150
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K26",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "2",
+       "Küme boyu": "9"
+      },
+      "color": "#FF7F0E"
+     },
+     {
+      "kind": "point",
+      "p": {
+       "x": 487150,
+       "y": 4420150
+      },
+      "layerId": "islem-kumeler-k-ortalamalar-",
+      "attrs": {
+       "No": "K27",
+       "Ağırlık": "1",
+       "Tür": "Bisiklet",
+       "Küme": "3",
+       "Küme boyu": "1"
+      },
+      "color": "#2CA02C"
+     }
+    ],
+    "outputs": {
+     "count": 27,
+     "clusters": 3
+    }
+   }
+  },
+  {
+   "id": "geographic",
+   "title": "Coğrafi koordinatlı projede ret",
+   "document": "spatial-stats-geo.kcad",
+   "run": {
+    "tool": "stats.meanCenter"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Mekânsal istatistik projeksiyonlu koordinat ister: projenin sistemi coğrafi."
+   }
+  },
+  {
+   "id": "moran-few",
+   "title": "Moran I, üç parsel: ret",
+   "document": "spatial-stats.kcad",
+   "selection": [
+    28,
+    29,
+    30
+   ],
+   "run": {
+    "tool": "stats.moransI"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "valueField": "Değer"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Moran I en az dört nesne ister; yeri ve değeri olan 3 nesne var."
+   }
+  },
+  {
+   "id": "kmeans-many",
+   "title": "k-ortalamalar, 50 küme: ret",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.kMeans"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "clusters": 50
+   },
+   "expect": {
+    "status": "error",
+    "message": "Farklı yer sayısı (27) küme sayısından (50) az."
+   }
+  },
+  {
+   "id": "moran-no-field",
+   "title": "Moran I, değer alanı seçilmemiş",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.moransI"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    }
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "valueField",
+      "message": "“Değer alanı”: bir alan adı seçin."
+     }
+    ]
+   }
+  }
+ ]
+}

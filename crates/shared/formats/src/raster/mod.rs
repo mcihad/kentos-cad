@@ -96,6 +96,17 @@ impl ByteStore {
     pub fn held(&self) -> usize {
         self.ranges.iter().map(|(_, b)| b.len()).sum()
     }
+
+    /// The longest handed-over run from the file's start (a header read by
+    /// growing prefixes, docs/adr/0243 §2); empty when none starts there.
+    pub fn prefix(&self) -> &[u8] {
+        self.ranges
+            .iter()
+            .filter(|(start, _)| *start == 0)
+            .map(|(_, b)| b.as_slice())
+            .max_by_key(|b| b.len())
+            .unwrap_or(&[])
+    }
 }
 
 /// Either a value or the bytes still needed to make it.

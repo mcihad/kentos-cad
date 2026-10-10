@@ -1,4 +1,4 @@
-import type { AnalysisResult, OpsResult, PointResult } from '../io/rasterAnalysisProtocol';
+import type { AnalysisResult, MultidimRequest, MultidimResult, OpsResult, PointResult } from '../io/rasterAnalysisProtocol';
 import type { RasterRunHost } from './rasterHost';
 
 /**
@@ -61,6 +61,7 @@ interface OpsApi {
   notes(): string;
   zones(): Float64Array;
   histogram(): string;
+  roc(): string;
   featureKind(): string;
   featureValues(): Float64Array;
   featureTexts(): string[];
@@ -73,12 +74,39 @@ interface OpsApi {
   free(): void;
 }
 type HeaderOpening = { need(): Float64Array; put(offset: number, bytes: Uint8Array): void; analysis(spec: string): AnalysisApi; free(): void };
+interface MultidimApi {
+  needs(): Float64Array;
+  putBlock(i: number, bytes: Uint8Array): Bytes;
+  step(): void;
+  done(): boolean;
+  finish(): string;
+  file(): Bytes;
+  output(): string;
+  free(): void;
+}
+type OpsOpeningApi = { addTiff(o: HeaderOpening): void; addCube(o: HeaderOpening): void; start(spec: string, shapes: string): OpsApi; free(): void };
 interface RasterWasm {
   initSync(o: { module: BufferSource }): unknown;
   AnalysisOpening: new (size: number) => HeaderOpening;
+  CubeOpening: new (size: number, part: string) => HeaderOpening;
   PointAnalysis: new (objects: string, values: string, spec: string, lines: boolean) => PointApi;
-  OpsOpening: new () => { addTiff(o: HeaderOpening): void; start(spec: string, shapes: string): OpsApi; free(): void };
+  OpsOpening: new () => OpsOpeningApi;
+  MultidimAnalysis: {
+    profile(o: OpsOpeningApi, affine: Float64Array, nodata: number | undefined, lines: string, step: number, band: number, axes: string): MultidimApi;
+    bandSeries(o: OpsOpeningApi, affine: Float64Array, nodata: number | undefined, points: string): MultidimApi;
+    timeSeries(c: HeaderOpening, affine: Float64Array, nodata: number | undefined, points: string): MultidimApi;
+    meshCalc(c: HeaderOpening, spec: string): MultidimApi;
+  };
   opsReads(spec: string): Uint32Array;
+}
+
+/** A header read in the pieces an opening asks for (a TIFF's, or a NetCDF's and its slice's). */
+function opened<T extends HeaderOpening>(o: T, bytes: Uint8Array): T {
+  for (;;) {
+    const need = o.need();
+    if (!need.length) return o;
+    o.put(need[0], bytes.slice(need[0], need[0] + need[1]));
+  }
 }
 interface FormatsWasm {
   initSync(o: { module: BufferSource }): unknown;
@@ -112,17 +140,12 @@ async function modules(): Promise<{ raster: RasterWasm; formats: FormatsWasm }> 
   return { raster, formats };
 }
 
-/** A job run here as the analysis worker runs it (io/rasterAnalysisWorker.ts), over a TIFF's bytes. */
-export async function analyzeHere(bytes: Uint8Array, spec: string): Promise<AnalysisResult> {
+/** A job run here as the analysis worker runs it (io/rasterAnalysisWorker.ts), over a TIFF's bytes or a NetCDF's slice `part`. */
+export async function analyzeHere(bytes: Uint8Array, spec: string, part: string | null = null): Promise<AnalysisResult> {
   const { raster: m } = await modules();
-  const o = new m.AnalysisOpening(bytes.length);
+  const o = opened(part ? new m.CubeOpening(bytes.length, part) : new m.AnalysisOpening(bytes.length), bytes);
   let a: AnalysisApi;
   try {
-    for (;;) {
-      const need = o.need();
-      if (!need.length) break;
-      o.put(need[0], bytes.slice(need[0], need[0] + need[1]));
-    }
     a = o.analysis(spec);
   } finally {
     o.free();
@@ -180,7 +203,7 @@ export async function analyzePointsHere(objects: string, values: string, spec: s
  * A raster operation (docs/adr/0233) run here as the analysis worker runs it, over TIFFs' bytes in the run's order (a
  * text: why that input cannot be read): only the inputs the run reads are opened.
  */
-export async function analyzeOpsHere(sources: (Uint8Array | string)[], spec: string, shapes: string): Promise<OpsResult> {
+export async function analyzeOpsHere(sources: (Uint8Array | string)[], spec: string, shapes: string, parts: (string | null)[] = []): Promise<OpsResult> {
   const { raster: m } = await modules();
   const reads = Array.from(m.opsReads(spec));
   const inputs = reads.map((k) => {
@@ -191,15 +214,12 @@ export async function analyzeOpsHere(sources: (Uint8Array | string)[], spec: str
   const o = new m.OpsOpening();
   let a: OpsApi;
   try {
-    for (const bytes of inputs) {
-      const t = new m.AnalysisOpening(bytes.length);
+    for (const [k, bytes] of inputs.entries()) {
+      const part = parts[reads[k]];
+      const t = opened(part ? new m.CubeOpening(bytes.length, part) : new m.AnalysisOpening(bytes.length), bytes);
       try {
-        for (;;) {
-          const need = t.need();
-          if (!need.length) break;
-          t.put(need[0], bytes.slice(need[0], need[0] + need[1]));
-        }
-        o.addTiff(t);
+        if (part) o.addCube(t);
+        else o.addTiff(t);
       } finally {
         t.free();
       }
@@ -244,7 +264,53 @@ export async function analyzeOpsHere(sources: (Uint8Array | string)[], spec: str
         },
       };
     }
-    return { ...result, zones: a.zones(), histogram: a.histogram() };
+    return { ...result, zones: a.zones(), histogram: a.histogram(), roc: a.roc() };
+  } finally {
+    a.free();
+  }
+}
+
+/** A Çok boyutlu veri tool (docs/adr/0243 §8–§10) run here as the analysis worker runs it. */
+export async function analyzeMultidimHere(job: Omit<MultidimRequest, 'type' | 'blob'>, bytes: Uint8Array): Promise<MultidimResult> {
+  const { raster: m } = await modules();
+  const affine = Float64Array.from(job.affine);
+  const nodata = job.nodata ?? undefined;
+  let a: MultidimApi;
+  if (job.kind === 'timeSeries' || job.kind === 'meshCalc') {
+    if (!job.part) throw new Error('Bu raster NetCDF veri seti göstermiyor.');
+    const c = opened(new m.CubeOpening(bytes.length, job.part), bytes);
+    try {
+      a = job.kind === 'timeSeries' ? m.MultidimAnalysis.timeSeries(c, affine, nodata, job.objects) : m.MultidimAnalysis.meshCalc(c, job.spec ?? '{}');
+    } finally {
+      c.free();
+    }
+  } else {
+    const o = new m.OpsOpening();
+    try {
+      const t = opened(job.part ? new m.CubeOpening(bytes.length, job.part) : new m.AnalysisOpening(bytes.length), bytes);
+      try {
+        if (job.part) o.addCube(t);
+        else o.addTiff(t);
+      } finally {
+        t.free();
+      }
+      a =
+        job.kind === 'profile'
+          ? m.MultidimAnalysis.profile(o, affine, nodata, job.objects, job.step ?? 1, job.band ?? 1, job.axes ?? 'Y,X')
+          : m.MultidimAnalysis.bandSeries(o, affine, nodata, job.objects);
+    } finally {
+      o.free();
+    }
+  }
+  try {
+    while (!a.done()) {
+      const needs = a.needs();
+      for (let i = 0; 2 * i < needs.length; i++) a.putBlock(i, bytes.slice(needs[2 * i], needs[2 * i] + needs[2 * i + 1]));
+      a.step();
+    }
+    const result = a.finish();
+    const file = a.file();
+    return { result, file: file.length ? file : undefined, output: a.output() || undefined };
   } finally {
     a.free();
   }
@@ -258,10 +324,11 @@ export function fixtureRasterHost(rasters: ReadonlyMap<string, Uint8Array>): { h
       const bytes = r.file !== undefined ? rasters.get(r.file) : undefined;
       return bytes ? new Blob([bytes as Bytes]) : { refused: `${r.file}: not among the cases' rasters` };
     },
-    analyze: async (blob, spec) => analyzeHere(new Uint8Array(await blob.arrayBuffer()), spec),
+    analyze: async (blob, spec, _watch, part) => analyzeHere(new Uint8Array(await blob.arrayBuffer()), spec, part ?? null),
     analyzePoints: (objects, values, spec, lines) => analyzePointsHere(objects, values, spec, lines),
-    analyzeOps: async (sources, spec, shapes) =>
-      analyzeOpsHere(await Promise.all(sources.map(async (b) => (typeof b === 'string' ? b : new Uint8Array(await b.arrayBuffer())))), spec, shapes),
+    analyzeOps: async (sources, spec, shapes, _watch, parts) =>
+      analyzeOpsHere(await Promise.all(sources.map(async (b) => (typeof b === 'string' ? b : new Uint8Array(await b.arrayBuffer())))), spec, shapes, parts ?? []),
+    analyzeMultidim: async ({ blob, ...job }) => analyzeMultidimHere(job, new Uint8Array(await blob.arrayBuffer())),
     keep: async (bytes, name) => {
       written.set(name, bytes);
       return { file: name, note: '' };

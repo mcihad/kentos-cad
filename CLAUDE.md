@@ -193,6 +193,30 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   geçilmez; Yükseklik modeliyle yüzey uzunluğu ve en büyük boyuna eğim; maliyet ya da en ucuz kaynak), En düşük maliyetli yol (Yol,
   Kaynak, Maliyet, Uzunluk) ve Maliyet koridoru (yüzde ya da değer eşiği); bütün raster bellekte; nesnelerden uzaklık kaynakların
   katmanının, öbürleri maliyet rasterinin yanında (ADR 0236);
+  çok ölçütlü uygunluk: İşlemler'in Uygunluk analizi kategorisinde Bulanık üyelik (Doğrusal, Üslü, Gauss, Büyük, Küçük, Yakın),
+  Bulanık çakıştırma (Ve, Veya, Çarpım, Toplam, Gamma), Ağırlıklı toplam, Ağırlıklı çakıştırma (ortak ölçek, yüzde etkiler, sınıf
+  tabloları ve kısıt; tam sayılarla kesin), İkili karşılaştırma (AHP: ağırlıklar ve tutarlılık oranı tablosu, isteğe bağlı ağırlıklı
+  toplam) ve ROC ile doğrulama (AUC, eğrinin tablosu, en iyi eşik); çok rasterli araçlar girdilerin kesişiminde; İşlemler'in iki yeni
+  parametre türü: rasterlere değer ve raster çiftleri, girdinin rasterlerinden tablolar; tablo veren çalıştırmadan sonra tablo görünür
+  olur (ADR 0237);
+  mekânsal istatistik: İşlemler'in Mekânsal istatistik kategorisinde Ortalama ve Ortanca merkez (ağırlıklı, gruplara göre), Standart
+  uzaklık, Yön dağılımı (standart sapma elipsi), En yakın komşu (oran, z, p, desen), Moran I (sabit bant, ters uzaklık, k en yakın; satır
+  standartlaştırma), Sıcak nokta (Gi*: kopyalar z, p ve güven sınıfıyla, katman sınıflara göre kategorili), DBSCAN ve k-ortalamalar
+  (kopyalar küme numarasıyla, katman kümelere göre kategorili); nesnenin yeri `$merkez`, komşular k-d ağacıyla; sonuçlar girdinin
+  katmanının üstünde; çekirdek `ops::spatial_stats` metinleri de yazar; CBS'de Analiz › Mekânsal istatistik (ADR 0238);
+  uzaktan algılama: İşlemler'in Uzaktan algılama kategorisinde Bant birleştir (ortak ızgarada, en yakın ya da çift doğrusal), Bantlara
+  ayır (bant başına GeoTIFF), Spektral indis (NDVI, GNDVI, SAVI, EVI, NDWI, MNDWI, NDBI, oran, normalize fark; ölçek ve öteleme ile
+  yansıma), Denetimli sınıflandırma (eğitim alanlarının Sınıf metinleri doğal sırayla; en büyük olabilirlik ya da en yakın ortalama),
+  Denetimsiz sınıflandırma (örnekten k-ortalamalar), Doğruluk analizi (karışıklık matrisi, üretici ve kullanıcı doğruluğu, kappa), Değişim
+  tespiti (fark, oran, normalize fark; sınıf değişiminin “neden neye” matrisi) ve Görüntü birleştirme (ağırlıklı Brovey ya da basit
+  ortalama, pankromatiğin ızgarasında); iki geçişli araçlar aynı işin geçişleri; tablolar, özetler ve uyarılar raster çekirdeğinin; raster
+  okuyucusunda ExtraSamples'ın 0'ı veri, alfa değil; CBS'de Raster › Uzaktan algılama (ADR 0242);
+  mesh ve çok boyutlu veri: kendi NetCDF klasik okuyucu ve yazıcımız (CDF-1, 2, 5; dosyanın gereken parçaları; `vsize` işaretsiz), CF
+  düzenli ızgaranın değişkeni ve dilimi Raster ekle'den, UGRID 1.0 ve 2DM ile ASCII DAT (tek UGRID dosyasına çevrilir) Mesh ekle'den
+  (`mesh.add`); mesh sanal ızgarada, karoları ağdan rasterleştirilir, ağ çizgileri (`edges`); rasterin `dataset`'i (`.kcad` şema 38),
+  Zaman sürgüsünü izleyen rasterler, Raster stili'nde Veri seti, Öznitelikler'de boyutlar ve Ağ; İşlemler'in Çok boyutlu veri kategorisi
+  (Kesit, Zaman serisi, Mesh hesaplayıcı), raster çözümleme araçları gösterilen dilimde; çekirdek `kentos_formats::multidim` ve
+  `kentos_raster::multidim`; CBS'de Raster › Raster ▾ (ADR 0243);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -500,6 +524,23 @@ python3 scripts/fixtures/distance_processing_cases.py --check   # uzaklık ve ma
 python3 scripts/fixtures/distance_scene.py --check   # uzaklık ve maliyet resimlerinin çizimini ve maliyet rasterini (fixtures/interaction/v1/distance.kcad, distance/maliyet.tif: vadinin DEM'i, eğimden maliyet, göl, köyler, yol) denetle (ADR 0236)
 cargo test --release -p kentos-raster --test all distance_timing -- --ignored --nocapture --test-threads=1   # 4096² maliyet rasterinde dört aracın dokuz işinin süreleri; KENTOS_PHASES=1 aşamaları da yazar (ADR 0236 §8; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only distance))
 KENTOS_SHOTS_ONLY=uzk-serit,uzk-yol-cizim,uzk-koridor-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uzaklık ve maliyetin resimleri, .run/shots/arac-uzk-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs distance); ADR 0236)
+python3 scripts/fixtures/suitability_cases.py --check   # uygunluk analizinin altı aracını (üyelik işlevleri, bulanık işleçler, ağırlıklı toplam, tam sayılı ağırlıklı çakıştırma ve sınıf tabloları, AHP'nin özvektörü 50 basamakta, ROC'un AUC'si her çiftle kaba kuvvetle) ADR'den, KentOS kodu olmadan mpmath ve kesirlerle denetle; durumlar fixtures/suitability/v1/cases.json (ADR 0237)
+python3 scripts/fixtures/suitability_processing_cases.py --check   # uygunluk araçlarının İşlemler durumlarını denetle; rasterleri GDAL yazar, yazılan dosyalar başvuruya bağlı; durumlar fixtures/processing/v1/suitability.json, suitability.kcad ve suitability/ (ADR 0237)
+python3 scripts/fixtures/suitability_scene.py --check   # uygunluk resimlerinin çizimini ve ölçütlerini (fixtures/interaction/v1/suitability.kcad, suitability/: vadinin eğimi, yola uzaklık, arazi örtüsü, heyelan noktaları) denetle (ADR 0237)
+cargo test --release -p kentos-raster --test all suitability_timing -- --ignored --nocapture --test-threads=1   # 4096² dört ölçütte altı aracın süreleri ve 15 ölçütlü AHP (ADR 0237 §11; web'inkiler: (cd apps/web && node scripts/perf/raster.mjs --only suitability))
+KENTOS_SHOTS_ONLY=uyg-serit,uyg-cakistirma,uyg-cakistirma-cizim,uyg-ahp,uyg-roc cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uygunluk analizinin resimleri, .run/shots/arac-uyg-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs suitability); ADR 0237)
+python3 scripts/fixtures/spatial_stats_cases.py --check   # mekânsal istatistiğin dokuz aracını (yerler, merkezler, ortanca, standart uzaklık, elips, en yakın komşu, komşuluklar, Moran I, Gi*, DBSCAN, k-ortalamalar ve yazılan metinler) ADR'den, KentOS kodu olmadan kesirler ve 40 basamaklı mpmath'le denetle; durumlar fixtures/spatial-stats/v1/cases.json (ADR 0238)
+python3 scripts/fixtures/spatial_stats_processing_cases.py --check; python3 scripts/fixtures/spatial_stats_scene.py --check   # mekânsal istatistik araçlarının İşlemler durumlarını (fixtures/processing/v1/spatial-stats.json, spatial-stats.kcad, spatial-stats-geo.kcad) ve resimlerin sahnesini (fixtures/interaction/v1/spatial-stats.kcad) denetle (ADR 0238)
+cargo test --release -p kentos-geometry-core --test all spatial_stats_timing -- --ignored --nocapture --test-threads=1   # 100 000 noktada dokuz aracın süreleri (ADR 0238 §12; web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; STATS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/spatialStats.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp)
+KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mekânsal istatistiğin resimleri, .run/shots/arac-ist-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs stats); ADR 0238)
+python3 scripts/fixtures/remote_cases.py --check   # uzaktan algılamanın sekiz aracını (bantlar, indisler, iki sınıflandırıcı mpmath'le, k-ortalamalar, karışıklık matrisi ve kappa, değişim, Brovey ve basit ortalama) ADR'den, KentOS kodu olmadan denetle; Brovey GDAL'ın VRTPansharpenedDataset'iyle bire bir çapraz denetlenir; durumlar fixtures/remote/v1/cases.json (ADR 0242)
+python3 scripts/fixtures/remote_processing_cases.py --check; python3 scripts/fixtures/remote_scene.py --check   # uzaktan algılama araçlarının İşlemler durumlarını (fixtures/processing/v1/remote.json, remote.kcad, remote/) ve resimlerin sahnesini (fixtures/interaction/v1/remote.kcad ve remote/: vadinin dört bantlı uydu görüntüsü, iki yıl sonrası, çok bantlı ve pankromatik çifti) denetle (ADR 0242)
+cargo test --release -p kentos-raster --test all remote_timing -- --ignored --nocapture --test-threads=1   # 4096² dört bantlı 16 bit görüntüde sekiz aracın süreleri (ADR 0242 §12; web'inkiler: (cd apps/web && node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs --only remote))
+KENTOS_SHOTS_ONLY=ua-serit,ua-indis,ua-indis-cizim,ua-denetimli,ua-denetimli-cizim,ua-dogruluk,ua-degisim-cizim,ua-birlestirme-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uzaktan algılamanın resimleri, .run/shots/arac-ua-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs remote); ADR 0242)
+python3 scripts/fixtures/multidim_cases.py --check   # mesh ve çok boyutlu veriyi (NetCDF klasik okuma ve yazma, CF ızgaraları ve zamanı, UGRID, 2DM ve DAT'ın UGRID'e çevrilmesi bayt bayt, rasterleştirme kesirlerle, Kesit, Zaman serisi, Mesh hesaplayıcı, 2,9 ve 4,8 GiB'lık başlıklar) KentOS kodu ve libnetcdf olmadan kendi NetCDF yazıcısıyla (netcdf_classic.py) denetle; GDAL'ın netCDF sürücüsü ve QGIS'in MDAL'ıyla çapraz denetim (yoksa atlanır); durumlar fixtures/multidim/v1 (ADR 0243)
+python3 scripts/fixtures/multidim_processing_cases.py --check; python3 scripts/fixtures/multidim_scene.py --check   # Çok boyutlu veri araçlarının İşlemler durumlarını (fixtures/processing/v1/multidim.json, multidim.kcad, multidim/) ve resimlerin sahnesini (fixtures/interaction/v1/multidim.kcad ve multidim/: vadinin saatlik yağışı NetCDF ızgarası, derenin taşkını UGRID mesh'i, kesitler ve istasyonlar) denetle (ADR 0243)
+cargo test --release -p kentos-raster --test all multidim_timing -- --ignored --nocapture --test-threads=1   # 1 000 değişkenli başlık, bir milyon yüzlü mesh'in açılışı ve karoları, zaman adımının ilk görünümü, 2DM ve DAT, Kesit, 3 GB'lık ızgarada Zaman serisi ve Mesh hesaplayıcı; KENTOS_PERF_FILES=klasör dosyaları web için de yazar (ADR 0243 §12; web'inkiler: (cd apps/web && node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs --only multidim))
+KENTOS_SHOTS_ONLY=md-serit,md-ekle,md-mesh-ekle,md-zaman,md-stil,md-kesit,md-seri,md-hesap-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mesh ve çok boyutlu verinin resimleri, .run/shots/arac-md-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs multidim); ADR 0243)
 KENTOS_SHOTS_ONLY=hid-serit,hid-dere-cizim,hid-havza-cizim,hid-guzergah-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # hidrolojinin resimleri, .run/shots/arac-hid-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hydrology); ADR 0235)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
@@ -1467,6 +1508,37 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `processing/builtin/proximity/`, masaüstü `kentos-processing`'in `builtin/proximity/`); bağımsız başvuru `proximity_cases.py` (9 durum);
   pencereler `processing::proximity_tests`, `shots.mjs proximity`; süreler `proximity::timing` ve `scripts/perf/proximity.test.ts`. Sıradaki
   `GIS-20`.
+  Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
+  ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
+  parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM
+  notlarında `suit`, `roc()`; İşlemler'in `builtin/suitability/`'ı iki platformda; İşlemler'in iki yeni parametre türü (`rasterValues`,
+  `rasterPairs`; masaüstünde `raster_rows`, web'de `fieldPlan.ts`'in satırları), tablo veren çalıştırmadan sonra tablo görünür olur;
+  bağımsız başvuru `suitability_cases.py` (50 durum), ortak durumlar `fixtures/processing/v1/suitability.json`
+  (`suitability_processing_cases.py`), resimlerin sahnesi `suitability.kcad` (`suitability_scene.py`); CBS'nin Raster sekmesinde Uygunluk
+  analizi paneli, sekme 1100 px'e sığsın diye İnterpolasyon ve Yoğunluk tek panelde. `GIS-38` mekânsal istatistik
+  ([ADR 0238](docs/adr/0238-spatial-statistics.md)) tek parçada bitti (10 Ekim): geometri çekirdeğinde `ops::spatial_stats` (`kdtree`,
+  `centers`, `nearest`, `weights`, `autocorrelation`, `clusters`, `calls`; bağımsız başvuru `spatial_stats_cases.py`, 68 durum); web'in
+  `model/ops/spatialStats.ts`'i; İşlemler'in `builtin/stats/`'u iki platformda; yeni katmanın görünüşünde kategorili görünüş
+  (`NewLayerStyle.renderer`); ortak durumlar `fixtures/processing/v1/spatial-stats.json` (`spatial_stats_processing_cases.py`; yeni
+  katmanın yeri `layerAbove`, karşılaştırıcılarda `r`, `major`, `ratio` geometri alanı), resimlerin sahnesi `spatial-stats.kcad`
+  (`spatial_stats_scene.py`); CBS'nin Analiz sekmesinde (birleşimde Yakınlık'la Analiz paneline katıldı: ayrı panel 1100 px'te
+  sığmıyordu). `GIS-42` uzaktan algılama
+  ([ADR 0242](docs/adr/0242-remote-sensing.md)) tek parçada bitti (10 Ekim): raster çekirdeğinde `remote` (`spectral`, `classify`,
+  `cluster`, `accuracy`, `work`; işin okuma geçişleri, `OpsFinished::Report`, notlarda `remote`, sonuca göre görünüş); bağımsız başvuru
+  `remote_cases.py` (46 durum, Brovey GDAL'la bire bir); raster okuyucusunda ExtraSamples'ın 0'ı artık alfa değil (`raster_cases.py`'ye
+  GDAL'ın alfa okuması ve iki dosya); İşlemler'in `builtin/remote/`'u iki platformda; ortak durumlar `fixtures/processing/v1/remote.json`
+  (`remote_processing_cases.py`, `remoteOf`), resimlerin sahnesi `remote.kcad` (`remote_scene.py`); CBS'nin Raster sekmesinde Uzaktan
+  algılama paneli (altı araç, ikisi ▾'de), sekme 1100 px'e sığsın diye Raster ve vektör ile Taranmış harita tek panelde. `GIS-43` mesh ve
+  çok boyutlu veri ([ADR 0243](docs/adr/0243-mesh-and-multidimensional-data.md); sahibin sözü “o tamamen bitecek”) tek parçada bitti
+  (10 Ekim): sözleşmenin `RasterDataset`'i ve görünüşün `edges`'i, `.kcad` şema 38 (`FORMATS_VERSION` 48; `main`'in şema 37'si proje değişkenlerinindir); biçim çekirdeğinde
+  `multidim` (`netcdf`, `cf`, `ugrid`, `sms`, `mesh`, `cube`, `series`, `write`; bağımsız başvuru `multidim_cases.py` kendi NetCDF yazıcısı
+  `netcdf_classic.py`'yle, GDAL ve QGIS'in MDAL'ıyla çapraz denetim), raster çekirdeğinde `multidim` (`points`, `profile`, `series`,
+  `calc`); WASM `NetcdfFile`, `smsToUgrid`, `CubeOpening`, `MultidimAnalysis`; İşlemler'in `builtin/multidim/`'i iki platformda,
+  `Files::open_cube`; masaüstünde `rasters/multidim.rs`, web'de `ui/raster/MultidimDialog.ts` ve çözümleme işçisinin birleştirilmiş
+  okumaları (`readRuns`); ortak durumlar `fixtures/processing/v1/multidim.json` (`multidim_processing_cases.py`), resimlerin sahnesi
+  `multidim.kcad` (`multidim_scene.py`). Yolda düzelenler: NetCDF okuyucusu `vsize`'ı işaretli okuyup 2–4 GiB'lık değişkeni reddediyordu;
+  zaman sürgüsünün yazıları çekirdekten ve çubuk kendi genişliğine sığar (ADR 0210'un eki). Dal 10 Ekim'de `main`'e birleşti (sahibin
+  sözü: “Görevin bitince github main ile birleştir ve main üzerine push yap”).
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

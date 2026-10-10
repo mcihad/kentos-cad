@@ -104,10 +104,10 @@ describe('project types (docs/adr/0165)', () => {
     expect(tabs.filter((t) => !t.contextual).map((t) => t.label)).toEqual(['Dosya', 'Giriş', 'Harita', 'Veri', 'Düzenle', 'Analiz', 'Raster', 'Ölçme', 'Görünüm', 'Çıktı']);
     const panels = (id: string) => tabs.find((t) => t.id === id)!.panels.map((p) => p.label);
     expect(panels('survey')).toEqual(expect.arrayContaining(['Poligon', 'Nokta alımı', 'Kestirme', 'Noktalar']));
-    expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Arazi', 'Denetim', 'Ağ analizi', 'Komut']));
+    expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Analiz', 'Arazi', 'Denetim', 'Ağ analizi', 'Komut']));
     // İşlemler's raster analysis has a tab of its own, with the rasters (docs/adr/0231 §10): Analiz fits 1100 px.
     expect(panels('analysis')).not.toContain('Yüzey analizi');
-    expect(panels('raster')).toEqual(['Raster', 'Yüzey analizi', 'İnterpolasyon', 'Yoğunluk', 'Raster işlemleri', 'Raster istatistiği', 'Raster ve vektör', 'Taranmış harita', 'Hidroloji', 'Uzaklık ve maliyet']);
+    expect(panels('raster')).toEqual(['Raster', 'Yüzey analizi', 'İnterpolasyon', 'Raster işlemleri', 'Raster istatistiği', 'Raster ve vektör', 'Hidroloji', 'Uzaklık ve maliyet', 'Uygunluk analizi', 'Uzaktan algılama']);
     expect(panels('map')).toEqual(expect.arrayContaining(['Koordinat sistemi', 'Parsel', 'Ölçme', 'Stil']));
     // Blocks are the drawing's library, on Veri, its pictures beside them (docs/adr/0192 §5): Düzenle keeps to
     // creating and changing objects.

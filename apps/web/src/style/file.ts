@@ -197,7 +197,7 @@ function validateItem(it: unknown, i: number): string[] {
   if (it.kind === 'symbol') issues.push(...validateSymbol(it.symbol, `${w} (${String(it.name)})`));
   else if (it.kind === 'asset') {
     // A raster's file may be a GeoTIFF too (docs/adr/0204 §2).
-    if (!['svg', 'png', 'jpeg', 'tiff'].includes(String(it.format))) issues.push(`${w}: bilinmeyen varlık biçimi`);
+    if (!['svg', 'png', 'jpeg', 'tiff', 'netcdf'].includes(String(it.format))) issues.push(`${w}: bilinmeyen varlık biçimi`);
     if (typeof it.data !== 'string') issues.push(`${w}: varlık verisi yok`);
     else if (it.format === 'svg' && !/<svg[\s>]/i.test(it.data)) issues.push(`${w}: SVG çizimi değil`);
     else if (it.format !== 'svg' && !/^data:image\/(png|jpeg|tiff);base64,/.test(it.data)) issues.push(`${w}: görüntü verisi data: adresi olmalı`);

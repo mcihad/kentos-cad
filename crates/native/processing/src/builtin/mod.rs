@@ -10,6 +10,7 @@ pub mod info_from_inside;
 pub mod interpolation;
 pub mod join_by_field;
 pub mod models;
+pub mod multidim;
 pub mod network;
 pub mod numbering;
 pub mod pointcloud;
@@ -17,8 +18,11 @@ pub mod proximity;
 pub mod queries;
 pub mod raster_ops;
 pub mod raster_vector;
+pub mod remote;
 pub mod select_by_expression;
 pub mod select_by_location;
+pub mod stats;
+pub mod suitability;
 pub mod summary_statistics;
 pub mod surface;
 pub mod vertex_numbering;
@@ -118,6 +122,36 @@ pub fn tools() -> Vec<Tool> {
         distance::cost(),
         distance::path(),
         distance::corridor(),
+        // Uygunluk analizi (docs/adr/0237): both platforms.
+        suitability::fuzzy_membership(),
+        suitability::fuzzy_overlay(),
+        suitability::weighted_sum(),
+        suitability::weighted_overlay(),
+        suitability::pairwise(),
+        suitability::roc(),
+        // Mekânsal istatistik (docs/adr/0238): both platforms.
+        stats::tools::mean_center(),
+        stats::tools::median_center(),
+        stats::tools::standard_distance(),
+        stats::tools::directional_distribution(),
+        stats::tools::nearest_neighbor(),
+        stats::tools::morans(),
+        stats::tools::hot_spot(),
+        stats::tools::dbscan_tool(),
+        stats::tools::k_means_tool(),
+        // Uzaktan algılama (docs/adr/0242): both platforms.
+        remote::tools::composite(),
+        remote::tools::split(),
+        remote::tools::index(),
+        remote::tools::supervised(),
+        remote::tools::unsupervised(),
+        remote::tools::accuracy(),
+        remote::tools::change(),
+        remote::tools::pansharpen(),
+        // Çok boyutlu veri (docs/adr/0243): both platforms.
+        multidim::tools::profile(),
+        multidim::tools::series(),
+        multidim::tools::calculator(),
     ]
 }
 

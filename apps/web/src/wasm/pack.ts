@@ -75,7 +75,8 @@ const TABLE = 18;
 const IMAGE = 19;
 /**
  * A raster (docs/adr/0204): its affine (six numbers), width, height and bands; its samples, asset, file and address
- * (docs/adr/0207 §1); its system; its look (the contract's JSON text); its opacity (NaN none).
+ * (docs/adr/0207 §1); its system; its look (the contract's JSON text); its opacity (NaN none); its dataset (the
+ * contract's JSON text, docs/adr/0243 §6).
  */
 const RASTER = 20;
 /**
@@ -352,6 +353,8 @@ export function packEntities(list: Iterable<object>): Packed {
         num(e.srid);
         out.push(str(JSON.stringify(e.style ?? {})));
         num(e.opacity);
+        // A NetCDF variable and its slice (docs/adr/0243 §6), its JSON text when it has one.
+        out.push(str(e.dataset === undefined ? undefined : JSON.stringify(e.dataset)));
         break;
       }
       case POINT_CLOUD: {
@@ -757,11 +760,13 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const srid = num();
         const style = JSON.parse(str() ?? '{}') as unknown;
         const opacity = num();
+        const dataset = str();
         g = { kind, affine, width, height, bands, sample, srid, style };
         if (asset !== undefined) g.asset = asset;
         if (file !== undefined) g.file = file;
         if (url !== undefined) g.url = url;
         if (!Number.isNaN(opacity)) g.opacity = opacity;
+        if (dataset !== undefined) g.dataset = JSON.parse(dataset) as unknown;
         break;
       }
       case 'pointcloud': {

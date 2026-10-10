@@ -824,6 +824,61 @@ export const ICONS = {
     '<path d="M6.6 5.4c2.6-.6 5 .9 5.2 3.3.2 2.2-1.6 3.8-4 3.9-2.5.1-4-1.4-4-3.4 0-1.8 1-3.4 2.8-3.8z" fill="currentColor" fill-opacity=".2" stroke="none"/><path d="M3.6 16.4 9.4 15.8 13.6 13 15 8.2 16.4 3.6" stroke-width="1.6"/><circle cx="3.6" cy="16.4" r="1.6" fill="currentColor" stroke="none"/><circle cx="16.4" cy="3.6" r="1.7" stroke-width="1.3"/>',
   costCorridor:
     '<path d="M4.2 15.8C4.2 8.6 15.8 11.4 15.8 4.2" stroke-width="6.2" stroke-opacity=".24"/><path d="M4.2 15.8C4.2 8.6 15.8 11.4 15.8 4.2" stroke-width="1.2"/><circle cx="4.2" cy="16.6" r="1.8" fill="currentColor" stroke="none"/><circle cx="15.8" cy="3.4" r="1.8" fill="currentColor" stroke="none"/>',
+  // Uygunluk analizi (docs/adr/0237): a membership's S rising to 1; two memberships' common part; a sum and its weights;
+  // sheets weighed in per cent; the scales of a pairwise comparison; the ROC curve above chance with its area.
+  fuzzyMembership:
+    '<path d="M3 16.5h14" stroke-width=".9" stroke-opacity=".5"/><path d="M3 4h14" stroke-width=".8" stroke-dasharray="1.5 1.5" stroke-opacity=".55"/><path d="M3 16C8.5 16 11.5 4 17 4" stroke-width="1.6"/>',
+  fuzzyOverlay:
+    '<circle cx="7.5" cy="10" r="5"/><circle cx="12.5" cy="10" r="5"/><path d="M10 5.67A5 5 0 0 1 10 14.33 5 5 0 0 1 10 5.67z" fill="currentColor" fill-opacity=".4" stroke="none"/>',
+  weightedSum:
+    '<path d="M10 4H3l3.6 6L3 16h7" stroke-width="1.5"/><path d="M13 16v-3.5M15.5 16V7M18 16v-5.5" stroke-width="1.7"/>',
+  weightedOverlay:
+    '<path d="m7.5 2.6 5.5 2.8-5.5 2.8L2 5.4z" fill="currentColor" fill-opacity=".2"/><path d="m2 8.6 5.5 2.8 5.5-2.8M2 11.8l5.5 2.8 5.5-2.8"/><circle cx="14.6" cy="12.4" r="1.2" stroke-width="1.1"/><circle cx="17.4" cy="16.8" r="1.2" stroke-width="1.1"/><path d="m17.8 11.6-3.6 6" stroke-width="1.1"/>',
+  pairwise:
+    '<path d="M10 6.7v9.8M7 16.5h6"/><path d="m3 8 14-2.5" stroke-width="1.5"/><path d="m3 8-1.3 4M3 8l1.3 4M17 5.5l-1.3 4M17 5.5l1.3 4" stroke-width=".9"/><path d="M1.2 12h3.6a1.8 1.8 0 0 1-3.6 0zM15.2 9.5h3.6a1.8 1.8 0 0 1-3.6 0z" fill="currentColor" fill-opacity=".3" stroke-width="1"/>',
+  rocCurve:
+    '<path d="M3 17V3M3 17h14" stroke-width=".9" stroke-opacity=".5"/><path d="M3 17 17 3" stroke-width=".9" stroke-dasharray="1.4 1.4" stroke-opacity=".6"/><path d="M3 17C3.6 9 8 4.2 17 3.2V17z" fill="currentColor" fill-opacity=".16" stroke="none"/><path d="M3 17C3.6 9 8 4.2 17 3.2" stroke-width="1.6"/>',
+  // Mekânsal istatistik (docs/adr/0238): the places as dots, what each tool finds drawn over them.
+  statsMeanCenter: `${dot(4, 5, 1.1)}${dot(15.5, 4.2, 1.1)}${dot(4.5, 15.2, 1.1)}${dot(16, 14.6, 1.1)}${dot(9.6, 17, 1.1)}<circle cx="10" cy="10" r="2.4" stroke-width="1.5"/><path d="M10 5.2v2M10 12.8v2M5.2 10h2M12.8 10h2" stroke-width="1.2"/>`,
+  statsMedianCenter: `<path d="M4 5 8.6 9.2M15.5 4.2l-4.4 4.6M4.5 15.2l4.2-4.1M16 14.6l-4.6-3.6" stroke-width=".9" stroke-opacity=".6"/>${dot(4, 5, 1.1)}${dot(15.5, 4.2, 1.1)}${dot(4.5, 15.2, 1.1)}${dot(16, 14.6, 1.1)}<path d="m10 7.3 2.7 2.7-2.7 2.7L7.3 10z" fill="currentColor" fill-opacity=".35" stroke-width="1.3"/>`,
+  statsStandardDistance: `<circle cx="10" cy="10" r="7.3" stroke-dasharray="2.2 1.6" stroke-width="1.2"/><path d="M10 10h7.3" stroke-width="1"/>${dot(10, 10, 1.4)}${dot(6.4, 6.8, 0.9)}${dot(12.8, 13.4, 0.9)}${dot(7.2, 13.2, 0.9)}${dot(13.6, 6.2, 0.9)}`,
+  statsEllipse: `<path d="M3.45 14.59A8 3.8-35 1 1 16.55 5.41 8 3.8-35 1 1 3.45 14.59z" stroke-width="1.3"/><path d="M3.45 14.59 16.55 5.41" stroke-width=".9" stroke-dasharray="1.4 1.2" stroke-opacity=".7"/>${dot(6.2, 12.4, 0.9)}${dot(9.2, 9.4, 0.9)}${dot(12.6, 8.6, 0.9)}${dot(14.2, 6.4, 0.9)}${dot(10.6, 11.6, 0.9)}`,
+  statsNearest: `<path d="M4.2 5.2 7.6 7.6M13 4.2l3.4 2.2M4.6 13.8l3 3M12.6 12.8l4 2" stroke-width="1.2"/>${dot(4.2, 5.2, 1.3)}${dot(7.6, 7.6, 1.3)}${dot(13, 4.2, 1.3)}${dot(16.4, 6.4, 1.3)}${dot(4.6, 13.8, 1.3)}${dot(7.6, 16.8, 1.3)}${dot(12.6, 12.8, 1.3)}${dot(16.6, 14.8, 1.3)}`,
+  statsMoran:
+    '<path d="M2.5 2.5H10V10H2.5z" fill="currentColor" fill-opacity=".55" stroke="none"/><path d="M10 10h7.5v7.5H10z" fill="currentColor" fill-opacity=".2" stroke="none"/><rect x="2.5" y="2.5" width="15" height="15" rx="1" stroke-width="1.1"/><path d="M6.25 2.5v15M10 2.5v15M13.75 2.5v15M2.5 6.25h15M2.5 10h15M2.5 13.75h15" stroke-width=".7" stroke-opacity=".6"/>',
+  statsHotSpot:
+    '<circle cx="10" cy="10" r="7.6" fill="currentColor" fill-opacity=".12" stroke-width="1.1"/><circle cx="10" cy="10" r="4.8" fill="currentColor" fill-opacity=".25" stroke-width="1.1"/><circle cx="10" cy="10" r="2.1" fill="currentColor" stroke="none"/>',
+  statsDbscan: `<circle cx="6.2" cy="7" r="4.4" stroke-dasharray="1.8 1.4" stroke-width="1.1"/><circle cx="13.6" cy="13.4" r="4" stroke-dasharray="1.8 1.4" stroke-width="1.1"/>${dot(5, 6, 1)}${dot(7.6, 6.6, 1)}${dot(6, 8.8, 1)}${dot(12.6, 12.6, 1)}${dot(14.8, 13.2, 1)}${dot(13.4, 15, 1)}${dot(16.8, 3.8, 1)}`,
+  statsKMeans: `<path d="M10 9.4V2.2M10 9.4 3.2 14.6M10 9.4l6.8 5.2" stroke-width=".9" stroke-dasharray="1.4 1.2" stroke-opacity=".7"/><path d="M3.6 6.2h3.2M5.2 4.6v3.2M13.2 6.2h3.2M14.8 4.6v3.2M8.4 15.6h3.2M10 14v3.2" stroke-width="1.4"/>${dot(3.2, 3.6, 0.8)}${dot(7.2, 8.2, 0.8)}${dot(17, 3.4, 0.8)}${dot(12.6, 8.4, 0.8)}${dot(7, 18, 0.8)}${dot(13.2, 17.6, 0.8)}`,
+  // Uzaktan algılama (docs/adr/0242): bands as colour circles and layers, a leaf, class maps, the matrix's diagonal, two dates, pixels coarse and fine.
+  bandComposite:
+    '<circle cx="7.3" cy="7.6" r="4.7" fill="currentColor" fill-opacity=".16" stroke-width="1.15"/><circle cx="12.7" cy="7.6" r="4.7" fill="currentColor" fill-opacity=".16" stroke-width="1.15"/><circle cx="10" cy="12.3" r="4.7" fill="currentColor" fill-opacity=".16" stroke-width="1.15"/>',
+  bandSplit:
+    '<path d="m10 1.9 6.8 2.9L10 7.7 3.2 4.8z" fill="currentColor" fill-opacity=".55" stroke-width="1.1"/><path d="m10 7.2 6.8 2.9-6.8 2.9-6.8-2.9z" fill="currentColor" fill-opacity=".3" stroke-width="1.1"/><path d="m10 12.5 6.8 2.9-6.8 2.9-6.8-2.9z" fill="currentColor" fill-opacity=".1" stroke-width="1.1"/>',
+  spectralIndex:
+    '<path d="M4.2 15.8C4.2 8.6 8.6 4 16 4c0 7.4-4.6 11.8-11.8 11.8z" fill="currentColor" fill-opacity=".22" stroke-width="1.3"/><path d="M4.2 15.8 11.6 8.4M8 12V9.2M10.4 9.6l2.4.2" stroke-width="1"/><path d="M2.6 17.4l1.6-1.6" stroke-width="1.3"/>',
+  classifySupervised:
+    '<rect x="5" y="5" width="12.5" height="12.5" rx="1" stroke-width="1.1"/><path d="M9.17 5v12.5M13.33 5v12.5M5 9.17h12.5M5 13.33h12.5" stroke-width=".7" stroke-opacity=".6"/><rect x="9.17" y="5" width="8.33" height="4.17" fill="currentColor" fill-opacity="0.55" stroke="none"/><rect x="13.33" y="9.17" width="4.17" height="4.17" fill="currentColor" fill-opacity="0.55" stroke="none"/><rect x="5" y="13.33" width="8.33" height="4.17" fill="currentColor" fill-opacity="0.25" stroke="none"/><rect x="2" y="2" width="8.4" height="8.4" rx=".6" stroke-dasharray="1.7 1.2" stroke-width="1.3"/>',
+  classifyUnsupervised:
+    '<rect x="2.5" y="2.5" width="15" height="15" rx="1" stroke-width="1.1"/><path d="M2.5 2.5h7.2c-.9 2.6.9 4.5-.8 7.3-1.9 1.2-4.2.6-6.4 1.9z" fill="currentColor" fill-opacity="0.55" stroke="none"/><path d="M17.5 9.4c-2.6.5-4.4-.9-7.6.4-1.1 2.8.6 5.1-.5 7.7h8.1z" fill="currentColor" fill-opacity="0.25" stroke="none"/><path d="M9.7 2.5c-.9 2.6.9 4.5-.8 7.3-1.9 1.2-4.2.6-6.4 1.9M17.5 9.4c-2.6.5-4.4-.9-7.6.4-1.1 2.8.6 5.1-.5 7.7" stroke-width=".9"/>',
+  accuracyMatrix:
+    '<rect x="2.5" y="2.5" width="15" height="15" rx="1" stroke-width="1.1"/><path d="M7.5 2.5v15M12.5 2.5v15M2.5 7.5h15M2.5 12.5h15" stroke-width=".8" stroke-opacity=".7"/><rect x="2.5" y="2.5" width="5" height="5" fill="currentColor" fill-opacity="0.6" stroke="none"/><rect x="7.5" y="7.5" width="5" height="5" fill="currentColor" fill-opacity="0.6" stroke="none"/><rect x="12.5" y="12.5" width="5" height="5" fill="currentColor" fill-opacity="0.6" stroke="none"/>',
+  changeDetect:
+    '<rect x="2.3" y="2.3" width="10" height="10" rx="1" stroke-dasharray="1.7 1.3" stroke-width="1.1"/><rect x="7.7" y="7.7" width="10" height="10" rx="1" fill="currentColor" fill-opacity=".14" stroke-width="1.3"/><path d="m12.7 10.3 2.9 4.9H9.8z" stroke-width="1.15" stroke-linejoin="round"/>',
+  pansharpen:
+    '<rect x="2.5" y="2.5" width="15" height="15" rx="1" stroke-width="1.1"/><rect x="2.5" y="2.5" width="7.5" height="7.5" fill="currentColor" fill-opacity="0.5" stroke="none"/><rect x="2.5" y="10" width="7.5" height="7.5" fill="currentColor" fill-opacity="0.2" stroke="none"/><path d="M10 2.5v15" stroke-width="1"/><path d="M13.75 2.5v15M10 6.25h7.5M10 10h7.5M10 13.75h7.5" stroke-width=".7" stroke-opacity=".7"/><rect x="10" y="2.5" width="3.75" height="3.75" fill="currentColor" fill-opacity="0.55" stroke="none"/><rect x="13.75" y="6.25" width="3.75" height="3.75" fill="currentColor" fill-opacity="0.4" stroke="none"/><rect x="10" y="10" width="3.75" height="3.75" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="13.75" y="13.75" width="3.75" height="3.75" fill="currentColor" fill-opacity="0.15" stroke="none"/>',
+  // Mesh ve çok boyutlu veri (docs/adr/0243): Mesh ekle a triangle mesh and a plus; Kesit a profile above a grid crossed by
+  // its line; Zaman serisi a line through dots over time; Mesh hesaplayıcı a mesh and an equals sign; the category a data
+  // cube in layers.
+  meshAdd:
+    '<path d="M2.5 12.5 5 3.5l3 6.5z" fill="currentColor" fill-opacity=".2" stroke-linejoin="round" stroke-width="1.2"/><path d="m5 3.5 7.5.5L8 10z" fill="currentColor" fill-opacity=".45" stroke-linejoin="round" stroke-width="1.2"/><path d="m2.5 12.5 5.5-2.5 2.5 3.5z" fill="currentColor" fill-opacity=".1" stroke-linejoin="round" stroke-width="1.2"/><path d="M16 12.5v6M13 15.5h6" stroke-width="1.6"/>',
+  multidimProfile:
+    '<path d="M2.5 8.5 6 6l3 2 3.5-4.5 5 3.5" stroke-width="1.4" stroke-linejoin="round"/><rect x="2.5" y="11" width="15" height="6.5" rx=".8" stroke-width="1.1"/><path d="M7.5 11v6.5M12.5 11v6.5M2.5 14.25h15" stroke-width=".8" stroke-opacity=".6"/><path d="M3.5 16.5 16.5 12.3" stroke-width="1.2" stroke-dasharray="1.6 1.2"/>',
+  timeSeries: `<path d="M2.5 2.5v15h15" stroke-width="1.1"/><path d="m5 13 3-4 3 2.5 3-6 3 3" stroke-width="1.2" stroke-linejoin="round"/>${dot(5, 13, 1.1)}${dot(8, 9, 1.1)}${dot(11, 11.5, 1.1)}${dot(14, 5.5, 1.1)}${dot(17, 8.5, 1.1)}`,
+  meshCalculator:
+    '<path d="M2.5 11.5 6 2.5l4 7z" fill="currentColor" fill-opacity=".3" stroke-linejoin="round" stroke-width="1.2"/><path d="m6 2.5 6.5 1.5-2.5 5.5" stroke-linejoin="round" stroke-width="1.2"/><path d="m2.5 11.5 7.5-2 2.5 5" stroke-linejoin="round" stroke-width="1.2"/><path d="M13 14h5M13 17h5" stroke-width="1.6"/>',
+  multidimData:
+    '<path d="M10 2.5 17 6l-7 3.5L3 6z" fill="currentColor" fill-opacity=".25" stroke="none"/><path d="M10 2.5 17 6v8.5L10 18l-7-3.5V6z" stroke-width="1.2" stroke-linejoin="round"/><path d="m3 6 7 3.5L17 6M10 9.5V18" stroke-width="1.1"/><path d="m3 8.8 7 3.5 7-3.5M3 11.6l7 3.5 7-3.5" stroke-width=".8" stroke-opacity=".6"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',
   cloud: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 9v4.6M7.9 11.6 10 13.7l2.1-2.1"/>',
   cloudUpload: '<path d="M6 15.5a3.5 3.5 0 0 1-.4-7A4.8 4.8 0 0 1 14.8 7a3.3 3.3 0 0 1-.3 8.5z"/><path d="M10 13.8V9.2M7.9 11.1 10 9l2.1 2.1"/>',

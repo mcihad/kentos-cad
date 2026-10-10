@@ -69,6 +69,8 @@ pub(super) enum Val<'d> {
     Source(&'d TableSource),
     /// A raster's look (§6.6, docs/adr/0204 §4).
     RasterStyle(&'d RasterStyle),
+    /// A raster's NetCDF variable and slice (§6.6, docs/adr/0243 §6).
+    Dataset(&'d kentos_contracts::RasterDataset),
     /// A point cloud's files (§6.6, docs/adr/0207 §3).
     CloudSources(&'d [CloudSource]),
     /// A point cloud's look (§6.6, docs/adr/0207 §5).
@@ -769,6 +771,10 @@ impl<'d> Encoder<'d> {
                 if let Some(o) = r.opacity {
                     f.push(("opacity", Val::Float(o)));
                 }
+                // Schema 38 (docs/adr/0243 §6).
+                if let Some(d) = &r.dataset {
+                    f.push(("dataset", Val::Dataset(d)));
+                }
             }
             Entity::PointCloud(e) => {
                 let refuse = |this: &mut Self, field: &'static str, words: &str| {
@@ -1175,10 +1181,11 @@ impl<'d> Encoder<'d> {
                     + usize::from(st.altitude.is_some())
                     + usize::from(st.z_factor.is_some())
                     + usize::from(st.nodata.is_some())
-                    + usize::from(st.resampling != RasterResampling::Bilinear);
+                    + usize::from(st.resampling != RasterResampling::Bilinear)
+                    + usize::from(st.edges.is_some());
                 self.open(n, true)?;
-                // max (3), min (3), ramp (4), bands (5), invert (6), nodata (6), render (6),
-                // azimuth (7), stretch (7), zFactor (7), altitude (8), resampling (10).
+                // max (3), min (3), ramp (4), bands (5), edges (5), invert (6), nodata (6),
+                // render (6), azimuth (7), stretch (7), zFactor (7), altitude (8), resampling (10).
                 let float =
                     |e: &mut Self, key: &'static str, v: Option<f64>| -> Result<(), KcadError> {
                         if let Some(x) = v {
@@ -1199,6 +1206,10 @@ impl<'d> Encoder<'d> {
                     self.w.uint(u64::from(b));
                 }
                 self.close();
+                if let Some(c) = &st.edges {
+                    self.key("edges");
+                    self.at(Seg::Name("edges"), |e| e.text(c))?;
+                }
                 if st.invert {
                     self.key("invert");
                     self.w.bool(true);
@@ -1216,6 +1227,61 @@ impl<'d> Encoder<'d> {
                 if st.resampling != RasterResampling::Bilinear {
                     self.key("resampling");
                     self.w.text(st.resampling.name());
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Dataset(d) => {
+                // dims (4), mesh (4), vector (6), variable (8), followTime (10).
+                let n = 1
+                    + usize::from(!d.dims.is_empty())
+                    + usize::from(d.mesh.is_some())
+                    + usize::from(d.vector.is_some())
+                    + usize::from(d.follow_time);
+                self.open(n, true)?;
+                if !d.dims.is_empty() {
+                    self.key("dims");
+                    self.open(d.dims.len(), false)?;
+                    for (i, dim) in d.dims.iter().enumerate() {
+                        self.at(Seg::Index(i), |e| {
+                            // name (4), time (4), index (5), units (5), values (6).
+                            e.open(
+                                3 + usize::from(dim.time) + usize::from(dim.units.is_some()),
+                                true,
+                            )?;
+                            e.key("name");
+                            e.at(Seg::Name("name"), |e| e.text(&dim.name))?;
+                            if dim.time {
+                                e.key("time");
+                                e.w.bool(true);
+                            }
+                            e.key("index");
+                            e.w.uint(u64::from(dim.index));
+                            if let Some(u) = &dim.units {
+                                e.key("units");
+                                e.at(Seg::Name("units"), |e| e.text(u))?;
+                            }
+                            e.key("values");
+                            e.at(Seg::Name("values"), |e| e.floats(&dim.values))?;
+                            e.close();
+                            Ok(())
+                        })?;
+                    }
+                    self.close();
+                }
+                if let Some(m) = &d.mesh {
+                    self.key("mesh");
+                    self.at(Seg::Name("mesh"), |e| e.text(m))?;
+                }
+                if let Some(v) = &d.vector {
+                    self.key("vector");
+                    self.at(Seg::Name("vector"), |e| e.text(v))?;
+                }
+                self.key("variable");
+                self.at(Seg::Name("variable"), |e| e.text(&d.variable))?;
+                if d.follow_time {
+                    self.key("followTime");
+                    self.w.bool(true);
                 }
                 self.close();
                 Ok(())

@@ -259,7 +259,9 @@ pub fn input_type_for(p: &ParamDef) -> Option<&'static str> {
         ParamKind::Choice { .. }
         | ParamKind::File { .. }
         | ParamKind::SaveFile { .. }
-        | ParamKind::Network { .. } => None,
+        | ParamKind::Network { .. }
+        | ParamKind::RasterValues { .. }
+        | ParamKind::RasterPairs { .. } => None,
     }
 }
 

@@ -60,14 +60,20 @@ fn is_empty_word(word: &str) -> bool {
     )
 }
 
-/// A rule's new value: a number or `boş`.
-fn new_value(word: &str, line: usize) -> Result<Option<f64>, String> {
+/// A rule's new value: a number, `boş`, or one of the caller's words (`kısıt`, docs/adr/0237 §6).
+fn new_value(word: &str, line: usize, words: &[(&str, f64)]) -> Result<Option<f64>, String> {
     if is_empty_word(word) {
         return Ok(None);
     }
-    number(word)
-        .map(Some)
-        .ok_or_else(|| format!("Tablonun {line}. kuralında “{word}” bir sayı ya da boş değil."))
+    if let Some(&(_, v)) = words.iter().find(|(w, _)| *w == word) {
+        return Ok(Some(v));
+    }
+    number(word).map(Some).ok_or_else(|| match words.first() {
+        Some((w, _)) => {
+            format!("Tablonun {line}. kuralında “{word}” bir sayı, boş ya da {w} değil.")
+        }
+        None => format!("Tablonun {line}. kuralında “{word}” bir sayı ya da boş değil."),
+    })
 }
 
 /// An end of a range: a number or `*`.
@@ -82,6 +88,11 @@ fn end(word: &str, line: usize) -> Result<Option<f64>, String> {
 
 /// The table's rules, in order.
 pub fn parse(text: &str) -> Result<Vec<Rule>, String> {
+    parse_with(text, &[])
+}
+
+/// The table's rules, a new value also one of `keywords` (each standing for its number).
+pub fn parse_with(text: &str, keywords: &[(&str, f64)]) -> Result<Vec<Rule>, String> {
     let mut rules = Vec::new();
     for (k, line) in text.split(['\n', ';']).enumerate() {
         let words: Vec<&str> = line.split_whitespace().collect();
@@ -89,13 +100,13 @@ pub fn parse(text: &str) -> Result<Vec<Rule>, String> {
         let rule = match words.as_slice() {
             [] => continue,
             [first, new] if is_empty_word(first) => Rule::Empty {
-                new: new_value(new, at)?,
+                new: new_value(new, at, keywords)?,
             },
             [x, new] => Rule::Value {
                 x: number(x).ok_or_else(|| {
                     format!("Tablonun {at}. kuralında “{x}” bir sayı ya da boş değil.")
                 })?,
-                new: new_value(new, at)?,
+                new: new_value(new, at, keywords)?,
             },
             [lo, hi, new] => {
                 let (lo, hi) = (end(lo, at)?, end(hi, at)?);
@@ -109,7 +120,7 @@ pub fn parse(text: &str) -> Result<Vec<Rule>, String> {
                 Rule::Range {
                     lo,
                     hi,
-                    new: new_value(new, at)?,
+                    new: new_value(new, at, keywords)?,
                 }
             }
             _ => {

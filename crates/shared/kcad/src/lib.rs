@@ -325,8 +325,15 @@ pub const SCHEMA_WITH_LABELS: u32 = 36;
 /// 36 or older, byte for byte; a reader of those refuses it rather than lose it.
 pub const SCHEMA_WITH_VARIABLES: u32 = 37;
 
+/// Document schema 38 (docs/specs/kcad-v2.md §6.6): schema 37 and
+/// multidimensional rasters (docs/adr/0243 §6): a raster's `dataset` (a NetCDF
+/// variable and its slice) and its look's `edges` (a mesh's lines). A writer
+/// writes it only when a raster has one of these: any other drawing stays 37
+/// or older, byte for byte; a reader of those refuses them rather than lose them.
+pub const SCHEMA_WITH_MULTIDIM: u32 = 38;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 36] = [
+pub const SCHEMAS: [u32; 37] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -363,6 +370,7 @@ pub const SCHEMAS: [u32; 36] = [
     SCHEMA_WITH_FILTERS,
     SCHEMA_WITH_LABELS,
     SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_MULTIDIM,
 ];
 
 /// The file a drawing is saved as.

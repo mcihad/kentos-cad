@@ -602,6 +602,13 @@ impl Reader<'_> {
                 let style = Json::parse(&self.string()?.unwrap_or_default())
                     .map_err(|e| format!("rasterin görünüşü okunamadı: {e}"))?;
                 let opacity = self.num()?;
+                let dataset = match self.string()? {
+                    Some(t) => Some(
+                        Json::parse(&t)
+                            .map_err(|e| format!("rasterin veri seti okunamadı: {e}"))?,
+                    ),
+                    None => None,
+                };
                 Shape::Raster {
                     affine,
                     width,
@@ -614,6 +621,7 @@ impl Reader<'_> {
                     srid,
                     style,
                     opacity: (!opacity.is_nan()).then_some(opacity),
+                    dataset,
                 }
             }
             // docs/adr/0207 §3: the bounds, the points, the files (their JSON text), the
@@ -1189,12 +1197,15 @@ impl Packer {
                 srid,
                 style,
                 opacity,
+                dataset,
             } => {
                 let sm = self.string(sample);
                 let a = self.maybe_string(asset.as_deref());
                 let f = self.maybe_string(file.as_deref());
                 let u = self.maybe_string(url.as_deref());
                 let st = self.string(&crate::api::json::to_string(style));
+                let ds = dataset.as_ref().map(crate::api::json::to_string);
+                let ds = self.maybe_string(ds.as_deref());
                 self.put(&[20.0]);
                 self.put(affine);
                 self.put(&[
@@ -1208,6 +1219,7 @@ impl Packer {
                     *srid,
                     st,
                     opacity.unwrap_or(f64::NAN),
+                    ds,
                 ]);
             }
             // docs/adr/0192, as the reader's kind 19 says.

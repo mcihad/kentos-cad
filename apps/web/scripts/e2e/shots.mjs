@@ -6626,6 +6626,378 @@ function distanceScenes() {
   ];
 }
 
+// Uygunluk analizi (docs/adr/0237) over the shared valley's elevation model, three criteria made from it (the slope, the
+// distance from the road, the land cover), the road and the landslides on the steep sides
+// (fixtures/interaction/v1/suitability.kcad, scripts/fixtures/suitability_scene.py): Bulanık üyelik's window, Ağırlıklı
+// çakıştırma's window with its influences and class tables and its result, İkili karşılaştırma's weights and ROC's curve
+// after their runs. The desktop's are `tools_screens`' uyg-* (apps/desktop/src/suitability_scenes.rs), at the same
+// places with the same values.
+const SUITABILITY_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/suitability.kcad', import.meta.url), 'utf8');
+const SUITABILITY_FILES = Object.fromEntries(
+  ['egim.tif', 'yol.tif', 'ortu.tif'].map((f) => [f, readFileSync(new URL(`../../../../fixtures/interaction/v1/suitability/${f}`, import.meta.url)).toString('base64')]),
+);
+SCENES.suitability = suitabilityScenes();
+
+function suitabilityScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  /** The valley with the criteria, the road and the landslides open, the criteria selected, the CBS ribbon's Raster on. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const file = (b64, name) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
+      rasterService().setFile('rasters/dem.tif', file(${JSON.stringify(RASTER_FILES['dem.tif'])}, 'dem.tif'));
+      const files = ${JSON.stringify(SUITABILITY_FILES)};
+      for (const [name, b64] of Object.entries(files)) rasterService().setFile('suitability/' + name, file(b64, name));
+      if (!(await k.files.load(${JSON.stringify(SUITABILITY_SCENE)}, null))) throw new Error('suitability.kcad did not load');
+      k.selection.set([26, 27, 28]);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    const b = VALLEY;
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** `tool`'s window with `values`; `end`: its form scrolled to its end (the tables). */
+  const windowOf = (tool, values, end) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    if (end) await ui.eval(`(() => { const m = document.querySelector('.dialog--ptool .ptool__main'); m.scrollTop = m.scrollHeight; })()`);
+    await tiles(ui);
+  };
+  /** Runs `tool` with `values` to its end; its window closed unless `keep`. */
+  const ranIn = (tool, values, keep) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await ui.sleep(300);
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+    if (!keep) await ui.escapeAll(2);
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const SELECTED = { scope: 'selection' };
+  const OVERLAY = {
+    input: SELECTED,
+    influence: { Eğim: 45, 'Yola uzaklık': 30, 'Arazi örtüsü': 25 },
+    classes: {
+      Eğim: '* 10 9; 10 20 7; 20 35 4; 35 60 2; 60 * kısıt',
+      'Yola uzaklık': '* 50 9; 50 150 6; 150 300 3; 300 * 1',
+      'Arazi örtüsü': '1 2; 2 6; 3 9; 4 kısıt; 5 kısıt',
+    },
+  };
+  const PAIRWISE = {
+    input: SELECTED,
+    comparisons: [
+      ['Eğim', 'Yola uzaklık', 3],
+      ['Eğim', 'Arazi örtüsü', 5],
+      ['Yola uzaklık', 'Arazi örtüsü', 2],
+    ],
+    write: false,
+  };
+  return [
+    { id: 'uyg-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'uyg-uyelik', open: windowOf('suitability.fuzzyMembership', { input: L('egim'), low: 30, high: 5 }), close },
+    { id: 'uyg-cakistirma', open: windowOf('suitability.weightedOverlay', OVERLAY, true), close },
+    { id: 'uyg-cakistirma-cizim', open: ranIn('suitability.weightedOverlay', OVERLAY, false), close },
+    { id: 'uyg-ahp', open: ranIn('suitability.pairwise', PAIRWISE, true), close },
+    { id: 'uyg-roc', open: ranIn('suitability.roc', { input: L('egim'), presence: L('heyelan') }, true), close },
+  ];
+}
+
+// Mekânsal istatistik (docs/adr/0238) over a district's roads, blocks with a value per m² and traffic accidents by kind
+// (fixtures/interaction/v1/spatial-stats.kcad, scripts/fixtures/spatial_stats_scene.py): the CBS ribbon's Analiz with its
+// panel, Yön dağılımı's window and the ellipses with the mean centres by kind, Moran I's and En yakın komşu's tables after
+// their runs, the blocks' hot and cold spots and the accidents' DBSCAN clusters. The desktop's are `tools_screens`' ist-*
+// (apps/desktop/src/stats_scenes.rs), at the same places with the same values.
+const STATS_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/spatial-stats.kcad', import.meta.url), 'utf8');
+SCENES.stats = statsScenes();
+
+function statsScenes() {
+  const DISTRICT = [486960, 4419960, 488240, 4420940];
+  /** The district open, the CBS ribbon's Analiz on. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(STATS_SCENE)}, null))) throw new Error('spatial-stats.kcad did not load');
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'analysis', type: 'gis' });
+    const b = DISTRICT;
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  const settle = async (ui) => {
+    await ui.sleep(500);
+    await ui.eval(`window.kentos.view.requestRender()`);
+    await ui.sleep(300);
+  };
+  /** `tool`'s window with `values`. */
+  const windowOf = (tool, values) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await settle(ui);
+  };
+  /** Runs each [tool, values] to its end; the last window kept when `keep` (its table scrolled into view by the run). */
+  const ranIn = (runs, keep) => async (ui) => {
+    await opened(ui);
+    for (let i = 0; i < runs.length; i++) {
+      const [tool, values] = runs[i];
+      await ui.eval(openTool(tool, values));
+      await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+      await ui.sleep(300);
+      await ui.clickSel('.ptool__run');
+      await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+      if (!(keep && i === runs.length - 1)) await ui.escapeAll(2);
+    }
+    await ui.move(2, 2);
+    await settle(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const ELLIPSES = { input: L('kaza'), groupField: 'Tür' };
+  const MORAN = { input: L('ada'), valueField: 'Değer' };
+  const HOT = { input: L('ada'), valueField: 'Değer', concept: 'nearest', neighbors: 4 };
+  const CLUSTERS = { input: L('kaza'), radius: 30, minPoints: 5 };
+  return [
+    { id: 'ist-serit', open: async (ui) => (await opened(ui), await settle(ui)), close },
+    { id: 'ist-elips', open: windowOf('stats.directionalDistribution', ELLIPSES), close },
+    { id: 'ist-elips-cizim', open: ranIn([['stats.directionalDistribution', ELLIPSES], ['stats.meanCenter', ELLIPSES]], false), close },
+    { id: 'ist-moran', open: ranIn([['stats.moransI', MORAN]], true), close },
+    { id: 'ist-komsu', open: ranIn([['stats.nearestNeighbor', { input: L('kaza') }]], true), close },
+    { id: 'ist-sicak-cizim', open: ranIn([['stats.hotSpot', HOT]], false), close },
+    { id: 'ist-dbscan-cizim', open: ranIn([['stats.dbscan', CLUSTERS]], false), close },
+  ];
+}
+
+// Uzaktan algılama (docs/adr/0242) over a synthetic satellite image of the shared valley: four bands made from its land
+// cover and its slopes' light, the same two years on (new houses north of the road, a felled stand), its coarse
+// multispectral and fine panchromatic pair, training areas and reference points (fixtures/interaction/v1/remote.kcad,
+// scripts/fixtures/remote_scene.py): the CBS ribbon's Raster with its panel, Spektral indis' window and its NDVI,
+// Denetimli sınıflandırma's window and its classes, Doğruluk analizi's matrix, the near infrared's change and the
+// pansharpened image. The desktop's are `tools_screens`' ua-* (apps/desktop/src/remote_scenes.rs), at the same places
+// with the same values.
+const REMOTE_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/remote.kcad', import.meta.url), 'utf8');
+const REMOTE_FILES = Object.fromEntries(
+  ['goruntu.tif', 'sonraki.tif', 'cok-bantli.tif', 'pankromatik.tif'].map((f) => [f, readFileSync(new URL(`../../../../fixtures/interaction/v1/remote/${f}`, import.meta.url)).toString('base64')]),
+);
+SCENES.remote = remoteScenes();
+
+function remoteScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  // Fields in the valley's north, their furrows finer than the multispectral image's cells.
+  const FIELDS = [487640, 4420500, 487760, 4420580];
+  /** The valley's image, its pair, the training areas and the reference points open, the CBS ribbon's Raster on. */
+  const opened = async (ui, b = VALLEY) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const file = (b64, name) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
+      const files = ${JSON.stringify(REMOTE_FILES)};
+      for (const [name, b64] of Object.entries(files)) rasterService().setFile('remote/' + name, file(b64, name));
+      if (!(await k.files.load(${JSON.stringify(REMOTE_SCENE)}, null))) throw new Error('remote.kcad did not load');
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** `tool`'s window with `values`. */
+  const windowOf = (tool, values) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  /** Runs the tools one after another to their ends, the last's window kept when `keep` (its form scrolled to its end). */
+  const ranIn = (runs, keep, b) => async (ui) => {
+    await opened(ui, b);
+    for (const [k, [tool, values]] of runs.entries()) {
+      await ui.eval(openTool(tool, values));
+      await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+      await ui.sleep(300);
+      await ui.clickSel('.ptool__run');
+      await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+      if (keep && k === runs.length - 1) {
+        await ui.eval(`(() => { const m = document.querySelector('.dialog--ptool .ptool__main'); m.scrollTop = m.scrollHeight; })()`);
+      } else {
+        await ui.escapeAll(2);
+      }
+    }
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const NDVI = { input: L('goruntu'), index: 'ndvi' };
+  const SUPERVISED = { input: L('goruntu'), training: L('egitim'), classField: 'Sınıf' };
+  const ACCURACY = { input: L('islem-denetimli-siniflandirma'), reference: L('referans'), referenceField: 'Sınıf' };
+  const CHANGE = { input: L('goruntu'), after: L('sonraki'), band: 4 };
+  const FUSION = { input: L('cok-bantli'), pan: L('pankromatik') };
+  return [
+    { id: 'ua-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'ua-indis', open: windowOf('remote.index', NDVI), close },
+    { id: 'ua-indis-cizim', open: ranIn([['remote.index', NDVI]], false), close },
+    { id: 'ua-denetimli', open: windowOf('remote.supervised', SUPERVISED), close },
+    { id: 'ua-denetimli-cizim', open: ranIn([['remote.supervised', SUPERVISED]], false), close },
+    { id: 'ua-dogruluk', open: ranIn([['remote.supervised', SUPERVISED], ['remote.accuracy', ACCURACY]], true), close },
+    { id: 'ua-degisim-cizim', open: ranIn([['remote.change', CHANGE]], false), close },
+    { id: 'ua-birlestirme-cizim', open: ranIn([['remote.pansharpen', FUSION]], false, FIELDS), close },
+  ];
+}
+
+// Mesh ve çok boyutlu veri (docs/adr/0243) over the shared valley: its hourly rain as a NetCDF grid and its stream's flood
+// as a UGRID mesh, both following the time slider, a section across the stream and three gauges
+// (fixtures/interaction/v1/multidim.kcad, scripts/fixtures/multidim_scene.py): the CBS ribbon's Raster with Mesh ekle,
+// Raster ekle's NetCDF window, Mesh ekle's window, the flood at a later step of the slider, Raster stili's Veri seti, Kesit's
+// table, Zaman serisi's table and Mesh hesaplayıcı's largest depth. The desktop's are `tools_screens`' md-*
+// (apps/desktop/src/multidim_scenes.rs), at the same places with the same values.
+const MULTIDIM_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/multidim.kcad', import.meta.url), 'utf8');
+const MULTIDIM_FILES = Object.fromEntries(
+  ['yagis.nc', 'taskin.nc'].map((f) => [f, readFileSync(new URL(`../../../../fixtures/interaction/v1/multidim/${f}`, import.meta.url)).toString('base64')]),
+);
+SCENES.multidim = multidimScenes();
+
+function multidimScenes() {
+  const VALLEY = [487200, 4420081.6, 487968, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  /** The valley's rain and flood, the section and the gauges open, the CBS ribbon's Raster on. */
+  const opened = async (ui, hide = []) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const file = (b64, name) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
+      const files = ${JSON.stringify(MULTIDIM_FILES)};
+      for (const [name, b64] of Object.entries(files)) rasterService().setFile('multidim/' + name, file(b64, name));
+      if (!(await k.files.load(${JSON.stringify(MULTIDIM_SCENE)}, null))) throw new Error('multidim.kcad did not load');
+      for (const id of ${JSON.stringify(hide)}) k.doc.layers.setVisible(id, false);
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${VALLEY[0]}, minY: ${VALLEY[1]}, maxX: ${VALLEY[2]}, maxY: ${VALLEY[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** A window of the multidim dialog opened with the scene's file `name`. */
+  const fileWindow = (fn, name, after = '') => async (ui) => {
+    await opened(ui);
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const m = await import('/src/ui/raster/MultidimDialog.ts');
+      const b64 = ${JSON.stringify(MULTIDIM_FILES)}[${JSON.stringify(name)}];
+      const f = new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], ${JSON.stringify(name)});
+      m.${fn}(k, ${fn === 'openMeshFiles' ? '[f]' : 'f'});
+    })()`);
+    await ui.waitFor(`!!document.querySelector('.dialog--io [data-key="variable"]')`, 10000);
+    if (after) await ui.eval(after);
+    await ui.sleep(800);
+    await tiles(ui);
+  };
+  const ranIn = (runs, keep, hide = []) => async (ui) => {
+    await opened(ui, hide);
+    for (const [k, [tool, values]] of runs.entries()) {
+      await ui.eval(openTool(tool, values));
+      await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+      await ui.sleep(300);
+      await ui.clickSel('.ptool__run');
+      await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind && document.querySelector('.ptool__status')?.dataset.kind !== 'running'`, 60000);
+      const status = await ui.eval(`document.querySelector('.ptool__status')?.dataset.kind + ': ' + document.querySelector('.ptool__status')?.textContent`);
+      if (!String(status).startsWith('ok')) {
+        const why = await ui.eval(`[...document.querySelectorAll('.dialog--ptool [class*="issue"], .dialog--ptool [class*="error"], .dialog--ptool [aria-invalid="true"]')].map((e) => (e.getAttribute('aria-label') || '') + ' ' + e.textContent).join(' | ')`);
+        throw new Error(`${tool}: ${status} — ${why}`);
+      }
+      if (keep && k === runs.length - 1) {
+        await ui.eval(`(() => { const m = document.querySelector('.dialog--ptool .ptool__main'); m.scrollTop = m.scrollHeight; })()`);
+      } else {
+        await ui.escapeAll(2);
+      }
+    }
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(`(() => { const t = window.kentos.time; if (t.open.value) t.close(); })()`);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const PROFILE = { input: L('taskin'), lines: L('kesit'), step: 10, draw: true };
+  const SERIES = { input: L('taskin'), points: L('istasyonlar') };
+  const LARGEST = { input: L('taskin'), expression: 'derinlik', summary: 'max', name: 'En büyük derinlik' };
+  // Su derinliği (the list's second), its step and following the slider, the mesh's lines on.
+  const DEPTH = `(() => {
+    const s = document.querySelector('.dialog--io [data-key="variable"]');
+    s.value = '1';
+    s.dispatchEvent(new Event('change'));
+    setTimeout(() => document.querySelector('.dialog--io [data-key="edges"] input, .dialog--io input[data-key="edges"]')?.click(), 300);
+  })()`;
+  return [
+    { id: 'md-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'md-ekle', open: fileWindow('openNetcdf', 'yagis.nc'), close },
+    { id: 'md-mesh-ekle', open: fileWindow('openMeshFiles', 'taskin.nc', DEPTH), close },
+    {
+      id: 'md-zaman',
+      open: async (ui) => {
+        await opened(ui);
+        await ui.eval(`(() => { const t = window.kentos.time; t.show(); t.go(8); })()`);
+        await ui.sleep(400);
+        await tiles(ui);
+      },
+      close,
+    },
+    {
+      id: 'md-stil',
+      open: async (ui) => {
+        await opened(ui);
+        await ui.eval(`(() => { const k = window.kentos; const r = [...k.doc.all()].find((e) => e.kind === 'raster' && e.layerId === 'taskin'); k.selection.set([r.id]); })()`);
+        await ui.eval(`window.kentos.commands.execute('raster.style')`);
+        await ui.waitFor(`!!document.querySelector('.raster-ramps')`);
+        await tiles(ui);
+      },
+      close,
+    },
+    { id: 'md-kesit', open: ranIn([['multidim.profile', PROFILE]], true), close },
+    { id: 'md-seri', open: ranIn([['multidim.series', SERIES]], true), close },
+    { id: 'md-hesap-cizim', open: ranIn([['multidim.meshCalculator', LARGEST]], false, ['yagis']), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

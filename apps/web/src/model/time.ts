@@ -44,6 +44,14 @@ export function readTime(text: string): TimeRead {
 export const writeTime = op<(t: number, dateOnly: boolean) => string>('timeWrite');
 /** A moment as the interface shows it: `GG.AA.YYYY`, with the hour for a step under a day. */
 export const showTime = op<(t: number, unit: TimeUnit) => string>('timeShow');
+const coreShowWindow = op<(a: number, b: number, unit: TimeUnit) => string>('timeShowWindow');
+const coreShowEnds = op<(first: number, last: number, unit: TimeUnit) => [string, string]>('timeShowEnds');
+/** What the slider's position shows: an instant's moment, or a period's two (its date once when inside one day). */
+export function showWindow(w: TimeWindow, unit: TimeUnit): string {
+  return w.kind === 'instant' ? coreShowWindow(w.a, Number.NaN, unit) : coreShowWindow(w.a, w.b, unit);
+}
+/** The slider's ends: under a day's step their clocks within one day, else their dates; a day or more as shown. */
+export const showEnds = coreShowEnds;
 /** A moment rounded down to its unit. */
 export const floorTime = op<(t: number, unit: TimeUnit) => number>('timeFloor');
 

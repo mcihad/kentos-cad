@@ -127,6 +127,13 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
         ParamKind::File { .. } => file(def, env),
         ParamKind::SaveFile { suffix, .. } => save_file(def, suffix, env),
         ParamKind::Network { .. } => network(def, env),
+        ParamKind::RasterValues {
+            of,
+            number,
+            placeholder,
+            ..
+        } => raster_values(def, of, *number, placeholder.as_deref(), env),
+        ParamKind::RasterPairs { of } => raster_pairs(def, of, env),
         ParamKind::Expression {
             of, placeholder, ..
         } => expression(def, of.as_deref(), placeholder.as_deref(), env),
@@ -993,4 +1000,153 @@ fn menu_face<'a>(text: String) -> Element<'a, Message> {
     )
     .padding([3, 6])
     .into()
+}
+
+/// The input's raster names; none when they are not known (a model's step, whose input has no summary).
+fn rasters_of(env: &Env<'_, '_>, of: &str) -> Option<Vec<String>> {
+    env.window.inputs.get(of).map(|s| s.rasters.clone())
+}
+
+/// A row's name: faint when the input does not hold it.
+fn raster_name<'a>(name: String, listed: bool) -> Element<'a, Message> {
+    let t = label::body(name);
+    container(if listed {
+        t.style(style::text::muted)
+    } else {
+        t.style(style::text::faint)
+    })
+    .width(Length::FillPortion(2))
+    .clip(true)
+    .into()
+}
+
+/// A row's × for a name the input does not hold.
+fn remove_row<'a>(on_press: Message) -> Element<'a, Message> {
+    tip(
+        button(icon(Icon::Close).size(12.0))
+            .padding(4)
+            .style(style::button::ghost)
+            .on_press(on_press),
+        Tip::new(kentos_processing::raster_rows::REMOVE)
+            .body(kentos_processing::raster_rows::MISSING),
+        iced::widget::tooltip::Position::Top,
+    )
+}
+
+/// A value for each raster (docs/adr/0237 §9; the web's `rasterValuesField`): a row a raster, its name and its
+/// field; the names the input does not hold faint with ×; in a model's step a name can be added.
+fn raster_values<'a>(
+    def: &'a ParamDef,
+    of: &str,
+    number: bool,
+    placeholder: Option<&'a str>,
+    env: &Env<'a, '_>,
+) -> Element<'a, Message> {
+    use kentos_processing::raster_rows::{
+        ADD, ADD_BUTTON, values_view, with_name, with_value, without,
+    };
+    let ev = env.send;
+    let value = env.value(&def.name).clone();
+    let view = values_view(&value, rasters_of(env, of).as_deref());
+    let mut col = Column::new().spacing(4);
+    for r in view.rows {
+        let (name, raster, current) = (def.name.clone(), r.name.clone(), value.clone());
+        let invalid = number
+            && !r.text.trim().is_empty()
+            && r.text
+                .trim()
+                .replace(',', ".")
+                .parse::<f64>()
+                .map_or(true, |n| !n.is_finite());
+        let mut field = input(placeholder.unwrap_or(""), &r.text, invalid, ev).on_input(move |t| {
+            ev(Event::Value(
+                name.clone(),
+                with_value(&current, number, &raster, &t),
+            ))
+        });
+        if number {
+            field = field.font(typography::mono()).align_x(Alignment::End);
+        }
+        let mut line = Row::new()
+            .push(raster_name(r.name.clone(), r.listed))
+            .push(container(focus_ring(field.width(Fill))).width(Length::FillPortion(3)))
+            .spacing(6)
+            .align_y(Center);
+        if !r.listed {
+            line = line.push(remove_row(ev(Event::Value(
+                def.name.clone(),
+                without(&value, &r.name),
+            ))));
+        }
+        col = col.push(line);
+    }
+    if let Some(note) = view.note {
+        col = col.push(label::caption(note).style(style::text::muted));
+    }
+    if view.adds {
+        let draft = env
+            .window
+            .drafts
+            .get(&def.name)
+            .cloned()
+            .unwrap_or_default();
+        let name = def.name.clone();
+        let field =
+            input(ADD, &draft, false, ev).on_input(move |t| ev(Event::Draft(name.clone(), t)));
+        let add = button(label::body(ADD_BUTTON))
+            .padding([5, 10])
+            .style(style::button::secondary)
+            .on_press_maybe((!draft.trim().is_empty()).then(|| {
+                ev(Event::Value(
+                    def.name.clone(),
+                    with_name(&value, number, &draft),
+                ))
+            }));
+        col = col.push(
+            row![focus_ring(field.width(Fill)), add]
+                .spacing(6)
+                .align_y(Center),
+        );
+    }
+    col.into()
+}
+
+/// A comparison for each pair of rasters (İkili karşılaştırma, docs/adr/0237 §9; the web's `rasterPairsField`): a
+/// row a pair, its list of 17.
+fn raster_pairs<'a>(def: &'a ParamDef, of: &str, env: &Env<'a, '_>) -> Element<'a, Message> {
+    use kentos_processing::raster_rows::{PAIR_VALUES, pair_label, pairs_view, with_pair};
+    let ev = env.send;
+    let value = env.value(&def.name).clone();
+    let (rows, note) = pairs_view(&value, rasters_of(env, of).as_deref());
+    let mut col = Column::new().spacing(4);
+    for r in rows {
+        let at = PAIR_VALUES.iter().position(|v| f64::from(*v) == r.value);
+        let (name, a, b, current) = (def.name.clone(), r.a.clone(), r.b.clone(), value.clone());
+        let pick = Select::new(
+            PAIR_VALUES
+                .iter()
+                .map(|v| Choice::new(pair_label(&r.a, &r.b, *v))),
+            at,
+            move |i| {
+                let v = PAIR_VALUES.get(i).copied().unwrap_or(1);
+                ev(Event::Value(name.clone(), with_pair(&current, &a, &b, v)))
+            },
+        );
+        let mut line = Row::new()
+            .push(raster_name(format!("{} — {}", r.a, r.b), r.listed))
+            .push(container(pick).width(Length::FillPortion(3)))
+            .spacing(6)
+            .align_y(Center);
+        if !r.listed {
+            line = line.push(remove_row(ev(Event::Value(
+                def.name.clone(),
+                with_pair(&value, &r.a, &r.b, 1),
+            ))));
+        }
+        col = col.push(line);
+    }
+    if let Some(note) = note {
+        col = col.push(label::caption(note).style(style::text::muted));
+    }
+    col.into()
 }

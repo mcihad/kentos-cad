@@ -1,7 +1,7 @@
 import { STOPPED, type AnalysisLines, type AnalysisResult } from '../../../io/rasterAnalysisProtocol';
 import type { NewEntity, RasterEntity, RasterSample, RasterStyle } from '../../../model/entities';
 import type { System } from '../../../model/geom/crsTransform';
-import { rasterRunHost, type RasterRunHost } from '../../rasterHost';
+import { rasterPart, rasterRunHost, type RasterRunHost } from '../../rasterHost';
 import type { Feedback, FeatureSet, RunContext, RunResult, Shown, TargetLayer } from '../../types';
 
 /**
@@ -74,7 +74,7 @@ export function stemOf(r: Pick<RasterEntity, 'file' | 'url' | 'asset'>): string 
   const full = r.file ?? r.url ?? r.asset ?? '';
   const base = (full.split(/[/\\]/).pop() ?? full).split(/[?#]/)[0];
   const lower = base.toLowerCase();
-  const ext = ['.copc.laz', '.laz', '.las', '.xyz', '.pts', '.txt', '.csv', '.tif', '.tiff', '.png', '.jpg', '.jpeg'].find((e) => lower.endsWith(e));
+  const ext = ['.copc.laz', '.laz', '.las', '.xyz', '.pts', '.txt', '.csv', '.tif', '.tiff', '.png', '.jpg', '.jpeg', '.nc'].find((e) => lower.endsWith(e));
   const stem = ext ? base.slice(0, base.length - ext.length) : base;
   return stem || 'raster';
 }
@@ -116,7 +116,7 @@ async function analyze(r: RasterEntity, spec: string, feedback: Feedback, label:
         return feedback.canceled;
       },
     };
-    return { ok: true, host, result: await host.analyze(blob, spec, watch) };
+    return { ok: true, host, result: await host.analyze(blob, spec, watch, rasterPart(r)) };
   } catch (e) {
     const why = e instanceof Error ? e.message : String(e);
     return { ok: false, end: why === STOPPED ? {} : { refused: why } };

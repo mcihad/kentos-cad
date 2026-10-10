@@ -62,8 +62,10 @@ fn raster(fields: impl FnOnce(&mut RasterFields)) -> Entity {
             z_factor: None,
             nodata: None,
             resampling: RasterResampling::Bilinear,
+            edges: None,
         },
         opacity: None,
+        dataset: None,
     };
     fields(&mut raster);
     Entity::Raster(RasterEntity {
@@ -123,6 +125,7 @@ fn only_a_drawing_with_a_raster_is_schema_29() {
             z_factor: Some(2.0),
             nodata: Some(-9999.0),
             resampling: RasterResampling::Nearest,
+            edges: None,
         };
         r.opacity = Some(0.5);
     });

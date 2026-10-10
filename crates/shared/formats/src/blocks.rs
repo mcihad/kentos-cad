@@ -654,6 +654,9 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 style: kentos_geometry_core::api::json::Json::parse(&f.style.to_json_text())
                     .unwrap_or(kentos_geometry_core::api::json::Json::Null),
                 opacity: f.opacity,
+                dataset: f.dataset.as_ref().and_then(|d| {
+                    kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
+                }),
             }
         }
         // Its attributes show as texts, which these formats leave out of a block.

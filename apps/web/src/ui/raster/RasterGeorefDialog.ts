@@ -3,7 +3,7 @@ import type { EditOperation } from '../../contracts/generated/EditOperation';
 import type { EntityGeometry as EditGeometry } from '../../contracts/generated/EntityGeometry';
 import { fixed } from '../../core/displayNumber';
 import type { RasterEntity } from '../../model/entities';
-import { cleanRasterStyle } from '../../model/rasterRules';
+import { rasterKey, cleanRasterStyle } from '../../model/rasterRules';
 import { hasRaster } from '../../product/entitiesEdit';
 import { sha256Hex, toBase64 } from '../../product/sheet/store';
 import { rasterService } from '../../render/rasterService';
@@ -105,8 +105,8 @@ function pixelOf(r: RasterEntity, p: { x: number; y: number }): { x: number; y: 
 
 /** A raster's scene key and an embedded one's bytes. */
 function sourceOf(ctx: AppContext, r: RasterEntity): { key: string; url: string | null } {
-  if (r.asset) return { key: `asset:${r.asset}`, url: (ctx.doc.styles.value.items.find((it) => it.id === r.asset) as { data?: string } | undefined)?.data ?? null };
-  return { key: `file:${r.file ?? ''}`, url: null };
+  if (r.asset) return { key: rasterKey(r), url: (ctx.doc.styles.value.items.find((it) => it.id === r.asset) as { data?: string } | undefined)?.data ?? null };
+  return { key: rasterKey(r), url: null };
 }
 
 class RasterGeorefDialog {

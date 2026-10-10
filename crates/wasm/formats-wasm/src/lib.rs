@@ -16,6 +16,7 @@ use kentos_contracts::{
 };
 use wasm_bindgen::prelude::*;
 
+pub mod multidim;
 pub mod raster;
 
 fn bad_input(what: &str, e: &serde_json::Error) -> JsError {

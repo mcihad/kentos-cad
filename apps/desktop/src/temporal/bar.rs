@@ -2,7 +2,8 @@
 //! `ui/time/TimeBar.ts`): Başa, Geri, Oynat/Durdur, İleri, Sona; what the
 //! position shows; the slider between its ends' dates; Adım (a number and a
 //! unit), Anlık | Aralık, Hız, Döngü; Kapat. Narrow, the ends' dates go
-//! first, then the words beside the fields.
+//! first, then the words beside the fields, then Hız and Döngü, as far as the
+//! slider needs to keep its room: what the bar holds is measured.
 
 use iced::widget::{button, container, row, slider, text_input};
 use iced::{Background, Border, Center, Element, Fill, Length, Theme};
@@ -19,6 +20,61 @@ use crate::app::{App, Message};
 
 /// The bar's height, logical pixels at the interface's type scale.
 const HEIGHT: f32 = 36.0;
+
+/// An icon button's width (a 16-pixel icon, 6 on each side).
+const BUTTON: f32 = 28.0;
+
+/// The room the slider keeps before something else gives way (the web's `.timebar__range`).
+const TRACK_MIN: f32 = 80.0;
+
+/// What the bar shows besides what it always does: the ends' dates, the words
+/// beside the fields, Hız and Döngü.
+struct Shown {
+    ends: bool,
+    words: bool,
+    speed: bool,
+    looping: bool,
+}
+
+/// What a bar `width` wide shows (the web's `TimeBar.fit`): the ends' dates
+/// give way first, then the words, then Hız, then Döngü, each as soon as the
+/// slider would have less than [`TRACK_MIN`]; the texts measured as drawn.
+fn shown(width: f32, when: &str, ends: [&str; 2]) -> Shown {
+    let measured = typography::measured_width;
+    let (body, caption) = (typography::body(), typography::caption());
+    let gap = 10.0;
+    let kind = measured("Anlık", body, false) + measured("Aralık", body, false) + 44.0;
+    // Always there: the padding, Başa … Sona, the position's text, Adım's number and unit,
+    // Anlık | Aralık and Kapat, the slider's row, and the gaps between the seven.
+    let fixed = 20.0
+        + (5.0 * BUTTON + 8.0)
+        + (measured(when, body, true) + 8.0)
+        + typography::scaled(52.0)
+        + typography::scaled(86.0)
+        + kind
+        + BUTTON
+        + 6.0 * gap;
+    let mut room = width - fixed;
+    let mut take = |w: f32| {
+        let fits = room - w >= TRACK_MIN;
+        if fits {
+            room -= w;
+        }
+        fits
+    };
+    let looping = take(BUTTON + gap);
+    let speed = looping && take(typography::scaled(70.0) + gap);
+    let words = speed
+        && take(measured("Adım", caption, false) + measured("Hız", caption, false) + 2.0 * gap);
+    let ends =
+        words && take(measured(ends[0], caption, false) + measured(ends[1], caption, false) + 16.0);
+    Shown {
+        ends,
+        words,
+        speed,
+        looping,
+    }
+}
 
 /// Anlık or Aralık, as the segmented control writes them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -42,7 +98,7 @@ fn speed_words(v: f64) -> String {
 }
 
 impl App {
-    /// The bar, while the slider is open; `width` the drawing area's, for what gives way.
+    /// The bar, while the slider is open; `width` the drawing area's (the bar's own), for what gives way.
     pub(crate) fn time_bar(&self, width: f32) -> Option<Element<'_, Message>> {
         let s = &self.time.slider;
         if !s.open {
@@ -92,18 +148,15 @@ impl App {
         })
         .step(1.0)
         .width(Fill);
-        // Narrow, the ends' dates go first, then the words beside the fields (the web's media rules).
-        let wide = width >= 1280.0;
-        let words = width >= 1180.0;
+        let [first, last] = s.ends();
+        let show = shown(width, &s.label(), [&first, &last]);
         let mut middle = row![].spacing(8).align_y(Center).width(Fill);
-        if wide {
-            middle = middle
-                .push(label::caption(s.position_text(0)).style(kentos_ui::style::text::muted));
+        if show.ends {
+            middle = middle.push(label::caption(first).style(kentos_ui::style::text::muted));
         }
         middle = middle.push(track);
-        if wide {
-            middle = middle
-                .push(label::caption(s.position_text(s.last)).style(kentos_ui::style::text::muted));
+        if show.ends {
+            middle = middle.push(label::caption(last).style(kentos_ui::style::text::muted));
         }
         let count = text_input("", &s.count)
             .on_input(|t| msg(Event::Count(t)))
@@ -140,19 +193,20 @@ impl App {
             iced::widget::tooltip::Position::Top,
         );
         let mut line = row![nav, when, middle].spacing(10).align_y(Center);
-        if words {
+        if show.words {
             line = line.push(label::caption("Adım"));
         }
         line = line.push(count).push(unit).push(kind);
-        if words {
+        if show.words {
             line = line.push(label::caption("Hız"));
         }
-        line = line.push(speed).push(loop_button).push(action(
-            "close",
-            "Zaman sürgüsünü kapat",
-            "",
-            Event::Close,
-        ));
+        if show.speed {
+            line = line.push(speed);
+        }
+        if show.looping {
+            line = line.push(loop_button);
+        }
+        line = line.push(action("close", "Zaman sürgüsünü kapat", "", Event::Close));
         Some(
             container(line)
                 .height(typography::scaled(HEIGHT))

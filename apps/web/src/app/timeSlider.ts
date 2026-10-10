@@ -4,7 +4,7 @@
 
 import { Signal } from '../core/signal';
 import type { CadDocument } from '../model/document';
-import { autoStep, showTime, timePosition, timePositions, windowAt, type TimeStep, type TimeWindow } from '../model/time';
+import { autoStep, showEnds, showTime, showWindow, timePosition, timePositions, windowAt, type TimeStep, type TimeWindow } from '../model/time';
 
 /** The speeds of playback, in steps a second. */
 export const TIME_SPEEDS = [0.5, 1, 2, 4] as const;
@@ -125,12 +125,19 @@ export class TimeSlider {
     return showTime(timePosition(this.anchor.value, this.step.value, k), this.step.value.unit);
   }
 
-  /** What the position shows: its date, or a period's two. */
+  /** What the position shows: its date, or a period's two (its date once when inside one day). */
   label(): string {
     const w = this.window.value;
-    const unit = this.step.value.unit;
-    if (!w) return '';
-    return w.kind === 'instant' ? showTime(w.a, unit) : `${showTime(w.a, unit)} – ${showTime(w.b, unit)}`;
+    return w ? showWindow(w, this.step.value.unit) : '';
+  }
+
+  /** The slider's ends: their clocks when both lie in one day under a day's step, else their dates (docs/adr/0210 §5). */
+  ends(): [string, string] {
+    return showEnds(this.momentAt(0), this.momentAt(this.last.value), this.step.value.unit);
+  }
+
+  private momentAt(k: number): number {
+    return timePosition(this.anchor.value, this.step.value, k);
   }
 
   play(): void {

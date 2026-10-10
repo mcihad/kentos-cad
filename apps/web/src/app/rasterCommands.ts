@@ -17,9 +17,20 @@ export function registerRasterCommands(ctx: AppContext): void {
       category: 'Raster',
       icon: 'rasterAdd',
       description:
-        'GeoTIFF, TIFF ya da dünya dosyalı PNG ve JPEG ekler: boyu, bantları, türü, konumu, sistemi ve nodata değeri gösterilir; sistemi projeninkinden başkaysa eklenmez, söylemiyorsa projenin sisteminde olduğu onaylanır, konumu yoksa görünümün ortasına oturtulmamış eklenir. Dosyanın adıyla yeni katmana tek adımda yazılır; büyük raster karolarla ve önizleme piramidiyle çizilir.',
+        'GeoTIFF, TIFF, dünya dosyalı PNG ve JPEG ya da NetCDF (değişkeni ve dilimiyle) ekler: boyu, bantları, türü, konumu, sistemi ve nodata değeri gösterilir; sistemi projeninkinden başkaysa eklenmez, söylemiyorsa projenin sisteminde olduğu onaylanır, konumu yoksa görünümün ortasına oturtulmamış eklenir. Dosyanın adıyla yeni katmana tek adımda yazılır; büyük raster karolarla ve önizleme piramidiyle çizilir.',
       aliases: ['RASTER', 'RASTEREKLE', 'GEOTIFF', 'ORTOFOTO', 'RASTERYUKLE', 'RASTERYÜKLE'],
       run: () => void import('../ui/raster/RasterAddDialog').then((m) => m.openRasterAdd(ctx)).catch(failed),
+    },
+    {
+      id: 'mesh.add',
+      title: 'Mesh ekle…',
+      short: 'Mesh ekle',
+      category: 'Raster',
+      icon: 'meshAdd',
+      description:
+        "Hidrodinamik modellerin üçgen ve dörtgen ağlarını ekler: UGRID ağlı NetCDF ya da 2DM ve ASCII DAT dosyaları (tek bir UGRID NetCDF'e yazılır). Veri seti, zaman ya da öbür boyutların değeri, hücre boyu ve ağ çizgileri seçilir; mesh her katta ağdan örneklenen sanal raster olarak çizilir, zaman sürgüsünü izleyebilir.",
+      aliases: ['MESH', 'MESHEKLE', 'UGRID', '2DM', 'NETCDF'],
+      run: () => void import('../ui/raster/MultidimDialog').then((m) => m.openMeshAdd(ctx)).catch(failed),
     },
     {
       id: 'raster.style',

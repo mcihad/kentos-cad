@@ -1,7 +1,9 @@
 //! Raster işlemleri's runs (docs/adr/0233): Raster hesaplayıcı, Yeniden
 //! sınıflandır, Maskeyle kırp, Mozaik, Yeniden örnekle, Bölgesel istatistik,
 //! Histogram, Komşuluk istatistiği and Hücre istatistiği over one or more
-//! input rasters (and areas for the mask and the zones).
+//! input rasters (and areas for the mask and the zones); the vectorizing,
+//! hydrology, distance (docs/adr/0234–0236), suitability (docs/adr/0237)
+//! and remote sensing tools (docs/adr/0242) on the same steps.
 //!
 //! The host opens each input (the formats core's reader) and, until the
 //! run is done, gives the blocks [`OpsJob::needs`] names (each with its
@@ -12,7 +14,9 @@
 //! what a step reads stays within bounds); its rows are worked out on the
 //! job's threads and every target gives the same bytes.
 
-use kentos_contracts::{RasterRender, RasterSample, RasterStretch, RasterStyle};
+use std::collections::BTreeMap;
+
+use kentos_contracts::{RasterRender, RasterResampling, RasterSample, RasterStretch, RasterStyle};
 use kentos_formats::raster::TILE;
 use kentos_formats::raster::samples::{Samples, stored};
 use kentos_formats::raster::source::{BlockNeed, Layout, Put, decode_block};
@@ -37,8 +41,15 @@ use crate::inputs::{
 use crate::out::{Out, OutSpec, Rows};
 use crate::par;
 use crate::reclass::{self, Bounds, Rule};
+use crate::remote::RemoteNotes;
+use crate::remote::classify::Method as ClassifyMethod;
+use crate::remote::spectral::{Index, IndexBands, IndexKind};
+use crate::remote::work::{ChangeMethod, FuseMethod, RemoteTool, RemoteWork, Weights};
 use crate::resample::{self, Method};
 use crate::stats::{Moments, Stat, order_stat};
+use crate::suitability::pairwise::{Pairwise, pairwise};
+use crate::suitability::roc::{Roc, RocWork};
+use crate::suitability::{FuzzyOp, Membership, Overlay, Scaled, common_grid, sum_weights};
 use crate::vector::Features;
 use crate::vector::capture::Colour;
 use crate::vector::work::{PointMode, Select, VectorTool, VectorWork};
@@ -382,6 +393,181 @@ pub enum OpsTool {
         value: f64,
         sample: FloatSample,
     },
+    /// Bulanık üyelik (docs/adr/0237 §3): the function and its settings.
+    FuzzyMembership {
+        band: u32,
+        function: String,
+        #[serde(default)]
+        low: f64,
+        #[serde(default)]
+        high: f64,
+        #[serde(default)]
+        exponent: f64,
+        #[serde(default)]
+        midpoint: f64,
+        #[serde(default)]
+        spread: f64,
+        #[serde(default)]
+        steep: f64,
+        sample: FloatSample,
+    },
+    /// Bulanık çakıştırma (§4).
+    FuzzyOverlay {
+        band: u32,
+        op: String,
+        #[serde(default)]
+        gamma: f64,
+        sample: FloatSample,
+    },
+    /// Ağırlıklı toplam (§5): the weights by the rasters' names (none: 1).
+    WeightedSum {
+        band: u32,
+        #[serde(default)]
+        weights: BTreeMap<String, Option<f64>>,
+        sample: FloatSample,
+    },
+    /// Ağırlıklı çakıştırma (§6): the scale's ends, the influences (per
+    /// cent) and the class tables by the rasters' names.
+    WeightedOverlay {
+        band: u32,
+        low: f64,
+        high: f64,
+        #[serde(default)]
+        influence: BTreeMap<String, Option<f64>>,
+        #[serde(default)]
+        classes: BTreeMap<String, Option<String>>,
+        bounds: BoundsName,
+    },
+    /// İkili karşılaştırma (§7): the comparisons by the rasters' names;
+    /// `write` the weighted sum's raster.
+    Pairwise {
+        band: u32,
+        #[serde(default)]
+        pairs: Vec<(String, String, f64)>,
+        write: bool,
+        sample: FloatSample,
+    },
+    /// ROC ile doğrulama (§8): the objects before `first` are the presence,
+    /// the rest the absence (the background when `absence`, else every cell).
+    Roc {
+        band: u32,
+        first: u32,
+        absence: bool,
+        higher: bool,
+    },
+    /// Bant birleştir (docs/adr/0242 §3).
+    Composite {
+        sampling: Sampling,
+    },
+    /// Bantlara ayır (§4): one band a run.
+    Band {
+        band: u32,
+    },
+    /// Spektral indis (§5): the bands by their names, the reflectance's scale and offset, the constants.
+    Index {
+        index: IndexKind,
+        bands: IndexBands,
+        scale: f64,
+        offset: f64,
+        savi_l: f64,
+        g: f64,
+        c1: f64,
+        c2: f64,
+        evi_l: f64,
+    },
+    /// Denetimli sınıflandırma (§6): each object's class text.
+    Supervised {
+        method: ClassifyMethod,
+        texts: Vec<Option<String>>,
+    },
+    /// Denetimsiz sınıflandırma (§7).
+    Unsupervised {
+        clusters: u32,
+        iterations: u32,
+    },
+    /// Doğruluk analizi (§8): each object's reference text.
+    Accuracy {
+        band: u32,
+        reference: Vec<Option<String>>,
+    },
+    /// Değişim tespiti (§9): the first input before, the second after.
+    Change {
+        band: u32,
+        method: ChangeMethod,
+    },
+    /// Görüntü birleştirme (§10): the first input multispectral, the second
+    /// panchromatic; Brovey's weights (none or an empty text: equal).
+    Pansharpen {
+        method: FuseMethod,
+        #[serde(default)]
+        weights: Option<Weights>,
+        sampling: Sampling,
+    },
+}
+
+/// A remote sensing tool's settings (docs/adr/0242); none for another tool.
+fn remote_tool(tool: &OpsTool) -> Result<Option<RemoteTool<'_>>, String> {
+    Ok(Some(match tool {
+        OpsTool::Composite { sampling } => RemoteTool::Composite {
+            sampling: *sampling,
+        },
+        OpsTool::Band { band } => RemoteTool::Band { band: *band },
+        OpsTool::Index {
+            index,
+            bands,
+            scale,
+            offset,
+            savi_l,
+            g,
+            c1,
+            c2,
+            evi_l,
+        } => RemoteTool::Index {
+            index: Index {
+                kind: *index,
+                scale: *scale,
+                offset: *offset,
+                savi_l: *savi_l,
+                g: *g,
+                c1: *c1,
+                c2: *c2,
+                evi_l: *evi_l,
+            },
+            bands: *bands,
+        },
+        OpsTool::Supervised { method, texts } => RemoteTool::Supervised {
+            method: *method,
+            texts,
+        },
+        OpsTool::Unsupervised {
+            clusters,
+            iterations,
+        } => RemoteTool::Unsupervised {
+            clusters: *clusters,
+            iterations: *iterations,
+        },
+        OpsTool::Accuracy { band, reference } => RemoteTool::Accuracy {
+            band: *band,
+            reference,
+        },
+        OpsTool::Change { band, method } => RemoteTool::Change {
+            band: *band,
+            method: *method,
+        },
+        OpsTool::Pansharpen {
+            method,
+            weights,
+            sampling,
+        } => RemoteTool::Pansharpen {
+            method: *method,
+            weights: match weights {
+                Some(w) => w.read()?,
+                None => None,
+            },
+            sampling: *sampling,
+        },
+        _ => return Ok(None),
+    }))
 }
 
 /// Uzaklık yüzeyi's result (docs/adr/0236 §3).
@@ -826,6 +1012,12 @@ pub enum OpsFinished {
     Histogram(Histogram),
     /// Areas, polylines or points (docs/adr/0234).
     Features(Features),
+    /// ROC ile doğrulama's figures (docs/adr/0237 §8).
+    Roc(Roc),
+    /// İkili karşılaştırma without its raster: the weights are in the notes.
+    Weights,
+    /// Doğruluk analizi (docs/adr/0242 §8): its table and figures are in the notes.
+    Report,
 }
 
 /// What a run met, for the host's summary and warnings.
@@ -839,6 +1031,25 @@ pub struct Notes {
     pub hydro: HydroNotes,
     /// A distance or cost run's (docs/adr/0236).
     pub distance: DistanceNotes,
+    /// A suitability run's (docs/adr/0237).
+    pub suit: SuitNotes,
+    /// A remote sensing run's table, summary and warnings (docs/adr/0242).
+    pub remote: RemoteNotes,
+}
+
+/// What a suitability run met (docs/adr/0237).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SuitNotes {
+    /// Ağırlıklı çakıştırma: cells left empty because a table had no rule
+    /// for a value, or a value was off the scale (each by its first input
+    /// in the run's order), and the restricted cells.
+    pub unmatched: u64,
+    pub outside: u64,
+    pub restricted: u64,
+    /// Bulanık çakıştırma: cells with a membership outside 0–1.
+    pub invalid: u64,
+    /// İkili karşılaştırma's weights.
+    pub pairwise: Option<Pairwise>,
 }
 
 struct Hist {
@@ -901,6 +1112,25 @@ enum Work {
     Vector(Box<VectorWork>),
     Hydro(Box<HydroWork>),
     Distance(Box<DistanceWork>),
+    /// A suitability tool's cells (docs/adr/0237 §3–§7).
+    Suit {
+        cell: SuitCell,
+        band: usize,
+        maps: Vec<Mapping>,
+    },
+    Roc(Box<RocWork>),
+    /// İkili karşılaştırma without its raster: nothing to read.
+    Weights,
+    /// A remote sensing tool's passes (docs/adr/0242).
+    Remote(Box<RemoteWork>),
+}
+
+/// A suitability cell's rule.
+enum SuitCell {
+    Membership(Membership),
+    Fuzzy(FuzzyOp),
+    Sum(Vec<f64>),
+    Overlay(Box<Overlay>),
 }
 
 /// The result raster's samples: type, bands (alpha included), nodata.
@@ -1177,6 +1407,8 @@ impl OpsJob {
                 RasterSample::F32
             }
         };
+        let names: Vec<String> = spec.inputs.iter().map(|i| i.name.clone()).collect();
+        let mut suit_notes = SuitNotes::default();
         let (grid, work, kind, style) = match &spec.tool {
             OpsTool::Calculator {
                 expression,
@@ -1547,6 +1779,192 @@ impl OpsJob {
                     Some(ramp_style("Viridis")),
                 )
             }
+            OpsTool::FuzzyMembership {
+                band,
+                function,
+                low,
+                high,
+                exponent,
+                midpoint,
+                spread,
+                steep,
+                sample,
+            } => {
+                if inputs.len() > 1 {
+                    return Err(format!(
+                        "{} raster seçili; Bulanık üyelik tek raster ister.",
+                        inputs.len()
+                    ));
+                }
+                let b = band_index(first, *band)?;
+                let m = Membership::new(
+                    function,
+                    (*low, *high, *exponent),
+                    (*midpoint, *spread, *steep),
+                )?;
+                let grid = first.grid();
+                (
+                    grid,
+                    Work::Suit {
+                        cell: SuitCell::Membership(m),
+                        band: b,
+                        maps: vec![mapping(&grid, &first.affine)],
+                    },
+                    Some(float_kind(float_of(*sample))),
+                    Some(suit_style(Some((0.0, 1.0)), false)),
+                )
+            }
+            OpsTool::FuzzyOverlay {
+                band,
+                op,
+                gamma,
+                sample,
+            } => {
+                if inputs.len() < 2 {
+                    return Err("Bulanık çakıştırma en az iki raster ister.".into());
+                }
+                let op = FuzzyOp::new(op, *gamma)?;
+                let (grid, b, maps) = suit_inputs(&inputs, *band)?;
+                (
+                    grid,
+                    Work::Suit {
+                        cell: SuitCell::Fuzzy(op),
+                        band: b,
+                        maps,
+                    },
+                    Some(float_kind(float_of(*sample))),
+                    Some(suit_style(Some((0.0, 1.0)), false)),
+                )
+            }
+            OpsTool::WeightedSum {
+                band,
+                weights,
+                sample,
+            } => {
+                let given: BTreeMap<String, f64> = weights
+                    .iter()
+                    .filter_map(|(k, v)| v.map(|v| (k.clone(), v)))
+                    .collect();
+                let w = sum_weights(&names, &given)?;
+                let (grid, b, maps) = suit_inputs(&inputs, *band)?;
+                (
+                    grid,
+                    Work::Suit {
+                        cell: SuitCell::Sum(w),
+                        band: b,
+                        maps,
+                    },
+                    Some(float_kind(float_of(*sample))),
+                    Some(suit_style(None, false)),
+                )
+            }
+            OpsTool::WeightedOverlay {
+                band,
+                low,
+                high,
+                influence,
+                classes,
+                bounds,
+            } => {
+                if inputs.len() < 2 {
+                    return Err("Ağırlıklı çakıştırma en az iki raster ister.".into());
+                }
+                let influence: BTreeMap<String, f64> = influence
+                    .iter()
+                    .filter_map(|(k, v)| v.map(|v| (k.clone(), v)))
+                    .collect();
+                let classes: BTreeMap<String, String> = classes
+                    .iter()
+                    .filter_map(|(k, v)| v.clone().map(|v| (k.clone(), v)))
+                    .collect();
+                let overlay = Overlay::new(
+                    &names,
+                    (*low, *high),
+                    &influence,
+                    &classes,
+                    match bounds {
+                        BoundsName::UpperClosed => Bounds::UpperClosed,
+                        BoundsName::LowerClosed => Bounds::LowerClosed,
+                    },
+                )?;
+                let (grid, b, maps) = suit_inputs(&inputs, *band)?;
+                let range = ((overlay.lo - 1) as f64, overlay.hi as f64);
+                (
+                    grid,
+                    Work::Suit {
+                        cell: SuitCell::Overlay(Box::new(overlay)),
+                        band: b,
+                        maps,
+                    },
+                    Some(Kind {
+                        sample: RasterSample::I32,
+                        values: 1,
+                        alpha: false,
+                        nodata: Some(-2_147_483_648.0),
+                    }),
+                    Some(suit_style(Some(range), true)),
+                )
+            }
+            OpsTool::Pairwise {
+                band,
+                pairs,
+                write,
+                sample,
+            } => {
+                let p = pairwise(&names, pairs)?;
+                let weights = p.weights.clone();
+                suit_notes.pairwise = Some(p);
+                if *write {
+                    let (grid, b, maps) = suit_inputs(&inputs, *band)?;
+                    (
+                        grid,
+                        Work::Suit {
+                            cell: SuitCell::Sum(weights),
+                            band: b,
+                            maps,
+                        },
+                        Some(float_kind(float_of(*sample))),
+                        Some(suit_style(None, false)),
+                    )
+                } else {
+                    (first.grid(), Work::Weights, None, None)
+                }
+            }
+            OpsTool::Roc {
+                band,
+                first: split,
+                absence,
+                higher,
+            } => {
+                if inputs.len() > 1 {
+                    return Err(format!(
+                        "{} raster seçili; ROC ile doğrulama tek raster ister.",
+                        inputs.len()
+                    ));
+                }
+                let b = band_index(first, *band)?;
+                let grid = first.grid();
+                let work = RocWork::new(&grid, b, &shapes, *split as usize, *absence, *higher)?;
+                (grid, Work::Roc(Box::new(work)), None, None)
+            }
+            OpsTool::Composite { .. }
+            | OpsTool::Band { .. }
+            | OpsTool::Index { .. }
+            | OpsTool::Supervised { .. }
+            | OpsTool::Unsupervised { .. }
+            | OpsTool::Accuracy { .. }
+            | OpsTool::Change { .. }
+            | OpsTool::Pansharpen { .. } => {
+                let tool = remote_tool(&spec.tool)?.ok_or("Uzaktan algılama aracı bilinmiyor.")?;
+                let s = RemoteWork::start(tool, &inputs, &names, first_style, &shapes)?;
+                let kind = s.kind.map(|(sample, values, alpha, nodata)| Kind {
+                    sample,
+                    values,
+                    alpha,
+                    nodata,
+                });
+                (s.grid, Work::Remote(Box::new(s.work)), kind, s.style)
+            }
         };
         if u64::from(grid.width) * u64::from(grid.height) > crate::job::MOST_CELLS
             || grid.width > crate::job::MOST_WIDTH
@@ -1592,7 +2010,10 @@ impl OpsJob {
             blocks: Vec::new(),
             strip: None,
             threads: threads.max(1),
-            notes: Notes::default(),
+            notes: Notes {
+                suit: suit_notes,
+                ..Notes::default()
+            },
         };
         job.blocks = job.plan();
         Ok((job, header))
@@ -1606,7 +2027,7 @@ impl OpsJob {
         while bw > TILE {
             let rect = (0, bw.min(w), 0, TILE.min(self.grid.height));
             let read: u64 = self
-                .regions(rect)
+                .regions_in(rect, true)
                 .iter()
                 .map(|(k, r)| u64::from(r.2) * u64::from(r.3) * u64::from(self.inputs[*k].values()))
                 .sum();
@@ -1621,9 +2042,15 @@ impl OpsJob {
     }
 
     /// The inputs a block of the grid (columns `c0..c1`, rows `y0..y1`) reads, and their regions.
-    fn regions(
+    fn regions(&self, rect: (u32, u32, u32, u32)) -> Vec<(usize, (i64, i64, u32, u32))> {
+        self.regions_in(rect, false)
+    }
+
+    /// [`OpsJob::regions`]; `planning`: what the widest pass reads (the column blocks' plan).
+    fn regions_in(
         &self,
         (c0, c1, y0, y1): (u32, u32, u32, u32),
+        planning: bool,
     ) -> Vec<(usize, (i64, i64, u32, u32))> {
         let mut out = Vec::new();
         let mut add = |k: usize, margin: i64| {
@@ -1639,7 +2066,16 @@ impl OpsJob {
             Work::Mosaic { sampling, .. } => {
                 (0..self.inputs.len()).for_each(|k| add(k, sampling.margin()))
             }
-            Work::Cells { .. } => (0..self.inputs.len()).for_each(|k| add(k, 0)),
+            Work::Cells { .. } | Work::Suit { .. } => {
+                (0..self.inputs.len()).for_each(|k| add(k, 0))
+            }
+            Work::Roc(_) => add(0, 0),
+            Work::Weights => {}
+            Work::Remote(r) => {
+                for (k, margin) in r.reads((c0, c1, y0, y1), planning) {
+                    add(k, margin);
+                }
+            }
             Work::Vector(v) => add(0, v.margin()),
             Work::Hydro(h) => {
                 if h.reading() {
@@ -1767,6 +2203,11 @@ impl OpsJob {
         if let Work::Distance(d) = &self.work {
             return d.done();
         }
+        match &self.work {
+            Work::Weights => return true,
+            Work::Roc(r) => return r.done,
+            _ => {}
+        }
         let bounds = matches!(&self.work, Work::Histogram(h) if h.bounds_pass);
         !bounds && self.next >= self.grid.height
     }
@@ -1783,6 +2224,9 @@ impl OpsJob {
             Work::Vector(v) => v.share(f),
             Work::Hydro(h) => h.share(f),
             Work::Distance(d) => d.share(f),
+            Work::Roc(r) => r.share(f),
+            Work::Remote(r) => r.share(f),
+            Work::Weights => 1.0,
             Work::Histogram(h) if h.bounds_pass => f / 3.0,
             Work::Histogram(h) if h.two_pass => 1.0 / 3.0 + 2.0 * f / 3.0,
             _ => f,
@@ -1799,7 +2243,8 @@ impl OpsJob {
         self.grid
     }
 
-    /// The result raster's look; none for a table.
+    /// The result raster's look; none for a table. A remote sensing run's
+    /// may change when its values are known: read it again when the run is done.
     pub fn style(&self) -> Option<RasterStyle> {
         self.style.clone()
     }
@@ -1896,6 +2341,15 @@ impl OpsJob {
                 Work::Hydro(h) => h.block(rect, &raw),
                 _ => unreachable!(),
             }
+        } else if matches!(&self.work, Work::Remote(r) if r.reading()) {
+            // A remote sensing tool's training, sample or reference cells.
+            let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
+            for (k, r) in regions {
+                views[k] = Some(self.inputs[k].view(r, self.threads)?);
+            }
+            if let Work::Remote(r) = &mut self.work {
+                r.read(&views, rect, self.threads);
+            }
         } else if let Some(kind) = self.kind {
             let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
             for (k, r) in regions {
@@ -1942,6 +2396,30 @@ impl OpsJob {
             return Ok(Vec::new());
         }
         if self.next >= self.grid.height
+            && let Work::Roc(r) = &mut self.work
+        {
+            // The presence read: every cell is counted against it in a second pass, or the absence is.
+            if r.second {
+                r.second_done();
+            } else if r.first_done()? {
+                self.next = 0;
+            }
+            return Ok(Vec::new());
+        }
+        if self.next >= self.grid.height
+            && let Work::Remote(r) = &mut self.work
+            && r.reading()
+        {
+            // The model, the clusters or the report; a class raster's pass follows.
+            if r.read_done(self.threads)? {
+                self.next = 0;
+            } else {
+                self.notes.remote = r.notes();
+            }
+            self.strip = None;
+            return Ok(Vec::new());
+        }
+        if self.next >= self.grid.height
             && let Work::Vector(v) = &mut self.work
             && let Some(g) = v.pass_done()?
         {
@@ -1966,6 +2444,14 @@ impl OpsJob {
             h.out.empty = 0;
             self.next = 0;
         }
+        if self.next >= self.grid.height
+            && let Work::Remote(r) = &self.work
+        {
+            self.notes.remote = r.notes();
+            if let Some(s) = r.style() {
+                self.style = Some(s);
+            }
+        }
         Ok(bytes)
     }
 
@@ -1985,6 +2471,13 @@ impl OpsJob {
         let row_len = bw * b;
         let empty = View::default();
         let view = |k: usize| views.get(k).and_then(Option::as_ref).unwrap_or(&empty);
+        if let Work::Remote(r) = &self.work {
+            let tally = r.block(&grid, inputs, views, (c0, c1, y0, y1), b, threads, vals);
+            if let Work::Remote(r) = &mut self.work {
+                r.add(tally);
+            }
+            return Ok(());
+        }
         match &self.work {
             Work::Calc { calc, maps } => {
                 let area = {
@@ -2248,11 +2741,52 @@ impl OpsJob {
                     }
                 });
             }
+            Work::Suit { cell, band, maps } => {
+                // Ağırlıklı çakıştırma's unmatched, off the scale and restricted cells, Bulanık çakıştırma's invalid.
+                let counts: [AtomicU64; 4] = Default::default();
+                par::rows(threads, vals, row_len, &|first, chunk: &mut [f64]| {
+                    let mut bufs: Vec<Vec<f64>> = vec![vec![0.0; bw]; inputs.len()];
+                    let mut mu = Vec::with_capacity(inputs.len());
+                    let mut met = [0u64; 4];
+                    for (k, row) in chunk.chunks_mut(row_len).enumerate() {
+                        let j = y0 + (first + k) as u32;
+                        for (q, buf) in bufs.iter_mut().enumerate() {
+                            match views.get(q).and_then(Option::as_ref) {
+                                Some(v) => sample_row(
+                                    (&grid, &inputs[q].affine),
+                                    maps[q],
+                                    v,
+                                    *band,
+                                    (c0, j),
+                                    Sampling::Nearest,
+                                    buf,
+                                ),
+                                None => buf.fill(f64::NAN),
+                            }
+                        }
+                        for (i, o) in row.iter_mut().enumerate() {
+                            *o = suit_cell(cell, &bufs, i, &mut mu, &mut met);
+                        }
+                    }
+                    for (c, m) in counts.iter().zip(met) {
+                        c.fetch_add(m, Ordering::Relaxed);
+                    }
+                });
+                let [unmatched, outside, restricted, invalid] = counts.map(AtomicU64::into_inner);
+                let n = &mut self.notes.suit;
+                n.unmatched += unmatched;
+                n.outside += outside;
+                n.restricted += restricted;
+                n.invalid += invalid;
+            }
             Work::Zonal { .. }
             | Work::Histogram(_)
             | Work::Vector(_)
             | Work::Hydro(_)
-            | Work::Distance(_) => {}
+            | Work::Distance(_)
+            | Work::Roc(_)
+            | Work::Weights
+            | Work::Remote(_) => {}
         }
         Ok(())
     }
@@ -2267,6 +2801,21 @@ impl OpsJob {
         let bw = (c1 - c0) as usize;
         let rows: Vec<u32> = (y0..y1).collect();
         match &mut self.work {
+            Work::Roc(r) => {
+                let map = mapping(&grid, &input_affine);
+                let band = r.band;
+                r.block((c0, c1), &rows, threads, &|j, out: &mut [f64]| {
+                    sample_row(
+                        (&grid, &input_affine),
+                        map,
+                        src,
+                        band,
+                        (c0, j),
+                        Sampling::Nearest,
+                        out,
+                    )
+                });
+            }
             Work::Zonal {
                 areas,
                 band,
@@ -2440,6 +2989,9 @@ impl OpsJob {
                 ))
             }
             Work::Histogram(h) => Ok(OpsFinished::Histogram(h.out)),
+            Work::Roc(r) => Ok(OpsFinished::Roc(r.finish()?)),
+            Work::Weights => Ok(OpsFinished::Weights),
+            Work::Remote(r) if r.report() => Ok(OpsFinished::Report),
             Work::Vector(v) => Ok(OpsFinished::Features(v.finish()?)),
             Work::Hydro(mut h) if h.tool().raster(RasterSample::F32).is_none() => {
                 Ok(OpsFinished::Features(h.finish()?))
@@ -2449,6 +3001,108 @@ impl OpsJob {
                 let out = self.out.ok_or("Sonuç rasteri yok.")?;
                 let (tail, header) = out.finish()?;
                 Ok(OpsFinished::Raster { tail, header })
+            }
+        }
+    }
+}
+
+/// A suitability result's look (docs/adr/0237): Spektral, stretched over
+/// `manual`'s range (else the band's least to its most); read by the
+/// nearest cell for classes.
+fn suit_style(manual: Option<(f64, f64)>, nearest: bool) -> RasterStyle {
+    let mut s = ramp_style("Spektral");
+    if let Some((lo, hi)) = manual {
+        s.stretch = RasterStretch::Manual;
+        s.min = Some(lo);
+        s.max = Some(hi);
+    }
+    if nearest {
+        s.resampling = RasterResampling::Nearest;
+    }
+    s
+}
+
+/// Several inputs on their common grid (docs/adr/0237 §2): the grid, the band (every input has it), the mappings.
+fn suit_inputs(inputs: &[Input], band: u32) -> Result<(Grid, usize, Vec<Mapping>), String> {
+    let b = band_index(&inputs[0], band)?;
+    for i in inputs {
+        band_index(i, band)?;
+    }
+    let grid = common_grid(inputs)?;
+    let maps = inputs.iter().map(|i| mapping(&grid, &i.affine)).collect();
+    Ok((grid, b, maps))
+}
+
+/// A suitability cell from its inputs' values (`bufs[k][i]`); `met` counts
+/// what it met: [unmatched, off the scale, restricted, outside 0–1].
+#[inline]
+fn suit_cell(
+    cell: &SuitCell,
+    bufs: &[Vec<f64>],
+    i: usize,
+    mu: &mut Vec<f64>,
+    met: &mut [u64; 4],
+) -> f64 {
+    match cell {
+        SuitCell::Membership(m) => {
+            let x = bufs[0][i];
+            if x.is_nan() { f64::NAN } else { m.of(x) }
+        }
+        SuitCell::Fuzzy(op) => {
+            mu.clear();
+            let (mut empty, mut invalid) = (false, false);
+            for buf in bufs {
+                let v = buf[i];
+                if v.is_nan() {
+                    empty = true;
+                } else if !(0.0..=1.0).contains(&v) {
+                    invalid = true;
+                } else {
+                    mu.push(v);
+                }
+            }
+            if invalid {
+                met[3] += 1;
+            }
+            if empty || invalid {
+                f64::NAN
+            } else {
+                op.combine(mu)
+            }
+        }
+        SuitCell::Sum(w) => {
+            let mut v = 0.0;
+            for (buf, wk) in bufs.iter().zip(w) {
+                let x = buf[i];
+                if x.is_nan() {
+                    return f64::NAN;
+                }
+                v += wk * x;
+            }
+            v
+        }
+        SuitCell::Overlay(o) => {
+            let (mut sum, mut restricted) = (0i64, false);
+            for (k, buf) in bufs.iter().enumerate() {
+                match o.scaled(k, buf[i]) {
+                    Scaled::Value(s) => sum += s * o.weights[k],
+                    Scaled::Restricted => restricted = true,
+                    Scaled::Empty => return f64::NAN,
+                    Scaled::Unmatched => {
+                        met[0] += 1;
+                        return f64::NAN;
+                    }
+                    Scaled::Outside => {
+                        met[1] += 1;
+                        return f64::NAN;
+                    }
+                }
+            }
+            if restricted {
+                met[2] += 1;
+                (o.lo - 1) as f64
+            } else {
+                o.class_of(sum) as f64
             }
         }
     }

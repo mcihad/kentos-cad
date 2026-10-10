@@ -12,7 +12,9 @@ import { Dropdown } from '../widgets/Dropdown';
  * Zaman sürgüsü's bar under the drawing (docs/adr/0210 §5, §10): Başa, Geri, Oynat/Durdur, İleri, Sona; what the
  * position shows; the slider; Adım (a number and a unit), Anlık | Aralık, Hız, Döngü; Kapat. On the slider ← and →
  * take a step, Home and End go to the ends, Boşluk plays and stops. The bar only shows and sets the session's slider
- * (app/timeSlider.ts); the drawing follows its window.
+ * (app/timeSlider.ts); the drawing follows its window. Narrow, the ends' dates give way first, then the words beside
+ * the fields, then Hız and Döngü, as far as the bar holds its controls (`fit`; the desktop's `temporal/bar.rs` measures
+ * the same).
  */
 export class TimeBar extends Component {
   readonly el: HTMLElement;
@@ -76,6 +78,7 @@ export class TimeBar extends Component {
       items: () => TIME_SPEEDS.map((v) => ({ label: `${String(v).replace('.', ',')} adım/sn`, radio: true, checked: t.speed.value === v, run: () => t.speed.set(v) })),
     });
     this.loop = button('loop', 'Döngü: sonda başa dön', () => t.loop.set(!t.loop.value));
+    this.loop.classList.add('timebar__loop');
     this.el = h(
       'div',
       { class: 'timebar', role: 'toolbar', 'aria-label': 'Zaman sürgüsü', hidden: true },
@@ -99,7 +102,28 @@ export class TimeBar extends Component {
       button('close', 'Zaman sürgüsünü kapat', () => t.close()),
     );
     this.d.add(watchAll([t.open, t.window, t.step, t.last, t.position, t.playing, t.speed, t.loop, t.ranged], () => this.render()));
+    const resized = new ResizeObserver(() => this.fit());
+    resized.observe(this.el);
+    this.d.add(() => resized.disconnect());
     this.render();
+  }
+
+  /** The texts the bar was last fitted to. */
+  private fitted = '';
+
+  /**
+   * What gives way in a narrow bar: the ends first, then the words, then Hız, then Döngü, as few as keep everything in
+   * the bar (`data-tight` 0–4; time.css). Measured from what the bar holds, so that a period's clocks ask for more room
+   * than its dates.
+   */
+  private fit(): void {
+    if (this.el.hidden) return;
+    // An end cut short (“01…”) tells nothing: it gives way as one that does not fit.
+    const cut = (e: HTMLElement) => e.scrollWidth > e.clientWidth;
+    for (let k = 0; k <= 4; k++) {
+      this.el.dataset.tight = String(k);
+      if (this.el.scrollWidth <= this.el.clientWidth && (k > 0 || !this.ends.some(cut))) return;
+    }
   }
 
   /** A position chosen by hand: playback stops there. */
@@ -123,8 +147,11 @@ export class TimeBar extends Component {
     this.range.value = String(t.position.value);
     this.range.setAttribute('aria-valuetext', t.label());
     const unit = t.step.value.unit;
-    this.ends[0].textContent = t.positionText(0);
-    this.ends[1].textContent = t.positionText(t.last.value);
+    const [first, last] = t.ends();
+    this.ends[0].textContent = first;
+    this.ends[1].textContent = last;
+    this.ends[0].title = t.positionText(0);
+    this.ends[1].title = t.positionText(t.last.value);
     replaceChildren(this.play, icon(t.playing.value ? 'pause' : 'play', 16));
     const playing = t.playing.value ? 'Durdur (Boşluk)' : 'Oynat (Boşluk)';
     this.play.title = playing;
@@ -138,5 +165,11 @@ export class TimeBar extends Component {
     });
     this.speed.set(`${String(t.speed.value).replace('.', ',')}×`);
     this.loop.setAttribute('aria-pressed', String(t.loop.value));
+    // A text of another length asks the bar again (while playing the same lengths come round).
+    const texts = `${(this.when.textContent ?? '').length}|${first.length}|${last.length}`;
+    if (texts !== this.fitted) {
+      this.fitted = texts;
+      this.fit();
+    }
   }
 }

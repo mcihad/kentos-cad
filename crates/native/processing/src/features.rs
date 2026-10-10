@@ -237,6 +237,9 @@ pub struct InputSummary {
     pub fields: Vec<(String, usize)>,
     /// A chosen file's table (docs/adr/0200 §7): the counts are its rows, not objects.
     pub rows: bool,
+    /// The rasters' names in the run's order (docs/adr/0233 §2, §3): a value
+    /// or a comparison a raster's rows (docs/adr/0237 §9).
+    pub rasters: Vec<String>,
 }
 
 /// A chosen file's table as a field parameter reads it: its rows, and its
@@ -257,6 +260,7 @@ pub fn summarize_file(header: &[String], rows: &[Vec<String>]) -> InputSummary {
         fields.push((name.clone(), filled));
     }
     InputSummary {
+        rasters: Vec::new(),
         count: rows.len(),
         description: String::new(),
         by_kind: Vec::new(),
@@ -301,11 +305,12 @@ pub fn summarize_features(
         })
         .collect();
     raster_order(&mut rasters, host.doc());
-    for (x, name) in rasters.iter().zip(raster_names(&rasters, host.doc())) {
+    let names = raster_names(&rasters, host.doc());
+    for (x, name) in rasters.iter().zip(&names) {
         for b in 2..=x.raster.bands {
             counts.insert(format!("{name}@{b}"), 1);
         }
-        counts.insert(name, 1);
+        counts.insert(name.clone(), 1);
     }
     let mut fields: Vec<(String, usize)> = counts.into_iter().collect();
     fields.sort_by(|a, b| match b.1.cmp(&a.1) {
@@ -318,6 +323,7 @@ pub fn summarize_features(
         by_kind,
         fields,
         rows: false,
+        rasters: names,
     }
 }
 

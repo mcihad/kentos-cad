@@ -21,6 +21,8 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'analysis', label: 'Analiz', icon: 'measure', description: 'Ölçüm, istatistik ve raporlar' },
   // docs/adr/0215: how near objects are to one another.
   { id: 'proximity', label: 'Yakınlık', icon: 'nearestFeature', description: 'En yakın nesne, uzaklık matrisi, en yakın merkez, komşu alanlar, en kısa çizgi' },
+  // docs/adr/0238: where objects lie and how their values sit among their neighbours.
+  { id: 'spatialStats', label: 'Mekânsal istatistik', icon: 'statsHotSpot', description: 'Merkezler ve yayılım, en yakın komşu, Moran I, sıcak noktalar, kümeleme' },
   { id: 'network', label: 'Ağ analizi', icon: 'networks', description: 'En yakın tesis, maliyet matrisi ve hizmet alanları' },
   { id: 'conversion', label: 'Dönüştürme', icon: 'explode', description: 'Nesne türleri arasında dönüşüm' },
   { id: 'selection', label: 'Seçim', icon: 'select', description: 'Özniteliğe ve konuma göre seçim' },
@@ -39,4 +41,15 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'hydrology', label: 'Hidroloji', icon: 'streams', description: 'Çukur doldurma, akış yönü ve birikimi, havzalar, dere ağı, nemlilik indisi' },
   // docs/adr/0236: how far, and how dear, every cell is from the sources.
   { id: 'distance', label: 'Uzaklık ve maliyet', icon: 'costPath', description: 'Uzaklık yüzeyi, birikimli maliyet, en düşük maliyetli yol, maliyet koridoru' },
+  // docs/adr/0237: criteria brought to one scale, weighed together, checked against known events.
+  { id: 'suitability', label: 'Uygunluk analizi', icon: 'weightedOverlay', description: 'Bulanık üyelik ve çakıştırma, ağırlıklı toplam ve çakıştırma, AHP, ROC' },
+  // docs/adr/0242: multi-band images: bands, indices, classes, their accuracy, change, fusion.
+  {
+    id: 'remoteSensing',
+    label: 'Uzaktan algılama',
+    icon: 'spectralIndex',
+    description: 'Bant birleştirme, spektral indisler, sınıflandırma, doğruluk, değişim ve görüntü birleştirme',
+  },
+  // docs/adr/0243: NetCDF slices and meshes read along lines, at points over time, and worked into new datasets.
+  { id: 'multidim', label: 'Çok boyutlu veri', icon: 'multidimData', description: 'Kesit, zaman serisi ve mesh hesaplayıcı' },
 ];

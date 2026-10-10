@@ -122,7 +122,8 @@
 .prow__control > .field,
 .prow__control > .dropdown,
 .prow__control > .pfield__stack,
-.prow__control > .pfield__point {
+.prow__control > .pfield__point,
+.prow__control > .pfield__rastertable {
   align-self: stretch;
 }
 .prow__control > .switch {
@@ -298,6 +299,45 @@
 .pfield__hint {
   color: var(--c-text-3);
   font-size: var(--fs-xs);
+}
+
+/* Rasterlere değer and Raster çiftleri (docs/adr/0237 §9): a row a raster or a pair, the name left, the field right;
+   a name the input does not hold faint, with its ×. */
+.pfield__rastertable {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.pfield__rasterrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.pfield__rastername {
+  flex: 0 0 40%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--c-text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pfield__rasterrow > .field,
+.pfield__rasterrow > .pfield__dropdown {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+.pfield__pairrow > .pfield__rastername {
+  flex-basis: 46%;
+}
+.pfield__rasterrow[data-missing] > .pfield__rastername {
+  color: var(--c-text-3);
+  font-style: italic;
+}
+.pfield__rowx {
+  flex: none;
 }
 .pfield__hint:empty {
   display: none;

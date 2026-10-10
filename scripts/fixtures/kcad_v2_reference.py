@@ -1042,10 +1042,36 @@ def raster_style(st):
         "zFactor": (f64, False),
         "nodata": (f64, False),
         "resampling": (enum(("nearest",)), False),
+        # Schema 38 (docs/adr/0243 §5): a mesh's lines.
+        "edges": (text, False),
     }
     out = fields(st, table, "rasterin görünüşü")
     assert out.get("invert", True) is not None, "invert yalnız true yazılır"
     return cmap(out)
+
+
+def raster_dataset(d):
+    """A raster's NetCDF variable and slice (schema 38, docs/adr/0243 §6): `variable`; `vector`, `mesh`, `dims` and
+    `followTime` only when given (no empty list, no false)."""
+    def dim(x):
+        table = {
+            "name": (text, True),
+            "index": (uint, True),
+            "values": (floats, True),
+            "time": (lambda b: boolean(b) if b is True else None, False),
+            "units": (text, False),
+        }
+        return cmap(fields(x, table, "veri setinin boyutu"))
+
+    assert d.get("dims", [None]), "boş dilim boyutu listesi yazılmaz"
+    table = {
+        "variable": (text, True),
+        "vector": (text, False),
+        "mesh": (text, False),
+        "dims": (lambda ds: array([dim(x) for x in ds]), False),
+        "followTime": (lambda b: boolean(b) if b is True else None, False),
+    }
+    return cmap(fields(d, table, "rasterin veri seti"))
 
 
 def raster_shape(e):
@@ -1186,6 +1212,8 @@ KINDS = {
         "srid": (uint, True),
         "style": (raster_style, True),
         "opacity": (f64, False),
+        # Schema 38 (docs/adr/0243 §6): a NetCDF variable and its slice.
+        "dataset": (raster_dataset, False),
     },
     # Schema 31 (docs/adr/0207 §3): a point cloud's files, their bounds and points together, the files' system, its look
     # and opacity; only in the drawing.
@@ -1414,6 +1442,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def labelled(nodes):
         return any(engine(n["style"]) or labelled(n["children"]) for n in nodes)
 
+    if any(e["kind"] == "raster" and ("dataset" in e or "edges" in e["style"]) for e in entities):
+        return 38
     if settings and "variables" in settings:
         return 37
     if (labelled(layers) or any("labelPins" in e for e in entities)
@@ -1682,7 +1712,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-38.kcad"] = container(root(cmap(parts), version=uint(38)))
+    files["schema-version-39.kcad"] = container(root(cmap(parts), version=uint(39)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1977,6 +2007,30 @@ def broken(minimal_content, minimal_file):
     files["raster-url-in-schema-30.kcad"] = in_schema(30, raster_of(file=None, url=text("https://ornek.org/orto.tif")))
     files["raster-url-and-file.kcad"] = in_schema(31, raster_of(url=text("https://ornek.org/orto.tif")))
     files["raster-url-ftp.kcad"] = in_schema(31, raster_of(file=None, url=text("ftp://ornek.org/orto.tif")))
+    # A raster's NetCDF variable and its look's mesh lines are schema 38's (docs/adr/0243 §6): in schema 37 unknown
+    # fields; one band; names given; no empty list, no false; an index within its values; one time dimension, its values
+    # not falling; following the slider needs it; lines only on a mesh, as #RRGGBB.
+    def dim_of(**extra):
+        body = {"name": text("time"), "index": uint(0), "values": floats([0.0, 3600000.0]), "time": boolean(True), **extra}
+        return cmap({k: v for k, v in body.items() if v is not None})
+
+    def dataset_of(**extra):
+        body = {"variable": text("depth"), "mesh": text("mesh"), "dims": array([dim_of()]), **extra}
+        return cmap({k: v for k, v in body.items() if v is not None})
+
+    one_band = dict(bands=uint(1), style=gray())
+    files["dataset-in-schema-37.kcad"] = in_schema(37, raster_of(dataset=dataset_of(), **one_band))
+    files["dataset-three-bands.kcad"] = in_schema(38, raster_of(dataset=dataset_of()))
+    files["dataset-follow-false.kcad"] = in_schema(38, raster_of(dataset=dataset_of(followTime=boolean(False)), **one_band))
+    files["dataset-dims-empty.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([])), **one_band))
+    files["dataset-index-out.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([dim_of(index=uint(2))])), **one_band))
+    files["dataset-two-times.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([dim_of(), dim_of(name=text("t2"))])), **one_band))
+    files["dataset-time-falling.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([dim_of(values=floats([3600000.0, 0.0]))])), **one_band))
+    files["dataset-follow-without-time.kcad"] = in_schema(38, raster_of(dataset=dataset_of(dims=array([dim_of(time=None)]), followTime=boolean(True)), **one_band))
+    files["dataset-variable-empty.kcad"] = in_schema(38, raster_of(dataset=dataset_of(variable=text(" ")), **one_band))
+    files["edges-in-schema-37.kcad"] = in_schema(37, raster_of(bands=uint(1), style=gray(edges=text("#203040"))))
+    files["edges-without-mesh.kcad"] = in_schema(38, raster_of(bands=uint(1), style=gray(edges=text("#203040")), dataset=dataset_of(mesh=None)))
+    files["edges-not-a-colour.kcad"] = in_schema(38, raster_of(bands=uint(1), style=gray(edges=text("lacivert")), dataset=dataset_of()))
     # A point cloud is schema 31's (docs/adr/0207 §3): in schema 30 an unknown kind; only in the drawing; files each
     # with one source, the points their sum, bounds in order, a look whose range a ramp needs, its defaults left out,
     # a size from 0.5 to 32, an opacity from 0.1 to 1.
@@ -2618,6 +2672,7 @@ def build():
     out["filters.kcad"] = container(document(load("filters.json")))
     out["labels.kcad"] = container(document(load("labels.json")))
     out["variables.kcad"] = container(document(load("variables.json")))
+    out["multidim.kcad"] = container(document(load("multidim.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

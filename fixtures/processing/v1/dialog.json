@@ -171,6 +171,19 @@
     "sample": 2,
     "text": "+2"
    }
+  },
+  "rasters": {
+   "none": "Önce rasterleri seçin.",
+   "later": "Rasterler çalışınca belli olur; adlarıyla ekleyin.",
+   "missing": "Girdide yok",
+   "remove": "Kaldır",
+   "add": "Raster adı",
+   "addButton": "Ekle",
+   "even": "Eşit",
+   "times": {
+    "sample": 3,
+    "text": "3 kat"
+   }
   }
  },
  "scopes": {
@@ -10702,6 +10715,3233 @@
     "aliases": [
      "KORIDOR",
      "CORRIDOR"
+    ]
+   }
+  },
+  "suitability.fuzzyMembership": {
+   "title": "Bulanık üyelik",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Üyeliğe çevrilecek raster (eğim, uzaklık …).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Değerlerin okunduğu bant (1'den); bütün rasterlerde aynı bant.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "function",
+     "label": "İşlev",
+     "description": "Değer 0–1 üyeliğe çevrilir: 1 bütünüyle uygun, 0 hiç uygun değil.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "linear",
+        "label": "Doğrusal",
+        "hint": "alt değerden üst değere doğru 0'dan 1'e"
+       },
+       {
+        "value": "power",
+        "label": "Üslü",
+        "hint": "doğrusalın üssü: yavaş ya da hızlı yükselen"
+       },
+       {
+        "value": "gaussian",
+        "label": "Gauss",
+        "hint": "orta noktada 1, iki yana çan eğrisiyle azalan"
+       },
+       {
+        "value": "large",
+        "label": "Büyük",
+        "hint": "orta noktadan büyük değerler 1'e yakın"
+       },
+       {
+        "value": "small",
+        "label": "Küçük",
+        "hint": "orta noktadan küçük değerler 1'e yakın"
+       },
+       {
+        "value": "near",
+        "label": "Yakın",
+        "hint": "orta noktaya yakın değerler 1'e yakın"
+       }
+      ]
+     }
+    },
+    {
+     "name": "low",
+     "label": "Alt değer",
+     "description": "Doğrusal ve Üslü'de üyeliğin 0 olduğu değer; üst değerden büyükse üyelik azalır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "high",
+     "label": "Üst değer",
+     "description": "Doğrusal ve Üslü'de üyeliğin 1 olduğu değer.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "exponent",
+     "label": "Üs",
+     "description": "Doğrusal üyelik bu üsse yükseltilir: 1'den büyükse yavaş, küçükse hızlı yükselir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "midpoint",
+     "label": "Orta nokta",
+     "description": "Gauss ve Yakın'da üyeliğin 1, Büyük ve Küçük'te 0,5 olduğu değer; Büyük ve Küçük'te 0'dan büyük.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "spread",
+     "label": "Yayılım",
+     "description": "Büyüdükçe üyelik orta noktadan uzaklaştıkça daha hızlı düşer.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "steep",
+     "label": "Diklik",
+     "description": "Büyüdükçe üyelik orta noktada daha keskin değişir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "sample",
+     "label": "Sonuç türü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "f32",
+        "label": "Ondalık 32 bit"
+       },
+       {
+        "value": "f64",
+        "label": "Ondalık 64 bit"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-uyelik” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-uyelik.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "weightedOverlay",
+     "text": "Uygunluk analizi"
+    },
+    "icon": "fuzzyMembership",
+    "about": "Rasterin değerlerini bir işlevle 0–1 arası üyeliğe çevirir: ölçütü ortak ölçeğe getirmenin bulanık yolu.",
+    "help": [
+     "Doğrusal: alt değerde 0, üst değerde 1, arada doğrusal (alt değer büyükse azalan). Üslü: doğrusal üyelik üssüne yükseltilir. Gauss: e^(−yayılım·(x − orta)²). Büyük: 1 / (1 + (x / orta)^(−diklik)), 0 ve altı 0. Küçük: 1 / (1 + (x / orta)^diklik), 0 ve altı 1. Yakın: 1 / (1 + yayılım·(x − orta)²).",
+     "Varsayılanlar ArcGIS'in Fuzzy Membership'iyle aynıdır: Gauss ve Yakın'da yayılım 0,1, Büyük ve Küçük'te diklik 5.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BULANIKUYELIK",
+     "FUZZYMEMBERSHIP"
+    ]
+   }
+  },
+  "suitability.fuzzyOverlay": {
+   "title": "Bulanık çakıştırma",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Rasterler",
+     "description": "Üyelik rasterleri (0–1), örneğin Bulanık üyelik'in sonuçları.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Değerlerin okunduğu bant (1'den); bütün rasterlerde aynı bant.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "op",
+     "label": "İşleç",
+     "description": "Ve: bütün ölçütler birlikte; Veya: en az biri; Çarpım ve Toplam ölçütlerin hepsini katar; Gamma ikisinin arası.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "and",
+        "label": "Ve (en küçük)"
+       },
+       {
+        "value": "or",
+        "label": "Veya (en büyük)"
+       },
+       {
+        "value": "product",
+        "label": "Çarpım"
+       },
+       {
+        "value": "sum",
+        "label": "Toplam"
+       },
+       {
+        "value": "gamma",
+        "label": "Gamma"
+       }
+      ]
+     }
+    },
+    {
+     "name": "gamma",
+     "label": "Gamma",
+     "description": "Toplam^γ · Çarpım^(1 − γ): 1'de Toplam, 0'da Çarpım.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "sample",
+     "label": "Sonuç türü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "f32",
+        "label": "Ondalık 32 bit"
+       },
+       {
+        "value": "f64",
+        "label": "Ondalık 64 bit"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-bulanik” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-bulanik.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "weightedOverlay",
+     "text": "Uygunluk analizi"
+    },
+    "icon": "fuzzyOverlay",
+    "about": "Üyelik rasterlerini bulanık mantığın işleciyle birleştirir: Ve, Veya, Çarpım, Toplam, Gamma.",
+    "help": [
+     "Ve en küçük üyeliği, Veya en büyüğünü alır. Çarpım üyeliklerin çarpımıdır (her ölçüt sonucu düşürür); Toplam 1 − Π(1 − μ)'dür (her ölçüt artırır). Gamma Toplam^γ · Çarpım^(1 − γ) (Bonham-Carter).",
+     "Üyelik 0 ile 1 arasında olmalıdır: dışındaki değerin hücresi değersiz bırakılır ve söylenir.",
+     "Rasterler ortak alanlarında, hücresi en küçük olanın ızgarasında birleşir: sonucun hücreleri merkezi bütün rasterlerin içinde olanlardır; her raster hücre merkezinde en yakın hücresiyle okunur. Bir rasterin değersiz olduğu hücre sonuçta değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BULANIKCAKISTIR",
+     "FUZZYOVERLAY"
+    ]
+   }
+  },
+  "suitability.weightedSum": {
+   "title": "Ağırlıklı toplam",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Rasterler",
+     "description": "Toplanacak ölçüt rasterleri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Değerlerin okunduğu bant (1'den); bütün rasterlerde aynı bant.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "weights",
+     "label": "Ağırlıklar",
+     "description": "Her rasterin çarpanı; boş bırakılanınki 1. Eksi ağırlık ölçütü tersine çevirir.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "rasterValues",
+      "of": "input",
+      "cell": "number",
+      "min": -1000000000,
+      "max": 1000000000,
+      "placeholder": "1"
+     }
+    },
+    {
+     "name": "sample",
+     "label": "Sonuç türü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "f32",
+        "label": "Ondalık 32 bit"
+       },
+       {
+        "value": "f64",
+        "label": "Ondalık 64 bit"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-agirlikli” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-agirlikli.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "weightedOverlay",
+     "text": "Uygunluk analizi"
+    },
+    "icon": "weightedSum",
+    "about": "Rasterleri ağırlıklarıyla çarpıp toplar: Σ ağırlık · değer, ondalık sonuç.",
+    "help": [
+     "Değerler yeniden ölçeklenmez: ölçütleri önce ortak bir ölçeğe getirin (Yeniden sınıflandır ya da Bulanık üyelik). Ağırlıklar İkili karşılaştırma'dan alınabilir.",
+     "Rasterler Katmanlar panelinde üstten aşağı sırayla (aynı katmanda sonra eklenen önce) ve katmanlarının adlarıyla anılır; aynı katmandaki ikinci raster “Ad (2)”.",
+     "Rasterler ortak alanlarında, hücresi en küçük olanın ızgarasında birleşir: sonucun hücreleri merkezi bütün rasterlerin içinde olanlardır; her raster hücre merkezinde en yakın hücresiyle okunur. Bir rasterin değersiz olduğu hücre sonuçta değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "AGIRLIKLITOPLAM",
+     "WEIGHTEDSUM"
+    ]
+   }
+  },
+  "suitability.weightedOverlay": {
+   "title": "Ağırlıklı çakıştırma",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Rasterler",
+     "description": "Ölçüt rasterleri: sınıfları ya da değerleri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Değerlerin okunduğu bant (1'den); bütün rasterlerde aynı bant.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "low",
+     "label": "Ölçeğin alt ucu",
+     "description": "Ortak ölçeğin en küçük sınıfı; kısıtlı hücreler bunun bir eksiğini alır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "high",
+     "label": "Ölçeğin üst ucu",
+     "description": "Ortak ölçeğin en büyük, en uygun sınıfı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "influence",
+     "label": "Etki (%)",
+     "description": "Her rasterin etkisi, yüzde; en çok dört ondalık, toplamları tam 100.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "rasterValues",
+      "of": "input",
+      "cell": "number",
+      "min": 0,
+      "max": 100,
+      "placeholder": "%"
+     }
+    },
+    {
+     "name": "classes",
+     "label": "Sınıflar",
+     "description": "Her rasterin tablosu: “alt üst yeni”, “değer yeni” ya da “boş yeni”; yeni değer ölçekte bir tam sayı, boş ya da kısıt. Tablosu boş rasterin değerleri ölçek değeridir.",
+     "optional": true,
+     "stacked": true,
+     "control": {
+      "type": "rasterValues",
+      "of": "input",
+      "cell": "text",
+      "placeholder": "* 5 9; 5 15 6; 15 * kısıt"
+     }
+    },
+    {
+     "name": "bounds",
+     "label": "Sınırlar",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "upperClosed",
+        "label": "alt < değer ≤ üst"
+       },
+       {
+        "value": "lowerClosed",
+        "label": "alt ≤ değer < üst"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-cakistirma” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-cakistirma.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "weightedOverlay",
+     "text": "Uygunluk analizi"
+    },
+    "icon": "weightedOverlay",
+    "about": "Rasterleri ortak bir ölçeğe sınıflayıp etkileriyle birleştirir; sonuç ölçeğin tam sayı sınıfıdır.",
+    "help": [
+     "Her raster tablosuyla ölçeğin bir sınıfına çevrilir (tablosu yoksa değeri sınıftır); sonuç sınıfların etkileriyle ağırlıklı toplamıdır, tam sayılarla kesin hesaplanıp yarımlar sıfırdan uzağa yuvarlanır. Kısıt sınıflı bir raster hücreyi kısıtlı yapar (ölçeğin alt ucunun bir eksiği).",
+     "Kuralı tutmayan, ölçeğin dışında ya da tam sayı olmayan değer hücreyi değersiz bırakır ve söylenir; değersiz kısıtlıdan önce gelir.",
+     "Rasterler Katmanlar panelinde üstten aşağı sırayla (aynı katmanda sonra eklenen önce) ve katmanlarının adlarıyla anılır; aynı katmandaki ikinci raster “Ad (2)”.",
+     "Rasterler ortak alanlarında, hücresi en küçük olanın ızgarasında birleşir: sonucun hücreleri merkezi bütün rasterlerin içinde olanlardır; her raster hücre merkezinde en yakın hücresiyle okunur. Bir rasterin değersiz olduğu hücre sonuçta değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "AGIRLIKLICAKISTIR",
+     "WEIGHTEDOVERLAY"
+    ]
+   }
+  },
+  "suitability.pairwise": {
+   "title": "İkili karşılaştırma (AHP)",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Ölçütler",
+     "description": "Karşılaştırılan ölçütler: 2 ile 15 raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "comparisons",
+     "label": "Karşılaştırmalar",
+     "description": "Her çift için hangisinin kaç kat önemli olduğu (Saaty'nin 1–9 ölçeği); seçilmeyen çift eşittir.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "rasterPairs",
+      "of": "input"
+     }
+    },
+    {
+     "name": "write",
+     "label": "Ağırlıklı toplamı yaz",
+     "description": "Açıkken ölçütler bu ağırlıklarla toplanıp raster yazılır; kapalıyken yalnız ağırlıklar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Değerlerin okunduğu bant (1'den); bütün rasterlerde aynı bant.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "sample",
+     "label": "Sonuç türü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "f32",
+        "label": "Ondalık 32 bit"
+       },
+       {
+        "value": "f64",
+        "label": "Ondalık 64 bit"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-ahp” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-ahp.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "weightedOverlay",
+     "text": "Uygunluk analizi"
+    },
+    "icon": "pairwise",
+    "about": "Ölçütleri ikişer ikişer karşılaştırıp ağırlıklarını ve tutarlılığını bulur (Saaty'nin AHP'si); isterseniz ağırlıklı toplamı yazar.",
+    "help": [
+     "Her çift için önemli olan ve kaç kat önemli olduğu seçilir: 1 eşit, 3 biraz, 5 açıkça, 7 çok, 9 son derece önemli (2, 4, 6, 8 arası). Ağırlıklar karşılaştırma matrisinin baş özvektörüdür, toplamları 1.",
+     "Tutarlılık oranı CR = CI / RI; CI = (λ − n) / (n − 1), RI Saaty'nin rastgele indeksi. CR 0,10'dan büyükse karşılaştırmalar tutarsızdır: en çelişkili çiftleri yeniden gözden geçirin.",
+     "Rasterler Katmanlar panelinde üstten aşağı sırayla (aynı katmanda sonra eklenen önce) ve katmanlarının adlarıyla anılır; aynı katmandaki ikinci raster “Ad (2)”.",
+     "Ağırlıklı toplam Ağırlıklı toplam aracınınkiyle aynıdır: ölçütleri önce ortak bir ölçeğe getirin.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "AHP",
+     "IKILIKARSILASTIRMA"
+    ]
+   }
+  },
+  "suitability.roc": {
+   "title": "ROC ile doğrulama",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Doğrulanacak raster: duyarlılık ya da uygunluk.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Değerlerin okunduğu bant (1'den); bütün rasterlerde aynı bant.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "presence",
+     "label": "Varlık",
+     "description": "Bilinen olaylar: noktalar ya da alanlar (heyelan, sel …).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "background",
+     "label": "Karşılaştırma",
+     "description": "Bütün hücreler başarı eğrisini verir (alan oranı); yokluk nesneleri olayın olmadığı bilinen yerlerdir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "cells",
+        "label": "Bütün hücreler"
+       },
+       {
+        "value": "absence",
+        "label": "Yokluk nesneleri"
+       }
+      ]
+     }
+    },
+    {
+     "name": "absence",
+     "label": "Yokluk",
+     "description": "Olayın olmadığı bilinen noktalar ya da alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "higher",
+     "label": "Yüksek değer daha olası",
+     "description": "Kapalıyken düşük değer olayı daha olası gösterir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "weightedOverlay",
+     "text": "Uygunluk analizi"
+    },
+    "icon": "rocCurve",
+    "about": "Rasterin bilinen olayları ne kadar iyi ayırdığını ölçer: ROC eğrisinin tablosu, eğrinin altındaki alan (AUC) ve en iyi eşik.",
+    "help": [
+     "Örnekler hücrelerdir: nokta içinde olduğu hücreyi, alan merkezini içine aldığı hücreleri verir; bir hücre bir kez sayılır. Değersiz hücreye ya da rasterin dışına düşen örnek atlanır, söylenir.",
+     "Eşik büyükten küçüğe inerken doğru pozitif oranı yanlış pozitif oranına (bütün hücrelerde alan oranına) karşı çıkar; tablo varlık değerlerinin eşiklerindedir (en çok 200). AUC bir varlık hücresinin değerinin karşılaştırma hücresininkinden büyük olma olasılığıdır (eşitler yarım): 0,5 rastgele, 1 kusursuz. En iyi eşik Youden'in J'sidir (doğru pozitif oranı eksi yanlış pozitif oranı en büyük).",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ROC",
+     "AUC"
+    ]
+   }
+  },
+  "stats.meanCenter": {
+   "title": "Ortalama merkez",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Merkezi bulunacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weightField",
+     "label": "Ağırlık alanı",
+     "description": "Seçilirse her nesne bu alanın değeriyle ağırlıklıdır; okunamayan ve eksi değerli nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "groupField",
+     "label": "Grup alanı",
+     "description": "Seçilirse her grubun sonucu ayrı yazılır; boş değerliler “(boş)” grubudur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsMeanCenter",
+    "about": "Nesnelerin (isterseniz ağırlıklı) ortalama merkezini, gruplara göre de, nokta olarak yazar.",
+    "help": [
+     "Nesnenin yeri ağırlık merkezidir: noktanın kendisi (çok noktalının ortalaması), alanın, dairenin ve bütün elipsin ağırlık merkezi, çizginin ortası, çoklu çizginin ortadaki köşesi; ifadelerin $merkez_y ve $merkez_x’i.",
+     "Ağırlık alanı seçilirse değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayan, boş ve eksi değerli nesneler alınmaz ve söylenir. Grup alanı seçilirse gruplar adlarının doğal sırasıyla, boş değerliler “(boş)” grubu olarak en sonda yazılır.",
+     "Coğrafi koordinatlı projede çalışmaz: uzaklıklar metre olmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ORTALAMAMERKEZ",
+     "MEANCENTER"
+    ]
+   }
+  },
+  "stats.medianCenter": {
+   "title": "Ortanca merkez",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Merkezi bulunacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weightField",
+     "label": "Ağırlık alanı",
+     "description": "Seçilirse her nesne bu alanın değeriyle ağırlıklıdır; okunamayan ve eksi değerli nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "groupField",
+     "label": "Grup alanı",
+     "description": "Seçilirse her grubun sonucu ayrı yazılır; boş değerliler “(boş)” grubudur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsMedianCenter",
+    "about": "Nesnelere uzaklıklarının (isterseniz ağırlıklı) toplamını en küçük yapan noktayı, gruplara göre de, yazar.",
+    "help": [
+     "Ortanca merkez (geometrik ortanca) aykırı nesnelerden ortalama merkez kadar etkilenmez. Weiszfeld’in yinelemesiyle ortalama merkezden başlanarak bulunur; ortanca bir nesnenin yerindeyse o yer yazılır.",
+     "Nesnenin yeri ağırlık merkezidir: noktanın kendisi (çok noktalının ortalaması), alanın, dairenin ve bütün elipsin ağırlık merkezi, çizginin ortası, çoklu çizginin ortadaki köşesi; ifadelerin $merkez_y ve $merkez_x’i.",
+     "Ağırlık alanı seçilirse değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayan, boş ve eksi değerli nesneler alınmaz ve söylenir. Grup alanı seçilirse gruplar adlarının doğal sırasıyla, boş değerliler “(boş)” grubu olarak en sonda yazılır.",
+     "Coğrafi koordinatlı projede çalışmaz: uzaklıklar metre olmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ORTANCAMERKEZ",
+     "MEDIANCENTER"
+    ]
+   }
+  },
+  "stats.standardDistance": {
+   "title": "Standart uzaklık",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Yayılımı ölçülecek noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weightField",
+     "label": "Ağırlık alanı",
+     "description": "Seçilirse her nesne bu alanın değeriyle ağırlıklıdır; okunamayan ve eksi değerli nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "groupField",
+     "label": "Grup alanı",
+     "description": "Seçilirse her grubun sonucu ayrı yazılır; boş değerliler “(boş)” grubudur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "deviations",
+     "label": "Standart sapma",
+     "description": "Sonucun kaç standart sapma boyunda yazılacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "1",
+        "label": "1 kat",
+        "hint": "Noktaların yaklaşık %63’ü (elipste)"
+       },
+       {
+        "value": "2",
+        "label": "2 kat",
+        "hint": "Yaklaşık %98"
+       },
+       {
+        "value": "3",
+        "label": "3 kat",
+        "hint": "Yaklaşık %99,9"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsStandardDistance",
+    "about": "Nesnelerin ortalama merkezin çevresinde ne kadar yayıldığını, standart uzaklık yarıçaplı daire olarak yazar.",
+    "help": [
+     "Standart uzaklık, nesnelerin ortalama merkeze uzaklıklarının karelerinin (ağırlıklı) ortalamasının köküdür. Daire Standart sapma kadar katıyla çizilir; tek nesneli ya da çakışık nesneli grubunki sıfırdır, yazılmaz.",
+     "Nesnenin yeri ağırlık merkezidir: noktanın kendisi (çok noktalının ortalaması), alanın, dairenin ve bütün elipsin ağırlık merkezi, çizginin ortası, çoklu çizginin ortadaki köşesi; ifadelerin $merkez_y ve $merkez_x’i.",
+     "Ağırlık alanı seçilirse değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayan, boş ve eksi değerli nesneler alınmaz ve söylenir. Grup alanı seçilirse gruplar adlarının doğal sırasıyla, boş değerliler “(boş)” grubu olarak en sonda yazılır.",
+     "Coğrafi koordinatlı projede çalışmaz: uzaklıklar metre olmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "STANDARTUZAKLIK",
+     "STANDARDDISTANCE"
+    ]
+   }
+  },
+  "stats.directionalDistribution": {
+   "title": "Yön dağılımı",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Doğrultusu bulunacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weightField",
+     "label": "Ağırlık alanı",
+     "description": "Seçilirse her nesne bu alanın değeriyle ağırlıklıdır; okunamayan ve eksi değerli nesne alınmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "groupField",
+     "label": "Grup alanı",
+     "description": "Seçilirse her grubun sonucu ayrı yazılır; boş değerliler “(boş)” grubudur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "deviations",
+     "label": "Standart sapma",
+     "description": "Sonucun kaç standart sapma boyunda yazılacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "1",
+        "label": "1 kat",
+        "hint": "Noktaların yaklaşık %63’ü (elipste)"
+       },
+       {
+        "value": "2",
+        "label": "2 kat",
+        "hint": "Yaklaşık %98"
+       },
+       {
+        "value": "3",
+        "label": "3 kat",
+        "hint": "Yaklaşık %99,9"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsEllipse",
+    "about": "Nesnelerin hangi doğrultuda yayıldığını standart sapma elipsi olarak yazar: büyük ve küçük yarı eksenleri, doğrultusu.",
+    "help": [
+     "Elipsin eksenleri koordinatların (ağırlıklı) kovaryansının özvektörleridir; yarı eksenler √2 düzeltmesiyle yazılır, bir standart sapmalık elips noktaların yaklaşık %63’ünü alır. Doğrultu büyük eksenin kuzeyden saat yönünde açısıdır (0–180°).",
+     "Nesneleri bir doğru üzerinde ya da çakışık olan grubun elipsi yazılmaz.",
+     "Nesnenin yeri ağırlık merkezidir: noktanın kendisi (çok noktalının ortalaması), alanın, dairenin ve bütün elipsin ağırlık merkezi, çizginin ortası, çoklu çizginin ortadaki köşesi; ifadelerin $merkez_y ve $merkez_x’i.",
+     "Ağırlık alanı seçilirse değerler sayı olarak okunur (ondalık nokta ya da virgül); okunamayan, boş ve eksi değerli nesneler alınmaz ve söylenir. Grup alanı seçilirse gruplar adlarının doğal sırasıyla, boş değerliler “(boş)” grubu olarak en sonda yazılır.",
+     "Coğrafi koordinatlı projede çalışmaz: uzaklıklar metre olmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "YONDAGILIMI",
+     "DIRECTIONALDISTRIBUTION"
+    ]
+   }
+  },
+  "stats.nearestNeighbor": {
+   "title": "En yakın komşu",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Deseni sınanacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "area",
+     "label": "Alan",
+     "description": "Çalışma alanı; boş bırakılırsa yerlerin kutusunun alanı.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²",
+      "placeholder": "Kutudan"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsNearest",
+    "about": "Nesnelerin en yakın komşularına ortalama uzaklığını rastgele dağılımınkiyle karşılaştırır: kümelenmiş mi, dağınık mı?",
+    "help": [
+     "Gözlenen ortalama en yakın komşu uzaklığı aynı alanda rastgele dağılmış aynı sayıda nesnenin beklenen uzaklığıyla (0,5 / √(n / A)) karşılaştırılır (Clark ve Evans 1954). Oran 1’den küçük ve z eksiyse kümelenme, büyük ve artıysa dağınıklık vardır; p 0,05’ten küçükse desen anlamlıdır.",
+     "Alan boş bırakılırsa nesnelerin yerlerini çevreleyen kutunun alanıdır; sonuç alana duyarlıdır, çalışma alanını biliyorsanız yazın. Çizim değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ENYAKINKOMSU",
+     "NEARESTNEIGHBOR"
+    ]
+   }
+  },
+  "stats.moransI": {
+   "title": "Moran I",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Değeri sınanacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "valueField",
+     "label": "Değer alanı",
+     "description": "Değerleri sayı olarak okunan alan; okunamayan nesne alınmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "concept",
+     "label": "Komşuluk",
+     "description": "Nesnelerin komşularının nasıl bulunacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "band",
+        "label": "Sabit bant",
+        "hint": "Bant içindeki her nesne komşu, ağırlığı 1"
+       },
+       {
+        "value": "inverse",
+        "label": "Ters uzaklık",
+        "hint": "Bant içinde ağırlık 1 / uzaklık; 1 m’den yakın 1 m sayılır"
+       },
+       {
+        "value": "nearest",
+        "label": "k en yakın",
+        "hint": "Her nesnenin en yakın k komşusu, ağırlığı 1"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Boş bırakılırsa en büyük en yakın komşu uzaklığı: her nesnenin en az bir komşusu olur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m",
+      "placeholder": "Kendiliğinden"
+     }
+    },
+    {
+     "name": "neighbors",
+     "label": "Komşu sayısı (k)",
+     "description": "Her nesnenin en yakın kaç komşusu; eşit uzaklıkta önce gelen.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "standardize",
+     "label": "Satır standartlaştırma",
+     "description": "Her nesnenin komşu ağırlıkları toplamına bölünür (önerilen).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsMoran",
+    "about": "Bir değerin komşu nesnelerde benzer olup olmadığını Moran I ile sınar: kümelenmiş mi, dağınık mı, rastgele mi?",
+    "help": [
+     "Moran I artıysa benzer değerler yan yana (kümelenme), eksiyse farklılar yan yana (dağınıklık); beklenen değer −1 / (n − 1). z ve p, rastgele dağıtım varsayımıyla bulunur (Cliff ve Ord); p 0,05’ten küçükse desen anlamlıdır.",
+     "Komşuluk: sabit uzaklık bandı, bant içinde ters uzaklık ya da k en yakın komşu. Bant boş bırakılırsa her nesnenin en az bir komşusu olacak en küçük uzaklık alınır. Satır standartlaştırma her nesnenin komşularının ağırlıklarını toplamına böler. Çizim değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "MORAN",
+     "MORANI"
+    ]
+   }
+  },
+  "stats.hotSpot": {
+   "title": "Sıcak nokta (Gi*)",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Değeri sınanacak noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "valueField",
+     "label": "Değer alanı",
+     "description": "Değerleri sayı olarak okunan alan; okunamayan nesne alınmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "concept",
+     "label": "Komşuluk",
+     "description": "Nesnelerin komşularının nasıl bulunacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "band",
+        "label": "Sabit bant",
+        "hint": "Bant içindeki her nesne komşu, ağırlığı 1"
+       },
+       {
+        "value": "nearest",
+        "label": "k en yakın",
+        "hint": "Her nesnenin en yakın k komşusu, ağırlığı 1"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Boş bırakılırsa en büyük en yakın komşu uzaklığı: her nesnenin en az bir komşusu olur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m",
+      "placeholder": "Kendiliğinden"
+     }
+    },
+    {
+     "name": "neighbors",
+     "label": "Komşu sayısı (k)",
+     "description": "Her nesnenin en yakın kaç komşusu; eşit uzaklıkta önce gelen.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsHotSpot",
+    "about": "Yüksek ve düşük değerlerin kümelendiği yerleri Getis-Ord Gi* ile bulur; her nesnenin kopyasını z, p ve güven sınıfıyla renkli yazar.",
+    "help": [
+     "Her nesnenin ve komşularının değer toplamı, bütün nesnelerden beklenenle karşılaştırılır (Ord ve Getis 1995); sonuç bir z puanıdır. Büyük artı z sıcak nokta (yüksek değerler kümesi), büyük eksi z soğuk noktadır.",
+     "Güven sınıfı z’nin işaretiyle 3 (%99), 2 (%95), 1 (%90) ya da 0’dır; kopyalar sınıflarının rengini alır (kırmızılar sıcak, maviler soğuk). Komşuluk sabit uzaklık bandı ya da k en yakın komşu; nesne kendi komşusudur. Bant boş bırakılırsa her nesnenin en az bir komşusu olacak en küçük uzaklık alınır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SICAKNOKTA",
+     "HOTSPOT",
+     "GISTAR"
+    ]
+   }
+  },
+  "stats.dbscan": {
+   "title": "DBSCAN kümeleme",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Kümelenecek noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "radius",
+     "label": "Yarıçap",
+     "description": "Komşuluğun yarıçapı (ε).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "minPoints",
+     "label": "En az nokta",
+     "description": "Çekirdek olmak için yarıçap içinde, kendisi dahil, gereken nesne sayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "borderNoise",
+     "label": "Sınır noktaları gürültü",
+     "description": "Açıkken yalnız çekirdekler kümelenir (DBSCAN*).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsDbscan",
+    "about": "Yakın nesneleri yoğunluklarına göre kümelere ayırır; seyrek kalanlar gürültüdür. Her nesnenin kopyası küme numarası ve kümenin rengiyle yazılır.",
+    "help": [
+     "Yarıçap içinde (kendisi dahil) en az nokta kadar nesnesi olan nesne çekirdektir; birbirine yarıçaptan yakın çekirdekler ve onlara yakın nesneler bir kümedir (Ester ve arkadaşları 1996). Nesneler çizimdeki sırasıyla gezilir; iki kümeye yakın sınır nesnesi ilk ulaşan kümeye girer.",
+     "Sınır noktaları gürültü açıkken (DBSCAN*) yalnız çekirdekler kümelenir. Gürültünün küme numarası 0’dır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DBSCAN"
+    ]
+   }
+  },
+  "stats.kMeans": {
+   "title": "k-ortalamalar kümeleme",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Kümelenecek noktalar, çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "clusters",
+     "label": "Küme sayısı",
+     "description": "Kaç küme (k).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "statsHotSpot",
+     "text": "Mekânsal istatistik"
+    },
+    "icon": "statsKMeans",
+    "about": "Nesneleri yerlerine göre k kümeye ayırır: her nesne en yakın küme merkezine. Her nesnenin kopyası küme numarası ve kümenin rengiyle yazılır.",
+    "help": [
+     "Başlangıç merkezleri kendiliğinden ve hep aynı seçilir: ilki ortalama merkeze en yakın nesne, sonrakiler seçilmiş merkezlere en uzak nesneler. Ardından her nesne en yakın merkeze atanır ve merkezler üyelerinin ortalaması olur; atamalar değişmeyene dek (en çok 500 kez) sürer (Lloyd).",
+     "Farklı yer sayısı küme sayısından azsa çalışmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KORTALAMA",
+     "KMEANS"
+    ]
+   }
+  },
+  "remote.composite": {
+   "title": "Bant birleştir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Rasterler",
+     "description": "Birleştirilecek rasterler (en az iki).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "sampling",
+     "label": "Örnekleme",
+     "description": "Rasterler sonucun ızgarasına böyle okunur; en yakın değerleri değiştirmez.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "nearest",
+        "label": "En yakın"
+       },
+       {
+        "value": "bilinear",
+        "label": "Çift doğrusal"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-birlesik” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-birlesik.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "bandComposite",
+    "about": "Rasterlerin bantlarını tek çok bantlı rasterde birleştirir: her rasterin bütün bantları sırayla sonucun bantları olur.",
+    "help": [
+     "Rasterler Katmanlar panelinde üstten aşağı sırayla (aynı katmanda sonra eklenen önce) birleşir; tabloda her bandın kaynağı yazılır.",
+     "Rasterler ortak alanlarında, hücresi en küçük olanın ızgarasında birleşir: sonucun hücreleri merkezi bütün rasterlerin içinde olanlardır. Örnekleme en yakın hücre ya da çift doğrusal (dört komşu hücre merkezi).",
+     "Rasterlerin hepsi aynı türdeyse sonuç o türde (ve aynı nodata ile), değilse ondalık 32 bit. Üç ve daha çok bantta görünüş renkli (1, 2, 3).",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BANTBIRLESTIR",
+     "COMPOSITEBANDS"
+    ]
+   }
+  },
+  "remote.split": {
+   "title": "Bantlara ayır",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Bantlarına ayrılacak raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-b” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-b.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "bandSplit",
+    "about": "Çok bantlı rasterin her bandını ayrı bir rastere yazar.",
+    "help": [
+     "Her bant kendi GeoTIFF'ine yazılır: çıktı dosyası boşsa rasterin yanına adının sonuna “-b1”, “-b2” … eklenerek; bir ad yazılırsa o adın sonuna. Örnek türü ve nodata rasterinkidir; alfa bandı ayrılmaz.",
+     "Çizime ekle açıksa bantlar sırayla rasterin katmanının hemen üstündeki yeni katmana eklenir; görünüşleri gri, %2–98 gerdirmeyle."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BANTAYIR",
+     "SPLITBANDS"
+    ]
+   }
+  },
+  "remote.index": {
+   "title": "Spektral indis",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çok bantlı görüntü (Landsat, Sentinel-2, ortofoto).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "index",
+     "label": "İndis",
+     "description": "Hesaplanacak indis.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "ndvi",
+        "label": "NDVI",
+        "hint": "bitki örtüsü"
+       },
+       {
+        "value": "gndvi",
+        "label": "GNDVI",
+        "hint": "yeşil bantla bitki"
+       },
+       {
+        "value": "savi",
+        "label": "SAVI",
+        "hint": "toprak etkisi azaltılmış bitki"
+       },
+       {
+        "value": "evi",
+        "label": "EVI",
+        "hint": "yoğun bitki örtüsü; yansıma ister"
+       },
+       {
+        "value": "ndwi",
+        "label": "NDWI",
+        "hint": "açık su"
+       },
+       {
+        "value": "mndwi",
+        "label": "MNDWI",
+        "hint": "su; yapı gölgesini ayırır"
+       },
+       {
+        "value": "ndbi",
+        "label": "NDBI",
+        "hint": "yapılaşma"
+       },
+       {
+        "value": "ratio",
+        "label": "Oran",
+        "hint": "A / B"
+       },
+       {
+        "value": "normalized",
+        "label": "Normalize fark",
+        "hint": "(A − B) / (A + B)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "blue",
+     "label": "Mavi bant",
+     "description": "Mavi bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "green",
+     "label": "Yeşil bant",
+     "description": "Yeşil bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "red",
+     "label": "Kırmızı bant",
+     "description": "Kırmızı bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "nir",
+     "label": "Yakın kızılötesi bandı",
+     "description": "Yakın kızılötesi bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "swir",
+     "label": "Kısa dalga kızılötesi bandı",
+     "description": "Kısa dalga kızılötesi bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "a",
+     "label": "A bandı",
+     "description": "Oranın payı, normalize farkın ilk bandı (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "b",
+     "label": "B bandı",
+     "description": "Oranın paydası, normalize farkın ikinci bandı (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "saviL",
+     "label": "L",
+     "description": "SAVI'nin toprak düzeltmesi: yoğun bitkide 0, seyrekte 1.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "eviG",
+     "label": "G",
+     "description": "EVI'nin kazancı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "eviC1",
+     "label": "C₁",
+     "description": "EVI'de kırmızının aerosol katsayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "eviC2",
+     "label": "C₂",
+     "description": "EVI'de mavinin aerosol katsayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "eviL",
+     "label": "EVI'nin L'si",
+     "description": "EVI'nin örtü düzeltmesi.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "scale",
+     "label": "Ölçek",
+     "description": "Yansıma = sayı × ölçek + öteleme (Sentinel-2 L2A: 0,0001; Landsat C2 L2: 0,0000275).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "offset",
+     "label": "Öteleme",
+     "description": "Yansıma = sayı × ölçek + öteleme (Landsat C2 L2: −0,2).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-indis” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-indis.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "spectralIndex",
+    "about": "Bantlardan bitki, su ve yapılaşma indisi hesaplar: NDVI, GNDVI, SAVI, EVI, NDWI, MNDWI, NDBI, oran ya da normalize fark.",
+    "help": [
+     "NDVI = (YKÖ − K) / (YKÖ + K); GNDVI = (YKÖ − Y) / (YKÖ + Y); SAVI = (1 + L)(YKÖ − K) / (YKÖ + K + L); EVI = G(YKÖ − K) / (YKÖ + C₁K − C₂M + L); NDWI = (Y − YKÖ) / (Y + YKÖ); MNDWI = (Y − KDK) / (Y + KDK); NDBI = (KDK − YKÖ) / (KDK + YKÖ); oran A / B; normalize fark (A − B) / (A + B). M mavi, Y yeşil, K kırmızı, YKÖ yakın kızılötesi, KDK kısa dalga kızılötesi.",
+     "Her bant önce yansımaya çevrilir: ρ = sayı × ölçek + öteleme (Sentinel-2 L2A'da ölçek 0,0001; Landsat Collection 2 L2'de 0,0000275 ve −0,2). EVI yansıma ister.",
+     "Hesap 64 bitte, sonuç 32 bit ondalıktır; bölenin sıfır olduğu hücre değersiz kalır, söylenir.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "INDIS",
+     "NDVI"
+    ]
+   }
+  },
+  "remote.supervised": {
+   "title": "Denetimli sınıflandırma",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Sınıflandırılacak çok bantlı görüntü.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "training",
+     "label": "Eğitim alanları",
+     "description": "Sınıfları örnekleyen alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "classField",
+     "label": "Sınıf alanı",
+     "description": "Eğitim alanının sınıfının adı (metin).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "description": "Hücrenin hangi sınıfa verileceği.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "likelihood",
+        "label": "En büyük olabilirlik",
+        "hint": "sınıfın ortalaması ve yayılımıyla (kovaryans)"
+       },
+       {
+        "value": "distance",
+        "label": "En yakın ortalama",
+        "hint": "sınıfın ortalamasına en yakın"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-siniflar” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-siniflar.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "classifySupervised",
+    "about": "Eğitim alanlarından öğrenip görüntünün her hücresini bir sınıfa atar: en büyük olabilirlik ya da en yakın ortalama.",
+    "help": [
+     "Sınıflar eğitim alanlarının Sınıf alanındaki metinlerdir (kırpılır; boş olanlar alınmaz), doğal sırayla 1, 2, … değerlerini alır. Bir sınıfın eğitim hücreleri merkezi o sınıfın alanlarından birinin içinde olan ve hiçbir bandı değersiz olmayan hücrelerdir.",
+     "En büyük olabilirlik her sınıfı ortalaması ve kovaryansıyla çok değişkenli normal dağılım sayar (eşit önsel olasılık): bir sınıfın en az bant sayısı + 1 eğitim hücresi olmalı, kovaryansı tekil olmamalı. En yakın ortalama hücreyi ortalamasına en yakın sınıfa verir.",
+     "Sonuç 8 bit tam sayı (255 sınıftan çoğunda 16 bit), 0 değersiz; tabloda her sınıfın eğitim hücresi, hücre sayısı ve alanı.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DENETIMLI",
+     "MAXLIKELIHOOD"
+    ]
+   }
+  },
+  "remote.unsupervised": {
+   "title": "Denetimsiz sınıflandırma",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Kümelere ayrılacak çok bantlı görüntü.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "clusters",
+     "label": "Küme sayısı",
+     "description": "Bulunacak küme sayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "iterations",
+     "label": "En çok yineleme",
+     "description": "Atamalar değişmeyince ya da bu kadar yinelemeden sonra durur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-kumeler” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-kumeler.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "classifyUnsupervised",
+    "about": "Görüntünün hücrelerini benzer spektral değerlerine göre kümelere ayırır (k-ortalamalar).",
+    "help": [
+     "Kümeler hücrelerin bir örneğinden bulunur: hiçbir bandı değersiz olmayan, sütunu ve satırı s'nin katı olan hücreler (s, yaklaşık 250 000 hücre kalacak biçimde). Başlangıç merkezleri bantların ortalaması ± standart sapması boyunca dizilir; her yinelemede hücreler en yakın merkeze, merkezler üyelerinin ortalamasına gider; atamalar değişmeyince ya da en çok yinelemede durur.",
+     "Kümeler merkezlerinin bant toplamına göre küçükten büyüğe 1 … k değerlerini alır; bütün hücreler en yakın merkeze atanır. Sonuç 8 bit, 0 değersiz; tabloda her kümenin hücre sayısı, alanı ve merkezi.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DENETIMSIZ",
+     "ISOCLUSTER"
+    ]
+   }
+  },
+  "remote.accuracy": {
+   "title": "Doğruluk analizi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Sınıflandırılmış raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Sınıfların okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "reference",
+     "label": "Referans nesneleri",
+     "description": "Sınıfı bilinen noktalar ya da alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "referenceField",
+     "label": "Referans alanı",
+     "description": "Nesnenin gerçek sınıfının değeri (tam sayı).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "accuracyMatrix",
+    "about": "Sınıflandırılmış rasteri referans nesneleriyle karşılaştırır: karışıklık matrisi, genel doğruluk, üretici ve kullanıcı doğruluğu, kappa.",
+    "help": [
+     "Nokta düştüğü hücreyi, alan merkezini içine aldığı hücreleri verir; her nesnenin hücreleri ayrı sayılır. Referans alanının değeri tam sayı olarak okunur (sınıfın değeri); okunamayan nesne ve değersiz ya da rasterin dışındaki hücre alınmaz, söylenir.",
+     "Matrisin satırları sınıflandırılan, sütunları referans değerlerdir. Kullanıcı doğruluğu satırın, üretici doğruluğu sütunun köşegendeki payıdır; genel doğruluk köşegenin toplamdaki payı; kappa (Cohen) şansla uyuşmanın ötesindeki uyum: (pₒ − pₑ) / (1 − pₑ)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DOGRULUK",
+     "CONFUSIONMATRIX"
+    ]
+   }
+  },
+  "remote.change": {
+   "title": "Değişim tespiti",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Önceki raster",
+     "description": "Önceki tarihin rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "after",
+     "label": "Sonraki raster",
+     "description": "Sonraki tarihin rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Karşılaştırılan bant (1'den); iki rasterde de aynı bant.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "description": "İki tarihin nasıl karşılaştırılacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "difference",
+        "label": "Fark",
+        "hint": "sonraki − önceki"
+       },
+       {
+        "value": "ratio",
+        "label": "Oran",
+        "hint": "sonraki / önceki"
+       },
+       {
+        "value": "normalized",
+        "label": "Normalize fark",
+        "hint": "(sonraki − önceki) / (sonraki + önceki)"
+       },
+       {
+        "value": "classes",
+        "label": "Sınıf değişimi",
+        "hint": "sınıf rasterleri: önceki × 1000 + sonraki"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-degisim” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-degisim.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "changeDetect",
+    "about": "İki tarihin rasterlerini karşılaştırır: fark, oran, normalize fark ya da sınıf değişimi.",
+    "help": [
+     "Fark sonraki − önceki, oran sonraki / önceki, normalize fark (sonraki − önceki) / (sonraki + önceki); sonuç 32 bit ondalık, bölenin sıfır olduğu hücre değersiz. Özette artan, azalan ve değişmeyen hücreler sayılır.",
+     "Sınıf değişimi sınıf rasterleri içindir: değer önceki × 1000 + sonraki (örneğin 2003: 2'den 3'e), 0 değerli ya da değersiz hücre değersiz; tablo “neden neye” matrisidir, özet değişen hücrelerin payı.",
+     "Rasterler ortak alanlarında, hücresi en küçük olanın ızgarasında, en yakın hücreleriyle okunur.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DEGISIM",
+     "CHANGEDETECTION"
+    ]
+   }
+  },
+  "remote.pansharpen": {
+   "title": "Görüntü birleştirme",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Çok bantlı raster",
+     "description": "Renkli ya da çok bantlı görüntü (kaba çözünürlük).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "pan",
+     "label": "Pankromatik raster",
+     "description": "Tek bantlı, ince çözünürlüklü görüntü.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "description": "Bantların pankromatikle nasıl birleşeceği.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "brovey",
+        "label": "Brovey",
+        "hint": "ağırlıklı; renkleri pankromatiğin parlaklığıyla ölçekler"
+       },
+       {
+        "value": "mean",
+        "label": "Basit ortalama",
+        "hint": "bant ile pankromatiğin ortalaması"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weights",
+     "label": "Ağırlıklar",
+     "description": "Bantların ağırlıkları, noktalı virgülle ayrılmış (0,1; 0,3; 0,3; 0,3); boşsa eşit.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "eşit"
+     }
+    },
+    {
+     "name": "sampling",
+     "label": "Örnekleme",
+     "description": "Çok bantlı görüntü pankromatiğin ızgarasına böyle okunur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "cubic",
+        "label": "Kübik"
+       },
+       {
+        "value": "bilinear",
+        "label": "Çift doğrusal"
+       },
+       {
+        "value": "nearest",
+        "label": "En yakın"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-birlesim” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-birlesim.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "pansharpen",
+    "about": "Çok bantlı görüntüyü pankromatik görüntünün ince çözünürlüğüne taşır (pansharpening): ağırlıklı Brovey ya da basit ortalama.",
+    "help": [
+     "Çok bantlı görüntü pankromatiğin ızgarasına seçilen örneklemeyle okunur. Brovey: her bant × PAN / Σ wⱼ·bantⱼ (toplam sıfır ya da eksiyse 0); ağırlıklar boşsa eşittir (1/n). Basit ortalama: (bant + PAN) / 2.",
+     "Sonuç pankromatiğin ızgarasında, çok bantlının örnek türündedir (tam sayıda en yakın tam sayıya yuvarlanır, türün aralığında tutulur); görünüşü çok bantlınınki.",
+     "Ağırlıkları noktalı virgül ya da boşlukla ayırarak yazın (0,1; 0,3; 0,3; 0,3); sayısı çok bantlının bant sayısı olmalı.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "PANSHARPEN",
+     "FUSION"
+    ]
+   }
+  },
+  "multidim.profile": {
+   "title": "Kesit",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Değerleri okunan raster: ızgara, NetCDF dilimi ya da mesh.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "lines",
+     "label": "Çizgiler",
+     "description": "Kesitin çizgileri: çizgi, çoklu çizgi, yay, daire, elips ya da eğri; her biri başından yürünür.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "step",
+     "label": "Adım",
+     "description": "Çizginin başından bu aralıklarla ve sonunda nokta; boşsa rasterin hücre boyu.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m",
+      "placeholder": "Hücre boyu"
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Çok bantlı rasterde değerin okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "draw",
+     "label": "Kotlu çizgi",
+     "description": "Değerler köşe kotu olan çoklu çizgiler yeni katmana eklenir; değersiz noktalar çizgiyi böler.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "multidimData",
+     "text": "Çok boyutlu veri"
+    },
+    "icon": "multidimProfile",
+    "about": "Rasterin değerlerini çizgiler boyunca, Adım aralıklarla okur: tablo ve isteğe bağlı kotlu çizgiler.",
+    "help": [
+     "Her çizginin başından Adım aralıklarla ve sonunda bir nokta; yay, daire, elips ve eğri kendi eğrileriyle yürünür. Değer noktanın düştüğü hücrenin değeridir; mesh rasterde ağdan enterpolasyondur (pikselin değil). NetCDF ve mesh rasterde gösterilen dilim okunur.",
+     "Tablo: Çizgi, Uzaklık (m), koordinatlar ve Değer; panoya kopyalanır ya da CSV olarak kaydedilir. Kotlu çizgi açıksa değerler köşe kotu olan çoklu çizgiler rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KESIT",
+     "PROFIL",
+     "BOYKESIT"
+    ]
+   }
+  },
+  "multidim.series": {
+   "title": "Zaman serisi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Zaman boyutlu veri seti (NetCDF ya da mesh) ya da çok bantlı raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "points",
+     "label": "Noktalar",
+     "description": "Değerlerin okunduğu noktalar; çok noktalı nesnenin her noktası. Sütunun adı noktanın ad özniteliği.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "multidimData",
+     "text": "Çok boyutlu veri"
+    },
+    "icon": "timeSeries",
+    "about": "Noktalardaki değerleri veri setinin her zaman adımında (ya da rasterin her bandında) okur: tablo.",
+    "help": [
+     "Zaman boyutlu veri setinde öbür boyutlar rasterin gösterdiği değerlerde kalır; yalnız noktaların değerleri okunur. Zaman boyutu olmayan çok bantlı rasterde her bant bir satırdır. Değer hücrenin değeridir; mesh rasterde ağdan enterpolasyondur.",
+     "Tablo: satırlar adımlar (Adım ve Zaman, ya da Bant), sütunlar noktalar; panoya kopyalanır ya da CSV olarak kaydedilir. Çizim değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ZAMANSERISI",
+     "ZSERI"
+    ]
+   }
+  },
+  "multidim.meshCalculator": {
+   "title": "Mesh hesaplayıcı",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Mesh ekle ile eklenen mesh raster; ifadenin veri setleri onun ağındandır.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "expression",
+     "label": "İfade",
+     "description": "Veri setleri değişken adlarıyla ya da gösterilen adlarıyla ([Su derinliği]); vektörün adı büyüklüğü.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "value",
+      "placeholder": "[depth] * 2"
+     }
+    },
+    {
+     "name": "summary",
+     "label": "Zaman özeti",
+     "description": "Yok: her zaman adımı yazılır; öbürleri adımları birleştirir (değersizler atlanır).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "none",
+        "label": "Yok"
+       },
+       {
+        "value": "max",
+        "label": "En büyük"
+       },
+       {
+        "value": "min",
+        "label": "En küçük"
+       },
+       {
+        "value": "mean",
+        "label": "Ortalama"
+       },
+       {
+        "value": "sum",
+        "label": "Toplam"
+       }
+      ]
+     }
+    },
+    {
+     "name": "name",
+     "label": "Veri setinin adı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 256,
+      "placeholder": "Hesap"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Boş bırakılırsa kaynağın adının sonuna -hesap eklenir (UGRID NetCDF).",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-hesap.nc"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "multidimData",
+     "text": "Çok boyutlu veri"
+    },
+    "icon": "meshCalculator",
+    "about": "Mesh'in veri setlerinden ifadeyle yeni veri seti yazar: aynı ağda, yeni UGRID dosyasında.",
+    "help": [
+     "İfadenin andığı veri setleri aynı konumda (düğümlerde ya da yüzlerde) olmalı; zamanlı olanlar aynı zaman adımlarında, zamansızlar her adımda geçerlidir; katmanlı veri seti okunmaz. Değersiz girdi değersiz sonuç verir; etkin olmayan yüzün değeri yoktur.",
+     "Örnekler: [depth] * 2; [Su derinliği] + bed; durum eğer depth > 0,5 ise 1 yoksa 0 son. Matematik işlevleri Raster hesaplayıcı'nınkiler.",
+     "Sonuç kaynağın ağı, zamanı (özetle yok olur) ve yeni veri setiyle 32 bit ondalık UGRID NetCDF'tir; web'de 32 MB'a kadar olanı projeye gömülür, büyüğü indirilir. Çizime ekle açıksa onu gösteren mesh raster kaynağın katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "MESHHESAP",
+     "AGHESAP"
     ]
    }
   },

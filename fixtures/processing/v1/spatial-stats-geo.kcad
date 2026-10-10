@@ -1,0 +1,123 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: coğrafi proje",
+ "settings": {
+  "srid": 4326,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kaza",
+   "name": "Kazalar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "ring",
+     "size": 5
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "parsel",
+   "name": "Parseller",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.35,
+    "fill": "#3E63DD1F"
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "point",
+   "id": 1,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "G1"
+   },
+   "p": {
+    "x": 32.5,
+    "y": 39.9
+   }
+  },
+  {
+   "kind": "point",
+   "id": 2,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "G2"
+   },
+   "p": {
+    "x": 32.51,
+    "y": 39.905
+   }
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "G3"
+   },
+   "p": {
+    "x": 32.52,
+    "y": 39.91
+   }
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "G4"
+   },
+   "p": {
+    "x": 32.53,
+    "y": 39.915
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

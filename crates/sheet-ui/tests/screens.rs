@@ -106,6 +106,7 @@ fn context(workspace: Option<kentos_contracts::Workspace>) -> Context {
             user: "Ayşe Yılmaz".into(),
             date: "2026-10-02".into(),
             crs_name: "TUREF / TM33".into(),
+            variables: Vec::new(),
         },
         center: Some(GroundPoint {
             x: 484_250.0,

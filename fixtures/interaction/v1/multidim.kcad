@@ -1,0 +1,288 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Mesh ve çok boyutlu veri",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 2,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 487500.0,
+  "y": 4420300.0
+ },
+ "layers": [
+  {
+   "id": "istasyonlar",
+   "name": "İstasyonlar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kesit",
+   "name": "Kesitler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#37474F",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "taskin",
+   "name": "Taşkın",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yagis",
+   "name": "Yağış",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "kesit",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    1.0,
+    0.0,
+    4420520.0,
+    0.0,
+    -1.0
+   ],
+   "width": 768,
+   "height": 360,
+   "bands": 1,
+   "sample": "f32",
+   "file": "multidim/taskin.nc",
+   "srid": 5256,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Viridis",
+    "edges": "#2B3440"
+   },
+   "dataset": {
+    "variable": "derinlik",
+    "mesh": "mesh",
+    "dims": [
+     {
+      "name": "time",
+      "index": 9,
+      "values": [
+       1714543200000.0,
+       1714545000000.0,
+       1714546800000.0,
+       1714548600000.0,
+       1714550400000.0,
+       1714552200000.0,
+       1714554000000.0,
+       1714555800000.0,
+       1714557600000.0,
+       1714559400000.0,
+       1714561200000.0,
+       1714563000000.0
+      ],
+      "time": true
+     }
+    ],
+    "followTime": true
+   },
+   "id": 1,
+   "layerId": "taskin",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487200.0,
+    16.0,
+    0.0,
+    4420600.0,
+    0.0,
+    -16.2
+   ],
+   "width": 48,
+   "height": 32,
+   "bands": 1,
+   "sample": "f32",
+   "file": "multidim/yagis.nc",
+   "srid": 5256,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Mavi-kırmızı"
+   },
+   "opacity": 0.6,
+   "dataset": {
+    "variable": "yagis",
+    "dims": [
+     {
+      "name": "time",
+      "index": 4,
+      "values": [
+       1714543200000.0,
+       1714546800000.0,
+       1714550400000.0,
+       1714554000000.0,
+       1714557600000.0,
+       1714561200000.0,
+       1714564800000.0,
+       1714568400000.0,
+       1714572000000.0,
+       1714575600000.0,
+       1714579200000.0,
+       1714582800000.0
+      ],
+      "time": true
+     }
+    ],
+    "followTime": true
+   },
+   "id": 2,
+   "layerId": "yagis",
+   "attrs": {}
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 487608.0,
+     "y": 4420225.74195827
+    },
+    {
+     "x": 487608.0,
+     "y": 4420525.74195827
+    }
+   ],
+   "id": 3,
+   "layerId": "kesit",
+   "attrs": {
+    "ad": "Kesit 1"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 487248.0,
+     "y": 4420357.417
+    },
+    {
+     "x": 487344.0,
+     "y": 4420386.381
+    },
+    {
+     "x": 487440.0,
+     "y": 4420399.711
+    },
+    {
+     "x": 487536.0,
+     "y": 4420392.915
+    },
+    {
+     "x": 487632.0,
+     "y": 4420368.284
+    },
+    {
+     "x": 487728.0,
+     "y": 4420334.119
+    },
+    {
+     "x": 487824.0,
+     "y": 4420301.936
+    },
+    {
+     "x": 487920.0,
+     "y": 4420282.584
+    }
+   ],
+   "id": 4,
+   "layerId": "kesit",
+   "attrs": {
+    "ad": "Eksen"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487320.0,
+    "y": 4420386.294
+   },
+   "id": 5,
+   "layerId": "istasyonlar",
+   "attrs": {
+    "ad": "Köprü"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487560.0,
+    "y": 4420394.192
+   },
+   "id": 6,
+   "layerId": "istasyonlar",
+   "attrs": {
+    "ad": "Değirmen"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487848.0,
+    "y": 4420301.543
+   },
+   "id": 7,
+   "layerId": "istasyonlar",
+   "attrs": {
+    "ad": "Mansap"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

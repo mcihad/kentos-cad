@@ -335,8 +335,10 @@ fn raster_object(f: &Frame, path: &str, srid: u32, (lo, hi): (f64, f64), layer: 
                 z_factor: None,
                 nodata: Some(NODATA),
                 resampling: kentos_contracts::RasterResampling::Bilinear,
+                edges: None,
             },
             opacity: None,
+            dataset: None,
         },
     })
 }

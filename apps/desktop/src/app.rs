@@ -205,6 +205,9 @@ pub enum Dialog {
     RasterAdd,
     /// Raster stili (rasters/look.rs, docs/adr/0204 §8); the window is `App::rasters.look`.
     RasterStyle,
+    /// Mesh ekle and Raster ekle's NetCDF (rasters/multidim.rs, docs/adr/0243 §11); the window
+    /// is `App::rasters.multidim`.
+    Multidim,
     /// Nokta bulutu ekle (pointclouds/add.rs, docs/adr/0207 §9); the window is `App::clouds.add`.
     PointCloudAdd,
     /// Nokta bulutu stili (pointclouds/look.rs, docs/adr/0207 §9); the window is `App::clouds.look`.
@@ -2208,6 +2211,8 @@ impl App {
             // Raster ekle and Raster stili (rasters/, docs/adr/0204 §8); Raster oturt is a Hesap window.
             "raster.add" => return self.raster_add_command(),
             "raster.style" => return self.raster_look_command(),
+            // Mesh ekle (rasters/multidim.rs, docs/adr/0243 §11).
+            "mesh.add" => return self.mesh_add_command(),
             // Nokta bulutu (pointclouds/, docs/adr/0207 §9).
             "pointcloud.add" => return self.cloud_add_command(),
             "pointcloud.style" => return self.cloud_look_command(),

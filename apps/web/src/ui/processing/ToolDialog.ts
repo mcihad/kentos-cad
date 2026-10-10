@@ -494,6 +494,8 @@ class ToolDialog {
     // Stopped before running (e.g. nothing selected): the problem is on its field.
     if (out.status === 'invalid') this.focusFirstIssue();
     else this.runBtn.focus();
+    // A run that gave a table: the table under the form is brought into view.
+    if (out.status === 'ok' && this.result.childElementCount) this.result.scrollIntoView({ block: 'nearest' });
   }
 
   private focusFirstIssue(): void {

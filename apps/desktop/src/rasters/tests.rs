@@ -428,9 +428,10 @@ fn raster_ekle_reads_a_geotiff_from_an_address() {
     assert!(r.raster.file.is_none() && r.raster.asset.is_none());
     assert_eq!(super::key_of(&r.raster), format!("url:{url}"));
     // The same pixels by ranges as from the file.
-    let from_url = super::tiles::open(&super::tiles::Origin::Url(url.clone())).expect("opens");
+    let from_url =
+        super::tiles::open(&super::tiles::Origin::Url(url.clone()), None).expect("opens");
     let from_file =
-        super::tiles::open(&super::tiles::Origin::File(fixture("dem.tif"))).expect("opens");
+        super::tiles::open(&super::tiles::Origin::File(fixture("dem.tif")), None).expect("opens");
     from_url.fill(0, 0, 0, 480, 324).expect("reads");
     from_file.fill(0, 0, 0, 480, 324).expect("reads");
     let region = |o: &super::tiles::Opened| {
