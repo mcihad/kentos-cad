@@ -135,12 +135,58 @@ const RULES: LayerStyle = {
   },
 };
 
+/** Districts with their numbers, two stops on one place and a road: what the thematic renderers read (docs/adr/0213). */
+const THEMATIC: NewEntity[] = [
+  { kind: 'polygon', layerId: 'k', attrs: { Nüfus: '120', Gelir: '20', Erkek: '600', Kadın: '640', Konut: '70', Ticaret: '30' }, pts: [P(0, 0), P(20, 0), P(20, 15), P(0, 15)] },
+  { kind: 'polygon', layerId: 'k', attrs: { Nüfus: '40', Gelir: '45', Erkek: '200', Kadın: '260', Konut: '20', Ticaret: '60' }, pts: [P(25, 0), P(45, 0), P(45, 15), P(25, 15)] },
+  // No number: “Değeri olmayanlar”.
+  { kind: 'polygon', layerId: 'k', attrs: { Gelir: '10' }, pts: [P(50, 0), P(60, 0), P(60, 10), P(50, 10)] },
+  { kind: 'polyline', layerId: 'k', attrs: { Nüfus: '80' }, pts: [P(0, 20), P(30, 20), P(30, 35)] },
+  { kind: 'point', layerId: 'k', attrs: { Nüfus: '150', Hat: '12' }, p: P(40, 25) },
+  { kind: 'point', layerId: 'k', attrs: { Nüfus: '20', Hat: '14' }, p: P(40.5, 25) },
+];
+
+const MAIN_FILL: Symbol = { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: '#000000' }, { id: 'l', type: 'simpleLine', color: '#FFFFFF', width: 0.3 }] };
+const MAIN_LINE: Symbol = { type: 'line', layers: [{ id: 'l', type: 'simpleLine', color: '#000000', width: 0.5 }] };
+const CIRCLE: Symbol = { type: 'marker', layers: [{ id: 'c', type: 'shape', shape: 'circle', size: 3, fill: '#000000', stroke: '#FFFFFF', strokeWidth: 0.2 }] };
+const GROUND: Symbol = { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: '#F2F2F2' }, { id: 'l', type: 'simpleLine', color: '#B0B0B0', width: 0.25 }] };
+const thematic = (renderer: LayerStyle['renderer']): LayerStyle => ({ ...SIMPLE, renderer });
+
+const UNCLASSED = thematic({ type: 'unclassed', expr: 'Nüfus', min: 0, max: 200, ramp: ['#FFF5B8', '#E66101', '#A50F15'], symbols: { fill: MAIN_FILL, line: MAIN_LINE, marker: CIRCLE }, other: { fill: GROUND } });
+const PROPORTIONAL = thematic({ type: 'proportional', expr: 'Nüfus', minValue: 0, maxValue: 200, minSize: 1, maxSize: 6, unit: 'mm', scaling: 'flannery', symbols: { marker: CIRCLE, line: MAIN_LINE, fill: GROUND } });
+const BIVARIATE = thematic({ type: 'bivariate', exprX: 'Nüfus', exprY: 'Gelir', breaksX: [100], breaksY: [30], colors: ['#E8E8E8', '#5AC8C8', '#BE64AC', '#3B4994'], symbols: { fill: MAIN_FILL } });
+const DOTS = thematic({ type: 'dotDensity', fields: [{ expr: 'Erkek', color: '#4E79A7' }, { expr: 'Kadın', color: '#E15759' }], dotValue: 50, dotSize: 0.6, unit: 'mm', seed: 3, symbols: { fill: GROUND } });
+const PIES = thematic({
+  type: 'chart',
+  kind: 'pie',
+  fields: [{ expr: 'Konut', color: '#E15759' }, { expr: 'Ticaret', color: '#4E79A7' }],
+  size: 6,
+  unit: 'mm',
+  sizeBy: { minValue: 50, maxValue: 100, minSize: 4, maxSize: 8 },
+  outline: { color: '#FFFFFF', width: 0.2 },
+  symbols: { fill: GROUND },
+});
+const BARS = thematic({ type: 'chart', kind: 'stacked', fields: [{ expr: 'Konut', color: '#E15759' }, { expr: 'Ticaret', color: '#4E79A7' }], size: 8, unit: 'mm', maxValue: 100, barWidth: 1.5 });
+const CLUSTER = thematic({
+  type: 'cluster',
+  distance: 30,
+  unit: 'px',
+  grow: true,
+  renderer: { type: 'categorized', expr: 'Hat', categories: [{ value: '12', label: '12', symbols: { marker: CIRCLE } }], other: { marker: { ref: 'nokta-harf' } } },
+});
+const DISPLACEMENT = thematic({ type: 'displacement', tolerance: 4, unit: 'px', placement: 'rings', spacing: 1, center: CIRCLE, circle: { color: '#7D7D7D', width: 1 }, renderer: { type: 'single', symbols: { marker: { ref: 'nokta-agac' } } } });
+const INVERTED = thematic({ type: 'inverted', symbols: { fill: { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: '#FFFFFFB3' }, { id: 'l', type: 'simpleLine', color: '#8E4EC6', width: 0.6 }] } }, merge: true });
+/** Ters alan's box (absolute): the construction lines' box of a view round the districts. */
+const CLIP = { minX: O.x - 40, minY: O.y - 40, maxX: O.x + 100, maxY: O.y + 75 };
+
 interface Input {
   id: string;
   title: string;
   style: LayerStyle;
   entities: NewEntity[];
   plotScale: number;
+  /** The box construction lines (and Ters alan) are drawn to, absolute; none where a case gives none. */
+  clip?: { minX: number; minY: number; maxX: number; maxY: number };
   /** Görünüm kipleri (docs/adr/0195) where a case gives them: Renkli, with fills, edges and transparency otherwise. */
   view: { symbolSize: 'plot' | 'screen'; pxPerM: number; lineWeights: boolean; colorMode?: ColorMode; fills?: boolean; areaEdges?: boolean; transparency?: boolean };
 }
@@ -163,6 +209,17 @@ const INPUTS: Input[] = [
   { id: 'view-no-edges', title: 'Alan sınırları kapalı (ADR 0195): alanların çizgileri çizilmez, dolguları çizilir; çoklu çizgi kalır', style: SIMPLE, entities: [...DRAWING, ...OWN], plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true, areaEdges: false } },
   { id: 'view-opaque', title: 'Saydamlık kapalı (ADR 0195): yarı saydam dolgular tam örtücü', style: SIMPLE, entities: [...DRAWING, ...OWN], plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true, transparency: false } },
   { id: 'far-tile', title: 'Çapada ve 4 400 km ötede, yerel koordinatlarda aynı nesneler: uzaktakiler kendi karolarının toplulukları, dünyaya bağlı desenlerin evresi katlanmış', style: SIMPLE, entities: FAR, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  // The thematic renderers (docs/adr/0213 §2): the same page call and batches on both platforms; a cluster's and a
+  // displacement's pixels as paper at the plot scale (no view given), Ters alan over its box.
+  { id: 'unclassed', title: 'Sürekli renk: rampadan renkler, değeri olmayan alan zeminiyle', style: UNCLASSED, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'proportional', title: 'Orantılı sembol: Flannery, noktada işaret, çizgide kalınlık, alanın iç noktasında işaret', style: PROPORTIONAL, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'bivariate', title: 'İki değişkenli renk: 2 × 2 ızgara', style: BIVARIATE, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'dot-density', title: 'Nokta yoğunluğu: iki değerin noktaları, tohum 3, zemin', style: DOTS, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'chart-pie', title: 'Grafik: toplama göre büyüyen pasta, çerçeveli', style: PIES, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'chart-stacked', title: 'Grafik: yığılmış çubuk', style: BARS, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'cluster', title: 'Kümeleme: büyüyen küme işareti, tek noktalar Kategorili', style: CLUSTER, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'displacement', title: 'Yayma: iç içe halkalar, merkez ve halka, tek noktalar Tek sembol', style: DISPLACEMENT, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'inverted', title: 'Ters alan: kutunun alanların dışı, örtüşenler boş', style: INVERTED, entities: THEMATIC, plotScale: 1000, clip: CLIP, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
 ];
 
 it.runIf(!!process.env.GOLDEN_WRITE)('records the styled layers’ way to the GPU', () => {
@@ -178,6 +235,7 @@ it.runIf(!!process.env.GOLDEN_WRITE)('records the styled layers’ way to the GP
       screen: c.view.symbolSize === 'screen',
       hairlines: !c.view.lineWeights,
       view: viewModesOf(c.view),
+      ...(c.clip && { clip: c.clip }),
       library: { symbol: (id) => LIBRARY[id], asset: (id) => ASSETS.find((a) => a.id === id) },
       layerName: (id) => doc.layers.get(id)?.name ?? id,
       geometry: captureStyled(new PickIndex(doc), (x) => (call = x)),

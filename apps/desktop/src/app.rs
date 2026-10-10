@@ -1340,6 +1340,13 @@ impl App {
     fn handle(&mut self, message: Message) -> Task<Message> {
         // What the drawing area's device can draw with, known after its first frame (AA-01).
         self.sync_device();
+        // Dots Nokta yoğunluğu left out are said once a layer (docs/adr/0213 §2.4).
+        for (name, n) in self.viewport.take_dropped() {
+            self.warn(format!(
+                "“{name}” katmanında Nokta yoğunluğunun {} noktası çizilmedi: bir katmanda en çok 1 000 000 nokta çizilir. Nokta değerini büyütün.",
+                crate::view::thousands(n as f64)
+            ));
+        }
         // While a drawing is being opened the app takes no command (opening.rs).
         if let Some(task) = self.while_opening(&message) {
             return task;

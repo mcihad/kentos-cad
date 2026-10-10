@@ -125,6 +125,8 @@ mod raster_scenes;
 mod rasters;
 mod recent;
 mod recovery;
+#[cfg(test)]
+mod renderer_scenes;
 mod ribbon_bar;
 mod ribbon_keys;
 mod ribbon_panels;

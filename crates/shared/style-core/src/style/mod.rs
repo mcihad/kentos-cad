@@ -6,11 +6,20 @@
 
 pub mod batch;
 pub mod build;
+pub mod charts;
 pub mod compile;
+pub mod dots;
+pub mod groups;
+pub mod heat;
+pub mod inverted;
 pub mod model;
 pub mod place;
 pub mod prim;
 pub mod resolve;
+pub mod rules;
+pub mod thematic;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod thematic_tests;

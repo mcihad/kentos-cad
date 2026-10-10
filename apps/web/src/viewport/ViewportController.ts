@@ -11,13 +11,14 @@ import type { Edge } from '../model/geom/intersect';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { LayerNode } from '../model/layers';
+import { rendererNeeds, type RendererNeeds } from '../model/style';
 import { highlightHex, modedPalette, parseHex, readCanvasPalette, viewRgba, withAlpha, type CanvasPalette } from '../render/color';
 import { onFaceLoaded } from '../render/drawingFaces';
 import { createBackend } from '../render/createBackend';
 import { buildGrid, gridExtent, type GridExtent } from '../render/grid';
 import { Atlas } from '../render/atlas';
 import { buildSceneLayer, widenLines } from '../render/sceneBuilder';
-import { buildStyledLayer } from '../render/styledLayer';
+import { buildStyledLayer, type StyledBuildOptions } from '../render/styledLayer';
 import { serviceHub, serviceKey } from '../render/serviceHub';
 import { connectionOf, CreditsStrip, drawServiceLabels, serviceProject, serviceSceneLayer, shownServices } from './serviceLayers';
 import type { BackendKind, RenderBackend } from '../render/types';
@@ -915,6 +916,7 @@ export class ViewportController {
       }),
     );
     d.add(() => clearTimeout(this.symbolTimer));
+    d.add(() => clearTimeout(this.viewTimer));
     const { prefs } = this.ctx;
     // The text's size on screen draws the labels again (docs/adr/0205 §5).
     d.add(prefs.annotationSize.subscribe(() => this.requestOverlay()));
@@ -1376,6 +1378,46 @@ export class ViewportController {
     return this.clipBox!;
   }
 
+  /** Layers whose renderer depends on the view (docs/adr/0213 §3): what each was built for. */
+  private viewLayers = new Map<string, { needs: RendererNeeds; scale: number; box: Bounds | null }>();
+  private viewTimer = 0;
+  /** A count that keeps every heat map picture's key new. */
+  private madeCount = 0;
+  /** Layers already warned of dots left out (docs/adr/0213 §2.4). */
+  private droppedWarned = new Set<string>();
+
+  /** The view's CSS px per metre in quarter octaves: a view-dependent build is made for it (docs/adr/0213 §3). */
+  private viewScale(): number {
+    return 2 ** (Math.round(Math.log2(Math.max(this.camera.scale, 1e-12)) * 4) / 4);
+  }
+
+  /** A heat map's box: the view and half of it on every side. */
+  private heatBox(): Bounds {
+    const v = this.camera.visibleBounds();
+    const w = (v.maxX - v.minX) / 2;
+    const h = (v.maxY - v.minY) / 2;
+    return { minX: v.minX - w, minY: v.minY - h, maxX: v.maxX + w, maxY: v.maxY + h };
+  }
+
+  /** View-dependent layers built for another view: a heat map whose box the view left now, the rest once the zoom settles. */
+  private refreshViewLayers(): void {
+    if (!this.viewLayers.size) return;
+    const v = this.camera.visibleBounds();
+    const q = this.viewScale();
+    let later = false;
+    for (const [id, b] of this.viewLayers) {
+      if (b.box && (v.minX < b.box.minX || v.maxX > b.box.maxX || v.minY < b.box.minY || v.maxY > b.box.maxY)) this.dirtyLayers.add(id);
+      else if (b.needs.scale && b.scale !== q) later = true;
+    }
+    if (!later) return;
+    clearTimeout(this.viewTimer);
+    this.viewTimer = window.setTimeout(() => {
+      const now = this.viewScale();
+      for (const [id, b] of this.viewLayers) if (b.needs.scale && b.scale !== now) this.dirtyLayers.add(id);
+      this.requestRender();
+    }, 150);
+  }
+
   /** Rebuild layers (and highlights) holding construction lines when their clip box is stale. */
   private refreshConstructionClip(): void {
     const sel = [...this.ctx.selection.ids.value, this.ctx.selection.hover.value].some((id) => {
@@ -1397,6 +1439,7 @@ export class ViewportController {
     if (this.backend && this.glQueued) {
       this.glQueued = false;
       this.refreshConstructionClip();
+      this.refreshViewLayers();
       this.syncLayers();
       t1 = performance.now();
       this.renderGl();
@@ -1451,11 +1494,13 @@ export class ViewportController {
       if (!node || node.type !== 'layer') {
         backend.remove(id);
         this.constructionLayers.delete(id);
+        this.viewLayers.delete(id);
         continue;
       }
       // A layer drawn from a map service: one batch the passes draw from its tiles (docs/adr/0208 §3).
       if (node.service) {
         this.constructionLayers.delete(id);
+        this.viewLayers.delete(id);
         backend.upload(serviceSceneLayer(id, serviceKeyOf(doc, node), node.service.opacity ?? 1, doc.origin));
         continue;
       }
@@ -1466,9 +1511,24 @@ export class ViewportController {
         const shown = this.picker.viewShown(list.map((e) => e.id));
         list = list.filter((_, i) => shown[i]);
       }
-      if (list.some(isConstruction)) this.constructionLayers.add(id);
+      // Ters alan's frame is the construction lines' box; a heat map's, a cluster's and a displacement's build is
+      // for the view's scale, a heat map's for a box round it too (docs/adr/0213 §3).
+      const needs = rendererNeeds(node.style.renderer);
+      if (list.some(isConstruction) || needs.frame === 'construction') this.constructionLayers.add(id);
       else this.constructionLayers.delete(id);
-      backend.upload(buildStyledLayer(id, list, node.style, style));
+      let opts: StyledBuildOptions = style;
+      if (needs.scale || needs.frame === 'heat') {
+        const q = this.viewScale();
+        const box = needs.frame === 'heat' ? this.heatBox() : null;
+        opts = { ...style, ...(box && { clip: box }), frame: { pxPerM: q, picture: `heat:${id}:${++this.madeCount}` } };
+        this.viewLayers.set(id, { needs, scale: q, box });
+      } else this.viewLayers.delete(id);
+      const built = buildStyledLayer(id, list, node.style, opts);
+      if (built.dropped && !this.droppedWarned.has(id)) {
+        this.droppedWarned.add(id);
+        this.ctx.log.warn(`“${node.name}” katmanında Nokta yoğunluğunun ${built.dropped.toLocaleString('tr-TR')} noktası çizilmedi: bir katmanda en çok 1 000 000 nokta çizilir. Nokta değerini büyütün.`);
+      }
+      backend.upload(built);
     }
     this.syncServices();
     if (this.highlightDirty) {

@@ -336,7 +336,8 @@ def struct_refs_outside_unions(schemas: dict[str, dict]) -> set[str]:
 
 
 def parse_type(s, where: str):
-    if s is True or s == {}:
+    # Any JSON: a schema that says nothing of its type (only what it is for, a renderer's JSON).
+    if s is True or (isinstance(s, dict) and set(s) <= {"description", "title"}):
         return AnyT()
     if not isinstance(s, dict):
         raise Fail(f"{where}: unsupported schema {s!r}")

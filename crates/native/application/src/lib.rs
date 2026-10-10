@@ -49,6 +49,7 @@ pub mod labels_pin;
 pub mod layer_filter;
 pub mod layers_filter;
 pub mod layers_labels;
+pub mod layers_renderer;
 pub mod layers_service;
 pub mod layers_time;
 pub mod line;
@@ -137,5 +138,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LABELS_PIN,
         kentos_contracts::CAD_LABELS_PIN_VERSION,
+    ),
+    // Katman stili's renderers ([`layers_renderer`], docs/adr/0213 §5).
+    (
+        kentos_contracts::CAD_LAYERS_RENDERER,
+        kentos_contracts::CAD_LAYERS_RENDERER_VERSION,
     ),
 ];

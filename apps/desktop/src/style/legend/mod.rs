@@ -235,12 +235,11 @@ impl App {
                 sheet::max_lines()
             )));
         }
+        let entries: Vec<_> = shown.into_iter().flat_map(|g| g.entries).collect();
         Some(Ok(sheet::Sheet {
             layout,
-            symbols: shown
-                .into_iter()
-                .flat_map(|g| g.entries.into_iter().map(|e| e.symbol))
-                .collect(),
+            scales: entries.iter().map(|e| e.px_per_mm).collect(),
+            symbols: entries.into_iter().map(|e| e.symbol).collect(),
             library: self.styles.library.clone(),
             images: self.styles.images.clone(),
         }))

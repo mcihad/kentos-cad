@@ -43,6 +43,8 @@ pub struct Sheet {
     pub layout: LegendLayout,
     /// Each entry's symbol, in the order of the layout's entries.
     pub symbols: Vec<Option<Value>>,
+    /// Each entry's fixed scale (CSS px per paper mm: Orantılı sembol's rows, docs/adr/0213 §2.2).
+    pub scales: Vec<Option<f64>>,
     pub library: StyleLibrary,
     pub images: Arc<Images>,
 }
@@ -101,6 +103,7 @@ fn line<'a>(
     row: &LegendRow,
     row_top: i64,
     symbol: Option<&Value>,
+    px_per_mm: Option<f64>,
     thumbs: &Thumbs,
     look: &Look<'_>,
 ) -> Element<'a, ()> {
@@ -112,7 +115,7 @@ fn line<'a>(
         let (w, h) = (p.w as f32, p.h as f32);
         // The frame over the picture, as the web strokes it after drawing.
         let framed = stack![
-            thumbs.picture(symbol, None, (w, h), None, look),
+            thumbs.picture(symbol, None, (w, h), px_per_mm, look),
             container(space())
                 .width(Length::Fixed(w))
                 .height(Length::Fixed(h))
@@ -161,15 +164,16 @@ fn strip<'a>(
     }
     let mut entry = entries_before;
     for (i, row) in layout.rows[from..to].iter().enumerate() {
-        let symbol = if row.kind == "entry" {
+        let (symbol, px_per_mm) = if row.kind == "entry" {
             let s = sheet.symbols.get(entry).and_then(Option::as_ref);
+            let k = sheet.scales.get(entry).copied().flatten();
             entry += 1;
-            s
+            (s, k)
         } else {
-            None
+            (None, None)
         };
         let row_top = TOP + (from + i) as i64 * ROW;
-        column = column.push(line(row, row_top, symbol, thumbs, look));
+        column = column.push(line(row, row_top, symbol, px_per_mm, thumbs, look));
     }
     let background = color(&layout.background);
     container(column)

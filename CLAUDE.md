@@ -151,6 +151,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   döndürülen, gizlenen etiket); Etiketler penceresi (beş sekme, sınıflar, Engel, ε) ve Katmanlar'ın sağ tıkı, Etiketi taşı, döndür,
   sabitle (Çöz) ve gizle (Göster), Sabit etiketleri vurgula, Yerleşmeyen etiketleri göster; CBS'de Harita › Etiket;
   `cad.layers.labels` ve `cad.labels.pin`; paftanın PDF'ine zeminler ve çağrı çizgileri vektör olarak (ADR 0212);
+  ek işleyiciler: Sürekli renk (rampadan ana renk), Orantılı sembol (Alan, Yarıçap, Flannery), İki değişkenli renk (n × n ızgara), Nokta
+  yoğunluğu (alanın içinde tohumlu noktalar, katmanda en çok 1 000 000), Grafik (pasta, çubuk, yığılmış çubuk), Isı haritası (QGIS'in
+  dördüncü dereceden çekirdeği, dinamik ya da sabit en büyük, görünümün resmi), Kümeleme ve Yayma (QGIS'in nokta uzaklığı kuralı; halka,
+  iç içe halkalar, ızgara; tek noktalar bir iç işleyiciyle), Ters alan (alanların dışı; çift-tek ya da sarım); görünüme bağlı olanlar
+  yakınlaştırma durunca ya da kutudan çıkınca yeniden kurulur; Katman stili'nde gruplu, ikonlu tür listesi ve formlar, lejant satırları,
+  pafta; `cad.layers.renderer` (ADR 0213);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -516,6 +522,10 @@ python3 scripts/fixtures/label_engine_cases.py --check   # etiket motorunun yerl
 python3 scripts/fixtures/label_command_cases.py --check; python3 scripts/fixtures/label_engine_scene.py --check   # cad.layers.labels ve cad.labels.pin durumlarını sözleşmenin kurallarından, etiket motorunun sahnesini (fixtures/interaction/v1/label-engine.kcad) denetle (ADR 0212)
 KENTOS_SHOTS_ONLY=etiket-sahne,etiket-yakin,etiket-pencere,etiket-pencere-yerlesim,etiket-pencere-bicim,etiket-pencere-sigdirma,etiket-pencere-oncelik,etiket-pencere-engel,etiket-tasi,etiket-dondur,etiket-gizle,etiket-yerlesmeyen,etiket-sabit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # etiket motorunun masaüstü resimleri, .run/shots/arac-etiket-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs labels); ADR 0212)
 cargo test --release -p kentos-geometry-core --test all label_engine::timing -- --ignored --nocapture   # etiket motorunun süreleri: 2 000 nokta adı (40 px ve yoğun), 10 000 parsel, 25 tepenin 500 eş yükseltisi, 100 000 parsellik genel bakış (ADR 0212 §6)
+python3 scripts/fixtures/renderer_cases.py --check   # ek işleyicilerin kurallarını (rampa, pay ve 256 basamak, boy, sınıf, nokta yoğunluğunun noktaları, grafik, gruplar, yayma, ısı haritası, ters alanın bölgesi) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; noktalar, gruplar ve ısı değerleri bit bit, ters alan shapely'yle; durumlar fixtures/renderers/v1/cases.json (ADR 0213)
+python3 scripts/fixtures/renderer_command_cases.py --check; python3 scripts/fixtures/renderer_scene.py --check   # cad.layers.renderer durumlarını sözleşmenin kurallarından, ek işleyicilerin sahnesini (fixtures/interaction/v1/renderers.kcad) denetle (ADR 0213)
+KENTOS_SHOTS_ONLY=isleyici-sahne,isleyici-isi,isleyici-pencere-liste,isleyici-lejant cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # ek işleyicilerin masaüstü resimleri, .run/shots/arac-isleyici-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs renderers); ADR 0213)
+cargo test --release -p kentos-native-style --test all renderer_timing -- --ignored --nocapture --test-threads=1   # ek işleyicilerin kurulum süreleri bütçeleriyle (ADR 0213 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; RENDERER_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/renderers.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-interaction --test perf label_texts -- --ignored --nocapture   # 100 000 parselin iki ifadeli sınıfının etiket metinleri (ADR 0212 §6)
 KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; LABEL_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/labels.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp   # aynı süreler web'de, gönderilen WASM'la (ADR 0212 §6)
 python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
@@ -1419,7 +1429,14 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `model/labelTexts.ts`; Etiketleri yazıya çevir motorun yerleşimiyle (`ops::label_text`, ADR 0175'in eki); web'de `app/labelCommands.ts`,
   `ui/labels/`, `tools/labelTools.ts`, `viewport/placedLabels.ts`; masaüstünde `labelling/`, `kentos_interaction::label_tools`; pafta PDF'ine
   zeminler ve çağrı çizgileri; sunucuda `label_pins` sütunu ve göç 0015 (tür denetimi kılavuz, tablo, resim, raster ve nokta bulutunu da
-  alır); Python ve MCP; ortak iz `label-tools.json` (yeni beklenti `labelPins`); süreler ADR'nin Doğrulama'sında. Sıradaki `GIS-17`.
+  alır); Python ve MCP; ortak iz `label-tools.json` (yeni beklenti `labelPins`); süreler ADR'nin Doğrulama'sında. `GIS-17` ek işleyiciler
+  ([ADR 0213](docs/adr/0213-additional-renderers.md); kapsamı ben belirledim) tek parçada bitti (10 Ekim): stil çekirdeğinde dokuz tür
+  (`model.rs`, `rules.rs`, `thematic.rs`, `dots.rs`, `charts.rs`, `groups.rs`, `heat.rs`, `inverted.rs`; kurulumun `build_layer_in`'i ve
+  `ViewFrame`'i, `BatchSink::fan`; bağımsız başvuru `renderer_cases.py`, 124 durum); işleyici KCAD'de opak, şema değişmez; komut
+  `cad.layers.renderer` iki platformda, başsız sunucuda, Python'da ve MCP'de (`renderer_command_cases.py`, 45 durum); masaüstünde stilli
+  sahnenin `ViewBuilt`'i, resim kaynağının `put_made` ve `keep_made`'i, Katman stili'nin `thematic.rs`'i; web'de `ui/style/thematicPanels.ts`,
+  `style/thematic.ts`; KentOS UI'da açıklamalı radyo satırlarının ikonları; ortak `legend.json` ve `batches.json`; resimlerin sahnesi
+  `renderers.kcad` (`renderer_scene.py`); süreler `renderer_timing` ve `scripts/perf/renderers.test.ts`. Sıradaki `GIS-18`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

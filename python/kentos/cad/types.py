@@ -6204,6 +6204,103 @@ class LayersLabelsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersRendered(_Model):
+    """Output of `cad.layers.renderer` v1.
+    Attributes:
+        changed: Whether the renderer differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRendered:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersRenderer(_Model):
+    """Input of `cad.layers.renderer` v1: a layer's renderer (the style
+    engine's JSON, docs/STYLE.md §4: tek sembol, kategorili, aralıklı,
+    kurallar, and the thematic ones of docs/adr/0213) written, or taken away
+    (`renderer` absent or null: the layer's simple look), as one undo step
+    “Katman stili”. A layer that already has it as given is left as it is
+    (`changed` false, no step). A renderer is the layer's look: a locked
+    layer takes it too.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_renderer`
+    (the style core's rules, `style::rules::renderer_problem`: an unknown
+    kind, a value out of its range, an expression that does not compile;
+    the message says which); then `invalid_revision`, `revision_conflict`
+    (status `conflict`), `layer_not_found`, `not_a_layer` (a group),
+    `service_layer` (a layer drawn from a service: it holds no objects).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        renderer: Its new renderer; absent or null takes it away.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    renderer: Any | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.renderer is not UNSET:
+            out["renderer"] = self.renderer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRenderer:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            renderer=data.get("renderer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersRendererPlan(_Model):
+    """What `cad.layers.renderer` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRendererPlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersService(_Model):
     """Input of `cad.layers.service` v1: one change of the layer tree, as one
     undo step named after the operation.
@@ -12187,6 +12284,9 @@ __all__ = [
     "LayersLabelled",
     "LayersLabels",
     "LayersLabelsPlan",
+    "LayersRendered",
+    "LayersRenderer",
+    "LayersRendererPlan",
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",

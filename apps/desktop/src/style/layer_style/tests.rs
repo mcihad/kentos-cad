@@ -125,8 +125,9 @@ fn every_kind_keeps_its_draft_and_basit_goes_back_to_the_simple_look() {
     ls(&mut app, Event::Kind(Kind::Simple));
     ls(&mut app, Event::Done);
     assert_eq!(renderer_of(&app, "parsel"), None);
+    // `cad.layers.renderer`'s step, the renderer taken away (docs/adr/0213 §5).
     let model = &mut app.document.as_mut().expect("open").model;
-    assert_eq!(model.undo().as_deref(), Some("Basit katman stili"));
+    assert_eq!(model.undo().as_deref(), Some("Katman stili"));
 }
 
 #[test]
@@ -257,7 +258,7 @@ fn a_slot_goes_back_to_the_simple_look() {
 #[test]
 fn a_renderer_this_version_cannot_read_is_kept() {
     let mut app = app_with_drawing();
-    let odd = json!({ "type": "heatmap", "radius": 5 });
+    let odd = json!({ "type": "voronoi", "cells": 5 });
     {
         let model = &mut app.document.as_mut().expect("open").model;
         let mut style = model.layers().get("parsel").expect("layer").style.clone();
@@ -336,7 +337,11 @@ fn arrows_step_through_the_kinds() {
     for _ in 0..6 {
         ls(&mut app, Event::Step(true));
     }
-    assert_eq!(window(&app).kind, Kind::Rules, "stops at the last");
+    assert_eq!(window(&app).kind, Kind::Rules);
+    for _ in 0..10 {
+        ls(&mut app, Event::Step(true));
+    }
+    assert_eq!(window(&app).kind, Kind::Inverted, "stops at the last");
     ls(&mut app, Event::Step(false));
-    assert_eq!(window(&app).kind, Kind::Graduated);
+    assert_eq!(window(&app).kind, Kind::Displacement);
 }

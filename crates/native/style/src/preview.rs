@@ -219,6 +219,7 @@ pub fn preview(
         library,
         layer_name: &|_| "Önizleme".to_owned(),
         view: Default::default(),
+        frame: None,
     };
     let (_, batches) = build_layer(&store, &style, &[&sample], &opts)?;
     let layer = decode(

@@ -114,7 +114,7 @@ export function registerStyleCommands(ctx: AppContext): void {
       category: cat,
       icon: 'layerStyle',
       aliases: ['KATMANSTILI', 'LAYERSTYLE'],
-      description: 'Etkin katmanın nesnelerinin nasıl çizileceği: tek sembol, kategorili, aralıklı ya da kurallarla.',
+      description: 'Etkin katmanın nesnelerinin nasıl çizileceği: tek sembol, kategorili, aralıklı, kurallar ya da tematik işleyiciler (sürekli renk, orantılı sembol, iki değişkenli renk, nokta yoğunluğu, grafik, ısı haritası, kümeleme, yayma, ters alan).',
       isEnabled: () => !!activeLayer(),
       watch: [ctx.doc.layers.active],
       run: () => {

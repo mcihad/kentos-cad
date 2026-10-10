@@ -3071,6 +3071,70 @@ SCENES.labels = [
   },
 ];
 
+// Ek işleyiciler (docs/adr/0213) on fixtures/interaction/v1/renderers.kcad (scripts/fixtures/renderer_scene.py): each
+// renderer's region closer in, Ters alan shown, the Katman stili window of each and its list, the legend. The
+// desktop's are `renderer_scenes` (arac-isleyici-*).
+const RENDERER_DRAWING = readFileSync(new URL('../../../../fixtures/interaction/v1/renderers.kcad', import.meta.url), 'utf8');
+const REGIONS = {
+  sahne: [-40, -140, 3700, 1300],
+  surekli: [-30, 570, 930, 1270],
+  iki: [970, 570, 1930, 1270],
+  nokta: [-30, -130, 930, 570],
+  grafik: [970, -130, 1930, 570],
+  isi: [1970, 570, 2930, 1270],
+  kume: [1970, -130, 2930, 570],
+  yayma: [2970, 620, 3640, 1260],
+  orantili: [2960, -120, 3660, 560],
+};
+const loadRenderers = async (ui, region = 'sahne', after = '') => {
+  const [x0, y0, x1, y1] = REGIONS[region];
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(RENDERER_DRAWING)}, null))) throw new Error('renderers.kcad did not load');
+    ${after}
+    k.view.zoomToBox({ minX: ${487000 + x0}, minY: ${4420000 + y0}, maxX: ${487000 + x1}, maxY: ${4420000 + y1} }, 24);
+    k.selection.clear();
+  })()`);
+  await ui.sleep(700);
+};
+/** Katman stili over a layer (made the active one), its list open when asked. */
+const rendererWindow = (layer, region, list = false) => async (ui) => {
+  await loadRenderers(ui, region, `k.doc.layers.setActive('${layer}');`);
+  await ui.eval(`window.kentos.commands.execute('style.layerStyle')`);
+  await ui.waitFor(`!!document.querySelector('.dialog--lstyle .lsty__panel, .dialog--lstyle .lsty__single')`, 8000);
+  if (list) {
+    await ui.eval(`(() => { const b = document.querySelector('.dialog--lstyle .lsty__kinds'); b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); })()`);
+    await ui.sleep(250);
+  }
+  await ui.sleep(400);
+};
+const rendererClose = async (ui) => ui.escapeAll(3);
+SCENES.renderers = [
+  { id: 'isleyici-sahne', open: (ui) => loadRenderers(ui), close: rendererClose },
+  ...['surekli', 'iki', 'nokta', 'grafik', 'isi', 'kume', 'yayma', 'orantili'].map((r) => ({ id: `isleyici-${r}`, open: (ui) => loadRenderers(ui, r), close: rendererClose })),
+  { id: 'isleyici-ters', open: (ui) => loadRenderers(ui, 'sahne', `k.doc.layers.setVisible('calisma', true);`), close: rendererClose },
+  { id: 'isleyici-pencere-liste', open: rendererWindow('surekli', 'surekli', true), close: rendererClose },
+  { id: 'isleyici-pencere-surekli', open: rendererWindow('surekli', 'surekli'), close: rendererClose },
+  { id: 'isleyici-pencere-orantili', open: rendererWindow('okul', 'orantili'), close: rendererClose },
+  { id: 'isleyici-pencere-iki', open: rendererWindow('iki', 'iki'), close: rendererClose },
+  { id: 'isleyici-pencere-nokta', open: rendererWindow('nokta', 'nokta'), close: rendererClose },
+  { id: 'isleyici-pencere-grafik', open: rendererWindow('grafik', 'grafik'), close: rendererClose },
+  { id: 'isleyici-pencere-isi', open: rendererWindow('olay', 'isi'), close: rendererClose },
+  { id: 'isleyici-pencere-kume', open: rendererWindow('agac', 'kume'), close: rendererClose },
+  { id: 'isleyici-pencere-yayma', open: rendererWindow('durak', 'yayma'), close: rendererClose },
+  { id: 'isleyici-pencere-ters', open: rendererWindow('calisma', 'sahne'), close: rendererClose },
+  {
+    id: 'isleyici-lejant',
+    open: async (ui) => {
+      await loadRenderers(ui);
+      await ui.eval(`window.kentos.commands.execute('style.legend')`);
+      await ui.sleep(600);
+    },
+    close: rendererClose,
+  },
+];
+
 // Zaman and Senaryo (docs/adr/0210) on fixtures/interaction/v1/temporal.kcad, the scenes the desktop's
 // `temporal_scenes` draws: the CBS ribbon's Harita with its Zaman and Senaryo panels; the slider at its last position
 // and back in 2015; Zaman ayarları; Senaryo oluştur; the scenario shown; Senaryoyu uygula's question; Zamanı

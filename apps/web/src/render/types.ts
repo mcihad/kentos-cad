@@ -1,3 +1,4 @@
+import type { MadePicture } from '../wasm/core';
 import type { Vec2 } from '../model/geometry';
 import type { ShapeParams } from '../style/primitives';
 
@@ -199,6 +200,10 @@ export interface SceneLayer {
   points: PointBatch[];
   /** Styled batches in draw order (symbol levels): drawn between the plain fills and the plain lines. */
   styled?: StyledBatch[];
+  /** Pictures the build made (a heat map's, docs/adr/0213 §2.6), drawn by the batches that name their keys. */
+  pictures?: readonly MadePicture[];
+  /** Dots of Nokta yoğunluğu left out over the layer's limit (docs/adr/0213 §2.4). */
+  dropped?: number;
 }
 
 export const emptySceneLayer = (id: string): SceneLayer => ({ id, lines: [], fills: [], points: [] });

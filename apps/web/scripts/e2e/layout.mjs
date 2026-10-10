@@ -267,6 +267,27 @@ const ITEMS = [
   { id: 'style-manager', open: (ui) => ui.run('style.manager'), ready: '.smgr__grid, .dialog' },
   { id: 'symbol-designer', open: async (ui) => (await ui.run('style.manager'), await ui.clickText('.dialog button', 'Yeni sembol'), await ui.clickText('.menu__item', 'Alan sembolü')) },
   { id: 'layer-style', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle')) },
+  // Katman stili's thematic kinds (docs/adr/0213 §4): the grouped list, and the widest forms.
+  {
+    id: 'layer-style-kinds',
+    open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle'), await ui.click('.lsty__kinds')),
+    must: '.menu .menu__item',
+  },
+  ...[
+    ['layer-style-chart', 'Grafik', '.lsty__fields'],
+    ['layer-style-heatmap', 'Isı haritası', '.lsty__ramp'],
+    ['layer-style-bivariate', 'İki değişkenli renk', '.lsty__grid'],
+    ['layer-style-displacement', 'Yayma', '.lsty__panel'],
+  ].map(([id, kind, ready]) => ({
+    id,
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.layers.setActive('ada')`);
+      await ui.run('style.layerStyle');
+      await ui.click('.lsty__kinds');
+      await ui.clickText('.menu__item', kind);
+    },
+    ready,
+  })),
   { id: 'legend', open: (ui) => ui.run('style.legend') },
   { id: 'svg-editor', open: (ui) => ui.run('style.svgEditor') },
   { id: 'processing-tool', open: (ui) => ui.run('map.edgeLengths') },

@@ -1,6 +1,8 @@
 import type { MapPrim } from '../../contracts/generated/sheet/MapPrim';
 import type { MapLayers } from '../../contracts/generated/sheet/MapLayers';
 import type { Bounds } from '../../model/geometry';
+import type { LayerStyle } from '../../model/layers';
+import { rendererNeeds } from '../../model/style';
 import { Atlas } from '../../render/atlas';
 import type { CanvasPalette } from '../../render/color';
 import { buildStyledLayer, type StyledBuildOptions } from '../../render/styledLayer';
@@ -74,6 +76,18 @@ export function styleAt(ctx: AppContext, scale: number, palette: CanvasPalette, 
   return { origin: doc.origin, palette, plotScale: scale, screen: false, hairlines: false, library: ctx.styles.library, layerName: (id: string) => doc.layers.get(id)?.name ?? id, geometry: ctx.view.geometry, clip };
 }
 
+let madePictures = 0;
+
+/**
+ * A layer's build on a map frame: a view-dependent renderer's (docs/adr/0213 §3) at the paper's CSS px per ground
+ * metre (96 dpi over the scale) over the map's box, a heat map's picture by a key of its own; the rest as `style`.
+ */
+export function layerStyleAt(style: StyledBuildOptions, layerId: string, renderer: LayerStyle['renderer']): StyledBuildOptions {
+  const needs = rendererNeeds(renderer);
+  if (!needs.scale && !needs.frame) return style;
+  return { ...style, frame: { pxPerM: 96_000 / (25.4 * Math.max(1, style.plotScale)), picture: `heat:sheet:${layerId}:${++madePictures}` } };
+}
+
 /**
  * The label records a map frame writes, of a box at `pxPerM`: only of the map's layers when it shows a list of
  * them, and only those whose anchor is inside the frame (frameLabels.ts; screen, pictures and PDF alike).
@@ -108,6 +122,7 @@ export class MapFrames {
   private styleEpoch = 0;
   /** What the backend's layers were built for: the drawing's revision, the scale symbols were compiled at, the styles. */
   private uploaded = '';
+  private uploadedBox = '';
   private readonly kept = new Map<string, Kept>();
   private readonly waiting = new Map<string, { prim: MapPrim; pxPerUm: number }>();
   private timer = 0;
@@ -240,16 +255,24 @@ export class MapFrames {
   }
 
 
-  /** Builds every layer for symbols compiled at `scale` (once per drawing revision and scale). */
+  /**
+   * Builds every layer for symbols compiled at `scale` (once per drawing revision and scale); a view-dependent
+   * renderer's (a heat map's, a cluster's, Ters alan's, docs/adr/0213 §3) also when the map's box moves.
+   */
   private upload(backend: RenderBackend, scale: number, palette: CanvasPalette, clip: Bounds): void {
     const { doc } = this.ctx;
     const key = `${doc.revision}|${scale}|${this.styleEpoch}`;
-    if (key === this.uploaded) return;
+    const boxKey = `${key}|${clip.minX},${clip.minY},${clip.maxX},${clip.maxY}`;
+    if (boxKey === this.uploadedBox) return;
+    const all = key !== this.uploaded;
     this.uploaded = key;
+    this.uploadedBox = boxKey;
     const style = styleAt(this.ctx, scale, palette, clip);
     for (const l of doc.layers.leaves()) {
       if (l.type !== 'layer') continue;
-      backend.upload(buildStyledLayer(l.id, doc.byLayer(l.id), l.style, style));
+      const opts = layerStyleAt(style, l.id, l.style.renderer);
+      if (!all && opts === style) continue;
+      backend.upload(buildStyledLayer(l.id, doc.byLayer(l.id), l.style, opts));
     }
   }
 

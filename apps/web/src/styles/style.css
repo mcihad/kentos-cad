@@ -689,6 +689,78 @@
   display: flex;
   gap: 6px;
 }
+/* The thematic renderers' forms (docs/adr/0213 §4). */
+.lsty__kinds {
+  flex: none;
+}
+.lsty__kinds .dropdown__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lsty__label--w {
+  flex: none;
+  width: calc(110px * var(--ui-scale));
+}
+.lsty__n2 {
+  width: calc(78px * var(--ui-scale));
+}
+.lsty__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+/* A ramp's colours: data, on a checkerboard so a clear end shows. */
+.lsty__ramp {
+  flex: 1 1 120px;
+  min-width: 80px;
+  max-width: 240px;
+  height: 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xs);
+}
+.lsty__grid {
+  display: grid;
+  gap: 2px;
+}
+.lsty__cell {
+  width: 22px;
+  height: 22px;
+  border-radius: 2px;
+  border: 1px solid var(--c-line-soft);
+}
+.lsty__fields .lsty__table td {
+  padding: 3px 6px;
+}
+.lsty__exprcell {
+  min-width: 0;
+  width: 55%;
+}
+.lsty__rowtools {
+  width: 1%;
+}
+.lsty__rowtools > div {
+  display: flex;
+  gap: 2px;
+}
+/* A form's lists (ramps, schemes, the renderer of single points): a measured width, not the row's. */
+.lsty__panel > .lsty__row > select.field {
+  flex: 0 1 calc(240px * var(--ui-scale));
+  min-width: 0;
+}
+.lsty__swatch {
+  width: 30px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xs);
+  background: none;
+}
+.lsty__range {
+  flex: 0 1 200px;
+}
 .slots {
   display: flex;
   gap: 4px;

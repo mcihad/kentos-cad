@@ -320,7 +320,167 @@ export type LayerRenderer =
       /** min ≤ value < max; the last class includes its max. */
       readonly classes: readonly { readonly min: number; readonly max: number; readonly label: string; readonly symbols: SymbolSet }[];
     }
-  | { readonly type: 'rules'; readonly rules: readonly Rule[] };
+  | { readonly type: 'rules'; readonly rules: readonly Rule[] }
+  | UnclassedRenderer
+  | ProportionalRenderer
+  | BivariateRenderer
+  | DotDensityRenderer
+  | ChartRenderer
+  | HeatmapRenderer
+  | ClusterRenderer
+  | DisplacementRenderer
+  | InvertedRenderer;
+
+// ── Thematic renderers (docs/adr/0213) ─────────────────────────────────
+
+/** A value of a dot density's or a chart's list: its expression, name and colour. */
+export interface RendererField {
+  readonly expr: string;
+  readonly label?: string;
+  readonly color: Color;
+}
+
+/** Sürekli renk: the value's share of [min, max] in the ramp's colour, the symbols' main colour (§2.1). */
+export interface UnclassedRenderer {
+  readonly type: 'unclassed';
+  readonly expr: string;
+  readonly min: number;
+  readonly max: number;
+  /** 2–16 colours, equally spaced. */
+  readonly ramp: readonly Color[];
+  readonly symbols: SymbolSet;
+  /** What the objects without a value draw; none: nothing. */
+  readonly other?: SymbolSet;
+}
+
+/** Orantılı sembol: the value's share of [minValue, maxValue] as a size between minSize and maxSize (§2.2). */
+export interface ProportionalRenderer {
+  readonly type: 'proportional';
+  readonly expr: string;
+  readonly minValue: number;
+  readonly maxValue: number;
+  readonly minSize: number;
+  readonly maxSize: number;
+  readonly unit?: 'mm' | 'px';
+  readonly scaling?: 'area' | 'radius' | 'flannery';
+  readonly symbols: SymbolSet;
+  readonly other?: SymbolSet;
+}
+
+/** İki değişkenli renk: two values' classes, a colour of an n × n grid (`colors[j · n + i]`) (§2.3). */
+export interface BivariateRenderer {
+  readonly type: 'bivariate';
+  readonly exprX: string;
+  readonly exprY: string;
+  readonly breaksX: readonly number[];
+  readonly breaksY: readonly number[];
+  readonly colors: readonly Color[];
+  readonly symbols: SymbolSet;
+  readonly other?: SymbolSet;
+}
+
+/** Nokta yoğunluğu: a value's dots in an area, one per `dotValue` (§2.4). */
+export interface DotDensityRenderer {
+  readonly type: 'dotDensity';
+  readonly fields: readonly RendererField[];
+  readonly dotValue: number;
+  readonly dotSize?: number;
+  readonly unit?: 'mm' | 'px';
+  readonly seed?: number;
+  /** The background drawn under the dots. */
+  readonly symbols?: SymbolSet;
+}
+
+/** Grafik: a pie, bars or a stacked bar at the object (§2.5). */
+export interface ChartRenderer {
+  readonly type: 'chart';
+  readonly kind?: 'pie' | 'bar' | 'stacked';
+  readonly fields: readonly RendererField[];
+  readonly size: number;
+  readonly unit?: 'mm' | 'px';
+  /** A pie's diameter from its total. */
+  readonly sizeBy?: { readonly minValue: number; readonly maxValue: number; readonly minSize: number; readonly maxSize: number };
+  /** The value a bar of `size` stands for (bars). */
+  readonly maxValue?: number;
+  readonly barWidth?: number;
+  readonly outline?: { readonly color: Color; readonly width: number };
+  readonly symbols?: SymbolSet;
+}
+
+/** Isı haritası: the points' kernel density through a ramp, one picture of the view (§2.6). */
+export interface HeatmapRenderer {
+  readonly type: 'heatmap';
+  readonly radius: number;
+  readonly unit?: 'px' | 'm';
+  readonly weight?: string;
+  /** Fixed; none: the computed box's largest (dynamic). */
+  readonly max?: number;
+  readonly ramp: readonly Color[];
+  /** A cell's pixels, 1–5. */
+  readonly quality?: number;
+  readonly opacity?: number;
+}
+
+/** The renderers a cluster or a displacement draws single points with. */
+export type InnerRenderer = Extract<LayerRenderer, { type: 'single' | 'categorized' | 'graduated' | 'rules' | 'unclassed' | 'proportional' | 'bivariate' }>;
+
+/** Kümeleme: points nearer than `distance` as one symbol with their count (§2.7). */
+export interface ClusterRenderer {
+  readonly type: 'cluster';
+  readonly distance: number;
+  readonly unit?: 'px' | 'm';
+  readonly symbol?: SymbolRef;
+  readonly count?: boolean;
+  readonly grow?: boolean;
+  readonly renderer?: InnerRenderer;
+}
+
+/** Yayma: points nearer than `tolerance` put round their centre (§2.8). */
+export interface DisplacementRenderer {
+  readonly type: 'displacement';
+  readonly tolerance: number;
+  readonly unit?: 'px' | 'm';
+  readonly placement?: 'ring' | 'rings' | 'grid';
+  readonly spacing?: number;
+  readonly center?: SymbolRef;
+  readonly circle?: { readonly color: Color; readonly width: number };
+  readonly renderer?: InnerRenderer;
+}
+
+/** Ters alan: the box outside the layer's areas with the fill symbol (§2.9). */
+export interface InvertedRenderer {
+  readonly type: 'inverted';
+  readonly symbols: SymbolSet;
+  readonly merge?: boolean;
+}
+
+/** What a renderer's build depends on beyond the objects (docs/adr/0213 §3; the core's `Renderer::view_needs`). */
+export interface RendererNeeds {
+  /** The view's scale, rounded to quarter octaves. */
+  readonly scale: boolean;
+  /** A box round the view: the heat map's (the view and half of it on every side) or the construction lines'. */
+  readonly frame: 'heat' | 'construction' | null;
+  /** Built whole (its objects drawn together). */
+  readonly whole: boolean;
+}
+
+export function rendererNeeds(r: LayerRenderer | undefined): RendererNeeds {
+  switch (r?.type) {
+    case 'heatmap':
+      return { scale: true, frame: 'heat', whole: true };
+    case 'cluster':
+    case 'displacement':
+      return { scale: r.unit !== 'm', frame: null, whole: true };
+    case 'chart':
+      return { scale: r.unit === 'px', frame: null, whole: false };
+    case 'inverted':
+      return { scale: false, frame: 'construction', whole: true };
+    case 'dotDensity':
+      return { scale: false, frame: null, whole: true };
+    default:
+      return { scale: false, frame: null, whole: false };
+  }
+}
 
 // ── Library ────────────────────────────────────────────────────────────
 

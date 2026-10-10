@@ -357,6 +357,7 @@ fn a_raster_draws_its_tiles(gpu: &mut Gpu) {
             min_scale: None,
             max_scale: None,
         }],
+        ..StyledLayer::default()
     };
     gpu.styled = Some(StyledScene {
         layers: vec![std::sync::Arc::new(StyledLayerPart { id: 7, layer })],

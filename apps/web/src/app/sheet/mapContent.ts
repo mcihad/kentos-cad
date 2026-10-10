@@ -3,7 +3,7 @@ import type { Bounds } from '../../model/geometry';
 import { buildStyledLayer } from '../../render/styledLayer';
 import type { AppContext } from '../context';
 import { mapTexts, type VecText } from './mapLabels';
-import { labelSpots, paperPalette, shownLayers, styleAt } from './mapFrames';
+import { labelSpots, layerStyleAt, paperPalette, shownLayers, styleAt } from './mapFrames';
 import { layerPaths, type VecPath } from './mapVectors';
 
 /**
@@ -99,7 +99,7 @@ export function vectorMap(ctx: AppContext, prim: MapPrim): VectorMap | null {
     if (!l || l.type !== 'layer') continue;
     const objects = doc.byLayer(id);
     if (!objects.length) continue;
-    const shapes = layerPaths(buildStyledLayer(id, objects, l.style, style), scale, reach);
+    const shapes = layerPaths(buildStyledLayer(id, objects, l.style, layerStyleAt(style, id, l.style.renderer)), scale, reach);
     if (shapes.unsupported.length) unsupported.push({ layer: l.name, what: shapes.unsupported });
     layers.push({ id, name: l.name, paths: within(shapes.paths, reach), masks: [], texts: [] });
   }

@@ -147,10 +147,24 @@ type LayerRenderer =
   | { type: 'categorized'; expr; categories: { value, label, symbols, enabled }[]; other?: SymbolSet }
   | { type: 'graduated'; expr; classes: { min, max, label, symbols }[] }
   | { type: 'rules'; rules: Rule[] }          // Rule: filter?, minScale?, maxScale?, symbols?, children?, isElse?
+  // Tematik işleyiciler (ADR 0213):
+  | { type: 'unclassed'; expr; min; max; ramp; symbols; other? }                       // Sürekli renk
+  | { type: 'proportional'; expr; minValue; maxValue; minSize; maxSize; unit?; scaling?; symbols; other? }  // Orantılı sembol
+  | { type: 'bivariate'; exprX; exprY; breaksX; breaksY; colors; symbols; other? }     // İki değişkenli renk
+  | { type: 'dotDensity'; fields; dotValue; dotSize?; unit?; seed?; symbols? }          // Nokta yoğunluğu
+  | { type: 'chart'; kind?; fields; size; unit?; sizeBy?; maxValue?; barWidth?; outline?; symbols? }  // Grafik
+  | { type: 'heatmap'; radius; unit?; weight?; max?; ramp; quality?; opacity? }        // Isı haritası
+  | { type: 'cluster'; distance; unit?; symbol?; count?; grow?; renderer? }            // Kümeleme
+  | { type: 'displacement'; tolerance; unit?; placement?; spacing?; center?; circle?; renderer? }  // Yayma
+  | { type: 'inverted'; symbols; merge? }                                               // Ters alan
 ```
 
 - Kategorili ve aralıklı işleyiciler tasarımcıda veriden üretilir (benzersiz değerler, eşit aralık ya da doğal kırılmalar); saklanırken yine veridir.
 - **Ölçek aralığı** (1:N paydası) kuralın çizilip çizilmeyeceğini belirler; GPU toplulukları bu aralığı taşır, çizici her karede seçer, tampon yeniden kurulmaz.
+- **Tematik işleyiciler** (ADR 0213): Sürekli renk ve İki değişkenli renk sembolün ana rengini, Orantılı sembol boyunu değiştirir (256
+  basamak); Nokta yoğunluğu ve Grafik nesneden yeni çizim üretir; Isı haritası, Kümeleme, Yayma ve Ters alan katmanın nesnelerini birlikte
+  ele alır, görünüme bağlıdır (ölçek, kutu) ve görünüm değişince yeniden kurulur. Kümeleme ve Yayma'nın tek noktaları bir iç işleyiciyle
+  (`renderer`) çizilir. Yazılırken stil çekirdeğinin kuralları (`style::rules`) denetler; komut `cad.layers.renderer`.
 
 ## 5. Kitaplık
 

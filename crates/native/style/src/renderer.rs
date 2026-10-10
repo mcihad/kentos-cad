@@ -223,6 +223,218 @@ pub struct Rules {
     pub extra: Map<String, Value>,
 }
 
+// ── Thematic renderers (docs/adr/0213 §2) ──────────────────────────────
+
+/// A value of a dot density's or a chart's list.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Field {
+    #[serde(default)]
+    pub expr: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default)]
+    pub color: String,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// `{ color, width }`: a chart's outline, a displacement's circle.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Stroke {
+    pub color: String,
+    pub width: f64,
+}
+
+/// Sürekli renk.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Unclassed {
+    #[serde(default)]
+    pub expr: String,
+    pub min: f64,
+    pub max: f64,
+    #[serde(default)]
+    pub ramp: Vec<String>,
+    #[serde(default)]
+    pub symbols: SymbolSet,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub other: Option<SymbolSet>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// Orantılı sembol.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Proportional {
+    #[serde(default)]
+    pub expr: String,
+    pub min_value: f64,
+    pub max_value: f64,
+    pub min_size: f64,
+    pub max_size: f64,
+    /// `mm` (the default) or `px`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    /// `area` (the default), `radius` or `flannery`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scaling: Option<String>,
+    #[serde(default)]
+    pub symbols: SymbolSet,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub other: Option<SymbolSet>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// İki değişkenli renk: `colors[j · n + i]`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Bivariate {
+    #[serde(default)]
+    pub expr_x: String,
+    #[serde(default)]
+    pub expr_y: String,
+    #[serde(default)]
+    pub breaks_x: Vec<f64>,
+    #[serde(default)]
+    pub breaks_y: Vec<f64>,
+    #[serde(default)]
+    pub colors: Vec<String>,
+    #[serde(default)]
+    pub symbols: SymbolSet,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub other: Option<SymbolSet>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// Nokta yoğunluğu.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DotDensity {
+    #[serde(default)]
+    pub fields: Vec<Field>,
+    pub dot_value: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dot_size: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub seed: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub symbols: Option<SymbolSet>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// A pie's diameter from its total.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SizeBy {
+    pub min_value: f64,
+    pub max_value: f64,
+    pub min_size: f64,
+    pub max_size: f64,
+}
+
+/// Grafik.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Chart {
+    /// `pie` (the default), `bar` or `stacked`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    #[serde(default)]
+    pub fields: Vec<Field>,
+    pub size: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size_by: Option<SizeBy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_value: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bar_width: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outline: Option<Stroke>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub symbols: Option<SymbolSet>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// Isı haritası.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Heatmap {
+    pub radius: f64,
+    /// `px` (the default) or `m`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weight: Option<String>,
+    /// Fixed; none: dynamic.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(default)]
+    pub ramp: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quality: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub opacity: Option<f64>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// Kümeleme; `renderer` its single points'.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Cluster {
+    pub distance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub symbol: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub count: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub grow: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renderer: Option<Value>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// Yayma; `renderer` its single points'.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Displacement {
+    pub tolerance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    /// `ring` (the default), `rings` or `grid`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub placement: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spacing: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub center: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub circle: Option<Stroke>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renderer: Option<Value>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// Ters alan.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Inverted {
+    #[serde(default)]
+    pub symbols: SymbolSet,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub merge: Option<bool>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
 /// A layer renderer; `LayerStyle::renderer` without one is the layer's simple look.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Renderer {
@@ -230,6 +442,15 @@ pub enum Renderer {
     Categorized(Categorized),
     Graduated(Graduated),
     Rules(Rules),
+    Unclassed(Unclassed),
+    Proportional(Proportional),
+    Bivariate(Bivariate),
+    DotDensity(DotDensity),
+    Chart(Chart),
+    Heatmap(Heatmap),
+    Cluster(Cluster),
+    Displacement(Displacement),
+    Inverted(Inverted),
 }
 
 impl Renderer {
@@ -248,6 +469,15 @@ impl Renderer {
             Some("categorized") => read(v).map(Renderer::Categorized),
             Some("graduated") => read(v).map(Renderer::Graduated),
             Some("rules") => read(v).map(Renderer::Rules),
+            Some("unclassed") => read(v).map(Renderer::Unclassed),
+            Some("proportional") => read(v).map(Renderer::Proportional),
+            Some("bivariate") => read(v).map(Renderer::Bivariate),
+            Some("dotDensity") => read(v).map(Renderer::DotDensity),
+            Some("chart") => read(v).map(Renderer::Chart),
+            Some("heatmap") => read(v).map(Renderer::Heatmap),
+            Some("cluster") => read(v).map(Renderer::Cluster),
+            Some("displacement") => read(v).map(Renderer::Displacement),
+            Some("inverted") => read(v).map(Renderer::Inverted),
             Some(other) => Err(format!("“{other}” türünde bir katman stili")),
             None => Err("türü yazılmamış bir katman stili".to_owned()),
         }
@@ -260,6 +490,15 @@ impl Renderer {
             Renderer::Categorized(r) => serde_json::to_value(r),
             Renderer::Graduated(r) => serde_json::to_value(r),
             Renderer::Rules(r) => serde_json::to_value(r),
+            Renderer::Unclassed(r) => serde_json::to_value(r),
+            Renderer::Proportional(r) => serde_json::to_value(r),
+            Renderer::Bivariate(r) => serde_json::to_value(r),
+            Renderer::DotDensity(r) => serde_json::to_value(r),
+            Renderer::Chart(r) => serde_json::to_value(r),
+            Renderer::Heatmap(r) => serde_json::to_value(r),
+            Renderer::Cluster(r) => serde_json::to_value(r),
+            Renderer::Displacement(r) => serde_json::to_value(r),
+            Renderer::Inverted(r) => serde_json::to_value(r),
         };
         let mut v = v.unwrap_or(Value::Null);
         if let Some(o) = v.as_object_mut() {
@@ -275,8 +514,81 @@ impl Renderer {
             Renderer::Categorized(_) => "categorized",
             Renderer::Graduated(_) => "graduated",
             Renderer::Rules(_) => "rules",
+            Renderer::Unclassed(_) => "unclassed",
+            Renderer::Proportional(_) => "proportional",
+            Renderer::Bivariate(_) => "bivariate",
+            Renderer::DotDensity(_) => "dotDensity",
+            Renderer::Chart(_) => "chart",
+            Renderer::Heatmap(_) => "heatmap",
+            Renderer::Cluster(_) => "cluster",
+            Renderer::Displacement(_) => "displacement",
+            Renderer::Inverted(_) => "inverted",
         }
     }
+
+    /// What its build depends on beyond the objects (docs/adr/0213 §3; the core's `Renderer::view_needs`).
+    pub fn view_needs(&self) -> ViewNeeds {
+        let px = |u: &Option<String>| u.as_deref() != Some("m");
+        match self {
+            Renderer::Heatmap(_) => ViewNeeds {
+                scale: true,
+                frame: Some(ViewFrameKind::Heat),
+                whole: true,
+            },
+            Renderer::Cluster(c) => ViewNeeds {
+                scale: px(&c.unit),
+                frame: None,
+                whole: true,
+            },
+            Renderer::Displacement(d) => ViewNeeds {
+                scale: px(&d.unit),
+                frame: None,
+                whole: true,
+            },
+            Renderer::Chart(c) => ViewNeeds {
+                scale: c.unit.as_deref() == Some("px"),
+                frame: None,
+                whole: false,
+            },
+            Renderer::Inverted(_) => ViewNeeds {
+                scale: false,
+                frame: Some(ViewFrameKind::Construction),
+                whole: true,
+            },
+            // The bound on its dots is the layer's (docs/adr/0213 §2.4).
+            Renderer::DotDensity(_) => ViewNeeds {
+                whole: true,
+                ..ViewNeeds::default()
+            },
+            _ => ViewNeeds::default(),
+        }
+    }
+}
+
+/// The box a view-dependent build takes (docs/adr/0213 §3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ViewFrameKind {
+    /// The view and half of it on every side.
+    Heat,
+    /// The construction lines' box.
+    Construction,
+}
+
+/// What a renderer's build depends on beyond the objects.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ViewNeeds {
+    /// The view's scale in quarter octaves.
+    pub scale: bool,
+    pub frame: Option<ViewFrameKind>,
+    /// Built whole (never in parts).
+    pub whole: bool,
+}
+
+/// What a layer style's renderer JSON needs (none without one, or one this version does not read).
+pub fn needs_of(renderer: Option<&Value>) -> ViewNeeds {
+    renderer
+        .and_then(|v| Renderer::from_value(v).ok())
+        .map_or_else(ViewNeeds::default, |r| r.view_needs())
 }
 
 #[cfg(test)]
@@ -310,7 +622,7 @@ mod tests {
             let r = Renderer::from_value(&v).expect("reads");
             assert_eq!(r.to_value(), v, "{}", v["type"]);
         }
-        assert!(Renderer::from_value(&json!({ "type": "heatmap" })).is_err());
+        assert!(Renderer::from_value(&json!({ "type": "pie" })).is_err());
         assert!(Renderer::from_value(&json!({ "symbols": {} })).is_err());
     }
 }

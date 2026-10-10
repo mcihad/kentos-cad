@@ -12,6 +12,7 @@ import { entitiesTransform } from './entitiesTransform';
 import { labelsPin } from './labelsPin';
 import { layersFilter } from './layersFilter';
 import { layersLabels } from './layersLabels';
+import { layersRenderer } from './layersRenderer';
 import { layersService } from './layersService';
 import { layersTime } from './layersTime';
 import { lineCreate } from './lineCreate';
@@ -55,6 +56,7 @@ export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = 
   layersFilter,
   // Etiketler and the label tools (docs/adr/0212 §5).
   layersLabels,
+  layersRenderer,
   labelsPin,
 ];
 

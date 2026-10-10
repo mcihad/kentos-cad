@@ -3,11 +3,13 @@
 //! objects are drawn, as in QGIS's layer styling. Basit is the layer's own
 //! colour and line type; Tek sembol gives every object one symbol per
 //! geometry; Kategorili picks by an expression's value, Aralıklı by a
-//! number's class; Kurallar by conditions and scale ranges. Classes are made
-//! from the data (`kentos_native_style::classify`, held to the web's by
+//! number's class; Kurallar by conditions and scale ranges; the thematic
+//! kinds (docs/adr/0213, [`thematic`]) colour, size, dot, chart, heat,
+//! cluster, spread or invert. Classes are made from the data
+//! (`kentos_native_style::classify`, held to the web's by
 //! `fixtures/style/v1/classify.json`) and then edited; nothing reaches the
-//! drawing until Uygula or Tamam, which write the layer's style as one undo
-//! step (“Katman stili”, or “Basit katman stili” back to the simple look).
+//! drawing until Uygula or Tamam, which write the layer's renderer with
+//! `cad.layers.renderer` as one undo step “Katman stili”.
 //!
 //! Every kind keeps its own draft, so switching back and forth loses
 //! nothing. The counts follow the drawing (`kentos_native_style::tally`):
@@ -17,6 +19,7 @@ mod panels;
 mod rules;
 #[cfg(test)]
 mod tests;
+mod thematic;
 mod widgets;
 
 use std::cell::RefCell;
@@ -40,14 +43,23 @@ use serde_json::Value;
 
 use crate::app::{App, Dialog, Message};
 
-/// The renderer kinds the window offers, as its segmented control names them.
+/// The renderer kinds the window offers, as its list names them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
     Simple,
     Single,
     Categorized,
     Graduated,
+    Unclassed,
+    Proportional,
+    Bivariate,
     Rules,
+    DotDensity,
+    Chart,
+    Heatmap,
+    Cluster,
+    Displacement,
+    Inverted,
     /// A renderer this version cannot read: kept as it is until another kind is chosen.
     Unknown,
 }
@@ -59,18 +71,93 @@ impl std::fmt::Display for Kind {
             Kind::Single => "Tek sembol",
             Kind::Categorized => "Kategorili",
             Kind::Graduated => "Aralıklı",
+            Kind::Unclassed => "Sürekli renk",
+            Kind::Proportional => "Orantılı sembol",
+            Kind::Bivariate => "İki değişkenli renk",
             Kind::Rules => "Kurallar",
+            Kind::DotDensity => "Nokta yoğunluğu",
+            Kind::Chart => "Grafik",
+            Kind::Heatmap => "Isı haritası",
+            Kind::Cluster => "Kümeleme",
+            Kind::Displacement => "Yayma",
+            Kind::Inverted => "Ters alan",
             Kind::Unknown => "Bilinmeyen",
         })
     }
 }
 
-pub const KINDS: [Kind; 5] = [
+impl Kind {
+    /// Its icon (the web's `ui/icons.ts`, the same on both).
+    pub fn icon(self) -> &'static str {
+        match self {
+            Kind::Simple => "rendererSimple",
+            Kind::Single => "rendererSingle",
+            Kind::Categorized => "rendererCategorized",
+            Kind::Graduated => "rendererGraduated",
+            Kind::Unclassed => "rendererUnclassed",
+            Kind::Proportional => "rendererProportional",
+            Kind::Bivariate => "rendererBivariate",
+            Kind::Rules => "rendererRules",
+            Kind::DotDensity => "rendererDotDensity",
+            Kind::Chart => "rendererChart",
+            Kind::Heatmap => "rendererHeatmap",
+            Kind::Cluster => "rendererCluster",
+            Kind::Displacement => "rendererDisplacement",
+            Kind::Inverted => "rendererInverted",
+            Kind::Unknown => "warning",
+        }
+    }
+
+    /// What it does, under its name in the list.
+    pub fn detail(self) -> &'static str {
+        match self {
+            Kind::Simple => "Katmanın kendi rengi, çizgi tipi ve dolgusu.",
+            Kind::Single => "Her nesne aynı sembolle.",
+            Kind::Categorized => "Değere göre bir sembol.",
+            Kind::Graduated => "Sayının sınıfına göre bir sembol.",
+            Kind::Unclassed => "Sayı, rampada sürekli bir renk.",
+            Kind::Proportional => "Sayı, sembolün boyu.",
+            Kind::Bivariate => "İki sayının sınıfları, bir renk ızgarası.",
+            Kind::Rules => "İfadeler ve ölçek aralıklarıyla.",
+            Kind::DotDensity => "Alanın içinde değerle orantılı noktalar.",
+            Kind::Chart => "Nesnenin üstünde pasta ya da çubuk.",
+            Kind::Heatmap => "Noktaların yoğunluğu, renkli resim.",
+            Kind::Cluster => "Yakın noktalar tek işaret ve sayısı.",
+            Kind::Displacement => "Üst üste binen noktalar çevreye dağılır.",
+            Kind::Inverted => "Alanların dışı boyanır.",
+            Kind::Unknown => "KentOS'un bu sürümünün okuyamadığı stil.",
+        }
+    }
+
+    /// The list's group it starts (docs/adr/0213 §4).
+    pub fn group(self) -> Option<&'static str> {
+        match self {
+            Kind::Categorized => Some("Değere göre"),
+            Kind::Rules => Some("Kurallar"),
+            Kind::DotDensity => Some("Tematik"),
+            Kind::Cluster => Some("Noktalar"),
+            Kind::Inverted => Some("Alanlar"),
+            _ => None,
+        }
+    }
+}
+
+/// The kinds in the list's order (the web's `KINDS`).
+pub const KINDS: [Kind; 14] = [
     Kind::Simple,
     Kind::Single,
     Kind::Categorized,
     Kind::Graduated,
+    Kind::Unclassed,
+    Kind::Proportional,
+    Kind::Bivariate,
     Kind::Rules,
+    Kind::DotDensity,
+    Kind::Chart,
+    Kind::Heatmap,
+    Kind::Cluster,
+    Kind::Displacement,
+    Kind::Inverted,
 ];
 
 /// Where a symbol set sits in the window.
@@ -81,6 +168,19 @@ pub enum SetAt {
     Other,
     Class(usize),
     Rule(Vec<usize>),
+    Unclassed,
+    UnclassedOther,
+    Proportional,
+    ProportionalOther,
+    Bivariate,
+    BivariateOther,
+    /// Nokta yoğunluğu's and Grafik's ground: what the objects draw under the dots and charts.
+    DotGround,
+    ChartGround,
+    Inverted,
+    /// Kümeleme's mark and Yayma's centre: a marker each, not a set.
+    ClusterMark,
+    DisplacementCenter,
 }
 
 /// An expression field of the window.
@@ -89,6 +189,15 @@ pub enum Field {
     Categories,
     Classes,
     Rule(Vec<usize>),
+    Unclassed,
+    Proportional,
+    BivariateX,
+    BivariateY,
+    /// Isı haritası's weight.
+    Weight,
+    /// A value of Nokta yoğunluğu's or Grafik's list.
+    DotValue(usize),
+    ChartValue(usize),
 }
 
 /// An edit of one rule.
@@ -159,6 +268,8 @@ pub enum Event {
     /// Sembol tasarımcısı edits the symbol (its title, the symbol to start from)
     /// and Uygula writes it into the style.
     Design(SetAt, GeometryClass, String, Value),
+    /// An edit of a thematic kind's panel (docs/adr/0213 §4).
+    Thematic(thematic::Edit),
 }
 
 /// What each rule takes, by its path.
@@ -237,6 +348,15 @@ pub struct LayerStyleWindow {
     pub categorized: Categorized,
     pub graduated: Graduated,
     pub rules: Vec<Rule>,
+    /// The thematic kinds' drafts (docs/adr/0213).
+    pub drafts: thematic::Drafts,
+    /// İki değişkenli renk's Sınıfla: its method and its colours' scheme.
+    pub bivariate_method: Method,
+    pub bivariate_scheme: usize,
+    /// What a cluster's or a displacement's single points draw with: another kind's draft.
+    pub inner: Kind,
+    /// The layer's simple look: what a class without a symbol falls back to.
+    pub simple: SymbolSet,
     /// A renderer this version could not read, and why.
     pub unknown: Option<(Value, String)>,
     pub method: Method,
@@ -279,13 +399,13 @@ impl LayerStyleWindow {
             Some(Err(why)) => (None, current.clone().map(|v| (v, why))),
         };
         let kind = match (&read, &unknown) {
-            (Some(Renderer::Single(_)), _) => Kind::Single,
-            (Some(Renderer::Categorized(_)), _) => Kind::Categorized,
-            (Some(Renderer::Graduated(_)), _) => Kind::Graduated,
-            (Some(Renderer::Rules(_)), _) => Kind::Rules,
+            (Some(r), _) => kind_of(r),
             (None, Some(_)) => Kind::Unknown,
             (None, None) => Kind::Simple,
         };
+        let field = guess_field(&entities);
+        let names: Vec<String> = field_names(&entities);
+        let drafts = thematic::Drafts::start(&node.style.color, &simple, &field, &names);
         let mut window = LayerStyleWindow {
             layer: id.to_owned(),
             kind,
@@ -304,6 +424,11 @@ impl LayerStyleWindow {
                 symbols: Some(simple.clone()),
                 ..Rule::new("r1".into(), "Bütün nesneler", false)
             }],
+            drafts,
+            bivariate_method: Method::Count,
+            bivariate_scheme: 0,
+            inner: Kind::Simple,
+            simple: simple.clone(),
             unknown,
             method: Method::Interval,
             count: CLASS_COUNT_DEFAULT.to_string(),
@@ -315,20 +440,75 @@ impl LayerStyleWindow {
             cache: RefCell::new(Cache::default()),
         };
         window.single = simple;
-        match read {
-            Some(Renderer::Single(r)) => window.single = r.symbols,
-            Some(Renderer::Categorized(r)) => window.categorized = r,
-            Some(Renderer::Graduated(r)) => window.graduated = r,
-            Some(Renderer::Rules(r)) => window.rules = r.rules,
-            None => {}
+        if let Some(r) = read {
+            window.take(r);
         }
         Ok(window)
     }
 
+    /// A renderer read into its kind's draft; a cluster's or a displacement's single points'
+    /// into theirs (Tek noktalar).
+    fn take(&mut self, r: Renderer) {
+        match r {
+            Renderer::Single(r) => self.single = r.symbols,
+            Renderer::Categorized(r) => self.categorized = r,
+            Renderer::Graduated(r) => self.graduated = r,
+            Renderer::Rules(r) => self.rules = r.rules,
+            Renderer::Unclassed(r) => self.drafts.unclassed = r,
+            Renderer::Proportional(r) => self.drafts.proportional = r,
+            Renderer::Bivariate(r) => self.drafts.bivariate = r,
+            Renderer::DotDensity(r) => self.drafts.dot_density = r,
+            Renderer::Chart(r) => self.drafts.chart = r,
+            Renderer::Heatmap(r) => self.drafts.heatmap = r,
+            Renderer::Cluster(mut r) => {
+                self.take_inner(r.renderer.take());
+                self.drafts.cluster = r;
+            }
+            Renderer::Displacement(mut r) => {
+                self.take_inner(r.renderer.take());
+                self.drafts.displacement = r;
+            }
+            Renderer::Inverted(r) => self.drafts.inverted = r,
+        }
+    }
+
+    fn take_inner(&mut self, inner: Option<Value>) {
+        if let Some(r) = inner.as_ref().and_then(|v| Renderer::from_value(v).ok()) {
+            let kind = kind_of(&r);
+            if thematic::INNER_KINDS.iter().any(|(k, _)| *k == kind) {
+                self.inner = kind;
+                self.take(r);
+            }
+        }
+    }
+
     /// The renderer the window stands for now (None: the simple look).
     pub fn renderer(&self) -> Option<Value> {
+        self.draft_of(self.kind)
+    }
+
+    /// A kind's draft as the renderer it writes.
+    fn draft_of(&self, kind: Kind) -> Option<Value> {
         let trimmed = |s: &str| kentos_processing::text::js_trim(s).to_owned();
-        match self.kind {
+        let d = &self.drafts;
+        match kind {
+            Kind::Unclassed => Some(Renderer::Unclassed(d.unclassed.clone()).to_value()),
+            Kind::Proportional => Some(Renderer::Proportional(d.proportional.clone()).to_value()),
+            Kind::Bivariate => Some(Renderer::Bivariate(d.bivariate.clone()).to_value()),
+            Kind::DotDensity => Some(Renderer::DotDensity(d.dot_density.clone()).to_value()),
+            Kind::Chart => Some(Renderer::Chart(d.chart.clone()).to_value()),
+            Kind::Heatmap => Some(Renderer::Heatmap(d.heatmap.clone()).to_value()),
+            Kind::Inverted => Some(Renderer::Inverted(d.inverted.clone()).to_value()),
+            Kind::Cluster => {
+                let mut r = d.cluster.clone();
+                r.renderer = self.draft_of(self.inner);
+                Some(Renderer::Cluster(r).to_value())
+            }
+            Kind::Displacement => {
+                let mut r = d.displacement.clone();
+                r.renderer = self.draft_of(self.inner);
+                Some(Renderer::Displacement(r).to_value())
+            }
             Kind::Simple => None,
             Kind::Unknown => self.unknown.as_ref().map(|(v, _)| v.clone()),
             Kind::Single => Some(
@@ -360,12 +540,12 @@ impl LayerStyleWindow {
 
     /// Whether the window holds changes Uygula has not written.
     pub fn unapplied(&self) -> bool {
-        self.renderer() != self.applied
+        !same_renderer(&self.renderer(), &self.applied)
     }
 
     /// What the footer says: that edits wait for Uygula, else the last word.
     pub fn status(&self) -> Option<(String, bool)> {
-        if self.renderer() != self.applied {
+        if self.unapplied() {
             return Some(("Değişiklikler henüz uygulanmadı.".into(), true));
         }
         self.said.clone()
@@ -375,31 +555,44 @@ impl LayerStyleWindow {
         self.said = Some((text.into(), warn));
     }
 
-    /// Writes the renderer into the layer's style, one undo step. Returns
-    /// false when the layer is gone.
+    /// Writes the renderer into the layer's style with `cad.layers.renderer`, one undo step
+    /// “Katman stili”. Returns false when the command refuses it (the layer gone, a value out
+    /// of its range: the footer says which).
     pub fn apply(&mut self, doc: &mut kentos_domain::Document) -> bool {
-        let Some(mut style) = doc.layers().get(&self.layer).map(|n| n.style.clone()) else {
-            self.say("Katman artık yok; stil uygulanamadı.", true);
-            return false;
-        };
+        use kentos_contracts::{CommandResult, LayersRenderer};
+        use kentos_native_application::{ExecutionContext, layers_renderer};
         let r = self.renderer();
-        let label = if r.is_some() {
-            "Katman stili"
-        } else {
-            "Basit katman stili"
+        // What the layer has (a renderer this version cannot read, kept): nothing to write.
+        if same_renderer(&r, &self.applied) {
+            return true;
+        }
+        let input = LayersRenderer {
+            layer: self.layer.clone(),
+            renderer: r.clone(),
+            expected_revision: None,
         };
-        style.renderer = r.clone();
-        doc.set_layer_style(&self.layer, style, label);
-        self.say(
-            if r.is_some() {
-                "Stil haritaya uygulandı."
-            } else {
-                "Katman basit görünüşüne döndü."
-            },
-            false,
-        );
-        self.applied = r;
-        true
+        match layers_renderer::execute(&mut ExecutionContext::new(doc), input) {
+            CommandResult::Completed { .. } => {
+                self.say(
+                    if r.is_some() {
+                        "Stil haritaya uygulandı."
+                    } else {
+                        "Katman basit görünüşüne döndü."
+                    },
+                    false,
+                );
+                self.applied = r;
+                true
+            }
+            CommandResult::Failed { error } => {
+                self.say(format!("Uygulanmadı: {}", error.message), true);
+                false
+            }
+            _ => {
+                self.say("Uygulanmadı: çizim değişti.", true);
+                false
+            }
+        }
     }
 
     // ── What the drawing gives ─────────────────────────────────────────
@@ -441,8 +634,13 @@ impl LayerStyleWindow {
 
     /// The graduated expression's number per object (None: none).
     pub fn numbers(&self, src: &Source<'_>) -> Rc<Evaluated<Option<f64>>> {
+        self.numbers_for(src, &self.graduated.expr)
+    }
+
+    /// An expression's number per object (None: none), kept while the drawing does not change.
+    pub fn numbers_for(&self, src: &Source<'_>, expr: &str) -> Rc<Evaluated<Option<f64>>> {
         self.fresh(src.doc);
-        let expr = kentos_processing::text::js_trim(&self.graduated.expr).to_owned();
+        let expr = kentos_processing::text::js_trim(expr).to_owned();
         if let Some(hit) = self.cache.borrow().numbers.get(&expr) {
             return hit.clone();
         }
@@ -613,11 +811,8 @@ impl LayerStyleWindow {
             Event::AddElse => {
                 self.rules.push(Rule::new(new_rule_id(), "Diğerleri", true));
             }
-            Event::Symbol(at, class, symbol) => {
-                if let Some(set) = self.set_mut(&at) {
-                    set.set(class, symbol);
-                }
-            }
+            Event::Symbol(at, class, symbol) => self.put_symbol(&at, class, symbol),
+            Event::Thematic(e) => self.thematic(e, src),
             Event::Open(_)
             | Event::Close
             | Event::Apply
@@ -632,9 +827,20 @@ impl LayerStyleWindow {
 
     /// The typed text of an expression field.
     pub fn expr_text(&self, field: &Field) -> String {
+        let d = &self.drafts;
+        let value = |list: &[kentos_native_style::renderer::Field], i: usize| {
+            list.get(i).map(|f| f.expr.clone()).unwrap_or_default()
+        };
         match field {
             Field::Categories => self.categorized.expr.clone(),
             Field::Classes => self.graduated.expr.clone(),
+            Field::Unclassed => d.unclassed.expr.clone(),
+            Field::Proportional => d.proportional.expr.clone(),
+            Field::BivariateX => d.bivariate.expr_x.clone(),
+            Field::BivariateY => d.bivariate.expr_y.clone(),
+            Field::Weight => d.heatmap.weight.clone().unwrap_or_default(),
+            Field::DotValue(i) => value(&d.dot_density.fields, *i),
+            Field::ChartValue(i) => value(&d.chart.fields, *i),
             Field::Rule(path) => self
                 .typed
                 .get(&filter_key(path))
@@ -648,9 +854,28 @@ impl LayerStyleWindow {
     }
 
     fn set_expr(&mut self, field: &Field, text: String) {
+        let d = &mut self.drafts;
         match field {
             Field::Categories => self.categorized.expr = text,
             Field::Classes => self.graduated.expr = text,
+            Field::Unclassed => d.unclassed.expr = text,
+            Field::Proportional => d.proportional.expr = text,
+            Field::BivariateX => d.bivariate.expr_x = text,
+            Field::BivariateY => d.bivariate.expr_y = text,
+            Field::Weight => {
+                d.heatmap.weight =
+                    (!kentos_processing::text::js_trim(&text).is_empty()).then_some(text);
+            }
+            Field::DotValue(i) => {
+                if let Some(f) = d.dot_density.fields.get_mut(*i) {
+                    f.expr = text;
+                }
+            }
+            Field::ChartValue(i) => {
+                if let Some(f) = d.chart.fields.get_mut(*i) {
+                    f.expr = text;
+                }
+            }
             Field::Rule(path) => {
                 let filter = kentos_processing::text::js_trim(&text).to_owned();
                 if let Some(r) = rule_at_mut(&mut self.rules, path) {
@@ -676,10 +901,16 @@ impl LayerStyleWindow {
         self.typed.insert(bound_key(i, min), text);
     }
 
-    /// A slot's symbol, from the symbol designer's Uygula.
+    /// A slot's symbol: chosen in its menu, or from the symbol designer's Uygula.
     pub(crate) fn put_symbol(&mut self, at: &SetAt, class: GeometryClass, symbol: Option<Value>) {
-        if let Some(set) = self.set_mut(at) {
-            set.set(class, symbol);
+        match at {
+            SetAt::ClusterMark => self.drafts.cluster.symbol = symbol,
+            SetAt::DisplacementCenter => self.drafts.displacement.center = symbol,
+            _ => {
+                if let Some(set) = self.set_mut(at) {
+                    set.set(class, symbol);
+                }
+            }
         }
     }
 
@@ -695,6 +926,26 @@ impl LayerStyleWindow {
             SetAt::Class(i) => self.graduated.classes.get_mut(*i).map(|c| &mut c.symbols),
             SetAt::Rule(path) => rule_at_mut(&mut self.rules, path)
                 .map(|r| r.symbols.get_or_insert_with(SymbolSet::default)),
+            SetAt::Unclassed => Some(&mut self.drafts.unclassed.symbols),
+            SetAt::UnclassedOther => self.drafts.unclassed.other.as_mut(),
+            SetAt::Proportional => Some(&mut self.drafts.proportional.symbols),
+            SetAt::ProportionalOther => self.drafts.proportional.other.as_mut(),
+            SetAt::Bivariate => Some(&mut self.drafts.bivariate.symbols),
+            SetAt::BivariateOther => self.drafts.bivariate.other.as_mut(),
+            SetAt::DotGround => Some(
+                self.drafts
+                    .dot_density
+                    .symbols
+                    .get_or_insert_with(SymbolSet::default),
+            ),
+            SetAt::ChartGround => Some(
+                self.drafts
+                    .chart
+                    .symbols
+                    .get_or_insert_with(SymbolSet::default),
+            ),
+            SetAt::Inverted => Some(&mut self.drafts.inverted.symbols),
+            SetAt::ClusterMark | SetAt::DisplacementCenter => None,
         }
     }
 
@@ -816,6 +1067,62 @@ fn siblings_mut<'a>(rules: &'a mut Vec<Rule>, parent: &[usize]) -> Option<&'a mu
             siblings_mut(r.children.get_or_insert_with(Vec::new), rest)
         }
     }
+}
+
+/// Whether two renderers' JSON are the same, numbers by their value: a draft writes its
+/// numbers as floats, a file may hold whole ones (4000 and 4000.0 alike).
+fn same_json(a: &Value, b: &Value) -> bool {
+    match (a, b) {
+        (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
+        (Value::Array(x), Value::Array(y)) => {
+            x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same_json(p, q))
+        }
+        (Value::Object(x), Value::Object(y)) => {
+            x.len() == y.len()
+                && x.iter()
+                    .all(|(k, v)| y.get(k).is_some_and(|w| same_json(v, w)))
+        }
+        _ => a == b,
+    }
+}
+
+fn same_renderer(a: &Option<Value>, b: &Option<Value>) -> bool {
+    match (a, b) {
+        (Some(a), Some(b)) => same_json(a, b),
+        (None, None) => true,
+        _ => false,
+    }
+}
+
+/// The kind of a renderer read.
+fn kind_of(r: &Renderer) -> Kind {
+    match r {
+        Renderer::Single(_) => Kind::Single,
+        Renderer::Categorized(_) => Kind::Categorized,
+        Renderer::Graduated(_) => Kind::Graduated,
+        Renderer::Rules(_) => Kind::Rules,
+        Renderer::Unclassed(_) => Kind::Unclassed,
+        Renderer::Proportional(_) => Kind::Proportional,
+        Renderer::Bivariate(_) => Kind::Bivariate,
+        Renderer::DotDensity(_) => Kind::DotDensity,
+        Renderer::Chart(_) => Kind::Chart,
+        Renderer::Heatmap(_) => Kind::Heatmap,
+        Renderer::Cluster(_) => Kind::Cluster,
+        Renderer::Displacement(_) => Kind::Displacement,
+        Renderer::Inverted(_) => Kind::Inverted,
+    }
+}
+
+/// The objects' attribute names in Turkish order (the web's `fields()`).
+fn field_names(entities: &[&Entity]) -> Vec<String> {
+    let mut names: Vec<String> = entities
+        .iter()
+        .flat_map(|e| e.base().attrs.keys().cloned())
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    names.sort_by(|a, b| classify::compare_text(a, b));
+    names
 }
 
 /// The attribute most objects have: a good first guess for categories (`guessField`).

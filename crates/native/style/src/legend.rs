@@ -25,6 +25,18 @@ use crate::simple::symbols_of_layer_style;
 pub struct LegendEntry {
     pub label: String,
     pub symbol: Option<Value>,
+    /// The rows of one Orantılı sembol share a scale (CSS px per paper mm):
+    /// their sizes compare (docs/adr/0213 §2.2).
+    #[serde(rename = "pxPerMm", skip_serializing_if = "Option::is_none")]
+    pub px_per_mm: Option<f64>,
+}
+
+fn row(label: impl Into<String>, symbol: Option<Value>) -> LegendEntry {
+    LegendEntry {
+        label: label.into(),
+        symbol,
+        px_per_mm: None,
+    }
 }
 
 /// A layer's rows.
@@ -92,73 +104,37 @@ pub fn legend_of(layers: &[LegendLayer<'_>], src: &impl LegendSources) -> Vec<Le
                 .filter_map(|c| resolve(set.and_then(|s| s.get(*c))).map(|s| (*c, s)))
                 .collect();
             if let [(_, symbol)] = found.as_slice() {
-                return vec![LegendEntry {
-                    label: label.to_owned(),
-                    symbol: Some(symbol.clone()),
-                }];
+                return vec![row(label, Some(symbol.clone()))];
             }
             found
                 .into_iter()
-                .map(|(c, symbol)| LegendEntry {
-                    label: format!("{label} ({})", class_name(c)),
-                    symbol: Some(symbol),
+                .map(|(c, symbol)| row(format!("{label} ({})", class_name(c)), Some(symbol)))
+                .collect()
+        };
+        // A set's rows with every symbol changed (a thematic renderer's colour or size).
+        let changed = |set: Option<&SymbolSet>,
+                       label: &str,
+                       f: &dyn Fn(&Value) -> Value|
+         -> Vec<LegendEntry> {
+            set_entries(set, label)
+                .into_iter()
+                .map(|e| LegendEntry {
+                    symbol: e.symbol.as_ref().map(f),
+                    ..e
                 })
                 .collect()
         };
         let mut entries = Vec::new();
-        match layer.style.renderer.as_ref().map(Renderer::from_value) {
-            None => {
-                let simple = SymbolSet::from_value(&symbols_of_layer_style(
-                    layer.style,
-                    &layer.style.color,
-                    layer.style.line_weight,
-                    false,
-                ));
-                entries.extend(set_entries(Some(&simple), layer.name));
-            }
-            Some(Ok(Renderer::Single(r))) => {
-                entries.extend(set_entries(Some(&r.symbols), layer.name))
-            }
-            Some(Ok(Renderer::Categorized(r))) => {
-                for k in r.categories.iter().filter(|k| k.enabled != Some(false)) {
-                    let label = if k.label.is_empty() {
-                        &k.value
-                    } else {
-                        &k.label
-                    };
-                    entries.extend(set_entries(Some(&k.symbols), label));
-                }
-                if let Some(other) = &r.other {
-                    entries.extend(set_entries(Some(other), "Diğer değerler"));
-                }
-            }
-            Some(Ok(Renderer::Graduated(r))) => {
-                for k in &r.classes {
-                    entries.extend(set_entries(Some(&k.symbols), &k.label));
-                }
-            }
-            Some(Ok(Renderer::Rules(r))) => {
-                fn walk(
-                    rules: &[Rule],
-                    prefix: &str,
-                    out: &mut Vec<LegendEntry>,
-                    set_entries: &dyn Fn(Option<&SymbolSet>, &str) -> Vec<LegendEntry>,
-                ) {
-                    for rule in rules.iter().filter(|r| r.enabled()) {
-                        let label = if prefix.is_empty() {
-                            rule.label.clone()
-                        } else {
-                            format!("{prefix} › {}", rule.label)
-                        };
-                        out.extend(set_entries(rule.symbols.as_ref(), &label));
-                        walk(rule.children(), &label, out, set_entries);
-                    }
-                }
-                walk(&r.rules, "", &mut entries, &set_entries);
-            }
-            // A renderer this version cannot read shows no rows of its own.
-            Some(Err(_)) => {}
-        }
+        let renderer = layer.style.renderer.as_ref().map(Renderer::from_value);
+        rows_of(
+            renderer,
+            layer,
+            &present,
+            &resolve,
+            &set_entries,
+            &changed,
+            &mut entries,
+        );
         // Objects drawn with their own symbol: each symbol once, under its library name.
         let mut own: Vec<&str> = Vec::new();
         for e in &entities {
@@ -170,10 +146,10 @@ pub fn legend_of(layers: &[LegendLayer<'_>], src: &impl LegendSources) -> Vec<Le
         }
         for id in own {
             if let Some(symbol) = src.symbol(id) {
-                entries.push(LegendEntry {
-                    label: src.item_name(id).unwrap_or_else(|| id.to_owned()),
-                    symbol: Some(symbol),
-                });
+                entries.push(row(
+                    src.item_name(id).unwrap_or_else(|| id.to_owned()),
+                    Some(symbol),
+                ));
             }
         }
         if !entries.is_empty() {
@@ -185,6 +161,226 @@ pub fn legend_of(layers: &[LegendLayer<'_>], src: &impl LegendSources) -> Vec<Le
         }
     }
     out
+}
+
+/// A set's rows with its symbols changed (a ramp's colour, a size).
+type ChangedRows<'a> =
+    dyn Fn(Option<&SymbolSet>, &str, &dyn Fn(&Value) -> Value) -> Vec<LegendEntry> + 'a;
+
+/// A renderer's rows (a cluster's and a displacement's single points' renderer in turn).
+fn rows_of(
+    renderer: Option<Result<Renderer, String>>,
+    layer: &LegendLayer<'_>,
+    present: &crate::classify::Present,
+    resolve: &dyn Fn(Option<&Value>) -> Option<Value>,
+    set_entries: &dyn Fn(Option<&SymbolSet>, &str) -> Vec<LegendEntry>,
+    changed: &ChangedRows<'_>,
+    entries: &mut Vec<LegendEntry>,
+) {
+    use crate::thematic::{legend_number, ramp_at, range_label, with_color, with_size};
+    use kentos_style_core::style::thematic::{share, size_at, step};
+    match renderer {
+        None => {
+            let simple = SymbolSet::from_value(&symbols_of_layer_style(
+                layer.style,
+                &layer.style.color,
+                layer.style.line_weight,
+                false,
+            ));
+            entries.extend(set_entries(Some(&simple), layer.name));
+        }
+        Some(Ok(Renderer::Single(r))) => entries.extend(set_entries(Some(&r.symbols), layer.name)),
+        Some(Ok(Renderer::Categorized(r))) => {
+            for k in r.categories.iter().filter(|k| k.enabled != Some(false)) {
+                let label = if k.label.is_empty() {
+                    &k.value
+                } else {
+                    &k.label
+                };
+                entries.extend(set_entries(Some(&k.symbols), label));
+            }
+            if let Some(other) = &r.other {
+                entries.extend(set_entries(Some(other), "Diğer değerler"));
+            }
+        }
+        Some(Ok(Renderer::Graduated(r))) => {
+            for k in &r.classes {
+                entries.extend(set_entries(Some(&k.symbols), &k.label));
+            }
+        }
+        Some(Ok(Renderer::Rules(r))) => {
+            fn walk(
+                rules: &[Rule],
+                prefix: &str,
+                out: &mut Vec<LegendEntry>,
+                set_entries: &dyn Fn(Option<&SymbolSet>, &str) -> Vec<LegendEntry>,
+            ) {
+                for rule in rules.iter().filter(|r| r.enabled()) {
+                    let label = if prefix.is_empty() {
+                        rule.label.clone()
+                    } else {
+                        format!("{prefix} › {}", rule.label)
+                    };
+                    out.extend(set_entries(rule.symbols.as_ref(), &label));
+                    walk(rule.children(), &label, out, set_entries);
+                }
+            }
+            walk(&r.rules, "", entries, &set_entries);
+        }
+        Some(Ok(Renderer::Unclassed(r))) => {
+            for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
+                let c = ramp_at(&r.ramp, f64::from(step(t)) / 255.0);
+                let c = c.get(..7).unwrap_or(&c).to_owned();
+                entries.extend(changed(
+                    Some(&r.symbols),
+                    &legend_number(r.min + (r.max - r.min) * t),
+                    &|s| with_color(s, &c),
+                ));
+            }
+            if let Some(o) = &r.other {
+                entries.extend(set_entries(Some(o), "Değeri olmayanlar"));
+            }
+        }
+        Some(Ok(Renderer::Proportional(r))) => {
+            let unit = r.unit.as_deref().unwrap_or("mm");
+            let e = match r.scaling.as_deref() {
+                Some("radius") => 1.0,
+                Some("flannery") => 0.57,
+                _ => 0.5,
+            };
+            // The largest as four fifths of a row's picture (24 px high); paper mm only.
+            let shared = (unit == "mm" && r.max_size > 0.0).then(|| 0.8 * 24.0 / r.max_size);
+            for v in [r.min_value, (r.min_value + r.max_value) / 2.0, r.max_value] {
+                let size = size_at(
+                    f64::from(step(share(v, r.min_value, r.max_value))) / 255.0,
+                    r.min_size,
+                    r.max_size,
+                    e,
+                );
+                // Areas and points by the marker symbol, lines by the line symbol.
+                let mut shown = Vec::new();
+                if present.line > 0
+                    && let Some(s) = resolve(r.symbols.line.as_ref())
+                {
+                    shown.push((GeometryClass::Line, s));
+                }
+                if (present.fill > 0 || present.marker > 0)
+                    && let Some(s) = resolve(r.symbols.marker.as_ref())
+                {
+                    shown.push((GeometryClass::Marker, s));
+                }
+                let many = shown.len() > 1;
+                for (c, s) in shown {
+                    let label = if many {
+                        format!("{} ({})", legend_number(v), class_name(c))
+                    } else {
+                        legend_number(v)
+                    };
+                    entries.push(LegendEntry {
+                        label,
+                        symbol: Some(with_size(&s, size, unit)),
+                        px_per_mm: if c == GeometryClass::Marker {
+                            shared
+                        } else {
+                            None
+                        },
+                    });
+                }
+            }
+            if let Some(o) = &r.other {
+                entries.extend(set_entries(Some(o), "Değeri olmayanlar"));
+            }
+        }
+        Some(Ok(Renderer::Bivariate(r))) => {
+            let n = r.breaks_x.len() + 1;
+            for j in 0..n {
+                for i in 0..n {
+                    let Some(c) = r.colors.get(j * n + i) else {
+                        continue;
+                    };
+                    let c = c.get(..7).unwrap_or(c).to_owned();
+                    let label = format!(
+                        "{} {}, {} {}",
+                        r.expr_x,
+                        range_label(&r.breaks_x, i),
+                        r.expr_y,
+                        range_label(&r.breaks_y, j)
+                    );
+                    entries.extend(changed(Some(&r.symbols), &label, &|s| with_color(s, &c)));
+                }
+            }
+            if let Some(o) = &r.other {
+                entries.extend(set_entries(Some(o), "Değeri olmayanlar"));
+            }
+        }
+        Some(Ok(Renderer::DotDensity(r))) => {
+            entries.push(row(
+                format!("1 nokta = {}", legend_number(r.dot_value)),
+                None,
+            ));
+            for f in &r.fields {
+                let symbol = serde_json::json!({ "type": "marker", "layers": [{ "id": "d", "type": "shape", "shape": "circle",
+                        "size": r.dot_size.unwrap_or(1.0), "unit": r.unit.as_deref().unwrap_or("mm"), "fill": f.color }] });
+                entries.push(row(
+                    f.label
+                        .clone()
+                        .filter(|l| !l.is_empty())
+                        .unwrap_or_else(|| f.expr.clone()),
+                    Some(symbol),
+                ));
+            }
+        }
+        Some(Ok(Renderer::Chart(r))) => {
+            for f in &r.fields {
+                let symbol = serde_json::json!({ "type": "fill", "layers": [{ "id": "f", "type": "simpleFill", "color": f.color }] });
+                entries.push(row(
+                    f.label
+                        .clone()
+                        .filter(|l| !l.is_empty())
+                        .unwrap_or_else(|| f.expr.clone()),
+                    Some(symbol),
+                ));
+            }
+        }
+        Some(Ok(Renderer::Heatmap(r))) => {
+            for (label, t) in [("Az", 0.25), ("Orta", 0.5), ("Çok", 1.0)] {
+                let symbol = serde_json::json!({ "type": "fill", "layers": [{ "id": "f", "type": "simpleFill", "color": ramp_at(&r.ramp, t) }] });
+                entries.push(row(label, Some(symbol)));
+            }
+        }
+        Some(Ok(Renderer::Cluster(r))) => {
+            let symbol = resolve(r.symbol.as_ref()).unwrap_or_else(|| {
+                    serde_json::json!({ "type": "marker", "layers": [{ "id": "k", "type": "shape", "shape": "circle", "size": 24,
+                        "unit": "px", "fill": layer.style.color, "stroke": "#FFFFFF", "strokeWidth": 1.5 }] })
+                });
+            entries.push(row("Küme", Some(symbol)));
+            rows_of(
+                r.renderer.as_ref().map(Renderer::from_value),
+                layer,
+                present,
+                resolve,
+                set_entries,
+                changed,
+                entries,
+            );
+        }
+        Some(Ok(Renderer::Displacement(r))) => {
+            rows_of(
+                r.renderer.as_ref().map(Renderer::from_value),
+                layer,
+                present,
+                resolve,
+                set_entries,
+                changed,
+                entries,
+            );
+        }
+        Some(Ok(Renderer::Inverted(r))) => {
+            entries.push(row("Dışı", resolve(r.symbols.fill.as_ref())));
+        }
+        // A renderer this version cannot read shows no rows of its own.
+        Some(Err(_)) => {}
+    }
 }
 
 /// The layers a legend reads: the top of the list first, only the visible ones when asked (`legendLayers`).

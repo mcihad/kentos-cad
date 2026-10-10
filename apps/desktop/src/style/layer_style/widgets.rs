@@ -163,8 +163,20 @@ pub(super) fn slots<'a>(
     set: &SymbolSet,
     title: &str,
 ) -> Element<'a, Message> {
+    slots_in(env, at, set, title, env.classes)
+}
+
+/// Slots for the classes given (a renderer that draws some of them: Orantılı sembol's
+/// markers and lines, Ters alan's fill, Kümeleme's mark).
+pub(super) fn slots_in<'a>(
+    env: &Env<'_>,
+    at: SetAt,
+    set: &SymbolSet,
+    title: &str,
+    classes: &[GeometryClass],
+) -> Element<'a, Message> {
     let mut out = Row::new().spacing(4);
-    for class in env.classes {
+    for class in classes {
         out = out.push(slot(
             env,
             at.clone(),

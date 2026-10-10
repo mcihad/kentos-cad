@@ -21,6 +21,7 @@ import {
   rasterLevelCount as wasmRasterLevelCount,
   rasterTiles as wasmRasterTiles,
   rasterTilesAt as wasmRasterTilesAt,
+  rendererProblem as wasmRendererProblem,
   scratch as wasmScratch,
   scratchCentroid as wasmScratchCentroid,
   scratchPathLength as wasmScratchPathLength,
@@ -556,16 +557,42 @@ export class CoreStyleProgram {
   /** The variables read, as bits: 1 geometry values, 2 corners, 4 kind, 8 layer, 16 label, 32 position, 64 id, 128 scale. */
   readonly needs: number;
 
+  /** What a build depends on beyond its objects (docs/adr/0213 §3), as bits: 1 the view's scale, 2 the heat map's box, 4 the construction lines' box, 8 built whole. */
+  readonly viewNeeds: number;
+
   constructor(json: string) {
     this.json = json;
     this.raw = typed(() => new StyleProgram(json));
     this.fields = JSON.parse(typed(() => this.raw.fields)) as string[];
     this.needs = typed(() => this.raw.needs);
+    this.viewNeeds = typed(() => this.raw.viewNeeds);
   }
 
   free(): void {
     this.raw.free();
   }
+}
+
+/** Why a renderer cannot be a layer's (docs/adr/0213 §5; the style core's `renderer_problem`), or null. */
+export function rendererProblem(renderer: unknown): string | null {
+  const why = typed(() => wasmRendererProblem(JSON.stringify(renderer)));
+  return why === '' ? null : why;
+}
+
+/** A picture a layer build made (a heat map's, docs/adr/0213 §2.6): RGBA, straight alpha, rows from the top. */
+export interface MadePicture {
+  readonly key: string;
+  readonly width: number;
+  readonly height: number;
+  readonly rgba: Uint8Array;
+}
+
+/** A layer build's answer: its batches, the pictures it made and the dots it left out (docs/adr/0213 §2.4). */
+export interface StyledOut {
+  json: string;
+  data: Float32Array;
+  pictures: MadePicture[];
+  dropped: number;
 }
 
 /**
@@ -893,11 +920,15 @@ export class CoreStore {
     plotScale: number,
     screen = false,
     view = { fills: true, areaEdges: true },
-  ): { json: string; data: Float32Array } {
+    frame: { pxPerM: number; picture: string } | null = null,
+  ): StyledOut {
     return typed(() => {
-      const r = this.raw.buildStyled(program.raw, ids, objects, pieces, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen, view.fills, view.areaEdges);
+      const r = this.raw.buildStyled(program.raw, ids, objects, pieces, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen, view.fills, view.areaEdges, frame?.pxPerM ?? 0, frame?.picture ?? '');
       const json = r.json;
-      return { json, data: r.intoData() };
+      const sizes = JSON.parse(r.pictures) as { key: string; width: number; height: number }[];
+      const pictures = sizes.map((p, i) => ({ ...p, rgba: r.pictureData(i) }));
+      const dropped = r.dropped;
+      return { json, data: r.intoData(), pictures, dropped };
     });
   }
 

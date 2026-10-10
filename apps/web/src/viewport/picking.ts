@@ -15,7 +15,7 @@ import type { LayerFilter } from '../contracts/generated/LayerFilter';
 import { IdMarks } from '../model/idMarks';
 import { compileFilter, filterPasses, filterPassesIn, type CompiledFilter } from '../model/layerFilter';
 import type { TimeWindow } from '../model/time';
-import { CoreStore, op, type CoreStyleProgram, type ExprColumnData } from '../wasm/core';
+import { CoreStore, op, type CoreStyleProgram, type ExprColumnData, type StyledOut } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { LABEL_DEFAULTS_JSON, labelLayers, layerTexts, objectTexts } from '../model/labelTexts';
 import { readGrips, type GripSet } from './storeRecords';
@@ -856,9 +856,9 @@ export class PickIndex {
   }
 
   /** A layer through the style engine, next to its geometry (render/styledLayer.ts); `pieces`: every insert's pieces' sets. */
-  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, pieces: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen = false, view = { fills: true, areaEdges: true }): { json: string; data: Float32Array } {
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, pieces: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen = false, view = { fills: true, areaEdges: true }, frame: { pxPerM: number; picture: string } | null = null): StyledOut {
     this.sync();
-    return this.store.buildStyled(program, Float64Array.from(ids), objects, pieces, table, clip, origin, plotScale, screen, view);
+    return this.store.buildStyled(program, Float64Array.from(ids), objects, pieces, table, clip, origin, plotScale, screen, view, frame);
   }
 
   /**

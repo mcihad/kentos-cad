@@ -21,6 +21,8 @@ pub const NOT_A_LAYER: &str = "not_a_layer";
 pub const LAYER_LOCKED: &str = "layer_locked";
 /// The layer named is drawn from a map service and holds no objects (docs/adr/0208 §2).
 pub const SERVICE_LAYER: &str = "service_layer";
+/// A renderer the style core's rules refuse (`cad.layers.renderer`, docs/adr/0213 §5).
+pub const INVALID_RENDERER: &str = "invalid_renderer";
 /// The desktop only: every slot (`u32`) of the document has been given out.
 pub const SLOTS_EXHAUSTED: &str = "slots_exhausted";
 /// No object named (`cad.entities.delete`).

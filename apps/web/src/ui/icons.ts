@@ -918,6 +918,28 @@ export const ICONS = {
     '<rect x="2" y="5" width="14.5" height="10" rx="1" stroke-dasharray="2.2 1.6"/><path d="M4.5 7.9h6.3l2.2 2.1-2.2 2.1H4.5z"/><circle cx="16.6" cy="4.9" r="1.7" fill="currentColor" stroke="none"/>',
   labelsUnplaced:
     '<path d="M2.5 4h6.6l2.5 2.6-2.5 2.6H2.5z"/><path d="M7.5 10.8h6.6l2.5 2.6-2.5 2.6H7.5z" stroke-dasharray="2 1.5"/><circle cx="4.6" cy="6.6" r=".85" fill="currentColor" stroke="none"/>',
+  // Katman stili's renderers (docs/adr/0213 §4): one glyph each, the list and the legend's window alike.
+  rendererSimple: '<rect x="3.5" y="3.5" width="13" height="13" rx="1.5"/><path d="M3.5 16.5 16.5 3.5"/>',
+  rendererSingle: '<circle cx="10" cy="10" r="5.5" fill="currentColor" fill-opacity=".3"/>',
+  rendererCategorized: '<circle cx="4.8" cy="10" r="2.3"/><rect x="8" y="7.7" width="4.6" height="4.6"/><path d="m15.4 7.4 2.7 4.8h-5.4z"/>',
+  rendererGraduated: '<path d="M3.5 16.5h3v-4h-3zM8.5 16.5h3v-8h-3zM13.5 16.5h3v-12h-3z"/>',
+  rendererUnclassed:
+    '<rect x="2.5" y="6.5" width="15" height="7" rx="1"/><path d="M6.25 6.5v7M10 6.5v7M13.75 6.5v7"/><path d="M6.25 7.2h3.75v5.6H6.25z" fill="currentColor" fill-opacity=".25" stroke="none"/><path d="M10 7.2h3.75v5.6H10z" fill="currentColor" fill-opacity=".55" stroke="none"/><path d="M13.75 7.2h3.05v5.6h-3.05z" fill="currentColor" fill-opacity=".9" stroke="none"/>',
+  rendererProportional: '<circle cx="4.3" cy="14.2" r="1.6"/><circle cx="8.9" cy="12.8" r="3"/><circle cx="14.6" cy="11" r="4.6"/>',
+  rendererBivariate:
+    '<rect x="3" y="3" width="14" height="14" rx="1"/><path d="M10 3v14M3 10h14"/><path d="M3.6 3.6H9.4V9.4H3.6z" fill="currentColor" fill-opacity=".45" stroke="none"/><path d="M10.6 3.6h5.8v5.8h-5.8z" fill="currentColor" fill-opacity=".9" stroke="none"/><path d="M10.6 10.6h5.8v5.8h-5.8z" fill="currentColor" fill-opacity=".45" stroke="none"/>',
+  rendererRules: '<path d="M3 5h14M5.5 10h9M8 15h4"/>',
+  rendererDotDensity:
+    '<path d="M3 15.8 4.6 4.4l12.2 1.8.7 9.8z"/><g fill="currentColor" stroke="none"><circle cx="7" cy="7.8" r=".9"/><circle cx="11.5" cy="8.6" r=".9"/><circle cx="8.8" cy="11.6" r=".9"/><circle cx="13.6" cy="12.6" r=".9"/><circle cx="6.4" cy="13.2" r=".9"/></g>',
+  rendererChart: '<circle cx="10" cy="10" r="6.5"/><path d="M10 3.5V10l5.6 3.3"/><path d="M10 3.5V10l5.6 3.3A6.5 6.5 0 0 0 10 3.5z" fill="currentColor" fill-opacity=".35" stroke="none"/>',
+  rendererHeatmap:
+    '<circle cx="10" cy="10" r="7" fill="currentColor" fill-opacity=".12" stroke="none"/><circle cx="10" cy="10" r="4.4" fill="currentColor" fill-opacity=".3" stroke="none"/><circle cx="10" cy="10" r="1.9" fill="currentColor" stroke="none"/><circle cx="10" cy="10" r="7"/>',
+  rendererCluster:
+    '<circle cx="10" cy="10" r="6.5"/><g fill="currentColor" stroke="none"><circle cx="8" cy="8.4" r="1.1"/><circle cx="12.2" cy="9.2" r="1.1"/><circle cx="9.6" cy="12.3" r="1.1"/></g><circle cx="3" cy="16.5" r="1" fill="currentColor" stroke="none"/>',
+  rendererDisplacement:
+    '<circle cx="10" cy="10" r="6" stroke-dasharray="1.6 1.9"/><circle cx="10" cy="10" r="1.2" fill="currentColor" stroke="none"/><g fill="currentColor" stroke="none"><circle cx="10" cy="4" r="1.4"/><circle cx="15.7" cy="11.9" r="1.4"/><circle cx="4.3" cy="11.9" r="1.4"/></g>',
+  rendererInverted:
+    '<path d="M2.5 2.5h15v15h-15zM7 6.5l6.5 1.2-1.2 6-5.8-1.4z" fill="currentColor" fill-opacity=".3" fill-rule="evenodd" stroke="none"/><path d="M2.5 2.5h15v15h-15z"/><path d="M7 6.5l6.5 1.2-1.2 6-5.8-1.4z"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

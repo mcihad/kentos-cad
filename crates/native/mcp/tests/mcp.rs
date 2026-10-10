@@ -77,11 +77,13 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.scenarios.edit",
         "cad.layers.labels",
         "cad.labels.pin",
+        "cad.layers.renderer",
     ] {
         assert!(names.contains(&name), "{name}");
     }
     // A map service layer's command removes a layer too (docs/adr/0208 §15), a network's its definition (0209 §11),
-    // a layer's time its time and a scenario's apply its layers (0210 §11), a labelling or a pin with null (0212 §5).
+    // a layer's time its time and a scenario's apply its layers (0210 §11), a labelling or a pin with null (0212 §5),
+    // a renderer with null (0213 §5).
     for name in [
         "cad.layers.service",
         "cad.network.define",
@@ -89,6 +91,7 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.scenarios.edit",
         "cad.layers.labels",
         "cad.labels.pin",
+        "cad.layers.renderer",
     ] {
         let tool = tools
             .iter()
@@ -776,4 +779,57 @@ fn a_layer_is_labelled_by_rules_and_a_label_pinned() {
     );
     assert_eq!(refused["isError"], true);
     assert_eq!(refused["structuredContent"]["status"], "failed");
+}
+
+/// Katman stili's command as a tool (docs/adr/0213 §5): a layer's heat map written, then taken
+/// away; a renderer the style core's rules refuse says why.
+#[test]
+fn a_layer_takes_a_heat_map_and_gives_it_back() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({ "srid": 5256 }));
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let layer = made["structuredContent"]["summary"]["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let heat =
+        json!({ "type": "heatmap", "radius": 20, "unit": "px", "ramp": ["#2B83BA00", "#D7191C"] });
+    let written = call(
+        &mut server,
+        "cad.layers.renderer",
+        json!({ "drawing": drawing, "layer": layer, "renderer": heat }),
+    );
+    assert_eq!(written["isError"], false, "{written}");
+    assert_eq!(written["structuredContent"]["output"]["changed"], true);
+    let again = call(
+        &mut server,
+        "cad.layers.renderer",
+        json!({ "drawing": drawing, "layer": layer, "renderer": heat }),
+    );
+    assert_eq!(again["structuredContent"]["output"]["changed"], false);
+    let taken = call(
+        &mut server,
+        "cad.layers.renderer",
+        json!({ "drawing": drawing, "layer": layer, "renderer": null }),
+    );
+    assert_eq!(taken["structuredContent"]["output"]["changed"], true);
+    let refused = call(
+        &mut server,
+        "cad.layers.renderer",
+        json!({ "drawing": drawing, "layer": layer, "renderer": { "type": "heatmap", "radius": 600, "ramp": ["#000000", "#FFFFFF"] } }),
+    );
+    assert_eq!(refused["isError"], true);
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "invalid_renderer"
+    );
+    assert!(
+        refused["structuredContent"]["error"]["message"]
+            .as_str()
+            .is_some_and(|m| m.contains("“radius”")),
+        "{refused}"
+    );
 }
