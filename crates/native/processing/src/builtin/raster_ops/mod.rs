@@ -156,6 +156,9 @@ pub fn drive(
         feedback.progress(0.97 * job.share(), label);
     }
     let notes = job.notes().clone();
+    // The look as the run left it (Değişim tespiti's is stretched by its values).
+    let raster = raster
+        .map(|(bands, sample, style, grid)| (bands, sample, job.style().unwrap_or(style), grid));
     let mut ran = Ran {
         raster,
         zones: Vec::new(),
@@ -174,7 +177,7 @@ pub fn drive(
         (OpsFinished::Histogram(h), _) => ran.histogram = Some(h),
         (OpsFinished::Features(f), _) => ran.features = Some(f),
         (OpsFinished::Roc(r), _) => ran.roc = Some(r),
-        (OpsFinished::Weights, _) => {}
+        (OpsFinished::Weights | OpsFinished::Report, _) => {}
         _ => return Err("Çözümlemenin sonucu beklenen türde değil.".into()),
     }
     Ok(ran)
@@ -336,6 +339,14 @@ fn spec_kind(spec: &OpsSpec) -> &'static str {
         OpsTool::WeightedOverlay { .. } => "weightedOverlay",
         OpsTool::Pairwise { .. } => "pairwise",
         OpsTool::Roc { .. } => "roc",
+        OpsTool::Composite { .. } => "composite",
+        OpsTool::Band { .. } => "band",
+        OpsTool::Index { .. } => "index",
+        OpsTool::Supervised { .. } => "supervised",
+        OpsTool::Unsupervised { .. } => "unsupervised",
+        OpsTool::Accuracy { .. } => "accuracy",
+        OpsTool::Change { .. } => "change",
+        OpsTool::Pansharpen { .. } => "pansharpen",
     }
 }
 

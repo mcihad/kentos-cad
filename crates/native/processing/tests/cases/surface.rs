@@ -197,6 +197,8 @@ fn raster_cases(name: &str, least: usize) {
     let suitability: Value =
         serde_json::from_slice(&surface_fixture("../../suitability/v1/cases.json"))
             .expect("the suitability reference reads");
+    let remote: Value = serde_json::from_slice(&surface_fixture("../../remote/v1/cases.json"))
+        .expect("the remote sensing reference reads");
     let rasters: BTreeMap<String, Vec<u8>> = file["rasters"]
         .as_object()
         .map(|m| {
@@ -253,6 +255,7 @@ fn raster_cases(name: &str, least: usize) {
             ("hydrologyOf", "hydrology"),
             ("distanceOf", "distance"),
             ("suitabilityOf", "suitability"),
+            ("remoteOf", "remote"),
         ] {
             for (name, of) in c["expect"][key].as_object().cloned().unwrap_or_default() {
                 wanted.push((name, of, kind));
@@ -303,13 +306,17 @@ fn raster_cases(name: &str, least: usize) {
                 }
                 continue;
             }
-            if matches!(*kind, "ops" | "hydrology" | "distance" | "suitability") {
+            if matches!(
+                *kind,
+                "ops" | "hydrology" | "distance" | "suitability" | "remote"
+            ) {
                 // The raster operations', the hydrology, the distance or the suitability reference: its samples by its
                 // case's rule (Ağırlıklı çakıştırma's 32-bit integer nodata is no value).
                 let file = match *kind {
                     "ops" => &raster_ops,
                     "hydrology" => &hydrology,
                     "suitability" => &suitability,
+                    "remote" => &remote,
                     _ => &distance,
                 };
                 let got: Vec<f64> = if *kind == "suitability" {
@@ -327,6 +334,9 @@ fn raster_cases(name: &str, least: usize) {
                     .unwrap_or_else(|| panic!("{id}: no {kind} case {of}"));
                 let want = &reference["expect"]["raster"];
                 let exact = want["rule"] == "exact";
+                // The remote sensing reference's integer results: “sum” within one unit (docs/adr/0242 §2).
+                let whole = *kind == "remote"
+                    && !matches!(want["sample"].as_str(), Some("f32" | "f64") | None);
                 let values = want["values"].as_array().expect("the values whole");
                 if got.len() != values.len() {
                     found.push(format!("{id}: {} samples for {}", got.len(), values.len()));
@@ -339,6 +349,8 @@ fn raster_cases(name: &str, least: usize) {
                     }
                     if exact {
                         *g != w
+                    } else if whole {
+                        (*g - w).abs() > 1.0
                     } else {
                         ulps(*g as f32, w as f32) > 1
                     }
@@ -463,6 +475,13 @@ fn the_distance_cases_do_what_they_say() {
 #[test]
 fn the_suitability_cases_do_what_they_say() {
     raster_cases("suitability.json", 21);
+}
+
+/// Uzaktan algılama's shared cases (fixtures/processing/v1/remote.json,
+/// scripts/fixtures/remote_processing_cases.py; docs/adr/0242).
+#[test]
+fn the_remote_sensing_cases_do_what_they_say() {
+    raster_cases("remote.json", 21);
 }
 
 /// The names an expression field offers on rasters (docs/adr/0233 §3): the

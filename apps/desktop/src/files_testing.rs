@@ -189,3 +189,27 @@ impl iced::advanced::widget::Operation for SnapAll {
         state.snap_to(iced::widget::scrollable::RelativeOffset::END.into());
     }
 }
+
+/// Every scrollable to its end downwards and to its start across (a form's
+/// table under it, its first column in sight).
+pub struct SnapDown;
+
+impl iced::advanced::widget::Operation for SnapDown {
+    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
+        operate(self);
+    }
+
+    fn scrollable(
+        &mut self,
+        _id: Option<&iced::widget::Id>,
+        _bounds: iced::Rectangle,
+        _content_bounds: iced::Rectangle,
+        _translation: iced::Vector,
+        state: &mut dyn iced::advanced::widget::operation::Scrollable,
+    ) {
+        state.snap_to(iced::widget::scrollable::RelativeOffset {
+            x: Some(0.0),
+            y: Some(1.0),
+        });
+    }
+}

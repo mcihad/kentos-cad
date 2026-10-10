@@ -16,6 +16,7 @@ pub mod pointcloud;
 pub mod queries;
 pub mod raster_ops;
 pub mod raster_vector;
+pub mod remote;
 pub mod select_by_expression;
 pub mod select_by_location;
 pub mod stats;
@@ -130,6 +131,15 @@ pub fn tools() -> Vec<Tool> {
         stats::tools::hot_spot(),
         stats::tools::dbscan_tool(),
         stats::tools::k_means_tool(),
+        // Uzaktan algılama (docs/adr/0242): both platforms.
+        remote::tools::composite(),
+        remote::tools::split(),
+        remote::tools::index(),
+        remote::tools::supervised(),
+        remote::tools::unsupervised(),
+        remote::tools::accuracy(),
+        remote::tools::change(),
+        remote::tools::pansharpen(),
     ]
 }
 

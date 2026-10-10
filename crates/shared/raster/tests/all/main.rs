@@ -15,6 +15,8 @@ mod ops_timing;
 mod point_timing;
 mod raster_ops;
 mod raster_vector;
+mod remote;
+mod remote_timing;
 mod suitability;
 mod suitability_timing;
 mod terrain;

@@ -2,8 +2,8 @@
 //! sınıflandır, Maskeyle kırp, Mozaik, Yeniden örnekle, Bölgesel istatistik,
 //! Histogram, Komşuluk istatistiği and Hücre istatistiği over one or more
 //! input rasters (and areas for the mask and the zones); the vectorizing,
-//! hydrology, distance (docs/adr/0234–0236) and suitability tools
-//! (docs/adr/0237) on the same steps.
+//! hydrology, distance (docs/adr/0234–0236), suitability (docs/adr/0237)
+//! and remote sensing tools (docs/adr/0242) on the same steps.
 //!
 //! The host opens each input (the formats core's reader) and, until the
 //! run is done, gives the blocks [`OpsJob::needs`] names (each with its
@@ -41,6 +41,10 @@ use crate::inputs::{
 use crate::out::{Out, OutSpec, Rows};
 use crate::par;
 use crate::reclass::{self, Bounds, Rule};
+use crate::remote::RemoteNotes;
+use crate::remote::classify::Method as ClassifyMethod;
+use crate::remote::spectral::{Index, IndexBands, IndexKind};
+use crate::remote::work::{ChangeMethod, FuseMethod, RemoteTool, RemoteWork, Weights};
 use crate::resample::{self, Method};
 use crate::stats::{Moments, Stat, order_stat};
 use crate::suitability::pairwise::{Pairwise, pairwise};
@@ -451,6 +455,119 @@ pub enum OpsTool {
         absence: bool,
         higher: bool,
     },
+    /// Bant birleştir (docs/adr/0242 §3).
+    Composite {
+        sampling: Sampling,
+    },
+    /// Bantlara ayır (§4): one band a run.
+    Band {
+        band: u32,
+    },
+    /// Spektral indis (§5): the bands by their names, the reflectance's scale and offset, the constants.
+    Index {
+        index: IndexKind,
+        bands: IndexBands,
+        scale: f64,
+        offset: f64,
+        savi_l: f64,
+        g: f64,
+        c1: f64,
+        c2: f64,
+        evi_l: f64,
+    },
+    /// Denetimli sınıflandırma (§6): each object's class text.
+    Supervised {
+        method: ClassifyMethod,
+        texts: Vec<Option<String>>,
+    },
+    /// Denetimsiz sınıflandırma (§7).
+    Unsupervised {
+        clusters: u32,
+        iterations: u32,
+    },
+    /// Doğruluk analizi (§8): each object's reference text.
+    Accuracy {
+        band: u32,
+        reference: Vec<Option<String>>,
+    },
+    /// Değişim tespiti (§9): the first input before, the second after.
+    Change {
+        band: u32,
+        method: ChangeMethod,
+    },
+    /// Görüntü birleştirme (§10): the first input multispectral, the second
+    /// panchromatic; Brovey's weights (none or an empty text: equal).
+    Pansharpen {
+        method: FuseMethod,
+        #[serde(default)]
+        weights: Option<Weights>,
+        sampling: Sampling,
+    },
+}
+
+/// A remote sensing tool's settings (docs/adr/0242); none for another tool.
+fn remote_tool(tool: &OpsTool) -> Result<Option<RemoteTool<'_>>, String> {
+    Ok(Some(match tool {
+        OpsTool::Composite { sampling } => RemoteTool::Composite {
+            sampling: *sampling,
+        },
+        OpsTool::Band { band } => RemoteTool::Band { band: *band },
+        OpsTool::Index {
+            index,
+            bands,
+            scale,
+            offset,
+            savi_l,
+            g,
+            c1,
+            c2,
+            evi_l,
+        } => RemoteTool::Index {
+            index: Index {
+                kind: *index,
+                scale: *scale,
+                offset: *offset,
+                savi_l: *savi_l,
+                g: *g,
+                c1: *c1,
+                c2: *c2,
+                evi_l: *evi_l,
+            },
+            bands: *bands,
+        },
+        OpsTool::Supervised { method, texts } => RemoteTool::Supervised {
+            method: *method,
+            texts,
+        },
+        OpsTool::Unsupervised {
+            clusters,
+            iterations,
+        } => RemoteTool::Unsupervised {
+            clusters: *clusters,
+            iterations: *iterations,
+        },
+        OpsTool::Accuracy { band, reference } => RemoteTool::Accuracy {
+            band: *band,
+            reference,
+        },
+        OpsTool::Change { band, method } => RemoteTool::Change {
+            band: *band,
+            method: *method,
+        },
+        OpsTool::Pansharpen {
+            method,
+            weights,
+            sampling,
+        } => RemoteTool::Pansharpen {
+            method: *method,
+            weights: match weights {
+                Some(w) => w.read()?,
+                None => None,
+            },
+            sampling: *sampling,
+        },
+        _ => return Ok(None),
+    }))
 }
 
 /// Uzaklık yüzeyi's result (docs/adr/0236 §3).
@@ -899,6 +1016,8 @@ pub enum OpsFinished {
     Roc(Roc),
     /// İkili karşılaştırma without its raster: the weights are in the notes.
     Weights,
+    /// Doğruluk analizi (docs/adr/0242 §8): its table and figures are in the notes.
+    Report,
 }
 
 /// What a run met, for the host's summary and warnings.
@@ -914,6 +1033,8 @@ pub struct Notes {
     pub distance: DistanceNotes,
     /// A suitability run's (docs/adr/0237).
     pub suit: SuitNotes,
+    /// A remote sensing run's table, summary and warnings (docs/adr/0242).
+    pub remote: RemoteNotes,
 }
 
 /// What a suitability run met (docs/adr/0237).
@@ -1000,6 +1121,8 @@ enum Work {
     Roc(Box<RocWork>),
     /// İkili karşılaştırma without its raster: nothing to read.
     Weights,
+    /// A remote sensing tool's passes (docs/adr/0242).
+    Remote(Box<RemoteWork>),
 }
 
 /// A suitability cell's rule.
@@ -1824,6 +1947,24 @@ impl OpsJob {
                 let work = RocWork::new(&grid, b, &shapes, *split as usize, *absence, *higher)?;
                 (grid, Work::Roc(Box::new(work)), None, None)
             }
+            OpsTool::Composite { .. }
+            | OpsTool::Band { .. }
+            | OpsTool::Index { .. }
+            | OpsTool::Supervised { .. }
+            | OpsTool::Unsupervised { .. }
+            | OpsTool::Accuracy { .. }
+            | OpsTool::Change { .. }
+            | OpsTool::Pansharpen { .. } => {
+                let tool = remote_tool(&spec.tool)?.ok_or("Uzaktan algılama aracı bilinmiyor.")?;
+                let s = RemoteWork::start(tool, &inputs, &names, first_style, &shapes)?;
+                let kind = s.kind.map(|(sample, values, alpha, nodata)| Kind {
+                    sample,
+                    values,
+                    alpha,
+                    nodata,
+                });
+                (s.grid, Work::Remote(Box::new(s.work)), kind, s.style)
+            }
         };
         if u64::from(grid.width) * u64::from(grid.height) > crate::job::MOST_CELLS
             || grid.width > crate::job::MOST_WIDTH
@@ -1886,7 +2027,7 @@ impl OpsJob {
         while bw > TILE {
             let rect = (0, bw.min(w), 0, TILE.min(self.grid.height));
             let read: u64 = self
-                .regions(rect)
+                .regions_in(rect, true)
                 .iter()
                 .map(|(k, r)| u64::from(r.2) * u64::from(r.3) * u64::from(self.inputs[*k].values()))
                 .sum();
@@ -1901,9 +2042,15 @@ impl OpsJob {
     }
 
     /// The inputs a block of the grid (columns `c0..c1`, rows `y0..y1`) reads, and their regions.
-    fn regions(
+    fn regions(&self, rect: (u32, u32, u32, u32)) -> Vec<(usize, (i64, i64, u32, u32))> {
+        self.regions_in(rect, false)
+    }
+
+    /// [`OpsJob::regions`]; `planning`: what the widest pass reads (the column blocks' plan).
+    fn regions_in(
         &self,
         (c0, c1, y0, y1): (u32, u32, u32, u32),
+        planning: bool,
     ) -> Vec<(usize, (i64, i64, u32, u32))> {
         let mut out = Vec::new();
         let mut add = |k: usize, margin: i64| {
@@ -1924,6 +2071,11 @@ impl OpsJob {
             }
             Work::Roc(_) => add(0, 0),
             Work::Weights => {}
+            Work::Remote(r) => {
+                for (k, margin) in r.reads((c0, c1, y0, y1), planning) {
+                    add(k, margin);
+                }
+            }
             Work::Vector(v) => add(0, v.margin()),
             Work::Hydro(h) => {
                 if h.reading() {
@@ -2073,6 +2225,7 @@ impl OpsJob {
             Work::Hydro(h) => h.share(f),
             Work::Distance(d) => d.share(f),
             Work::Roc(r) => r.share(f),
+            Work::Remote(r) => r.share(f),
             Work::Weights => 1.0,
             Work::Histogram(h) if h.bounds_pass => f / 3.0,
             Work::Histogram(h) if h.two_pass => 1.0 / 3.0 + 2.0 * f / 3.0,
@@ -2090,7 +2243,8 @@ impl OpsJob {
         self.grid
     }
 
-    /// The result raster's look; none for a table.
+    /// The result raster's look; none for a table. A remote sensing run's
+    /// may change when its values are known: read it again when the run is done.
     pub fn style(&self) -> Option<RasterStyle> {
         self.style.clone()
     }
@@ -2187,6 +2341,15 @@ impl OpsJob {
                 Work::Hydro(h) => h.block(rect, &raw),
                 _ => unreachable!(),
             }
+        } else if matches!(&self.work, Work::Remote(r) if r.reading()) {
+            // A remote sensing tool's training, sample or reference cells.
+            let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
+            for (k, r) in regions {
+                views[k] = Some(self.inputs[k].view(r, self.threads)?);
+            }
+            if let Work::Remote(r) = &mut self.work {
+                r.read(&views, rect, self.threads);
+            }
         } else if let Some(kind) = self.kind {
             let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
             for (k, r) in regions {
@@ -2244,6 +2407,19 @@ impl OpsJob {
             return Ok(Vec::new());
         }
         if self.next >= self.grid.height
+            && let Work::Remote(r) = &mut self.work
+            && r.reading()
+        {
+            // The model, the clusters or the report; a class raster's pass follows.
+            if r.read_done(self.threads)? {
+                self.next = 0;
+            } else {
+                self.notes.remote = r.notes();
+            }
+            self.strip = None;
+            return Ok(Vec::new());
+        }
+        if self.next >= self.grid.height
             && let Work::Vector(v) = &mut self.work
             && let Some(g) = v.pass_done()?
         {
@@ -2268,6 +2444,14 @@ impl OpsJob {
             h.out.empty = 0;
             self.next = 0;
         }
+        if self.next >= self.grid.height
+            && let Work::Remote(r) = &self.work
+        {
+            self.notes.remote = r.notes();
+            if let Some(s) = r.style() {
+                self.style = Some(s);
+            }
+        }
         Ok(bytes)
     }
 
@@ -2287,6 +2471,13 @@ impl OpsJob {
         let row_len = bw * b;
         let empty = View::default();
         let view = |k: usize| views.get(k).and_then(Option::as_ref).unwrap_or(&empty);
+        if let Work::Remote(r) = &self.work {
+            let tally = r.block(&grid, inputs, views, (c0, c1, y0, y1), b, threads, vals);
+            if let Work::Remote(r) = &mut self.work {
+                r.add(tally);
+            }
+            return Ok(());
+        }
         match &self.work {
             Work::Calc { calc, maps } => {
                 let area = {
@@ -2594,7 +2785,8 @@ impl OpsJob {
             | Work::Hydro(_)
             | Work::Distance(_)
             | Work::Roc(_)
-            | Work::Weights => {}
+            | Work::Weights
+            | Work::Remote(_) => {}
         }
         Ok(())
     }
@@ -2799,6 +2991,7 @@ impl OpsJob {
             Work::Histogram(h) => Ok(OpsFinished::Histogram(h.out)),
             Work::Roc(r) => Ok(OpsFinished::Roc(r.finish()?)),
             Work::Weights => Ok(OpsFinished::Weights),
+            Work::Remote(r) if r.report() => Ok(OpsFinished::Report),
             Work::Vector(v) => Ok(OpsFinished::Features(v.finish()?)),
             Work::Hydro(mut h) if h.tool().raster(RasterSample::F32).is_none() => {
                 Ok(OpsFinished::Features(h.finish()?))

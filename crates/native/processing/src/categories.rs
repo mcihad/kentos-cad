@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 21] = [
+pub const CATEGORIES: [Category; 22] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -162,5 +162,12 @@ pub const CATEGORIES: [Category; 21] = [
         "Uygunluk analizi",
         "weightedOverlay",
         "Bulanık üyelik ve çakıştırma, ağırlıklı toplam ve çakıştırma, AHP, ROC",
+    ),
+    // docs/adr/0242: multi-band images: bands, indices, classes, their accuracy, change, fusion.
+    category(
+        "remoteSensing",
+        "Uzaktan algılama",
+        "spectralIndex",
+        "Bant birleştirme, spektral indisler, sınıflandırma, doğruluk, değişim ve görüntü birleştirme",
     ),
 ];

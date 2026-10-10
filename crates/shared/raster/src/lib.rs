@@ -14,6 +14,8 @@
 //! - [`out`]: the result's GeoTIFF, written as it is worked out (§2).
 //! - [`job`]: a run: the host's settings, the strips, the result.
 //! - [`suitability`]: Uygunluk analizi's cells, weights and validation (docs/adr/0237).
+//! - [`remote`]: Uzaktan algılama's bands, indices, classifications, accuracy,
+//!   change and fusion (docs/adr/0242).
 //! - [`points`], [`grid`], [`index`], [`interp`], [`density`]: a raster from
 //!   points or lines (docs/adr/0232): the objects' points, the grid, the
 //!   neighbours, the interpolations and densities; [`from_points`] the run.
@@ -44,6 +46,7 @@ pub mod points;
 pub mod rasterize;
 pub mod reclass;
 pub mod relief;
+pub mod remote;
 pub mod resample;
 pub mod solve;
 pub mod stats;

@@ -1,0 +1,994 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: uzaktan algılama",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 1000,
+  "y": 2000
+ },
+ "layers": [
+  {
+   "id": "egitim",
+   "name": "Eğitim alanları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#2E7D32",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "referans",
+   "name": "Referans",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "uzak",
+   "name": "Uzak",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#6A1B9A",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "mavi",
+   "name": "Mavi",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yesil",
+   "name": "Yeşil",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kirmizi",
+   "name": "Kırmızı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yko",
+   "name": "YKÖ",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "goruntu",
+   "name": "Görüntü",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sonraki",
+   "name": "Sonraki",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "once-sinif",
+   "name": "Önceki sınıflar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sonra-sinif",
+   "name": "Sonraki sınıflar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "siniflar",
+   "name": "Sınıflar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sifirli",
+   "name": "Sıfırlı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "cok-bantli",
+   "name": "Çok bantlı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "pankromatik",
+   "name": "Pankromatik",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "egitim",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "u16",
+   "file": "mavi.tif",
+   "srid": 5254,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax"
+   },
+   "id": 1,
+   "layerId": "mavi",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "u16",
+   "file": "yesil.tif",
+   "srid": 5254,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax"
+   },
+   "id": 2,
+   "layerId": "yesil",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "u16",
+   "file": "kirmizi.tif",
+   "srid": 5254,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax"
+   },
+   "id": 3,
+   "layerId": "kirmizi",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "u16",
+   "file": "yko.tif",
+   "srid": 5254,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax"
+   },
+   "id": 4,
+   "layerId": "yko",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 4,
+   "sample": "u16",
+   "file": "goruntu.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     3,
+     2,
+     1
+    ],
+    "stretch": "percent"
+   },
+   "id": 5,
+   "layerId": "goruntu",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 4,
+   "sample": "u16",
+   "file": "sonraki.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     3,
+     2,
+     1
+    ],
+    "stretch": "percent"
+   },
+   "id": 6,
+   "layerId": "sonraki",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "u8",
+   "file": "once-sinif.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Spektral",
+    "resampling": "nearest"
+   },
+   "id": 7,
+   "layerId": "once-sinif",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "u8",
+   "file": "sonra-sinif.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Spektral",
+    "resampling": "nearest"
+   },
+   "id": 8,
+   "layerId": "sonra-sinif",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "u8",
+   "file": "siniflar.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Spektral",
+    "resampling": "nearest"
+   },
+   "id": 9,
+   "layerId": "siniflar",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 4,
+   "height": 2,
+   "bands": 2,
+   "sample": "u16",
+   "file": "sifirli.tif",
+   "srid": 5254,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax"
+   },
+   "id": 10,
+   "layerId": "sifirli",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    20.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -20.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 4,
+   "sample": "u16",
+   "file": "cok-bantli.tif",
+   "srid": 5254,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     3,
+     2,
+     1
+    ],
+    "stretch": "percent"
+   },
+   "id": 11,
+   "layerId": "cok-bantli",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    5.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -5.0
+   ],
+   "width": 24,
+   "height": 20,
+   "bands": 1,
+   "sample": "u16",
+   "file": "pankromatik.tif",
+   "srid": 5254,
+   "style": {
+    "render": "gray",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax"
+   },
+   "id": 12,
+   "layerId": "pankromatik",
+   "attrs": {}
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500001.0,
+     "y": 4419961.0
+    },
+    {
+     "x": 500029.0,
+     "y": 4419961.0
+    },
+    {
+     "x": 500029.0,
+     "y": 4419999.0
+    },
+    {
+     "x": 500001.0,
+     "y": 4419999.0
+    }
+   ],
+   "id": 13,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Su"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500041.0,
+     "y": 4419971.0
+    },
+    {
+     "x": 500079.0,
+     "y": 4419971.0
+    },
+    {
+     "x": 500079.0,
+     "y": 4419999.0
+    },
+    {
+     "x": 500041.0,
+     "y": 4419999.0
+    }
+   ],
+   "id": 14,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Orman"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500091.0,
+     "y": 4419911.0
+    },
+    {
+     "x": 500119.0,
+     "y": 4419911.0
+    },
+    {
+     "x": 500119.0,
+     "y": 4419979.0
+    },
+    {
+     "x": 500091.0,
+     "y": 4419979.0
+    }
+   ],
+   "id": 15,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Toprak"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500041.0,
+     "y": 4419901.0
+    },
+    {
+     "x": 500079.0,
+     "y": 4419901.0
+    },
+    {
+     "x": 500079.0,
+     "y": 4419929.0
+    },
+    {
+     "x": 500041.0,
+     "y": 4419929.0
+    }
+   ],
+   "id": 16,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Yapı"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500011.0,
+     "y": 4419901.0
+    },
+    {
+     "x": 500039.0,
+     "y": 4419901.0
+    },
+    {
+     "x": 500039.0,
+     "y": 4419969.0
+    },
+    {
+     "x": 500011.0,
+     "y": 4419969.0
+    }
+   ],
+   "id": 17,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": " Su "
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500001.0,
+     "y": 4419901.0
+    },
+    {
+     "x": 500119.0,
+     "y": 4419901.0
+    },
+    {
+     "x": 500119.0,
+     "y": 4419999.0
+    },
+    {
+     "x": 500001.0,
+     "y": 4419999.0
+    }
+   ],
+   "id": 18,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": ""
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500051.0,
+     "y": 4419951.0
+    },
+    {
+     "x": 500069.0,
+     "y": 4419951.0
+    },
+    {
+     "x": 500069.0,
+     "y": 4419979.0
+    },
+    {
+     "x": 500051.0,
+     "y": 4419979.0
+    }
+   ],
+   "id": 19,
+   "layerId": "egitim",
+   "attrs": {
+    "Sınıf": "Orman"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500001.0,
+     "y": 4419901.0
+    },
+    {
+     "x": 500119.0,
+     "y": 4419901.0
+    },
+    {
+     "x": 500119.0,
+     "y": 4419999.0
+    },
+    {
+     "x": 500001.0,
+     "y": 4419999.0
+    }
+   ],
+   "id": 20,
+   "layerId": "egitim",
+   "attrs": {}
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500005.0,
+    "y": 4419995.0
+   },
+   "id": 21,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.0,
+    "y": 4419985.0
+   },
+   "id": 22,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500055.0,
+    "y": 4419985.0
+   },
+   "id": 23,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500065.0,
+    "y": 4419975.0
+   },
+   "id": 24,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500095.0,
+    "y": 4419955.0
+   },
+   "id": 25,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500105.0,
+    "y": 4419915.0
+   },
+   "id": 26,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500055.0,
+    "y": 4419915.0
+   },
+   "id": 27,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500065.0,
+    "y": 4419905.0
+   },
+   "id": 28,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "4"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500025.0,
+    "y": 4419945.0
+   },
+   "id": 29,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500075.0,
+    "y": 4419955.0
+   },
+   "id": 30,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.0,
+    "y": 4419985.0
+   },
+   "id": 31,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500041.0,
+     "y": 4419981.0
+    },
+    {
+     "x": 500059.0,
+     "y": 4419981.0
+    },
+    {
+     "x": 500059.0,
+     "y": 4419999.0
+    },
+    {
+     "x": 500041.0,
+     "y": 4419999.0
+    }
+   ],
+   "id": 32,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "2"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500015.0,
+    "y": 4419985.0
+   },
+   "id": 33,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "x"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 499000.0,
+    "y": 4420050.0
+   },
+   "id": 34,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 500095.0,
+    "y": 4419905.0
+   },
+   "parts": [
+    {
+     "p": {
+      "x": 500105.0,
+      "y": 4419905.0
+     }
+    }
+   ],
+   "id": 35,
+   "layerId": "referans",
+   "attrs": {
+    "Sınıf": " 3,0 "
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 499000.0,
+    "y": 4420050.0
+   },
+   "id": 36,
+   "layerId": "uzak",
+   "attrs": {
+    "Sınıf": "5"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

@@ -767,6 +767,10 @@ impl OpsAnalysis {
             .job
             .take()
             .ok_or_else(|| JsError::new("Çözümleme bitti."))?;
+        // The look as the run left it (Değişim tespiti's is stretched by its values).
+        if let Some(s) = job.style() {
+            self.style = serde_json::to_string(&s).unwrap_or_default();
+        }
         let n = job.notes().clone();
         let h = &n.hydro;
         self.notes = serde_json::json!({
@@ -805,6 +809,14 @@ impl OpsAnalysis {
                     "ri": p.ri,
                     "cr": p.cr,
                 })),
+            },
+            // Uzaktan algılama (docs/adr/0242): the table, the summary's tail, the warnings; Doğruluk analizi's figures.
+            "remote": {
+                "table": n.remote.table.as_ref().map(|t| serde_json::json!({ "columns": t.columns, "rows": t.rows })),
+                "tail": n.remote.tail,
+                "warnings": n.remote.warnings,
+                "overall": n.remote.overall,
+                "kappa": n.remote.kappa,
             },
         })
         .to_string();
@@ -859,7 +871,7 @@ impl OpsAnalysis {
                 .to_string();
                 Ok(Vec::new())
             }
-            OpsFinished::Weights => Ok(Vec::new()),
+            OpsFinished::Weights | OpsFinished::Report => Ok(Vec::new()),
         }
     }
 

@@ -11,12 +11,13 @@
 // (docs/adr/0235 §12, hydro_timing.rs's work): every tool over its 4096² DEM with pits and flats; then distance and cost
 // (docs/adr/0236 §8, distance_timing.rs's work): each tool over its 4096² cost raster with lakes, the sources' raster and
 // hydrology's DEM as the surface, Uzaklık yüzeyi from 2000 points and 100 lines; then suitability (docs/adr/0237 §11,
-// suitability_timing.rs's work): four 4096² criteria, each tool's run and ROC with 10 000 presence cells. Starts its own Vite dev
+// suitability_timing.rs's work): four 4096² criteria, each tool's run and ROC with 10 000 presence cells; then remote sensing
+// (docs/adr/0242 §12, remote_timing.rs's work): a 4096² four-band 16-bit image and its kin, each tool's run. Starts its own Vite dev
 // server and one headless Chrome; the DEMs are written once by GDAL into .run/perf (python3 with numpy and osgeo) and
 // fetched by the page as a file the user gave. The worker's whole run is timed: its start, the module, reading the
 // file's blocks, the job and the result's coding. Nothing else heavy may run meanwhile (docs/adr/0005).
 //
-//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance|suitability]
+//   node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs [--runs 3] [--only surface|points|ops|vector|hydro|distance|suitability|remote]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { cpus } from 'node:os';
@@ -148,6 +149,57 @@ for path, z in zip(${JSON.stringify(names)}, (slope, dist + 0 * y, cls, mem)):
     d.GetRasterBand(1).SetNoDataValue(float('nan'))
     d.GetRasterBand(1).WriteArray(z.astype(np.float32))
     d = None
+`;
+  execFileSync('python3', ['-c', script], { stdio: 'inherit' });
+  return names;
+}
+
+/** remote_timing.rs's rasters of 5 m: the four-band image, two years on, its bands, its classes, a 2048² multispectral and a 4096² panchromatic. */
+function remoteRasters(n) {
+  const names = ['goruntu', 'sonraki', 'b1', 'b2', 'b3', 'b4', 'siniflar', 'cok-bantli', 'pankromatik'].map((k) => `${dir}uzaktan-${k}-${n}.tif`);
+  if (names.every((f) => existsSync(f))) return names;
+  const script = `
+import numpy as np
+from osgeo import gdal, osr
+gdal.UseExceptions()
+n = ${n}
+def hash(i, j, b):
+    h = (i * np.uint32(0x9e3779b9)) ^ (j * np.uint32(0x85ebca6b)) ^ np.uint32((b * 0xc2b2ae35) & 0xFFFFFFFF)
+    h ^= h >> np.uint32(15)
+    h = h * np.uint32(0x2c1b3c6d)
+    return h ^ (h >> np.uint32(12))
+SIG = np.array([[600, 520, 330, 180], [300, 560, 380, 3400], [520, 820, 760, 2700], [980, 1250, 1600, 2150], [420, 900, 560, 4100], [1250, 1330, 1420, 1850]], dtype=np.float64)
+i = np.arange(n, dtype=np.uint32)[None, :] * np.ones((n, 1), np.uint32)
+j = np.arange(n, dtype=np.uint32)[:, None] * np.ones((1, n), np.uint32)
+bi, bj = i // np.uint32(256), j // np.uint32(256)
+cover = ((bi + np.uint32(3) * bj + hash(bi, bj, 9) % np.uint32(2)) % np.uint32(6)).astype(np.int64)
+empty = (i < 40) & (j < 40)
+img = np.stack([np.maximum(SIG[cover, b] + (hash(i, j, b) % np.uint32(201)).astype(np.float64) - 100.0, 1.0) for b in range(4)], axis=-1)
+img[empty] = 0
+later = img * 1.02
+fell = (i >= 1024) & (i < 1536) & (j >= 2048) & (j < 2560)
+later[fell] = SIG[3]
+later[empty] = 0
+def write(path, z, cell):
+    m = z.shape[0]
+    bands = 1 if z.ndim == 2 else z.shape[2]
+    d = gdal.GetDriverByName('GTiff').Create(path, m, m, bands, gdal.GDT_UInt16, ['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256', 'COMPRESS=DEFLATE', 'ZLEVEL=1'])
+    d.SetGeoTransform([500000.0, cell, 0.0, 4420000.0, 0.0, -cell])
+    s = osr.SpatialReference(); s.ImportFromEPSG(5254); d.SetProjection(s.ExportToWkt())
+    for k in range(bands):
+        d.GetRasterBand(k + 1).SetNoDataValue(0)
+        d.GetRasterBand(k + 1).WriteArray(np.round(z if bands == 1 else z[:, :, k]).astype(np.uint16))
+    d = None
+paths = ${JSON.stringify(names)}
+write(paths[0], img, 5.0)
+write(paths[1], later, 5.0)
+for b in range(4):
+    write(paths[2 + b], img[:, :, b], 5.0)
+write(paths[6], np.where(empty, 0, cover + 1).astype(np.float64), 5.0)
+write(paths[7], img[::2, ::2], 10.0)
+pan = img[:, :, :3].mean(axis=2)
+pan[empty] = 0
+write(paths[8], pan, 5.0)
 `;
   execFileSync('python3', ['-c', script], { stdio: 'inherit' });
   return names;
@@ -527,6 +579,71 @@ img[np.broadcast_to(contour, (n, n))] = (150, 80, 30)`);
       }
       times.sort((a, c) => a - c);
       console.log(`${job.name.padEnd(40)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
+    }
+  }
+  // Uzaktan algılama (docs/adr/0242 §12): remote_timing.rs's jobs, the whole worker run each.
+  if (part('remote')) {
+    const [img, later, b1, b2, b3, b4, classes, ms, pan] = remoteRasters(4096);
+    const hash = (i, j, k) => {
+      let h = (Math.imul(i, 0x9e3779b9) ^ Math.imul(j, 0x85ebca6b) ^ Math.imul(k, 0xc2b2ae35)) >>> 0;
+      h = (h ^ (h >>> 15)) >>> 0;
+      h = Math.imul(h, 0x2c1b3c6d) >>> 0;
+      return (h ^ (h >>> 12)) >>> 0;
+    };
+    const cover = (i, j) => (Math.floor(i / 256) + 3 * Math.floor(j / 256) + (hash(Math.floor(i / 256), Math.floor(j / 256), 9) % 2)) % 6;
+    const A = [500000, 5, 0, 4420000, 0, -5];
+    const C = [500000, 10, 0, 4420000, 0, -10];
+    const square = (i0, j0, k) => {
+      const [x0, y0] = [500000 + 5 * i0 + 0.5, 4420000 - 5 * j0 - 0.5];
+      const [x1, y1] = [x0 + 5 * k - 1, y0 - 5 * k + 1];
+      return { kind: 'polygon', pts: [[x0, y1], [x1, y1], [x1, y0], [x0, y0]].map(([x, y]) => ({ x, y })) };
+    };
+    const training = [];
+    const texts = [];
+    for (let c = 0; c < 6; c++) {
+      let at = null;
+      for (let bj = 0; bj < 16 && !at; bj++) for (let bi = 0; bi < 16 && !at; bi++) if (cover(bi * 256, bj * 256) === c && bi * 256 >= 64) at = [bi, bj];
+      training.push(square(at[0] * 256 + 96, at[1] * 256 + 96, 64));
+      texts.push(`Örtü ${c + 1}`);
+    }
+    const points = [];
+    const refs = [];
+    for (let k = 0; k < 10000; k++) {
+      const [i, j] = [hash(k, 1, 2) % 4096, hash(k, 3, 4) % 4096];
+      points.push({ kind: 'point', p: { x: 500000 + 5 * (i + 0.5), y: 4420000 - 5 * (j + 0.5) } });
+      refs.push(String(1 + cover(i, j)));
+    }
+    const INDEX = { kind: 'index', index: 'ndvi', bands: { blue: 1, green: 2, red: 3, nir: 4, swir: 1, a: 4, b: 3 }, scale: 1, offset: 0, saviL: 0.5, g: 2.5, c1: 6, c2: 7.5, eviL: 1 };
+    const remoteJobs = [
+      { name: 'Bant birleştir, dört tek bantlı', budget: 6, files: [[b1, A], [b2, A], [b3, A], [b4, A]], tool: { kind: 'composite', sampling: 'nearest' } },
+      { name: 'NDVI', budget: 4, files: [[img, A]], tool: INDEX },
+      { name: 'Denetimli, en büyük olabilirlik, 6 sınıf', budget: 8, files: [[img, A]], tool: { kind: 'supervised', method: 'likelihood', texts }, shapes: training },
+      { name: 'Denetimsiz, 8 küme, 20 yineleme', budget: 8, files: [[img, A]], tool: { kind: 'unsupervised', clusters: 8, iterations: 20 } },
+      { name: 'Doğruluk analizi, 10 000 nokta', budget: 2, files: [[classes, A]], tool: { kind: 'accuracy', band: 1, reference: refs }, shapes: points },
+      { name: 'Değişim tespiti, fark', budget: 4, files: [[img, A], [later, A]], tool: { kind: 'change', band: 4, method: 'difference' } },
+      { name: 'Görüntü birleştirme, Brovey, 2048² → 4096²', budget: 8, files: [[ms, C], [pan, A]], tool: { kind: 'pansharpen', method: 'brovey', sampling: 'cubic' } },
+      { name: 'Bantlara ayır, dört bant', budget: 8, files: [[img, A]], tools: [1, 2, 3, 4].map((band) => ({ kind: 'band', band })) },
+    ];
+    for (const job of remoteJobs) {
+      const times = [];
+      for (let r = 0; r < runs; r++) {
+        const ms = await b.eval(`(async () => {
+          const { analyzeOps } = await import('/src/io/rasterAnalysis.ts');
+          const files = ${JSON.stringify(job.files)};
+          const tools = ${JSON.stringify(job.tools ?? [job.tool])};
+          const blobs = await Promise.all(files.map(async ([f]) => (await fetch('/@fs' + f)).blob()));
+          const t0 = performance.now();
+          for (const tool of tools) {
+            const spec = JSON.stringify({ tool, inputs: files.map(([, a], k) => ({ affine: a, name: 'R' + k })), epsg: 5254 });
+            const out = await analyzeOps(blobs, spec, ${JSON.stringify(JSON.stringify(job.shapes ?? []))}, { progress() {}, canceled: false });
+            if (!out.bytes && !JSON.parse(out.notes).remote?.table) throw new Error('no result');
+          }
+          return performance.now() - t0;
+        })()`);
+        times.push(ms / 1000);
+      }
+      times.sort((a, c) => a - c);
+      console.log(`${job.name.padEnd(44)} 4096²  p50 ${times[Math.floor(times.length / 2)].toFixed(3)} s  en yavaş ${times[times.length - 1].toFixed(3)} s  bütçe ${job.budget} s`);
     }
   }
 } finally {

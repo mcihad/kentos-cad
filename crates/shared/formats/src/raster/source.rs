@@ -261,7 +261,14 @@ impl Reader {
             6 => "ycbcr",
             _ => "gray",
         };
-        let alpha = !ifd.extra.is_empty() || photometric == 2 && base.bands >= 4;
+        // ExtraSamples: 1 associated and 2 unassociated alpha; 0 is data
+        // (GDAL's extra bands of a multi-band raster: a satellite image's
+        // near infrared is no mask). Without the tag an RGB raster's fourth
+        // sample is alpha, as writers that leave it out mean.
+        let alpha = match ifd.extra.last() {
+            Some(&e) => e == 1 || e == 2,
+            None => photometric == 2 && base.bands >= 4,
+        };
         let (affine, placed_by) = match (geo.affine, world) {
             (Some(a), _) => (Some(a), "geotiff"),
             (None, Some(w)) => (Some(w), "world"),

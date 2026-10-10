@@ -191,9 +191,21 @@ const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 's
 const RASTERS = ['raster.add', 'raster.style', 'raster.georef'];
 /**
  * İşlemler's categories of raster analysis (docs/adr/0231 §10): CBS's Raster tab rather than Analiz, which they would
- * crowd past 1100 px; GIS-32 to GIS-37 add theirs here.
+ * crowd past 1100 px; GIS-32 to GIS-37 and Uzaktan algılama (GIS-42, docs/adr/0242 §11) add theirs here.
  */
-const RASTER_ANALYSIS = ['Yüzey analizi', 'İnterpolasyon', 'Yoğunluk', 'Raster işlemleri', 'Raster istatistiği', 'Raster ve vektör', 'Taranmış harita', 'Hidroloji', 'Uzaklık ve maliyet', 'Uygunluk analizi'];
+const RASTER_ANALYSIS = [
+  'Yüzey analizi',
+  'İnterpolasyon',
+  'Yoğunluk',
+  'Raster işlemleri',
+  'Raster istatistiği',
+  'Raster ve vektör',
+  'Taranmış harita',
+  'Hidroloji',
+  'Uzaklık ve maliyet',
+  'Uygunluk analizi',
+  'Uzaktan algılama',
+];
 /**
  * İnterpolasyon's and Yoğunluk's tools (docs/adr/0232) in one panel of the Raster tab: surfaces from points both, and
  * Uygunluk analizi's panel (docs/adr/0237 §10) then fits at 1100 px.
@@ -210,6 +222,40 @@ const POINT_SURFACES = {
     'processing.run.density.kernel',
     'processing.run.density.line',
   ],
+} as const;
+/**
+ * Raster ve vektör's and Taranmış harita's tools (docs/adr/0234) in one panel of the Raster tab: both turn cells into
+ * objects, and Uzaktan algılama's panel (docs/adr/0242 §11) then fits at 1100 px.
+ */
+const RASTER_VECTORS = {
+  pick: 'Raster ve vektör',
+  icon: 'rasterize',
+  commands: [
+    'processing.run.raster.rasterize',
+    'processing.run.raster.toPolygons',
+    'processing.run.raster.toLines',
+    'processing.run.raster.toPoints',
+    'processing.run.scan.captureLine',
+    'processing.run.scan.closeArea',
+    'processing.run.scan.contourElevations',
+  ],
+} as const;
+/**
+ * Uzaktan algılama's tools (docs/adr/0242 §11): six in the panel, the bands' joining and splitting under its ▾, so that the
+ * Raster tab keeps under 3200 px when wide.
+ */
+const REMOTE_PANEL = {
+  pick: 'Uzaktan algılama',
+  icon: 'spectralIndex',
+  commands: [
+    'processing.run.remote.index',
+    'processing.run.remote.supervised',
+    'processing.run.remote.unsupervised',
+    'processing.run.remote.accuracy',
+    'processing.run.remote.change',
+    'processing.run.remote.pansharpen',
+  ],
+  under: ['processing.run.remote.composite', 'processing.run.remote.split'],
 } as const;
 /** Nokta bulutu (docs/adr/0207 §9), the desktop's for now: CAD's Ekle and CBS's Veri, İşlemler's tools under ▾. */
 const POINT_CLOUD_PANEL = { pick: 'Nokta bulutu', icon: 'pointCloudAdd', commands: POINT_CLOUDS, under: POINT_CLOUD_TOOLS } as const;
@@ -452,7 +498,10 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Raster', icon: 'rasterAdd', commands: RASTERS },
       { menu: 'processing', sections: ['Yüzey analizi'] },
       POINT_SURFACES,
-      { menu: 'processing', sections: RASTER_ANALYSIS.filter((s) => s !== 'Yüzey analizi' && s !== 'İnterpolasyon' && s !== 'Yoğunluk') },
+      { menu: 'processing', sections: ['Raster işlemleri', 'Raster istatistiği'] },
+      RASTER_VECTORS,
+      { menu: 'processing', sections: ['Hidroloji', 'Uzaklık ve maliyet', 'Uygunluk analizi'] },
+      REMOTE_PANEL,
     ],
   },
   {

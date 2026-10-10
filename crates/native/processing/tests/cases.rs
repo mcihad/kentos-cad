@@ -848,6 +848,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         distance,
         suitability,
         spatial_stats,
+        remote,
     ) = (
         cases(),
         case_file("geometry.json"),
@@ -860,6 +861,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         case_file("distance.json"),
         case_file("suitability.json"),
         case_file("spatial-stats.json"),
+        case_file("remote.json"),
     );
     let registry = Registry::builtin();
     let lookup = |id: &str| registry.tool(id);
@@ -876,7 +878,8 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         .chain(hydrology["documents"].as_object().expect("documents"))
         .chain(distance["documents"].as_object().expect("documents"))
         .chain(suitability["documents"].as_object().expect("documents"))
-        .chain(spatial_stats["documents"].as_object().expect("documents"));
+        .chain(spatial_stats["documents"].as_object().expect("documents"))
+        .chain(remote["documents"].as_object().expect("documents"));
     for (name, d) in documents {
         let doc = load(name);
         let defaults = Defaults::of(&doc);

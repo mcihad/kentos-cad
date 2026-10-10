@@ -11841,6 +11841,1102 @@
     ]
    }
   },
+  "remote.composite": {
+   "title": "Bant birleştir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Rasterler",
+     "description": "Birleştirilecek rasterler (en az iki).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "sampling",
+     "label": "Örnekleme",
+     "description": "Rasterler sonucun ızgarasına böyle okunur; en yakın değerleri değiştirmez.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "nearest",
+        "label": "En yakın"
+       },
+       {
+        "value": "bilinear",
+        "label": "Çift doğrusal"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-birlesik” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-birlesik.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "bandComposite",
+    "about": "Rasterlerin bantlarını tek çok bantlı rasterde birleştirir: her rasterin bütün bantları sırayla sonucun bantları olur.",
+    "help": [
+     "Rasterler Katmanlar panelinde üstten aşağı sırayla (aynı katmanda sonra eklenen önce) birleşir; tabloda her bandın kaynağı yazılır.",
+     "Rasterler ortak alanlarında, hücresi en küçük olanın ızgarasında birleşir: sonucun hücreleri merkezi bütün rasterlerin içinde olanlardır. Örnekleme en yakın hücre ya da çift doğrusal (dört komşu hücre merkezi).",
+     "Rasterlerin hepsi aynı türdeyse sonuç o türde (ve aynı nodata ile), değilse ondalık 32 bit. Üç ve daha çok bantta görünüş renkli (1, 2, 3).",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BANTBIRLESTIR",
+     "COMPOSITEBANDS"
+    ]
+   }
+  },
+  "remote.split": {
+   "title": "Bantlara ayır",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Bantlarına ayrılacak raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-b” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-b.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "bandSplit",
+    "about": "Çok bantlı rasterin her bandını ayrı bir rastere yazar.",
+    "help": [
+     "Her bant kendi GeoTIFF'ine yazılır: çıktı dosyası boşsa rasterin yanına adının sonuna “-b1”, “-b2” … eklenerek; bir ad yazılırsa o adın sonuna. Örnek türü ve nodata rasterinkidir; alfa bandı ayrılmaz.",
+     "Çizime ekle açıksa bantlar sırayla rasterin katmanının hemen üstündeki yeni katmana eklenir; görünüşleri gri, %2–98 gerdirmeyle."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BANTAYIR",
+     "SPLITBANDS"
+    ]
+   }
+  },
+  "remote.index": {
+   "title": "Spektral indis",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Çok bantlı görüntü (Landsat, Sentinel-2, ortofoto).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "index",
+     "label": "İndis",
+     "description": "Hesaplanacak indis.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "ndvi",
+        "label": "NDVI",
+        "hint": "bitki örtüsü"
+       },
+       {
+        "value": "gndvi",
+        "label": "GNDVI",
+        "hint": "yeşil bantla bitki"
+       },
+       {
+        "value": "savi",
+        "label": "SAVI",
+        "hint": "toprak etkisi azaltılmış bitki"
+       },
+       {
+        "value": "evi",
+        "label": "EVI",
+        "hint": "yoğun bitki örtüsü; yansıma ister"
+       },
+       {
+        "value": "ndwi",
+        "label": "NDWI",
+        "hint": "açık su"
+       },
+       {
+        "value": "mndwi",
+        "label": "MNDWI",
+        "hint": "su; yapı gölgesini ayırır"
+       },
+       {
+        "value": "ndbi",
+        "label": "NDBI",
+        "hint": "yapılaşma"
+       },
+       {
+        "value": "ratio",
+        "label": "Oran",
+        "hint": "A / B"
+       },
+       {
+        "value": "normalized",
+        "label": "Normalize fark",
+        "hint": "(A − B) / (A + B)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "blue",
+     "label": "Mavi bant",
+     "description": "Mavi bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "green",
+     "label": "Yeşil bant",
+     "description": "Yeşil bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "red",
+     "label": "Kırmızı bant",
+     "description": "Kırmızı bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "nir",
+     "label": "Yakın kızılötesi bandı",
+     "description": "Yakın kızılötesi bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "swir",
+     "label": "Kısa dalga kızılötesi bandı",
+     "description": "Kısa dalga kızılötesi bandın numarası (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "a",
+     "label": "A bandı",
+     "description": "Oranın payı, normalize farkın ilk bandı (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "b",
+     "label": "B bandı",
+     "description": "Oranın paydası, normalize farkın ikinci bandı (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "saviL",
+     "label": "L",
+     "description": "SAVI'nin toprak düzeltmesi: yoğun bitkide 0, seyrekte 1.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "eviG",
+     "label": "G",
+     "description": "EVI'nin kazancı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "eviC1",
+     "label": "C₁",
+     "description": "EVI'de kırmızının aerosol katsayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "eviC2",
+     "label": "C₂",
+     "description": "EVI'de mavinin aerosol katsayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "eviL",
+     "label": "EVI'nin L'si",
+     "description": "EVI'nin örtü düzeltmesi.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "scale",
+     "label": "Ölçek",
+     "description": "Yansıma = sayı × ölçek + öteleme (Sentinel-2 L2A: 0,0001; Landsat C2 L2: 0,0000275).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "offset",
+     "label": "Öteleme",
+     "description": "Yansıma = sayı × ölçek + öteleme (Landsat C2 L2: −0,2).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-indis” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-indis.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "spectralIndex",
+    "about": "Bantlardan bitki, su ve yapılaşma indisi hesaplar: NDVI, GNDVI, SAVI, EVI, NDWI, MNDWI, NDBI, oran ya da normalize fark.",
+    "help": [
+     "NDVI = (YKÖ − K) / (YKÖ + K); GNDVI = (YKÖ − Y) / (YKÖ + Y); SAVI = (1 + L)(YKÖ − K) / (YKÖ + K + L); EVI = G(YKÖ − K) / (YKÖ + C₁K − C₂M + L); NDWI = (Y − YKÖ) / (Y + YKÖ); MNDWI = (Y − KDK) / (Y + KDK); NDBI = (KDK − YKÖ) / (KDK + YKÖ); oran A / B; normalize fark (A − B) / (A + B). M mavi, Y yeşil, K kırmızı, YKÖ yakın kızılötesi, KDK kısa dalga kızılötesi.",
+     "Her bant önce yansımaya çevrilir: ρ = sayı × ölçek + öteleme (Sentinel-2 L2A'da ölçek 0,0001; Landsat Collection 2 L2'de 0,0000275 ve −0,2). EVI yansıma ister.",
+     "Hesap 64 bitte, sonuç 32 bit ondalıktır; bölenin sıfır olduğu hücre değersiz kalır, söylenir.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "INDIS",
+     "NDVI"
+    ]
+   }
+  },
+  "remote.supervised": {
+   "title": "Denetimli sınıflandırma",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Sınıflandırılacak çok bantlı görüntü.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "training",
+     "label": "Eğitim alanları",
+     "description": "Sınıfları örnekleyen alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "classField",
+     "label": "Sınıf alanı",
+     "description": "Eğitim alanının sınıfının adı (metin).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "description": "Hücrenin hangi sınıfa verileceği.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "likelihood",
+        "label": "En büyük olabilirlik",
+        "hint": "sınıfın ortalaması ve yayılımıyla (kovaryans)"
+       },
+       {
+        "value": "distance",
+        "label": "En yakın ortalama",
+        "hint": "sınıfın ortalamasına en yakın"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-siniflar” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-siniflar.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "classifySupervised",
+    "about": "Eğitim alanlarından öğrenip görüntünün her hücresini bir sınıfa atar: en büyük olabilirlik ya da en yakın ortalama.",
+    "help": [
+     "Sınıflar eğitim alanlarının Sınıf alanındaki metinlerdir (kırpılır; boş olanlar alınmaz), doğal sırayla 1, 2, … değerlerini alır. Bir sınıfın eğitim hücreleri merkezi o sınıfın alanlarından birinin içinde olan ve hiçbir bandı değersiz olmayan hücrelerdir.",
+     "En büyük olabilirlik her sınıfı ortalaması ve kovaryansıyla çok değişkenli normal dağılım sayar (eşit önsel olasılık): bir sınıfın en az bant sayısı + 1 eğitim hücresi olmalı, kovaryansı tekil olmamalı. En yakın ortalama hücreyi ortalamasına en yakın sınıfa verir.",
+     "Sonuç 8 bit tam sayı (255 sınıftan çoğunda 16 bit), 0 değersiz; tabloda her sınıfın eğitim hücresi, hücre sayısı ve alanı.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DENETIMLI",
+     "MAXLIKELIHOOD"
+    ]
+   }
+  },
+  "remote.unsupervised": {
+   "title": "Denetimsiz sınıflandırma",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Kümelere ayrılacak çok bantlı görüntü.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "clusters",
+     "label": "Küme sayısı",
+     "description": "Bulunacak küme sayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "iterations",
+     "label": "En çok yineleme",
+     "description": "Atamalar değişmeyince ya da bu kadar yinelemeden sonra durur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-kumeler” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-kumeler.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "classifyUnsupervised",
+    "about": "Görüntünün hücrelerini benzer spektral değerlerine göre kümelere ayırır (k-ortalamalar).",
+    "help": [
+     "Kümeler hücrelerin bir örneğinden bulunur: hiçbir bandı değersiz olmayan, sütunu ve satırı s'nin katı olan hücreler (s, yaklaşık 250 000 hücre kalacak biçimde). Başlangıç merkezleri bantların ortalaması ± standart sapması boyunca dizilir; her yinelemede hücreler en yakın merkeze, merkezler üyelerinin ortalamasına gider; atamalar değişmeyince ya da en çok yinelemede durur.",
+     "Kümeler merkezlerinin bant toplamına göre küçükten büyüğe 1 … k değerlerini alır; bütün hücreler en yakın merkeze atanır. Sonuç 8 bit, 0 değersiz; tabloda her kümenin hücre sayısı, alanı ve merkezi.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DENETIMSIZ",
+     "ISOCLUSTER"
+    ]
+   }
+  },
+  "remote.accuracy": {
+   "title": "Doğruluk analizi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Raster",
+     "description": "Sınıflandırılmış raster.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Sınıfların okunduğu bant (1'den).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "reference",
+     "label": "Referans nesneleri",
+     "description": "Sınıfı bilinen noktalar ya da alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "referenceField",
+     "label": "Referans alanı",
+     "description": "Nesnenin gerçek sınıfının değeri (tam sayı).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "accuracyMatrix",
+    "about": "Sınıflandırılmış rasteri referans nesneleriyle karşılaştırır: karışıklık matrisi, genel doğruluk, üretici ve kullanıcı doğruluğu, kappa.",
+    "help": [
+     "Nokta düştüğü hücreyi, alan merkezini içine aldığı hücreleri verir; her nesnenin hücreleri ayrı sayılır. Referans alanının değeri tam sayı olarak okunur (sınıfın değeri); okunamayan nesne ve değersiz ya da rasterin dışındaki hücre alınmaz, söylenir.",
+     "Matrisin satırları sınıflandırılan, sütunları referans değerlerdir. Kullanıcı doğruluğu satırın, üretici doğruluğu sütunun köşegendeki payıdır; genel doğruluk köşegenin toplamdaki payı; kappa (Cohen) şansla uyuşmanın ötesindeki uyum: (pₒ − pₑ) / (1 − pₑ)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DOGRULUK",
+     "CONFUSIONMATRIX"
+    ]
+   }
+  },
+  "remote.change": {
+   "title": "Değişim tespiti",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Önceki raster",
+     "description": "Önceki tarihin rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "after",
+     "label": "Sonraki raster",
+     "description": "Sonraki tarihin rasteri.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "band",
+     "label": "Bant",
+     "description": "Karşılaştırılan bant (1'den); iki rasterde de aynı bant.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "description": "İki tarihin nasıl karşılaştırılacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "difference",
+        "label": "Fark",
+        "hint": "sonraki − önceki"
+       },
+       {
+        "value": "ratio",
+        "label": "Oran",
+        "hint": "sonraki / önceki"
+       },
+       {
+        "value": "normalized",
+        "label": "Normalize fark",
+        "hint": "(sonraki − önceki) / (sonraki + önceki)"
+       },
+       {
+        "value": "classes",
+        "label": "Sınıf değişimi",
+        "hint": "sınıf rasterleri: önceki × 1000 + sonraki"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-degisim” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-degisim.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "changeDetect",
+    "about": "İki tarihin rasterlerini karşılaştırır: fark, oran, normalize fark ya da sınıf değişimi.",
+    "help": [
+     "Fark sonraki − önceki, oran sonraki / önceki, normalize fark (sonraki − önceki) / (sonraki + önceki); sonuç 32 bit ondalık, bölenin sıfır olduğu hücre değersiz. Özette artan, azalan ve değişmeyen hücreler sayılır.",
+     "Sınıf değişimi sınıf rasterleri içindir: değer önceki × 1000 + sonraki (örneğin 2003: 2'den 3'e), 0 değerli ya da değersiz hücre değersiz; tablo “neden neye” matrisidir, özet değişen hücrelerin payı.",
+     "Rasterler ortak alanlarında, hücresi en küçük olanın ızgarasında, en yakın hücreleriyle okunur.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DEGISIM",
+     "CHANGEDETECTION"
+    ]
+   }
+  },
+  "remote.pansharpen": {
+   "title": "Görüntü birleştirme",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Çok bantlı raster",
+     "description": "Renkli ya da çok bantlı görüntü (kaba çözünürlük).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "pan",
+     "label": "Pankromatik raster",
+     "description": "Tek bantlı, ince çözünürlüklü görüntü.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       }
+      ]
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "description": "Bantların pankromatikle nasıl birleşeceği.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "brovey",
+        "label": "Brovey",
+        "hint": "ağırlıklı; renkleri pankromatiğin parlaklığıyla ölçekler"
+       },
+       {
+        "value": "mean",
+        "label": "Basit ortalama",
+        "hint": "bant ile pankromatiğin ortalaması"
+       }
+      ]
+     }
+    },
+    {
+     "name": "weights",
+     "label": "Ağırlıklar",
+     "description": "Bantların ağırlıkları, noktalı virgülle ayrılmış (0,1; 0,3; 0,3; 0,3); boşsa eşit.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "eşit"
+     }
+    },
+    {
+     "name": "sampling",
+     "label": "Örnekleme",
+     "description": "Çok bantlı görüntü pankromatiğin ızgarasına böyle okunur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "cubic",
+        "label": "Kübik"
+       },
+       {
+        "value": "bilinear",
+        "label": "Çift doğrusal"
+       },
+       {
+        "value": "nearest",
+        "label": "En yakın"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Çıktı dosyası",
+     "description": "Sonucun dosya adı; boşsa ilk rasterin adının sonuna “-birlesim” eklenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "placeholder": "<kaynak>-birlesim.tif"
+     }
+    },
+    {
+     "name": "add",
+     "label": "Çizime ekle",
+     "description": "Sonuç yeni katmanda nesne olarak eklenir; bu işlemin adımında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "spectralIndex",
+     "text": "Uzaktan algılama"
+    },
+    "icon": "pansharpen",
+    "about": "Çok bantlı görüntüyü pankromatik görüntünün ince çözünürlüğüne taşır (pansharpening): ağırlıklı Brovey ya da basit ortalama.",
+    "help": [
+     "Çok bantlı görüntü pankromatiğin ızgarasına seçilen örneklemeyle okunur. Brovey: her bant × PAN / Σ wⱼ·bantⱼ (toplam sıfır ya da eksiyse 0); ağırlıklar boşsa eşittir (1/n). Basit ortalama: (bant + PAN) / 2.",
+     "Sonuç pankromatiğin ızgarasında, çok bantlının örnek türündedir (tam sayıda en yakın tam sayıya yuvarlanır, türün aralığında tutulur); görünüşü çok bantlınınki.",
+     "Ağırlıkları noktalı virgül ya da boşlukla ayırarak yazın (0,1; 0,3; 0,3; 0,3); sayısı çok bantlının bant sayısı olmalı.",
+     "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.",
+     "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin adının sonuna ek konur. Web'de 32 MB'a kadar olan sonuç projeye gömülür, büyüğü indirilir ve bu oturumda bağlı kalır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "PANSHARPEN",
+     "FUSION"
+    ]
+   }
+  },
   "model:builtin.parcelSheet": {
    "title": "Parsel ölçü yazıları",
    "rows": [

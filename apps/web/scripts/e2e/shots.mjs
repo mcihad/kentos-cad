@@ -6606,6 +6606,93 @@ function statsScenes() {
   ];
 }
 
+// Uzaktan algılama (docs/adr/0242) over a synthetic satellite image of the shared valley: four bands made from its land
+// cover and its slopes' light, the same two years on (new houses north of the road, a felled stand), its coarse
+// multispectral and fine panchromatic pair, training areas and reference points (fixtures/interaction/v1/remote.kcad,
+// scripts/fixtures/remote_scene.py): the CBS ribbon's Raster with its panel, Spektral indis' window and its NDVI,
+// Denetimli sınıflandırma's window and its classes, Doğruluk analizi's matrix, the near infrared's change and the
+// pansharpened image. The desktop's are `tools_screens`' ua-* (apps/desktop/src/remote_scenes.rs), at the same places
+// with the same values.
+const REMOTE_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/remote.kcad', import.meta.url), 'utf8');
+const REMOTE_FILES = Object.fromEntries(
+  ['goruntu.tif', 'sonraki.tif', 'cok-bantli.tif', 'pankromatik.tif'].map((f) => [f, readFileSync(new URL(`../../../../fixtures/interaction/v1/remote/${f}`, import.meta.url)).toString('base64')]),
+);
+SCENES.remote = remoteScenes();
+
+function remoteScenes() {
+  const [X0, Y0] = [487200, 4420600];
+  const tiles = async (ui) => {
+    for (let i = 0; i < 6; i++) {
+      await ui.sleep(700);
+      await ui.eval(`window.kentos.view.requestRender()`);
+    }
+  };
+  const VALLEY = [X0, Y0 - 518.4, X0 + 768, Y0];
+  // Fields in the valley's north, their furrows finer than the multispectral image's cells.
+  const FIELDS = [487640, 4420500, 487760, 4420580];
+  /** The valley's image, its pair, the training areas and the reference points open, the CBS ribbon's Raster on. */
+  const opened = async (ui, b = VALLEY) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { rasterService } = await import('/src/render/rasterService.ts');
+      k.files.ask = async () => 'drop';
+      const file = (b64, name) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
+      const files = ${JSON.stringify(REMOTE_FILES)};
+      for (const [name, b64] of Object.entries(files)) rasterService().setFile('remote/' + name, file(b64, name));
+      if (!(await k.files.load(${JSON.stringify(REMOTE_SCENE)}, null))) throw new Error('remote.kcad did not load');
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'raster', type: 'gis' });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${b[0]}, minY: ${b[1]}, maxX: ${b[2]}, maxY: ${b[3]} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+  };
+  /** `tool`'s window with `values`. */
+  const windowOf = (tool, values) => async (ui) => {
+    await opened(ui);
+    await ui.eval(openTool(tool, values));
+    await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+    await tiles(ui);
+  };
+  /** Runs the tools one after another to their ends, the last's window kept when `keep` (its form scrolled to its end). */
+  const ranIn = (runs, keep, b) => async (ui) => {
+    await opened(ui, b);
+    for (const [k, [tool, values]] of runs.entries()) {
+      await ui.eval(openTool(tool, values));
+      await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+      await ui.sleep(300);
+      await ui.clickSel('.ptool__run');
+      await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 60000);
+      if (keep && k === runs.length - 1) {
+        await ui.eval(`(() => { const m = document.querySelector('.dialog--ptool .ptool__main'); m.scrollTop = m.scrollHeight; })()`);
+      } else {
+        await ui.escapeAll(2);
+      }
+    }
+    await ui.move(2, 2);
+    await tiles(ui);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const L = QUERY_LAYER;
+  const NDVI = { input: L('goruntu'), index: 'ndvi' };
+  const SUPERVISED = { input: L('goruntu'), training: L('egitim'), classField: 'Sınıf' };
+  const ACCURACY = { input: L('islem-denetimli-siniflandirma'), reference: L('referans'), referenceField: 'Sınıf' };
+  const CHANGE = { input: L('goruntu'), after: L('sonraki'), band: 4 };
+  const FUSION = { input: L('cok-bantli'), pan: L('pankromatik') };
+  return [
+    { id: 'ua-serit', open: async (ui) => (await opened(ui), await tiles(ui)), close },
+    { id: 'ua-indis', open: windowOf('remote.index', NDVI), close },
+    { id: 'ua-indis-cizim', open: ranIn([['remote.index', NDVI]], false), close },
+    { id: 'ua-denetimli', open: windowOf('remote.supervised', SUPERVISED), close },
+    { id: 'ua-denetimli-cizim', open: ranIn([['remote.supervised', SUPERVISED]], false), close },
+    { id: 'ua-dogruluk', open: ranIn([['remote.supervised', SUPERVISED], ['remote.accuracy', ACCURACY]], true), close },
+    { id: 'ua-degisim-cizim', open: ranIn([['remote.change', CHANGE]], false), close },
+    { id: 'ua-birlestirme-cizim', open: ranIn([['remote.pansharpen', FUSION]], false, FIELDS), close },
+  ];
+}
+
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over
 // a ready basemap, its tiles from the service itself (the network is needed), in the project's system. The desktop's
 // are `tools_screens`' servis-* (apps/desktop/src/service_scenes.rs), the same drawing.

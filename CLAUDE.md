@@ -189,6 +189,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   standartlaştırma), Sıcak nokta (Gi*: kopyalar z, p ve güven sınıfıyla, katman sınıflara göre kategorili), DBSCAN ve k-ortalamalar
   (kopyalar küme numarasıyla, katman kümelere göre kategorili); nesnenin yeri `$merkez`, komşular k-d ağacıyla; sonuçlar girdinin
   katmanının üstünde; çekirdek `ops::spatial_stats` metinleri de yazar; CBS'de Analiz › Mekânsal istatistik (ADR 0238);
+  uzaktan algılama: İşlemler'in Uzaktan algılama kategorisinde Bant birleştir (ortak ızgarada, en yakın ya da çift doğrusal), Bantlara
+  ayır (bant başına GeoTIFF), Spektral indis (NDVI, GNDVI, SAVI, EVI, NDWI, MNDWI, NDBI, oran, normalize fark; ölçek ve öteleme ile
+  yansıma), Denetimli sınıflandırma (eğitim alanlarının Sınıf metinleri doğal sırayla; en büyük olabilirlik ya da en yakın ortalama),
+  Denetimsiz sınıflandırma (örnekten k-ortalamalar), Doğruluk analizi (karışıklık matrisi, üretici ve kullanıcı doğruluğu, kappa), Değişim
+  tespiti (fark, oran, normalize fark; sınıf değişiminin “neden neye” matrisi) ve Görüntü birleştirme (ağırlıklı Brovey ya da basit
+  ortalama, pankromatiğin ızgarasında); iki geçişli araçlar aynı işin geçişleri; tablolar, özetler ve uyarılar raster çekirdeğinin; raster
+  okuyucusunda ExtraSamples'ın 0'ı veri, alfa değil; CBS'de Raster › Uzaktan algılama (ADR 0242);
   açıklamaların yükseklikleri ve ölçeği: yazı, kılavuz, ölçü, tablo, Koordinat yaz, Km yaz ve İşlemler'in yazılarının kâğıt yüksekliği
   projenin ayarı (`.kcad` şema 30; Proje ayarları › Ölçek ve yazılar), ölçek ya da genel yükseklik değişince genel yükseklikteki nesneler
   tek adımda izler (Yazı yüksekliklerini uydur), Ölçek yaz… ve türün ölçekleri, görünüş Kaybolmasın / Gerçek boy / Ekranda sabit
@@ -505,6 +512,10 @@ python3 scripts/fixtures/spatial_stats_cases.py --check   # mekânsal istatisti�
 python3 scripts/fixtures/spatial_stats_processing_cases.py --check; python3 scripts/fixtures/spatial_stats_scene.py --check   # mekânsal istatistik araçlarının İşlemler durumlarını (fixtures/processing/v1/spatial-stats.json, spatial-stats.kcad, spatial-stats-geo.kcad) ve resimlerin sahnesini (fixtures/interaction/v1/spatial-stats.kcad) denetle (ADR 0238)
 cargo test --release -p kentos-geometry-core --test all spatial_stats_timing -- --ignored --nocapture --test-threads=1   # 100 000 noktada dokuz aracın süreleri (ADR 0238 §12; web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; STATS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/spatialStats.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp)
 KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mekânsal istatistiğin resimleri, .run/shots/arac-ist-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs stats); ADR 0238)
+python3 scripts/fixtures/remote_cases.py --check   # uzaktan algılamanın sekiz aracını (bantlar, indisler, iki sınıflandırıcı mpmath'le, k-ortalamalar, karışıklık matrisi ve kappa, değişim, Brovey ve basit ortalama) ADR'den, KentOS kodu olmadan denetle; Brovey GDAL'ın VRTPansharpenedDataset'iyle bire bir çapraz denetlenir; durumlar fixtures/remote/v1/cases.json (ADR 0242)
+python3 scripts/fixtures/remote_processing_cases.py --check; python3 scripts/fixtures/remote_scene.py --check   # uzaktan algılama araçlarının İşlemler durumlarını (fixtures/processing/v1/remote.json, remote.kcad, remote/) ve resimlerin sahnesini (fixtures/interaction/v1/remote.kcad ve remote/: vadinin dört bantlı uydu görüntüsü, iki yıl sonrası, çok bantlı ve pankromatik çifti) denetle (ADR 0242)
+cargo test --release -p kentos-raster --test all remote_timing -- --ignored --nocapture --test-threads=1   # 4096² dört bantlı 16 bit görüntüde sekiz aracın süreleri (ADR 0242 §12; web'inkiler: (cd apps/web && node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/raster.mjs --only remote))
+KENTOS_SHOTS_ONLY=ua-serit,ua-indis,ua-indis-cizim,ua-denetimli,ua-denetimli-cizim,ua-dogruluk,ua-degisim-cizim,ua-birlestirme-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # uzaktan algılamanın resimleri, .run/shots/arac-ua-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs remote); ADR 0242)
 KENTOS_SHOTS_ONLY=hid-serit,hid-dere-cizim,hid-havza-cizim,hid-guzergah-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # hidrolojinin resimleri, .run/shots/arac-hid-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hydrology); ADR 0235)
 KENTOS_SHOTS_ONLY=bulut-koy,bulut-siniflar,bulut-yukseklik,bulut-ekle,bulut-stili,bulut-xyz,bulut-zemin-penceresi,bulut-zemin-sonucu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nokta bulutunun masaüstü resimleri, .run/shots/arac-bulut-* (ADR 0207)
 cargo test --release -p kentos-desktop perf::clouds -- --ignored --nocapture --test-threads=1   # sentetik 4 milyon noktalı bulutta dizin, ilk görüntü, düğüm çözme, tam okuma, işlemler ve kareler (ADR 0207 §12; KENTOS_PERF_POINTS)
@@ -1453,7 +1464,14 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `model/ops/spatialStats.ts`'i; İşlemler'in `builtin/stats/`'u iki platformda; yeni katmanın görünüşünde kategorili görünüş
   (`NewLayerStyle.renderer`); ortak durumlar `fixtures/processing/v1/spatial-stats.json` (`spatial_stats_processing_cases.py`; yeni
   katmanın yeri `layerAbove`, karşılaştırıcılarda `r`, `major`, `ratio` geometri alanı), resimlerin sahnesi `spatial-stats.kcad`
-  (`spatial_stats_scene.py`); CBS'nin Analiz sekmesinde Mekânsal istatistik paneli. Dalda sıradaki `GIS-42`.
+  (`spatial_stats_scene.py`); CBS'nin Analiz sekmesinde Mekânsal istatistik paneli. `GIS-42` uzaktan algılama
+  ([ADR 0242](docs/adr/0242-remote-sensing.md)) tek parçada bitti (10 Ekim): raster çekirdeğinde `remote` (`spectral`, `classify`,
+  `cluster`, `accuracy`, `work`; işin okuma geçişleri, `OpsFinished::Report`, notlarda `remote`, sonuca göre görünüş); bağımsız başvuru
+  `remote_cases.py` (46 durum, Brovey GDAL'la bire bir); raster okuyucusunda ExtraSamples'ın 0'ı artık alfa değil (`raster_cases.py`'ye
+  GDAL'ın alfa okuması ve iki dosya); İşlemler'in `builtin/remote/`'u iki platformda; ortak durumlar `fixtures/processing/v1/remote.json`
+  (`remote_processing_cases.py`, `remoteOf`), resimlerin sahnesi `remote.kcad` (`remote_scene.py`); CBS'nin Raster sekmesinde Uzaktan
+  algılama paneli (altı araç, ikisi ▾'de), sekme 1100 px'e sığsın diye Raster ve vektör ile Taranmış harita tek panelde. Dalda sıradaki
+  `GIS-43`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

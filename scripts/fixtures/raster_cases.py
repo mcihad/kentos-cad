@@ -534,6 +534,9 @@ def make_files():
     tiff("i8.tif", "i8", pattern(40, 50, 1, "i8", seed=10), [])
     tiff("u32.tif", "u32", pattern(40, 50, 1, "u32", seed=11), ["COMPRESS=LZW"])
     tiff("i32-two-bands.tif", "i32", pattern(40, 50, 2, "i32", seed=12), ["COMPRESS=DEFLATE", "PREDICTOR=2"])
+    # The last band: a mask (RGB with ALPHA=YES: ExtraSamples 2) or data (a 4-band satellite image: ExtraSamples 0).
+    tiff("rgba-alpha.tif", "u8", pattern(48, 64, 4, "u8", seed=15), ["PHOTOMETRIC=RGB", "ALPHA=YES"])
+    tiff("u16-four-bands.tif", "u16", pattern(48, 64, 4, "u16", seed=16), ["COMPRESS=DEFLATE"])
     tiff("no-place.tif", "u8", pattern(30, 40, 3, "u8", seed=13), [], gt=None, epsg=None)
     # A large one without overviews: its pyramid is worked out (levels 1, 2) from level 0.
     tiff("u8-large-stripped.tif", "u8", pattern(700, 900, 1, "u8", seed=14), ["COMPRESS=DEFLATE", "BLOCKYSIZE=16"])
@@ -632,6 +635,8 @@ def describe(case):
             "geographic": geographic,
             "nodata": None if nodata is None else ("nan" if math.isnan(nodata) else nodata),
             "overviews": len(file_levels) - 1,
+            # GDAL's reading: the last band a mask (ExtraSamples 1 or 2; an RGB's fourth without the tag).
+            "alpha": ds.GetRasterBand(ds.RasterCount).GetColorInterpretation() == gdal.GCI_AlphaBand,
         }
         levels = file_levels
     sizes = level_sizes(out["info"]["width"], out["info"]["height"])

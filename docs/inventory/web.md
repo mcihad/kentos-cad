@@ -4,9 +4,9 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 530 | 507 | 0 | 23 |
+| Komutlar | 538 | 515 | 0 | 23 |
 | Araçlar | 130 | 128 | 0 | 2 |
-| İşlem araçları | 81 | 81 | 0 | 0 |
+| İşlem araçları | 89 | 89 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 95 | 95 | 0 | 0 |
@@ -60,9 +60,9 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 460 | 0 | 58 | 10 | 2 | 530 |
+| Komutlar | 468 | 0 | 58 | 10 | 2 | 538 |
 | Araçlar | 128 | 0 | 0 | 2 | 0 | 130 |
-| İşlem araçları | 81 | 0 | 0 | 0 | 0 | 81 |
+| İşlem araçları | 89 | 0 | 0 | 0 | 0 | 89 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 91 | 0 | 3 | 0 | 1 | 95 |
@@ -87,7 +87,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 530; ayrıca 10 iki platformda da bekliyor)
+#### Komutlar (58 / 538; ayrıca 10 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -163,7 +163,7 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
 
-#### İşlem araçları (0 / 81)
+#### İşlem araçları (0 / 89)
 
 Yok.
 
@@ -214,4 +214,4 @@ Yok.
 
 ## Test başvurusu
 
-241 / 530 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+249 / 538 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

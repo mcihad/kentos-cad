@@ -41,4 +41,11 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'distance', label: 'Uzaklık ve maliyet', icon: 'costPath', description: 'Uzaklık yüzeyi, birikimli maliyet, en düşük maliyetli yol, maliyet koridoru' },
   // docs/adr/0237: criteria brought to one scale, weighed together, checked against known events.
   { id: 'suitability', label: 'Uygunluk analizi', icon: 'weightedOverlay', description: 'Bulanık üyelik ve çakıştırma, ağırlıklı toplam ve çakıştırma, AHP, ROC' },
+  // docs/adr/0242: multi-band images: bands, indices, classes, their accuracy, change, fusion.
+  {
+    id: 'remoteSensing',
+    label: 'Uzaktan algılama',
+    icon: 'spectralIndex',
+    description: 'Bant birleştirme, spektral indisler, sınıflandırma, doğruluk, değişim ve görüntü birleştirme',
+  },
 ];
