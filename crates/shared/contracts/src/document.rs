@@ -206,6 +206,13 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NetworkDef>>", optional))]
     pub networks: Vec<crate::NetworkDef>,
+    /// The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::ProjectVariable>>", optional)
+    )]
+    pub variables: Vec<crate::ProjectVariable>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -614,6 +621,7 @@ impl ProjectSettings {
             .annotation
             .and_then(crate::AnnotationHeights::sanitized);
         self.networks = crate::sanitized_networks(std::mem::take(&mut self.networks));
+        self.variables = crate::sanitized_variables(std::mem::take(&mut self.variables));
         self
     }
 }

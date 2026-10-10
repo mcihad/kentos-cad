@@ -209,6 +209,7 @@ pub fn walk<'a>(
                 return Ok(Value::Bool(if *op == BinOp::And { p && q } else { p || q }));
             }
             if *op == BinOp::Join
+                && !matches!(&a, Value::Text(t) if crate::compound::is_compound(t))
                 && let Value::Text(Cow::Owned(mut left)) = a
             {
                 // Text the walk made is extended in place, as before the column engine.
@@ -296,5 +297,27 @@ pub fn walk<'a>(
         Node::IsNull(x, negated) => {
             Value::Bool(scalar::is_empty(walk(x, s, sc)?.view()) != *negated)
         }
+        // A call that looks at other objects (docs/adr/0214 §3), answered by the scope's world.
+        Node::World(k, own) => {
+            let values = own
+                .iter()
+                .map(|a| walk(a, s, sc))
+                .collect::<Result<Vec<_>, _>>()?;
+            let Some(w) = s.world() else {
+                return Ok(Value::Null);
+            };
+            let views: Vec<V> = values.iter().map(Value::view).collect();
+            let mut made = String::new();
+            match w.call(*k as usize, s.id(), &views, &mut made) {
+                R::V(V::Null) => Value::Null,
+                R::V(V::Num(x)) => Value::Num(x),
+                R::V(V::Bool(b)) => Value::Bool(b),
+                R::V(V::Text(t)) => Value::Text(Cow::Owned(t.to_owned())),
+                R::Made => Value::Text(Cow::Owned(made)),
+                R::Thrown => return Err(Thrown),
+            }
+        }
+        // Resolved when the expression compiled (`resolve`).
+        Node::At(_) => Value::Null,
     })
 }

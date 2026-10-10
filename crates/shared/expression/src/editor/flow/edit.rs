@@ -280,6 +280,7 @@ fn new_node(key: &str) -> Result<T, String> {
             T::Call(f.func, vec![T::Hole; f.arity.0])
         }
         "var" => T::Var(find_variable(name).ok_or_else(unknown)?.var),
+        "at" if !name.is_empty() => T::At(name.to_string()),
         "field" => T::Field(name.to_string()),
         "lit" => match name {
             "number" => T::Num(0.0),

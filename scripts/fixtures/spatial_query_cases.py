@@ -988,6 +988,92 @@ def case_join(cid, title, values, targets, target_key, rows, source_key, fields,
     return {"id": cid, "title": title, "document": "queries.kcad", "run": {"tool": "attributes.joinByField"}, "values": values, "expect": expect}
 
 
+# ── Expressions that look at other layers (docs/adr/0214 §2.6–§2.8) ──────────
+# The tools run them with the drawing's layers: İfadeyle seç and Öznitelik hesapla. A layer is named as the tree
+# shows it; the relations are the ones above, an aggregate's numbers kentos.statistics/1's.
+
+def layer_named(name):
+    return next(lay["id"] for lay in LAYERS if lay["name"] == name)
+
+
+def number_key(v):
+    """A value as keys and groups compare it: numbers (and text that reads as one) by value, text as it is."""
+    if v is None or v == "":
+        return None
+    d = read_number(v)
+    return ("n", d[0] / 10 ** d[1]) if d is not None and "," not in v else ("t", v)
+
+
+def case_expr_select(cid, title, layer_id, condition, test):
+    inputs = on_layer(layer_id)
+    hits = [i for i in inputs if test(i)]
+    expect = {
+        "status": "ok",
+        "summary": f"{len(hits)} / {len(inputs)} nesne koşulu sağladı; seçimde {len(hits)} nesne var.",
+        "undo": None,
+        "selection": hits,
+        "outputs": {"count": len(hits), "matched": hits},
+    }
+    return {"id": cid, "title": title, "document": "queries.kcad", "run": {"tool": "selection.byExpression"},
+            "values": {"input": {"scope": "layer", "layerId": layer_id}, "condition": condition}, "expect": expect}
+
+
+def case_expr_calculate(cid, title, layer_id, field, value, compute):
+    inputs = on_layer(layer_id)
+    changes, empty = {}, 0
+    for i in inputs:
+        v = compute(i)
+        if v is None:
+            empty += 1
+            continue
+        v = canonical_for(layer_id, field, v)
+        attrs = dict(BY_ID[i]["attrs"])
+        attrs[field] = v
+        changes[i] = attrs
+    notes = [f"{empty} nesnede sonuç boş olduğu için dokunulmadı"] if empty else []
+    expect = {
+        "status": "ok",
+        "summary": f"{len(changes)} nesnede “{field}” yazıldı" + "".join(f"; {n}" for n in notes) + ".",
+        "undo": "Öznitelik hesapla",
+        "updated": updated_rows(changes),
+        "outputs": {"count": len(changes), "changed": sorted(changes)},
+    }
+    return {"id": cid, "title": title, "document": "queries.kcad", "run": {"tool": "attributes.calculate"},
+            "values": {"input": {"scope": "layer", "layerId": layer_id}, "field": field, "value": value, "where": "",
+                       "empty": "keep", "label": False}, "expect": expect}
+
+
+def nearest(i, layer_id):
+    """The nearest object of a layer to `i` (another than it): the first in the layer's order among equals."""
+    others = [j for j in on_layer(layer_id) if j != i]
+    return min(others, key=lambda j: distance(SHAPE_OF[i], SHAPE_OF[j])) if others else None
+
+
+def world_cases():
+    roads, trees = on_layer("yol"), on_layer("agac")
+    parcels = on_layer("parsel")
+    kat = {i: number_key(BY_ID[i]["attrs"].get("Kat")) for i in on_layer("yapi")}
+    return [
+        case_expr_select("expr-intersects", "İfadeyle seç, başka katmanla: Yol'la kesişen parseller (Konuma göre seç'in Kesişen'i gibi)",
+                         "parsel", "kesişir('Yol')", lambda i: any(related(i, r, "intersects") for r in roads)),
+        case_expr_calculate("expr-tree-count", "Öznitelik hesapla, kesişen sayısı: parseldeki ağaçlar; sınırdaki ağaç iki parselde, delikteki hiçbirinde; tam sayı alanına",
+                            "parsel", "Ağaç sayısı", "kesişen_sayısı('Ağaç')",
+                            lambda i: str(sum(1 for t in trees if related(i, t, "intersects")))),
+        case_expr_calculate("expr-nearest-road", "Öznitelik hesapla, en yakın: her ağaca en yakın yolun adı",
+                            "agac", "Yol", "en_yakın('Yol', Ad)", lambda i: BY_ID[nearest(i, "yol")]["attrs"]["Ad"]),
+        case_expr_calculate("expr-group-count", "Öznitelik hesapla, katmanın toplaması: aynı kattaki yapı sayısı; boş kat kendi grubu",
+                            "yapi", "Aynı kattaki", "say($id, Kat)",
+                            lambda i: str(sum(1 for j in kat if kat[j] == kat[i]))),
+        case_expr_calculate("expr-from-layer", "Öznitelik hesapla, başka katmandan: tapu kaydının parselinin adası; 002 ile 2 aynı anahtar, eşi olmayana dokunulmaz",
+                            "kayit", "Ada", "katmandan('Parsel', Ada, 'Parsel', Parsel)",
+                            lambda i: next((BY_ID[p]["attrs"]["Ada"] for p in parcels
+                                            if number_key(BY_ID[p]["attrs"].get("Parsel")) == number_key(BY_ID[i]["attrs"].get("Parsel"))), None)),
+        case_expr_calculate("expr-variable", "Öznitelik hesapla, projenin değişkeniyle: @proje_adi çizimin adıdır",
+                            "parsel", "Proje", "@proje_adi || ' / ' || Parsel",
+                            lambda i: f"{DOCUMENT['name']} / {BY_ID[i]['attrs']['Parsel']}"),
+    ]
+
+
 def layer_rows(layer_id, key_field, fields):
     """A layer's objects as a join's rows: the key's column, then the fields."""
     header = [key_field] + fields
@@ -1063,6 +1149,7 @@ def build_processing():
             "values": {"target": lay("parsel"), "targetKey": "Parsel", "sourceKind": "file", "file": "malikler.csv", "sourceKey": "Ada", "fields": ""},
             "expect": {"status": "error", "message": "Kaynakta “Ada” alanı yok; alanları: Parsel, Malik, Hisse."},
         },
+        *world_cases(),
         {
             "id": "refuse-field-rule",
             "title": "Öznitelik hesapla, katmanın tam sayı alanına sayı olmayan değer: çalıştırma reddedilir, hiçbir şey değişmez",

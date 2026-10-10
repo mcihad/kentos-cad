@@ -6,6 +6,7 @@ import type { DrawingFont } from '../contracts/generated/DrawingFont';
 import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
 import type { LayerState } from '../contracts/generated/LayerState';
 import type { NetworkDef } from '../contracts/generated/NetworkDef';
+import type { ProjectVariable } from '../contracts/generated/ProjectVariable';
 import type { ServiceConnection } from '../contracts/generated/ServiceConnection';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import type { TextStyleDef } from '../contracts/generated/TextStyleDef';
@@ -14,6 +15,7 @@ import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 import { sanitizedDimensionStyles, sanitizedTextStyles } from './annotationStyles';
 import { sanitizedNetworks } from './networkRules';
+import { sanitizedVariables } from './projectVariables';
 import { sameJson } from './sameJson';
 import { sameTopology, sanitizeTopology } from './topologyRules';
 import { ANNOTATION_KINDS, annotationMm, paperHeight, sanitizedAnnotationHeights, type AnnotationHeights, type AnnotationKind } from './annotationScale';
@@ -86,6 +88,8 @@ export interface ProjectSettingsData {
   connections?: ServiceConnection[];
   /** The project's networks (docs/adr/0209 §2), in the list's order; absent: none. */
   networks?: NetworkDef[];
+  /** The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order; absent: none. */
+  variables?: ProjectVariable[];
 }
 
 /**
@@ -270,6 +274,8 @@ export class ProjectSettings {
   readonly connections: Signal<readonly ServiceConnection[]>;
   /** The project's networks, as a project keeps them (docs/adr/0209 §2; `sanitizedNetworks`). */
   readonly networks: Signal<readonly NetworkDef[]>;
+  /** The project's own `@` variables, as a project keeps them (docs/adr/0214 §2.3; `sanitizedVariables`). */
+  readonly variables: Signal<readonly ProjectVariable[]>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -297,6 +303,7 @@ export class ProjectSettings {
     this.annotation = new Signal(sanitizedAnnotationHeights(d.annotation) ?? null, sameHeights);
     this.connections = new Signal<readonly ServiceConnection[]>(structuredClone(d.connections ?? []), sameJson);
     this.networks = new Signal<readonly NetworkDef[]>(sanitizedNetworks(d.networks ?? []), sameJson);
+    this.variables = new Signal<readonly ProjectVariable[]>(sanitizedVariables(d.variables ?? []), sameJson);
     watchAll(
       [
         this.crs,
@@ -320,6 +327,7 @@ export class ProjectSettings {
         this.annotation,
         this.connections,
         this.networks,
+        this.variables,
       ],
       () => this.changed.update((v) => v + 1),
     );
@@ -359,6 +367,8 @@ export class ProjectSettings {
       ...(this.connections.value.length ? { connections: structuredClone([...this.connections.value]) } : {}),
       // Written only when there are (KCAD schema 33).
       ...(this.networks.value.length ? { networks: structuredClone([...this.networks.value]) } : {}),
+      // Written only when there are (KCAD schema 37).
+      ...(this.variables.value.length ? { variables: structuredClone([...this.variables.value]) } : {}),
     };
   }
 
@@ -420,6 +430,7 @@ export class ProjectSettings {
       annotation: data.annotation ?? null,
       connections: data.connections ?? [],
       networks: data.networks ?? [],
+      variables: data.variables ?? [],
     });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
@@ -462,6 +473,7 @@ export class ProjectSettings {
     if (data.annotation !== undefined) this.annotation.set(sanitizedAnnotationHeights(data.annotation ?? undefined) ?? null);
     if (data.connections !== undefined) this.connections.set(structuredClone([...data.connections]));
     if (data.networks !== undefined) this.networks.set(sanitizedNetworks(data.networks));
+    if (data.variables !== undefined) this.variables.set(sanitizedVariables(data.variables));
   }
 
   /** The project's text style `id`, or null (Standart, or one it no longer has). */

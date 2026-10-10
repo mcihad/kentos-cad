@@ -97,6 +97,7 @@ fn opened(n: usize) -> Opened {
         text_styles: Vec::new(),
         connections: Vec::new(),
         networks: Vec::new(),
+        variables: Vec::new(),
     };
     let layers = vec![LayerNode {
         id: "parsel".into(),

@@ -22,6 +22,7 @@ use std::time::{Duration, Instant};
 use iced::Task;
 use iced::futures::channel::mpsc;
 use kentos_domain::{Document, Slot};
+use kentos_expression::Variable;
 use kentos_processing::files::Files;
 use kentos_processing::model_runner::{RecordedStep, record_model};
 use kentos_processing::{
@@ -46,9 +47,9 @@ pub enum Reply {
 
 /// What runs.
 pub(crate) enum Work {
-    /// A tool's job, prepared on the drawing.
-    Tool(Job),
-    Model(ModelRun),
+    /// A tool's job, prepared on the drawing; both boxed, a job and a run are of very different sizes.
+    Tool(Box<Job>),
+    Model(Box<ModelRun>),
 }
 
 impl Work {
@@ -125,7 +126,7 @@ pub(crate) fn start_tool<M: Send + 'static>(
     to: impl Fn(u64, Reply) -> M + Send + 'static,
 ) -> (Running, Task<M>) {
     let work = job.clone();
-    start(id, Work::Tool(job), session, files, to, move |feedback| {
+    start(id, Work::Tool(Box::new(job)), session, files, to, move |feedback| {
         Answer::Tool(Runner::compute(&work, &copy, feedback))
     })
 }
@@ -141,14 +142,16 @@ pub(crate) fn start_model<M: Send + 'static>(
     view: Option<Bounds>,
     session: u64,
     files: Option<Arc<dyn Files>>,
+    variables: Vec<Variable>,
     to: impl Fn(u64, Reply) -> M + Send + 'static,
 ) -> (Running, Task<M>) {
     let there = run.clone();
-    start(id, Work::Model(run), session, files, to, move |feedback| {
+    start(id, Work::Model(Box::new(run)), session, files, to, move |feedback| {
         let mut host = Copy {
             doc: copy,
             selection,
             view,
+            variables,
         };
         let lookup = |id: &str| there.tool(id);
         let mut log = Vec::new();
@@ -231,6 +234,8 @@ struct Copy {
     doc: Document,
     selection: Vec<Slot>,
     view: Option<Bounds>,
+    /// The `@` values the steps' expressions read (docs/adr/0214 §2.3), taken when the model started.
+    variables: Vec<Variable>,
 }
 
 impl Scene for Copy {
@@ -244,6 +249,10 @@ impl Scene for Copy {
 
     fn visible_bounds(&self) -> Option<Bounds> {
         self.view
+    }
+
+    fn variables(&self) -> Vec<Variable> {
+        self.variables.clone()
     }
 }
 

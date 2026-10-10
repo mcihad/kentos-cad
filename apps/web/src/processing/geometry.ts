@@ -1,7 +1,7 @@
 import type { Entity } from '../model/entities';
 import type { ExprGeometry } from '../model/expression/expression';
 import type { Bounds, Vec2 } from '../model/geometry';
-import { CoreStore, cornerTexts, type ExprColumnData } from '../wasm/core';
+import { CoreStore, cornerTexts, type ExprColumnData, type ExprWorldTable } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 
 /**
@@ -126,6 +126,11 @@ export class ObjectStore implements RunGeometry, DocumentGeometry {
 
   evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData {
     return this.core.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
+  }
+
+  /** The same in a context, with the layers its calls to other objects look at (docs/adr/0214); their objects are here too. */
+  evaluateExpressionIn(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData {
+    return this.core.evaluateExpressionIn(source, context, ids, texts, textLens, numbers, scale, want, world);
   }
 
   numberCorners(ids: readonly number[], walk: CornerWalk, existing: readonly Vec2[]): CoreCorner[] {

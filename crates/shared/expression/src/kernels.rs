@@ -12,6 +12,7 @@ use crate::library::Func;
 use crate::parser::BinOp;
 use crate::program::{Const, Operand, Program};
 use crate::scalar::{self, R, Scratch, V};
+use crate::world::WorldCalls;
 
 pub(crate) fn bit(b: bool) -> f64 {
     f64::from(u8::from(b))
@@ -415,5 +416,36 @@ pub(crate) fn round_to(a: Col, d: f64, out: &mut Out, scratch: &mut Scratch) {
         out.rule(i, |made| {
             functions::call(Func::Round, &[x, V::Num(d)], made, scratch)
         });
+    }
+}
+
+/// A call that looks at other objects (docs/adr/0214 §3): the object's id
+/// (the first column) and its own arguments, answered by the world; empty
+/// without one.
+pub(crate) fn world(k: usize, cols: &[Col], world: Option<&dyn WorldCalls>, out: &mut Out) {
+    let Some(w) = world else {
+        out.k.fill(NULL);
+        return;
+    };
+    let mut own: Vec<V> = Vec::with_capacity(cols.len().saturating_sub(1));
+    for i in 0..out.k.len() {
+        own.clear();
+        let mut thrown = false;
+        for c in &cols[1..] {
+            match c.view(i) {
+                Some(v) => own.push(v),
+                None => thrown = true,
+            }
+        }
+        if thrown {
+            out.k[i] = THROWN;
+            continue;
+        }
+        let id = match cols.first().and_then(|c| c.view(i)) {
+            Some(V::Num(x)) => x,
+            _ => f64::NAN,
+        };
+        let own = &own;
+        out.rule(i, |made| w.call(k, id, own, made));
     }
 }

@@ -1,5 +1,5 @@
-import { exprEvaluate, op, type ExprColumnData } from '../../wasm/core';
-export type { ExprColumnData };
+import { exprEvaluate, exprEvaluateIn, op, type ExprColumnData, type ExprWorldTable } from '../../wasm/core';
+export type { ExprColumnData, ExprWorldTable };
 import { ENTITY_KIND_LABEL, entityAnchor, entityArea, entityLength, type Entity } from '../entities';
 import { MEASURE_STRIDE, type ExprValue } from './expressionLib';
 
@@ -41,6 +41,51 @@ export interface ExprNeeds {
 /** A geometry store the objects are in (`CoreStore`): the geometry values are read there. */
 export interface ExprGeometry {
   evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData;
+  /**
+   * The same in a context (docs/adr/0214): the schema as JSON (`{ variables, world }`), and the layers the calls to
+   * other objects look at, whose objects are in this store too. A store without it evaluates without the context.
+   */
+  evaluateExpressionIn?(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData;
+}
+
+/** A `@` value (docs/adr/0214 §2.3): one of the project's variables or a built-in one. */
+export interface ExprVariable {
+  readonly name: string;
+  readonly value: string | number | boolean | null;
+  /** One line for the builder. */
+  readonly description?: string;
+}
+
+/** Where an expression is compiled (docs/adr/0214): its `@` values, and whether calls to other layers can be used. */
+export interface ExprContext {
+  readonly variables?: readonly ExprVariable[];
+  /** İşlemler and the builder over them: the functions that look at other layers (toplama, kesişir …). */
+  readonly world?: boolean;
+}
+
+/** What an expression's calls to other layers read (docs/adr/0214 §3). */
+export interface ExprWorldNeeds {
+  /** An aggregate over the evaluated objects' own layers. */
+  readonly own: boolean;
+  /** Other layers by name. */
+  readonly layers: readonly string[];
+  /** The fields and values the calls read of those layers' objects. */
+  readonly fields: readonly string[];
+  readonly needs: ExprNeeds;
+}
+
+/** A layer as the calls to other objects read it: its name and objects in the document's order. */
+export interface ExprLayer {
+  readonly name: string;
+  readonly entities: readonly Entity[];
+}
+
+/** The layers a host gives the calls to other objects (docs/adr/0214 §3). */
+export interface ExprLayers {
+  /** The layer the tree names so (the first of that name, Turkish letters and case aside), or null. */
+  named(name: string): ExprLayer | null;
+  /** The layer with this id, or null. */
+  byId(layerId: string): ExprLayer | null;
 }
 
 /** What an expression is evaluated on: objects in run order ($sıra is the position + 1). */
@@ -57,6 +102,8 @@ export interface ExprObjects {
    * boundary; `$merkez_y`, `$genişlik` … need it). Preferred over `measures`.
    */
   readonly geometry?: ExprGeometry;
+  /** The layers the calls to other objects look at (docs/adr/0214 §3); their objects are in `geometry` too. */
+  readonly layers?: ExprLayers;
 }
 
 /**
@@ -77,20 +124,36 @@ export interface CompiledExpression {
   /** Attribute names the expression reads (to warn about missing ones). */
   readonly fields: readonly string[];
   readonly needs: ExprNeeds;
+  /** What its calls to other layers read (docs/adr/0214 §3); null when it makes none. */
+  readonly world: ExprWorldNeeds | null;
+  /** The `@` names it read that the context did not have (they are empty). */
+  readonly unknown: readonly string[];
   /** The value for each object, as `as` asks, in one call to the core. */
   evaluateAll(objects: ExprObjects, as?: ExprAs): ExprColumn;
 }
 
 export type CompileResult = { ok: true; expr: CompiledExpression } | { ok: false; error: string; at: number };
 
-type Compiled = { ok: true; fields: string[]; needs: ExprNeeds } | { ok: false; error: string; at: number };
+type Compiled = { ok: true; fields: string[]; needs: ExprNeeds; world?: ExprWorldNeeds; unknown?: string[] } | { ok: false; error: string; at: number };
 const exprCompile = op<(source: string) => Compiled>('exprCompile');
+const exprCompileIn = op<(source: string, context: { variables: readonly ExprVariable[]; world: boolean }) => Compiled>('exprCompileIn');
 
-export function compileExpression(source: string): CompileResult {
-  const r = exprCompile(source);
+/**
+ * Compiles an expression; with a context (docs/adr/0214) its `@` values are
+ * read and, where `world` allows, its calls to other layers: elsewhere such a
+ * call does not compile.
+ */
+export function compileExpression(source: string, context?: ExprContext): CompileResult {
+  const ctx = context ? { variables: context.variables ?? [], world: context.world === true } : null;
+  const r = ctx ? exprCompileIn(source, ctx) : exprCompile(source);
   if (!r.ok) return { ok: false, error: r.error, at: r.at };
   const { fields, needs } = r;
-  return { ok: true, expr: { source, fields, needs, evaluateAll: (objects, as = 'value') => evaluateAll(source, fields, needs, objects, as) } };
+  const world = r.world ?? null;
+  const json = ctx ? JSON.stringify(ctx) : '';
+  return {
+    ok: true,
+    expr: { source, fields, needs, world, unknown: r.unknown ?? [], evaluateAll: (objects, as = 'value') => evaluateAll(source, fields, needs, objects, as, json, world) },
+  };
 }
 
 /** Message for the dialog: "12. karakterde: …". */
@@ -185,14 +248,44 @@ export function exprTable(fields: readonly string[], needs: ExprNeeds, list: rea
   return { texts, lens, numbers };
 }
 
-function evaluateAll(source: string, fields: readonly string[], needs: ExprNeeds, o: ExprObjects, as: ExprAs): ExprColumn {
+/**
+ * The layers an expression's calls read, as one table (docs/adr/0214 §3): the evaluated objects' own layers for an
+ * aggregate, then the layers named (each once).
+ */
+function worldTable(world: ExprWorldNeeds, o: ExprObjects): ExprWorldTable | undefined {
+  const layers = o.layers;
+  if (!layers) return undefined;
+  const chosen: ExprLayer[] = [];
+  const add = (l: ExprLayer | null) => {
+    if (l && !chosen.includes(l) && !chosen.some((c) => c.name === l.name && c.entities === l.entities)) chosen.push(l);
+  };
+  if (world.own) for (const id of new Set(o.entities.map((e) => e.layerId))) add(layers.byId(id));
+  for (const name of world.layers) add(layers.named(name));
+  const all = chosen.flatMap((l) => l.entities);
+  const { texts, lens, numbers } = exprTable(world.fields, world.needs, all, o.layerName);
+  return {
+    names: chosen.map((l) => l.name),
+    counts: Uint32Array.from(chosen, (l) => l.entities.length),
+    ids: Float64Array.from(all, (e) => e.id),
+    texts,
+    lens,
+    numbers,
+  };
+}
+
+function evaluateAll(source: string, fields: readonly string[], needs: ExprNeeds, o: ExprObjects, as: ExprAs, context: string, world: ExprWorldNeeds | null): ExprColumn {
   const list = o.entities;
   const { texts, lens, numbers } = exprTable(fields, needs, list, o.layerName);
   if (o.geometry) {
     const ids = Float64Array.from(list, (e) => e.id);
+    if (context && o.geometry.evaluateExpressionIn) {
+      const table = world ? worldTable(world, o) : undefined;
+      return column(o.geometry.evaluateExpressionIn(source, context, ids, texts, lens, numbers, o.plotScale ?? NaN, WANT[as], table));
+    }
     return column(o.geometry.evaluateExpression(source, ids, texts, lens, numbers, o.plotScale ?? NaN, WANT[as]));
   }
   const measures = needs.measured ? (o.measures?.() ?? measuresOf(list)) : NO_NUMBERS;
+  if (context) return column(exprEvaluateIn(source, context, list.length, texts, lens, numbers, measures, o.plotScale ?? NaN, WANT[as]));
   return column(exprEvaluate(source, list.length, texts, lens, numbers, measures, o.plotScale ?? NaN, WANT[as]));
 }
 
@@ -245,12 +338,13 @@ export function previewExpression(
   layerName: (id: string) => string,
   measures?: (entities: readonly Entity[]) => Float64Array,
   geometry?: ExprGeometry,
+  layers?: ExprLayers,
 ): string {
   if (!entities.length) return 'Önizleme için uygun nesne yok.';
   const missing = expr.fields.filter((f) => !entities.some((e) => Object.hasOwn(e.attrs, f)));
   const note = missing.length ? ` ${missing.map((f) => `“${f}”`).join(', ')} alanı bu nesnelerde yok.` : '';
   const list = entities.slice(0, 20000);
-  const objects: ExprObjects = { entities: list, layerName, geometry, measures: measures && (() => measures(list)) };
+  const objects: ExprObjects = { entities: list, layerName, geometry, measures: measures && (() => measures(list)), layers };
   if (kind === 'condition') {
     const c = expr.evaluateAll(objects, 'bool');
     const hits = list.filter((_, i) => c.value(i) === true).length;

@@ -96,6 +96,7 @@ fn user(name: &str, ty: FieldType) -> FieldDef {
 
 fn schema() -> Schema {
     Schema {
+        variables: Vec::new(),
         fields: vec![
             user("Kat", FieldType::Number),
             user("Ad", FieldType::Text),
@@ -108,6 +109,7 @@ fn schema() -> Schema {
                 description: String::new(),
             },
         ],
+        world: false,
     }
 }
 

@@ -6,8 +6,16 @@
 //! the sources the reference refuses do not compile. The web plays the same
 //! file through WASM (apps/web/src/model/expression/language.test.ts).
 
+use kentos_expression::exec::{Slot, Source};
+use kentos_expression::host::objects_source;
 use kentos_expression::rows::{As, Column, EMPTY, NUMBER, RowsInput, TEXT, evaluate_rows};
-use kentos_expression::{Measured, Scope, Value, compile};
+use kentos_expression::world::{LayerObjects, Session, World, WorldCalls, WorldLayer};
+use kentos_expression::{
+    Builtin, Expr, FieldType, Geometry, Measured, Objects, Schema, Scope, Value, Variable, compile,
+    compile_with, geometry,
+};
+use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::store::Store;
 use serde_json::{Map, Value as Json};
 
 const FIXTURE: &str = concat!(
@@ -183,4 +191,251 @@ fn the_new_words_give_the_independent_references_values() {
         wrong.join("\n")
     );
     assert!(values >= 500, "{values}");
+}
+
+// ── docs/adr/0214: fixtures/expression/v2/extras.json ──────────────────────
+
+const EXTRAS: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../../fixtures/expression/v2/extras.json"
+);
+
+/// A layer of the extras' world: its objects' attributes, their shapes in the store.
+struct Layer<'a> {
+    name: &'a str,
+    ids: Vec<f64>,
+    attrs: Vec<&'a Map<String, Json>>,
+    store: &'a Store,
+}
+
+impl<'s, 'a: 's> Objects<'s> for Layer<'a> {
+    fn len(&self) -> usize {
+        self.ids.len()
+    }
+
+    fn field(&self, name: &str, _ty: FieldType, start: usize, mut slot: Slot<'_, 's>) {
+        for i in 0..slot.len() {
+            slot.text(i, self.attrs[start + i].get(name).and_then(Json::as_str));
+        }
+    }
+
+    fn geometry(&self, what: Geometry, start: usize, mut slot: Slot<'_, 's>) {
+        for i in 0..slot.len() {
+            let shape = self.store.get(self.ids[start + i]).map(|it| &it.shape);
+            slot.number(i, shape.and_then(|s| geometry::value(s, what)));
+        }
+    }
+
+    fn builtin(&self, what: Builtin, start: usize, mut slot: Slot<'_, 's>) {
+        for i in 0..slot.len() {
+            match what {
+                Builtin::Layer => slot.text(i, Some(self.name)),
+                Builtin::Id => slot.number(i, Some(self.ids[start + i])),
+                Builtin::Kind => slot.text(i, Some("Kapalı alan")),
+                Builtin::Label | Builtin::Scale => slot.text(i, None),
+            }
+        }
+    }
+}
+
+impl LayerObjects for Layer<'_> {
+    fn source<'s>(&'s self, e: &'s Expr) -> Box<dyn Source<'s> + 's> {
+        Box::new(objects_source(e, self as &dyn Objects<'s>))
+    }
+}
+
+/// One object of a layer as the tree walker reads it, with the world.
+struct OneOf<'a, 'w> {
+    layer: &'a Layer<'a>,
+    i: usize,
+    fields: &'a [String],
+    world: &'w Session<'w>,
+}
+
+impl OneOf<'_, '_> {
+    fn shape_value(&self, what: Geometry) -> Option<f64> {
+        let it = self.layer.store.get(self.layer.ids[self.i])?;
+        geometry::value(&it.shape, what)
+    }
+}
+
+impl Scope for OneOf<'_, '_> {
+    fn field(&self, i: usize) -> Option<&str> {
+        self.layer.attrs[self.i].get(self.fields.get(i)?)?.as_str()
+    }
+    fn measured(&self) -> Measured {
+        Measured {
+            length: self.shape_value(Geometry::Length),
+            area: self.shape_value(Geometry::Area),
+            anchor: self
+                .shape_value(Geometry::AnchorY)
+                .zip(self.shape_value(Geometry::AnchorX)),
+        }
+    }
+    fn vertices(&self) -> Option<f64> {
+        self.shape_value(Geometry::Vertices)
+    }
+    fn kind(&self) -> &str {
+        "Kapalı alan"
+    }
+    fn layer(&self) -> &str {
+        self.layer.name
+    }
+    fn label(&self) -> Option<&str> {
+        None
+    }
+    fn index(&self) -> f64 {
+        (self.i + 1) as f64
+    }
+    fn id(&self) -> f64 {
+        self.layer.ids[self.i]
+    }
+    fn scale(&self) -> Option<f64> {
+        None
+    }
+    fn geometry(&self, what: Geometry) -> Option<f64> {
+        self.shape_value(what)
+    }
+    fn world(&self) -> Option<&dyn WorldCalls> {
+        Some(self.world)
+    }
+}
+
+/// Two encoded values the same; numbers within 1e-9 relative when `near`.
+fn same_near(a: &Json, b: &Json, near: bool) -> bool {
+    match (
+        a.get(1).and_then(Json::as_f64),
+        b.get(1).and_then(Json::as_f64),
+    ) {
+        (Some(x), Some(y)) if near && a[0] == "n" && b[0] == "n" => {
+            (x - y).abs() <= 1e-9 * js_max(js_max(x.abs(), y.abs()), 1.0)
+        }
+        _ => same(a, b, 0),
+    }
+}
+
+#[test]
+fn the_additions_give_the_independent_references_values() {
+    let text = std::fs::read_to_string(EXTRAS).expect("the fixture is readable");
+    let doc: Json = serde_json::from_str(&text).expect("the fixture is JSON");
+    let variables = doc["variables"]
+        .as_array()
+        .expect("variables")
+        .iter()
+        .map(|v| Variable {
+            name: v["name"].as_str().expect("a name").to_owned(),
+            value: match &v["value"] {
+                Json::String(s) => Value::text(s.clone()),
+                Json::Bool(b) => Value::Bool(*b),
+                Json::Number(n) => Value::Num(n.as_f64().unwrap_or(f64::NAN)),
+                _ => Value::Null,
+            },
+            description: String::new(),
+        })
+        .collect();
+    let schema = Schema {
+        fields: Vec::new(),
+        variables,
+        world: true,
+    };
+    let layers = doc["layers"].as_array().expect("layers");
+    let all: Vec<&Json> = layers
+        .iter()
+        .flat_map(|l| l["objects"].as_array().expect("objects"))
+        .collect();
+    let mut store = Store::new();
+    store
+        .put_json(&serde_json::to_string(&all).expect("JSON"))
+        .expect("the store reads the objects");
+    let mine: Vec<Layer> = layers
+        .iter()
+        .map(|l| {
+            let objects = l["objects"].as_array().expect("objects");
+            Layer {
+                name: l["name"].as_str().expect("a name"),
+                ids: objects
+                    .iter()
+                    .map(|o| o["id"].as_f64().expect("an id"))
+                    .collect(),
+                attrs: objects
+                    .iter()
+                    .map(|o| o["attrs"].as_object().expect("attributes"))
+                    .collect(),
+                store: &store,
+            }
+        })
+        .collect();
+    let world = World {
+        layers: mine
+            .iter()
+            .map(|l| WorldLayer {
+                name: l.name.to_owned(),
+                ids: l.ids.clone(),
+                objects: l,
+            })
+            .collect(),
+        store: Some(&store),
+    };
+    let evaluated = layers
+        .iter()
+        .position(|l| l["id"] == doc["evaluated"])
+        .expect("the evaluated layer");
+    let parcels = &mine[evaluated];
+    let mut wrong = Vec::new();
+    let mut values = 0;
+    for case in doc["cases"].as_array().expect("cases") {
+        let src = case["source"].as_str().expect("source");
+        let compiled = compile_with(src, &schema);
+        if case.get("compiles") == Some(&Json::Bool(false)) {
+            if compiled.is_ok() {
+                wrong.push(format!("{src:?}: derlendi, derlenmemeliydi"));
+            }
+            continue;
+        }
+        let e = match compiled {
+            Ok(e) => e,
+            Err(err) => {
+                wrong.push(format!("{src:?}: {}", err.text()));
+                continue;
+            }
+        };
+        let unknown: Vec<&str> = case
+            .get("unknown")
+            .and_then(Json::as_array)
+            .map(|u| u.iter().filter_map(Json::as_str).collect())
+            .unwrap_or_default();
+        if e.unknown_variables != unknown {
+            wrong.push(format!("{src:?}: bilinmeyenler {:?}", e.unknown_variables));
+        }
+        let want = case["values"].as_array().expect("values");
+        let near = case.get("near") == Some(&Json::Bool(true));
+        let session = Session::new(&e, &world);
+        for (i, w) in want.iter().enumerate() {
+            let got = encode(&e.evaluate(&OneOf {
+                layer: parcels,
+                i,
+                fields: &e.fields,
+                world: &session,
+            }));
+            if !same_near(&got, w, near) {
+                wrong.push(format!("{src:?} nesne {}: {got} ≠ {w}", i + 1));
+            }
+            values += 1;
+        }
+        let column = e.evaluate_objects_in(parcels as &dyn Objects<'_>, As::Value, Some(&world));
+        let mut at = (0, 0);
+        for (i, w) in want.iter().enumerate() {
+            let got = encode_column(&column, i, &mut at);
+            if !same_near(&got, w, near) {
+                wrong.push(format!("{src:?} sütun, nesne {}: {got} ≠ {w}", i + 1));
+            }
+        }
+    }
+    assert!(
+        wrong.is_empty(),
+        "{} fark:\n{}",
+        wrong.len(),
+        wrong.join("\n")
+    );
+    assert!(values >= 900, "{values}");
 }

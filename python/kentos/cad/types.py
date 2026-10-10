@@ -1319,6 +1319,24 @@ TopologyRuleKindName = Literal["mustNotOverlap", "mustNotHaveGaps", "mustNotHave
 """The names of :class:`TopologyRuleKind`, for a plain string."""
 
 
+class VariableKind(_StrEnum):
+    """What a variable holds.
+
+    - ``text``
+    - ``number``
+    - ``bool``
+    - ``date``: ISO text (YYYY-AA-GG).
+    """
+    TEXT = "text"
+    NUMBER = "number"
+    BOOL = "bool"
+    DATE = "date"
+
+
+VariableKindName = Literal["text", "number", "bool", "date"]
+"""The names of :class:`VariableKind`, for a plain string."""
+
+
 class Workspace(_StrEnum):
     """A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each
     with its own scene, axes and ribbon; every command still runs in both.
@@ -1333,6 +1351,10 @@ class Workspace(_StrEnum):
 
 WorkspaceName = Literal["cad", "gis", "plan3d", "disaster"]
 """The names of :class:`Workspace`, for a plain string."""
+
+
+#: A variable's value: none yet, true/false, a number or text.
+VariableValue = Union[bool, float, str, None]
 
 
 class ArrayLayout(_Union):
@@ -8650,6 +8672,7 @@ class ProjectSettings(_Model):
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
         topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
+        variables: The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
             (see [`ProjectSettings::project_type`]).
@@ -8674,6 +8697,7 @@ class ProjectSettings(_Model):
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
+    variables: list[ProjectVariable] | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -8712,6 +8736,8 @@ class ProjectSettings(_Model):
             out["textStyles"] = [e0.to_json() for e0 in self.text_styles]
         if self.topology is not UNSET:
             out["topology"] = None if self.topology is None else self.topology.to_json()
+        if self.variables is not UNSET:
+            out["variables"] = [e0.to_json() for e0 in self.variables]
         if self.workspace is not UNSET:
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         return out
@@ -8739,6 +8765,7 @@ class ProjectSettings(_Model):
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
+            variables=[ProjectVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else UNSET,
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
 
@@ -8901,6 +8928,39 @@ class ProjectSummary(_Model):
             purge_after=data.get("purgeAfter", UNSET),
             trashed_at=data.get("trashedAt", UNSET),
             trashed_by_name=data.get("trashedByName", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProjectVariable(_Model):
+    """One of the project's variables.
+    Attributes:
+        name: Without the `@`: a letter or `_`, then letters, digits and `_` (`is_no`).
+        label: What the settings window shows beside it (“İş numarası”).
+        value: None yet: written as no value (an empty `@ad`), as the file keeps it.
+    """
+    name: str
+    kind: VariableKind | VariableKindName = VariableKind.TEXT
+    label: str | Unset = UNSET
+    value: VariableValue | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectVariable:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(VariableKind, data["kind"]) if "kind" in data else VariableKind.TEXT,
+            label=data.get("label", UNSET),
+            value=data.get("value", UNSET),
         )
 
 
@@ -12397,6 +12457,7 @@ __all__ = [
     "ProjectSummary",
     "ProjectType",
     "ProjectTypeName",
+    "ProjectVariable",
     "ProjectiveTransform",
     "PropertiesOperation",
     "PropertiesOperationName",
@@ -12473,6 +12534,9 @@ __all__ = [
     "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
+    "VariableKind",
+    "VariableKindName",
+    "VariableValue",
     "Vec2",
     "Vec2Like",
     "Workspace",

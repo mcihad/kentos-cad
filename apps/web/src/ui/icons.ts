@@ -698,6 +698,9 @@ export const ICONS = {
   history: '<path d="M3.5 10a6.5 6.5 0 1 0 2-4.7"/><path d="M3 3.3v3h3M10 6.5V10l2.5 1.8"/>',
   clear: '<path d="M4 6h12M8 6V4h4v2M5.5 6l.8 10.5h7.4L14.5 6"/>',
   settings: '<path d="M3.5 6h8M15.5 6h1M3.5 14h1M8.5 14h8"/><circle cx="13.5" cy="6" r="2"/><circle cx="6.5" cy="14" r="2"/>',
+  // Proje ayarları › Değişkenler (docs/adr/0214 §4): an `@` between braces, the values expressions read by name.
+  projectVariables:
+    '<path d="M5 3.5h-.4c-1.2 0-1.6.6-1.6 1.8v2.6c0 1-.5 1.6-1.4 2.1.9.5 1.4 1.1 1.4 2.1v2.6c0 1.2.4 1.8 1.6 1.8H5M15 3.5h.4c1.2 0 1.6.6 1.6 1.8v2.6c0 1 .5 1.6 1.4 2.1-.9.5-1.4 1.1-1.4 2.1v2.6c0 1.2-.4 1.8-1.6 1.8H15"/><circle cx="10" cy="10" r="1.7"/><path d="M11.7 10v.9a1.2 1.2 0 0 0 2.4 0V10a4.1 4.1 0 1 0-1.6 3.25"/>',
   units: '<path d="M3.5 16.5v-13l13 13z"/><path d="M3.5 12.5h2M3.5 9h2M7.5 16.5v-2M11 16.5v-2"/><path d="M6.5 13.5v-3l3 3z"/>',
   chip: '<rect x="5" y="5" width="10" height="10" rx="1.5"/><rect x="8" y="8" width="4" height="4"/><path d="M8 2.5V5M12 2.5V5M8 15v2.5M12 15v2.5M2.5 8H5M2.5 12H5M15 8h2.5M15 12h2.5"/>',
   appearance: '<circle cx="10" cy="10" r="6.5"/><path d="M10 3.5a6.5 6.5 0 0 1 0 13z" fill="currentColor" stroke="none"/>',

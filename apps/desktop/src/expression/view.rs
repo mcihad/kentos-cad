@@ -395,6 +395,8 @@ fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
                 let glyph = match item.key.as_str() {
                     "lit:number" => "#",
                     "lit:text" => "'",
+                    // A `@` value (docs/adr/0214 §2.3).
+                    k if k.starts_with("at:") => "@",
                     _ => glyph,
                 };
                 node = node.push(

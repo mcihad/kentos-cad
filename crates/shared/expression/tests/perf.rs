@@ -376,12 +376,14 @@ fn typed_and_shapes(sizes: &[usize], runs: usize, warm: usize) -> Vec<(String, S
         }
     }
     let schema = Schema {
+        variables: Vec::new(),
         fields: vec![FieldDef {
             name: "Kat".into(),
             ty: FieldType::Number,
             source: FieldSource::User,
             description: String::new(),
         }],
+        world: false,
     };
     for &n in sizes {
         let kat: Vec<f64> = (0..n).map(|i| (i % 12) as f64).collect();
@@ -489,4 +491,259 @@ fn typed_and_shapes(sizes: &[usize], runs: usize, warm: usize) -> Vec<(String, S
         }
     }
     rows
+}
+
+/// Objects with named text fields (kept elsewhere: the engine borrows their
+/// texts) and, when they are in a store, their shapes.
+struct Named<'a> {
+    name: &'static str,
+    ids: Vec<f64>,
+    fields: Vec<(&'static str, &'a [String])>,
+    store: Option<&'a kentos_geometry_core::store::Store>,
+}
+
+impl<'s, 'a: 's> Host<'s> for Named<'a> {
+    fn len(&self) -> usize {
+        self.ids.len()
+    }
+
+    fn field(&self, name: &str, _ty: FieldType, start: usize, mut slot: Slot<'_, 's>) {
+        let column: Option<&'a [String]> = self
+            .fields
+            .iter()
+            .find(|(n, _)| *n == name)
+            .map(|(_, v)| *v);
+        for i in 0..slot.len() {
+            slot.text(i, column.and_then(|v| v.get(start + i)).map(String::as_str));
+        }
+    }
+
+    fn geometry(&self, what: Geometry, start: usize, slot: Slot<'_, 's>) {
+        let store = self.store;
+        Shapes::new(|i| store.and_then(|s| s.get(self.ids[i])).map(|it| &it.shape))
+            .fill(what, start, slot);
+    }
+
+    fn builtin(&self, what: Builtin, start: usize, mut slot: Slot<'_, 's>) {
+        for i in 0..slot.len() {
+            match what {
+                Builtin::Layer => slot.text(i, Some(self.name)),
+                Builtin::Id => slot.number(i, Some(self.ids[start + i])),
+                _ => slot.text(i, None),
+            }
+        }
+    }
+}
+
+impl kentos_expression::world::LayerObjects for Named<'_> {
+    fn source<'s>(
+        &'s self,
+        e: &'s kentos_expression::Expr,
+    ) -> Box<dyn kentos_expression::exec::Source<'s> + 's> {
+        Box::new(kentos_expression::host::objects_source(
+            e,
+            self as &dyn Host<'s>,
+        ))
+    }
+}
+
+/// A square of `side` metres with its lower left corner at (x, y), as the store reads one.
+fn square(id: f64, layer: &str, x: f64, y: f64, side: f64) -> String {
+    format!(
+        r#"{{"id":{id},"layerId":"{layer}","kind":"polygon","pts":[{{"x":{x},"y":{y}}},{{"x":{},"y":{y}}},{{"x":{},"y":{}}},{{"x":{x},"y":{}}}]}}"#,
+        x + side,
+        x + side,
+        y + side,
+        y + side
+    )
+}
+
+/// The language's additions (docs/adr/0214 §5) against the ADR's budgets:
+/// date parts, a regular expression and arrays on 10⁵ objects; an aggregate
+/// by group, a spatial relation over 500 protected areas, the nearest of
+/// 2 000 stops and a value from another layer on 10⁴ parcels in a 100 × 100
+/// grid of 20 m squares. Each value is read; p50 and p95 of repeated runs
+/// after a warm-up, the world's tables made in each run.
+#[test]
+#[ignore = "a measurement: cargo test --release -p kentos-expression --test perf measures_the_additions -- --ignored --nocapture"]
+fn measures_the_additions() {
+    use kentos_expression::world::{World, WorldLayer};
+    use kentos_geometry_core::store::Store;
+
+    let runs = env_list("EXPRESSION_RUNS", &[20])[0];
+    let warm = 3;
+    let schema = Schema {
+        world: true,
+        ..Schema::default()
+    };
+    let measure = |label: &str, budget: f64, run_once: &dyn Fn() -> usize, n: usize| {
+        let mut ms = Vec::with_capacity(runs);
+        for run in 0..warm + runs {
+            let t = Instant::now();
+            let filled = run_once();
+            let elapsed = t.elapsed().as_secs_f64() * 1000.0;
+            assert_eq!(filled, n, "{label}");
+            if run >= warm {
+                ms.push(elapsed);
+            }
+        }
+        let (p50, p95) = quantiles(&mut ms);
+        let verdict = if p50 <= budget {
+            "bütçede"
+        } else {
+            "BÜTÇEYİ AŞIYOR"
+        };
+        println!("{label:<58} p50 {p50:7.2} ms (p95 {p95:7.2}), bütçe {budget:5.1} ms: {verdict}");
+        p50
+    };
+    // 10⁵ objects: dates, names with a number, tags.
+    let n = 100_000;
+    let dates: Vec<String> = (0..n)
+        .map(|i| format!("20{:02}-{:02}-{:02}", 10 + i % 17, 1 + i % 12, 1 + i % 28))
+        .collect();
+    let names: Vec<String> = (0..n).map(|i| format!("Parsel {i} B")).collect();
+    let tags: Vec<String> = (0..n)
+        .map(|i| ["imar", "ifraz,tevhit", "a,b,c,d"][i % 3].to_owned())
+        .collect();
+    let rows = Named {
+        name: "Parsel",
+        ids: (1..=n).map(|i| i as f64).collect(),
+        fields: vec![("Tarih", &dates), ("Ad", &names), ("Etiketler", &tags)],
+        store: None,
+    };
+    println!("\n{n} nesne, bütün değerler okunarak");
+    let mut over = Vec::new();
+    for (source, want, budget) in [
+        ("yıl(Tarih)", As::Number, 15.0),
+        (r"düzenli_parça(Ad, '(\d+)')", As::Text, 40.0),
+        ("dizi_uzunluğu(metin_dizi(Etiketler))", As::Number, 40.0),
+    ] {
+        let e = compile_with(source, &schema).unwrap_or_else(|e| panic!("{source}: {}", e.text()));
+        let p50 = measure(
+            source,
+            budget,
+            &|| {
+                let c = e.evaluate_objects_in(&rows, want, None);
+                c.kinds.iter().filter(|&&k| k != EMPTY).count()
+            },
+            n,
+        );
+        if p50 > budget {
+            over.push(source);
+        }
+    }
+    // 10⁴ parcels in a grid, 500 protected areas, 2 000 stops, 100 districts.
+    let side = 100usize;
+    let parcels = side * side;
+    let mut json = Vec::new();
+    let mut parcel_ids = Vec::new();
+    let (mut district, mut code) = (Vec::new(), Vec::new());
+    for r in 0..side {
+        for c in 0..side {
+            let id = (r * side + c + 1) as f64;
+            json.push(square(id, "parsel", c as f64 * 20.0, r as f64 * 20.0, 20.0));
+            parcel_ids.push(id);
+            let d = (r / 10) * 10 + c / 10;
+            district.push(format!("M{d}"));
+            code.push(format!("K{d}"));
+        }
+    }
+    let mut sit_ids = Vec::new();
+    for k in 0..500 {
+        let id = 100_000.0 + k as f64;
+        let (x, y) = ((k * 37 % 1960) as f64, (k * 53 % 1960) as f64);
+        json.push(square(id, "sit", x, y, 35.0));
+        sit_ids.push(id);
+    }
+    let mut stop_ids = Vec::new();
+    for k in 0..2_000 {
+        let id = 200_000.0 + k as f64;
+        let (x, y) = ((k * 97 % 2000) as f64 + 0.5, (k * 61 % 2000) as f64 + 0.5);
+        json.push(format!(
+            r#"{{"id":{id},"layerId":"durak","kind":"point","p":{{"x":{x},"y":{y}}}}}"#
+        ));
+        stop_ids.push(id);
+    }
+    let mut district_ids = Vec::new();
+    for k in 0..100 {
+        let id = 300_000.0 + k as f64;
+        json.push(square(
+            id,
+            "mahalle",
+            (k % 10) as f64 * 200.0,
+            (k / 10) as f64 * 200.0,
+            200.0,
+        ));
+        district_ids.push(id);
+    }
+    let mut store = Store::new();
+    store
+        .put_json(&format!("[{}]", json.join(",")))
+        .expect("the store reads the objects");
+    let sit_names: Vec<String> = (0..500).map(|k| format!("Sit {k}")).collect();
+    let stop_names: Vec<String> = (0..2_000).map(|k| format!("Durak {k}")).collect();
+    let district_codes: Vec<String> = (0..100).map(|k| format!("K{k}")).collect();
+    let district_names: Vec<String> = (0..100).map(|k| format!("Mahalle {k}")).collect();
+    let parcels_layer = Named {
+        name: "Parsel",
+        ids: parcel_ids,
+        fields: vec![("Mahalle", &district), ("MahalleKodu", &code)],
+        store: Some(&store),
+    };
+    let sit = Named {
+        name: "Sit alanı",
+        ids: sit_ids,
+        fields: vec![("Ad", &sit_names)],
+        store: Some(&store),
+    };
+    let stops = Named {
+        name: "Durak",
+        ids: stop_ids,
+        fields: vec![("Ad", &stop_names)],
+        store: Some(&store),
+    };
+    let districts = Named {
+        name: "Mahalle",
+        ids: district_ids,
+        fields: vec![("Kod", &district_codes), ("Ad", &district_names)],
+        store: Some(&store),
+    };
+    let world = World {
+        layers: [&parcels_layer, &sit, &stops, &districts]
+            .into_iter()
+            .map(|l| WorldLayer {
+                name: l.name.to_owned(),
+                ids: l.ids.clone(),
+                objects: l,
+            })
+            .collect(),
+        store: Some(&store),
+    };
+    println!("\n{parcels} parsel, dünyanın tabloları her koşuda kurularak");
+    for (source, want, budget) in [
+        ("$alan / topla($alan, Mahalle)", As::Number, 15.0),
+        ("kesişir('Sit alanı')", As::Bool, 60.0),
+        ("en_yakın('Durak', Ad)", As::Text, 80.0),
+        (
+            "katmandan('Mahalle', Ad, 'Kod', MahalleKodu)",
+            As::Text,
+            10.0,
+        ),
+    ] {
+        let e = compile_with(source, &schema).unwrap_or_else(|e| panic!("{source}: {}", e.text()));
+        let p50 = measure(
+            source,
+            budget,
+            &|| {
+                let c = e.evaluate_objects_in(&parcels_layer, want, Some(&world));
+                c.kinds.iter().filter(|&&k| k != EMPTY).count()
+            },
+            parcels,
+        );
+        if p50 > budget {
+            over.push(source);
+        }
+    }
+    println!("\n{} · {}", machine(), output("rustc", &["--version"]));
+    assert!(over.is_empty(), "bütçeyi aşanlar: {over:?}");
 }

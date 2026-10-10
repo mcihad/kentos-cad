@@ -1,5 +1,5 @@
 import { op } from '../../wasm/core';
-import type { ExprDiagnostic, ExprField } from './builder';
+import type { ExprDiagnostic, Fields } from './builder';
 
 /**
  * The expression's flow (docs/adr/0101), from the core
@@ -101,7 +101,6 @@ export interface FlowEdited {
   readonly focus?: string;
 }
 
-type Fields = readonly ExprField[];
 
 export const exprFlow = op<(trees: readonly FlowTree[], fields: Fields) => Flow>('exprFlow');
 /** Throws (the core's Turkish message) when the change cannot be made. */

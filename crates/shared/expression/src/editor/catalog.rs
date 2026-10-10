@@ -11,7 +11,8 @@ use super::{Item, Kind};
 use crate::js::collate::compare_tr;
 use crate::js::text::{fold_turkish, trim, utf16_len};
 use crate::library::{
-    FUNCTIONS, FuncDef, Group, OPERATORS, OpDef, VARIABLES, VarDef, find_function, find_variable,
+    FUNCTIONS, Family, FuncDef, Group, OPERATORS, OpDef, VARIABLES, VarDef, find_function,
+    find_variable,
 };
 use crate::parser::keyword_of;
 use crate::value::number_text;
@@ -87,6 +88,54 @@ pub(crate) fn variable_item(v: &VarDef) -> Item {
         key: format!("var:{}", v.name),
         alias: None,
     }
+}
+
+/// The `@` values the language knows besides the host's: the object's layer.
+pub(crate) const LAYER_AT: [(&str, &str); 2] = [
+    (
+        "katman_adi",
+        "Değerlendirilen nesnenin katmanının adı ($katman)",
+    ),
+    (
+        "katman",
+        "Değerlendirilen nesnenin katmanının adı ($katman)",
+    ),
+];
+
+/// A `@` value (docs/adr/0214 §2.3): its name, and what it holds beside it.
+pub(crate) fn at_item(name: &str, description: &str, value: Option<&Value>) -> Item {
+    let insert = format!("@{name}");
+    let detail = match value {
+        Some(v) if *v != Value::Null => format!("{} · {description}", preview(v)),
+        Some(_) => format!("boş · {description}"),
+        None => description.to_string(),
+    };
+    Item {
+        kind: Kind::Variable,
+        label: insert.clone(),
+        detail,
+        caret: utf16_len(&insert),
+        insert,
+        key: format!("at:{name}"),
+        alias: None,
+    }
+}
+
+/// The `@` values of a schema, then the object's layer's.
+pub(crate) fn at_items(schema: &Schema) -> Vec<Item> {
+    let mut out: Vec<Item> = schema
+        .variables
+        .iter()
+        .map(|v| at_item(&v.name, &v.description, Some(&v.value)))
+        .collect();
+    out.extend(LAYER_AT.iter().map(|(n, d)| at_item(n, d, None)));
+    out
+}
+
+/// Whether the builder offers a function here: one that looks at other
+/// layers only where they are given (docs/adr/0214 §1).
+pub(crate) fn offered(f: &FuncDef, schema: &Schema) -> bool {
+    schema.world || f.func.family() != Family::World
 }
 
 /// A function; `call` writes the parentheses too, with the cursor between them.
@@ -187,6 +236,9 @@ pub fn catalog(schema: &Schema, query: &str) -> Vec<Section> {
                     );
                 }
                 _ => {
+                    if group == Group::Variables {
+                        items.extend(at_items(schema).into_iter().filter(|i| found(i, &[], &q)));
+                    }
                     items.extend(
                         VARIABLES
                             .iter()
@@ -195,7 +247,7 @@ pub fn catalog(schema: &Schema, query: &str) -> Vec<Section> {
                             .chain(
                                 FUNCTIONS
                                     .iter()
-                                    .filter(|f| f.group == group)
+                                    .filter(|f| f.group == group && offered(f, schema))
                                     .map(|f| (function_item(f, true), f.aliases)),
                             )
                             .chain(
@@ -409,9 +461,62 @@ pub fn help(key: &str, schema: &Schema) -> Option<Help> {
                 def.is_none() && !schema.fields.is_empty(),
             ))
         }
+        "at" => Some(at_help(name, schema)),
         _ => None,
     }
 }
+
+/// A `@` value's help: what it holds now, and where it comes from.
+fn at_help(name: &str, schema: &Schema) -> Help {
+    let builtin = BUILTIN_AT
+        .iter()
+        .any(|b| fold_turkish(b) == fold_turkish(name));
+    let layer = LAYER_AT
+        .iter()
+        .find(|(n, _)| fold_turkish(n) == fold_turkish(name));
+    let description = match (schema.variable(name), layer) {
+        (Some(v), _) => {
+            let what = if builtin {
+                "Yerleşik değişken"
+            } else {
+                "Projenin değişkeni"
+            };
+            let about = if v.description.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", v.description)
+            };
+            format!("{what}{about}. Şimdiki değeri: {}.", preview(&v.value))
+        }
+        (None, Some((_, d))) => format!("{d}: nesneden nesneye değişir."),
+        (None, None) => format!(
+            "“@{name}” değişkeni yok; değeri boş okunur. Projenin değişkenleri Proje ayarları › Değişkenler'dedir."
+        ),
+    };
+    Help {
+        key: format!("at:{name}"),
+        kind: Kind::Variable,
+        title: format!("@{name}"),
+        group: Group::Variables.title(),
+        signature: format!("@{name}"),
+        description,
+        args: Vec::new(),
+        examples: vec![(format!("@{name}"), "değişkenin değeri".to_string())],
+        aliases: Vec::new(),
+        field: None,
+    }
+}
+
+/// The built-in `@` names a host gives (docs/adr/0214 §2.3).
+const BUILTIN_AT: [&str; 7] = [
+    "proje_adi",
+    "koordinat_sistemi",
+    "epsg",
+    "olcek",
+    "tarih",
+    "simdi",
+    "kullanici",
+];
 
 /// The help of what is at the cursor: the name or operator it is in or
 /// just after, else the call it is in.
@@ -445,6 +550,7 @@ pub fn help_at(src: &str, cursor: usize, schema: &Schema) -> Option<Help> {
             },
             Lex::Field { name, .. } if !name.is_empty() => help(&format!("field:{name}"), schema),
             Lex::Var { name } => find_variable(name).map(variable_help),
+            Lex::At { name } if !name.is_empty() => Some(at_help(name, schema)),
             Lex::Op(op) if !matches!(*op, "(" | ")" | ",") => OPERATORS
                 .iter()
                 .find(|o| o.symbol == *op || o.aliases.contains(op))
@@ -530,6 +636,7 @@ mod tests {
 
     fn schema() -> Schema {
         Schema {
+            variables: Vec::new(),
             fields: vec![
                 FieldDef {
                     name: "Parsel".into(),
@@ -544,6 +651,7 @@ mod tests {
                     description: String::new(),
                 },
             ],
+            world: false,
         }
     }
 
@@ -561,14 +669,27 @@ mod tests {
                 "İşleçler",
                 "Koşullar",
                 "Matematik",
-                "Metin"
+                "Metin",
+                "Tarih ve saat",
+                "Diziler ve eşlemeler"
             ]
         );
+        // Every entry once: the fields, the object's layer's `@` values, the
+        // `$` values, the functions offered here (none that looks at other
+        // layers without them, docs/adr/0214 §1) and the operators.
         let count: usize = tree.iter().map(|s| s.items.len()).sum();
+        let offered_here = FUNCTIONS.iter().filter(|f| offered(f, &schema())).count();
         assert_eq!(
             count,
-            2 + VARIABLES.len() + FUNCTIONS.len() + OPERATORS.len()
+            2 + LAYER_AT.len() + VARIABLES.len() + offered_here + OPERATORS.len()
         );
+        // Where other layers are given, Toplama and Mekânsal list them.
+        let with_world = Schema {
+            world: true,
+            ..schema()
+        };
+        let titles: Vec<&str> = catalog(&with_world, "").iter().map(|s| s.title).collect();
+        assert!(titles.ends_with(&["Toplama", "Mekânsal"]));
         assert_eq!(tree[0].items[1].insert, "[Tapu alanı]");
         // A search keeps the groups with a match; English names count.
         let found = catalog(&schema(), "round");
@@ -578,7 +699,7 @@ mod tests {
             .iter()
             .flat_map(|s| s.items.iter().map(|i| i.label.clone()))
             .collect();
-        assert_eq!(found, ["$uzunluk", "uzunluk"]);
+        assert_eq!(found, ["$uzunluk", "uzunluk", "dizi_uzunluğu"]);
         assert!(
             catalog(&Schema::default(), "")
                 .iter()
@@ -703,8 +824,13 @@ mod tests {
             .chain(VARIABLES.iter().flat_map(|v| v.examples.iter()))
             .chain(OPERATORS.iter().flat_map(|o| o.examples.iter()));
         let mut checked = 0;
+        // The examples of the functions that look at other layers compile where they are given.
+        let world = crate::Schema {
+            world: true,
+            ..crate::Schema::default()
+        };
         for (expression, result) in all {
-            let Ok(e) = crate::compile(expression) else {
+            let Ok(e) = crate::compile_with(expression, &world) else {
                 panic!("the example {expression} does not compile");
             };
             let Some(want) = stated(result) else {

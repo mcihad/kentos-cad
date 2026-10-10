@@ -55,7 +55,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-37.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-38.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },
@@ -146,6 +146,7 @@
     { "file": "scenarios.kcad", "sniff": "kcad", "content": "scenarios.json" },
     { "file": "filters.kcad", "sniff": "kcad", "content": "filters.json" },
     { "file": "labels.kcad", "sniff": "kcad", "content": "labels.json" },
+    { "file": "variables.kcad", "sniff": "kcad", "content": "variables.json" },
     { "file": "broken/second-srid-in-schema-11.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/second-srid-zero.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/second-srid-same.kcad", "sniff": "kcad", "error": "bad_value" },
@@ -523,6 +524,16 @@
     { "file": "broken/bad-enum.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/srid-range.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/bad-source.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/variables-in-schema-36.kcad", "sniff": "kcad", "error": "unknown_field" },
+    { "file": "broken/variables-empty.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/variable-duplicate.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/variable-bad-name.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/variable-builtin-name.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/variable-number-text.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/variable-bad-date.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/variable-unknown-kind.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/variable-unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
+    { "file": "broken/variable-no-kind.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "../../document/v1/sample.json", "sniff": "json", "error": "not_kcad" },
     { "file": "../../formats/v1/blocks.dxf", "sniff": "foreign", "error": "not_kcad" }
   ]

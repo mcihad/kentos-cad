@@ -15,7 +15,7 @@ import type { LayerFilter } from '../contracts/generated/LayerFilter';
 import { IdMarks } from '../model/idMarks';
 import { compileFilter, filterPasses, filterPassesIn, type CompiledFilter } from '../model/layerFilter';
 import type { TimeWindow } from '../model/time';
-import { CoreStore, op, type CoreStyleProgram, type ExprColumnData, type StyledOut } from '../wasm/core';
+import { CoreStore, op, type CoreStyleProgram, type ExprColumnData, type ExprWorldTable, type StyledOut } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { LABEL_DEFAULTS_JSON, labelLayers, layerTexts, objectTexts } from '../model/labelTexts';
 import { readGrips, type GripSet } from './storeRecords';
@@ -853,6 +853,12 @@ export class PickIndex {
   evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData {
     this.sync();
     return this.store.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
+  }
+
+  /** The same in a context, with the layers its calls to other objects look at (docs/adr/0214). */
+  evaluateExpressionIn(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData {
+    this.sync();
+    return this.store.evaluateExpressionIn(source, context, ids, texts, textLens, numbers, scale, want, world);
   }
 
   /** A layer through the style engine, next to its geometry (render/styledLayer.ts); `pieces`: every insert's pieces' sets. */

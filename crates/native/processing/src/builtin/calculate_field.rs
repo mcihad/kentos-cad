@@ -9,7 +9,7 @@ use kentos_style_core::expr::Value as ExprValue;
 use kentos_style_core::expr::rows::As;
 use serde_json::{Value, json};
 
-use crate::expression::evaluate_all;
+use crate::expression::evaluate_in;
 use crate::types::{
     ChangeSet, EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Patch, Resolved,
     Returns, RunContext, RunResult, Target, Tool,
@@ -110,21 +110,15 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     let field = v.text("field").to_owned();
     let list = &v.features("input").entities;
     feedback.progress(0.0, "Değerler hesaplanıyor");
-    // $alan, $uzunluk, $y, $x from the geometry store, asked once.
-    let ids: Vec<Slot> = list.iter().map(|e| Slot(e.base().id)).collect();
-    let mut measured: Option<Vec<f64>> = None;
-    let mut measures = || {
-        measured
-            .get_or_insert_with(|| ctx.geometry.measures(&ids))
-            .clone()
-    };
+    // The geometry values from the run's store; calls to other objects from its world (docs/adr/0214 §3).
     let layer_name = |id: &str| ctx.layer_name(id).to_owned();
+    let how = ctx.evaluation(&layer_name);
     let condition = v
         .expr("where")
-        .map(|e| evaluate_all(e, list, &layer_name, &mut measures, As::Bool));
+        .map(|e| evaluate_in(e, list, &how, As::Bool));
     let values = v
         .expr("value")
-        .map(|e| evaluate_all(e, list, &layer_name, &mut measures, As::Text))
+        .map(|e| evaluate_in(e, list, &how, As::Text))
         .unwrap_or_default();
     let (mut same, mut empty, mut filtered) = (0usize, 0usize, 0usize);
     let mut update = Vec::new();

@@ -10,6 +10,8 @@ import {
   dist as wasmDist,
   distToSegment as wasmDistToSegment,
   exprEvaluate as wasmExprEvaluate,
+  exprEvaluateIn as wasmExprEvaluateIn,
+  ExprWorld as WasmExprWorld,
   FaceIndex,
   GeometryStore,
   StyleProgram,
@@ -521,6 +523,36 @@ export function exprEvaluate(source: string, n: number, texts: string, textLens:
 }
 
 /**
+ * `exprEvaluate` in a context (docs/adr/0214): `context` is the schema as JSON,
+ * `{ variables, world }` (the `@` values; whether other layers are given). Without
+ * a geometry store no call looks at other layers: one that would is refused.
+ */
+export function exprEvaluateIn(source: string, context: string, n: number, texts: string, textLens: Int32Array, numbers: Float64Array, measures: Float64Array, scale: number, want: number): ExprColumnData {
+  return typed(() => {
+    const c = wasmExprEvaluateIn(source, context, n, texts, textLens, numbers, measures, scale, want);
+    try {
+      return { kinds: c.kinds, numbers: c.numbers, texts: c.texts, textLengths: c.textLengths };
+    } finally {
+      c.free();
+    }
+  });
+}
+
+/**
+ * The layers an expression's calls to other objects look at (docs/adr/0214 §3), as one table: every layer's
+ * objects one after another (`exprTable` of the fields and values the calls read), their ids, each layer's name
+ * and count. Their objects are in the store the expression is evaluated in.
+ */
+export interface ExprWorldTable {
+  readonly names: readonly string[];
+  readonly counts: Uint32Array;
+  readonly ids: Float64Array;
+  readonly texts: string;
+  readonly lens: Int32Array;
+  readonly numbers: Float64Array;
+}
+
+/**
  * Where the texts beside numbered corners go (processing, docs/adr/0008 S4):
  * four numbers per corner in `corners` (x, y, outward x and y), its text in
  * `texts`, measured in the drawing typeface `font`; x, y per corner come back.
@@ -892,6 +924,23 @@ export class CoreStore {
   evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData {
     return typed(() => {
       const c = this.raw.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
+      try {
+        return { kinds: c.kinds, numbers: c.numbers, texts: c.texts, textLengths: c.textLengths };
+      } finally {
+        c.free();
+      }
+    });
+  }
+
+  /**
+   * `evaluateExpression` in a context (docs/adr/0214): the schema as JSON (`{ variables, world }`), and the layers
+   * its calls to other objects look at, whose objects are in this store too.
+   */
+  evaluateExpressionIn(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData {
+    return typed(() => {
+      // Handed over to the core, which frees it.
+      const w = world ? new WasmExprWorld([...world.names], world.counts, world.ids, world.texts, world.lens, world.numbers) : undefined;
+      const c = this.raw.evaluateExpressionIn(source, context, ids, texts, textLens, numbers, scale, want, w);
       try {
         return { kinds: c.kinds, numbers: c.numbers, texts: c.texts, textLengths: c.textLengths };
       } finally {

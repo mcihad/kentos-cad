@@ -34,6 +34,7 @@ import { GridLibrary, indexedGridStore } from './gridLibrary';
 import { ServerStatus } from './server';
 import { registerDefaultKeybindings } from './keybindings';
 import { createProcessing, registerProcessingCommands } from './processing';
+import { appVariables } from './expressionVariables';
 import { NetworkService, type NetworkWorkerLike } from './networks';
 import { TimeSlider } from './timeSlider';
 import { registerTimeCommands } from './timeCommands';
@@ -105,7 +106,12 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     format: new Formatter(doc.settings),
     clipboard: new Clipboard(),
     // The visible area and the geometry store are read lazily: the viewport exists only after the context.
-    processing: createProcessing(doc, selection, () => ctx.view.camera.visibleBounds(), { inBox: (r) => ctx.view.inBox(r), measures: (ids) => ctx.view.measures(ids), evaluateExpression: (...a) => ctx.view.evaluateExpression(...a) }),
+    processing: createProcessing(doc, selection, () => ctx.view.camera.visibleBounds(), {
+      inBox: (r) => ctx.view.inBox(r),
+      measures: (ids) => ctx.view.measures(ids),
+      evaluateExpression: (...a) => ctx.view.evaluateExpression(...a),
+      evaluateExpressionIn: (...a) => ctx.view.evaluateExpressionIn(...a),
+    }, () => appVariables(ctx)),
     styles: createStyles(doc, system),
     // Blok oluştur's window is loaded when first opened (CLAUDE.md §20).
     blocks: createBlocks(

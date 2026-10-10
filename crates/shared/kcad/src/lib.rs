@@ -319,8 +319,14 @@ pub const SCHEMA_WITH_FILTERS: u32 = 35;
 /// byte; a reader of those refuses them rather than lose them.
 pub const SCHEMA_WITH_LABELS: u32 = 36;
 
+/// Document schema 37 (docs/specs/kcad-v2.md §6.4.9): schema 36 and the
+/// settings' `variables`, the project's `@` values (docs/adr/0214 §2.3). A
+/// writer writes it only when the project has one: any other drawing stays
+/// 36 or older, byte for byte; a reader of those refuses it rather than lose it.
+pub const SCHEMA_WITH_VARIABLES: u32 = 37;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 35] = [
+pub const SCHEMAS: [u32; 36] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -356,6 +362,7 @@ pub const SCHEMAS: [u32; 35] = [
     SCHEMA_WITH_TEMPORAL,
     SCHEMA_WITH_FILTERS,
     SCHEMA_WITH_LABELS,
+    SCHEMA_WITH_VARIABLES,
 ];
 
 /// The file a drawing is saved as.

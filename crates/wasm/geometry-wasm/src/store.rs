@@ -1157,6 +1157,74 @@ impl GeometryStore {
         Ok(crate::ExprColumn::from(c))
     }
 
+    /// `evaluateExpression` in a context (docs/adr/0214): the schema as JSON
+    /// (`{ variables, world }`), and the layers its calls to other objects
+    /// look at, whose objects are in this store too.
+    #[wasm_bindgen(js_name = evaluateExpressionIn)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn evaluate_expression_in(
+        &self,
+        source: &str,
+        context: &str,
+        ids: &[f64],
+        texts: &str,
+        text_lens: &[i32],
+        numbers: &[f64],
+        scale: f64,
+        want: u8,
+        world: Option<crate::ExprWorld>,
+    ) -> Result<crate::ExprColumn, JsError> {
+        use kentos_expression::world::{World, WorldLayer};
+        use kentos_expression::{api::schema_of, compile_with, rows};
+        let schema = schema_of(context).map_err(|e| JsError::new(&e))?;
+        let e = compile_with(source, &schema).map_err(|e| JsError::new(&e.text()))?;
+        let input = rows::RowsInput {
+            n: ids.len(),
+            texts,
+            text_lens,
+            numbers,
+            measures: &[],
+            scale,
+        };
+        let shape = |i: usize| {
+            ids.get(i)
+                .and_then(|&id| self.inner.get(id))
+                .map(|it| &it.shape)
+        };
+        let want = rows::As::from_code(want);
+        let c = match world.filter(|_| e.looks_around()) {
+            Some(w) => {
+                let needs = e.world_needs();
+                let table = rows::WorldTable::new(
+                    &needs,
+                    w.names,
+                    &w.counts,
+                    &w.ids,
+                    &w.texts,
+                    &w.text_lens,
+                    &w.numbers,
+                )
+                .map_err(|e| JsError::new(&e))?;
+                let layers = table.layers(Some(&self.inner));
+                let world = World {
+                    layers: layers
+                        .iter()
+                        .map(|(name, ids, objects)| WorldLayer {
+                            name: name.clone(),
+                            ids: ids.clone(),
+                            objects,
+                        })
+                        .collect(),
+                    store: Some(&self.inner),
+                };
+                rows::evaluate_rows_on_in(&e, &input, want, shape, Some(&world))
+            }
+            None => rows::evaluate_rows_on(&e, &input, want, shape),
+        }
+        .map_err(|e| JsError::new(&e))?;
+        Ok(crate::ExprColumn::from(c))
+    }
+
     /// A layer through the style engine (`kentos_style_core::style::build`):
     /// `objects` four numbers per id (how it is drawn, its set or symbol, the
     /// set of its simple look, its colour), `pieces` the sets of every

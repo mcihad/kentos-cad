@@ -159,6 +159,17 @@ const ITEMS = [
   { id: 'project-settings-general', open: (ui) => ui.run('file.settings') },
   { id: 'project-settings-crs', open: (ui) => ui.run('crs.set') },
   { id: 'project-settings-units', open: async (ui) => (await ui.run('file.settings'), await ui.clickText('.settings__navitem', 'Birimler')) },
+  // Değişkenler (docs/adr/0214 §4): five of every kind, a long text value, the built-in values under them.
+  {
+    id: 'project-settings-variables',
+    open: async (ui) => (
+      await ui.eval(
+        `window.kentos.doc.settings.assign({ variables: [{ name: 'is_no', label: 'İş numarası', kind: 'text', value: '2026/41' }, { name: 'idare_adi_uzun_bir_degisken', label: 'Uygulamayı yapan idarenin tam adı', kind: 'text', value: 'Ankara Büyükşehir Belediyesi İmar ve Şehircilik Dairesi Başkanlığı' }, { name: 'katsayi', kind: 'number', value: 1.5 }, { name: 'teslim', kind: 'date', value: '2026-11-30' }, { name: 'onayli', kind: 'bool', value: true }] })`,
+      ),
+      await ui.run('file.settings'),
+      await ui.clickText('.settings__navitem', 'Değişkenler')
+    ),
+  },
   { id: 'new-project', open: (ui) => ui.run('file.new') },
   // The wizard's other steps (docs/adr/0165 §3): a CBS project's lists and zone strip, a CAD project's units, the summary.
   { id: 'new-project-coords', open: async (ui) => (await ui.run('file.new'), await ui.click('.dialog--wizard .wspick__card[data-mode="gis"]'), await ui.clickText('.dialog__foot .btn--primary', 'İleri')) },

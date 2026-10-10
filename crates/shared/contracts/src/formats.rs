@@ -103,7 +103,9 @@ use crate::layer::LineType;
 /// 45: layer filters (docs/adr/0211): `.kcad` document schema 35, a layer's `filter`.
 /// 46: the label engine (docs/adr/0212): `.kcad` document schema 36, a label style's engine
 ///    fields, a layer style's `labels`, an object's `labelPins` (the typed columns' `PINS` flag).
-pub const FORMATS_VERSION: u32 = 46;
+/// 47: the project's variables (docs/adr/0214 §2.3): `.kcad` document schema 37, the settings'
+///    `variables`.
+pub const FORMATS_VERSION: u32 = 47;
 
 // ── Every import ────────────────────────────────────────────────────────
 

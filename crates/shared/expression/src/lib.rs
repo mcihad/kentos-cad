@@ -32,6 +32,9 @@
 )]
 
 pub mod api;
+pub mod arrays;
+pub mod compound;
+pub mod dates;
 pub mod editor;
 pub mod exec;
 pub mod functions;
@@ -42,14 +45,19 @@ mod kernels;
 pub mod lexer;
 pub mod library;
 pub mod parser;
+pub mod patterns;
 pub mod program;
 pub mod read;
+mod resolve;
 pub mod rows;
 pub mod scalar;
 pub mod value;
 pub mod walk;
+pub mod world;
 
-pub use host::{Builtin, FieldDef, FieldRef, FieldSource, FieldType, Geometry, Objects, Schema};
+pub use host::{
+    Builtin, FieldDef, FieldRef, FieldSource, FieldType, Geometry, Objects, Schema, Variable,
+};
 use library::Var;
 use parser::{Node, Parser};
 use program::Program;
@@ -134,6 +142,12 @@ pub trait Scope {
     /// Denominator of the plot scale while drawing a symbol; None elsewhere.
     fn scale(&self) -> Option<f64>;
 
+    /// The world the expression's calls to other objects are answered from
+    /// (docs/adr/0214 §3); without one they are empty.
+    fn world(&self) -> Option<&dyn world::WorldCalls> {
+        None
+    }
+
     /// A geometry value. By default the ones `measured` and `vertices` give;
     /// a scope that holds the object's shape gives the others too
     /// (`geometry::value`).
@@ -159,36 +173,87 @@ pub struct Expr {
     /// What each field is (the same order as `fields`): a user-defined typed
     /// field of the schema it was compiled with, else a text attribute.
     pub types: Vec<FieldRef>,
+    /// The calls that look at other objects (docs/adr/0214 §3), by their
+    /// place in the tree's `World` nodes.
+    pub world: Vec<world::WorldCall>,
+    /// The `@` names the schema had no value for (empty in the expression),
+    /// as written: the builder marks them.
+    pub unknown_variables: Vec<String>,
     /// The expression's tree, walked for one object (`walk`).
     root: Node,
     /// The expression compiled for the column engine (docs/adr/0100).
     program: Program,
 }
 
-/// An expression whose names are all today's text attributes (no schema).
+/// An expression whose names are all today's text attributes (no schema):
+/// no `@` value but the layer's, no call to other layers.
 pub fn compile(source: &str) -> Result<Expr, CompileError> {
     compile_with(source, &Schema::default())
 }
 
 /// An expression whose names resolve against the host's fields: a
-/// user-defined field of `schema` with its type, else a text attribute.
+/// user-defined field of `schema` with its type, else a text attribute; its
+/// `@` names against the schema's values. A function that looks at other
+/// layers compiles only where the schema says the host gives them
+/// (`Schema::world`, İşlemler: docs/adr/0214 §1); elsewhere (a style, a
+/// label, a layer's filter, a network's costs, a sheet, the raster
+/// calculator) it is an error at its name.
 pub fn compile_with(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
+    let e = compile_in(source, schema)?;
+    if schema.world || e.world.is_empty() {
+        return Ok(e);
+    }
+    let names: Vec<&str> = e
+        .world
+        .iter()
+        .filter_map(|c| library::FUNCTIONS.iter().find(|d| d.func == c.func))
+        .map(|d| d.name)
+        .collect();
+    Err(CompileError {
+        message: WORLD_REFUSED.into(),
+        at: first_call(source, &names).unwrap_or(1),
+    })
+}
+
+/// The message where a function that looks at other layers is refused.
+pub const WORLD_REFUSED: &str = "Bu işlev başka katmanlara bakar; burada kullanılamaz.";
+
+fn compile_in(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
     let mut parser = Parser::new(lexer::tokenize(source)?);
-    let root = parser.parse()?;
+    let parsed = parser.parse()?;
+    let resolve::Resolved {
+        root,
+        fields,
+        world,
+        unknown,
+    } = resolve::resolve(parsed, &parser.fields, schema);
     let mut needs = Needs::default();
     uses(&root, &mut needs);
-    let types = parser.fields.iter().map(|f| schema.resolve(f)).collect();
+    let types = fields.iter().map(|f| schema.resolve(f)).collect();
     Ok(Expr {
         source: source.to_string(),
-        fields: parser.fields,
+        fields,
         needs,
         types,
         program: Program::compile(&root),
         root,
+        world,
+        unknown_variables: unknown,
     })
 }
 
-fn uses(n: &Node, needs: &mut Needs) {
+/// Where the first of these functions is called in the source (1-based, UTF-16).
+fn first_call(source: &str, names: &[&str]) -> Option<usize> {
+    let toks = lexer::tokenize(source).ok()?;
+    toks.windows(2).find_map(|w| match (&w[0].t, &w[1].t) {
+        (lexer::Tok::Word(name), lexer::Tok::Op("(")) => library::find_function(name)
+            .filter(|f| names.contains(&f.name))
+            .map(|_| w[0].at),
+        _ => None,
+    })
+}
+
+pub(crate) fn uses(n: &Node, needs: &mut Needs) {
     match n {
         Node::Var(v) => match v {
             Var::Area | Var::Length | Var::Y | Var::X => needs.measured = true,
@@ -228,7 +293,12 @@ fn uses(n: &Node, needs: &mut Needs) {
                 uses(e, needs);
             }
         }
-        Node::Lit(_) | Node::Field(_) => {}
+        Node::World(_, own) => {
+            // The object is found among the other objects by its id.
+            needs.id = true;
+            own.iter().for_each(|a| uses(a, needs));
+        }
+        Node::Lit(_) | Node::Field(_) | Node::At(_) => {}
     }
 }
 
@@ -246,9 +316,69 @@ impl Expr {
         // The rules' buffers are made only when an operation needs them.
         match walk::walk(&self.root, s, &mut None) {
             Ok(Value::Num(x)) if !x.is_finite() => Value::Null,
-            Ok(v) => v,
+            Ok(v) => shown(v),
             Err(walk::Thrown) => Value::Null,
         }
+    }
+
+    /// Whether the expression looks at other objects (docs/adr/0214 §3).
+    pub fn looks_around(&self) -> bool {
+        !self.world.is_empty()
+    }
+
+    /// The layers the expression looks at: whether it reads the object's
+    /// own layer (an aggregate) and the other layers' names, each once; and
+    /// what the inner expressions read of those objects (their fields in
+    /// all, and their variables).
+    pub fn world_needs(&self) -> WorldNeeds {
+        let mut w = WorldNeeds::default();
+        for c in &self.world {
+            match &c.layer {
+                None => w.own = true,
+                Some(name) => {
+                    if !w
+                        .layers
+                        .iter()
+                        .any(|l| world::layer_key(l) == world::layer_key(name))
+                    {
+                        w.layers.push(name.clone());
+                    }
+                }
+            }
+            for e in [&c.value, &c.group, &c.condition].into_iter().flatten() {
+                for f in &e.fields {
+                    if !w.fields.contains(f) {
+                        w.fields.push(f.clone());
+                    }
+                }
+                w.needs = w.needs.union(e.needs);
+            }
+        }
+        w
+    }
+}
+
+/// What an expression's calls to other objects read (`Expr::world_needs`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct WorldNeeds {
+    /// An aggregate over the evaluated object's own layer.
+    pub own: bool,
+    /// Other layers by name.
+    pub layers: Vec<String>,
+    pub fields: Vec<String>,
+    pub needs: Needs,
+}
+
+/// An array's or a map's text as it shows (its JSON), any other value as it is.
+fn shown(v: Value<'_>) -> Value<'_> {
+    match v {
+        Value::Text(std::borrow::Cow::Borrowed(s)) if compound::is_compound(s) => {
+            Value::Text(std::borrow::Cow::Borrowed(compound::shown(s)))
+        }
+        Value::Text(std::borrow::Cow::Owned(s)) if compound::is_compound(&s) => {
+            Value::Text(std::borrow::Cow::Owned(compound::shown(&s).to_owned()))
+        }
+        v => v,
     }
 }
 

@@ -2,6 +2,7 @@ import type { Command } from '../core/commands';
 import type { Disposable } from '../core/disposable';
 import { Signal, type ReadonlySignal } from '../core/signal';
 import type { CadDocument } from '../model/document';
+import type { ExpressionVariable } from '../model/projectVariables';
 import type { Bounds } from '../model/geometry';
 import type { Selection } from '../model/selection';
 import { BUILTIN_TOOLS } from '../processing/builtin';
@@ -63,10 +64,16 @@ function createExecutors(): Executor[] {
  * geometry store (the viewport's), for the "visible" scope and the dialog's
  * previews.
  */
-export function createProcessing(doc: CadDocument, selection: Selection, visibleBounds: () => Bounds | null, geometry: DocumentGeometry): ProcessingService {
+export function createProcessing(
+  doc: CadDocument,
+  selection: Selection,
+  visibleBounds: () => Bounds | null,
+  geometry: DocumentGeometry,
+  variables?: () => readonly ExpressionVariable[],
+): ProcessingService {
   const registry = new ProcessingRegistry();
   for (const t of BUILTIN_TOOLS) registry.register(t);
-  const runner = new ProcessingRunner({ doc, selectedIds: () => [...selection.ids.value], visibleBounds, geometry, select: (ids) => selection.set(ids) }, createExecutors());
+  const runner = new ProcessingRunner({ doc, selectedIds: () => [...selection.ids.value], visibleBounds, geometry, select: (ids) => selection.set(ids), variables }, createExecutors());
   const memory = persistedSignals<ProcessingMemory>('kentos.processing.v1', { lastValues: {}, targets: {}, models: [] });
   const builtin = new Set(BUILTIN_MODELS.map((m) => m.id));
   const models = new Signal<readonly ProcessingModel[]>([]);

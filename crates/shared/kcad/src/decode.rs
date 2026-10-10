@@ -15,6 +15,7 @@ mod objects;
 mod services;
 mod styles;
 mod temporal;
+mod variables;
 
 use kentos_contracts::{
     AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
@@ -390,6 +391,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut annotation = None;
     let mut connections = Vec::new();
     let mut networks = Vec::new();
+    let mut variables = Vec::new();
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
@@ -461,6 +463,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
             "networks" if has.networks => networks = networks::networks(r)?,
+            "variables" if has.variables => variables = variables::variables(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             "dimensionStyles" if has.styles => {
                 dimension_styles = styles::dimension_styles(r, has.annotation)?
@@ -532,6 +535,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         annotation,
         connections,
         networks,
+        variables,
     })
 }
 

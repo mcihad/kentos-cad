@@ -1461,6 +1461,46 @@
           },
           {
             "caret": 6,
+            "detail": "tarih(yıl, ay, gün)",
+            "insert": "tarih()",
+            "key": "func:tarih",
+            "kind": "function",
+            "label": "tarih"
+          },
+          {
+            "caret": 14,
+            "detail": "tarih_biçimle(tarih, biçim)",
+            "insert": "tarih_biçimle()",
+            "key": "func:tarih_biçimle",
+            "kind": "function",
+            "label": "tarih_biçimle"
+          },
+          {
+            "caret": 11,
+            "detail": "tarih_ekle(tarih, sayı, birim)",
+            "insert": "tarih_ekle()",
+            "key": "func:tarih_ekle",
+            "kind": "function",
+            "label": "tarih_ekle"
+          },
+          {
+            "caret": 12,
+            "detail": "tarih_farkı(başlangıç, bitiş, birim)",
+            "insert": "tarih_farkı()",
+            "key": "func:tarih_farkı",
+            "kind": "function",
+            "label": "tarih_farkı"
+          },
+          {
+            "caret": 11,
+            "detail": "tarih_saat(yıl, ay, gün, saat, dakika, saniye)",
+            "insert": "tarih_saat()",
+            "key": "func:tarih_saat",
+            "kind": "function",
+            "label": "tarih_saat"
+          },
+          {
+            "caret": 6,
             "detail": "tavan(sayı)",
             "insert": "tavan()",
             "key": "func:tavan",
@@ -1602,6 +1642,14 @@
             "key": "var:yükseklik",
             "kind": "variable",
             "label": "$yükseklik"
+          },
+          {
+            "caret": 14,
+            "detail": "dizi_en_yüksek(dizi)",
+            "insert": "dizi_en_yüksek",
+            "key": "func:dizi_en_yüksek",
+            "kind": "function",
+            "label": "dizi_en_yüksek"
           }
         ],
         "start": 0
@@ -1708,6 +1756,14 @@
             "label": "atan2"
           },
           {
+            "caret": 3,
+            "detail": "ay(tarih)",
+            "insert": "ay()",
+            "key": "func:ay",
+            "kind": "function",
+            "label": "ay"
+          },
+          {
             "caret": 7,
             "detail": "başlar(metin, aranan)",
             "insert": "başlar()",
@@ -1740,6 +1796,14 @@
             "label": "boş"
           },
           {
+            "caret": 6,
+            "detail": "bugün()",
+            "insert": "bugün()",
+            "key": "func:bugün",
+            "kind": "function",
+            "label": "bugün"
+          },
+          {
             "caret": 4,
             "detail": "bul(metin, aranan)",
             "insert": "bul()",
@@ -1764,6 +1828,14 @@
             "label": "cos"
           },
           {
+            "caret": 7,
+            "detail": "dakika(tarih)",
+            "insert": "dakika()",
+            "key": "func:dakika",
+            "kind": "function",
+            "label": "dakika"
+          },
+          {
             "caret": 9,
             "detail": "değiştir(metin, aranan, yeni)",
             "insert": "değiştir()",
@@ -1780,12 +1852,188 @@
             "label": "derece"
           },
           {
+            "caret": 5,
+            "detail": "dizi(a, b, …)",
+            "insert": "dizi()",
+            "key": "func:dizi",
+            "kind": "function",
+            "label": "dizi"
+          },
+          {
+            "caret": 15,
+            "detail": "dizi_benzersiz(dizi)",
+            "insert": "dizi_benzersiz()",
+            "key": "func:dizi_benzersiz",
+            "kind": "function",
+            "label": "dizi_benzersiz"
+          },
+          {
+            "caret": 15,
+            "detail": "dizi_birleştir(dizi, öbür)",
+            "insert": "dizi_birleştir()",
+            "key": "func:dizi_birleştir",
+            "kind": "function",
+            "label": "dizi_birleştir"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_bul(dizi, değer)",
+            "insert": "dizi_bul()",
+            "key": "func:dizi_bul",
+            "kind": "function",
+            "label": "dizi_bul"
+          },
+          {
+            "caret": 11,
+            "detail": "dizi_dilim(dizi, baş, son)",
+            "insert": "dizi_dilim()",
+            "key": "func:dizi_dilim",
+            "kind": "function",
+            "label": "dizi_dilim"
+          },
+          {
+            "caret": 10,
+            "detail": "dizi_ekle(dizi, değer)",
+            "insert": "dizi_ekle()",
+            "key": "func:dizi_ekle",
+            "kind": "function",
+            "label": "dizi_ekle"
+          },
+          {
+            "caret": 14,
+            "detail": "dizi_en_düşük(dizi)",
+            "insert": "dizi_en_düşük()",
+            "key": "func:dizi_en_düşük",
+            "kind": "function",
+            "label": "dizi_en_düşük"
+          },
+          {
+            "caret": 15,
+            "detail": "dizi_en_yüksek(dizi)",
+            "insert": "dizi_en_yüksek()",
+            "key": "func:dizi_en_yüksek",
+            "kind": "function",
+            "label": "dizi_en_yüksek"
+          },
+          {
+            "caret": 12,
+            "detail": "dizi_içerir(dizi, değer)",
+            "insert": "dizi_içerir()",
+            "key": "func:dizi_içerir",
+            "kind": "function",
+            "label": "dizi_içerir"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_ilk(dizi)",
+            "insert": "dizi_ilk()",
+            "key": "func:dizi_ilk",
+            "kind": "function",
+            "label": "dizi_ilk"
+          },
+          {
+            "caret": 11,
+            "detail": "dizi_metin(dizi, ayraç, boş_yerine)",
+            "insert": "dizi_metin()",
+            "key": "func:dizi_metin",
+            "kind": "function",
+            "label": "dizi_metin"
+          },
+          {
+            "caret": 14,
+            "detail": "dizi_ortalama(dizi)",
+            "insert": "dizi_ortalama()",
+            "key": "func:dizi_ortalama",
+            "kind": "function",
+            "label": "dizi_ortalama"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_öğe(dizi, sıra)",
+            "insert": "dizi_öğe()",
+            "key": "func:dizi_öğe",
+            "kind": "function",
+            "label": "dizi_öğe"
+          },
+          {
+            "caret": 12,
+            "detail": "dizi_sırala(dizi, artan)",
+            "insert": "dizi_sırala()",
+            "key": "func:dizi_sırala",
+            "kind": "function",
+            "label": "dizi_sırala"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_son(dizi)",
+            "insert": "dizi_son()",
+            "key": "func:dizi_son",
+            "kind": "function",
+            "label": "dizi_son"
+          },
+          {
+            "caret": 10,
+            "detail": "dizi_ters(dizi)",
+            "insert": "dizi_ters()",
+            "key": "func:dizi_ters",
+            "kind": "function",
+            "label": "dizi_ters"
+          },
+          {
+            "caret": 11,
+            "detail": "dizi_topla(dizi)",
+            "insert": "dizi_topla()",
+            "key": "func:dizi_topla",
+            "kind": "function",
+            "label": "dizi_topla"
+          },
+          {
+            "caret": 14,
+            "detail": "dizi_uzunluğu(dizi)",
+            "insert": "dizi_uzunluğu()",
+            "key": "func:dizi_uzunluğu",
+            "kind": "function",
+            "label": "dizi_uzunluğu"
+          },
+          {
             "caret": 7,
             "detail": "doldur(değer, uzunluk, karakter)",
             "insert": "doldur()",
             "key": "func:doldur",
             "kind": "function",
             "label": "doldur"
+          },
+          {
+            "caret": 12,
+            "detail": "düzenli_bul(metin, kalıp)",
+            "insert": "düzenli_bul()",
+            "key": "func:düzenli_bul",
+            "kind": "function",
+            "label": "düzenli_bul"
+          },
+          {
+            "caret": 17,
+            "detail": "düzenli_değiştir(metin, kalıp, yerine)",
+            "insert": "düzenli_değiştir()",
+            "key": "func:düzenli_değiştir",
+            "kind": "function",
+            "label": "düzenli_değiştir"
+          },
+          {
+            "caret": 16,
+            "detail": "düzenli_gruplar(metin, kalıp)",
+            "insert": "düzenli_gruplar()",
+            "key": "func:düzenli_gruplar",
+            "kind": "function",
+            "label": "düzenli_gruplar"
+          },
+          {
+            "caret": 14,
+            "detail": "düzenli_parça(metin, kalıp)",
+            "insert": "düzenli_parça()",
+            "key": "func:düzenli_parça",
+            "kind": "function",
+            "label": "düzenli_parça"
           },
           {
             "caret": 5,
@@ -1797,11 +2045,115 @@
           },
           {
             "caret": 7,
+            "detail": "eşleme(anahtar1, değer1, anahtar2, değer2, …)",
+            "insert": "eşleme()",
+            "key": "func:eşleme",
+            "kind": "function",
+            "label": "eşleme"
+          },
+          {
+            "caret": 19,
+            "detail": "eşleme_anahtarları(eşleme)",
+            "insert": "eşleme_anahtarları()",
+            "key": "func:eşleme_anahtarları",
+            "kind": "function",
+            "label": "eşleme_anahtarları"
+          },
+          {
+            "caret": 14,
+            "detail": "eşleme_değeri(eşleme, anahtar)",
+            "insert": "eşleme_değeri()",
+            "key": "func:eşleme_değeri",
+            "kind": "function",
+            "label": "eşleme_değeri"
+          },
+          {
+            "caret": 17,
+            "detail": "eşleme_değerleri(eşleme)",
+            "insert": "eşleme_değerleri()",
+            "key": "func:eşleme_değerleri",
+            "kind": "function",
+            "label": "eşleme_değerleri"
+          },
+          {
+            "caret": 12,
+            "detail": "eşleme_ekle(eşleme, anahtar, değer)",
+            "insert": "eşleme_ekle()",
+            "key": "func:eşleme_ekle",
+            "kind": "function",
+            "label": "eşleme_ekle"
+          },
+          {
+            "caret": 14,
+            "detail": "eşleme_içerir(eşleme, anahtar)",
+            "insert": "eşleme_içerir()",
+            "key": "func:eşleme_içerir",
+            "kind": "function",
+            "label": "eşleme_içerir"
+          },
+          {
+            "caret": 11,
+            "detail": "eşleme_sil(eşleme, anahtar)",
+            "insert": "eşleme_sil()",
+            "key": "func:eşleme_sil",
+            "kind": "function",
+            "label": "eşleme_sil"
+          },
+          {
+            "caret": 8,
+            "detail": "eşleşir(metin, kalıp)",
+            "insert": "eşleşir()",
+            "key": "func:eşleşir",
+            "kind": "function",
+            "label": "eşleşir"
+          },
+          {
+            "caret": 4,
+            "detail": "gün(tarih)",
+            "insert": "gün()",
+            "key": "func:gün",
+            "kind": "function",
+            "label": "gün"
+          },
+          {
+            "caret": 6,
+            "detail": "hafta(tarih)",
+            "insert": "hafta()",
+            "key": "func:hafta",
+            "kind": "function",
+            "label": "hafta"
+          },
+          {
+            "caret": 14,
+            "detail": "haftanın_günü(tarih)",
+            "insert": "haftanın_günü()",
+            "key": "func:haftanın_günü",
+            "kind": "function",
+            "label": "haftanın_günü"
+          },
+          {
+            "caret": 7,
             "detail": "içerir(metin, aranan)",
             "insert": "içerir()",
             "key": "func:içerir",
             "kind": "function",
             "label": "içerir"
+          },
+          {
+            "caret": 9,
+            "detail": "json_oku(metin)",
+            "insert": "json_oku()",
+            "key": "func:json_oku",
+            "kind": "function",
+            "label": "json_oku"
+          },
+          {
+            "caret": 9,
+            "detail": "json_yaz(değer)",
+            "insert": "json_yaz()",
+            "key": "func:json_yaz",
+            "kind": "function",
+            "label": "json_yaz"
           },
           {
             "caret": 5,
@@ -1868,6 +2220,14 @@
             "label": "metin"
           },
           {
+            "caret": 11,
+            "detail": "metin_dizi(metin, ayraç, boş_metin)",
+            "insert": "metin_dizi()",
+            "key": "func:metin_dizi",
+            "kind": "function",
+            "label": "metin_dizi"
+          },
+          {
             "caret": 4,
             "detail": "min(a, b, …)",
             "insert": "min()",
@@ -1908,6 +2268,14 @@
             "label": "radyan"
           },
           {
+            "caret": 5,
+            "detail": "saat(tarih)",
+            "insert": "saat()",
+            "key": "func:saat",
+            "kind": "function",
+            "label": "saat"
+          },
+          {
             "caret": 4,
             "detail": "sağ(metin, uzunluk)",
             "insert": "sağ()",
@@ -1922,6 +2290,14 @@
             "key": "func:sağdoldur",
             "kind": "function",
             "label": "sağdoldur"
+          },
+          {
+            "caret": 7,
+            "detail": "saniye(tarih)",
+            "insert": "saniye()",
+            "key": "func:saniye",
+            "kind": "function",
+            "label": "saniye"
           },
           {
             "caret": 5,
@@ -1949,6 +2325,14 @@
           },
           {
             "caret": 6,
+            "detail": "şimdi()",
+            "insert": "şimdi()",
+            "key": "func:şimdi",
+            "kind": "function",
+            "label": "şimdi"
+          },
+          {
+            "caret": 6,
             "detail": "taban(sayı)",
             "insert": "taban()",
             "key": "func:taban",
@@ -1970,6 +2354,46 @@
             "key": "func:tan",
             "kind": "function",
             "label": "tan"
+          },
+          {
+            "caret": 6,
+            "detail": "tarih(yıl, ay, gün)",
+            "insert": "tarih()",
+            "key": "func:tarih",
+            "kind": "function",
+            "label": "tarih"
+          },
+          {
+            "caret": 14,
+            "detail": "tarih_biçimle(tarih, biçim)",
+            "insert": "tarih_biçimle()",
+            "key": "func:tarih_biçimle",
+            "kind": "function",
+            "label": "tarih_biçimle"
+          },
+          {
+            "caret": 11,
+            "detail": "tarih_ekle(tarih, sayı, birim)",
+            "insert": "tarih_ekle()",
+            "key": "func:tarih_ekle",
+            "kind": "function",
+            "label": "tarih_ekle"
+          },
+          {
+            "caret": 12,
+            "detail": "tarih_farkı(başlangıç, bitiş, birim)",
+            "insert": "tarih_farkı()",
+            "key": "func:tarih_farkı",
+            "kind": "function",
+            "label": "tarih_farkı"
+          },
+          {
+            "caret": 11,
+            "detail": "tarih_saat(yıl, ay, gün, saat, dakika, saniye)",
+            "insert": "tarih_saat()",
+            "key": "func:tarih_saat",
+            "kind": "function",
+            "label": "tarih_saat"
           },
           {
             "caret": 6,
@@ -2004,12 +2428,44 @@
             "label": "varsayılan"
           },
           {
+            "caret": 4,
+            "detail": "yıl(tarih)",
+            "insert": "yıl()",
+            "key": "func:yıl",
+            "kind": "function",
+            "label": "yıl"
+          },
+          {
+            "caret": 11,
+            "detail": "yılın_günü(tarih)",
+            "insert": "yılın_günü()",
+            "key": "func:yılın_günü",
+            "kind": "function",
+            "label": "yılın_günü"
+          },
+          {
             "caret": 8,
             "detail": "yuvarla(sayı, basamak)",
             "insert": "yuvarla()",
             "key": "func:yuvarla",
             "kind": "function",
             "label": "yuvarla"
+          },
+          {
+            "caret": 7,
+            "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+            "insert": "@katman",
+            "key": "at:katman",
+            "kind": "variable",
+            "label": "@katman"
+          },
+          {
+            "caret": 11,
+            "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+            "insert": "@katman_adi",
+            "key": "at:katman_adi",
+            "kind": "variable",
+            "label": "@katman_adi"
           },
           {
             "caret": 5,
@@ -2387,6 +2843,14 @@
             "label": "atan2"
           },
           {
+            "caret": 3,
+            "detail": "ay(tarih)",
+            "insert": "ay()",
+            "key": "func:ay",
+            "kind": "function",
+            "label": "ay"
+          },
+          {
             "caret": 7,
             "detail": "başlar(metin, aranan)",
             "insert": "başlar()",
@@ -2419,6 +2883,14 @@
             "label": "boş"
           },
           {
+            "caret": 6,
+            "detail": "bugün()",
+            "insert": "bugün()",
+            "key": "func:bugün",
+            "kind": "function",
+            "label": "bugün"
+          },
+          {
             "caret": 4,
             "detail": "bul(metin, aranan)",
             "insert": "bul()",
@@ -2443,6 +2915,14 @@
             "label": "cos"
           },
           {
+            "caret": 7,
+            "detail": "dakika(tarih)",
+            "insert": "dakika()",
+            "key": "func:dakika",
+            "kind": "function",
+            "label": "dakika"
+          },
+          {
             "caret": 9,
             "detail": "değiştir(metin, aranan, yeni)",
             "insert": "değiştir()",
@@ -2459,12 +2939,188 @@
             "label": "derece"
           },
           {
+            "caret": 5,
+            "detail": "dizi(a, b, …)",
+            "insert": "dizi()",
+            "key": "func:dizi",
+            "kind": "function",
+            "label": "dizi"
+          },
+          {
+            "caret": 15,
+            "detail": "dizi_benzersiz(dizi)",
+            "insert": "dizi_benzersiz()",
+            "key": "func:dizi_benzersiz",
+            "kind": "function",
+            "label": "dizi_benzersiz"
+          },
+          {
+            "caret": 15,
+            "detail": "dizi_birleştir(dizi, öbür)",
+            "insert": "dizi_birleştir()",
+            "key": "func:dizi_birleştir",
+            "kind": "function",
+            "label": "dizi_birleştir"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_bul(dizi, değer)",
+            "insert": "dizi_bul()",
+            "key": "func:dizi_bul",
+            "kind": "function",
+            "label": "dizi_bul"
+          },
+          {
+            "caret": 11,
+            "detail": "dizi_dilim(dizi, baş, son)",
+            "insert": "dizi_dilim()",
+            "key": "func:dizi_dilim",
+            "kind": "function",
+            "label": "dizi_dilim"
+          },
+          {
+            "caret": 10,
+            "detail": "dizi_ekle(dizi, değer)",
+            "insert": "dizi_ekle()",
+            "key": "func:dizi_ekle",
+            "kind": "function",
+            "label": "dizi_ekle"
+          },
+          {
+            "caret": 14,
+            "detail": "dizi_en_düşük(dizi)",
+            "insert": "dizi_en_düşük()",
+            "key": "func:dizi_en_düşük",
+            "kind": "function",
+            "label": "dizi_en_düşük"
+          },
+          {
+            "caret": 15,
+            "detail": "dizi_en_yüksek(dizi)",
+            "insert": "dizi_en_yüksek()",
+            "key": "func:dizi_en_yüksek",
+            "kind": "function",
+            "label": "dizi_en_yüksek"
+          },
+          {
+            "caret": 12,
+            "detail": "dizi_içerir(dizi, değer)",
+            "insert": "dizi_içerir()",
+            "key": "func:dizi_içerir",
+            "kind": "function",
+            "label": "dizi_içerir"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_ilk(dizi)",
+            "insert": "dizi_ilk()",
+            "key": "func:dizi_ilk",
+            "kind": "function",
+            "label": "dizi_ilk"
+          },
+          {
+            "caret": 11,
+            "detail": "dizi_metin(dizi, ayraç, boş_yerine)",
+            "insert": "dizi_metin()",
+            "key": "func:dizi_metin",
+            "kind": "function",
+            "label": "dizi_metin"
+          },
+          {
+            "caret": 14,
+            "detail": "dizi_ortalama(dizi)",
+            "insert": "dizi_ortalama()",
+            "key": "func:dizi_ortalama",
+            "kind": "function",
+            "label": "dizi_ortalama"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_öğe(dizi, sıra)",
+            "insert": "dizi_öğe()",
+            "key": "func:dizi_öğe",
+            "kind": "function",
+            "label": "dizi_öğe"
+          },
+          {
+            "caret": 12,
+            "detail": "dizi_sırala(dizi, artan)",
+            "insert": "dizi_sırala()",
+            "key": "func:dizi_sırala",
+            "kind": "function",
+            "label": "dizi_sırala"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_son(dizi)",
+            "insert": "dizi_son()",
+            "key": "func:dizi_son",
+            "kind": "function",
+            "label": "dizi_son"
+          },
+          {
+            "caret": 10,
+            "detail": "dizi_ters(dizi)",
+            "insert": "dizi_ters()",
+            "key": "func:dizi_ters",
+            "kind": "function",
+            "label": "dizi_ters"
+          },
+          {
+            "caret": 11,
+            "detail": "dizi_topla(dizi)",
+            "insert": "dizi_topla()",
+            "key": "func:dizi_topla",
+            "kind": "function",
+            "label": "dizi_topla"
+          },
+          {
+            "caret": 14,
+            "detail": "dizi_uzunluğu(dizi)",
+            "insert": "dizi_uzunluğu()",
+            "key": "func:dizi_uzunluğu",
+            "kind": "function",
+            "label": "dizi_uzunluğu"
+          },
+          {
             "caret": 7,
             "detail": "doldur(değer, uzunluk, karakter)",
             "insert": "doldur()",
             "key": "func:doldur",
             "kind": "function",
             "label": "doldur"
+          },
+          {
+            "caret": 12,
+            "detail": "düzenli_bul(metin, kalıp)",
+            "insert": "düzenli_bul()",
+            "key": "func:düzenli_bul",
+            "kind": "function",
+            "label": "düzenli_bul"
+          },
+          {
+            "caret": 17,
+            "detail": "düzenli_değiştir(metin, kalıp, yerine)",
+            "insert": "düzenli_değiştir()",
+            "key": "func:düzenli_değiştir",
+            "kind": "function",
+            "label": "düzenli_değiştir"
+          },
+          {
+            "caret": 16,
+            "detail": "düzenli_gruplar(metin, kalıp)",
+            "insert": "düzenli_gruplar()",
+            "key": "func:düzenli_gruplar",
+            "kind": "function",
+            "label": "düzenli_gruplar"
+          },
+          {
+            "caret": 14,
+            "detail": "düzenli_parça(metin, kalıp)",
+            "insert": "düzenli_parça()",
+            "key": "func:düzenli_parça",
+            "kind": "function",
+            "label": "düzenli_parça"
           },
           {
             "caret": 5,
@@ -2476,11 +3132,115 @@
           },
           {
             "caret": 7,
+            "detail": "eşleme(anahtar1, değer1, anahtar2, değer2, …)",
+            "insert": "eşleme()",
+            "key": "func:eşleme",
+            "kind": "function",
+            "label": "eşleme"
+          },
+          {
+            "caret": 19,
+            "detail": "eşleme_anahtarları(eşleme)",
+            "insert": "eşleme_anahtarları()",
+            "key": "func:eşleme_anahtarları",
+            "kind": "function",
+            "label": "eşleme_anahtarları"
+          },
+          {
+            "caret": 14,
+            "detail": "eşleme_değeri(eşleme, anahtar)",
+            "insert": "eşleme_değeri()",
+            "key": "func:eşleme_değeri",
+            "kind": "function",
+            "label": "eşleme_değeri"
+          },
+          {
+            "caret": 17,
+            "detail": "eşleme_değerleri(eşleme)",
+            "insert": "eşleme_değerleri()",
+            "key": "func:eşleme_değerleri",
+            "kind": "function",
+            "label": "eşleme_değerleri"
+          },
+          {
+            "caret": 12,
+            "detail": "eşleme_ekle(eşleme, anahtar, değer)",
+            "insert": "eşleme_ekle()",
+            "key": "func:eşleme_ekle",
+            "kind": "function",
+            "label": "eşleme_ekle"
+          },
+          {
+            "caret": 14,
+            "detail": "eşleme_içerir(eşleme, anahtar)",
+            "insert": "eşleme_içerir()",
+            "key": "func:eşleme_içerir",
+            "kind": "function",
+            "label": "eşleme_içerir"
+          },
+          {
+            "caret": 11,
+            "detail": "eşleme_sil(eşleme, anahtar)",
+            "insert": "eşleme_sil()",
+            "key": "func:eşleme_sil",
+            "kind": "function",
+            "label": "eşleme_sil"
+          },
+          {
+            "caret": 8,
+            "detail": "eşleşir(metin, kalıp)",
+            "insert": "eşleşir()",
+            "key": "func:eşleşir",
+            "kind": "function",
+            "label": "eşleşir"
+          },
+          {
+            "caret": 4,
+            "detail": "gün(tarih)",
+            "insert": "gün()",
+            "key": "func:gün",
+            "kind": "function",
+            "label": "gün"
+          },
+          {
+            "caret": 6,
+            "detail": "hafta(tarih)",
+            "insert": "hafta()",
+            "key": "func:hafta",
+            "kind": "function",
+            "label": "hafta"
+          },
+          {
+            "caret": 14,
+            "detail": "haftanın_günü(tarih)",
+            "insert": "haftanın_günü()",
+            "key": "func:haftanın_günü",
+            "kind": "function",
+            "label": "haftanın_günü"
+          },
+          {
+            "caret": 7,
             "detail": "içerir(metin, aranan)",
             "insert": "içerir()",
             "key": "func:içerir",
             "kind": "function",
             "label": "içerir"
+          },
+          {
+            "caret": 9,
+            "detail": "json_oku(metin)",
+            "insert": "json_oku()",
+            "key": "func:json_oku",
+            "kind": "function",
+            "label": "json_oku"
+          },
+          {
+            "caret": 9,
+            "detail": "json_yaz(değer)",
+            "insert": "json_yaz()",
+            "key": "func:json_yaz",
+            "kind": "function",
+            "label": "json_yaz"
           },
           {
             "caret": 5,
@@ -2547,6 +3307,14 @@
             "label": "metin"
           },
           {
+            "caret": 11,
+            "detail": "metin_dizi(metin, ayraç, boş_metin)",
+            "insert": "metin_dizi()",
+            "key": "func:metin_dizi",
+            "kind": "function",
+            "label": "metin_dizi"
+          },
+          {
             "caret": 4,
             "detail": "min(a, b, …)",
             "insert": "min()",
@@ -2587,6 +3355,14 @@
             "label": "radyan"
           },
           {
+            "caret": 5,
+            "detail": "saat(tarih)",
+            "insert": "saat()",
+            "key": "func:saat",
+            "kind": "function",
+            "label": "saat"
+          },
+          {
             "caret": 4,
             "detail": "sağ(metin, uzunluk)",
             "insert": "sağ()",
@@ -2601,6 +3377,14 @@
             "key": "func:sağdoldur",
             "kind": "function",
             "label": "sağdoldur"
+          },
+          {
+            "caret": 7,
+            "detail": "saniye(tarih)",
+            "insert": "saniye()",
+            "key": "func:saniye",
+            "kind": "function",
+            "label": "saniye"
           },
           {
             "caret": 5,
@@ -2628,6 +3412,14 @@
           },
           {
             "caret": 6,
+            "detail": "şimdi()",
+            "insert": "şimdi()",
+            "key": "func:şimdi",
+            "kind": "function",
+            "label": "şimdi"
+          },
+          {
+            "caret": 6,
             "detail": "taban(sayı)",
             "insert": "taban()",
             "key": "func:taban",
@@ -2649,6 +3441,46 @@
             "key": "func:tan",
             "kind": "function",
             "label": "tan"
+          },
+          {
+            "caret": 6,
+            "detail": "tarih(yıl, ay, gün)",
+            "insert": "tarih()",
+            "key": "func:tarih",
+            "kind": "function",
+            "label": "tarih"
+          },
+          {
+            "caret": 14,
+            "detail": "tarih_biçimle(tarih, biçim)",
+            "insert": "tarih_biçimle()",
+            "key": "func:tarih_biçimle",
+            "kind": "function",
+            "label": "tarih_biçimle"
+          },
+          {
+            "caret": 11,
+            "detail": "tarih_ekle(tarih, sayı, birim)",
+            "insert": "tarih_ekle()",
+            "key": "func:tarih_ekle",
+            "kind": "function",
+            "label": "tarih_ekle"
+          },
+          {
+            "caret": 12,
+            "detail": "tarih_farkı(başlangıç, bitiş, birim)",
+            "insert": "tarih_farkı()",
+            "key": "func:tarih_farkı",
+            "kind": "function",
+            "label": "tarih_farkı"
+          },
+          {
+            "caret": 11,
+            "detail": "tarih_saat(yıl, ay, gün, saat, dakika, saniye)",
+            "insert": "tarih_saat()",
+            "key": "func:tarih_saat",
+            "kind": "function",
+            "label": "tarih_saat"
           },
           {
             "caret": 6,
@@ -2683,12 +3515,44 @@
             "label": "varsayılan"
           },
           {
+            "caret": 4,
+            "detail": "yıl(tarih)",
+            "insert": "yıl()",
+            "key": "func:yıl",
+            "kind": "function",
+            "label": "yıl"
+          },
+          {
+            "caret": 11,
+            "detail": "yılın_günü(tarih)",
+            "insert": "yılın_günü()",
+            "key": "func:yılın_günü",
+            "kind": "function",
+            "label": "yılın_günü"
+          },
+          {
             "caret": 8,
             "detail": "yuvarla(sayı, basamak)",
             "insert": "yuvarla()",
             "key": "func:yuvarla",
             "kind": "function",
             "label": "yuvarla"
+          },
+          {
+            "caret": 7,
+            "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+            "insert": "@katman",
+            "key": "at:katman",
+            "kind": "variable",
+            "label": "@katman"
+          },
+          {
+            "caret": 11,
+            "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+            "insert": "@katman_adi",
+            "key": "at:katman_adi",
+            "kind": "variable",
+            "label": "@katman_adi"
           },
           {
             "caret": 5,
@@ -2978,6 +3842,15 @@
             "key": "op:gibi",
             "kind": "keyword",
             "label": "gibi"
+          },
+          {
+            "alias": "regexp_like",
+            "caret": 8,
+            "detail": "eşleşir(metin, kalıp)",
+            "insert": "eşleşir()",
+            "key": "func:eşleşir",
+            "kind": "function",
+            "label": "eşleşir"
           }
         ],
         "start": 4
@@ -3041,6 +3914,14 @@
             "key": "op:içinde",
             "kind": "keyword",
             "label": "içinde"
+          },
+          {
+            "caret": 13,
+            "detail": "tarih_biçimle(tarih, biçim)",
+            "insert": "tarih_biçimle",
+            "key": "func:tarih_biçimle",
+            "kind": "function",
+            "label": "tarih_biçimle"
           }
         ],
         "start": 0
@@ -6266,6 +7147,22 @@
           "items": [
             {
               "caret": 7,
+              "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+              "insert": "@katman",
+              "key": "at:katman",
+              "kind": "variable",
+              "label": "@katman"
+            },
+            {
+              "caret": 11,
+              "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+              "insert": "@katman_adi",
+              "key": "at:katman_adi",
+              "kind": "variable",
+              "label": "@katman_adi"
+            },
+            {
+              "caret": 7,
               "detail": "Çizimde görünen etiket (parsel no, nokta adı)",
               "insert": "$etiket",
               "key": "var:etiket",
@@ -6925,6 +7822,46 @@
               "label": "doldur"
             },
             {
+              "caret": 12,
+              "detail": "düzenli_bul(metin, kalıp)",
+              "insert": "düzenli_bul()",
+              "key": "func:düzenli_bul",
+              "kind": "function",
+              "label": "düzenli_bul"
+            },
+            {
+              "caret": 17,
+              "detail": "düzenli_değiştir(metin, kalıp, yerine)",
+              "insert": "düzenli_değiştir()",
+              "key": "func:düzenli_değiştir",
+              "kind": "function",
+              "label": "düzenli_değiştir"
+            },
+            {
+              "caret": 16,
+              "detail": "düzenli_gruplar(metin, kalıp)",
+              "insert": "düzenli_gruplar()",
+              "key": "func:düzenli_gruplar",
+              "kind": "function",
+              "label": "düzenli_gruplar"
+            },
+            {
+              "caret": 14,
+              "detail": "düzenli_parça(metin, kalıp)",
+              "insert": "düzenli_parça()",
+              "key": "func:düzenli_parça",
+              "kind": "function",
+              "label": "düzenli_parça"
+            },
+            {
+              "caret": 8,
+              "detail": "eşleşir(metin, kalıp)",
+              "insert": "eşleşir()",
+              "key": "func:eşleşir",
+              "kind": "function",
+              "label": "eşleşir"
+            },
+            {
               "caret": 7,
               "detail": "içerir(metin, aranan)",
               "insert": "içerir()",
@@ -6990,6 +7927,370 @@
             }
           ],
           "title": "Metin"
+        },
+        {
+          "group": "dates",
+          "items": [
+            {
+              "caret": 3,
+              "detail": "ay(tarih)",
+              "insert": "ay()",
+              "key": "func:ay",
+              "kind": "function",
+              "label": "ay"
+            },
+            {
+              "caret": 6,
+              "detail": "bugün()",
+              "insert": "bugün()",
+              "key": "func:bugün",
+              "kind": "function",
+              "label": "bugün"
+            },
+            {
+              "caret": 7,
+              "detail": "dakika(tarih)",
+              "insert": "dakika()",
+              "key": "func:dakika",
+              "kind": "function",
+              "label": "dakika"
+            },
+            {
+              "caret": 4,
+              "detail": "gün(tarih)",
+              "insert": "gün()",
+              "key": "func:gün",
+              "kind": "function",
+              "label": "gün"
+            },
+            {
+              "caret": 6,
+              "detail": "hafta(tarih)",
+              "insert": "hafta()",
+              "key": "func:hafta",
+              "kind": "function",
+              "label": "hafta"
+            },
+            {
+              "caret": 14,
+              "detail": "haftanın_günü(tarih)",
+              "insert": "haftanın_günü()",
+              "key": "func:haftanın_günü",
+              "kind": "function",
+              "label": "haftanın_günü"
+            },
+            {
+              "caret": 5,
+              "detail": "saat(tarih)",
+              "insert": "saat()",
+              "key": "func:saat",
+              "kind": "function",
+              "label": "saat"
+            },
+            {
+              "caret": 7,
+              "detail": "saniye(tarih)",
+              "insert": "saniye()",
+              "key": "func:saniye",
+              "kind": "function",
+              "label": "saniye"
+            },
+            {
+              "caret": 6,
+              "detail": "şimdi()",
+              "insert": "şimdi()",
+              "key": "func:şimdi",
+              "kind": "function",
+              "label": "şimdi"
+            },
+            {
+              "caret": 6,
+              "detail": "tarih(yıl, ay, gün)",
+              "insert": "tarih()",
+              "key": "func:tarih",
+              "kind": "function",
+              "label": "tarih"
+            },
+            {
+              "caret": 14,
+              "detail": "tarih_biçimle(tarih, biçim)",
+              "insert": "tarih_biçimle()",
+              "key": "func:tarih_biçimle",
+              "kind": "function",
+              "label": "tarih_biçimle"
+            },
+            {
+              "caret": 11,
+              "detail": "tarih_ekle(tarih, sayı, birim)",
+              "insert": "tarih_ekle()",
+              "key": "func:tarih_ekle",
+              "kind": "function",
+              "label": "tarih_ekle"
+            },
+            {
+              "caret": 12,
+              "detail": "tarih_farkı(başlangıç, bitiş, birim)",
+              "insert": "tarih_farkı()",
+              "key": "func:tarih_farkı",
+              "kind": "function",
+              "label": "tarih_farkı"
+            },
+            {
+              "caret": 11,
+              "detail": "tarih_saat(yıl, ay, gün, saat, dakika, saniye)",
+              "insert": "tarih_saat()",
+              "key": "func:tarih_saat",
+              "kind": "function",
+              "label": "tarih_saat"
+            },
+            {
+              "caret": 4,
+              "detail": "yıl(tarih)",
+              "insert": "yıl()",
+              "key": "func:yıl",
+              "kind": "function",
+              "label": "yıl"
+            },
+            {
+              "caret": 11,
+              "detail": "yılın_günü(tarih)",
+              "insert": "yılın_günü()",
+              "key": "func:yılın_günü",
+              "kind": "function",
+              "label": "yılın_günü"
+            }
+          ],
+          "title": "Tarih ve saat"
+        },
+        {
+          "group": "arrays",
+          "items": [
+            {
+              "caret": 5,
+              "detail": "dizi(a, b, …)",
+              "insert": "dizi()",
+              "key": "func:dizi",
+              "kind": "function",
+              "label": "dizi"
+            },
+            {
+              "caret": 15,
+              "detail": "dizi_benzersiz(dizi)",
+              "insert": "dizi_benzersiz()",
+              "key": "func:dizi_benzersiz",
+              "kind": "function",
+              "label": "dizi_benzersiz"
+            },
+            {
+              "caret": 15,
+              "detail": "dizi_birleştir(dizi, öbür)",
+              "insert": "dizi_birleştir()",
+              "key": "func:dizi_birleştir",
+              "kind": "function",
+              "label": "dizi_birleştir"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_bul(dizi, değer)",
+              "insert": "dizi_bul()",
+              "key": "func:dizi_bul",
+              "kind": "function",
+              "label": "dizi_bul"
+            },
+            {
+              "caret": 11,
+              "detail": "dizi_dilim(dizi, baş, son)",
+              "insert": "dizi_dilim()",
+              "key": "func:dizi_dilim",
+              "kind": "function",
+              "label": "dizi_dilim"
+            },
+            {
+              "caret": 10,
+              "detail": "dizi_ekle(dizi, değer)",
+              "insert": "dizi_ekle()",
+              "key": "func:dizi_ekle",
+              "kind": "function",
+              "label": "dizi_ekle"
+            },
+            {
+              "caret": 14,
+              "detail": "dizi_en_düşük(dizi)",
+              "insert": "dizi_en_düşük()",
+              "key": "func:dizi_en_düşük",
+              "kind": "function",
+              "label": "dizi_en_düşük"
+            },
+            {
+              "caret": 15,
+              "detail": "dizi_en_yüksek(dizi)",
+              "insert": "dizi_en_yüksek()",
+              "key": "func:dizi_en_yüksek",
+              "kind": "function",
+              "label": "dizi_en_yüksek"
+            },
+            {
+              "caret": 12,
+              "detail": "dizi_içerir(dizi, değer)",
+              "insert": "dizi_içerir()",
+              "key": "func:dizi_içerir",
+              "kind": "function",
+              "label": "dizi_içerir"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_ilk(dizi)",
+              "insert": "dizi_ilk()",
+              "key": "func:dizi_ilk",
+              "kind": "function",
+              "label": "dizi_ilk"
+            },
+            {
+              "caret": 11,
+              "detail": "dizi_metin(dizi, ayraç, boş_yerine)",
+              "insert": "dizi_metin()",
+              "key": "func:dizi_metin",
+              "kind": "function",
+              "label": "dizi_metin"
+            },
+            {
+              "caret": 14,
+              "detail": "dizi_ortalama(dizi)",
+              "insert": "dizi_ortalama()",
+              "key": "func:dizi_ortalama",
+              "kind": "function",
+              "label": "dizi_ortalama"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_öğe(dizi, sıra)",
+              "insert": "dizi_öğe()",
+              "key": "func:dizi_öğe",
+              "kind": "function",
+              "label": "dizi_öğe"
+            },
+            {
+              "caret": 12,
+              "detail": "dizi_sırala(dizi, artan)",
+              "insert": "dizi_sırala()",
+              "key": "func:dizi_sırala",
+              "kind": "function",
+              "label": "dizi_sırala"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_son(dizi)",
+              "insert": "dizi_son()",
+              "key": "func:dizi_son",
+              "kind": "function",
+              "label": "dizi_son"
+            },
+            {
+              "caret": 10,
+              "detail": "dizi_ters(dizi)",
+              "insert": "dizi_ters()",
+              "key": "func:dizi_ters",
+              "kind": "function",
+              "label": "dizi_ters"
+            },
+            {
+              "caret": 11,
+              "detail": "dizi_topla(dizi)",
+              "insert": "dizi_topla()",
+              "key": "func:dizi_topla",
+              "kind": "function",
+              "label": "dizi_topla"
+            },
+            {
+              "caret": 14,
+              "detail": "dizi_uzunluğu(dizi)",
+              "insert": "dizi_uzunluğu()",
+              "key": "func:dizi_uzunluğu",
+              "kind": "function",
+              "label": "dizi_uzunluğu"
+            },
+            {
+              "caret": 7,
+              "detail": "eşleme(anahtar1, değer1, anahtar2, değer2, …)",
+              "insert": "eşleme()",
+              "key": "func:eşleme",
+              "kind": "function",
+              "label": "eşleme"
+            },
+            {
+              "caret": 19,
+              "detail": "eşleme_anahtarları(eşleme)",
+              "insert": "eşleme_anahtarları()",
+              "key": "func:eşleme_anahtarları",
+              "kind": "function",
+              "label": "eşleme_anahtarları"
+            },
+            {
+              "caret": 14,
+              "detail": "eşleme_değeri(eşleme, anahtar)",
+              "insert": "eşleme_değeri()",
+              "key": "func:eşleme_değeri",
+              "kind": "function",
+              "label": "eşleme_değeri"
+            },
+            {
+              "caret": 17,
+              "detail": "eşleme_değerleri(eşleme)",
+              "insert": "eşleme_değerleri()",
+              "key": "func:eşleme_değerleri",
+              "kind": "function",
+              "label": "eşleme_değerleri"
+            },
+            {
+              "caret": 12,
+              "detail": "eşleme_ekle(eşleme, anahtar, değer)",
+              "insert": "eşleme_ekle()",
+              "key": "func:eşleme_ekle",
+              "kind": "function",
+              "label": "eşleme_ekle"
+            },
+            {
+              "caret": 14,
+              "detail": "eşleme_içerir(eşleme, anahtar)",
+              "insert": "eşleme_içerir()",
+              "key": "func:eşleme_içerir",
+              "kind": "function",
+              "label": "eşleme_içerir"
+            },
+            {
+              "caret": 11,
+              "detail": "eşleme_sil(eşleme, anahtar)",
+              "insert": "eşleme_sil()",
+              "key": "func:eşleme_sil",
+              "kind": "function",
+              "label": "eşleme_sil"
+            },
+            {
+              "caret": 9,
+              "detail": "json_oku(metin)",
+              "insert": "json_oku()",
+              "key": "func:json_oku",
+              "kind": "function",
+              "label": "json_oku"
+            },
+            {
+              "caret": 9,
+              "detail": "json_yaz(değer)",
+              "insert": "json_yaz()",
+              "key": "func:json_yaz",
+              "kind": "function",
+              "label": "json_yaz"
+            },
+            {
+              "caret": 11,
+              "detail": "metin_dizi(metin, ayraç, boş_metin)",
+              "insert": "metin_dizi()",
+              "key": "func:metin_dizi",
+              "kind": "function",
+              "label": "metin_dizi"
+            }
+          ],
+          "title": "Diziler ve eşlemeler"
         }
       ]
     },
@@ -7018,6 +8319,38 @@
           "group": "text",
           "items": [
             {
+              "caret": 12,
+              "detail": "düzenli_bul(metin, kalıp)",
+              "insert": "düzenli_bul()",
+              "key": "func:düzenli_bul",
+              "kind": "function",
+              "label": "düzenli_bul"
+            },
+            {
+              "caret": 17,
+              "detail": "düzenli_değiştir(metin, kalıp, yerine)",
+              "insert": "düzenli_değiştir()",
+              "key": "func:düzenli_değiştir",
+              "kind": "function",
+              "label": "düzenli_değiştir"
+            },
+            {
+              "caret": 16,
+              "detail": "düzenli_gruplar(metin, kalıp)",
+              "insert": "düzenli_gruplar()",
+              "key": "func:düzenli_gruplar",
+              "kind": "function",
+              "label": "düzenli_gruplar"
+            },
+            {
+              "caret": 14,
+              "detail": "düzenli_parça(metin, kalıp)",
+              "insert": "düzenli_parça()",
+              "key": "func:düzenli_parça",
+              "kind": "function",
+              "label": "düzenli_parça"
+            },
+            {
               "caret": 8,
               "detail": "uzunluk(metin)",
               "insert": "uzunluk()",
@@ -7027,6 +8360,20 @@
             }
           ],
           "title": "Metin"
+        },
+        {
+          "group": "arrays",
+          "items": [
+            {
+              "caret": 14,
+              "detail": "dizi_uzunluğu(dizi)",
+              "insert": "dizi_uzunluğu()",
+              "key": "func:dizi_uzunluğu",
+              "kind": "function",
+              "label": "dizi_uzunluğu"
+            }
+          ],
+          "title": "Diziler ve eşlemeler"
         }
       ]
     },
@@ -7065,6 +8412,22 @@
           "items": [
             {
               "caret": 7,
+              "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+              "insert": "@katman",
+              "key": "at:katman",
+              "kind": "variable",
+              "label": "@katman"
+            },
+            {
+              "caret": 11,
+              "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+              "insert": "@katman_adi",
+              "key": "at:katman_adi",
+              "kind": "variable",
+              "label": "@katman_adi"
+            },
+            {
+              "caret": 7,
               "detail": "Çizimde görünen etiket (parsel no, nokta adı)",
               "insert": "$etiket",
               "key": "var:etiket",
@@ -7724,6 +9087,46 @@
               "label": "doldur"
             },
             {
+              "caret": 12,
+              "detail": "düzenli_bul(metin, kalıp)",
+              "insert": "düzenli_bul()",
+              "key": "func:düzenli_bul",
+              "kind": "function",
+              "label": "düzenli_bul"
+            },
+            {
+              "caret": 17,
+              "detail": "düzenli_değiştir(metin, kalıp, yerine)",
+              "insert": "düzenli_değiştir()",
+              "key": "func:düzenli_değiştir",
+              "kind": "function",
+              "label": "düzenli_değiştir"
+            },
+            {
+              "caret": 16,
+              "detail": "düzenli_gruplar(metin, kalıp)",
+              "insert": "düzenli_gruplar()",
+              "key": "func:düzenli_gruplar",
+              "kind": "function",
+              "label": "düzenli_gruplar"
+            },
+            {
+              "caret": 14,
+              "detail": "düzenli_parça(metin, kalıp)",
+              "insert": "düzenli_parça()",
+              "key": "func:düzenli_parça",
+              "kind": "function",
+              "label": "düzenli_parça"
+            },
+            {
+              "caret": 8,
+              "detail": "eşleşir(metin, kalıp)",
+              "insert": "eşleşir()",
+              "key": "func:eşleşir",
+              "kind": "function",
+              "label": "eşleşir"
+            },
+            {
               "caret": 7,
               "detail": "içerir(metin, aranan)",
               "insert": "içerir()",
@@ -7789,6 +9192,370 @@
             }
           ],
           "title": "Metin"
+        },
+        {
+          "group": "dates",
+          "items": [
+            {
+              "caret": 3,
+              "detail": "ay(tarih)",
+              "insert": "ay()",
+              "key": "func:ay",
+              "kind": "function",
+              "label": "ay"
+            },
+            {
+              "caret": 6,
+              "detail": "bugün()",
+              "insert": "bugün()",
+              "key": "func:bugün",
+              "kind": "function",
+              "label": "bugün"
+            },
+            {
+              "caret": 7,
+              "detail": "dakika(tarih)",
+              "insert": "dakika()",
+              "key": "func:dakika",
+              "kind": "function",
+              "label": "dakika"
+            },
+            {
+              "caret": 4,
+              "detail": "gün(tarih)",
+              "insert": "gün()",
+              "key": "func:gün",
+              "kind": "function",
+              "label": "gün"
+            },
+            {
+              "caret": 6,
+              "detail": "hafta(tarih)",
+              "insert": "hafta()",
+              "key": "func:hafta",
+              "kind": "function",
+              "label": "hafta"
+            },
+            {
+              "caret": 14,
+              "detail": "haftanın_günü(tarih)",
+              "insert": "haftanın_günü()",
+              "key": "func:haftanın_günü",
+              "kind": "function",
+              "label": "haftanın_günü"
+            },
+            {
+              "caret": 5,
+              "detail": "saat(tarih)",
+              "insert": "saat()",
+              "key": "func:saat",
+              "kind": "function",
+              "label": "saat"
+            },
+            {
+              "caret": 7,
+              "detail": "saniye(tarih)",
+              "insert": "saniye()",
+              "key": "func:saniye",
+              "kind": "function",
+              "label": "saniye"
+            },
+            {
+              "caret": 6,
+              "detail": "şimdi()",
+              "insert": "şimdi()",
+              "key": "func:şimdi",
+              "kind": "function",
+              "label": "şimdi"
+            },
+            {
+              "caret": 6,
+              "detail": "tarih(yıl, ay, gün)",
+              "insert": "tarih()",
+              "key": "func:tarih",
+              "kind": "function",
+              "label": "tarih"
+            },
+            {
+              "caret": 14,
+              "detail": "tarih_biçimle(tarih, biçim)",
+              "insert": "tarih_biçimle()",
+              "key": "func:tarih_biçimle",
+              "kind": "function",
+              "label": "tarih_biçimle"
+            },
+            {
+              "caret": 11,
+              "detail": "tarih_ekle(tarih, sayı, birim)",
+              "insert": "tarih_ekle()",
+              "key": "func:tarih_ekle",
+              "kind": "function",
+              "label": "tarih_ekle"
+            },
+            {
+              "caret": 12,
+              "detail": "tarih_farkı(başlangıç, bitiş, birim)",
+              "insert": "tarih_farkı()",
+              "key": "func:tarih_farkı",
+              "kind": "function",
+              "label": "tarih_farkı"
+            },
+            {
+              "caret": 11,
+              "detail": "tarih_saat(yıl, ay, gün, saat, dakika, saniye)",
+              "insert": "tarih_saat()",
+              "key": "func:tarih_saat",
+              "kind": "function",
+              "label": "tarih_saat"
+            },
+            {
+              "caret": 4,
+              "detail": "yıl(tarih)",
+              "insert": "yıl()",
+              "key": "func:yıl",
+              "kind": "function",
+              "label": "yıl"
+            },
+            {
+              "caret": 11,
+              "detail": "yılın_günü(tarih)",
+              "insert": "yılın_günü()",
+              "key": "func:yılın_günü",
+              "kind": "function",
+              "label": "yılın_günü"
+            }
+          ],
+          "title": "Tarih ve saat"
+        },
+        {
+          "group": "arrays",
+          "items": [
+            {
+              "caret": 5,
+              "detail": "dizi(a, b, …)",
+              "insert": "dizi()",
+              "key": "func:dizi",
+              "kind": "function",
+              "label": "dizi"
+            },
+            {
+              "caret": 15,
+              "detail": "dizi_benzersiz(dizi)",
+              "insert": "dizi_benzersiz()",
+              "key": "func:dizi_benzersiz",
+              "kind": "function",
+              "label": "dizi_benzersiz"
+            },
+            {
+              "caret": 15,
+              "detail": "dizi_birleştir(dizi, öbür)",
+              "insert": "dizi_birleştir()",
+              "key": "func:dizi_birleştir",
+              "kind": "function",
+              "label": "dizi_birleştir"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_bul(dizi, değer)",
+              "insert": "dizi_bul()",
+              "key": "func:dizi_bul",
+              "kind": "function",
+              "label": "dizi_bul"
+            },
+            {
+              "caret": 11,
+              "detail": "dizi_dilim(dizi, baş, son)",
+              "insert": "dizi_dilim()",
+              "key": "func:dizi_dilim",
+              "kind": "function",
+              "label": "dizi_dilim"
+            },
+            {
+              "caret": 10,
+              "detail": "dizi_ekle(dizi, değer)",
+              "insert": "dizi_ekle()",
+              "key": "func:dizi_ekle",
+              "kind": "function",
+              "label": "dizi_ekle"
+            },
+            {
+              "caret": 14,
+              "detail": "dizi_en_düşük(dizi)",
+              "insert": "dizi_en_düşük()",
+              "key": "func:dizi_en_düşük",
+              "kind": "function",
+              "label": "dizi_en_düşük"
+            },
+            {
+              "caret": 15,
+              "detail": "dizi_en_yüksek(dizi)",
+              "insert": "dizi_en_yüksek()",
+              "key": "func:dizi_en_yüksek",
+              "kind": "function",
+              "label": "dizi_en_yüksek"
+            },
+            {
+              "caret": 12,
+              "detail": "dizi_içerir(dizi, değer)",
+              "insert": "dizi_içerir()",
+              "key": "func:dizi_içerir",
+              "kind": "function",
+              "label": "dizi_içerir"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_ilk(dizi)",
+              "insert": "dizi_ilk()",
+              "key": "func:dizi_ilk",
+              "kind": "function",
+              "label": "dizi_ilk"
+            },
+            {
+              "caret": 11,
+              "detail": "dizi_metin(dizi, ayraç, boş_yerine)",
+              "insert": "dizi_metin()",
+              "key": "func:dizi_metin",
+              "kind": "function",
+              "label": "dizi_metin"
+            },
+            {
+              "caret": 14,
+              "detail": "dizi_ortalama(dizi)",
+              "insert": "dizi_ortalama()",
+              "key": "func:dizi_ortalama",
+              "kind": "function",
+              "label": "dizi_ortalama"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_öğe(dizi, sıra)",
+              "insert": "dizi_öğe()",
+              "key": "func:dizi_öğe",
+              "kind": "function",
+              "label": "dizi_öğe"
+            },
+            {
+              "caret": 12,
+              "detail": "dizi_sırala(dizi, artan)",
+              "insert": "dizi_sırala()",
+              "key": "func:dizi_sırala",
+              "kind": "function",
+              "label": "dizi_sırala"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_son(dizi)",
+              "insert": "dizi_son()",
+              "key": "func:dizi_son",
+              "kind": "function",
+              "label": "dizi_son"
+            },
+            {
+              "caret": 10,
+              "detail": "dizi_ters(dizi)",
+              "insert": "dizi_ters()",
+              "key": "func:dizi_ters",
+              "kind": "function",
+              "label": "dizi_ters"
+            },
+            {
+              "caret": 11,
+              "detail": "dizi_topla(dizi)",
+              "insert": "dizi_topla()",
+              "key": "func:dizi_topla",
+              "kind": "function",
+              "label": "dizi_topla"
+            },
+            {
+              "caret": 14,
+              "detail": "dizi_uzunluğu(dizi)",
+              "insert": "dizi_uzunluğu()",
+              "key": "func:dizi_uzunluğu",
+              "kind": "function",
+              "label": "dizi_uzunluğu"
+            },
+            {
+              "caret": 7,
+              "detail": "eşleme(anahtar1, değer1, anahtar2, değer2, …)",
+              "insert": "eşleme()",
+              "key": "func:eşleme",
+              "kind": "function",
+              "label": "eşleme"
+            },
+            {
+              "caret": 19,
+              "detail": "eşleme_anahtarları(eşleme)",
+              "insert": "eşleme_anahtarları()",
+              "key": "func:eşleme_anahtarları",
+              "kind": "function",
+              "label": "eşleme_anahtarları"
+            },
+            {
+              "caret": 14,
+              "detail": "eşleme_değeri(eşleme, anahtar)",
+              "insert": "eşleme_değeri()",
+              "key": "func:eşleme_değeri",
+              "kind": "function",
+              "label": "eşleme_değeri"
+            },
+            {
+              "caret": 17,
+              "detail": "eşleme_değerleri(eşleme)",
+              "insert": "eşleme_değerleri()",
+              "key": "func:eşleme_değerleri",
+              "kind": "function",
+              "label": "eşleme_değerleri"
+            },
+            {
+              "caret": 12,
+              "detail": "eşleme_ekle(eşleme, anahtar, değer)",
+              "insert": "eşleme_ekle()",
+              "key": "func:eşleme_ekle",
+              "kind": "function",
+              "label": "eşleme_ekle"
+            },
+            {
+              "caret": 14,
+              "detail": "eşleme_içerir(eşleme, anahtar)",
+              "insert": "eşleme_içerir()",
+              "key": "func:eşleme_içerir",
+              "kind": "function",
+              "label": "eşleme_içerir"
+            },
+            {
+              "caret": 11,
+              "detail": "eşleme_sil(eşleme, anahtar)",
+              "insert": "eşleme_sil()",
+              "key": "func:eşleme_sil",
+              "kind": "function",
+              "label": "eşleme_sil"
+            },
+            {
+              "caret": 9,
+              "detail": "json_oku(metin)",
+              "insert": "json_oku()",
+              "key": "func:json_oku",
+              "kind": "function",
+              "label": "json_oku"
+            },
+            {
+              "caret": 9,
+              "detail": "json_yaz(değer)",
+              "insert": "json_yaz()",
+              "key": "func:json_yaz",
+              "kind": "function",
+              "label": "json_yaz"
+            },
+            {
+              "caret": 11,
+              "detail": "metin_dizi(metin, ayraç, boş_metin)",
+              "insert": "metin_dizi()",
+              "key": "func:metin_dizi",
+              "kind": "function",
+              "label": "metin_dizi"
+            }
+          ],
+          "title": "Diziler ve eşlemeler"
         }
       ]
     },
@@ -7828,6 +9595,20 @@
             }
           ],
           "title": "İşleçler"
+        },
+        {
+          "group": "text",
+          "items": [
+            {
+              "caret": 8,
+              "detail": "eşleşir(metin, kalıp)",
+              "insert": "eşleşir()",
+              "key": "func:eşleşir",
+              "kind": "function",
+              "label": "eşleşir"
+            }
+          ],
+          "title": "Metin"
         }
       ]
     },
@@ -8227,6 +10008,1227 @@
       ],
       "op": "exprPreview",
       "result": "''"
+    },
+    {
+      "args": [
+        "@proje_adi || ' / ' || @yok || @"
+      ],
+      "op": "exprTokens",
+      "result": [
+        {
+          "class": "variable",
+          "end": 10,
+          "start": 0
+        },
+        {
+          "class": "operator",
+          "end": 13,
+          "start": 11
+        },
+        {
+          "class": "text",
+          "end": 19,
+          "start": 14
+        },
+        {
+          "class": "operator",
+          "end": 22,
+          "start": 20
+        },
+        {
+          "class": "variable",
+          "end": 27,
+          "start": 23
+        },
+        {
+          "class": "operator",
+          "end": 30,
+          "start": 28
+        },
+        {
+          "class": "unknown",
+          "end": 32,
+          "start": 31
+        }
+      ]
+    },
+    {
+      "args": [
+        "kesişir('Yol') ve @is_nu = 1",
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": false
+        }
+      ],
+      "op": "exprCheck",
+      "result": {
+        "error": {
+          "end": 7,
+          "message": "Bu işlev başka katmanlara bakar; burada kullanılamaz.",
+          "start": 0,
+          "text": "Bu işlev başka katmanlara bakar; burada kullanılamaz."
+        },
+        "warnings": [
+          {
+            "end": 24,
+            "message": "“@is_nu” değişkeni yok, boş okunur. “@is_no” mi yazılacaktı?",
+            "start": 18,
+            "text": "19. karakterde: “@is_nu” değişkeni yok, boş okunur. “@is_no” mi yazılacaktı?"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        "kesişir('Yol') ve @is_nu = 1",
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": true
+        }
+      ],
+      "op": "exprCheck",
+      "result": {
+        "warnings": [
+          {
+            "end": 24,
+            "message": "“@is_nu” değişkeni yok, boş okunur. “@is_no” mi yazılacaktı?",
+            "start": 18,
+            "text": "19. karakterde: “@is_nu” değişkeni yok, boş okunur. “@is_no” mi yazılacaktı?"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        "@proje_adi || Ada || @katman_adi",
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "op": "exprCheck",
+      "result": {
+        "warnings": [
+          {
+            "end": 10,
+            "message": "Bu alanda yalnız @katman_adi ve @katman okunur; “@proje_adi” boş olur.",
+            "start": 0,
+            "text": "Bu alanda yalnız @katman_adi ve @katman okunur; “@proje_adi” boş olur."
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        "en_yakın('Yol', Ad || Kod) || kesişen_sayısı('Ağaç', Adaa) || topla($alan, Adaa)",
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "world": true
+        }
+      ],
+      "op": "exprCheck",
+      "result": {
+        "warnings": [
+          {
+            "end": 57,
+            "message": "Bu nesnelerde “Adaa” alanı yok, boş okunur. “Ada” mi yazılacaktı?",
+            "start": 53,
+            "text": "54. karakterde: Bu nesnelerde “Adaa” alanı yok, boş okunur. “Ada” mi yazılacaktı?"
+          },
+          {
+            "end": 79,
+            "message": "Bu nesnelerde “Adaa” alanı yok, boş okunur. “Ada” mi yazılacaktı?",
+            "start": 75,
+            "text": "76. karakterde: Bu nesnelerde “Adaa” alanı yok, boş okunur. “Ada” mi yazılacaktı?"
+          }
+        ]
+      }
+    },
+    {
+      "args": [
+        "topla($alan, Ada) / @katsayı + yıl(@tarih)",
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": true
+        }
+      ],
+      "op": "exprCheck",
+      "result": {
+        "warnings": []
+      }
+    },
+    {
+      "args": [
+        "@pro",
+        4,
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": false
+        },
+        false
+      ],
+      "op": "exprComplete",
+      "result": {
+        "end": 4,
+        "items": [
+          {
+            "caret": 10,
+            "detail": "'Kızılay Etüdü' · Projenin adı",
+            "insert": "@proje_adi",
+            "key": "at:proje_adi",
+            "kind": "variable",
+            "label": "@proje_adi"
+          }
+        ],
+        "start": 0
+      }
+    },
+    {
+      "args": [
+        "kesiş",
+        5,
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": false
+        },
+        true
+      ],
+      "op": "exprComplete",
+      "result": null
+    },
+    {
+      "args": [
+        "kesiş",
+        5,
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": true
+        },
+        true
+      ],
+      "op": "exprComplete",
+      "result": {
+        "end": 5,
+        "items": [
+          {
+            "caret": 15,
+            "detail": "kesişen_sayısı(katman, uzaklık, koşul)",
+            "insert": "kesişen_sayısı()",
+            "key": "func:kesişen_sayısı",
+            "kind": "function",
+            "label": "kesişen_sayısı"
+          },
+          {
+            "caret": 11,
+            "detail": "kesişenler(katman, ifade, uzaklık, koşul)",
+            "insert": "kesişenler()",
+            "key": "func:kesişenler",
+            "kind": "function",
+            "label": "kesişenler"
+          },
+          {
+            "caret": 14,
+            "detail": "kesişim_alanı(katman, koşul)",
+            "insert": "kesişim_alanı()",
+            "key": "func:kesişim_alanı",
+            "kind": "function",
+            "label": "kesişim_alanı"
+          },
+          {
+            "caret": 17,
+            "detail": "kesişim_uzunluğu(katman, koşul)",
+            "insert": "kesişim_uzunluğu()",
+            "key": "func:kesişim_uzunluğu",
+            "kind": "function",
+            "label": "kesişim_uzunluğu"
+          },
+          {
+            "caret": 8,
+            "detail": "kesişir(katman, uzaklık, koşul)",
+            "insert": "kesişir()",
+            "key": "func:kesişir",
+            "kind": "function",
+            "label": "kesişir"
+          }
+        ],
+        "start": 0
+      }
+    },
+    {
+      "args": [
+        "at:is_no",
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": false
+        }
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [],
+        "args": [],
+        "description": "Projenin değişkeni (İş numarası). Şimdiki değeri: '2026/41'.",
+        "examples": [
+          {
+            "expression": "@is_no",
+            "result": "değişkenin değeri"
+          }
+        ],
+        "group": "Değişkenler",
+        "key": "at:is_no",
+        "kind": "variable",
+        "signature": "@is_no",
+        "title": "@is_no"
+      }
+    },
+    {
+      "args": [
+        "at:yok",
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": false
+        }
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [],
+        "args": [],
+        "description": "“@yok” değişkeni yok; değeri boş okunur. Projenin değişkenleri Proje ayarları › Değişkenler'dedir.",
+        "examples": [
+          {
+            "expression": "@yok",
+            "result": "değişkenin değeri"
+          }
+        ],
+        "group": "Değişkenler",
+        "key": "at:yok",
+        "kind": "variable",
+        "signature": "@yok",
+        "title": "@yok"
+      }
+    },
+    {
+      "args": [
+        "@katman_adi || ''",
+        3,
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": false
+        }
+      ],
+      "op": "exprHelpAt",
+      "result": {
+        "aliases": [],
+        "args": [],
+        "description": "Değerlendirilen nesnenin katmanının adı ($katman): nesneden nesneye değişir.",
+        "examples": [
+          {
+            "expression": "@katman_adi",
+            "result": "değişkenin değeri"
+          }
+        ],
+        "group": "Değişkenler",
+        "key": "at:katman_adi",
+        "kind": "variable",
+        "signature": "@katman_adi",
+        "title": "@katman_adi"
+      }
+    },
+    {
+      "args": [
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": true
+        },
+        "kes"
+      ],
+      "op": "exprBuilderCatalog",
+      "result": [
+        {
+          "group": "spatial",
+          "items": [
+            {
+              "caret": 15,
+              "detail": "kesişen_sayısı(katman, uzaklık, koşul)",
+              "insert": "kesişen_sayısı()",
+              "key": "func:kesişen_sayısı",
+              "kind": "function",
+              "label": "kesişen_sayısı"
+            },
+            {
+              "caret": 11,
+              "detail": "kesişenler(katman, ifade, uzaklık, koşul)",
+              "insert": "kesişenler()",
+              "key": "func:kesişenler",
+              "kind": "function",
+              "label": "kesişenler"
+            },
+            {
+              "caret": 14,
+              "detail": "kesişim_alanı(katman, koşul)",
+              "insert": "kesişim_alanı()",
+              "key": "func:kesişim_alanı",
+              "kind": "function",
+              "label": "kesişim_alanı"
+            },
+            {
+              "caret": 17,
+              "detail": "kesişim_uzunluğu(katman, koşul)",
+              "insert": "kesişim_uzunluğu()",
+              "key": "func:kesişim_uzunluğu",
+              "kind": "function",
+              "label": "kesişim_uzunluğu"
+            },
+            {
+              "caret": 8,
+              "detail": "kesişir(katman, uzaklık, koşul)",
+              "insert": "kesişir()",
+              "key": "func:kesişir",
+              "kind": "function",
+              "label": "kesişir"
+            }
+          ],
+          "title": "Mekânsal"
+        }
+      ]
+    },
+    {
+      "args": [
+        {
+          "fields": [
+            {
+              "name": "Ada",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "12 nesnede var.",
+              "name": "Parsel",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "name": "Nitelik",
+              "source": "attribute",
+              "type": "text"
+            },
+            {
+              "description": "Tapudaki yüzölçümü (m²)",
+              "name": "Tapu alanı",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Kat",
+              "source": "user",
+              "type": "number"
+            },
+            {
+              "name": "Onaylı",
+              "source": "user",
+              "type": "bool"
+            },
+            {
+              "name": "ve",
+              "source": "attribute",
+              "type": "text"
+            }
+          ],
+          "variables": [
+            {
+              "description": "İş numarası",
+              "name": "is_no",
+              "value": "2026/41"
+            },
+            {
+              "description": "Projenin değişkeni (sayı)",
+              "name": "Katsayı",
+              "value": 1.5
+            },
+            {
+              "description": "Projenin adı",
+              "name": "proje_adi",
+              "value": "Kızılay Etüdü"
+            },
+            {
+              "description": "Bugünün tarihi",
+              "name": "tarih",
+              "value": "2026-10-10"
+            }
+          ],
+          "world": false
+        },
+        "@"
+      ],
+      "op": "exprBuilderCatalog",
+      "result": [
+        {
+          "group": "variables",
+          "items": [
+            {
+              "caret": 6,
+              "detail": "'2026/41' · İş numarası",
+              "insert": "@is_no",
+              "key": "at:is_no",
+              "kind": "variable",
+              "label": "@is_no"
+            },
+            {
+              "caret": 7,
+              "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+              "insert": "@katman",
+              "key": "at:katman",
+              "kind": "variable",
+              "label": "@katman"
+            },
+            {
+              "caret": 11,
+              "detail": "Değerlendirilen nesnenin katmanının adı ($katman)",
+              "insert": "@katman_adi",
+              "key": "at:katman_adi",
+              "kind": "variable",
+              "label": "@katman_adi"
+            },
+            {
+              "caret": 8,
+              "detail": "1.5 · Projenin değişkeni (sayı)",
+              "insert": "@Katsayı",
+              "key": "at:Katsayı",
+              "kind": "variable",
+              "label": "@Katsayı"
+            },
+            {
+              "caret": 10,
+              "detail": "'Kızılay Etüdü' · Projenin adı",
+              "insert": "@proje_adi",
+              "key": "at:proje_adi",
+              "kind": "variable",
+              "label": "@proje_adi"
+            },
+            {
+              "caret": 6,
+              "detail": "'2026-10-10' · Bugünün tarihi",
+              "insert": "@tarih",
+              "key": "at:tarih",
+              "kind": "variable",
+              "label": "@tarih"
+            }
+          ],
+          "title": "Değişkenler"
+        }
+      ]
+    },
+    {
+      "args": [
+        "tarih_ekle(Tarih, 1, ",
+        21
+      ],
+      "op": "exprSignature",
+      "result": {
+        "active": 2,
+        "args": [
+          {
+            "description": "Tarih ya da tarih ve saat",
+            "end": 16,
+            "name": "tarih",
+            "optional": false,
+            "start": 11
+          },
+          {
+            "description": "Eklenecek süre",
+            "end": 22,
+            "name": "sayı",
+            "optional": false,
+            "start": 18
+          },
+          {
+            "description": "'yıl', 'ay', 'hafta', 'gün', 'saat', 'dakika' ya da 'saniye'",
+            "end": 29,
+            "name": "birim",
+            "optional": false,
+            "start": 24
+          }
+        ],
+        "description": "Tarihe süre ekler (eksi sayı çıkarır). Ay ve yıl takvimle: ayın son gününü aşan gün o ayın son günü olur. Tarihe tam gün eklenince tarih kalır",
+        "key": "func:tarih_ekle",
+        "name": "tarih_ekle",
+        "open": 10,
+        "signature": "tarih_ekle(tarih, sayı, birim)"
+      }
     }
   ],
   "fields": [

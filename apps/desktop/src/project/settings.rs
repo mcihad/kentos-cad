@@ -19,7 +19,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Dialog, overlay};
 use kentos_ui::{label, style};
 
-use kentos_project::survey_form;
+use kentos_project::{survey_form, variable_form};
 
 use super::custom_crs::{self, Outcome, Target};
 use super::{Event as ProjectEvent, Window, group, message, modes, setting};
@@ -38,15 +38,18 @@ pub enum Section {
     Units,
     /// Ölçme: the survey settings (docs/adr/0169 §3; survey.rs).
     Survey,
+    /// Değişkenler: the project's `@` values (docs/adr/0214 §4; variables.rs).
+    Variables,
 }
 
 impl Section {
-    const ALL: [Section; 5] = [
+    const ALL: [Section; 6] = [
         Section::General,
         Section::Scale,
         Section::Crs,
         Section::Units,
         Section::Survey,
+        Section::Variables,
     ];
 
     fn label(self) -> &'static str {
@@ -56,6 +59,7 @@ impl Section {
             Section::Crs => "Koordinat sistemi",
             Section::Units => "Birimler ve hassasiyet",
             Section::Survey => "Ölçme",
+            Section::Variables => "Değişkenler",
         }
     }
 
@@ -68,6 +72,7 @@ impl Section {
             Section::Crs => Icon::Globe,
             Section::Units => Icon::Ruler,
             Section::Survey => crate::icons::from_web(Some("surveyPolar")),
+            Section::Variables => crate::icons::from_web(Some("projectVariables")),
         }
     }
 
@@ -85,6 +90,9 @@ impl Section {
             }
             Section::Survey => {
                 "Saha ölçülerinin indirgenmesindeki katsayı, zemin değerlerinin yüksekliği ve karnenin denetlendiği toleranslar."
+            }
+            Section::Variables => {
+                "Projenin ifadelerde @ad olarak okunan değerleri: iş numarası, idare, katsayı, teslim tarihi … Projeyle saklanır, projeyi açan herkes aynısını okur."
             }
         }
     }
@@ -165,6 +173,8 @@ pub struct State {
     reduce: bool,
     /// Ölçek ve yazılar' scale denominator as typed (docs/adr/0205 §4).
     scale_typed: String,
+    /// Değişkenler' rows as typed (docs/adr/0214 §4; variables.rs).
+    variables: Vec<variable_form::Row>,
 }
 
 #[derive(Debug, Clone)]
@@ -209,6 +219,10 @@ pub enum Event {
     Grid(crate::grids::Event),
     /// Ölçme: a field typed (docs/adr/0169 §3).
     Survey(survey_form::Field, String),
+    /// Değişkenler: a row changed (docs/adr/0214 §4).
+    Variable(usize, super::variables::Edit),
+    /// Değişken ekle: a new row, the keyboard to its name.
+    AddVariable,
     /// Uzunlukları projeksiyona indir (docs/adr/0171 §4).
     Reduce(bool),
     /// The shown section's own values back to their defaults (the web's
@@ -244,6 +258,7 @@ impl State {
             survey: survey_form::texts(doc.settings().survey.as_ref(), doc.settings().angle_unit),
             reduce: doc.settings().reduces_to_grid(),
             scale_typed: kentos_processing::text::js_number(doc.settings().plot_scale),
+            variables: variable_form::rows(&doc.settings().variables),
         }
     }
 
@@ -262,6 +277,11 @@ impl State {
     /// Whether Ölçme has a text to put right: Kaydet waits.
     fn survey_blocked(&self) -> bool {
         survey_form::read(&self.survey, self.settings.angle_unit).blocked()
+    }
+
+    /// Whether a variable's row has something to put right: Kaydet waits.
+    fn variables_blocked(&self) -> bool {
+        variable_form::read(&self.variables).blocked()
     }
 
     /// The draft's system: its SRID, and whether it is the project's own definition.
@@ -402,10 +422,25 @@ impl App {
                 );
             }
             Event::DrawingUnit(u) => d.drawing_unit = (u != DrawingUnit::M).then_some(u),
+            // The draft takes the rows that hold (docs/adr/0214 §4).
+            Event::Variable(i, edit) => {
+                super::variables::edit(&mut s.variables, i, edit);
+                d.variables = variable_form::read(&s.variables).variables;
+            }
+            Event::AddVariable => {
+                s.variables.push(variable_form::new_row(&s.variables));
+                d.variables = variable_form::read(&s.variables).variables;
+                let id = super::variables::name_id(s.variables.len() - 1);
+                return Task::batch([
+                    iced::widget::operation::focus(id.clone()),
+                    iced::widget::operation::select_all(id),
+                ]);
+            }
             Event::ResetSection => {
                 reset_section(s.section, d);
                 s.survey = survey_form::texts(d.survey.as_ref(), d.angle_unit);
                 s.reduce = d.reduces_to_grid();
+                s.variables = variable_form::rows(&d.variables);
             }
             Event::OpenApp | Event::Save => {}
         }
@@ -483,8 +518,8 @@ impl App {
         let (Some(Window::Settings(s)), Some(doc)) = (&self.project, &mut self.document) else {
             return;
         };
-        // A datum choice or an Ölçme field with something to put right is not saved (its button waits too).
-        if s.choices.blocked() || s.survey_blocked() {
+        // A datum choice, an Ölçme field or a variable with something to put right is not saved (its button waits too).
+        if s.choices.blocked() || s.survey_blocked() || s.variables_blocked() {
             return;
         }
         let name = s.name.trim();
@@ -607,6 +642,13 @@ impl App {
                 |f, t| event(Event::Survey(f, t)),
                 |on| event(Event::Reduce(on)),
             ),
+            // The built-in values as they are now: the draft's name, system and scale.
+            Section::Variables => super::variables::view(
+                &s.variables,
+                self.variables_of(&s.name, &s.settings),
+                |i, e| event(Event::Variable(i, e)),
+                event(Event::AddVariable),
+            ),
         };
         let content = column![
             text(s.section.label())
@@ -648,10 +690,11 @@ impl App {
                     "Vazgeç",
                     Some(message(ProjectEvent::Close)),
                 ))
-                // A datum choice or an Ölçme field with something to put right keeps it waiting.
+                // A datum choice, an Ölçme field or a variable with something to put right keeps it waiting.
                 .action(words::primary(
                     "Kaydet",
-                    (!s.choices.blocked() && !s.survey_blocked()).then(|| event(Event::Save)),
+                    (!s.choices.blocked() && !s.survey_blocked() && !s.variables_blocked())
+                        .then(|| event(Event::Save)),
                 ))
                 .width(900.0)
                 .max_height(760.0),
@@ -1113,6 +1156,7 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
             }
         }
         Section::Survey => d.survey = None,
+        Section::Variables => d.variables = Vec::new(),
         Section::Crs => {}
     }
 }

@@ -1,0 +1,84 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Değişkenler",
+  "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "variables": [
+      {
+        "name": "is_no",
+        "label": "İş numarası",
+        "kind": "text",
+        "value": "2026/41"
+      },
+      {
+        "name": "Katsayı",
+        "kind": "number",
+        "value": 1.5
+      },
+      {
+        "name": "onaylı",
+        "kind": "bool",
+        "value": true
+      },
+      {
+        "name": "teslim",
+        "label": "Teslim tarihi",
+        "kind": "date",
+        "value": "2026-12-31"
+      },
+      {
+        "name": "musteri",
+        "kind": "text"
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "N1"
+      },
+      "p": {
+        "x": 500010.0,
+        "y": 4400020.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a1-6666-7000-8000-000000003701"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

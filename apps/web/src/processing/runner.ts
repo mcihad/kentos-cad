@@ -2,7 +2,10 @@ import { Signal } from '../core/signal';
 import { foldTurkish } from '../core/text';
 import type { Entity, NewEntity } from '../model/entities';
 import { entityObjects, type BuilderObjects } from '../model/expression/builderObjects';
-import { compileExpression, previewExpression } from '../model/expression/expression';
+import { compileExpression, previewExpression, type ExprLayers } from '../model/expression/expression';
+import { exprLayers, worldObjects } from '../model/expression/layers';
+import { leftOut } from '../model/layerFilter';
+import { documentVariables, type ExpressionVariable } from '../model/projectVariables';
 import { crsSettings, datumChoices, ownSystem } from '../model/projectCrs';
 import { resolveFeatures, summarizeFeatures, type FeatureHost, type InputSummary } from './features';
 import { withObjects } from './geometry';
@@ -196,7 +199,7 @@ export class ProcessingRunner {
     const def = tool.parameters.find((p) => p.name === name);
     if (def?.type !== 'expression') return null;
     const src = String(values[name] ?? '').trim();
-    const r = src ? compileExpression(src) : null;
+    const r = src ? compileExpression(src, { variables: this.variables(), world: true }) : null;
     if (!r?.ok) return null;
     const input = tool.parameters.find((p) => p.name === (def.of ?? ''));
     if (input?.type !== 'features' || !values[input.name]) return null;
@@ -207,9 +210,35 @@ export class ProcessingRunner {
     const layerName = (id: string) => layers.get(id)?.name ?? id;
     // Evaluated in the drawing's store the host keeps, else in a store of the previewed objects: the geometry values are read there.
     const geometry = this.host.geometry;
+    // The layers the calls to other objects look at (docs/adr/0214 §3); a store of their own has their objects too.
+    const looked = this.layers();
     return geometry
-      ? previewExpression(r.expr, set.entities, def.returns, layerName, undefined, geometry)
-      : withObjects(set.entities, (s) => previewExpression(r.expr, set.entities, def.returns, layerName, undefined, s));
+      ? previewExpression(r.expr, set.entities, def.returns, layerName, undefined, geometry, looked)
+      : withObjects([...set.entities, ...worldObjects(r.expr.world, set.entities, looked)], (s) =>
+          previewExpression(r.expr, set.entities, def.returns, layerName, undefined, s, looked),
+        );
+  }
+
+  /** The `@` values the run's expressions read (docs/adr/0214 §2.3), now. */
+  variables(): readonly ExpressionVariable[] {
+    return this.host.variables?.() ?? documentVariables(this.host.doc, new Date(), '');
+  }
+
+  /**
+   * The drawing's layers as the calls to other objects read them (docs/adr/0214 §3): a layer's filter leaves its
+   * objects out here as it does of the inputs (docs/adr/0211 §1), asked once, when a layer is first read.
+   */
+  private layers(): ExprLayers {
+    const doc = this.host.doc;
+    let out: Set<number> | null = null;
+    return exprLayers(
+      doc.layers.leaves().map((l) => [l.id, l.name] as const),
+      (id) => {
+        out ??= leftOut(doc);
+        const left = out;
+        return left.size ? doc.byLayer(id).filter((e) => !left.has(e.id)) : doc.byLayer(id);
+      },
+    );
   }
 
   /**
@@ -226,7 +255,12 @@ export class ProcessingRunner {
     if (onlyRasters(set.entities)) return undefined;
     const layers = this.host.doc.layers;
     // The drawing's store the host keeps gives every geometry value ($genişlik, $merkez_y …); the measures are the fallback.
-    return entityObjects(set.entities, (id) => layers.get(id)?.name ?? id, { geometry: this.host.geometry, measures: (list) => this.measures(list) });
+    return entityObjects(set.entities, (id) => layers.get(id)?.name ?? id, {
+      geometry: this.host.geometry,
+      measures: (list) => this.measures(list),
+      context: { variables: this.variables(), world: true },
+      layers: this.layers(),
+    });
   }
 
   /** The expressions' geometry values of these objects: from the drawing's store the host keeps, else from a store of their own. */
@@ -351,6 +385,8 @@ export class ProcessingRunner {
     }
     target = executor.target;
     const layers = this.host.doc.layers;
+    // What the layers' filters leave out (docs/adr/0211 §1): the calls to other layers do not read them (docs/adr/0214 §3).
+    const out = leftOut(this.host.doc);
     const job: RunJob = {
       toolId: tool.id,
       values: jobValues,
@@ -360,6 +396,8 @@ export class ProcessingRunner {
       fields: layers.leaves().flatMap((l) => (l.fields?.length ? [[l.id, l.fields] as const] : [])),
       crs: this.projectCrs(),
       project: this.projectInfo(),
+      variables: this.variables(),
+      ...(out.size ? { leftOut: [...out] } : {}),
     };
 
     this.canceled = false;

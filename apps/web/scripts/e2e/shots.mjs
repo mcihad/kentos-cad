@@ -32,7 +32,9 @@
 // dönüşümleri: seven parameters with a translation still to type, a grid of the library, EPSG's way); definitions
 // (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
 // chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points);
-// survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); fieldbook (Karne editörü: a GSI
+// survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); variables (Proje ayarları'
+// Değişkenler: none, four with the built-in values, a row typed wrong; the expression builder's `@` values and a call to
+// other layers, docs/adr/0214); fieldbook (Karne editörü: a GSI
 // book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both);
 // gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system);
 // fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates); ground (docs/adr/0171 §4:
@@ -2828,6 +2830,9 @@ const sheetAfterHelmert = async (ui) => {
 // Çevreleyenden bilgi al), Özet istatistik with its table under the form, Anahtarla birleştir with the owners' CSV and
 // its fields' list open.
 const QUERIES = readFileSync(new URL('../../../../fixtures/processing/v1/queries.kcad', import.meta.url), 'utf8');
+function QUERIES_TEXT() {
+  return QUERIES;
+}
 const OWNERS_ROWS = [
   ['Parsel', 'Malik', 'Hisse'],
   ['1', 'Ayşe Yılmaz', '1/2'],
@@ -4474,6 +4479,67 @@ SCENES.survey = [
   { id: 'survey-problems', open: (ui) => surveyOpen(ui, SURVEY_WRONG), close: (ui) => ui.escapeAll(3) },
   // The ground height beyond its bounds, the Zemin group in view (docs/adr/0171 §2).
   { id: 'survey-ground', open: (ui) => surveyOpen(ui, [['Ortalama elipsoit yüksekliği', '9500']]), close: (ui) => ui.escapeAll(3) },
+];
+
+/**
+ * Proje ayarları › Değişkenler and the language's `@` values (docs/adr/0214 §4): no variable yet; four of them with the
+ * built-in values under them; a new row typed wrong (a name that is a built-in's, a number that is none), Kaydet
+ * waiting; and the expression builder opened from Öznitelik hesapla on fixtures/processing/v1/queries.kcad, its tree
+ * on Değişkenler and an expression reading `@is_no` and the trees of the Ağaç layer inside each parcel. The desktop's
+ * are `project::variables::tests::screens` (degiskenler-*).
+ */
+const PROJECT_VARIABLES = [
+  { name: 'is_no', label: 'İş numarası', kind: 'text', value: '2026/41' },
+  { name: 'idare', label: 'İdare', kind: 'text', value: 'Çankaya Belediyesi' },
+  { name: 'katsayi', label: 'Emsal katsayısı', kind: 'number', value: 1.5 },
+  { name: 'teslim', label: 'Teslim tarihi', kind: 'date', value: '2026-11-30' },
+  { name: 'onayli', label: 'Onaylı', kind: 'bool', value: true },
+];
+const variablesOpen = async (ui, variables) => {
+  await ui.eval(`window.kentos.doc.settings.assign({ variables: ${JSON.stringify(variables)} })`);
+  await ui.eval(`import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'variables'))`);
+  await ui.waitFor(`!!document.querySelector('.dialog--settings .settings__title')`);
+  await ui.sleep(250);
+};
+const variablesClose = async (ui) => (await ui.escapeAll(3), await ui.eval(`window.kentos.doc.settings.assign({ variables: [] })`));
+const builderVariables = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(QUERIES_TEXT())}, null))) throw new Error('queries.kcad did not load');
+    k.doc.settings.assign({ variables: ${JSON.stringify(PROJECT_VARIABLES)} });
+    k.view.zoomExtents();
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+  await ui.eval(openTool('attributes.calculate', { input: { scope: 'layer', layerId: 'parsel' }, field: 'Ağaç', value: "@is_no || ' · ' || kesişen_sayısı('Ağaç') || ' ağaç, en yakın yol ' || en_yakın('Yol', Ad)" }));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  await ui.clickSel('.dialog--ptool .exprb-open');
+  await ui.waitFor(`!!document.querySelector('.exprb')`, 8000);
+  await ui.sleep(300);
+  // The tree on Değişkenler (the `@` values with theirs) and the help of the first `@`.
+  await ui.eval(`(() => { const s = document.querySelector('.exprb input[aria-label="İfade öğesi ara"]'); if (s) { s.value = '@'; s.dispatchEvent(new Event('input', { bubbles: true })); } })()`);
+  await ui.sleep(300);
+};
+SCENES.variables = [
+  { id: 'degiskenler-bos', open: (ui) => variablesOpen(ui, []), close: variablesClose },
+  { id: 'degiskenler-dolu', open: (ui) => variablesOpen(ui, PROJECT_VARIABLES), close: variablesClose },
+  {
+    id: 'degiskenler-sorun',
+    open: async (ui) => {
+      await variablesOpen(ui, PROJECT_VARIABLES.slice(0, 3));
+      await ui.clickText('.dialog--settings .btn', 'Değişken ekle');
+      await ui.sleep(150);
+      await ui.clickSel('[aria-label="4. değişkenin adı"]');
+      await ui.eval(`(() => { const i = document.querySelector('[aria-label="4. değişkenin adı"]'); i.value = 'proje_adı'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+      await ui.clickSel('[aria-label="3. değişkenin değeri"]');
+      await ui.eval(`(() => { const i = document.querySelector('[aria-label="3. değişkenin değeri"]'); i.value = 'bir buçuk'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+      await ui.sleep(250);
+    },
+    close: variablesClose,
+  },
+  { id: 'ifade-degiskenler', open: builderVariables, close: async (ui) => (await ui.escapeAll(4), await ui.eval(`window.kentos.doc.settings.assign({ variables: [] })`)) },
 ];
 
 /**

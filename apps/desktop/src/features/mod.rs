@@ -299,7 +299,9 @@ impl App {
         } else {
             Default::default()
         };
-        let (passes, filter_error) = filter_passes(&panel.filter, &entities, model);
+        let (passes, filter_error) = filter_passes(&panel.filter, &entities, model, &|| {
+            self.expression_variables()
+        });
         let fields = layer
             .as_deref()
             .and_then(|l| model.layers().get(l))
@@ -720,17 +722,28 @@ fn write_attribute(
 }
 
 /// Which objects the expression filter keeps (none: no filter), and why it
-/// cannot be read; a filter that cannot be read keeps none.
+/// cannot be read; a filter that cannot be read keeps none. The filter is
+/// evaluated when asked, so it reads the project's `@` values (docs/adr/0214
+/// §2.3): `variables` gives them, asked only when the filter has a `@`.
 fn filter_passes(
     filter: &str,
     entities: &[&Entity],
     model: &kentos_domain::Document,
+    variables: &dyn Fn() -> Vec<kentos_expression::Variable>,
 ) -> (Option<Vec<bool>>, Option<String>) {
     let source = js_trim(filter);
     if source.is_empty() {
         return (None, None);
     }
-    match kentos_expression::compile(source) {
+    let schema = kentos_expression::Schema {
+        variables: if source.contains('@') {
+            variables()
+        } else {
+            Vec::new()
+        },
+        ..kentos_expression::Schema::default()
+    };
+    match kentos_expression::compile_with(source, &schema) {
         Err(e) => (Some(vec![false; entities.len()]), Some(e.text())),
         Ok(expr) => {
             let layer_name = |id: &str| {

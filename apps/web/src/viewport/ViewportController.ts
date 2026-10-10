@@ -30,7 +30,7 @@ import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTrac
 import { ViewNavigation } from './viewHistory';
 import { NavigationCards } from './navigationCards';
 import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
-import type { ExprColumnData } from '../wasm/core';
+import type { ExprColumnData, ExprWorldTable } from '../wasm/core';
 import { extensionAlong, extensionAt, LABELS_HIDDEN, LABELS_KEEP, LABELS_UNPLACED, PickIndex, type Extension, type LabelHit, type PolygonMode, type SnapHit, type SnapKind } from './picking';
 import { LABEL_SHOWN_STRIDE } from './storeRecords';
 import { screenScale, snapInRange } from './snapRange';
@@ -553,6 +553,11 @@ export class ViewportController {
   /** An expression over these objects in the drawing's store, their geometry values read there: processing's previews. */
   evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData {
     return this.picker.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
+  }
+
+  /** The same in a context, with the layers its calls to other objects look at (docs/adr/0214). */
+  evaluateExpressionIn(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData {
+    return this.picker.evaluateExpressionIn(source, context, ids, texts, textLens, numbers, scale, want, world);
   }
 
   /** Trim `target` at `at` against the chosen boundaries, or every visible edge in view. */

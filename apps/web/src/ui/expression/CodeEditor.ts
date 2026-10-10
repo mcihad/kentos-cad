@@ -9,6 +9,7 @@ import {
   type ExprCompletion,
   type ExprField,
   type ExprItem,
+  type Fields,
 } from '../../model/expression/builder';
 import { h, overlayRoot } from '../dom';
 import { KIND_STYLE, TOKEN_STYLE } from './highlight';
@@ -26,6 +27,8 @@ export interface CodeEditorOptions {
   readonly value: string;
   readonly label: string;
   readonly fields: () => readonly ExprField[];
+  /** What the services know of the objects (fields, `@` values, other layers); absent: the fields. */
+  readonly schema?: () => Fields;
   /** The text changed (typed, completed or inserted). */
   readonly onChange: (source: string, check: ExprCheck) => void;
   /** The cursor moved (or the text changed under it). */
@@ -74,7 +77,7 @@ export class CodeEditor {
     d.add(listen(this.list, 'mousedown', (e) => e.preventDefault()));
     d.add(() => this.list.remove());
     // Painted at once; the owner asks for the first check (`checked`) when it is built.
-    this.check = exprCheck(this.input.value, opts.fields());
+    this.check = exprCheck(this.input.value, (opts.schema ?? opts.fields)());
     this.repaint();
   }
 
@@ -140,7 +143,7 @@ export class CodeEditor {
   }
 
   private changed(): void {
-    this.check = exprCheck(this.input.value, this.opts.fields());
+    this.check = exprCheck(this.input.value, (this.opts.schema ?? this.opts.fields)());
     this.bracket = null;
     this.repaint();
     this.opts.onChange(this.input.value, this.check);
@@ -219,7 +222,7 @@ export class CodeEditor {
   // ── Completion ───────────────────────────────────────────────────
 
   private complete(explicit: boolean): void {
-    const c = exprComplete(this.input.value, this.input.selectionStart, this.opts.fields(), explicit);
+    const c = exprComplete(this.input.value, this.input.selectionStart, (this.opts.schema ?? this.opts.fields)(), explicit);
     if (!c || !c.items.length) {
       this.close();
       return;

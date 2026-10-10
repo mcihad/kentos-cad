@@ -134,6 +134,14 @@ SCHEMA_WITH_FILTERS = 35
 # Schema 36: schema 35 and the label engine (docs/adr/0212 §2): a label style's engine fields, a layer style's
 # `labels`, an object's `labelPins`.
 SCHEMA_WITH_LABELS = 36
+# Schema 37: schema 36 and the settings' `variables`, the project's `@` values (docs/adr/0214 §2.3).
+SCHEMA_WITH_VARIABLES = 37
+# A project's variables' bounds (kentos_contracts::variables).
+VARIABLES_MAX = 200
+VARIABLE_NAME_MAX = 64
+VARIABLE_TEXT_MAX = 4000
+VARIABLE_KINDS = ("text", "number", "bool", "date")
+BUILTIN_VARIABLES = ("proje_adi", "koordinat_sistemi", "epsg", "olcek", "tarih", "simdi", "katman_adi", "katman", "kullanici")
 # The label engine's bounds (kentos_contracts::labels).
 LABEL_CLASSES_MAX = 64
 LABEL_EXPRESSION_MAX = 10_000
@@ -262,7 +270,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -673,6 +681,54 @@ def network_problem(n):
             return "Alan maliyeti hız almaz; birimi kırpılmış ve en çok 12 karakter olmalı."
     if bad_expression(n.get("closed")):
         return "Kapalı kenarlar ifadesi boş ya da uzun."
+    return None
+
+
+def variable_key(name):
+    """A variable's name as names are compared: case and the Turkish letters' marks aside (ı and i alike)."""
+    marks = {"ı": "I", "i": "I", "İ": "I", "ğ": "G", "Ğ": "G", "ü": "U", "Ü": "U", "ş": "S", "Ş": "S", "ö": "O", "Ö": "O", "ç": "C", "Ç": "C"}
+    return "".join(marks.get(c, c.upper()) for c in name)
+
+
+def is_iso_date(t):
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", t)
+    if not m:
+        return False
+    y, mo, d = map(int, m.groups())
+    if not (1 <= y <= 9999 and 1 <= mo <= 12):
+        return False
+    leap = y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)
+    days = [31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1]
+    return 1 <= d <= days
+
+
+def variables_problem(list_):
+    """A project's variables (kentos_contracts::variables::variables_problem): at most 200; a name a letter or _ then
+    letters, digits and _, at most 64 characters, no built-in one's, each once; a value of its kind."""
+    if len(list_) > VARIABLES_MAX:
+        return f"projede {len(list_)} değişken var; en çok {VARIABLES_MAX}"
+    seen = set()
+    builtins = {variable_key(b) for b in BUILTIN_VARIABLES}
+    for v in list_:
+        name = v["name"]
+        if not name:
+            return "değişkenin adı boş"
+        if len(name) > VARIABLE_NAME_MAX:
+            return f"“{name}” değişken adı {VARIABLE_NAME_MAX} karakterden uzun"
+        if not (name[0].isalpha() or name[0] == "_") or not all(c.isalnum() or c == "_" for c in name):
+            return f"“{name}” değişken adı olamaz"
+        if variable_key(name) in builtins:
+            return f"@{name} yerleşik bir değişkendir"
+        value, kind = v.get("value"), v["kind"]
+        if value is not None:
+            ok = {"number": type(value) is float, "bool": type(value) is bool,
+                  "text": type(value) is str and len(value) <= VARIABLE_TEXT_MAX,
+                  "date": type(value) is str and is_iso_date(value)}[kind]
+            if not ok:
+                return f"@{name} değeri türüne uymuyor"
+        if variable_key(name) in seen:
+            return f"@{name} adında iki değişken var"
+        seen.add(variable_key(name))
     return None
 
 
@@ -1510,6 +1566,7 @@ class _Schema:
         self.temporal = version >= SCHEMA_WITH_TEMPORAL
         self.filters = version >= SCHEMA_WITH_FILTERS
         self.labels = version >= SCHEMA_WITH_LABELS
+        self.variables = version >= SCHEMA_WITH_VARIABLES
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -1601,6 +1658,7 @@ class _Schema:
                 **({"annotation": (self.annotation_, False)} if self.annotation else {}),
                 **({"connections": (self.connections_, False)} if self.services else {}),
                 **({"networks": (self.networks_, False)} if self.networks else {}),
+                **({"variables": (self.variables_, False)} if self.variables else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -2185,6 +2243,32 @@ class _Schema:
         if not all_:
             self.fail("bad_value", "boş ağ listesi yazılmaz")
         problem = networks_problem(all_)
+        if problem:
+            self.fail("bad_value", problem)
+        return all_
+
+    def variables_(self, v):
+        """The project's variables (schema 37, docs/adr/0214 §2.3): each its kind and name, its label and value when
+        given (null, true/false, a float64 or text); then checked whole."""
+
+        def value(v):
+            if v is None or type(v) in (bool, float, str):
+                return v
+            self.fail("wrong_type", "null, true/false, float64 ya da metin olmalı")
+
+        def nonempty_label(v):
+            t = self.text(v)
+            if not t:
+                self.fail("bad_value", "boş etiket yazılmaz")
+            return t
+
+        variable = self.fields(
+            {"name": (self.text, True), "label": (nonempty_label, False), "kind": (self.enum(VARIABLE_KINDS), True), "value": (value, False)}
+        )
+        all_ = self.array(variable)(v)
+        if not all_:
+            self.fail("bad_value", "boş değişken listesi yazılmaz")
+        problem = variables_problem(all_)
         if problem:
             self.fail("bad_value", problem)
         return all_

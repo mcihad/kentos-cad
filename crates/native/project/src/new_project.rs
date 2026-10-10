@@ -76,6 +76,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         text_styles: Vec::new(),
         connections: Vec::new(),
         networks: Vec::new(),
+        variables: Vec::new(),
     }
 }
 

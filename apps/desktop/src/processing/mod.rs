@@ -51,6 +51,7 @@ mod window;
 
 use iced::Task;
 use kentos_domain::Slot;
+use kentos_expression::Variable;
 use kentos_interaction::pick::PickPoint;
 use kentos_interaction::{Level, Selection, Vec2};
 use kentos_processing::model_runner::{MODEL_PREFIX, end_model, replay_model, run_model};
@@ -217,6 +218,8 @@ pub(crate) struct Look<'a> {
     pub selection: &'a Selection,
     pub store: &'a Store,
     pub view: Option<Bounds>,
+    /// The `@` values the expressions read (docs/adr/0214 §2.3).
+    pub variables: Vec<Variable>,
 }
 
 impl Scene for Look<'_> {
@@ -235,6 +238,10 @@ impl Scene for Look<'_> {
     fn store(&self) -> Option<&Store> {
         Some(self.store)
     }
+
+    fn variables(&self) -> Vec<Variable> {
+        self.variables.clone()
+    }
 }
 
 /// The app as a run changes it.
@@ -243,6 +250,7 @@ struct Stage<'a> {
     selection: &'a mut Selection,
     store: &'a Store,
     view: Option<Bounds>,
+    variables: Vec<Variable>,
 }
 
 impl Scene for Stage<'_> {
@@ -260,6 +268,10 @@ impl Scene for Stage<'_> {
 
     fn store(&self) -> Option<&Store> {
         Some(self.store)
+    }
+
+    fn variables(&self) -> Vec<Variable> {
+        self.variables.clone()
     }
 }
 
@@ -340,6 +352,7 @@ impl App {
 
     /// The window's live parts again: problems, what the inputs resolve to, previews.
     pub(crate) fn refresh_processing(&mut self) {
+        let variables = self.expression_variables();
         let (Some(doc), Some(window)) = (&self.document, &mut self.processing.dialog) else {
             return;
         };
@@ -348,6 +361,7 @@ impl App {
             selection: &self.selection,
             store: self.spatial.store(),
             view: Some(self.viewport.camera.visible_bounds()),
+            variables,
         };
         window.refresh(&self.processing.runner, &look);
     }
@@ -469,6 +483,7 @@ impl App {
     /// Nerede çalışır's: Otomatik sends inputs of 2 000 objects or more to
     /// another thread, the window showing how far it is (background.rs).
     fn run_processing(&mut self) -> Task<Message> {
+        let variables = self.expression_variables();
         let Some(window) = &mut self.processing.dialog else {
             return Task::none();
         };
@@ -506,6 +521,7 @@ impl App {
             selection: &mut self.selection,
             store: self.spatial.store(),
             view: Some(self.viewport.camera.visible_bounds()),
+            variables,
         };
         let mut log: Vec<LogLine> = Vec::new();
         let registry = &self.processing.registry;
@@ -541,6 +557,7 @@ impl App {
                 stage.view,
                 session,
                 Some(files),
+                stage.variables.clone(),
                 |id, reply| Message::Processing(Event::Background(id, reply)),
             )
         } else {
@@ -669,6 +686,7 @@ impl App {
         answer: Result<background::Answer, String>,
     ) {
         use background::{Answer, Work};
+        let variables = self.expression_variables();
         let label = running.work.label();
         let background::Running {
             id, work, session, ..
@@ -685,16 +703,17 @@ impl App {
                 selection: &mut self.selection,
                 store: self.spatial.store(),
                 view,
+                variables,
             });
         let outcome = match (work, answer, &mut stage) {
             (Work::Tool(job), Ok(Answer::Tool(result)), Some(stage)) => {
-                runner.finish(stage, job, result, false, &mut log)
+                runner.finish(stage, *job, result, false, &mut log)
             }
-            (Work::Tool(job), Ok(_), None) => runner.stop(job),
+            (Work::Tool(job), Ok(_), None) => runner.stop(*job),
             (Work::Tool(job), Ok(Answer::Model { .. }), Some(_)) => {
-                runner.failed(job, "beklenmeyen bir sonuç geldi")
+                runner.failed(*job, "beklenmeyen bir sonuç geldi")
             }
-            (Work::Tool(job), Err(why), _) => runner.failed(job, &why),
+            (Work::Tool(job), Err(why), _) => runner.failed(*job, &why),
             (Work::Model(run), Ok(Answer::Model { steps, log: said }), Some(stage)) => {
                 let lookup = |id: &str| run.tool(id);
                 if stage.doc.generation() == run.generation {
@@ -747,7 +766,7 @@ impl App {
         let label = running.work.label();
         let runner = &mut self.processing.runner;
         let outcome = match running.work {
-            background::Work::Tool(job) => runner.stop(job),
+            background::Work::Tool(job) => runner.stop(*job),
             background::Work::Model(run) => {
                 end_model(&run.model, &run.inputs, runner, &|id| run.tool(id), None)
             }

@@ -20,7 +20,7 @@ export function fakeApp(o: { account?: { id: string; name: string } } = {}) {
     name: new Signal('Yeni çizim'),
     crs,
     // As the project's settings: the same system, no definition of its own (docs/adr/0168 §1).
-    settings: { crs, customCrs: new Signal(null), hasSystem: true, workspace: new Signal('cad'), plotScale: new Signal(1000), drawingFont: new Signal('barlow') },
+    settings: { crs, customCrs: new Signal(null), hasSystem: true, workspace: new Signal('cad'), plotScale: new Signal(1000), drawingFont: new Signal('barlow'), variables: new Signal([]) },
     revision: 1,
     layers: { events: layerEvents, leaves: () => [], get: () => undefined, isVisible: () => true, parentOf: () => null },
     byLayer: () => [],

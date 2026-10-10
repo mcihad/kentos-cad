@@ -42,6 +42,8 @@ fn old(n: &Node) -> bool {
         Node::Not(a) | Node::Neg(a) => old(a),
         Node::Call(_, args) => args.iter().all(old),
         Node::Lit(_) | Node::Field(_) | Node::Var(_) => true,
+        // docs/adr/0214's `@` and calls to other objects.
+        Node::At(_) | Node::World(..) => false,
     }
 }
 
@@ -79,7 +81,13 @@ fn uses(n: &Node, needs: &mut Needs) {
         },
         Node::Call(_, args) => args.iter().for_each(|a| uses(a, needs)),
         // CASE, IN, BETWEEN, LIKE and IS NULL came after it (docs/adr/0100 §4).
-        Node::Case(..) | Node::In(..) | Node::Between(..) | Node::Like(..) | Node::IsNull(..) => {
+        Node::Case(..)
+        | Node::In(..)
+        | Node::Between(..)
+        | Node::Like(..)
+        | Node::IsNull(..)
+        | Node::At(_)
+        | Node::World(..) => {
             panic!("the old language had no {n:?}")
         }
         Node::Not(a) | Node::Neg(a) => uses(a, needs),
@@ -757,7 +765,13 @@ fn eval<'a>(n: &'a Node, s: &'a dyn Scope) -> Result<Value<'a>, Thrown> {
             let b = eval(b, s)?;
             binary(*op, a, b)?
         }
-        Node::Case(..) | Node::In(..) | Node::Between(..) | Node::Like(..) | Node::IsNull(..) => {
+        Node::Case(..)
+        | Node::In(..)
+        | Node::Between(..)
+        | Node::Like(..)
+        | Node::IsNull(..)
+        | Node::At(_)
+        | Node::World(..) => {
             panic!("the old language had no {n:?}")
         }
     })

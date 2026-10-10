@@ -54,7 +54,8 @@ fn holds(
     if text.is_empty() {
         return vec![none; list.len()];
     }
-    let expr = match kentos_style_core::expr::compile(text) {
+    // A network's filters look at their own objects only (docs/adr/0214 §1).
+    let expr = match kentos_expression::compile(text) {
         Ok(e) => e,
         Err(e) => {
             problems.push(format!(

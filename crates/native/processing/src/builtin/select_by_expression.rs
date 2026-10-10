@@ -11,7 +11,7 @@ use kentos_style_core::expr::Value as ExprValue;
 use kentos_style_core::expr::rows::As;
 use serde_json::json;
 
-use crate::expression::evaluate_all;
+use crate::expression::evaluate_in;
 use crate::types::{
     EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, Returns,
     RunContext, RunResult, ScopeKind, Target, Tool,
@@ -97,10 +97,9 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     feedback.progress(0.0, "Koşul deneniyor");
     let ids: Vec<Slot> = list.iter().map(|e| Slot(e.base().id)).collect();
     let layer_name = |id: &str| ctx.layer_name(id).to_owned();
-    let mut measures = || ctx.geometry.measures(&ids);
     let met = v
         .expr("condition")
-        .map(|e| evaluate_all(e, list, &layer_name, &mut measures, As::Bool))
+        .map(|e| evaluate_in(e, list, &ctx.evaluation(&layer_name), As::Bool))
         .unwrap_or_default();
     let hits: Vec<Slot> = ids
         .iter()

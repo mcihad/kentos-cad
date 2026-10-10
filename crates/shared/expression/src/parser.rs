@@ -13,9 +13,11 @@
 
 use super::CompileError;
 use super::lexer::{Tok, Token};
-use super::library::{Func, FuncDef, Var, find_function, find_variable};
+use super::library::{Family, Func, FuncDef, Var, find_function, find_variable};
 use super::value::Value;
 use crate::js::text::fold_turkish;
+use crate::world::Aggregate;
+use crate::world::roles::{Role, is_inner, roles};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BinOp {
@@ -58,6 +60,12 @@ pub enum Node {
     Like(Box<Node>, Box<Node>, bool, bool),
     /// `x boş` / `x boş değil` (IS [NOT] NULL): negated.
     IsNull(Box<Node>, bool),
+    /// `@name` as written (docs/adr/0214 §2.3); compiling turns it into its
+    /// value (`resolve`), the builder's flow keeps it.
+    At(String),
+    /// A function that looks at other objects, resolved (`resolve`): its
+    /// place in `Expr::world` and its arguments that are the object's own.
+    World(u32, Vec<Node>),
 }
 
 /// The language's words (in either language); the builder colours and completes them too.
@@ -151,6 +159,12 @@ pub struct Parser {
     i: usize,
     /// Attribute names in the order they first appear.
     pub fields: Vec<String>,
+    /// Arguments of a function that looks at other objects being read
+    /// (docs/adr/0214 §3): one of those may not stand inside another.
+    inner: usize,
+    /// Leaves the arguments' rules to the compile: the builder's flow reads
+    /// expressions with empty inputs (`?`) where a constant text must go.
+    pub lenient: bool,
 }
 
 fn err(message: impl Into<String>, at: usize) -> CompileError {
@@ -166,6 +180,8 @@ impl Parser {
             toks,
             i: 0,
             fields: Vec::new(),
+            inner: 0,
+            lenient: false,
         }
     }
 
@@ -419,6 +435,7 @@ impl Parser {
                 Some(v) => Ok(Node::Var(v.var)),
                 None => Err(err(format!("Bilinmeyen değişken: ${name}."), tok.at)),
             },
+            Tok::At(name) => Ok(Node::At(name.clone())),
             Tok::Word(name) => {
                 if self.peek().t == Tok::Op("(") {
                     return self.call(name, tok.at);
@@ -462,11 +479,29 @@ impl Parser {
         let Some(f) = find_function(name) else {
             return Err(err(format!("Bilinmeyen işlev: {name}()."), at));
         };
+        let roles = roles(f.func);
+        if roles.is_some() && self.inner > 0 && !self.lenient {
+            return Err(err(
+                format!(
+                    "{}() başka katmanlara bakar; böyle bir işlevin içindeki ifadede kullanılamaz.",
+                    f.name
+                ),
+                at,
+            ));
+        }
         self.next(); // (
         let mut args = Vec::new();
+        // Where each argument starts, for the messages about it.
+        let mut starts = Vec::new();
         if self.peek().t != Tok::Op(")") {
             loop {
-                args.push(self.binary(0)?);
+                let role = roles.and_then(|r| r.get(args.len())).copied();
+                let inner = role.is_some_and(is_inner);
+                starts.push(self.peek().at);
+                self.inner += usize::from(inner);
+                let arg = self.binary(0);
+                self.inner -= usize::from(inner);
+                args.push(arg?);
                 if self.peek().t == Tok::Op(",") {
                     self.next();
                     continue;
@@ -476,6 +511,9 @@ impl Parser {
         }
         self.expect_close(&format!("{}(…) kapanmamış: “)” bekleniyordu.", f.name))?;
         check_arity(f, args.len(), at)?;
+        if !self.lenient {
+            check_args(f, roles, &args, &starts, at)?;
+        }
         Ok(Node::Call(f.func, args))
     }
 
@@ -489,6 +527,66 @@ impl Parser {
             Err(err(message, tok.at))
         }
     }
+}
+
+/// The rules a call's arguments keep beyond their number (docs/adr/0214):
+/// a layer's name and the other constant texts, a constant regular
+/// expression that reads, a map's keys and values in pairs.
+fn check_args(
+    f: &FuncDef,
+    roles: Option<&[Role]>,
+    args: &[Node],
+    starts: &[usize],
+    at: usize,
+) -> Result<(), CompileError> {
+    let text = |i: usize| match args.get(i) {
+        Some(Node::Lit(Value::Text(t))) => Some(t.as_ref()),
+        _ => None,
+    };
+    for (i, role) in roles.unwrap_or_default().iter().enumerate() {
+        if i >= args.len() || !matches!(role, Role::Layer | Role::Text) {
+            continue;
+        }
+        let place = starts.get(i).copied().unwrap_or(at);
+        let Some(t) = text(i) else {
+            let what = match (role, f.func) {
+                (Role::Layer, _) => "Katman adı",
+                (_, Func::Aggregate) => "Toplamanın adı",
+                (_, Func::FromLayer) => "Anahtar alanın adı",
+                _ => "Ayraç",
+            };
+            return Err(err(
+                format!(
+                    "{what} sabit bir metin olmalı (tırnak içinde). Kullanım: {}",
+                    f.signature
+                ),
+                place,
+            ));
+        };
+        if f.func == Func::Aggregate && *role == Role::Text && Aggregate::from_name(t).is_none() {
+            return Err(err(
+                format!("Bilinmeyen toplama: '{t}'. {} olabilir.", Aggregate::NAMES),
+                place,
+            ));
+        }
+    }
+    if f.func.family() == Family::Patterns
+        && let Some(p) = text(1)
+        && let Err(e) = crate::patterns::read(p)
+    {
+        return Err(err(e, starts.get(1).copied().unwrap_or(at)));
+    }
+    if f.func == Func::Map && !args.len().is_multiple_of(2) {
+        return Err(err(
+            format!(
+                "eşleme() anahtar ve değer çiftleri alır; {} değer verildi. Kullanım: {}",
+                args.len(),
+                f.signature
+            ),
+            at,
+        ));
+    }
+    Ok(())
 }
 
 fn check_arity(f: &FuncDef, n: usize, at: usize) -> Result<(), CompileError> {

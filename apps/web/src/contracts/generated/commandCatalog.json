@@ -5119,6 +5119,13 @@
                 ],
                 "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
               },
+              "variables": {
+                "description": "The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.",
+                "items": {
+                  "$ref": "#/$defs/ProjectVariable"
+                },
+                "type": "array"
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -5156,6 +5163,31 @@
             "required": [
               "items",
               "categories"
+            ],
+            "type": "object"
+          },
+          "ProjectVariable": {
+            "description": "One of the project's variables.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/VariableKind",
+                "default": "text"
+              },
+              "label": {
+                "description": "What the settings window shows beside it (“İş numarası”).",
+                "type": "string"
+              },
+              "name": {
+                "description": "Without the `@`: a letter or `_`, then letters, digits and `_` (`is_no`).",
+                "type": "string"
+              },
+              "value": {
+                "$ref": "#/$defs/VariableValue",
+                "description": "None yet: written as no value (an empty `@ad`), as the file keeps it."
+              }
+            },
+            "required": [
+              "name"
             ],
             "type": "object"
           },
@@ -6963,6 +6995,42 @@
               }
             },
             "type": "object"
+          },
+          "VariableKind": {
+            "description": "What a variable holds.",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "number",
+                  "bool"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "ISO text (YYYY-AA-GG).",
+                "type": "string"
+              }
+            ]
+          },
+          "VariableValue": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "format": "double",
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A variable's value: none yet, true/false, a number or text."
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -9937,6 +10005,13 @@
                 ],
                 "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
               },
+              "variables": {
+                "description": "The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.",
+                "items": {
+                  "$ref": "#/$defs/ProjectVariable"
+                },
+                "type": "array"
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -10031,6 +10106,31 @@
                 "type": "string"
               }
             ]
+          },
+          "ProjectVariable": {
+            "description": "One of the project's variables.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/VariableKind",
+                "default": "text"
+              },
+              "label": {
+                "description": "What the settings window shows beside it (“İş numarası”).",
+                "type": "string"
+              },
+              "name": {
+                "description": "Without the `@`: a letter or `_`, then letters, digits and `_` (`is_no`).",
+                "type": "string"
+              },
+              "value": {
+                "$ref": "#/$defs/VariableValue",
+                "description": "None yet: written as no value (an empty `@ad`), as the file keeps it."
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
           },
           "RegistryDatum": {
             "description": "One of the registry's datums.",
@@ -10810,6 +10910,42 @@
               }
             },
             "type": "object"
+          },
+          "VariableKind": {
+            "description": "What a variable holds.",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "number",
+                  "bool"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "ISO text (YYYY-AA-GG).",
+                "type": "string"
+              }
+            ]
+          },
+          "VariableValue": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "format": "double",
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A variable's value: none yet, true/false, a number or text."
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -16021,6 +16157,13 @@
                 ],
                 "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
               },
+              "variables": {
+                "description": "The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.",
+                "items": {
+                  "$ref": "#/$defs/ProjectVariable"
+                },
+                "type": "array"
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -16094,6 +16237,31 @@
             "required": [
               "items",
               "categories"
+            ],
+            "type": "object"
+          },
+          "ProjectVariable": {
+            "description": "One of the project's variables.",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/VariableKind",
+                "default": "text"
+              },
+              "label": {
+                "description": "What the settings window shows beside it (“İş numarası”).",
+                "type": "string"
+              },
+              "name": {
+                "description": "Without the `@`: a letter or `_`, then letters, digits and `_` (`is_no`).",
+                "type": "string"
+              },
+              "value": {
+                "$ref": "#/$defs/VariableValue",
+                "description": "None yet: written as no value (an empty `@ad`), as the file keeps it."
+              }
+            },
+            "required": [
+              "name"
             ],
             "type": "object"
           },
@@ -17917,6 +18085,42 @@
               }
             },
             "type": "object"
+          },
+          "VariableKind": {
+            "description": "What a variable holds.",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "number",
+                  "bool"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "date",
+                "description": "ISO text (YYYY-AA-GG).",
+                "type": "string"
+              }
+            ]
+          },
+          "VariableValue": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "format": "double",
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A variable's value: none yet, true/false, a number or text."
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",

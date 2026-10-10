@@ -76,6 +76,11 @@ impl RunGeometry {
         Self { store }
     }
 
+    /// The store itself: the shapes of the run's objects by id.
+    pub fn store(&self) -> &Store {
+        &self.store
+    }
+
     /// Geometry values of these objects for expressions, six numbers each
     /// (`kentos_style_core::expr::rows`, `measures`).
     pub fn measures(&self, slots: &[Slot]) -> Vec<f64> {

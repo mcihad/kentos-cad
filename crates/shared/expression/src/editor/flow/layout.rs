@@ -166,6 +166,11 @@ fn face(t: &T) -> (NodeKind, String, Option<String>) {
                 Some(format!("var:{name}")),
             )
         }
+        T::At(name) => (
+            NodeKind::Variable,
+            format!("@{name}"),
+            Some(format!("at:{name}")),
+        ),
         T::Call(f, _) => {
             let name = func_def(*f).name;
             (

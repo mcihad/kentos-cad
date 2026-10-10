@@ -105,7 +105,12 @@ impl Calc {
                 ));
             }
         }
-        let expr = compile_with(source, &Schema { fields }).map_err(|e| e.text())?;
+        let schema = Schema {
+            fields,
+            variables: Vec::new(),
+            world: false,
+        };
+        let expr = compile_with(source, &schema).map_err(|e| e.text())?;
         let mut refs = Vec::with_capacity(expr.fields.len());
         for f in &expr.fields {
             match band_of(f, names) {

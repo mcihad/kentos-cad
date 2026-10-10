@@ -44,7 +44,7 @@ export const selectByExpression = defineTool({
     const list = v.input.entities;
     feedback.progress(0, 'Koşul deneniyor');
     // One call to the run's geometry store for every object: the geometry values ($alan, $merkez_y, $genişlik …) are read there.
-    const met = v.condition.evaluateAll({ entities: list, layerName: ctx.layerName, geometry: ctx.geometry }, 'bool');
+    const met = v.condition.evaluateAll({ entities: list, layerName: ctx.layerName, geometry: ctx.geometry, layers: ctx.layers }, 'bool');
     const hits: number[] = [];
     for (let i = 0; i < list.length; i++) if (met.value(i) === true) hits.push(list[i].id);
     const current = ctx.selection;

@@ -201,7 +201,8 @@ function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null 
     case 'expression': {
       const src = (v as string).trim();
       if (!src) return p.optional ? null : `${name}: bir ifade yazın.`;
-      const r = compileExpression(src);
+      // İşlemler give the calls to other layers (docs/adr/0214 §1); the `@` values are read at the run.
+      const r = compileExpression(src, { world: true });
       return r.ok ? null : `${name}: ${expressionError(r)}`;
     }
     case 'field': {

@@ -5,6 +5,7 @@ use crate::{FieldDef, FieldSource, FieldType};
 
 fn schema() -> Schema {
     Schema {
+        variables: Vec::new(),
         fields: vec![
             FieldDef {
                 name: "Ada".into(),
@@ -19,6 +20,7 @@ fn schema() -> Schema {
                 description: String::new(),
             },
         ],
+        world: false,
     }
 }
 

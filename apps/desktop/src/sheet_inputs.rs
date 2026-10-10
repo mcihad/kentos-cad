@@ -76,6 +76,28 @@ fn system(srid: u32) -> Option<&'static System> {
         .find(|s| s.srid == srid)
 }
 
+/// A drawing's variable as a sheet keeps one: the same shape (docs/adr/0214 §2.3).
+pub fn sheet_variable(v: &kentos_contracts::ProjectVariable) -> kentos_sheet::model::Variable {
+    use kentos_contracts::{VariableKind, VariableValue};
+    use kentos_sheet::model::VarKind;
+    kentos_sheet::model::Variable {
+        name: v.name.clone(),
+        label: v.label.clone(),
+        kind: match v.kind {
+            VariableKind::Text => VarKind::Text,
+            VariableKind::Number => VarKind::Number,
+            VariableKind::Bool => VarKind::Bool,
+            VariableKind::Date => VarKind::Date,
+        },
+        value: match &v.value {
+            VariableValue::Null => VarValue::Null,
+            VariableValue::Bool(b) => VarValue::Bool(*b),
+            VariableValue::Number(x) => VarValue::Number(*x),
+            VariableValue::Text(t) => VarValue::Text(t.clone()),
+        },
+    }
+}
+
 /// The project's system for a sheet PDF's GeoPDF: its WKT (the core's `tm_wkt` from the
 /// registry's values) and its EPSG code; none for a system the core cannot invert (not TM).
 pub fn pdf_crs(srid: u32) -> Option<kentos_sheet::pdf::PdfCrs> {

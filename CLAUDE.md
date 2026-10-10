@@ -157,6 +157,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   iç içe halkalar, ızgara; tek noktalar bir iç işleyiciyle), Ters alan (alanların dışı; çift-tek ya da sarım); görünüme bağlı olanlar
   yakınlaştırma durunca ya da kutudan çıkınca yeniden kurulur; Katman stili'nde gruplu, ikonlu tür listesi ve formlar, lejant satırları,
   pafta; `cad.layers.renderer` (ADR 0213);
+  ifade dili ekleri: tarih ve saat (yap, oku, parçalar, ekle, fark, biçimle, şimdi), `@` değerleri (projenin değişkenleri ve yerleşikler:
+  proje adı, sistem, EPSG, ölçek, tarih, şimdi, kullanıcı, katman; `.kcad` şema 37), düzenli ifade (`regex-lite`), dizi ve eşleme (JSON),
+  aynı ve başka katman üstünden toplama, Konuma göre seç'in ilişkileri, en yakının değeri, örtüşen alan ve uzunluk, başka katmandan değer;
+  başka katmana bakanlar yalnız İşlemler'de (`compile_with` başka yerde reddeder), katman süzgecinin dışarıda bıraktıklarını okumaz;
+  `@` değerleri İşlemler'de, İfade oluşturucu'da, Öznitelik tablosunun süzgecinde ve paftada; Proje ayarları › Değişkenler (ADR 0214);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -528,6 +533,10 @@ KENTOS_SHOTS_ONLY=isleyici-sahne,isleyici-isi,isleyici-pencere-liste,isleyici-le
 cargo test --release -p kentos-native-style --test all renderer_timing -- --ignored --nocapture --test-threads=1   # ek işleyicilerin kurulum süreleri bütçeleriyle (ADR 0213 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; RENDERER_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/renderers.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-interaction --test perf label_texts -- --ignored --nocapture   # 100 000 parselin iki ifadeli sınıfının etiket metinleri (ADR 0212 §6)
 KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; LABEL_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/labels.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp   # aynı süreler web'de, gönderilen WASM'la (ADR 0212 §6)
+python3 scripts/fixtures/expression_extras.py --check   # ifade dili eklerinin değerlerini (tarih ve saat, `@` değerleri, düzenli ifade, dizi ve eşleme, toplama, mekânsal ilişki, başka katmandan değer) KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/expression/v2/extras.json (ADR 0214)
+python3 scripts/fixtures/variable_form_cases.py --check   # Proje ayarları › Değişkenler'in form kurallarını (adlar, türlere göre değerler, yeni satır, tür değişimi) ve yerleşik `@` değerlerini kurallardan denetle; durumlar fixtures/project/v1/variable-form.json (ADR 0214 §4)
+cargo test -p kentos-desktop project::variables::tests::screens -- --ignored --nocapture; cargo test -p kentos-desktop expression::tests::world_screens -- --ignored --nocapture --test-threads=1   # Değişkenler ve İfade oluşturucu'nun `@` değerleriyle başka katmana bakan önizlemesi, .run/shots/degiskenler-*, ifade-degiskenler-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs variables); ADR 0214)
+cargo test --release -p kentos-expression --test perf measures_the_additions -- --ignored --nocapture   # ifade dili eklerinin süreleri bütçeleriyle (ADR 0214 §5); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; EXTRAS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/expressionExtras.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
 python3 scripts/fixtures/template_layer_cases.py --check   # nesne şablonunun katmanını bulma ve açma kuralını (yol tercihi, kilitli grup, açılacak gruplar) kurallardan denetle; durumlar fixtures/style/v1/template-layers.json (ADR 0176 §3)
 python3 scripts/fixtures/template_from_object_cases.py --check   # Seçili nesneden şablon'u (araç, katman yolu ve görünüşü, noktanın adı ve kodu, yazının kâğıttaki yüksekliği, bloğun adı, retler) kesirle kurallardan denetle; durumlar fixtures/style/v1/template-from-object.json (ADR 0176 §4)
@@ -1436,7 +1445,15 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `cad.layers.renderer` iki platformda, başsız sunucuda, Python'da ve MCP'de (`renderer_command_cases.py`, 45 durum); masaüstünde stilli
   sahnenin `ViewBuilt`'i, resim kaynağının `put_made` ve `keep_made`'i, Katman stili'nin `thematic.rs`'i; web'de `ui/style/thematicPanels.ts`,
   `style/thematic.ts`; KentOS UI'da açıklamalı radyo satırlarının ikonları; ortak `legend.json` ve `batches.json`; resimlerin sahnesi
-  `renderers.kcad` (`renderer_scene.py`); süreler `renderer_timing` ve `scripts/perf/renderers.test.ts`. Sıradaki `GIS-18`.
+  `renderers.kcad` (`renderer_scene.py`); süreler `renderer_timing` ve `scripts/perf/renderers.test.ts`. `GIS-18` ifade dili ekleri
+  ([ADR 0214](docs/adr/0214-expression-extras.md); kapsamı ben belirledim, `regex-lite` sahibin onayıyla) tek parçada bitti (10 Ekim):
+  çekirdekte `dates`, `patterns`, `arrays`, `compound`, `resolve` ve `world` (`roles`, `aggregate`, `spatial`, `Session`), `library/extras.rs`'in
+  71 işlevi; `compile_with` başka katmana bakanı şema izin vermedikçe reddeder (`WORLD_REFUSED`); sözleşmenin `variables`'ı, `.kcad` şema 37
+  (`FORMATS_VERSION` 47); `kentos_project::variables` ve `variable_form`, web `model/projectVariables.ts` ve `model/variableForm.ts`; masaüstünün
+  İşlemler'i sütun motorunda (`EntityObjects`, `evaluate_in`, `runner::world_layers`); web'de `exprCompileIn`, `evaluateExpressionIn`,
+  `ExprWorld`, `RunJob.variables` ve `leftOut`; Proje ayarları › Değişkenler iki platformda (`project/variables.rs`, `variablesSection`);
+  pafta `ProjectInfo.variables`; Python `ProjectVariable`; bağımsız başvurular `expression_extras.py` (190 kaynak), `variable_form_cases.py`,
+  `spatial_query_cases.py`'nin ifade durumları; süreler `measures_the_additions` ve `scripts/perf/expressionExtras.test.ts`. Sıradaki `GIS-19`.
   `GIS-06` ve `GIS-07` mevzuatla
   düzenlenen işlerdir: yol haritasının en sonuna kalır, sahiple ayrı çalışma ister; §16.2 sırasında atlanır (sahibin kararı, 7 Ekim).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.

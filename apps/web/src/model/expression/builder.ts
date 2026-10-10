@@ -1,4 +1,5 @@
 import { op } from '../../wasm/core';
+import type { ExprVariable } from './expression';
 import type { ExprValue } from './expressionLib';
 
 /**
@@ -127,7 +128,18 @@ export interface ExprPlaced {
   readonly caret: number;
 }
 
-type Fields = readonly ExprField[];
+/**
+ * What the builder's services know of the objects (docs/adr/0214): their fields, the `@` values, and whether the
+ * functions that look at other layers can be used (İşlemler); without `world` they are refused and not offered.
+ */
+export interface ExprSchema {
+  readonly fields: readonly ExprField[];
+  readonly variables?: readonly ExprVariable[];
+  readonly world?: boolean;
+}
+
+/** The fields alone (the builder's first form), or the whole schema. */
+export type Fields = readonly ExprField[] | ExprSchema;
 
 export const exprTokens = op<(source: string) => ExprToken[]>('exprTokens');
 export const exprCheck = op<(source: string, fields: Fields) => ExprCheck>('exprCheck');

@@ -3,7 +3,9 @@
 //! ([`systems`], docs/adr/0168), its datum choices as Proje ayarları types
 //! them ([`choice_form`]) and its own systems as Özel koordinat sistemi does
 //! ([`definition_form`]), its survey settings as Proje ayarları › Ölçme
-//! types them ([`survey_form`]), the drawing a new project starts as
+//! types them ([`survey_form`]), its variables as Proje ayarları ›
+//! Değişkenler types them ([`variable_form`]) and the `@` values its
+//! expressions read ([`variables`]), the drawing a new project starts as
 //! ([`new_project`]) and what the Yeni proje wizard asks ([`wizard`]), the
 //! web's `geo/crs.ts`, `model/newProject.ts` and `model/newProjectWizard.ts`.
 //! The desktop and the headless command host (Python, AI) use the same.
@@ -20,4 +22,6 @@ pub mod new_project;
 pub mod provinces;
 pub mod survey_form;
 pub mod systems;
+pub mod variable_form;
+pub mod variables;
 pub mod wizard;
