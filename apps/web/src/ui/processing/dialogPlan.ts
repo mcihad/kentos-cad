@@ -12,6 +12,7 @@ import {
   featuresView,
   fieldMapView,
   fileView,
+  layersView,
   layerFieldView,
   planLayers,
   pointView,
@@ -22,6 +23,7 @@ import {
   type FeaturesView,
   type FieldMapView,
   type FileView,
+  type LayersView,
   type LayerFieldView,
   type PlanLayers,
   type PointView,
@@ -68,7 +70,9 @@ export type ControlForm =
   /** A comparison for each pair of `of`'s rasters. */
   | { type: 'rasterPairs'; of: string }
   /** Alan eşleme (docs/adr/0216 §2): rows of a target field, a source column and a default. */
-  | { type: 'fieldMap'; target: string; source: string[] };
+  | { type: 'fieldMap'; target: string; source: string[] }
+  /** Katmanlar (docs/adr/0217 §7): the layers checked in a list, at least `min`. */
+  | { type: 'layers'; min: number };
 
 export interface RowForm {
   name: string;
@@ -124,6 +128,8 @@ export function controlForm(def: ParamDef): ControlForm {
       return { type: 'rasterPairs', of: def.of };
     case 'fieldMap':
       return { type: 'fieldMap', target: def.target, source: [...def.source] };
+    case 'layers':
+      return { type: 'layers', min: def.min ?? 1 };
   }
 }
 
@@ -133,7 +139,7 @@ export function rowForm(def: ParamDef): RowForm {
     label: def.label,
     ...(def.description ? { description: def.description } : {}),
     optional: !!def.optional,
-    stacked: def.type === 'features' || def.type === 'expression' || def.type === 'rasterValues' || def.type === 'rasterPairs' || def.type === 'fieldMap',
+    stacked: def.type === 'features' || def.type === 'expression' || def.type === 'rasterValues' || def.type === 'rasterPairs' || def.type === 'fieldMap' || def.type === 'layers',
     control: controlForm(def),
   };
 }
@@ -205,8 +211,9 @@ export function sectionsOf(params: readonly ParamDef[], values: Values, advanced
   const shown = params.filter((p) => isVisible(p, values));
   const names = (keep: (p: ParamDef) => boolean) => shown.filter(keep).map((p) => p.name);
   const groups = [
-    { title: T.sections.input, rows: names((p) => !p.advanced && p.type === 'features') },
-    { title: T.sections.main, rows: names((p) => !p.advanced && p.type !== 'features' && p.type !== 'layer') },
+    // Objects and lists of layers are what a tool reads (docs/adr/0217 §7).
+    { title: T.sections.input, rows: names((p) => !p.advanced && (p.type === 'features' || p.type === 'layers')) },
+    { title: T.sections.main, rows: names((p) => !p.advanced && p.type !== 'features' && p.type !== 'layers' && p.type !== 'layer') },
     { title: T.sections.output, rows: names((p) => !p.advanced && p.type === 'layer') },
   ].filter((g) => g.rows.length);
   const advanced = names((p) => !!p.advanced);
@@ -494,7 +501,7 @@ export function hostEnv(runner: ProcessingRunner, tool: ProcessingTool, values: 
       return def?.type === 'fieldMap' ? fieldMapKey(def, values) : '';
     },
     previewExpression: (name) => runner.previewExpression(tool, values, name),
-    layers: planLayers(layers),
+    layers: planLayers(layers, (id) => runner.layerCount(id)),
     formatPoint,
     targets: {
       declared: modelTools ? [...available] : tool.targets,
@@ -505,7 +512,7 @@ export function hostEnv(runner: ProcessingRunner, tool: ProcessingTool, values: 
   };
 }
 
-export type FieldView = FeaturesView | LayerFieldView | PointView | AttrFieldView | ExpressionView | FileView | RasterValuesView | RasterPairsView | FieldMapView;
+export type FieldView = FeaturesView | LayerFieldView | PointView | AttrFieldView | ExpressionView | FileView | RasterValuesView | RasterPairsView | FieldMapView | LayersView;
 
 /** A shown field's changing parts (number, text, switch and choice fields show only their value). */
 export function fieldView(def: ParamDef, value: unknown, env: ViewEnv): FieldView | null {
@@ -526,6 +533,8 @@ export function fieldView(def: ParamDef, value: unknown, env: ViewEnv): FieldVie
       return rasterValuesView(value as RasterValues | null, env.inputs[def.of]?.rasters ?? (env.inputs[def.of] ? [] : undefined));
     case 'rasterPairs':
       return rasterPairsView(value as RasterPairs | null, env.inputs[def.of]?.rasters ?? (env.inputs[def.of] ? [] : undefined));
+    case 'layers':
+      return layersView(value as readonly string[] | null, env.layers, env.inputs[def.name]);
     case 'fieldMap':
       return fieldMapView(
         value as FieldMap | null,

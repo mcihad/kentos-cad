@@ -28,13 +28,14 @@ export function numberOfText(text: string): number {
 
 /** Layers as the fields list them: leaves in tree order with their paths, and any layer's or group's name. */
 export interface PlanLayers {
-  readonly leaves: readonly { id: string; name: string; path: string; locked: boolean }[];
+  /** The layers in the tree's order; `count`: their objects (a Katmanlar list shows them, docs/adr/0217 §7). */
+  readonly leaves: readonly { id: string; name: string; path: string; locked: boolean; count: number }[];
   name(id: string): string | undefined;
 }
 
-export function planLayers(layers: LayerStore): PlanLayers {
+export function planLayers(layers: LayerStore, count: (id: string) => number = () => 0): PlanLayers {
   return {
-    leaves: layers.leaves().map((l) => ({ id: l.id, name: l.name, path: layers.path(l.id), locked: layers.isLocked(l.id) })),
+    leaves: layers.leaves().map((l) => ({ id: l.id, name: l.name, path: layers.path(l.id), locked: layers.isLocked(l.id), count: count(l.id) })),
     name: (id) => layers.get(id)?.name,
   };
 }
@@ -432,4 +433,38 @@ export function filledMap(map: FieldMap | null | undefined, columns: readonly st
     out.push({ target: name, source: name, default: '' });
   }
   return out;
+}
+
+// ── Katmanlar (docs/adr/0217 §7) ────────────────────────────────────────
+
+/** A layer as a Katmanlar list shows it: its path, its objects, whether it is chosen, and whether it is locked. */
+export interface LayersRowView {
+  id: string;
+  label: string;
+  count: number;
+  checked: boolean;
+  locked: boolean;
+}
+
+export interface LayersView {
+  rows: LayersRowView[];
+  /** Under the list: what the chosen layers hold (the runner's summary), or what to do. */
+  note: string;
+}
+
+/** Every layer in the tree's order, the chosen ones checked; the note is the input's summary. */
+export function layersView(value: readonly string[] | null | undefined, layers: PlanLayers, found: InputSummary | undefined): LayersView {
+  const chosen = new Set(value ?? []);
+  return {
+    rows: layers.leaves.map((l) => ({ id: l.id, label: l.path, count: l.count, checked: chosen.has(l.id), locked: l.locked })),
+    note: chosen.size ? (found?.description ?? '') : T.layers.none,
+  };
+}
+
+/** A layer checked or not: the chosen ones in the tree's order. */
+export function withChosenLayer(value: readonly string[] | null | undefined, layers: PlanLayers, id: string, on: boolean): string[] {
+  const chosen = new Set(value ?? []);
+  if (on) chosen.add(id);
+  else chosen.delete(id);
+  return layers.leaves.filter((l) => chosen.has(l.id)).map((l) => l.id);
 }

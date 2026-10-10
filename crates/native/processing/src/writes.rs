@@ -27,8 +27,10 @@ pub fn check(doc: &Document, ch: &mut ChangeSet) -> Result<(), String> {
             continue;
         };
         let base = e.base();
+        // An object moved to another layer is checked against that layer's fields (as the web's `patch.layerId`).
+        let layer = u.layer.as_deref().unwrap_or(&base.layer_id);
         let Some(node) = layers
-            .get(&base.layer_id)
+            .get(layer)
             .filter(|n| !n.fields.is_empty() && !layers.is_locked(&base.layer_id))
         else {
             continue;

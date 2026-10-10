@@ -439,7 +439,21 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     id: 'data',
     label: 'Veri',
     sources: [
-      { pick: 'Katman', icon: 'layerAdd', commands: ['layer.new', 'layer.newGroup', 'layer.showAll'] },
+      // Katman işlemleri (docs/adr/0217 §8): the İşlemler tools that make, merge and order layers beside the new layer.
+      {
+        pick: 'Katman',
+        icon: 'layerAdd',
+        commands: [
+          'layer.new',
+          'layer.newGroup',
+          'layer.showAll',
+          processingCommandId('layers.splitByAttribute'),
+          processingCommandId('layers.merge'),
+          processingCommandId('layers.extract'),
+          processingCommandId('layers.deleteDuplicates'),
+          processingCommandId('layers.orderBy'),
+        ],
+      },
       // Öznitelik tablosu, a layer's fields and the data sources (docs/adr/0199 §3, §4, §7).
       { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
       // Veride ara (docs/adr/0178): a value in the layers' data, and a place by its coordinates.
@@ -474,8 +488,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Analiz',
     sources: [
       // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10), the raster analysis's in the Raster
-      // tab (docs/adr/0231 §10).
-      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity', 'spatialStats'] },
+      // tab (docs/adr/0231 §10), the Katman tools in the Veri tab's Katman panel (docs/adr/0217 §8).
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity', 'spatialStats', 'layers'] },
       // Yakınlık's five (docs/adr/0215 §5) and Mekânsal istatistik's (docs/adr/0238 §11) join Özet istatistik in the Analiz
       // panel: panels of their own made the tab wider than 1100 pixels.
       { pick: 'Analiz', icon: 'measure', commands: [...PROXIMITY_COMMANDS, ...SPATIAL_STATS_COMMANDS], under: SPATIAL_STATS_UNDER },

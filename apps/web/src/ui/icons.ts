@@ -622,6 +622,18 @@ export const ICONS = {
   joinField:
     '<circle cx="5.2" cy="5.2" r="2.7"/><path d="m7.1 7.1 4 4M9.3 9.3l1.3-1.3M10.6 10.6l1.3-1.3" stroke-width="1.3"/><rect x="10.5" y="11" width="7.5" height="6.5" rx=".8"/><path d="M10.5 14.2h7.5M14.2 11v6.5" stroke-width="1.1"/>',
   // Veri aktar (docs/adr/0216 §6): a table's rows into a layer; Aynı adlarla doldur: each column to the field of its name.
+  // Katman işlemleri (docs/adr/0217): a plate split into three; two plates into one; the selected carried out to a
+  // plate; a repeated square struck out; bars sorted under an arrow.
+  layerSplitAttr:
+    '<path d="m10 2.5 6.4 3.3-6.4 3.3-6.4-3.3z" fill="currentColor" fill-opacity=".3"/><path d="M10 9.1v3.4M8.4 9.6l-3.6 3M11.6 9.6l3.6 3" stroke-width="1.2"/><path d="m4.3 13.4 2.9 1.5-2.9 1.5-2.9-1.5zM10 13.4l2.9 1.5-2.9 1.5-2.9-1.5zM15.7 13.4l2.9 1.5-2.9 1.5-2.9-1.5z" stroke-width="1.1"/>',
+  layersMergeVector:
+    '<path d="m4.8 2.4 3.4 1.8-3.4 1.8-3.4-1.8zM15.2 2.4l3.4 1.8-3.4 1.8-3.4-1.8z" stroke-width="1.1"/><path d="m4.8 7.2 4.4 3.6M15.2 7.2l-4.4 3.6M10 9.2v2.4" stroke-width="1.2"/><path d="m10 12.2 7 3.6-7 3.6-7-3.6z" fill="currentColor" fill-opacity=".3"/>',
+  extractSelected:
+    '<rect x="2.4" y="2.4" width="8.4" height="7.2" rx=".8" stroke-dasharray="1.6 1.4" stroke-width="1.1"/><rect x="4.4" y="4.3" width="4.4" height="3.4" rx=".5" fill="currentColor" fill-opacity=".3" stroke-width="1.1"/><path d="M9.4 8.4 12.6 11.6M12.8 9.2v2.6h-2.6" stroke-width="1.2"/><path d="m12.5 13.4 5.6 2.9-5.6 2.9-5.6-2.9z"/>',
+  deleteDuplicates:
+    '<rect x="2.5" y="2.5" width="9" height="9" rx="1" stroke-dasharray="1.6 1.4" stroke-width="1.1"/><path d="m4.6 4.6 3.8 3.8M8.4 4.6 4.6 8.4" stroke-width="1.3"/><rect x="8.5" y="8.5" width="9" height="9" rx="1" fill="currentColor" fill-opacity=".3"/>',
+  orderByExpression:
+    '<path d="M3.5 3v12.5M1.5 13.5l2 2 2-2" stroke-width="1.3"/><path d="M8 4.5h4M8 9.5h6.5M8 14.5h9.5" stroke-width="1.6"/>',
   dataTransfer:
     '<rect x="1.8" y="3" width="8" height="9" rx=".9" stroke-width="1.3"/><path d="M1.8 6h8M1.8 9h8M4.8 6v6" stroke-width="1.1"/><path d="M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4" stroke-width="1.2"/><path d="m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z" stroke-width="1.2"/><path d="m12.2 14.1 3.2 1.7 3.2-1.7" stroke-width="1.2"/>',
   fieldMapFill:

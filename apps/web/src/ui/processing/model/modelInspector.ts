@@ -256,6 +256,7 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
       const def = tool.parameters.find((p) => p.name === name);
       return def?.type === 'fieldMap' ? fieldMapKey(def, fixed()) : '';
     },
+    layerCount: (id) => runner.layerCount(id),
     // A file's rows are not kept in a model (docs/adr/0200 §7): a step reads a layer instead.
     chooseFile: () => ctx.log.info(DIALOG_TEXTS.file.inModel),
     previewExpression: (name) => runner.previewExpression(tool, fixed(), name),

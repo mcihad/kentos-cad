@@ -4,7 +4,7 @@ import { compileExpression, type CompiledExpression, type ExprLayers } from '../
 import { exprLayers, worldObjects } from '../model/expression/layers';
 import type { ExpressionVariable } from '../model/projectVariables';
 import { ObjectStore, type RunGeometry } from './geometry';
-import type { DefaultsContext, DocumentSnapshot, ExecutionTarget, Feedback, FeatureSet, ProcessingTool, ProjectCrs, ProjectInfo, RunContext, RunResult } from './types';
+import type { DefaultsContext, DocumentSnapshot, ExecutionTarget, Feedback, FeatureSet, LayerSet, ProcessingTool, ProjectCrs, ProjectInfo, RunContext, RunResult } from './types';
 
 /**
  * A run as data. The runner resolves what depends on the host (selection,
@@ -20,6 +20,11 @@ export interface FeatureRef {
   readonly description: string;
   /** The layer chosen, when the scope is a layer (`FeatureSet.layerId`, docs/adr/0216 §3). */
   readonly layerId?: string;
+}
+
+/** A `layers` input resolved (docs/adr/0217 §7): each layer's id, name and objects' ids, in the tree's order. */
+export interface LayersRef {
+  readonly layers: readonly { readonly id: string; readonly name: string; readonly ids: readonly number[] }[];
 }
 
 export interface RunJob {
@@ -58,6 +63,7 @@ export interface Executor {
 }
 
 const isFeatureRef = (v: unknown): v is FeatureRef => !!v && typeof v === 'object' && Array.isArray((v as FeatureRef).ids) && typeof (v as FeatureRef).description === 'string';
+const isLayersRef = (v: unknown): v is LayersRef => !!v && typeof v === 'object' && Array.isArray((v as LayersRef).layers);
 
 /**
  * The values `run` receives: features as objects of this document, expressions compiled with the run's `@` values
@@ -70,6 +76,8 @@ export function materialize(tool: ProcessingTool, values: RunJob['values'], doc:
     if (p.type === 'features' && isFeatureRef(v)) {
       const entities = v.ids.flatMap((id) => doc.get(id) ?? []);
       out[p.name] = { entities, description: v.description, ...(v.layerId !== undefined && { layerId: v.layerId }) } satisfies FeatureSet;
+    } else if (p.type === 'layers' && isLayersRef(v)) {
+      out[p.name] = v.layers.map((l): LayerSet => ({ id: l.id, name: l.name, entities: l.ids.flatMap((id) => doc.get(id) ?? []) }));
     } else if (p.type === 'expression' && typeof v === 'string') {
       const src = v.trim();
       const r = src ? compileExpression(src, { variables, world: true }) : null;
@@ -98,12 +106,17 @@ export function jobContext(job: RunJob, doc: DocumentSnapshot, geometry: RunGeom
   };
 }
 
-/** The objects of a tool's features inputs, each once. */
+/** The objects of a tool's features and layers inputs, each once. */
 function inputObjects(tool: ProcessingTool, values: Record<string, unknown>): Entity[] {
   const byId = new Map<number, Entity>();
   for (const p of tool.parameters) {
-    const set = p.type === 'features' ? (values[p.name] as FeatureSet | null | undefined) : null;
-    for (const e of set?.entities ?? []) if (!byId.has(e.id)) byId.set(e.id, e);
+    const lists =
+      p.type === 'features'
+        ? [(values[p.name] as FeatureSet | null | undefined)?.entities ?? []]
+        : p.type === 'layers'
+          ? ((values[p.name] as readonly LayerSet[] | null | undefined) ?? []).map((l) => l.entities)
+          : [];
+    for (const list of lists) for (const e of list) if (!byId.has(e.id)) byId.set(e.id, e);
   }
   return [...byId.values()];
 }

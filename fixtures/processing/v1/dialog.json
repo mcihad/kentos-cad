@@ -185,6 +185,12 @@
     "text": "3 kat"
    }
   },
+  "layers": {
+   "layer": "Katman",
+   "objects": "Nesne",
+   "none": "Katmanları işaretleyin.",
+   "locked": "Kilitli: nesneleri alınmaz"
+  },
   "fieldMap": {
    "target": "Hedef alan",
    "source": "Kaynak alan",
@@ -2464,6 +2470,448 @@
     "aliases": [
      "ENKISACIZGI",
      "KISACIZGI"
+    ]
+   }
+  },
+  "layers.splitByAttribute": {
+   "title": "Özniteliğe göre böl",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Bölünecek nesneler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "fields",
+     "label": "Alanlar",
+     "description": "Değerleri katmanları veren alan ya da alanlar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin",
+      "multiple": true
+     }
+    },
+    {
+     "name": "mode",
+     "label": "İşlem",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "copy",
+        "label": "Kopyala",
+        "hint": "Nesneler yerinde kalır, kopyaları yazılır"
+       },
+       {
+        "value": "move",
+        "label": "Taşı",
+        "hint": "Nesneler katman değiştirir"
+       }
+      ]
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "layers",
+     "text": "Katman"
+    },
+    "icon": "layerSplitAttr",
+    "about": "Nesneleri bir ya da birkaç özniteliğin değerlerine göre yeni bir gruptaki katmanlara böler: her değer bir katman.",
+    "help": [
+     "Örnekler: parselleri mahallelerine, yapıları kullanım ve kat sayılarına, yolları türlerine göre ayrı katmanlarda toplamak.",
+     "Değerler baştaki ve sondaki boşluklar atılarak okunur; değeri olmayan “(boş)” katmanına gider; birden çok alanda değerler “ – ” ile birleşir. Katmanlar alanların adını taşıyan yeni bir grupta, değerlerin ilk görüldüğü sırayla açılır ve her biri değerinin ilk nesnesinin katmanının görünüşünü ve alanlarını alır.",
+     "Kopyala nesneleri yerinde bırakır; Taşı onları yeni katmanlara geçirir. Kilitli katmandaki nesneler alınmaz. En çok 1000 katmana bölünür."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "OZNITELIKBOL"
+    ]
+   }
+  },
+  "layers.merge": {
+   "title": "Vektör katmanlarını birleştir",
+   "rows": [
+    {
+     "name": "layers",
+     "label": "Katmanlar",
+     "description": "Birleştirilecek katmanlar; ağaçtaki sırasıyla okunur.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "layers",
+      "min": 2
+     }
+    },
+    {
+     "name": "map",
+     "label": "Alan eşleme",
+     "description": "Her sonuç alanına hangi kaynak alan ya da hücre boşken hangi değer; boşsa bütün öznitelikler kendi adlarıyla.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "fieldMap",
+      "target": "layers",
+      "source": [
+       "layers"
+      ]
+     }
+    },
+    {
+     "name": "sourceField",
+     "label": "Kaynak katman alanı",
+     "description": "Nesnenin geldiği katmanın adı bu alana yazılır; boşsa yazılmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "combo",
+      "placeholder": "Alan adı"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Sonuç",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "layers",
+     "text": "Katman"
+    },
+    "icon": "layersMergeVector",
+    "about": "Seçilen katmanların nesnelerini alan eşlemesiyle tek katmanda toplar; kaynak katmanın adını bir alana yazar.",
+    "help": [
+     "Örnekler: paftalara bölünmüş parsel katmanlarını tek parsel katmanında toplamak; farklı ekiplerin bina katmanlarını ortak alan adlarıyla birleştirmek.",
+     "Nesneler kopyalanır, girdiler değişmez: katmanlar ağaçtaki sırasıyla, her katmanda çizim sırasıyla. Alan eşleme boşsa nesneler bütün öznitelikleriyle gelir; doluysa yalnız eşlemenin alanlarıyla (hücre boşsa varsayılan). Kaynak katman alanı doluysa nesnenin geldiği katmanın adı oraya yazılır.",
+     "Sonuç alanları tipli bir katmansa değerler alanların kuralıyla yazılır: uymayan değer yazılmaz, katmanın varsayılanları boş alanlara gelir, zorunlu alanı boş kalan nesne eklenmez. Kilitli katmanın nesneleri alınmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KATMANTOPLA"
+    ]
+   }
+  },
+  "layers.extract": {
+   "title": "Seçilenleri çıkar",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Çıkarılacak nesneler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "mode",
+     "label": "İşlem",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "copy",
+        "label": "Kopyala",
+        "hint": "Nesneler yerinde kalır, kopyaları yazılır"
+       },
+       {
+        "value": "move",
+        "label": "Taşı",
+        "hint": "Nesneler katman değiştirir"
+       }
+      ]
+     }
+    },
+    {
+     "name": "output",
+     "label": "Sonuç",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "layers",
+     "text": "Katman"
+    },
+    "icon": "extractSelected",
+    "about": "Seçili nesneleri yeni ya da var olan bir katmana kopyalar ya da taşır.",
+    "help": [
+     "Örnekler: bir sorgunun seçtiği parselleri ayrı bir katmanda toplamak; elle seçilen yapıları bir iş katmanına taşımak.",
+     "Yeni sonuç katmanı ilk nesnenin katmanının görünüşünü ve alanlarını alır ve onun hemen üstüne açılır. Kopyala nesneleri yerinde bırakır; Taşı onları sonuç katmanına geçirir. Kilitli katmandaki nesneler alınmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SECILENLERICIKAR"
+    ]
+   }
+  },
+  "layers.deleteDuplicates": {
+   "title": "Yinelenenleri sil",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Yinelenenleri silinecek nesneler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "fields",
+     "label": "Alanlar",
+     "description": "Boş bırakılırsa bütün öznitelikler.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin",
+      "multiple": true
+     }
+    },
+    {
+     "name": "geometry",
+     "label": "Geometri de aynı olsun",
+     "description": "Türü ve şekli de aynı olanlar yinelenen sayılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "layers",
+     "text": "Katman"
+    },
+    "icon": "deleteDuplicates",
+    "about": "Aynı öznitelikli (isterse aynı geometrili) nesnelerden ilkini bırakıp öbürlerini siler.",
+    "help": [
+     "Örnekler: iki kez içe aktarılmış parselleri temizlemek; aynı numaralı noktalardan yalnız ilkini bırakmak.",
+     "Alanlar boşsa bütün öznitelikler karşılaştırılır (değeri boş alanlar yok sayılır). Değerler baştaki ve sondaki boşluklar atılarak karşılaştırılır. Geometri de aynı olsun açıkken türü ve şekli (köşeler, yaylar, kotlar) tam aynı olanlar yinelenen sayılır. Girdinin sırasıyla ilk nesne kalır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "YINELENENSIL"
+    ]
+   }
+  },
+  "layers.orderBy": {
+   "title": "İfadeye göre sırala",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Sıralanacak nesneler; kilitli katmandakiler alınmaz.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "expression",
+     "label": "İfade",
+     "description": "Nesneleri sıralayan değer.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "value",
+      "placeholder": "$alan"
+     }
+    },
+    {
+     "name": "direction",
+     "label": "Yön",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "asc",
+        "label": "Artan",
+        "hint": "Küçükten büyüğe, A'dan Z'ye"
+       },
+       {
+        "value": "desc",
+        "label": "Azalan",
+        "hint": "Büyükten küçüğe, Z'den A'ya"
+       }
+      ]
+     }
+    },
+    {
+     "name": "nulls",
+     "label": "Boşlar",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "last",
+        "label": "Sonda",
+        "hint": "Değeri olmayan nesneler sonda"
+       },
+       {
+        "value": "first",
+        "label": "Başta",
+        "hint": "Değeri olmayan nesneler başta"
+       }
+      ]
+     }
+    },
+    {
+     "name": "orderField",
+     "label": "Sıra alanı",
+     "description": "Sıra numarası (1, 2, 3 …) bu alana yazılır; boşsa yazılmaz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "combo",
+      "placeholder": "Alan adı"
+     }
+    },
+    {
+     "name": "output",
+     "label": "Sonuç",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "layers",
+     "text": "Katman"
+    },
+    "icon": "orderByExpression",
+    "about": "Nesnelerin kopyalarını bir ifadenin değerine göre sıralı olarak yeni bir katmana yazar; isterse sıra numarasını bir alana yazar.",
+    "help": [
+     "Örnekler: parselleri alanlarına göre büyükten küçüğe, noktaları adlarına göre doğal sırayla (P2, P10) dizmek; sıra numarasını bir alana yazmak.",
+     "Değeri olmayan nesneler Boşlar'a göre başta ya da sonda. Türler karışıksa evet/hayır, sayı, metin sırasıyla; metinler doğal sırayla (sayılar değerleriyle, Türkçe harf sırasıyla). Eşit değerler girdinin sırasıyla kalır.",
+     "Kopyalar sonuç katmanına sıralı yazılır; Öznitelik tablosu ve çizim sırası onların sırasıdır. Girdi değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "IFADEYLESIRALA"
     ]
    }
   },

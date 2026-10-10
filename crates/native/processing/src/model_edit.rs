@@ -262,7 +262,8 @@ pub fn input_type_for(p: &ParamDef) -> Option<&'static str> {
         | ParamKind::Network { .. }
         | ParamKind::RasterValues { .. }
         | ParamKind::RasterPairs { .. }
-        | ParamKind::FieldMap { .. } => None,
+        | ParamKind::FieldMap { .. }
+        | ParamKind::Layers { .. } => None,
     }
 }
 

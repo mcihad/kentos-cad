@@ -16,6 +16,7 @@ import { networkClosestFacility } from './network/closestFacility';
 import { networkOdMatrix } from './network/odMatrix';
 import { networkServiceAreas } from './network/serviceAreas';
 import { PROXIMITY_TOOLS } from './proximity/tools';
+import { LAYER_TOOLS } from './layers';
 import { selectByExpression } from './selectByExpression';
 import { selectByLocation } from './selectByLocation';
 import { summaryStatistics } from './summaryStatistics';
@@ -45,6 +46,8 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   transfer,
   // Yakınlık (docs/adr/0215): nearest, distance matrix, nearest hub, neighbours, shortest line.
   ...PROXIMITY_TOOLS,
+  // Katman işlemleri (docs/adr/0217): split, merge, extract, delete duplicates, order.
+  ...LAYER_TOOLS,
   geometryBuffer,
   geometryClip,
   geometryDissolve,

@@ -14,14 +14,15 @@ use serde_json::{Value, json};
 
 use crate::expression::{EntityObjects, Evaluation, preview_expression};
 use crate::features::{
-    Host, InputSummary, Scene, resolve_features, summarize_features, summarize_file,
+    Host, InputSummary, Scene, resolve_features, resolve_layers, summarize_features,
+    summarize_file, summarize_layers,
 };
 use crate::geometry::RunGeometry;
 use crate::parameters::{Issue, file_table, is_visible, validate_with};
 use crate::text::{fold_turkish, js_trim};
 use crate::types::{
-    ChangeSet, Defaults, FeatureSet, Feedback, NewLayerStyle, ParamKind, Resolved, RunContext,
-    RunFn, RunResult, Target, TargetLayer, Tool, Values,
+    ChangeSet, Defaults, FeatureSet, Feedback, LayerSet, NewLayerStyle, ParamKind, Resolved,
+    RunContext, RunFn, RunResult, Target, TargetLayer, Tool, ToolLayer, Values,
 };
 use crate::values::{FeaturesValue, LayerValue, Scope};
 
@@ -117,6 +118,8 @@ pub struct Job {
     silent: bool,
     started: (u64, Instant),
     inputs: BTreeMap<String, Input>,
+    /// The `layers` parameters' layers (docs/adr/0217 §7): each layer's id, name and objects, in the tree's order.
+    layer_inputs: BTreeMap<String, Vec<(String, String, Vec<Slot>)>>,
     layers: BTreeMap<String, TargetLayer>,
     /// Layers the run writes to that do not exist yet: their names, looks and
     /// the layer each goes right above (none: last).
@@ -149,7 +152,13 @@ impl Job {
     /// Objects the features inputs resolved to: the web's input size, from
     /// which [`WORKER_THRESHOLD`] sends a job to the background.
     pub fn size(&self) -> usize {
-        self.inputs.values().map(|i| i.ids.len()).sum()
+        self.inputs.values().map(|i| i.ids.len()).sum::<usize>()
+            + self
+                .layer_inputs
+                .values()
+                .flatten()
+                .map(|(_, _, ids)| ids.len())
+                .sum::<usize>()
     }
 }
 
@@ -223,6 +232,53 @@ impl Feedback for Collect<'_> {
     }
 }
 
+/// A `layers` value's ids; none when it is not a list of texts.
+fn layer_ids(v: &Value) -> Option<Vec<String>> {
+    v.as_array()?
+        .iter()
+        .map(|id| id.as_str().map(str::to_owned))
+        .collect()
+}
+
+/// A new layer's id from its name (`islem-merkez`): the folded name's
+/// letters and digits, “-” for every other run; “-2”, then “-2-3” …
+/// appended while `taken` says it is taken (as the web does).
+pub fn new_layer_id(name: &str, taken: impl Fn(&str) -> bool) -> String {
+    let mut slug = String::new();
+    let mut gap = false;
+    for c in fold_turkish(name).to_lowercase().chars() {
+        if c.is_ascii_lowercase() || c.is_ascii_digit() {
+            slug.push(c);
+            gap = false;
+        } else if !gap {
+            slug.push('-');
+            gap = true;
+        }
+    }
+    let mut id = format!("islem-{slug}");
+    let mut k = 2;
+    while taken(&id) {
+        id = format!("{id}-{k}");
+        k += 1;
+    }
+    id
+}
+
+/// A name for a node among these: the name, or with “ (2)”, “ (3)” … when a
+/// node there has it (folded, the web's `freeName`).
+pub fn free_name<'a>(name: &str, siblings: impl Iterator<Item = &'a str> + Clone) -> String {
+    let mut out = name.to_owned();
+    let mut k = 2;
+    while siblings
+        .clone()
+        .any(|s| fold_turkish(s) == fold_turkish(&out) && !fold_turkish(&out).is_empty())
+    {
+        out = format!("{name} ({k})");
+        k += 1;
+    }
+    out
+}
+
 /// A new-layer value reuses a layer that already has that name (running a
 /// tool twice keeps writing to the same "Köşe noktaları"); otherwise it
 /// gets an id now and is created on apply.
@@ -250,26 +306,8 @@ pub fn resolve_layer(doc: &Document, v: &LayerValue) -> TargetLayer {
                     is_new: false,
                 };
             }
-            let mut slug = String::new();
-            let mut gap = false;
-            for c in folded.to_lowercase().chars() {
-                if c.is_ascii_lowercase() || c.is_ascii_digit() {
-                    slug.push(c);
-                    gap = false;
-                } else if !gap {
-                    slug.push('-');
-                    gap = true;
-                }
-            }
-            let mut id = format!("islem-{slug}");
-            // As the web does: each try extends the last ("-2", then "-2-3").
-            let mut k = 2;
-            while layers.get(&id).is_some() {
-                id = format!("{id}-{k}");
-                k += 1;
-            }
             TargetLayer {
-                id,
+                id: new_layer_id(&name, |id| layers.get(id).is_some()),
                 name,
                 is_new: true,
             }
@@ -322,6 +360,11 @@ impl Runner {
                 ParamKind::File { .. } => {
                     if let Some((header, rows)) = values.get(&p.name).and_then(file_table) {
                         out.insert(p.name.clone(), summarize_file(&header, &rows));
+                    }
+                }
+                ParamKind::Layers { .. } => {
+                    if let Some(ids) = values.get(&p.name).and_then(layer_ids) {
+                        out.insert(p.name.clone(), summarize_layers(&ids, scene));
                     }
                 }
                 _ => {}
@@ -510,6 +553,7 @@ impl Runner {
         // Resolve what depends on the host: objects to ids, layers to a
         // target (new layers are made only on apply).
         let mut inputs: BTreeMap<String, Input> = BTreeMap::new();
+        let mut layer_inputs: BTreeMap<String, Vec<(String, String, Vec<Slot>)>> = BTreeMap::new();
         let mut layers: BTreeMap<String, TargetLayer> = BTreeMap::new();
         let mut new_layers: BTreeMap<String, NewLayerPlan> = BTreeMap::new();
         // What resolving the inputs left out, said once the run starts.
@@ -574,6 +618,46 @@ impl Runner {
                                 description: set.description,
                                 layer: set.layer_id,
                             },
+                        );
+                    }
+                    // A list of layers (docs/adr/0217 §7): read in the tree's order; a locked layer's objects are not taken.
+                    ParamKind::Layers { .. } => {
+                        let Some(ids) = layer_ids(v) else {
+                            continue;
+                        };
+                        let sets = resolve_layers(&ids, scene);
+                        let (taken, locked): (Vec<_>, Vec<_>) = sets
+                            .into_iter()
+                            .partition(|l| !doc.layers().is_locked(&l.id));
+                        let left: usize = locked.iter().map(|l| l.entities.len()).sum();
+                        if left > 0 {
+                            notes.push(format!(
+                                "“{}”: {left} nesne kilitli katmanda olduğu için işleme alınmadı.",
+                                p.label
+                            ));
+                        }
+                        let count: usize = taken.iter().map(|l| l.entities.len()).sum();
+                        if count == 0 && !p.optional {
+                            return Prepared::Done(Outcome::Invalid {
+                                issues: vec![Issue {
+                                    param: Some(p.name.clone()),
+                                    message: format!(
+                                        "“{}”: seçilen katmanlarda uygun nesne yok.",
+                                        p.label
+                                    ),
+                                }],
+                            });
+                        }
+                        layer_inputs.insert(
+                            p.name.clone(),
+                            taken
+                                .into_iter()
+                                .map(|l| {
+                                    let ids =
+                                        l.entities.iter().map(|e| Slot(e.base().id)).collect();
+                                    (l.id, l.name, ids)
+                                })
+                                .collect(),
                         );
                     }
                     ParamKind::Layer {
@@ -653,6 +737,7 @@ impl Runner {
             silent,
             started,
             inputs,
+            layer_inputs,
             layers,
             new_layers,
             selection: host.selected(),
@@ -712,6 +797,21 @@ impl Runner {
                 }
                 _ => {}
             }
+        }
+        // The `layers` parameters' layers, their objects read again from this drawing.
+        for (name, list) in &job.layer_inputs {
+            let sets: Vec<LayerSet<'_>> = list
+                .iter()
+                .map(|(id, layer, ids)| LayerSet {
+                    id: id.clone(),
+                    name: layer.clone(),
+                    entities: ids.iter().filter_map(|id| doc.get(*id)).collect(),
+                })
+                .collect();
+            for set in &sets {
+                objects.extend(set.entities.iter().filter(|e| seen.insert(e.base().id)));
+            }
+            resolved.layer_sets.insert(name.clone(), sets);
         }
         resolved.layers = job.layers.clone();
         let layer_names: BTreeMap<String, String> = doc
@@ -857,11 +957,17 @@ impl Runner {
         }
         let updated: Vec<Slot> = changes.update.iter().map(|u| u.id).collect();
         let removed = !changes.remove.is_empty();
+        let made = !result.layers.is_empty();
         let added = match apply(
             host.doc_mut(),
             tool,
             changes,
-            (&new_layers, result.above.as_deref()),
+            Placing {
+                new_layers: &new_layers,
+                above: result.above.as_deref(),
+                made: &result.layers,
+                like: result.like.as_deref(),
+            },
             log,
         ) {
             Ok(added) => added,
@@ -911,7 +1017,7 @@ impl Runner {
             Some(ids) => format!("{} nesne seçildi.", ids.len()),
             None => format!("{} nesne eklendi.", added.len()),
         });
-        let edited = !added.is_empty() || !updated.is_empty() || removed;
+        let edited = !added.is_empty() || !updated.is_empty() || removed || made;
         let record = self.record(
             silent,
             tool,
@@ -933,18 +1039,103 @@ impl Runner {
     }
 }
 
+/// Where a run's new layers go: the layer parameters' plans, the layer a new
+/// one goes right above (the tool's word), the layers the run makes itself
+/// and the layer whose look and fields a new one takes (docs/adr/0217 §7).
+struct Placing<'a> {
+    new_layers: &'a BTreeMap<String, NewLayerPlan>,
+    above: Option<&'a str>,
+    made: &'a [ToolLayer],
+    like: Option<&'a str>,
+}
+
+/// A layer's look and fields for a new one (`like`); none when it is not a layer.
+fn look_of(
+    doc: &Document,
+    id: Option<&str>,
+) -> Option<(
+    kentos_contracts::LayerStyle,
+    Vec<kentos_contracts::fields::LayerField>,
+)> {
+    let node = doc.layers().get(id?)?;
+    (node.kind == kentos_contracts::LayerNodeType::Layer)
+        .then(|| (node.style.clone(), node.fields.clone()))
+}
+
 /// Applies the change set in one undo step named after the tool; locked
 /// layers are left alone and counted. Returns the objects added.
 fn apply(
     doc: &mut Document,
     tool: &Tool,
-    ch: ChangeSet,
-    (new_layers, above): (&BTreeMap<String, NewLayerPlan>, Option<&str>),
+    mut ch: ChangeSet,
+    placing: Placing<'_>,
     log: &mut Vec<LogLine>,
 ) -> Result<Vec<Slot>, String> {
+    let Placing {
+        new_layers,
+        above,
+        made,
+        like,
+    } = placing;
     let mut skipped = 0usize;
     // Removals, then updates, then additions, each as one change.
     let added = doc.transact(&tool.label, |doc| {
+        // Layers and groups the run makes itself (docs/adr/0217 §7), in its order: a key becomes an id from the
+        // name, a name taken where it goes gets “ (2)”; a group's layers go into it, first on top.
+        let mut keys: BTreeMap<&str, String> = BTreeMap::new();
+        for t in made {
+            let parent = t.parent.as_deref().and_then(|k| keys.get(k)).cloned();
+            let anchor = t
+                .above
+                .as_deref()
+                .filter(|a| parent.is_none() && doc.layers().get(a).is_some());
+            let (group, index) = match (&parent, anchor) {
+                (Some(g), _) => (Some(g.clone()), None),
+                (None, Some(a)) => match doc.layers().place_of(a) {
+                    Some((g, i)) => (g, Some(i)),
+                    None => (None, None),
+                },
+                (None, None) => (None, None),
+            };
+            let siblings: Vec<String> = match &group {
+                Some(g) => doc
+                    .layers()
+                    .get(g)
+                    .map(|n| n.children.iter().map(|c| c.name.clone()).collect())
+                    .unwrap_or_default(),
+                None => doc
+                    .layers()
+                    .nodes()
+                    .iter()
+                    .map(|n| n.name.clone())
+                    .collect(),
+            };
+            let name = free_name(&t.name, siblings.iter().map(String::as_str));
+            let id = new_layer_id(&name, |x| doc.layers().get(x).is_some());
+            let mut node = if t.group {
+                NewLayer::group(name)
+            } else {
+                NewLayer::layer(name)
+            };
+            node.id = Some(id.clone());
+            if let Some((style, fields)) = look_of(doc, t.like.as_deref()).filter(|_| !t.group) {
+                node.style = style;
+                node.fields = fields;
+            }
+            doc.add_layer_at(node, group.as_deref(), index, None, false)
+                .map_err(|r| r.0)?;
+            keys.insert(t.key.as_str(), id);
+        }
+        for e in &mut ch.add {
+            if let Some(id) = keys.get(e.base().layer_id.as_str()) {
+                e.base_mut().layer_id = id.clone();
+            }
+        }
+        for u in &mut ch.update {
+            if let Some(id) = u.layer.as_deref().and_then(|k| keys.get(k)) {
+                u.layer = Some(id.clone());
+            }
+        }
         // Layers the run writes to but that do not exist yet: in the tool's step, so undo takes them too.
         // Each run of one layer is asked once: a run adds hundreds of thousands of objects to a few layers.
         let mut asked: Option<&str> = None;
@@ -965,7 +1156,14 @@ fn apply(
             }
             let mut layer = NewLayer::layer(plan.name.clone());
             layer.id = Some(id.clone());
-            layer.style = plan.style.over(default_style());
+            // A layer the tool names gives its look and fields (docs/adr/0217 §7).
+            match look_of(doc, like) {
+                Some((style, fields)) => {
+                    layer.style = style;
+                    layer.fields = fields;
+                }
+                None => layer.style = plan.style.over(default_style()),
+            }
             // Right above or below the layer its plan names (its group, its place), else last;
             // the tool may name it.
             let at = match (&plan.above, &plan.below) {
@@ -1023,6 +1221,9 @@ fn apply(
             }
             if let Some(label) = u.label {
                 next.base_mut().label = label;
+            }
+            if let Some(layer) = u.layer {
+                next.base_mut().layer_id = layer;
             }
             if let Some(zs) = &u.zs {
                 kentos_native_application::elevation::assign(&mut next, zs);

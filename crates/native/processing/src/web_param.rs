@@ -146,6 +146,13 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
         "rasterPairs" => ParamKind::RasterPairs {
             of: text(o, "of").unwrap_or_default(),
         },
+        "layers" => ParamKind::Layers {
+            min: o
+                .get("min")
+                .and_then(Value::as_u64)
+                .and_then(|n| usize::try_from(n).ok())
+                .unwrap_or(1),
+        },
         "fieldMap" => ParamKind::FieldMap {
             target: text(o, "target").unwrap_or_default(),
             source: texts(o.get("source")).unwrap_or_default(),

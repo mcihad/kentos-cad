@@ -226,6 +226,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 label: None,
                 zs: None,
                 geometry: None,
+                layer: None,
             });
         }
     }

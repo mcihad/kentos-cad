@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CadDocument } from '../model/document';
 import type { Entity } from '../model/entities';
-import { LayerStore } from '../model/layers';
+import { LayerStore, type LayerNode } from '../model/layers';
 import { readSnapshot } from '../model/snapshot';
 import { BUILTIN_TOOLS } from './builtin';
 import { BUILTIN_MODELS } from './builtin/models';
@@ -70,6 +70,7 @@ const CASES = JSON.parse(file('cases.json')) as CaseFile;
 const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const PROXIMITY = JSON.parse(file('proximity.json')) as CaseFile;
 const TRANSFER = JSON.parse(file('transfer.json')) as CaseFile;
+const LAYER_OPS = JSON.parse(file('layers.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
@@ -254,7 +255,21 @@ function observed(s: Seen): Json {
   const known = new Set<string>();
   const walk = (nodes: readonly { id: string; children?: unknown[] }[]) => nodes.forEach((n) => (known.add(n.id), walk((n.children ?? []) as never)));
   walk(was);
-  const layers = [...doc.layers.leaves()].filter((l) => !known.has(l.id)).map((l) => ({ id: l.id, name: l.name, style: l.style }));
+  // The groups a run made, and its new layers with their fields and, in a group it made, that group (docs/adr/0217 §7).
+  const groups: Json[] = [];
+  const walkNow = (nodes: readonly LayerNode[]) =>
+    nodes.forEach((n) => {
+      if (n.type === 'group' && !known.has(n.id)) groups.push({ id: n.id, name: n.name });
+      walkNow(n.children);
+    });
+  walkNow(doc.layers.tree);
+  const made = new Set(groups.map((g) => g.id as string));
+  const layers = [...doc.layers.leaves()]
+    .filter((l) => !known.has(l.id))
+    .map((l) => {
+      const parent = doc.layers.parentOf(l.id);
+      return { id: l.id, name: l.name, style: l.style, ...(l.fields?.length && { fields: l.fields }), ...(parent && made.has(parent.id) && { parent: parent.id }) };
+    });
   const added: Json[] = [];
   const updated: Json[] = [];
   for (const e of doc.all()) {
@@ -265,7 +280,9 @@ function observed(s: Seen): Json {
       const was = geometryPart(JSON.parse(old) as Json);
       const now = geometryPart(plain(e));
       const moved = JSON.stringify(was) !== JSON.stringify(now);
-      updated.push({ id: e.id, attrs: e.attrs, ...(e.label !== undefined ? { label: e.label } : {}), ...(moved ? { geometry: now } : {}) });
+      // A layer changed is written too (Özniteliğe göre böl's and Seçilenleri çıkar's Taşı, docs/adr/0217).
+      const layerId = (JSON.parse(old) as Json).layerId !== e.layerId ? { layerId: e.layerId } : {};
+      updated.push({ id: e.id, attrs: e.attrs, ...(e.label !== undefined ? { label: e.label } : {}), ...(moved ? { geometry: now } : {}), ...layerId });
     }
   }
   const removed = [...before.objects.keys()].filter((id) => !doc.get(id));
@@ -274,6 +291,7 @@ function observed(s: Seen): Json {
     summary: outcome.record.summary,
     log: s.log,
     layers: JSON.parse(JSON.stringify(layers)),
+    groups,
     added,
     updated,
     removed,
@@ -292,6 +310,7 @@ function check(c: Case, s: Seen, tol: number, measureTol = tol): void {
   expect(got.summary, where).toBe(want.summary);
   expect(got.log, where).toEqual(want.log ?? []);
   expect(got.layers, where).toEqual(want.layers ?? []);
+  expect(got.groups, where).toEqual(want.groups ?? []);
   const added = got.added as Json[];
   if (want.addedShapes) {
     const shapes = want.addedShapes as Json[];
@@ -404,6 +423,19 @@ describe('data transfer cases (fixtures/processing/v1/transfer.json, docs/adr/02
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(TRANSFER, c, 'client'), TRANSFER.tolerance);
       check(c, await play(TRANSFER, c, 'worker'), TRANSFER.tolerance);
+    });
+  }
+});
+
+describe('layer tool cases (fixtures/processing/v1/layers.json, docs/adr/0217)', () => {
+  it('is a v1 case file', () => {
+    expect([LAYER_OPS.format, LAYER_OPS.version]).toEqual(['kentos.processing-cases', 1]);
+  });
+
+  for (const c of LAYER_OPS.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      check(c, await play(LAYER_OPS, c, 'client'), LAYER_OPS.tolerance);
+      check(c, await play(LAYER_OPS, c, 'worker'), LAYER_OPS.tolerance);
     });
   }
 });

@@ -389,6 +389,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 label: None,
                 zs: None,
                 geometry: shape,
+                layer: None,
             });
             "Güncellendi"
         };

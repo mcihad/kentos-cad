@@ -351,6 +351,12 @@ pub const PORTED: &[&str] = &[
     "processing.run.proximity.hub",
     "processing.run.proximity.neighbors",
     "processing.run.proximity.shortestLine",
+    // Katman işlemleri (docs/adr/0217).
+    "processing.run.layers.splitByAttribute",
+    "processing.run.layers.merge",
+    "processing.run.layers.extract",
+    "processing.run.layers.deleteDuplicates",
+    "processing.run.layers.orderBy",
     // Geometri işlemleri (docs/adr/0201).
     "processing.run.geometry.buffer",
     "processing.run.geometry.clip",

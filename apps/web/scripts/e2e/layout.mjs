@@ -212,6 +212,10 @@ const ITEMS = [
   // Veri aktar (docs/adr/0216 §6): the form as it opens (no file yet: the field map's note), and a map of four rows with
   // long names, one with a problem (the rows share the width; names are cut, not the buttons).
   { id: 'processing-transfer', open: (ui) => ui.run('processing.run.attributes.transfer'), ready: '.dialog--ptool' },
+  // Katman işlemleri (docs/adr/0217 §8): Vektör katmanlarını birleştir's list of every layer and field map, Özniteliğe
+  // göre böl's fields.
+  { id: 'processing-layers-merge', open: (ui) => ui.run('processing.run.layers.merge'), ready: '.dialog--ptool .pfield__layers' },
+  { id: 'processing-layers-split', open: (ui) => ui.run('processing.run.layers.splitByAttribute'), ready: '.dialog--ptool' },
   {
     id: 'processing-transfer-map',
     open: (ui) =>

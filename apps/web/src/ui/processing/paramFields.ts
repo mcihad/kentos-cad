@@ -1,3 +1,4 @@
+import '../../styles/io.css';
 import type { AppContext } from '../../app/context';
 import type { Vec2 } from '../../model/geometry';
 import { attributeFields, type BuilderObjects } from '../../model/expression/builderObjects';
@@ -32,8 +33,10 @@ import {
   previewIcon,
   rasterPairsView,
   rasterValuesView,
+  layersView,
   toggleKind,
   toggledName,
+  withChosenLayer,
   withLayer,
   withMapRow,
   withNewMapRow,
@@ -59,6 +62,8 @@ export interface FieldEnv {
   sourceOf(name: string): InputSummary | undefined;
   /** A field map's source key: the column Aynı adlarla doldur leaves out (docs/adr/0216 §2). */
   mapKey?(name: string): string;
+  /** A layer's objects, beside it in a Katmanlar list (docs/adr/0217 §7); none: not said. */
+  layerCount?(id: string): number;
   /** Asks for a file parameter's file and sets it (docs/adr/0200 §7). */
   chooseFile(name: string): void;
   /** How an expression parameter works out on its objects now; null when it cannot be run. */
@@ -119,7 +124,41 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
       return rasterPairsField(def, value as RasterPairs | null, set, env);
     case 'fieldMap':
       return fieldMapField(def, value as FieldMap | null, set, env);
+    case 'layers':
+      return layersField(def, value as readonly string[] | null, set, env);
   }
+}
+
+/**
+ * Katmanlar (docs/adr/0217 §7): every layer in the tree's order with its objects, checked to be chosen; a locked one
+ * marked (its objects are not taken); under the list what the chosen ones hold.
+ */
+function layersField(def: Extract<ParamDef, { type: 'layers' }>, value: readonly string[] | null, set: Setter, env: FieldEnv): HTMLElement {
+  const layers = planLayers(env.ctx.doc.layers, (id) => env.layerCount?.(id) ?? 0);
+  const view = layersView(value, layers, env.describe(def.name));
+  const tbody = h('tbody');
+  for (const r of view.rows) {
+    const box = h('input', { type: 'checkbox', checked: r.checked, 'aria-label': r.label });
+    box.addEventListener('change', () => set(withChosenLayer(value, layers, r.id, box.checked), true));
+    const row = h(
+      'tr',
+      { class: `merge-row${r.locked ? ' find-row--blocked' : ''}`, ...(r.locked && { title: T.layers.locked }) },
+      h('td', { class: 'find-check' }, box),
+      h('td', { class: 'io-table__name' }, r.locked ? icon('lock', 12) : null, r.label),
+      h('td', { class: 'num' }, String(r.count)),
+    );
+    // A click on the row checks it, as on its box.
+    row.addEventListener('click', (e) => {
+      if (e.target !== box) box.click();
+    });
+    tbody.append(row);
+  }
+  const table = h(
+    'div',
+    { class: 'io-table-wrap pfield__layers' },
+    h('table', { class: 'io-table' }, h('thead', null, h('tr', null, h('th', { class: 'find-check' }), h('th', null, T.layers.layer), h('th', { class: 'num' }, T.layers.objects))), tbody),
+  );
+  return h('div', { class: 'pfield__stack' }, table, h('div', { class: 'pfield__hint' }, view.note));
 }
 
 /** The input's raster names, none when it is not known (a model's step). */

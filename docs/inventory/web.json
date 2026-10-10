@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 548,
-      "implemented": 525,
+      "total": 553,
+      "implemented": 530,
       "partial": 0,
       "pending": 23
     },
@@ -31,8 +31,8 @@
       "pending": 2
     },
     "processing": {
-      "total": 98,
-      "implemented": 98,
+      "total": 103,
+      "implemented": 103,
       "partial": 0,
       "pending": 0
     },
@@ -102,12 +102,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 256,
-    "commandsOnDesktop": 478,
+    "commandsWithoutTests": 259,
+    "commandsOnDesktop": 483,
     "desktop": {
       "commands": {
-        "total": 548,
-        "implemented": 478,
+        "total": 553,
+        "implemented": 483,
         "partial": 0,
         "pending": 10,
         "none": 58,
@@ -122,8 +122,8 @@
         "n/a": 0
       },
       "processing": {
-        "total": 98,
-        "implemented": 98,
+        "total": 103,
+        "implemented": 103,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -6451,6 +6451,145 @@
         "desktop": "implemented"
       },
       "tests": []
+    },
+    {
+      "id": "processing.run.layers.deleteDuplicates",
+      "title": "Yinelenenleri sil…",
+      "category": "İşlemler",
+      "icon": "deleteDuplicates",
+      "description": "Aynı öznitelikli (isterse aynı geometrili) nesnelerden ilkini bırakıp öbürlerini siler.",
+      "aliases": [
+        "YINELENENSIL"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Katman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.layers.extract",
+      "title": "Seçilenleri çıkar…",
+      "category": "İşlemler",
+      "icon": "extractSelected",
+      "description": "Seçili nesneleri yeni ya da var olan bir katmana kopyalar ya da taşır.",
+      "aliases": [
+        "SECILENLERICIKAR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Katman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.layers.merge",
+      "title": "Vektör katmanlarını birleştir…",
+      "category": "İşlemler",
+      "icon": "layersMergeVector",
+      "description": "Seçilen katmanların nesnelerini alan eşlemesiyle tek katmanda toplar; kaynak katmanın adını bir alana yazar.",
+      "aliases": [
+        "KATMANTOPLA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Katman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "processing.run.layers.orderBy",
+      "title": "İfadeye göre sırala…",
+      "category": "İşlemler",
+      "icon": "orderByExpression",
+      "description": "Nesnelerin kopyalarını bir ifadenin değerine göre sıralı olarak yeni bir katmana yazar; isterse sıra numarasını bir alana yazar.",
+      "aliases": [
+        "IFADEYLESIRALA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Katman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.layers.splitByAttribute",
+      "title": "Özniteliğe göre böl…",
+      "category": "İşlemler",
+      "icon": "layerSplitAttr",
+      "description": "Nesneleri bir ya da birkaç özniteliğin değerlerine göre yeni bir gruptaki katmanlara böler: her değer bir katman.",
+      "aliases": [
+        "OZNITELIKBOL"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Katman"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "processing.run.multidim.meshCalculator",
@@ -23553,6 +23692,284 @@
         "desktop": "implemented"
       },
       "tests": []
+    },
+    {
+      "id": "layers.deleteDuplicates",
+      "label": "Yinelenenleri sil",
+      "category": "Katman",
+      "description": "Aynı öznitelikli (isterse aynı geometrili) nesnelerden ilkini bırakıp öbürlerini siler.",
+      "aliases": [
+        "YINELENENSIL"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "fields",
+          "type": "field",
+          "label": "Alanlar",
+          "optional": true
+        },
+        {
+          "name": "geometry",
+          "type": "boolean",
+          "label": "Geometri de aynı olsun",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.layers.deleteDuplicates",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "layers.extract",
+      "label": "Seçilenleri çıkar",
+      "category": "Katman",
+      "description": "Seçili nesneleri yeni ya da var olan bir katmana kopyalar ya da taşır.",
+      "aliases": [
+        "SECILENLERICIKAR"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "mode",
+          "type": "enum",
+          "label": "İşlem",
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": "layer",
+          "label": "Sonuç",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.layers.extract",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "layers.merge",
+      "label": "Vektör katmanlarını birleştir",
+      "category": "Katman",
+      "description": "Seçilen katmanların nesnelerini alan eşlemesiyle tek katmanda toplar; kaynak katmanın adını bir alana yazar.",
+      "aliases": [
+        "KATMANTOPLA"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "layers",
+          "type": "layers",
+          "label": "Katmanlar",
+          "optional": false
+        },
+        {
+          "name": "map",
+          "type": "fieldMap",
+          "label": "Alan eşleme",
+          "optional": false
+        },
+        {
+          "name": "sourceField",
+          "type": "field",
+          "label": "Kaynak katman alanı",
+          "optional": true
+        },
+        {
+          "name": "output",
+          "type": "layer",
+          "label": "Sonuç",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "added",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.layers.merge",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "layers.orderBy",
+      "label": "İfadeye göre sırala",
+      "category": "Katman",
+      "description": "Nesnelerin kopyalarını bir ifadenin değerine göre sıralı olarak yeni bir katmana yazar; isterse sıra numarasını bir alana yazar.",
+      "aliases": [
+        "IFADEYLESIRALA"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "expression",
+          "type": "expression",
+          "label": "İfade",
+          "optional": false
+        },
+        {
+          "name": "direction",
+          "type": "enum",
+          "label": "Yön",
+          "optional": false
+        },
+        {
+          "name": "nulls",
+          "type": "enum",
+          "label": "Boşlar",
+          "optional": false
+        },
+        {
+          "name": "orderField",
+          "type": "field",
+          "label": "Sıra alanı",
+          "optional": true
+        },
+        {
+          "name": "output",
+          "type": "layer",
+          "label": "Sonuç",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.layers.orderBy",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "layers.splitByAttribute",
+      "label": "Özniteliğe göre böl",
+      "category": "Katman",
+      "description": "Nesneleri bir ya da birkaç özniteliğin değerlerine göre yeni bir gruptaki katmanlara böler: her değer bir katman.",
+      "aliases": [
+        "OZNITELIKBOL"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "fields",
+          "type": "field",
+          "label": "Alanlar",
+          "optional": false
+        },
+        {
+          "name": "mode",
+          "type": "enum",
+          "label": "İşlem",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "table",
+          "type": "table"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.layers.splitByAttribute",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "multidim.meshCalculator",
@@ -42883,6 +43300,11 @@
               "processing.run.proximity.hub",
               "processing.run.proximity.neighbors",
               "processing.run.proximity.shortestLine",
+              "processing.run.layers.splitByAttribute",
+              "processing.run.layers.merge",
+              "processing.run.layers.extract",
+              "processing.run.layers.deleteDuplicates",
+              "processing.run.layers.orderBy",
               "processing.run.geometry.buffer",
               "processing.run.geometry.clip",
               "processing.run.geometry.dissolve",
@@ -44062,6 +44484,26 @@
               },
               {
                 "command": "layer.showAll",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.layers.splitByAttribute",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.layers.merge",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.layers.extract",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.layers.deleteDuplicates",
+                "size": "small"
+              },
+              {
+                "command": "processing.run.layers.orderBy",
                 "size": "small"
               }
             ],
@@ -49656,6 +50098,26 @@
                 {
                   "command": "layer.showAll",
                   "size": "small"
+                },
+                {
+                  "command": "processing.run.layers.splitByAttribute",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.layers.merge",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.layers.extract",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.layers.deleteDuplicates",
+                  "size": "small"
+                },
+                {
+                  "command": "processing.run.layers.orderBy",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -52205,6 +52667,11 @@
     "infoEnclosing": "<path d=\"M2.5 6.5 9.5 2.8l8 3.6-1.5 11.1H4z\"/><rect x=\"8\" y=\"10.3\" width=\"4.6\" height=\"4.6\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><rect x=\"8\" y=\"10.3\" width=\"4.6\" height=\"4.6\" stroke-width=\"1.2\"/><path d=\"M10.3 4.8v3.8M8.7 7.1l1.6 1.6 1.6-1.6\" stroke-width=\"1.2\"/>",
     "statsSummary": "<path d=\"M9 3.2H2.8l3.4 4.6-3.4 4.6H9\" stroke-width=\"1.4\"/><path d=\"M11.8 17v-5M14.8 17V8.5M17.8 17v-6.5\" stroke-width=\"2\"/><path d=\"M10.3 17.2h8.5\" stroke-width=\"1.1\"/>",
     "joinField": "<circle cx=\"5.2\" cy=\"5.2\" r=\"2.7\"/><path d=\"m7.1 7.1 4 4M9.3 9.3l1.3-1.3M10.6 10.6l1.3-1.3\" stroke-width=\"1.3\"/><rect x=\"10.5\" y=\"11\" width=\"7.5\" height=\"6.5\" rx=\".8\"/><path d=\"M10.5 14.2h7.5M14.2 11v6.5\" stroke-width=\"1.1\"/>",
+    "layerSplitAttr": "<path d=\"m10 2.5 6.4 3.3-6.4 3.3-6.4-3.3z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"M10 9.1v3.4M8.4 9.6l-3.6 3M11.6 9.6l3.6 3\" stroke-width=\"1.2\"/><path d=\"m4.3 13.4 2.9 1.5-2.9 1.5-2.9-1.5zM10 13.4l2.9 1.5-2.9 1.5-2.9-1.5zM15.7 13.4l2.9 1.5-2.9 1.5-2.9-1.5z\" stroke-width=\"1.1\"/>",
+    "layersMergeVector": "<path d=\"m4.8 2.4 3.4 1.8-3.4 1.8-3.4-1.8zM15.2 2.4l3.4 1.8-3.4 1.8-3.4-1.8z\" stroke-width=\"1.1\"/><path d=\"m4.8 7.2 4.4 3.6M15.2 7.2l-4.4 3.6M10 9.2v2.4\" stroke-width=\"1.2\"/><path d=\"m10 12.2 7 3.6-7 3.6-7-3.6z\" fill=\"currentColor\" fill-opacity=\".3\"/>",
+    "extractSelected": "<rect x=\"2.4\" y=\"2.4\" width=\"8.4\" height=\"7.2\" rx=\".8\" stroke-dasharray=\"1.6 1.4\" stroke-width=\"1.1\"/><rect x=\"4.4\" y=\"4.3\" width=\"4.4\" height=\"3.4\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".3\" stroke-width=\"1.1\"/><path d=\"M9.4 8.4 12.6 11.6M12.8 9.2v2.6h-2.6\" stroke-width=\"1.2\"/><path d=\"m12.5 13.4 5.6 2.9-5.6 2.9-5.6-2.9z\"/>",
+    "deleteDuplicates": "<rect x=\"2.5\" y=\"2.5\" width=\"9\" height=\"9\" rx=\"1\" stroke-dasharray=\"1.6 1.4\" stroke-width=\"1.1\"/><path d=\"m4.6 4.6 3.8 3.8M8.4 4.6 4.6 8.4\" stroke-width=\"1.3\"/><rect x=\"8.5\" y=\"8.5\" width=\"9\" height=\"9\" rx=\"1\" fill=\"currentColor\" fill-opacity=\".3\"/>",
+    "orderByExpression": "<path d=\"M3.5 3v12.5M1.5 13.5l2 2 2-2\" stroke-width=\"1.3\"/><path d=\"M8 4.5h4M8 9.5h6.5M8 14.5h9.5\" stroke-width=\"1.6\"/>",
     "dataTransfer": "<rect x=\"1.8\" y=\"3\" width=\"8\" height=\"9\" rx=\".9\" stroke-width=\"1.3\"/><path d=\"M1.8 6h8M1.8 9h8M4.8 6v6\" stroke-width=\"1.1\"/><path d=\"M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4\" stroke-width=\"1.2\"/><path d=\"m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z\" stroke-width=\"1.2\"/><path d=\"m12.2 14.1 3.2 1.7 3.2-1.7\" stroke-width=\"1.2\"/>",
     "fieldMapFill": "<path d=\"M2.5 5h4.5M2.5 10h4.5M2.5 15h4.5\" stroke-width=\"1.4\"/><path d=\"M8.6 5h3M8.6 10h3M8.6 15h3\" stroke-width=\"1.1\"/><path d=\"m10.6 3.8 1.2 1.2-1.2 1.2M10.6 8.8l1.2 1.2-1.2 1.2M10.6 13.8l1.2 1.2-1.2 1.2\" stroke-width=\"1.1\"/><path d=\"M13.5 5h4M13.5 10h4M13.5 15h4\" stroke-width=\"1.4\"/>",
     "geoBuffer": "<path d=\"M4.2 14.6 9 7.6l6.8 3.4\" stroke-width=\"7\" stroke-opacity=\".28\"/><path d=\"M4.2 14.6 9 7.6l6.8 3.4\" stroke-width=\"1.5\"/><circle cx=\"4.2\" cy=\"14.6\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.8\" cy=\"11\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/>",

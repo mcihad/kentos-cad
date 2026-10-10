@@ -127,7 +127,8 @@
 .find-row--blocked td {
   color: var(--c-text-3);
 }
-.find-row .icon {
+.find-row .icon,
+.merge-row .icon {
   display: inline-block;
   margin-right: 4px;
   vertical-align: -2px;

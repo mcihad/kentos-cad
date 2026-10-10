@@ -32,6 +32,7 @@ pub mod label_text;
 pub mod lengthen;
 pub mod network;
 pub mod offset;
+pub mod order;
 pub mod parts;
 pub mod path;
 pub mod point_editor;

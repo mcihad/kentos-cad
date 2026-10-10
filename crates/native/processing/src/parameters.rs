@@ -52,7 +52,9 @@ pub fn default_value(def: &ParamDef, d: &Defaults) -> Value {
         ParamKind::Layer { .. } => json!({ "layerId": d.active_layer }),
         ParamKind::Point | ParamKind::File { .. } => Value::Null,
         ParamKind::RasterValues { .. } => json!({}),
-        ParamKind::RasterPairs { .. } | ParamKind::FieldMap { .. } => json!([]),
+        ParamKind::RasterPairs { .. } | ParamKind::FieldMap { .. } | ParamKind::Layers { .. } => {
+            json!([])
+        }
         ParamKind::Network { prefers } => d
             .networks
             .iter()
@@ -243,6 +245,9 @@ pub fn fits(def: &ParamDef, v: &Value) -> bool {
             })
         }),
         ParamKind::FieldMap { .. } => field_map::read(v).is_some(),
+        ParamKind::Layers { .. } => v
+            .as_array()
+            .is_some_and(|ids| ids.iter().all(Value::is_string)),
     }
 }
 
@@ -448,6 +453,14 @@ fn check_param(
             })
         }
         ParamKind::FieldMap { .. } => field_map::problem(&name, &field_map::read(v)?),
+        ParamKind::Layers { min } => {
+            let ids: Vec<&str> = v.as_array()?.iter().filter_map(Value::as_str).collect();
+            if ids.iter().any(|id| layers.get(id).is_none()) {
+                return Some(format!("{name}: seçilen katman artık yok."));
+            }
+            (ids.len() < *min && !(p.optional && ids.is_empty()))
+                .then(|| format!("{name}: en az {min} katman seçin."))
+        }
         ParamKind::RasterPairs { .. } => v.as_array()?.iter().find_map(|r| {
             let t = r.as_array()?;
             let n = t.get(2)?.as_f64()?;

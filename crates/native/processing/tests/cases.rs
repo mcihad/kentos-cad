@@ -446,12 +446,42 @@ fn observed(s: &Seen) -> Value {
                 }
             }
             walk(&s.before.layers, &mut known);
+            // The groups a run made, and its new layers with their fields and, in a group it made, that
+            // group (docs/adr/0217 §7).
+            let mut groups = Vec::new();
+            fn walk_now(
+                nodes: &[kentos_contracts::LayerNode],
+                known: &BTreeSet<String>,
+                groups: &mut Vec<Value>,
+            ) {
+                for n in nodes {
+                    if n.kind == kentos_contracts::LayerNodeType::Group && !known.contains(&n.id) {
+                        groups.push(json!({ "id": n.id, "name": n.name }));
+                    }
+                    walk_now(&n.children, known, groups);
+                }
+            }
+            walk_now(doc.layers().nodes(), &known, &mut groups);
+            let made: BTreeSet<&str> = groups.iter().filter_map(|g| g["id"].as_str()).collect();
             let layers: Vec<Value> = doc
                 .layers()
                 .leaves()
                 .into_iter()
                 .filter(|l| !known.contains(&l.id))
-                .map(|l| json!({ "id": l.id, "name": l.name, "style": l.style }))
+                .map(|l| {
+                    let mut v = json!({ "id": l.id, "name": l.name, "style": l.style });
+                    if !l.fields.is_empty() {
+                        v["fields"] = json!(l.fields);
+                    }
+                    if let Some(parent) = doc
+                        .layers()
+                        .parent(&l.id)
+                        .filter(|p| made.contains(p.id.as_str()))
+                    {
+                        v["parent"] = json!(parent.id);
+                    }
+                    v
+                })
                 .collect();
             let mut added = Vec::new();
             let mut updated = Vec::new();
@@ -468,6 +498,10 @@ fn observed(s: &Seen) -> Value {
                         let now = geometry_part(e);
                         if geometry_part(old) != now {
                             u["geometry"] = now;
+                        }
+                        // A layer changed too (Özniteliğe göre böl's and Seçilenleri çıkar's Taşı, docs/adr/0217).
+                        if old["layerId"] != e["layerId"] {
+                            u["layerId"] = e["layerId"].clone();
                         }
                         updated.push(u);
                     }
@@ -497,6 +531,7 @@ fn observed(s: &Seen) -> Value {
                 "summary": record.summary,
                 "log": log,
                 "layers": layers,
+                "groups": groups,
                 "added": added,
                 "updated": updated,
                 "removed": removed,
@@ -571,6 +606,12 @@ fn check_measured(c: &Value, mut s: Seen, tol: f64, measure_tol: f64) -> Vec<Str
         "katmanlar",
         &got["layers"],
         &want["layers"],
+    );
+    expect(
+        same(&got["groups"], &or_empty(&want["groups"])),
+        "gruplar",
+        &got["groups"],
+        &want["groups"],
     );
     let shapes = !want["addedShapes"].is_null();
     let (have, wanted) = (
@@ -780,6 +821,37 @@ fn the_proximity_cases_do_what_they_say() {
     );
 }
 
+/// The Katman tools' cases (docs/adr/0217): written by the independent
+/// reference (scripts/fixtures/layer_ops_cases.py); the same run here and on
+/// the drawing's reading copy as the background runs it.
+#[test]
+fn the_layer_tool_cases_do_what_they_say() {
+    let file = case_file("layers.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check(c, play(c, &registry, false, &file["files"]), tol);
+        found.extend(check(c, play(c, &registry, true, &file["files"]), tol));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 15, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Veri aktar's cases (docs/adr/0216): written by the independent reference
 /// (scripts/fixtures/transfer_cases.py); the same run here and on the
 /// drawing's reading copy as the background runs it.
@@ -961,6 +1033,178 @@ fn transfer_timing() {
         t.elapsed().as_secs_f64() * 1e3
     );
     assert!(p50 <= 120.0, "p50 {p50:.1} ms > 120 ms");
+}
+
+/// Katman işlemleri's timing scene (docs/adr/0217 §9): 100 000 parcels on a
+/// 20 m grid in two layers of 50 000, Pa and Pb; Mahalle of 50 values, Ada of
+/// 1000, Parsel their own; every hundredth parcel a copy of the one before it
+/// (values and shape), so 1000 duplicates, and every Mahalle and Ada pair
+/// comes twice in a hundred, so every object's shape is weighed.
+pub fn layer_scene() -> Document {
+    let (e0, n0) = (487_000.0, 4_420_000.0);
+    let mut entities = Vec::with_capacity(100_000);
+    for i in 0..100_000usize {
+        let k = if i % 100 == 99 { i - 1 } else { i };
+        let (x, y) = (e0 + (k % 316) as f64 * 20.0, n0 + (k / 316) as f64 * 20.0);
+        let size = 10.0 + (k % 7) as f64;
+        entities.push(format!(
+            r#"{{"kind":"polygon","id":{},"layerId":"{}","attrs":{{"Parsel":"{}","Ada":"{}","Mahalle":"Mahalle {}"}},"pts":[{{"x":{x},"y":{y}}},{{"x":{},"y":{y}}},{{"x":{},"y":{}}},{{"x":{x},"y":{}}}]}}"#,
+            i + 1,
+            if i < 50_000 { "pa" } else { "pb" },
+            k + 1,
+            (k / 100) % 1000,
+            k % 50 + 1,
+            x + size,
+            x + size,
+            y + size,
+            y + size
+        ));
+    }
+    let layer = |id: &str, name: &str| {
+        format!(
+            r#"{{"id":"{id}","name":"{name}","type":"layer","visible":true,"locked":false,"expanded":true,
+            "style":{{"color":"fg","lineType":"continuous","lineWeight":0.25}},"children":[]}}"#
+        )
+    };
+    let json = format!(
+        r#"{{"format":"kentos.document","version":1,"name":"Katmanlar","settings":{{"srid":5256,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,"workspace":"gis","drawingFont":"barlow"}},
+            "origin":{{"x":{e0},"y":{n0}}},"layers":[{},{}],"activeLayer":"pa","entities":[{}],"styles":{{"items":[],"categories":[]}}}}"#,
+        layer("pa", "Pa"),
+        layer("pb", "Pb"),
+        entities.join(",")
+    );
+    Document::from_snapshot(DocumentSnapshotV1::from_json(&json).expect("the drawing reads"))
+        .expect("the drawing opens")
+}
+
+/// Katman işlemleri's whole runs (docs/adr/0217 §9) on the scene above: the
+/// runner's check, the tool and its one undo step, after a warm-up, each run
+/// undone before the next; p50 and p95 against the ADR's budgets. Run on purpose:
+/// `cargo test --release -p kentos-processing --test cases layer_timing -- --ignored --nocapture`.
+#[test]
+#[ignore = "timings, run by hand in release"]
+fn layer_timing() {
+    use std::time::Instant;
+    let registry = Registry::builtin();
+    let all = json!({ "scope": "all" });
+    let runs: [(&str, &str, Values, f64); 4] = [
+        (
+            "layers.splitByAttribute",
+            "Özniteliğe göre böl, 100 000 parsel, 50 değer, kopya",
+            [
+                ("input", all.clone()),
+                ("fields", json!("Mahalle")),
+                ("mode", json!("copy")),
+            ]
+            .into_iter()
+            .map(|(k, v)| (k.to_owned(), v))
+            .collect(),
+            300.0,
+        ),
+        (
+            "layers.deleteDuplicates",
+            "Yinelenenleri sil, 100 000 parsel, iki alan ve geometri",
+            [
+                ("input", all.clone()),
+                ("fields", json!("Mahalle, Ada")),
+                ("geometry", json!(true)),
+            ]
+            .into_iter()
+            .map(|(k, v)| (k.to_owned(), v))
+            .collect(),
+            200.0,
+        ),
+        (
+            "layers.orderBy",
+            "İfadeye göre sırala, 100 000 parsel, $alan, kopya",
+            [
+                ("input", all.clone()),
+                ("expression", json!("$alan")),
+                ("direction", json!("desc")),
+                ("nulls", json!("last")),
+                ("orderField", json!("Sıra")),
+                ("output", json!({ "newName": "Sıralı" })),
+            ]
+            .into_iter()
+            .map(|(k, v)| (k.to_owned(), v))
+            .collect(),
+            300.0,
+        ),
+        (
+            "layers.merge",
+            "Vektör katmanlarını birleştir, iki 50 000'lik katman",
+            [
+                ("layers", json!(["pa", "pb"])),
+                ("map", json!([])),
+                ("sourceField", json!("Kaynak katman")),
+                ("output", json!({ "newName": "Birleşik" })),
+            ]
+            .into_iter()
+            .map(|(k, v)| (k.to_owned(), v))
+            .collect(),
+            300.0,
+        ),
+    ];
+    let mut host = TestHost {
+        doc: layer_scene(),
+        selection: Vec::new(),
+        view: None,
+    };
+    let mut over = Vec::new();
+    for (id, title, values, budget) in runs {
+        let tool = registry.tool(id).expect("the tool");
+        let mut runner = Runner::new();
+        let mut ms = Vec::new();
+        let mut summary = String::new();
+        for run in 0..8 {
+            let mut log = Vec::new();
+            let t = Instant::now();
+            let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+            let took = t.elapsed().as_secs_f64() * 1e3;
+            let Outcome::Ok { record, .. } = outcome else {
+                panic!("{id}: {log:?}");
+            };
+            summary = record.summary;
+            assert!(host.doc.undo().is_some(), "{id}: one step");
+            if run >= 2 {
+                ms.push(took);
+            }
+        }
+        ms.sort_by(f64::total_cmp);
+        let (p50, p95) = (
+            ms[ms.len() / 2],
+            ms[(ms.len() * 95 / 100).min(ms.len() - 1)],
+        );
+        println!("{title}: p50 {p50:.1} ms, p95 {p95:.1} ms, bütçe {budget} ms\n  {summary}");
+        // Its parts, once: the check and the inputs, the tool, the one undo step.
+        let mut log = Vec::new();
+        let t = Instant::now();
+        let Prepared::Ready(job) = runner.prepare(&host, &tool, &values, true, &mut log) else {
+            panic!("{id} prepared: {log:?}");
+        };
+        let prepared = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        let result = Runner::compute(
+            &job,
+            &host.doc,
+            &mut Apart {
+                log: &mut log,
+                files: None,
+            },
+        );
+        let computed = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        runner.finish(&mut host, job, result, false, &mut log);
+        println!(
+            "  hazırlık {prepared:.1} ms, araç {computed:.1} ms, uygulama {:.1} ms",
+            t.elapsed().as_secs_f64() * 1e3
+        );
+        assert!(host.doc.undo().is_some(), "{id}: one step");
+        if p50 > budget {
+            over.push(format!("{title}: p50 {p50:.1} ms > {budget} ms"));
+        }
+    }
+    assert!(over.is_empty(), "{over:#?}");
 }
 
 /// The geometry tools' cases (docs/adr/0201): the same run here and on the

@@ -110,6 +110,46 @@ function narrow(value: FeaturesValue, host: FeatureHost, candidates: Entity[]): 
   return { entities, description: `${describeCount(entities)}; ${where}` };
 }
 
+/**
+ * A layers value's layers (docs/adr/0217 §7): the layers its ids name (a group: every layer under it) in the tree's
+ * order, each with its objects in the drawing's order but those its filter leaves out (docs/adr/0211 §1).
+ */
+export function resolveLayers(ids: readonly string[], host: FeatureHost): { id: string; name: string; entities: Entity[] }[] {
+  const { doc } = host;
+  const wanted = new Set<string>();
+  for (const id of ids) {
+    const node = doc.layers.get(id);
+    if (node?.type === 'group') for (const l of doc.layers.leavesOf(id)) wanted.add(l.id);
+    else if (node) wanted.add(id);
+  }
+  const out = leftOut(doc);
+  return doc.layers
+    .leaves()
+    .filter((l) => wanted.has(l.id))
+    .map((l) => ({ id: l.id, name: l.name, entities: out.size ? doc.byLayer(l.id).filter((e) => !out.has(e.id)) : [...doc.byLayer(l.id)] }));
+}
+
+/** A layers parameter as the dialog shows it: the chosen layers' objects, their kinds and their fields. */
+export function summarizeLayers(ids: readonly string[], host: FeatureHost): InputSummary {
+  const sets = resolveLayers(ids, host);
+  const kinds = new Map<EntityKind, number>();
+  const fields = new Map<string, number>();
+  let count = 0;
+  for (const s of sets) {
+    count += s.entities.length;
+    for (const e of s.entities) {
+      kinds.set(e.kind, (kinds.get(e.kind) ?? 0) + 1);
+      for (const k of Object.keys(e.attrs)) fields.set(k, (fields.get(k) ?? 0) + 1);
+    }
+  }
+  return {
+    count,
+    description: sets.length ? `${sets.length} katmanda ${count} nesne` : 'katman seçilmedi',
+    byKind: [...kinds].map(([kind, n]) => ({ kind, count: n })).sort((a, b) => b.count - a.count),
+    fields: [...fields].map(([name, n]) => ({ name, count: n })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'tr')),
+  };
+}
+
 /** A features parameter as the dialog shows it before running. */
 export interface InputSummary {
   count: number;

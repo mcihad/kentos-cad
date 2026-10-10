@@ -100,10 +100,11 @@ fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>) -> Element<'a, Message> {
         .filter(|p| is_visible(p, &window.values))
         .collect();
     let is = |p: &&ParamDef, kind: &str| p.type_name() == kind;
+    // Objects and lists of layers are what a tool reads (docs/adr/0217 §7).
     let input: Vec<&ParamDef> = shown
         .iter()
         .copied()
-        .filter(|p| !p.advanced && is(p, "features"))
+        .filter(|p| !p.advanced && (is(p, "features") || is(p, "layers")))
         .collect();
     let output: Vec<&ParamDef> = shown
         .iter()
@@ -113,7 +114,7 @@ fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>) -> Element<'a, Message> {
     let main: Vec<&ParamDef> = shown
         .iter()
         .copied()
-        .filter(|p| !p.advanced && !is(p, "features") && !is(p, "layer"))
+        .filter(|p| !p.advanced && !is(p, "features") && !is(p, "layers") && !is(p, "layer"))
         .collect();
     let advanced: Vec<&ParamDef> = shown.iter().copied().filter(|p| p.advanced).collect();
     let open = window.advanced_open || advanced.iter().any(|p| window.issue_of(&p.name).is_some());
@@ -334,6 +335,7 @@ fn field_row<'a>(
             | ParamKind::RasterValues { .. }
             | ParamKind::RasterPairs { .. }
             | ParamKind::FieldMap { .. }
+            | ParamKind::Layers { .. }
     );
     let content: Element<'a, Message> = if stacked {
         column![text, control_col].spacing(8).into()

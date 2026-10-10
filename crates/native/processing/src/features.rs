@@ -275,6 +275,80 @@ pub fn summarize_file(header: &[String], rows: &[Vec<&str>]) -> InputSummary {
     }
 }
 
+/// A layers value's layers (docs/adr/0217 §7): the layers its ids name (a
+/// group: every layer under it) in the tree's order, each with its objects in
+/// the drawing's order but those its filter leaves out (docs/adr/0211 §1).
+pub fn resolve_layers<'d>(ids: &[String], host: &'d dyn Scene) -> Vec<crate::types::LayerSet<'d>> {
+    let doc = host.doc();
+    let layers = doc.layers();
+    let mut wanted: HashSet<&str> = HashSet::new();
+    for id in ids {
+        match layers.get(id) {
+            Some(node) if node.kind == kentos_contracts::LayerNodeType::Group => {
+                wanted.extend(layers.leaves_of(id).into_iter().map(|l| l.id.as_str()));
+            }
+            Some(_) => {
+                wanted.insert(id.as_str());
+            }
+            None => {}
+        }
+    }
+    let out = kentos_native_application::layer_filter::left_out(doc);
+    layers
+        .leaves()
+        .into_iter()
+        .filter(|l| wanted.contains(l.id.as_str()))
+        .map(|l| crate::types::LayerSet {
+            id: l.id.clone(),
+            name: l.name.clone(),
+            entities: doc
+                .by_layer(&l.id)
+                .filter(|e| !out.contains(&Slot(e.base().id)))
+                .collect(),
+        })
+        .collect()
+}
+
+/// A layers parameter as the dialog shows it: the chosen layers' objects, their kinds and their fields.
+pub fn summarize_layers(ids: &[String], host: &dyn Scene) -> InputSummary {
+    let sets = resolve_layers(ids, host);
+    let mut by_kind: Vec<(String, usize)> = Vec::new();
+    let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut count = 0;
+    for s in &sets {
+        count += s.entities.len();
+        for e in &s.entities {
+            match by_kind.iter_mut().find(|(k, _)| k == e.kind()) {
+                Some((_, n)) => *n += 1,
+                None => by_kind.push((e.kind().to_owned(), 1)),
+            }
+            for k in e.base().attrs.keys() {
+                *counts.entry(k.as_str()).or_default() += 1;
+            }
+        }
+    }
+    by_kind.sort_by_key(|k| std::cmp::Reverse(k.1));
+    let mut fields: Vec<(String, usize)> = counts
+        .into_iter()
+        .map(|(name, n)| (name.to_owned(), n))
+        .collect();
+    fields.sort_by(|a, b| match b.1.cmp(&a.1) {
+        Ordering::Equal => compare_tr(&a.0, &b.0),
+        other => other,
+    });
+    InputSummary {
+        count,
+        description: if sets.is_empty() {
+            "katman seçilmedi".into()
+        } else {
+            format!("{} katmanda {count} nesne", sets.len())
+        },
+        by_kind,
+        fields,
+        ..InputSummary::default()
+    }
+}
+
 pub fn summarize_features(
     value: &FeaturesValue,
     kinds: Option<&[String]>,

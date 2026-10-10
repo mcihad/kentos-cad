@@ -170,6 +170,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   dosyasından Anahtarla birleştir'in anahtar kuralıyla; Alan eşleme parametresi: hedef alan, kaynak sütun ya da yok, varsayılan, Aynı
   adlarla doldur; Üzerine yaz ya da Yalnız boşlara, tipli alanlar kurallarıyla, Geometriyi güncelle, Eşleşmeyenleri ekle, Yalnız raporla;
   rapor tablosu, tek adım); İşlemler'e `allowEmpty`, girdinin katmanı ve şeklin yaması; CBS'de Veri › Öznitelik (ADR 0216);
+  katman bölme ve birleştirme: İşlemler'in Katman kategorisinde Özniteliğe göre böl (bir ya da birkaç alanın değerleri, yeni grupta değer
+  başına katman, ilk nesnenin katmanının görünüşü ve alanlarıyla; Kopyala ya da Taşı, en çok 1000), Vektör katmanlarını birleştir (alan
+  eşlemesiyle, Kaynak katman alanı, tipli hedefin kuralları), Seçilenleri çıkar, Yinelenenleri sil (alanlar ya da bütün öznitelikler,
+  isteğe bağlı kesin geometri; ilki kalır), İfadeye göre sırala (`ops::order`: türler, doğal sıra, boşlar, Sıra alanı); İşlemler'e Katmanlar
+  parametresi, aracın açtığı katmanlar ve gruplar, `like`; CBS'de Veri › Katman (ADR 0217);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -590,6 +595,9 @@ cargo test -p kentos-desktop processing::proximity_tests::screens -- --ignored -
 python3 scripts/fixtures/transfer_cases.py --check; python3 scripts/fixtures/field_map_cases.py --check   # Veri aktar'ın durumlarını (alan eşleme, tipli alanlar, Yalnız boşlara, geometri, ekleme, Yalnız raporla, retler, boş, kilitli ve grup hedef) ve Alan eşleme alanının kurallarını (satırın sorunu, not, Aynı adlarla doldur, denetim, düzenlemeler) ADR'den, KentOS kodu olmadan yazılmış başvurulardan denetle; durumlar fixtures/processing/v1/transfer.json, field-map.json (ADR 0216)
 cargo test -p kentos-desktop processing::transfer_tests::screens -- --ignored --nocapture --test-threads=1   # Veri aktar'ın şeridi, alan eşlemesi, sorunlu satırları, raporu ve çizimdeki sonucu, .run/shots/islem-aktar-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs transfer); ADR 0216)
 cargo test --release -p kentos-processing --test cases transfer_timing -- --ignored --nocapture   # Veri aktar'ın 10 000 parsel ve 10 000 satırda bütün çalışması bütçesiyle (ADR 0216 §7); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; TRANSFER_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/transfer.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
+python3 scripts/fixtures/layer_ops_cases.py --check   # katman işlemlerinin durumlarını (bölme, birleştirme, çıkarma, yinelenenler, sıralama; yeni gruplar ve katmanlar, tipli hedef alanları, kilitli katman, kotun sıfırının işareti) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/processing/v1/layers.json ve layers.kcad (ADR 0217)
+cargo test -p kentos-desktop processing::layer_tools_tests::screens -- --ignored --nocapture --test-threads=1   # katman işlemlerinin şeridi, pencereleri, raporları ve bölmenin yeni grubu, .run/shots/islem-katman-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs layertools); ADR 0217)
+cargo test --release -p kentos-processing --test cases layer_timing -- --ignored --nocapture   # 100 000 parselde bölme, yinelenenler, sıralama ve iki 50 000'lik katmanın birleştirilmesi bütçeleriyle (ADR 0217 §9); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; LAYERS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/layers.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-geometry-core --test all proximity::timing -- --ignored --nocapture   # beş aracın aramaları 10 000 parselde bütçeleriyle (ADR 0215 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; PROXIMITY_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/proximity.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-expression --test perf measures_the_additions -- --ignored --nocapture   # ifade dili eklerinin süreleri bütçeleriyle (ADR 0214 §5); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; EXTRAS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/expressionExtras.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
@@ -1520,7 +1528,13 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   web `processing/builtin/transfer.ts`, masaüstü `builtin/transfer.rs`, kaynağın satırları Anahtarla birleştir'le ortak (`joinSource.ts`,
   `join_source.rs`); bağımsız başvurular `transfer_cases.py` (10 durum) ve `field_map_cases.py` (27 durum); pencereler
   `processing::transfer_tests`, `shots.mjs transfer`; süreler `transfer_timing` ve `scripts/perf/transfer.test.ts`. Masaüstünde dosyanın
-  satırları kopyalanmadan okunur, çalıştırıcı yamanın parçalarını taşır. Sıradaki `GIS-21`.
+  satırları kopyalanmadan okunur, çalıştırıcı yamanın parçalarını taşır. `GIS-21` katman bölme ve birleştirme
+  ([ADR 0217](docs/adr/0217-layer-split-and-merge.md); kapsamı ben belirledim) tek parçada bitti (11 Ekim): çekirdek `ops::order` (işlem
+  `orderBy`, doğal sıra `text::natural`'ın `tokens_cmp`'siyle); İşlemler'in Katmanlar parametresi (`layers`), aracın katmanları
+  (`RunResult.layers`, `ToolLayer`; çalıştırıcı tek adımda açar) ve `like`, masaüstünde `Patch.layer`; beş araç web
+  `processing/builtin/layers/`, masaüstü `builtin/layers/`; Yinelenenleri sil değer sınıfları, ön süzgeç ve masaüstünde özetlenen şekille;
+  bağımsız başvuru `layer_ops_cases.py` (16 durum); pencereler `processing::layer_tools_tests`, `shots.mjs layertools`; süreler
+  `layer_timing` ve `scripts/perf/layers.test.ts`. Sıradaki `GIS-22`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

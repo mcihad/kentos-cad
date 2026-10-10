@@ -10,6 +10,7 @@ pub mod info_from_inside;
 pub mod interpolation;
 pub mod join_by_field;
 pub mod join_source;
+pub mod layers;
 pub mod models;
 pub mod multidim;
 pub mod network;
@@ -51,6 +52,12 @@ pub fn tools() -> Vec<Tool> {
         proximity::hub::tool(),
         proximity::neighbors::tool(),
         proximity::shortest_line::tool(),
+        // Katman işlemleri (docs/adr/0217): both platforms.
+        layers::split::tool(),
+        layers::merge::tool(),
+        layers::extract::tool(),
+        layers::dedupe::tool(),
+        layers::order_by::tool(),
         geometry::buffer::tool(),
         geometry::clip::tool(),
         geometry::dissolve::tool(),

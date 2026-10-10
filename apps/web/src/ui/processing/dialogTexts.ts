@@ -123,6 +123,12 @@ export const DIALOG_TEXTS = {
     even: 'Eşit',
     times: (n: number) => `${n} kat`,
   },
+  layers: {
+    layer: 'Katman',
+    objects: 'Nesne',
+    none: 'Katmanları işaretleyin.',
+    locked: 'Kilitli: nesneleri alınmaz',
+  },
   fieldMap: {
     target: 'Hedef alan',
     source: 'Kaynak alan',

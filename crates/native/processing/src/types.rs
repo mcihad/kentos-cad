@@ -276,6 +276,13 @@ pub enum ParamKind {
         source: Vec<String>,
         key: Vec<String>,
     },
+    /// Katmanlar (docs/adr/0217 §7): layers chosen from a checked list, their
+    /// ids; read in the tree's order, layer by layer (a group means every
+    /// layer under it), without the objects a filter leaves out or on locked
+    /// layers. `min`: the fewest to choose.
+    Layers {
+        min: usize,
+    },
 }
 
 /// When a parameter is shown (the web's `visibleWhen`).
@@ -408,6 +415,7 @@ impl ParamDef {
             ParamKind::RasterValues { .. } => "rasterValues",
             ParamKind::RasterPairs { .. } => "rasterPairs",
             ParamKind::FieldMap { .. } => "fieldMap",
+            ParamKind::Layers { .. } => "layers",
         }
     }
 }
@@ -513,6 +521,14 @@ pub struct FeatureSet<'d> {
     pub layer_id: Option<String>,
 }
 
+/// A chosen layer's objects (a `layers` parameter's, docs/adr/0217 §7).
+#[derive(Clone, Debug, Default)]
+pub struct LayerSet<'d> {
+    pub id: String,
+    pub name: String,
+    pub entities: Vec<&'d Entity>,
+}
+
 /// Where a layer parameter writes: an existing layer, or one the runner creates on apply.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TargetLayer {
@@ -527,6 +543,8 @@ pub struct TargetLayer {
 pub struct Resolved<'d> {
     pub values: Values,
     pub features: BTreeMap<String, FeatureSet<'d>>,
+    /// The `layers` parameters' layers, in the tree's order.
+    pub layer_sets: BTreeMap<String, Vec<LayerSet<'d>>>,
     pub layers: BTreeMap<String, TargetLayer>,
     pub exprs: BTreeMap<String, Expr>,
     empty: FeatureSet<'d>,
@@ -566,6 +584,11 @@ impl<'d> Resolved<'d> {
 
     pub fn layer(&self, name: &str) -> &TargetLayer {
         self.layers.get(name).unwrap_or(&self.none)
+    }
+
+    /// A `layers` parameter's layers; none when it gave none.
+    pub fn layer_sets(&self, name: &str) -> &[LayerSet<'d>] {
+        self.layer_sets.get(name).map_or(&[], Vec::as_slice)
     }
 
     /// A compiled expression; none when it was left empty.
@@ -647,6 +670,9 @@ pub struct Patch {
     /// An object of its kind whose shape it takes: every field but those every object has
     /// (`EntityBase`: its id, layer, look, attributes and labels stay its own).
     pub geometry: Option<Box<Entity>>,
+    /// Its layer (Özniteliğe göre böl's and Seçilenleri çıkar's Taşı, docs/adr/0217): an
+    /// existing layer, or the key of a layer the run makes (`RunResult::layers`).
+    pub layer: Option<String>,
 }
 
 /// The document edits a run asks for, applied by the runner in one transaction.
@@ -675,6 +701,28 @@ pub struct RunResult {
     /// above, where the tool knows better than the input's first object (a
     /// raster operation's first raster read, docs/adr/0233 §2).
     pub above: Option<String>,
+    /// Layers and groups the run makes itself (Özniteliğe göre böl's,
+    /// docs/adr/0217 §7): new objects and patches name them by their keys;
+    /// the runner makes them in the run's one step, in this order.
+    pub layers: Vec<ToolLayer>,
+    /// A layer whose look and fields a new layer of the run's layer
+    /// parameters takes (docs/adr/0217 §7).
+    pub like: Option<String>,
+}
+
+/// A layer or group a run makes (docs/adr/0217 §7): its key (what the run's
+/// objects and patches name it by), its name, the run's group it goes into
+/// (a key) or the existing layer it goes right above, and the layer whose
+/// look and fields it takes. Its id is given from its name as a new layer
+/// parameter's is; a name taken where it goes gets “ (2)”.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ToolLayer {
+    pub key: String,
+    pub name: String,
+    pub group: bool,
+    pub parent: Option<String>,
+    pub above: Option<String>,
+    pub like: Option<String>,
 }
 
 impl RunResult {

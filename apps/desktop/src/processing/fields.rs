@@ -139,6 +139,7 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
             source,
             key,
         } => field_map(def, target, source, key, env),
+        ParamKind::Layers { .. } => layers_list(def, env),
         ParamKind::Expression {
             of, placeholder, ..
         } => expression(def, of.as_deref(), placeholder.as_deref(), env),
@@ -1353,4 +1354,128 @@ fn field_map<'a>(
 /// A name as the run reads it: trimmed (JavaScript's white space).
 fn js_trim_owned(s: &str) -> String {
     kentos_processing::text::js_trim(s).to_owned()
+}
+
+/// Katmanlar (docs/adr/0217 §7; the web's `layersField`): every layer in the
+/// tree's order with its objects, checked to be chosen; a locked one marked
+/// (its objects are not taken); under the list what the chosen ones hold.
+fn layers_list<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
+    use kentos_ui::theme::Tokens;
+    use kentos_ui::widget::tree_view::{Check, check_box};
+    use kentos_ui::widget::{Elided, VirtualList};
+    const ROW: f32 = 26.0;
+    let ev = env.send;
+    let layers = env.doc.layers();
+    let chosen: Vec<String> = env
+        .value(&def.name)
+        .as_array()
+        .map(|ids| {
+            ids.iter()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect()
+        })
+        .unwrap_or_default();
+    let leaves: Vec<(String, String, bool, usize)> = layers
+        .leaves()
+        .into_iter()
+        .map(|l| {
+            (
+                l.id.clone(),
+                layers.path(&l.id),
+                layers.is_locked(&l.id),
+                env.doc.by_layer(&l.id).count(),
+            )
+        })
+        .collect();
+    let order: Vec<String> = leaves.iter().map(|l| l.0.clone()).collect();
+    let name = def.name.clone();
+    let rows = leaves.clone();
+    let list = VirtualList::new(rows.len(), typography::scaled(ROW), move |i| {
+        let (id, path, locked, n) = &rows[i];
+        let on = chosen.contains(id);
+        // Checked or not, the chosen ones in the tree's order.
+        let next: Vec<String> = order
+            .iter()
+            .filter(|x| if *x == id { !on } else { chosen.contains(x) })
+            .cloned()
+            .collect();
+        let toggle = ev(Event::Value(name.clone(), json!(next)));
+        let quiet = *locked;
+        let label_text = Elided::new(path.clone())
+            .size(typography::caption())
+            .font(typography::ui())
+            .style(move |theme: &iced::Theme| {
+                let t = Tokens::of(theme);
+                iced::widget::text::Style {
+                    color: Some(if quiet { t.muted } else { t.text }),
+                }
+            })
+            .width(Fill);
+        let named: Element<'_, Message> = if *locked {
+            tip(
+                row![icon(Icon::Lock).size(12.0).tone(Tone::Muted), label_text]
+                    .spacing(4)
+                    .align_y(Center)
+                    .width(Fill),
+                Tip::new("Kilitli: nesneleri alınmaz"),
+                iced::widget::tooltip::Position::Top,
+            )
+        } else {
+            row![label_text].width(Fill).into()
+        };
+        row![
+            container(check_box(
+                if on { Check::Checked } else { Check::Unchecked },
+                Some(toggle.clone()),
+            ))
+            .width(typography::scaled(28.0))
+            .center_x(typography::scaled(28.0)),
+            button(named)
+                .on_press(toggle)
+                .padding(0)
+                .style(style::button::ghost)
+                .width(Fill),
+            container(label::mono_caption(n.to_string()).style(style::text::muted))
+                .width(typography::scaled(56.0))
+                .align_x(Alignment::End),
+        ]
+        .spacing(8)
+        .padding([0, 8])
+        .height(typography::scaled(ROW))
+        .align_y(Center)
+        .into()
+    })
+    .height(typography::scaled(
+        (ROW * leaves.len().clamp(3, 8) as f32).min(220.0),
+    ));
+    let head = row![
+        container(iced::widget::text("")).width(typography::scaled(28.0)),
+        container(label::caption("Katman").style(style::text::muted)).width(Fill),
+        container(label::caption("Nesne").style(style::text::muted))
+            .width(typography::scaled(56.0))
+            .align_x(Alignment::End),
+    ]
+    .spacing(8)
+    .padding([4, 8]);
+    let table = container(Column::new().push(head).push(list))
+        .style(style::container::field_box)
+        .width(Fill);
+    let note = if env
+        .value(&def.name)
+        .as_array()
+        .is_some_and(|a| !a.is_empty())
+    {
+        env.window
+            .inputs
+            .get(&def.name)
+            .map(|s| s.description.clone())
+            .unwrap_or_default()
+    } else {
+        "Katmanları işaretleyin.".to_owned()
+    };
+    column![table, label::caption(note).style(style::text::muted)]
+        .spacing(6)
+        .width(Fill)
+        .into()
 }

@@ -55,6 +55,8 @@ export function defaultValue(def: ParamDef, ctx: DefaultsContext): unknown {
       return [] satisfies RasterPairs;
     case 'fieldMap':
       return [] satisfies FieldMap;
+    case 'layers':
+      return def.default ?? [];
   }
 }
 
@@ -169,6 +171,8 @@ export function fits(def: ParamDef, v: unknown): boolean {
         Array.isArray(v) &&
         v.every((r) => !!r && typeof r === 'object' && typeof r.target === 'string' && typeof r.source === 'string' && typeof r.default === 'string')
       );
+    case 'layers':
+      return Array.isArray(v) && v.every((id) => typeof id === 'string');
   }
 }
 
@@ -306,6 +310,12 @@ function checkParam(p: ParamDef, v: unknown, env: ValidationEnv): string | null 
     }
     case 'fieldMap':
       return fieldMapProblem(name, v as FieldMap);
+    case 'layers': {
+      const ids = v as readonly string[];
+      if (ids.some((id) => !env.layerExists(id))) return `${name}: seçilen katman artık yok.`;
+      const min = p.min ?? 1;
+      return ids.length < min && !(p.optional && !ids.length) ? `${name}: en az ${min} katman seçin.` : null;
+    }
     case 'layer': {
       const l = v as LayerValue;
       if ('newName' in l) return l.newName.trim() ? null : `${name}: yeni katmanın adını yazın.`;

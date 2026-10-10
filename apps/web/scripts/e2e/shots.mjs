@@ -3059,6 +3059,50 @@ SCENES.transfer = [
   },
 ];
 
+// Katman işlemleri (docs/adr/0217) on fixtures/processing/v1/layers.kcad, the scenes the desktop's
+// `processing::layer_tools_tests::screens` draws: the CBS ribbon's Veri with the five in its Katman panel, Özniteliğe göre
+// böl's report and its new group in the layer tree, Vektör katmanlarını birleştir's list and field map, Yinelenenleri
+// sil's report, İfadeye göre sırala's form.
+const LAYERS_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/layers.kcad', import.meta.url), 'utf8');
+const LAYER_CASES = JSON.parse(readFileSync(new URL('../../../../fixtures/processing/v1/layers.json', import.meta.url), 'utf8'));
+const layerCase = (id) => LAYER_CASES.cases.find((c) => c.id === id);
+const openLayerTool = async (ui, id, over = {}, run = true) => {
+  const c = layerCase(id);
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(LAYERS_DRAWING)}, null))) throw new Error('layers.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.set(${JSON.stringify(c.selection ?? [])});
+  })()`);
+  await ui.sleep(300);
+  await ui.eval(openTool(c.run.tool, { ...c.values, ...over }));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (run) {
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+    await ui.sleep(300);
+  }
+};
+SCENES.layertools = [
+  {
+    id: 'katman-serit',
+    open: async (ui) => (
+      await ui.eval(`window.kentos.files.ask = async () => 'drop'; window.kentos.files.load(${JSON.stringify(LAYERS_DRAWING)}, null)`),
+      await ui.sleep(300),
+      await ribbonOn(ui, { ribbonTab: 'data' }),
+      await ui.sleep(300)
+    ),
+    close: ribbonOff,
+  },
+  { id: 'katman-bol', open: async (ui) => (await openLayerTool(ui, 'split-copy'), await formEnd(ui), await ui.sleep(200)), close: queryClose },
+  { id: 'katman-bol-agac', open: async (ui) => (await openLayerTool(ui, 'split-copy'), await proximityDrawing(ui)), close: queryClose },
+  { id: 'katman-birlestir', open: (ui) => openLayerTool(ui, 'merge-typed', { sourceField: 'Kaynak katman' }, false), close: queryClose },
+  { id: 'katman-yinelenen', open: async (ui) => (await openLayerTool(ui, 'dedupe-fields'), await formEnd(ui), await ui.sleep(200)), close: queryClose },
+  { id: 'katman-sirala', open: (ui) => openLayerTool(ui, 'order-area', {}, false), close: queryClose },
+];
+
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
 // `networks::tests::screens` draws: Ağlar with Yollar and with İçme suyu after Denetle (the form scrolled to its answer),
 // En yakın tesis and Maliyet matrisi after a run, En yakın tesis's ways and Hizmet alanları's areas in the drawing, the

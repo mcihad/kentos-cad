@@ -820,3 +820,11 @@
   display: flex;
   gap: 4px;
 }
+
+/* Katmanlar (docs/adr/0217 §7): the layers' checked list, its height kept so that the form scrolls past it. */
+.pfield__layers {
+  max-height: min(calc(220px * var(--ui-scale)), 30vh);
+}
+.pfield__layers .merge-row {
+  cursor: default;
+}

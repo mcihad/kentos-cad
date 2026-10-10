@@ -1,0 +1,2429 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "documents": {},
+ "files": {},
+ "cases": [
+  {
+   "id": "split-copy",
+   "title": "Parselleri mahalleye göre böl: boşluklu ve boş değerler, yeni grup ve katmanlar parselin görünüşü ve alanlarıyla, kopyalar",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.splitByAttribute"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "fields": "Mahalle",
+    "mode": "copy"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Özniteliğe göre böl",
+    "layers": [
+     {
+      "id": "islem-merkez",
+      "name": "Merkez",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "integer"
+       },
+       {
+        "name": "Mahalle",
+        "kind": "text"
+       }
+      ],
+      "parent": "islem-mahalle"
+     },
+     {
+      "id": "islem-yeni",
+      "name": "Yeni",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "integer"
+       },
+       {
+        "name": "Mahalle",
+        "kind": "text"
+       }
+      ],
+      "parent": "islem-mahalle"
+     },
+     {
+      "id": "islem--bos-",
+      "name": "(boş)",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "integer"
+       },
+       {
+        "name": "Mahalle",
+        "kind": "text"
+       }
+      ],
+      "parent": "islem-mahalle"
+     },
+     {
+      "id": "islem-eski",
+      "name": "Eski",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "integer"
+       },
+       {
+        "name": "Mahalle",
+        "kind": "text"
+       }
+      ],
+      "parent": "islem-mahalle"
+     }
+    ],
+    "groups": [
+     {
+      "id": "islem-mahalle",
+      "name": "Mahalle"
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-merkez",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-yeni",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-merkez",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Mahalle": " Merkez "
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem--bos-",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-merkez",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-eski",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "6",
+       "Mahalle": "Eski"
+      },
+      "pts": [
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420025
+       },
+       {
+        "x": 487070,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-yeni",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420050
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem--bos-",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "8",
+       "Mahalle": ""
+      },
+      "pts": [
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420040
+       },
+       {
+        "x": 487090,
+        "y": 4420040
+       }
+      ]
+     }
+    ],
+    "summary": "8 nesne 4 katmana bölündü (kopyalandı).",
+    "outputs": {
+     "count": 4,
+     "table": {
+      "columns": [
+       "Değer",
+       "Nesne"
+      ],
+      "rows": [
+       [
+        "Merkez",
+        "3"
+       ],
+       [
+        "Yeni",
+        "2"
+       ],
+       [
+        "(boş)",
+        "2"
+       ],
+       [
+        "Eski",
+        "1"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "split-move",
+   "title": "Binaları kullanım ve kata göre böl: iki alan, nesneler taşınır",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.splitByAttribute"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "bina"
+    },
+    "fields": "Kullanım, Kat",
+    "mode": "move"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Özniteliğe göre böl",
+    "layers": [
+     {
+      "id": "islem-konut-3",
+      "name": "Konut – 3",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "parent": "islem-kullanim-kat"
+     },
+     {
+      "id": "islem-ticaret-1",
+      "name": "Ticaret – 1",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "parent": "islem-kullanim-kat"
+     },
+     {
+      "id": "islem-konut-5",
+      "name": "Konut – 5",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "parent": "islem-kullanim-kat"
+     },
+     {
+      "id": "islem-konut-iki",
+      "name": "Konut – iki",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "parent": "islem-kullanim-kat"
+     }
+    ],
+    "groups": [
+     {
+      "id": "islem-kullanim-kat",
+      "name": "Kullanım, Kat"
+     }
+    ],
+    "updated": [
+     {
+      "id": 11,
+      "attrs": {
+       "Kullanım": "Konut",
+       "Kat": "3",
+       "Ad": "A Blok"
+      },
+      "layerId": "islem-konut-3"
+     },
+     {
+      "id": 12,
+      "attrs": {
+       "Kullanım": "Ticaret",
+       "Kat": "1",
+       "Ad": "Çarşı"
+      },
+      "layerId": "islem-ticaret-1"
+     },
+     {
+      "id": 13,
+      "attrs": {
+       "Kullanım": "Konut",
+       "Kat": "5"
+      },
+      "layerId": "islem-konut-5"
+     },
+     {
+      "id": 14,
+      "attrs": {
+       "Kullanım": "Konut",
+       "Kat": "iki",
+       "Ad": "B Blok"
+      },
+      "layerId": "islem-konut-iki"
+     },
+     {
+      "id": 15,
+      "attrs": {
+       "Kullanım": "Ticaret",
+       "Kat": "1",
+       "Ad": "Pasaj"
+      },
+      "layerId": "islem-ticaret-1"
+     }
+    ],
+    "summary": "5 nesne 4 katmana bölündü (taşındı).",
+    "outputs": {
+     "count": 4,
+     "table": {
+      "columns": [
+       "Değer",
+       "Nesne"
+      ],
+      "rows": [
+       [
+        "Konut – 3",
+        "1"
+       ],
+       [
+        "Ticaret – 1",
+        "2"
+       ],
+       [
+        "Konut – 5",
+        "1"
+       ],
+       [
+        "Konut – iki",
+        "1"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "split-name-taken",
+   "title": "Grubun adı ağaçta var: “ (2)” eklenir (büyük küçük harf ve Türkçe harfler katlanarak)",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.splitByAttribute"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "bina"
+    },
+    "fields": "Kullanım",
+    "mode": "copy"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Özniteliğe göre böl",
+    "layers": [
+     {
+      "id": "islem-konut",
+      "name": "Konut",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "parent": "islem-kullanim-2-"
+     },
+     {
+      "id": "islem-ticaret",
+      "name": "Ticaret",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "parent": "islem-kullanim-2-"
+     }
+    ],
+    "groups": [
+     {
+      "id": "islem-kullanim-2-",
+      "name": "Kullanım (2)"
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-konut",
+      "attrs": {
+       "Kullanım": "Konut",
+       "Kat": "3",
+       "Ad": "A Blok"
+      },
+      "pts": [
+       {
+        "x": 487002,
+        "y": 4420002
+       },
+       {
+        "x": 487010,
+        "y": 4420002
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487002,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-ticaret",
+      "attrs": {
+       "Kullanım": "Ticaret",
+       "Kat": "1",
+       "Ad": "Çarşı"
+      },
+      "pts": [
+       {
+        "x": 487022,
+        "y": 4420002
+       },
+       {
+        "x": 487030,
+        "y": 4420002
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-konut",
+      "attrs": {
+       "Kullanım": "Konut",
+       "Kat": "5"
+      },
+      "pts": [
+       {
+        "x": 487042,
+        "y": 4420002
+       },
+       {
+        "x": 487050,
+        "y": 4420002
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487042,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-konut",
+      "attrs": {
+       "Kullanım": "Konut",
+       "Kat": "iki",
+       "Ad": "B Blok"
+      },
+      "pts": [
+       {
+        "x": 487062,
+        "y": 4420002
+       },
+       {
+        "x": 487068,
+        "y": 4420002
+       },
+       {
+        "x": 487068,
+        "y": 4420008
+       },
+       {
+        "x": 487062,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-ticaret",
+      "attrs": {
+       "Kullanım": "Ticaret",
+       "Kat": "1",
+       "Ad": "Pasaj"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420002
+       },
+       {
+        "x": 487080,
+        "y": 4420002
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "summary": "5 nesne 2 katmana bölündü (kopyalandı).",
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Değer",
+       "Nesne"
+      ],
+      "rows": [
+       [
+        "Konut",
+        "3"
+       ],
+       [
+        "Ticaret",
+        "2"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "split-locked",
+   "title": "Kilitli katmanı böl: çalıştırma başlamaz",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.splitByAttribute"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kilitli"
+    },
+    "fields": "Ad",
+    "mode": "copy"
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "input",
+      "message": "“Nesneler”: bu katmandaki nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın."
+     }
+    ]
+   }
+  },
+  {
+   "id": "merge-all",
+   "title": "Yol ve parseli birleştir: ağacın sırasıyla, bütün öznitelikler ve kaynak katman",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.merge"
+   },
+   "values": {
+    "layers": [
+     "yol",
+     "parsel"
+    ],
+    "map": [],
+    "sourceField": "Kaynak katman",
+    "output": {
+     "newName": "Birleşik"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 katmandan 10 nesne “Birleşik” katmanına birleştirildi.",
+    "undo": "Vektör katmanlarını birleştir",
+    "layers": [
+     {
+      "id": "islem-birlesik",
+      "name": "Birleşik",
+      "style": {
+       "color": "#8E4EC6",
+       "lineType": "continuous",
+       "lineWeight": 0.18
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Mahalle": " Merkez ",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "6",
+       "Mahalle": "Eski",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420025
+       },
+       {
+        "x": 487070,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420050
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "8",
+       "Mahalle": "",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420040
+       },
+       {
+        "x": 487090,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ad": "Atatürk Cd.",
+       "Tür": "Cadde",
+       "Kaynak katman": "Yol"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4419995
+       },
+       {
+        "x": 487100,
+        "y": 4419995
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ad": "Okul Sk.",
+       "Tür": "Sokak",
+       "Kaynak katman": "Yol"
+      },
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4419995
+       },
+       {
+        "x": 487030,
+        "y": 4419980
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 10
+    }
+   }
+  },
+  {
+   "id": "merge-typed",
+   "title": "Bina ve yolu tipli katmana eşleyerek birleştir: varsayılanlar, uymayan değer, zorunlu alanı boş nesne",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.merge"
+   },
+   "values": {
+    "layers": [
+     "bina",
+     "yol"
+    ],
+    "map": [
+     {
+      "target": "Ad",
+      "source": "Ad",
+      "default": ""
+     },
+     {
+      "target": "Kullanım",
+      "source": "Kullanım",
+      "default": "Yol"
+     },
+     {
+      "target": "Kat",
+      "source": "Kat",
+      "default": ""
+     }
+    ],
+    "sourceField": "",
+    "output": {
+     "layerId": "hedef"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 katmandan 6 nesne “Yapı envanteri” katmanına birleştirildi.",
+    "undo": "Vektör katmanlarını birleştir",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer alanına uymadığı için yazılmadı."
+     },
+     {
+      "level": "warn",
+      "text": "1 nesne zorunlu alanı boş kaldığı için eklenmedi."
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "hedef",
+      "attrs": {
+       "Ad": "A Blok",
+       "Kullanım": "Konut",
+       "Kat": "3",
+       "Durum": "Mevcut"
+      },
+      "pts": [
+       {
+        "x": 487002,
+        "y": 4420002
+       },
+       {
+        "x": 487010,
+        "y": 4420002
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487002,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "hedef",
+      "attrs": {
+       "Ad": "Çarşı",
+       "Kullanım": "Ticaret",
+       "Kat": "1",
+       "Durum": "Mevcut"
+      },
+      "pts": [
+       {
+        "x": 487022,
+        "y": 4420002
+       },
+       {
+        "x": 487030,
+        "y": 4420002
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "hedef",
+      "attrs": {
+       "Ad": "B Blok",
+       "Kullanım": "Konut",
+       "Durum": "Mevcut"
+      },
+      "pts": [
+       {
+        "x": 487062,
+        "y": 4420002
+       },
+       {
+        "x": 487068,
+        "y": 4420002
+       },
+       {
+        "x": 487068,
+        "y": 4420008
+       },
+       {
+        "x": 487062,
+        "y": 4420008
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "hedef",
+      "attrs": {
+       "Ad": "Pasaj",
+       "Kullanım": "Ticaret",
+       "Kat": "1",
+       "Durum": "Mevcut"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420002
+       },
+       {
+        "x": 487080,
+        "y": 4420002
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "hedef",
+      "attrs": {
+       "Ad": "Atatürk Cd.",
+       "Kullanım": "Yol",
+       "Durum": "Mevcut"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4419995
+       },
+       {
+        "x": 487100,
+        "y": 4419995
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "hedef",
+      "attrs": {
+       "Ad": "Okul Sk.",
+       "Kullanım": "Yol",
+       "Durum": "Mevcut"
+      },
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4419995
+       },
+       {
+        "x": 487030,
+        "y": 4419980
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 6
+    }
+   }
+  },
+  {
+   "id": "merge-locked",
+   "title": "Kilitli katmanla birleştir: kilitli katmanın nesneleri alınmaz",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.merge"
+   },
+   "values": {
+    "layers": [
+     "parsel",
+     "kilitli"
+    ],
+    "map": [],
+    "sourceField": "Kaynak katman",
+    "output": {
+     "newName": "Birleşik"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 katmandan 8 nesne “Birleşik” katmanına birleştirildi.",
+    "undo": "Vektör katmanlarını birleştir",
+    "log": [
+     {
+      "level": "warn",
+      "text": "“Katmanlar”: 2 nesne kilitli katmanda olduğu için işleme alınmadı."
+     }
+    ],
+    "layers": [
+     {
+      "id": "islem-birlesik",
+      "name": "Birleşik",
+      "style": {
+       "color": "#8E4EC6",
+       "lineType": "continuous",
+       "lineWeight": 0.18
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Mahalle": " Merkez ",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "6",
+       "Mahalle": "Eski",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420025
+       },
+       {
+        "x": 487070,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420050
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-birlesik",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "8",
+       "Mahalle": "",
+       "Kaynak katman": "Parsel"
+      },
+      "pts": [
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420040
+       },
+       {
+        "x": 487090,
+        "y": 4420040
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 8
+    }
+   }
+  },
+  {
+   "id": "merge-one",
+   "title": "Tek katman: çalıştırma başlamaz",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.merge"
+   },
+   "values": {
+    "layers": [
+     "parsel"
+    ],
+    "map": [],
+    "sourceField": "Kaynak katman",
+    "output": {
+     "newName": "Birleşik"
+    }
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "layers",
+      "message": "“Katmanlar”: en az 2 katman seçin."
+     }
+    ]
+   }
+  },
+  {
+   "id": "extract-copy",
+   "title": "Seçilenleri yeni katmana kopyala: yeni katman ilk nesnenin katmanının görünüşü ve alanlarıyla",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.extract"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "mode": "copy",
+    "output": {
+     "newName": "Seçilenler"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Seçilenleri çıkar",
+    "layers": [
+     {
+      "id": "islem-secilenler",
+      "name": "Seçilenler",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "integer"
+       },
+       {
+        "name": "Mahalle",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-secilenler",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-secilenler",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420050
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-secilenler",
+      "attrs": {
+       "Kullanım": "Ticaret",
+       "Kat": "1",
+       "Ad": "Çarşı"
+      },
+      "pts": [
+       {
+        "x": 487022,
+        "y": 4420002
+       },
+       {
+        "x": 487030,
+        "y": 4420002
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "summary": "3 nesne “Seçilenler” katmanına kopyalandı.",
+    "outputs": {
+     "count": 3
+    }
+   },
+   "selection": [
+    2,
+    7,
+    12
+   ]
+  },
+  {
+   "id": "extract-move",
+   "title": "Seçilenleri var olan katmana taşı: kilitli katmandaki seçili nesne alınmaz",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.extract"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "mode": "move",
+    "output": {
+     "layerId": "secilen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Seçilenleri çıkar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "“Nesneler”: 1 nesne kilitli katmanda olduğu için işleme alınmadı."
+     }
+    ],
+    "updated": [
+     {
+      "id": 21,
+      "attrs": {
+       "Ad": "Atatürk Cd.",
+       "Tür": "Cadde"
+      },
+      "layerId": "secilen"
+     },
+     {
+      "id": 22,
+      "attrs": {
+       "Ad": "Okul Sk.",
+       "Tür": "Sokak"
+      },
+      "layerId": "secilen"
+     }
+    ],
+    "summary": "2 nesne “Seçili işler” katmanına taşındı.",
+    "outputs": {
+     "count": 2
+    }
+   },
+   "selection": [
+    21,
+    22,
+    31
+   ]
+  },
+  {
+   "id": "dedupe-exact",
+   "title": "Parsellerin yinelenenlerini sil: bütün öznitelikler ve geometri",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.deleteDuplicates"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "fields": "",
+    "geometry": true
+   },
+   "expect": {
+    "status": "ok",
+    "removed": [
+     5
+    ],
+    "outputs": {
+     "count": 1,
+     "table": {
+      "columns": [
+       "Değer",
+       "Silinen"
+      ],
+      "rows": [
+       [
+        "Ada: 101; Kullanım: Konut; Mahalle: Merkez; Parsel: 1",
+        "1"
+       ]
+      ]
+     }
+    },
+    "summary": "1 grupta 1 yinelenen nesne silindi.",
+    "undo": "Yinelenenleri sil"
+   }
+  },
+  {
+   "id": "dedupe-fields",
+   "title": "Binaların kullanıma göre yinelenenlerini sil: geometrisiz",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.deleteDuplicates"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "bina"
+    },
+    "fields": "Kullanım",
+    "geometry": false
+   },
+   "expect": {
+    "status": "ok",
+    "removed": [
+     13,
+     14,
+     15
+    ],
+    "outputs": {
+     "count": 3,
+     "table": {
+      "columns": [
+       "Değer",
+       "Silinen"
+      ],
+      "rows": [
+       [
+        "Konut",
+        "2"
+       ],
+       [
+        "Ticaret",
+        "1"
+       ]
+      ]
+     }
+    },
+    "summary": "2 grupta 3 yinelenen nesne silindi.",
+    "undo": "Yinelenenleri sil"
+   }
+  },
+  {
+   "id": "dedupe-none",
+   "title": "Yolların yinelenenleri yok: çizim değişmez",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.deleteDuplicates"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "fields": "",
+    "geometry": true
+   },
+   "expect": {
+    "status": "ok",
+    "removed": [],
+    "outputs": {
+     "count": 0,
+     "table": {
+      "columns": [
+       "Değer",
+       "Silinen"
+      ],
+      "rows": []
+     }
+    },
+    "summary": "Yinelenen nesne yok.",
+    "undo": null
+   }
+  },
+  {
+   "id": "dedupe-zero",
+   "title": "Röper noktalarının yinelenenini sil: kotun sıfırının işareti tek sayı, yüksek olan kalır",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.deleteDuplicates"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "roper"
+    },
+    "fields": "",
+    "geometry": true
+   },
+   "expect": {
+    "status": "ok",
+    "removed": [
+     42
+    ],
+    "outputs": {
+     "count": 1,
+     "table": {
+      "columns": [
+       "Değer",
+       "Silinen"
+      ],
+      "rows": [
+       [
+        "Ad: R1",
+        "1"
+       ]
+      ]
+     }
+    },
+    "summary": "1 grupta 1 yinelenen nesne silindi.",
+    "undo": "Yinelenenleri sil"
+   }
+  },
+  {
+   "id": "order-area",
+   "title": "Parselleri alana göre azalan sırala: eşitler girdinin sırasıyla, Sıra alanı",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.orderBy"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "expression": "$alan",
+    "direction": "desc",
+    "nulls": "last",
+    "orderField": "Sıra",
+    "output": {
+     "newName": "Sıralı"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "8 nesne sıralanıp “Sıralı” katmanına yazıldı.",
+    "undo": "İfadeye göre sırala",
+    "layers": [
+     {
+      "id": "islem-sirali",
+      "name": "Sıralı",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "integer"
+       },
+       {
+        "name": "Mahalle",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-sirali",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Mahalle": " Merkez ",
+       "Sıra": "1"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-sirali",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "6",
+       "Mahalle": "Eski",
+       "Sıra": "2"
+      },
+      "pts": [
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420025
+       },
+       {
+        "x": 487070,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-sirali",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut",
+       "Sıra": "3"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-sirali",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni",
+       "Sıra": "4"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-sirali",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut",
+       "Sıra": "5"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-sirali",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni",
+       "Sıra": "6"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420050
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-sirali",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "8",
+       "Mahalle": "",
+       "Sıra": "7"
+      },
+      "pts": [
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420040
+       },
+       {
+        "x": 487090,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-sirali",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4",
+       "Sıra": "8"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 8
+    }
+   }
+  },
+  {
+   "id": "order-text",
+   "title": "Parselleri mahalleye göre artan sırala: boşlar başta, doğal sıra, sıra alanı yok",
+   "document": "layers.kcad",
+   "run": {
+    "tool": "layers.orderBy"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "expression": "Mahalle",
+    "direction": "asc",
+    "nulls": "first",
+    "orderField": "",
+    "output": {
+     "newName": "Mahalleye göre"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "8 nesne sıralanıp “Mahalleye göre” katmanına yazıldı.",
+    "undo": "İfadeye göre sırala",
+    "layers": [
+     {
+      "id": "islem-mahalleye-gore",
+      "name": "Mahalleye göre",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "integer"
+       },
+       {
+        "name": "Mahalle",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-mahalleye-gore",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "4"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-mahalleye-gore",
+      "attrs": {
+       "Ada": "103",
+       "Parsel": "8",
+       "Mahalle": ""
+      },
+      "pts": [
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487100,
+        "y": 4420040
+       },
+       {
+        "x": 487090,
+        "y": 4420040
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-mahalleye-gore",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Mahalle": " Merkez "
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-mahalleye-gore",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "6",
+       "Mahalle": "Eski"
+      },
+      "pts": [
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420025
+       },
+       {
+        "x": 487070,
+        "y": 4420025
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-mahalleye-gore",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-mahalleye-gore",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Kullanım": "Konut"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-mahalleye-gore",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-mahalleye-gore",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Mahalle": "Yeni"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420030
+       },
+       {
+        "x": 487040,
+        "y": 4420050
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 8
+    }
+   }
+  }
+ ]
+}

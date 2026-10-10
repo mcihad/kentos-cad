@@ -286,6 +286,17 @@ export interface FieldMapParam<N extends string = string> extends ParamBase<N> {
   readonly default?: FieldMap;
 }
 
+/**
+ * Katmanlar (docs/adr/0217 §7): layers chosen from a checked list, their ids; the runner reads them in the tree's order,
+ * layer by layer (a group means every layer under it), without the objects a filter leaves out or on locked layers.
+ */
+export interface LayersParam<N extends string = string> extends ParamBase<N> {
+  readonly type: 'layers';
+  /** The fewest layers to choose (“en az n katman seçin”). */
+  readonly min?: number;
+  readonly default?: readonly string[];
+}
+
 /** A comparison for each pair of the features parameter `of`'s rasters (İkili karşılaştırma, docs/adr/0237 §9). */
 export interface RasterPairsParam<N extends string = string> extends ParamBase<N> {
   readonly type: 'rasterPairs';
@@ -307,7 +318,8 @@ export type ParamDef =
   | NetworkParam
   | RasterValuesParam
   | RasterPairsParam
-  | FieldMapParam;
+  | FieldMapParam
+  | LayersParam;
 export type ParamType = ParamDef['type'];
 
 /** A parameter's value as the dialog and history hold it. */
@@ -337,7 +349,9 @@ export type ValueOf<D> = D extends { type: 'features' }
                         ? RasterPairs
                         : D extends { type: 'fieldMap' }
                           ? FieldMap
-                          : never;
+                          : D extends { type: 'layers' }
+                            ? readonly string[]
+                            : never;
 
 type Maybe<D, T> = D extends { optional: true } ? T | null : T;
 
@@ -359,7 +373,22 @@ export interface TargetLayer {
   readonly isNew: boolean;
 }
 
-type ResolvedOf<D> = D extends { type: 'features' } ? FeatureSet : D extends { type: 'layer' } ? TargetLayer : D extends { type: 'expression' } ? CompiledExpression : ValueOf<D>;
+/** A chosen layer's objects (a `layers` parameter's, docs/adr/0217 §7). */
+export interface LayerSet {
+  readonly id: string;
+  readonly name: string;
+  readonly entities: readonly Entity[];
+}
+
+type ResolvedOf<D> = D extends { type: 'features' }
+  ? FeatureSet
+  : D extends { type: 'layer' }
+    ? TargetLayer
+    : D extends { type: 'expression' }
+      ? CompiledExpression
+      : D extends { type: 'layers' }
+        ? readonly LayerSet[]
+        : ValueOf<D>;
 
 /** What `run` receives: features and layers resolved, the rest as entered. */
 export type ResolvedValues<Ds extends readonly ParamDef[]> = { [D in Ds[number] as D['name']]: Maybe<D, ResolvedOf<D>> };
@@ -481,6 +510,27 @@ export interface RunResult {
    * operation's first raster read, docs/adr/0233 §2).
    */
   above?: string;
+  /**
+   * Layers and groups the run makes itself (Özniteliğe göre böl's, docs/adr/0217 §7): new objects and patches name
+   * them by their keys; the runner makes them in the run's one step, in this order.
+   */
+  layers?: readonly ToolLayer[];
+  /** A layer whose look and fields a new layer of the run's layer parameters takes (docs/adr/0217 §7). */
+  like?: string;
+}
+
+/**
+ * A layer or group a run makes (docs/adr/0217 §7): its key (what the run's objects and patches name it by), its name,
+ * the run's group it goes into (a key) or the existing layer it goes right above, and the layer whose look and fields
+ * it takes. Its id is given from its name as a new layer parameter's is; a name taken where it goes gets “ (2)”.
+ */
+export interface ToolLayer {
+  readonly key: string;
+  readonly name: string;
+  readonly group?: boolean;
+  readonly parent?: string;
+  readonly above?: string;
+  readonly like?: string;
 }
 
 // ── The tool ───────────────────────────────────────────────────────────

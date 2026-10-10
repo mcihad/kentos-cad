@@ -25,13 +25,15 @@ const ALPHABET: [char; 32] = [
     'p', 'q', 'r', 's', 'ş', 't', 'u', 'ü', 'v', 'w', 'x', 'y', 'z',
 ];
 
+/// A text's piece: a run of ASCII digits, or one other character.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Token<'a> {
+pub(crate) enum Token<'a> {
     Number(&'a str),
     Char(char),
 }
 
-fn tokens(text: &str) -> Vec<Token<'_>> {
+/// A text's pieces, read once: an order of many texts compares them, not the texts.
+pub(crate) fn tokens(text: &str) -> Vec<Token<'_>> {
     let mut out = Vec::new();
     let mut rest = text;
     while let Some(c) = rest.chars().next() {
@@ -69,8 +71,12 @@ fn rank(c: char) -> (u8, u32) {
 
 /// `a` against `b` in the natural order.
 pub fn natural_cmp(a: &str, b: &str) -> Ordering {
-    let (ta, tb) = (tokens(a), tokens(b));
-    for (x, y) in ta.iter().zip(&tb) {
+    tokens_cmp((a, &tokens(a)), (b, &tokens(b)))
+}
+
+/// Two texts in the natural order, each with its pieces ([`tokens`]).
+pub(crate) fn tokens_cmp((a, ta): (&str, &[Token<'_>]), (b, tb): (&str, &[Token<'_>])) -> Ordering {
+    for (x, y) in ta.iter().zip(tb) {
         let order = match (x, y) {
             (Token::Number(p), Token::Number(q)) => by_value(p, q),
             (Token::Number(_), Token::Char(_)) => Ordering::Less,

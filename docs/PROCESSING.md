@@ -132,6 +132,7 @@ export const vertexNumbering = defineTool({
 | `rasterValues` | `{ "<raster adı>": sayı ya da metin }` | aynı | `of` (rasterleri satır olan `features` parametresi; adlar Raster hesaplayıcı'nınki), `cell: 'number' \| 'text'`, `min`, `max`, `placeholder`. Pencere girdinin rasterlerini sırasıyla satır satır gösterir; girdide olmayan adlar soluk, × ile silinir; model adımında ad eklenir. Yazılmayan satırın anlamı aracındır (ADR 0237 §9). Model girdisi olamaz |
 | `rasterPairs` | `[[a, b, v]]` (v 9 … 2 a b'den v kat önemli, 1 eşit, −2 … −9 b a'dan) | aynı | `of`. Pencere her raster çiftine 17 seçenekli bir liste gösterir (ADR 0237 §9). Model girdisi olamaz |
 | `fieldMap` | `[{ target, source, default }]` (Alan eşleme; boş liste: anahtardan başka bütün sütunlar kendi adlarıyla) | aynı | `target` (yazılan `features` parametresi: hedef alanların listesi), `source` (sütunları sunan parametreler; görünen ilki), `key` (kaynağın anahtarını adlandıran `field` parametreleri; adı olan ilki, Aynı adlarla doldur onu atlar). Pencere satır satır: Hedef alan (yazılır ya da seçilir), Kaynak alan ya da “(yok)”, Varsayılan, ×; Satır ekle, Aynı adlarla doldur; sorunlu satır uyarı rengiyle (boş ya da yinelenen hedef, kaynakta olmayan sütun). Çalıştırma boş ya da yinelenen hedefle, 64 karakterden uzun ya da köşeli parantezli adla başlamaz (ADR 0216 §2). Model girdisi olamaz |
+| `layers` | katman kimliklerinin listesi | `LayerSet { layers: { id, name, entities }[], description }` (masaüstünde `layer_sets`) | `min` (en az işaretli katman). Pencerede Girdi'de katmanlar (grupları değil) ağacın sırasıyla, yollarıyla ve nesne sayılarıyla onay kutulu bir liste; kilitli olan soluk ve kilitli. Çalıştırıcı listeyi ağacın sırasıyla katman katman çözer: süzgecin dışarıda bıraktıkları ve kilitli katmanın nesneleri alınmaz (söylenir), olmayan katman “seçilen katman artık yok”, nesnesiz liste “seçilen katmanlarda uygun nesne yok”tur (ADR 0217 §7). Model girdisi olamaz |
 
 Ortak alanlar: `name` (değer anahtarı), `label`, `description`, `optional`,
 `advanced` ("Gelişmiş ayarlar" altında), `visibleWhen` (yalnızca koşul
@@ -158,7 +159,11 @@ RunContext { doc: DocumentSnapshot /* get, all, byLayer; salt okunur */, units: 
 Feedback   { progress(fraction, label?), info(m), warn(m), canceled, yield() }
 ChangeSet  { add?: NewEntity[], update?: { id, patch }[], remove?: number[] }
 RunResult  { changes?, select?: readonly number[] /* çalıştırmadan sonraki seçim */, outputs?, summary?,
-             refused?: string /* araç reddeder: çizim değişmez, ileti olduğu gibi */ }
+             refused?: string /* araç reddeder: çizim değişmez, ileti olduğu gibi */,
+             layers?: ToolLayer[] /* aracın açtığı katmanlar ve gruplar (ADR 0217 §7) */,
+             like?: string /* yeni sonuç katmanı görünüşünü ve alanlarını bu katmandan alır */ }
+ToolLayer  { key /* '#…': nesneler ve yamalar katmanı bununla anar */, name, group?, parent? /* aynı çalıştırmanın grubu */,
+             above? /* hemen üstüne açıldığı katman */, like? /* görünüşünü ve alanlarını aldığı katman */ }
 ```
 
 - Uzun döngülerde `await feedback.yield()` sayfanın donmasını önler (16 ms'de bir gerçekten bekler) ve `feedback.canceled` denetlenir. İptal edilen çalıştırmanın değişiklikleri uygulanmaz.
@@ -170,6 +175,7 @@ RunResult  { changes?, select?: readonly number[] /* çalıştırmadan sonraki s
 - **`features` çıktıları:** `outputs[ad]` bir kimlik dizisiyse o kullanılır (seçilenler, değişenler); yoksa çalıştırmanın eklediği nesneler çıktıdır. Modeller bu kimlikleri sonraki adıma `{ scope: 'ids' }` olarak verir.
 - **`table` çıktısı** (`{ columns, rows }`, metinler; Özet istatistik, Geçerliliği denetle, Onar, Sadeleştir): pencere çalıştırmadan sonra formun altında gösterir (Panoya kopyala, CSV olarak kaydet); modelde sonraki adıma geçmez.
 - **Geometri işlemleri** (ADR 0201): hesap çekirdeğin `ops::geoprocess`'idir (web `model/ops/geoprocess.ts` ile nesneleri bütün verir, masaüstü işlevleri şekillerle çağırır); araç sonucu kendi Çıktı katmanına yeni nesne olarak yazar, girdi değişmez. Ortak notlar (`builtin/geometry/shared.ts`, `builtin/geometry/mod.rs`): elips ve eğrinin 0,1 mm'lik doğru parçalarıyla girdiği, kotların taşınmadığı, sonucu boş kalan nesneler.
+- **Aracın katmanları** (`RunResult.layers`, ADR 0217 §7): Özniteliğe göre böl gibi katman açan araç her katmana bir anahtar verir; nesnelerin `layerId`'si ve yamaların katmanı (web'de `patch.layerId`, masaüstünde `Patch.layer`) bu anahtardır. Çalıştırıcı katmanları ve grupları değişikliklerle tek adımda açar: kimlik adından (`islem-<ad>`, alınmışsa “-2” eklenerek), ad yerinde alınmışsa “ (2)”; grup `above`'un hemen üstüne, katmanları içine sırayla; `like` görünüşü ve alanları verir.
 - **Katmanın alanları:** çalıştırıcı değişiklik kümesini uygulamadan önce öznitelik yazmalarını katmanın alanlarının kuralıyla denetler (`processing/writeCheck.ts`, masaüstünde `kentos_processing::writes`; ADR 0199 §1, 0200 §3): alana yazılan değer alanın tek biçimine çevrilir, uymayan ilk değer bütün çalıştırmayı reddeder ("Öznitelik yazılamadı (#id): …"). Araçlar değeri yazarken `ctx.field` ile aynı biçime çevirir; aynı kalan değeri yeniden yazmaz.
 
 ### 4.4 Çalıştırma akışı (`ProcessingRunner.run`)
@@ -355,6 +361,11 @@ türünün işaretidir (bkz. §10).
 | `geometry.repair` | Onar | Alan kendi halkalarından yeniden kurulur, yinelenen köşeler düşer; sorunsuz nesne olduğu gibi; rapor tablosu (§6). |
 | `geometry.simplify` | Sadeleştir | Çizimin Sadeleştir kuralı yeni katmana; köşe, alan değişimi ve en büyük sapma tablosu (§7). |
 | `geometry.reproject` | Koordinat sistemine dönüştür | Kayıttaki bir sistemden projenin sistemine, projenin datum seçimleriyle; yay ve daireler 1 mm içinde doğru parçaları (§8). |
+| `layers.splitByAttribute` | Özniteliğe göre böl | Nesneleri bir ya da birkaç alanın kırpılmış değerlerine göre (“(boş)”, “ – ”) alanların adını taşıyan yeni bir gruptaki katmanlara böler: değer başına katman, değerlerin ilk görüldüğü sırayla, ilk nesnesinin katmanının görünüşü ve alanlarıyla; Kopyala ya da Taşı; en çok 1000 katman; tablo Değer, Nesne (ADR 0217 §2). |
+| `layers.merge` | Vektör katmanlarını birleştir | Katmanlar parametresindeki katmanların nesnelerinin kopyaları ağacın sırasıyla tek katmana; alan eşlemesi ya da bütün öznitelikler, Kaynak katman alanı; tipli hedefte uymayan değer yazılmaz, varsayılanlar gelir, zorunlu alanı boş kalan eklenmez (§3). |
+| `layers.extract` | Seçilenleri çıkar | Seçili (ya da kapsamdaki) nesneler bir katmana kopyalanır ya da taşınır; yeni katman ilk nesnenin katmanının görünüşü ve alanlarıyla (§4). |
+| `layers.deleteDuplicates` | Yinelenenleri sil | Alanların (ya da değerli bütün özniteliklerin) değerleri ve isteğe bağlı kesin geometrisi aynı olanlardan ilki kalır, öbürleri silinir; tablo Değer, Silinen (§5). |
+| `layers.orderBy` | İfadeye göre sırala | Nesnelerin kopyaları bir ifadenin değerine göre sıralı yeni katmana: türler evet/hayır, sayı, metin; metinler doğal sırayla; Artan ya da Azalan; boşlar başta ya da sonda; eşitler girdinin sırasıyla; isteğe bağlı Sıra alanı (çekirdeğin `ops::order`'ı, §6). |
 
 ## 12. Masaüstü
 

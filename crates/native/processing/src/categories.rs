@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 24] = [
+pub const CATEGORIES: [Category; 25] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -45,6 +45,13 @@ pub const CATEGORIES: [Category; 24] = [
         "Öznitelik",
         "table",
         "Öznitelik hesaplama ve düzenleme",
+    ),
+    // docs/adr/0217: layers split by values, merged with a field map, objects extracted, duplicates deleted, ordered copies.
+    category(
+        "layers",
+        "Katman",
+        "layers",
+        "Özniteliğe göre bölme, katmanları birleştirme, seçilenleri çıkarma, yinelenenleri silme, sıralama",
     ),
     category(
         "cadastre",

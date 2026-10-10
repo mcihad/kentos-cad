@@ -1,0 +1,663 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: katman işlemleri",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    }
+   ]
+  },
+  {
+   "id": "bina",
+   "name": "Bina",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#30A46C",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kilitli",
+   "name": "Arşiv",
+   "type": "layer",
+   "visible": true,
+   "locked": true,
+   "expanded": true,
+   "style": {
+    "color": "#8E8C99",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "hedef",
+   "name": "Yapı envanteri",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#F76B15",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "Kullanım",
+     "kind": "text"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    },
+    {
+     "name": "Durum",
+     "kind": "text",
+     "default": "Mevcut"
+    }
+   ]
+  },
+  {
+   "id": "secilen",
+   "name": "Seçili işler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E54666",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kullanim",
+   "name": "KULLANIM",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#FFC53D",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "roper",
+   "name": "Röper",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#00A2C7",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "1",
+    "Mahalle": "Merkez",
+    "Kullanım": "Konut"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420020
+    },
+    {
+     "x": 487000,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "2",
+    "Mahalle": "Yeni"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487040,
+     "y": 4420000
+    },
+    {
+     "x": 487040,
+     "y": 4420020
+    },
+    {
+     "x": 487020,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "3",
+    "Mahalle": " Merkez "
+   },
+   "pts": [
+    {
+     "x": 487040,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487060,
+     "y": 4420030
+    },
+    {
+     "x": 487040,
+     "y": 4420030
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "102",
+    "Parsel": "4"
+   },
+   "pts": [
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487070,
+     "y": 4420000
+    },
+    {
+     "x": 487070,
+     "y": 4420010
+    },
+    {
+     "x": 487060,
+     "y": 4420010
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "1",
+    "Mahalle": "Merkez",
+    "Kullanım": "Konut"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420020
+    },
+    {
+     "x": 487000,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "102",
+    "Parsel": "6",
+    "Mahalle": "Eski"
+   },
+   "pts": [
+    {
+     "x": 487070,
+     "y": 4420000
+    },
+    {
+     "x": 487090,
+     "y": 4420000
+    },
+    {
+     "x": 487090,
+     "y": 4420025
+    },
+    {
+     "x": 487070,
+     "y": 4420025
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "2",
+    "Mahalle": "Yeni"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420030
+    },
+    {
+     "x": 487040,
+     "y": 4420030
+    },
+    {
+     "x": 487040,
+     "y": 4420050
+    },
+    {
+     "x": 487020,
+     "y": 4420050
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 8,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "103",
+    "Parsel": "8",
+    "Mahalle": ""
+   },
+   "pts": [
+    {
+     "x": 487090,
+     "y": 4420000
+    },
+    {
+     "x": 487100,
+     "y": 4420000
+    },
+    {
+     "x": 487100,
+     "y": 4420040
+    },
+    {
+     "x": 487090,
+     "y": 4420040
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 11,
+   "layerId": "bina",
+   "attrs": {
+    "Kullanım": "Konut",
+    "Kat": "3",
+    "Ad": "A Blok"
+   },
+   "pts": [
+    {
+     "x": 487002,
+     "y": 4420002
+    },
+    {
+     "x": 487010,
+     "y": 4420002
+    },
+    {
+     "x": 487010,
+     "y": 4420010
+    },
+    {
+     "x": 487002,
+     "y": 4420010
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 12,
+   "layerId": "bina",
+   "attrs": {
+    "Kullanım": "Ticaret",
+    "Kat": "1",
+    "Ad": "Çarşı"
+   },
+   "pts": [
+    {
+     "x": 487022,
+     "y": 4420002
+    },
+    {
+     "x": 487030,
+     "y": 4420002
+    },
+    {
+     "x": 487030,
+     "y": 4420010
+    },
+    {
+     "x": 487022,
+     "y": 4420010
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 13,
+   "layerId": "bina",
+   "attrs": {
+    "Kullanım": "Konut",
+    "Kat": "5"
+   },
+   "pts": [
+    {
+     "x": 487042,
+     "y": 4420002
+    },
+    {
+     "x": 487050,
+     "y": 4420002
+    },
+    {
+     "x": 487050,
+     "y": 4420010
+    },
+    {
+     "x": 487042,
+     "y": 4420010
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 14,
+   "layerId": "bina",
+   "attrs": {
+    "Kullanım": "Konut",
+    "Kat": "iki",
+    "Ad": "B Blok"
+   },
+   "pts": [
+    {
+     "x": 487062,
+     "y": 4420002
+    },
+    {
+     "x": 487068,
+     "y": 4420002
+    },
+    {
+     "x": 487068,
+     "y": 4420008
+    },
+    {
+     "x": 487062,
+     "y": 4420008
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 15,
+   "layerId": "bina",
+   "attrs": {
+    "Kullanım": "Ticaret",
+    "Kat": "1",
+    "Ad": "Pasaj"
+   },
+   "pts": [
+    {
+     "x": 487072,
+     "y": 4420002
+    },
+    {
+     "x": 487080,
+     "y": 4420002
+    },
+    {
+     "x": 487080,
+     "y": 4420010
+    },
+    {
+     "x": 487072,
+     "y": 4420010
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 21,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Atatürk Cd.",
+    "Tür": "Cadde"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4419995
+    },
+    {
+     "x": 487100,
+     "y": 4419995
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 22,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Okul Sk.",
+    "Tür": "Sokak"
+   },
+   "pts": [
+    {
+     "x": 487030,
+     "y": 4419995
+    },
+    {
+     "x": 487030,
+     "y": 4419980
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 31,
+   "layerId": "kilitli",
+   "attrs": {
+    "Ad": "Eski yapı"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420060
+    },
+    {
+     "x": 487010,
+     "y": 4420060
+    },
+    {
+     "x": 487010,
+     "y": 4420070
+    },
+    {
+     "x": 487000,
+     "y": 4420070
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 32,
+   "layerId": "kilitli",
+   "attrs": {
+    "Ad": "Röper"
+   },
+   "p": {
+    "x": 487005,
+    "y": 4420080
+   }
+  },
+  {
+   "kind": "point",
+   "id": 41,
+   "layerId": "roper",
+   "attrs": {
+    "Ad": "R1"
+   },
+   "p": {
+    "x": 487005,
+    "y": 4420090
+   },
+   "z": 0.0
+  },
+  {
+   "kind": "point",
+   "id": 42,
+   "layerId": "roper",
+   "attrs": {
+    "Ad": "R1"
+   },
+   "p": {
+    "x": 487005,
+    "y": 4420090
+   },
+   "z": -0.0
+  },
+  {
+   "kind": "point",
+   "id": 43,
+   "layerId": "roper",
+   "attrs": {
+    "Ad": "R1"
+   },
+   "p": {
+    "x": 487005,
+    "y": 4420090
+   },
+   "z": 0.5
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

@@ -7,9 +7,9 @@ import { exprLayers, worldObjects } from '../model/expression/layers';
 import { leftOut } from '../model/layerFilter';
 import { documentVariables, type ExpressionVariable } from '../model/projectVariables';
 import { crsSettings, datumChoices, ownSystem } from '../model/projectCrs';
-import { resolveFeatures, summarizeFeatures, type FeatureHost, type InputSummary } from './features';
+import { resolveFeatures, resolveLayers, summarizeFeatures, summarizeLayers, type FeatureHost, type InputSummary } from './features';
 import { withObjects } from './geometry';
-import { clientExecutor, type Executor, type FeatureRef, type RunJob } from './job';
+import { clientExecutor, type Executor, type FeatureRef, type LayersRef, type RunJob } from './job';
 import { fileTable, isVisible, validateValues, type ValidationIssue } from './parameters';
 import type {
   DefaultsContext,
@@ -94,6 +94,20 @@ const HISTORY_LIMIT = 100;
 export function sameNamedLayer<L extends { readonly name: string }>(leaves: readonly L[], name: string): L | undefined {
   const key = foldTurkish(name);
   return key ? leaves.find((l) => foldTurkish(l.name) === key) : undefined;
+}
+
+/** A new layer's id from its name (`islem-merkez`), “-2”, then “-2-3” … appended while `taken` says it is taken. */
+export function newLayerId(name: string, taken: (id: string) => boolean): string {
+  let id = `islem-${foldTurkish(name).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  for (let k = 2; taken(id); k++) id = `${id}-${k}`;
+  return id;
+}
+
+/** A name for a node among these: the name, or with “ (2)”, “ (3)” … when a node there has it (folded). */
+export function freeName(name: string, siblings: readonly { readonly name: string }[]): string {
+  let out = name;
+  for (let k = 2; sameNamedLayer(siblings, out); k++) out = `${name} (${k})`;
+  return out;
 }
 
 /** A chosen file's table as a field parameter reads it: its rows, and its named columns with how many rows fill each. */
@@ -187,6 +201,7 @@ export class ProcessingRunner {
     const out: Record<string, InputSummary> = {};
     for (const p of tool.parameters) {
       if (p.type === 'features' && values[p.name]) out[p.name] = summarizeFeatures(values[p.name] as FeaturesValue, p, this.host);
+      if (p.type === 'layers' && Array.isArray(values[p.name])) out[p.name] = summarizeLayers(values[p.name] as string[], this.host);
       if (p.type === 'file') {
         const t = fileTable(values[p.name] as FileValue | null);
         if (t) out[p.name] = fileSummary(t.header, t.rows);
@@ -295,6 +310,11 @@ export class ProcessingRunner {
     return all[0] ?? null;
   }
 
+  /** A layer's objects: what a Katmanlar list says beside it (docs/adr/0217 §7). */
+  layerCount(id: string): number {
+    return this.host.doc.byLayer(id).length;
+  }
+
   /** Objects the features inputs resolve to now (what "auto" weighs). */
   inputSize(tool: ProcessingTool, values: Record<string, unknown>): number {
     return Object.values(this.describeInputs(tool, values)).reduce((n, s) => n + s.count, 0);
@@ -358,6 +378,17 @@ export class ProcessingRunner {
         if (!entities.length && !p.optional && !p.allowEmpty && fv.scope !== 'ids') return { status: 'invalid', issues: [{ param: p.name, message: emptyInputMessage(p.label, fv) }] };
         size += entities.length;
         jobValues[p.name] = { ids: entities.map((e) => e.id), description: set.description, ...(fv.scope === 'layer' && { layerId: fv.layerId }) } satisfies FeatureRef;
+      }
+      // A list of layers (docs/adr/0217 §7): read in the tree's order; a locked layer's objects are not taken.
+      if (p.type === 'layers') {
+        const sets = resolveLayers(v as string[], this.host);
+        const taken = sets.filter((l) => !this.host.doc.layers.isLocked(l.id));
+        const locked = sets.reduce((n, l) => n + (taken.includes(l) ? 0 : l.entities.length), 0);
+        if (locked) notes.push(`“${p.label}”: ${locked} nesne kilitli katmanda olduğu için işleme alınmadı.`);
+        const count = taken.reduce((n, l) => n + l.entities.length, 0);
+        if (!count && !p.optional) return { status: 'invalid', issues: [{ param: p.name, message: `“${p.label}”: seçilen katmanlarda uygun nesne yok.` }] };
+        size += count;
+        jobValues[p.name] = { layers: taken.map((l) => ({ id: l.id, name: l.name, ids: l.entities.map((e) => e.id) })) } satisfies LayersRef;
       }
       if (p.type === 'layer') {
         const t = this.resolveLayer(v as LayerValue);
@@ -445,7 +476,7 @@ export class ProcessingRunner {
       const touched = [...new Set([...(result.changes?.update ?? []).map((u) => u.id), ...(selected ?? [])])].filter((id) => doc.get(id));
       const summary = result.summary ?? (selected ? `${selected.length} nesne seçildi.` : `${added.length} nesne eklendi.`);
       const ch = result.changes;
-      const edited = added.length > 0 || !!ch?.update?.length || !!ch?.remove?.length;
+      const edited = added.length > 0 || !!ch?.update?.length || !!ch?.remove?.length || !!result.layers?.length;
       return { status: 'ok', result, added, touched, edited, record: record('ok', summary, added, touched) };
     } catch (err) {
       const message = `“${tool.label}” çalışırken hata: ${(err as Error).message}`;
@@ -466,21 +497,40 @@ export class ProcessingRunner {
     const name = v.newName.trim();
     const same = sameNamedLayer(layers.leaves(), name);
     if (same) return { id: same.id, name: same.name, isNew: false };
-    let id = `islem-${foldTurkish(name).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
-    for (let k = 2; layers.get(id); k++) id = `${id}-${k}`;
-    return { id, name, isNew: true };
+    return { id: newLayerId(name, (id) => !!layers.get(id)), name, isNew: true };
   }
 
   /** Applies the ChangeSet in one undo step; locked layers are left alone and counted. */
   private apply(tool: ProcessingTool, result: RunResult, newLayers: Map<string, { name: string; def: LayerParam; above?: string; below?: string }>, log?: (level: 'info' | 'warn', message: string) => void): number[] {
     const { doc } = this.host;
-    const ch = result.changes;
-    if (!ch) return [];
+    if (!result.changes && !result.layers?.length) return [];
+    const ch = result.changes ?? {};
     const locked = (layerId: string) => doc.layers.isLocked(layerId);
     let skipped = 0;
     const added: number[] = [];
+    // A new layer of the run's layer parameters takes this layer's look and fields (docs/adr/0217 §7).
+    const likeOf = (id: string | undefined) => {
+      const like = id ? doc.layers.get(id) : undefined;
+      return like?.type === 'layer' ? { style: like.style, ...(like.fields?.length && { fields: like.fields }) } : null;
+    };
     // Removals, then updates, then additions, each as one change (the panels and the store hear it once).
     doc.transact(tool.label, () => {
+      // Layers and groups the run makes itself (docs/adr/0217 §7), in its order: a key becomes an id from the name, a
+      // name taken where it goes gets “ (2)”; a group's layers go into it, first on top.
+      const keys = new Map<string, string>();
+      for (const t of result.layers ?? []) {
+        const parent = t.parent !== undefined ? (keys.get(t.parent) ?? null) : null;
+        const anchor = parent === null && t.above && doc.layers.get(t.above) ? t.above : null;
+        const group = parent ?? (anchor ? (doc.layers.parentOf(anchor)?.id ?? null) : null);
+        const siblings = group ? (doc.layers.get(group)?.children ?? []) : doc.layers.tree;
+        const name = freeName(t.name, siblings);
+        const id = newLayerId(name, (x) => !!doc.layers.get(x));
+        const index = anchor ? siblings.findIndex((n) => n.id === anchor) : -1;
+        const look = t.group ? null : likeOf(t.like);
+        doc.addLayer({ id, name, type: t.group ? 'group' : 'layer', ...look }, group, index >= 0 ? { index } : {});
+        keys.set(t.key, id);
+      }
+      const real = (layerId: string) => keys.get(layerId) ?? layerId;
       // Layers the run writes to but that do not exist yet: in the tool's step, so undo takes them too.
       // New layers below one layer keep the run's order: each below the one before (Kriging's prediction right under
       // its points, its error under that).
@@ -500,7 +550,7 @@ export class ProcessingRunner {
           under.set(below, n);
           index += n;
         }
-        doc.addLayer({ id: e.layerId, name: pending.name, style: pending.def.newLayerStyle }, group?.id ?? null, index >= 0 ? { index } : {});
+        doc.addLayer({ id: e.layerId, name: pending.name, ...(likeOf(result.like) ?? { style: pending.def.newLayerStyle }) }, group?.id ?? null, index >= 0 ? { index } : {});
       }
       const gone: number[] = [];
       for (const id of ch.remove ?? []) {
@@ -515,11 +565,12 @@ export class ProcessingRunner {
         const e = doc.get(u.id);
         if (!e) continue;
         if (locked(e.layerId)) skipped++;
-        else patches.push({ ...(u.patch as Partial<Entity>), id: u.id });
+        else patches.push({ ...(u.patch as Partial<Entity>), id: u.id, ...(u.patch.layerId !== undefined && { layerId: real(u.patch.layerId) }) });
       }
       doc.updateMany(patches);
       const fresh: NewEntity[] = [];
-      for (const n of ch.add ?? []) {
+      for (const given of ch.add ?? []) {
+        const n = keys.has(given.layerId) ? { ...given, layerId: real(given.layerId) } : given;
         if (!doc.layers.get(n.layerId) || locked(n.layerId)) {
           skipped++;
           continue;
