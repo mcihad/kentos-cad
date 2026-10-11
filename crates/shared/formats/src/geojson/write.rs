@@ -3,7 +3,13 @@
 //! read back to the same float64, never rounded or transformed: a WGS 84
 //! project (EPSG:4326) gives RFC 7946 GeoJSON, any other its own
 //! coordinates with the 2008 `crs` member naming them (RFC 7946 has no such
-//! member; the export window says so before writing).
+//! member; the export window says so before writing). Asked to
+//! ([`write_wgs84`], docs/adr/0222 §7), the writer moves them into WGS 84
+//! longitude and latitude as Koordinat dönüştür moves a point (the
+//! project's datum choices taken), rounded once to ten decimals (about
+//! 0.01 mm), and writes RFC 7946 GeoJSON without the `crs` member; an object
+//! one of whose vertices the move does not reach is left out and said;
+//! elevations are written as they are.
 //!
 //! What GeoJSON cannot hold is written as the nearest thing it can, and
 //! said: curves (circles, arcs, ellipses, splines, bulged paths) sampled
@@ -28,436 +34,20 @@ use std::collections::HashMap;
 use std::fmt::Write as _;
 
 use kentos_contracts::{
-    Entity, ExportReport, GeoJsonLayer, GeoJsonWriteInput, LayerField, LayerFieldKind, Vec2,
-    check_value, compare_decimals,
+    ExportReport, GeoJsonLayer, GeoJsonWriteInput, LayerField, LayerFieldKind, Vec2, check_value,
+    compare_decimals,
 };
-use kentos_geometry_core::Vec2 as CoreVec2;
-use kentos_geometry_core::entity::{ellipse_geom, polygon_ring, tessellate_circle};
-use kentos_geometry_core::geom::arc::{ArcGeom, DEFAULT_STEP, tessellate_arc};
-use kentos_geometry_core::geom::bulge::bulge_path_outline;
-use kentos_geometry_core::geom::ellipse::{is_full_ellipse, tessellate_ellipse};
-use kentos_geometry_core::geom::spline::catmull_rom;
+use kentos_geometry_core::crs::{Choice, System, Unreached, transform_in};
 use serde::{Deserialize, Deserializer};
 
 use crate::blocks::Placing;
 use crate::dxf::{Definitions, Objects};
-use crate::geom::{bulge_path_zs, has_arcs, to_core};
-use crate::gis::{Ring, Zs, open_ring, shoelace};
+use crate::export_geom::{GEOJSON, Geometry, geometry};
+use crate::gis::Ring;
 use crate::json::quote;
-use crate::num::plain;
+use crate::kml::write::{DEGREE_DECIMALS, WGS84, say_unreached, tally};
+use crate::num::{plain, rounded};
 use crate::report::Report;
-
-/// Segments per turn of a sampled curve: the app's own (72, the core's `DEFAULT_STEP`).
-/// Each curve is sampled by the core function the app's outline uses for it
-/// (`entity_outline` with 72 segments), called directly so the formats module
-/// does not take in the outline of every other kind (dimensions, text).
-const SEGMENTS: f64 = 72.0;
-/// Points per turn of an ellipse in that outline (`max(64, 2 × segments)`).
-const ELLIPSE_PER_TURN: f64 = 2.0 * SEGMENTS;
-/// Points per span of a spline in that outline.
-const SPLINE_PER_SPAN: f64 = 16.0;
-
-/// A feature's geometry as it will be written.
-enum Geometry {
-    Point(Vec2, Option<f64>),
-    /// A multi-point object's points, each with its elevation (docs/adr/0174).
-    Points(Vec<(Vec2, Option<f64>)>),
-    Line(Ring),
-    /// A multi-part polyline's paths, the polyline's own first (docs/adr/0174).
-    Lines(Vec<Ring>),
-    /// Closed rings, the outline first, turned to the right-hand rule.
-    Area(Vec<Ring>),
-    /// A multi-part area: each part's rings as [`Geometry::Area`]'s.
-    Areas(Vec<Vec<Ring>>),
-    /// An insert's placed objects (docs/adr/0144 §5).
-    Collection(Vec<Geometry>),
-}
-
-fn from_core(pts: Vec<CoreVec2>) -> Vec<Vec2> {
-    pts.into_iter().map(|p| Vec2 { x: p.x, y: p.y }).collect()
-}
-
-fn core(p: Vec2) -> CoreVec2 {
-    CoreVec2::new(p.x, p.y)
-}
-
-/// A ring closed by repeating its first point (and its elevation).
-fn closed(mut ring: Ring) -> Ring {
-    if let Some(&first) = ring.pts.first()
-        && ring.pts.last() != Some(&first)
-    {
-        ring.pts.push(first);
-        if let Some(zs) = ring.zs.as_mut() {
-            let z = zs.first().copied().flatten();
-            zs.push(z);
-        }
-    }
-    ring
-}
-
-/// A ring (without its closing point) turned counter-clockwise (`ccw`) or
-/// clockwise, keeping its first vertex (each vertex its elevation); the ring closed.
-fn oriented(ring: Ring, ccw: bool, turned: &mut bool) -> Ring {
-    let (mut ring, _, _) = open_ring(ring);
-    let s = shoelace(&ring.pts);
-    if (ccw && s < 0.0) || (!ccw && s > 0.0) {
-        if let Some(rest) = ring.pts.get_mut(1..) {
-            rest.reverse();
-        }
-        if let Some(rest) = ring.zs.as_mut().and_then(|zs| zs.get_mut(1..)) {
-            rest.reverse();
-        }
-        *turned = true;
-    }
-    closed(ring)
-}
-
-/// An area from its outline and holes; None when the outline has fewer than three points.
-fn area(outline: Ring, holes: Vec<Ring>, rep: &mut Report) -> Option<Geometry> {
-    let mut turned = false;
-    if open_ring(outline.clone()).0.pts.len() < 3 {
-        return None;
-    }
-    let mut rings = vec![oriented(outline, true, &mut turned)];
-    for h in holes {
-        if open_ring(h.clone()).0.pts.len() >= 3 {
-            rings.push(oriented(h, false, &mut turned));
-        } else {
-            rep.skip("Delik", "üçten az köşesi var; yazılmadı", 0);
-        }
-    }
-    if turned {
-        rep.note(
-            "Halka yönü",
-            "RFC 7946'nın sağ el kuralına çevrildi (dış sınır saat yönünün tersine, delikler saat yönünde); köşeler aynı",
-            0,
-        );
-    }
-    Some(Geometry::Area(rings))
-}
-
-fn curve(rep: &mut Report, what: &str, ring: Ring) -> Option<Geometry> {
-    rep.note(
-        what,
-        "GeoJSON'da eğri yok: uygulamanın kendi örneklemesiyle (turda 72 adım) çizgi olarak yazıldı",
-        0,
-    );
-    (ring.pts.len() >= 2).then_some(Geometry::Line(ring))
-}
-
-/// A path's elevations when it has as many as vertices (else it has none).
-fn heights(zs: &Zs, vertices: usize) -> Option<&[Option<f64>]> {
-    zs.as_deref().filter(|z| z.len() == vertices)
-}
-
-/// Whether some elevations are not numbers a file can hold.
-fn zs_finite(zs: &Zs) -> bool {
-    zs.iter().flatten().flatten().all(|z| z.is_finite())
-}
-
-/// Whether a geometry has vertices with an elevation and vertices without, in a
-/// ring or between its rings (a hole of a 3D area that has none).
-fn mixed(rings: &[&Ring]) -> bool {
-    let has = |r: &&Ring| r.zs.iter().flatten().any(Option::is_some);
-    let lacks = |r: &&Ring| r.zs.as_ref().is_none_or(|z| z.iter().any(Option::is_none));
-    rings.iter().any(has) && rings.iter().any(lacks)
-}
-
-/// What an object becomes, or None (said in the report).
-fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> {
-    let g = match e {
-        Entity::Point(p) => Some(match p.parts.as_deref() {
-            Some(parts) if !parts.is_empty() => Geometry::Points(
-                std::iter::once((p.p, p.z))
-                    .chain(parts.iter().map(|q| (q.p, q.z)))
-                    .collect(),
-            ),
-            _ => Geometry::Point(p.p, p.z),
-        }),
-        Entity::Line(l) => Some(Geometry::Line(Ring::new(vec![l.a, l.b], [l.za, l.zb]))),
-        Entity::Polyline(p) => {
-            if p.holes.as_ref().is_some_and(|h| !h.is_empty()) {
-                rep.note(
-                    "Çoklu çizginin delikleri",
-                    "açık çizginin delikleri GeoJSON'da gösterilemez; yazılmadı",
-                    0,
-                );
-            }
-            let one = |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs, rep: &mut Report| {
-                let zs = heights(zs, pts.len());
-                match bulges {
-                    Some(b) if has_arcs(b) => {
-                        let out = from_core(bulge_path_outline(
-                            &to_core(pts),
-                            Some(b),
-                            false,
-                            DEFAULT_STEP,
-                        ));
-                        let zs = zs.map(|z| bulge_path_zs(pts, b, z, false));
-                        curve(
-                            rep,
-                            "Yaylı çoklu çizgi",
-                            Ring::new(out, zs.into_iter().flatten()),
-                        )
-                    }
-                    _ => (pts.len() >= 2).then(|| {
-                        Geometry::Line(Ring::new(pts.to_vec(), zs.into_iter().flatten().copied()))
-                    }),
-                }
-            };
-            let first = one(&p.pts, p.bulges.as_deref(), &p.zs, rep);
-            match p.parts.as_deref() {
-                // A multi-part polyline is a MultiLineString, its own path the first member (docs/adr/0174).
-                Some(parts) if !parts.is_empty() => {
-                    let mut paths: Vec<Ring> = Vec::new();
-                    let members = std::iter::once(first).chain(
-                        parts
-                            .iter()
-                            .map(|q| one(&q.pts, q.bulges.as_deref(), &q.zs, rep)),
-                    );
-                    for member in members.collect::<Vec<_>>() {
-                        match member {
-                            Some(Geometry::Line(r)) => paths.push(r),
-                            _ => rep.skip("Parça", "iki köşesi yok; yazılmadı", 0),
-                        }
-                    }
-                    match paths.len() {
-                        0 => None,
-                        1 => paths.pop().map(Geometry::Line),
-                        _ => Some(Geometry::Lines(paths)),
-                    }
-                }
-                _ => first,
-            }
-        }
-        Entity::Polygon(p) => {
-            let mut arcs = false;
-            let mut ring = |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs| {
-                arcs |= bulges.is_some_and(has_arcs);
-                let outline = from_core(polygon_ring(&to_core(pts), bulges));
-                let zs = heights(zs, pts.len())
-                    .map(|z| bulge_path_zs(pts, bulges.unwrap_or(&[]), z, true));
-                Ring::new(outline, zs.into_iter().flatten())
-            };
-            // The area's own fields are its first part (docs/adr/0143).
-            let mut parts = vec![(
-                ring(&p.pts, p.bulges.as_deref(), &p.zs),
-                p.holes
-                    .iter()
-                    .flatten()
-                    .map(|h| ring(&h.pts, h.bulges.as_deref(), &h.zs))
-                    .collect::<Vec<_>>(),
-            )];
-            for part in p.parts.iter().flatten() {
-                let holes = part.holes.iter().flatten();
-                let holes = holes.map(|h| ring(&h.pts, h.bulges.as_deref(), &h.zs));
-                let holes: Vec<Ring> = holes.collect();
-                parts.push((ring(&part.pts, part.bulges.as_deref(), &part.zs), holes));
-            }
-            if arcs {
-                rep.note(
-                    "Yaylı alan",
-                    "GeoJSON'da eğri yok: yayları uygulamanın kendi örneklemesiyle (turda 72 adım) yazıldı",
-                    0,
-                );
-            }
-            let several = parts.len() > 1;
-            let mut areas: Vec<Vec<Ring>> = Vec::new();
-            for (outline, holes) in parts {
-                match area(outline, holes, rep) {
-                    Some(Geometry::Area(rings)) => areas.push(rings),
-                    _ if several => rep.skip("Parça", "üçten az köşesi var; yazılmadı", 0),
-                    _ => {}
-                }
-            }
-            match areas.len() {
-                0 => None,
-                1 => areas.pop().map(Geometry::Area),
-                _ => Some(Geometry::Areas(areas)),
-            }
-        }
-        Entity::Circle(c) => {
-            let pts = from_core(tessellate_circle(core(c.c), c.r, SEGMENTS));
-            curve(rep, "Daire", closed(Ring::flat(pts)))
-        }
-        Entity::Arc(a) => curve(
-            rep,
-            "Yay",
-            Ring::flat(from_core(tessellate_arc(
-                &ArcGeom {
-                    c: core(a.c),
-                    r: a.r,
-                    a0: a.a0,
-                    a1: a.a1,
-                },
-                DEFAULT_STEP,
-            ))),
-        ),
-        Entity::Ellipse(el) => {
-            let g = ellipse_geom(core(el.c), core(el.major), el.ratio, el.t0, el.t1);
-            let pts = from_core(tessellate_ellipse(&g, ELLIPSE_PER_TURN.max(64.0)));
-            let ring = Ring::flat(pts);
-            curve(
-                rep,
-                "Elips",
-                if is_full_ellipse(&g) {
-                    closed(ring)
-                } else {
-                    ring
-                },
-            )
-        }
-        Entity::Spline(s) => {
-            let mut pts = from_core(catmull_rom(&to_core(&s.pts), s.closed, SPLINE_PER_SPAN));
-            // The curve passes through its fit points: its ends are the source's own
-            // coordinates, not a sample off by the last bit.
-            if let (Some(first), Some(&start)) = (pts.first_mut(), s.pts.first()) {
-                *first = start;
-            }
-            if s.closed {
-                if let Some(first) = pts.first().copied() {
-                    pts.pop();
-                    pts.push(first);
-                }
-            } else if let (Some(last), Some(&end)) = (pts.last_mut(), s.pts.last()) {
-                *last = end;
-            }
-            curve(rep, "Eğri (spline)", Ring::flat(pts))
-        }
-        Entity::Hatch(h) => {
-            rep.note(
-                "Tarama",
-                "deseni GeoJSON'da gösterilemez; sınırı alan (Polygon) olarak yazıldı",
-                0,
-            );
-            let holes = h.holes.iter().flatten().cloned().map(Ring::flat);
-            area(Ring::flat(h.ring.clone()), holes.collect(), rep)
-        }
-        Entity::Text(_) => {
-            rep.skip("Yazı", "GeoJSON'da yazı nesnesi yok; yazılmadı", 0);
-            return None;
-        }
-        Entity::Dimension(_) => {
-            rep.skip("Ölçü", "GeoJSON'da ölçü nesnesi yok; yazılmadı", 0);
-            return None;
-        }
-        Entity::Table(_) => {
-            rep.skip("Tablo", "GeoJSON'da tablo nesnesi yok; yazılmadı", 0);
-            return None;
-        }
-        Entity::Image(_) => {
-            rep.skip("Resim", "GeoJSON'da resim nesnesi yok; yazılmadı", 0);
-            return None;
-        }
-        // Nor a point cloud (docs/adr/0207 §11).
-        Entity::PointCloud(_) => {
-            rep.skip("Nokta bulutu", "GeoJSON'da nokta bulutu yok; yazılmadı", 0);
-            return None;
-        }
-        // GeoJSON holds no raster (docs/adr/0204 §10).
-        Entity::Raster(_) => {
-            rep.skip("Raster", "GeoJSON'da raster yok; yazılmadı", 0);
-            return None;
-        }
-        // Its line, as the server projects it (docs/adr/0146 §8).
-        Entity::Leader(l) => {
-            rep.note(
-                "Kılavuz",
-                "kırık çizgisi çizgi (LineString) olarak yazıldı; ok başı ve not GeoJSON'da gösterilemez",
-                0,
-            );
-            Some(Geometry::Line(Ring::flat(l.pts.clone())))
-        }
-        Entity::Insert(i) => {
-            let pieces = blocks.placed(i);
-            if pieces.is_empty() {
-                rep.skip(
-                    "Blok",
-                    "bloğunun tanımı dışa aktarılanlarda yok ya da blok boş; yazılmadı",
-                    0,
-                );
-                return None;
-            }
-            let members: Vec<Geometry> = pieces
-                .iter()
-                .filter_map(|p| geometry(p, blocks, rep))
-                .collect();
-            if members.is_empty() {
-                rep.skip(
-                    "Blok",
-                    "bloğunda GeoJSON'a yazılabilecek nesne yok; yazılmadı",
-                    0,
-                );
-                return None;
-            }
-            rep.note(
-                "Blok",
-                "yerleştirmeler bloklarının nesneleriyle, açılmış olarak (GeometryCollection) yazıldı; GeoJSON'da blok yoktur, KentOS'a ayrı nesneler olarak geri okunur",
-                0,
-            );
-            Some(Geometry::Collection(members))
-        }
-        Entity::Xline(_) | Entity::Ray(_) => {
-            rep.skip(
-                "Sonsuz doğru",
-                "uçsuz doğru ve ışın GeoJSON'da gösterilemez; yazılmadı",
-                0,
-            );
-            return None;
-        }
-    };
-    let Some(g) = g else {
-        rep.skip("Geçersiz nesne", "yeterli köşesi yok; yazılmadı", 0);
-        return None;
-    };
-    let finite = |p: &Vec2| p.x.is_finite() && p.y.is_finite();
-    let ok = match &g {
-        Geometry::Point(p, z) => finite(p) && z.is_none_or(f64::is_finite),
-        Geometry::Points(ps) => ps
-            .iter()
-            .all(|(p, z)| finite(p) && z.is_none_or(f64::is_finite)),
-        Geometry::Line(r) => r.pts.iter().all(finite) && zs_finite(&r.zs),
-        Geometry::Lines(paths) => paths
-            .iter()
-            .all(|r| r.pts.iter().all(finite) && zs_finite(&r.zs)),
-        Geometry::Area(rings) => rings
-            .iter()
-            .all(|r| r.pts.iter().all(finite) && zs_finite(&r.zs)),
-        Geometry::Areas(parts) => parts
-            .iter()
-            .flatten()
-            .all(|r| r.pts.iter().all(finite) && zs_finite(&r.zs)),
-        // Each member was checked (and said) as the object it is.
-        Geometry::Collection(_) => true,
-    };
-    if !ok {
-        rep.skip(
-            "Sonlu olmayan koordinat",
-            "koordinatı sayı değil ya da sonsuz; yazılmadı",
-            0,
-        );
-        return None;
-    }
-    let mixes = match &g {
-        Geometry::Line(r) => mixed(&[r]),
-        Geometry::Lines(paths) => mixed(&paths.iter().collect::<Vec<_>>()),
-        // Points with an elevation and points without (docs/adr/0174).
-        Geometry::Points(ps) => {
-            ps.iter().any(|(_, z)| z.is_some()) && ps.iter().any(|(_, z)| z.is_none())
-        }
-        Geometry::Area(rings) => mixed(&rings.iter().collect::<Vec<_>>()),
-        Geometry::Areas(parts) => mixed(&parts.iter().flatten().collect::<Vec<_>>()),
-        Geometry::Point(..) | Geometry::Collection(_) => false,
-    };
-    if mixes {
-        rep.note(
-            "Kotsuz köşe",
-            "kotu olmayan köşeler iki sayıyla yazıldı (RFC 7946 iki ve üç sayılı konumların bir dizide karışmasına izin verir; bazı programlar onları 0 kotlu okur)",
-            0,
-        );
-    }
-    Some(g)
-}
 
 fn position(p: Vec2, z: Option<f64>, out: &mut String) {
     out.push('[');
@@ -583,8 +173,40 @@ fn typed(field: Option<&LayerField>, value: &str, out: &mut String) {
     quote(value, out);
 }
 
-/// Writes the objects as a GeoJSON FeatureCollection.
+/// Writes the objects as a GeoJSON FeatureCollection in the project's coordinates.
 pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
+    write_with(input, None)
+}
+
+/// Writes the objects as RFC 7946 GeoJSON: moved from the project's system
+/// `from` into WGS 84 longitude and latitude, `choices` the project's datum
+/// choices (docs/adr/0222 §7).
+pub fn write_wgs84(
+    input: &GeoJsonWriteInput,
+    from: &System,
+    choices: &[Choice],
+) -> (Vec<u8>, ExportReport) {
+    write_with(input, Some((from, choices)))
+}
+
+/// A vertex moved into WGS 84 and rounded to ten decimals; why not when the move does not reach it.
+fn to_wgs84(from: &System, choices: &[Choice], p: Vec2) -> Result<Vec2, Unreached> {
+    transform_in(
+        from,
+        &WGS84,
+        kentos_geometry_core::Vec2::new(p.x, p.y),
+        choices,
+    )
+    .map(|t| Vec2 {
+        x: rounded(t.point.x, DEGREE_DECIMALS),
+        y: rounded(t.point.y, DEGREE_DECIMALS),
+    })
+}
+
+fn write_with(
+    input: &GeoJsonWriteInput,
+    wgs84: Option<(&System, &[Choice])>,
+) -> (Vec<u8>, ExportReport) {
     let fields: HashMap<&str, &[LayerField]> = input
         .layers
         .iter()
@@ -599,7 +221,16 @@ pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
     let mut out = String::with_capacity(64 + input.entities.len() * 160);
     out.push_str("{\"type\":\"FeatureCollection\",\"name\":");
     quote(&input.name, &mut out);
-    if input.srid == 0 {
+    if wgs84.is_some() {
+        rep.note(
+            "Koordinat sistemi",
+            &format!(
+                "EPSG:{} koordinatları WGS 84 boylam ve enlemine çevrilip on basamağa yuvarlandı (RFC 7946); kotlar olduğu gibi yazıldı",
+                input.srid
+            ),
+            0,
+        );
+    } else if input.srid == 0 {
         // A local project's coordinates are bound to no place (docs/adr/0165 §2): no crs member.
         rep.note(
             "Koordinat sistemi",
@@ -624,10 +255,27 @@ pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
     out.push_str(",\"features\":[\n");
     let blocks = Placing::new(&input.blocks);
     let mut first = true;
+    let mut unreached: Vec<(Unreached, u32)> = Vec::new();
     for e in &input.entities {
-        let Some(g) = geometry(e, &blocks, &mut rep) else {
+        let Some(mut g) = geometry(e, &blocks, &mut rep, &GEOJSON) else {
             continue;
         };
+        if let Some((from, choices)) = wgs84 {
+            let mut why = None;
+            let moved = g.map(&mut |p| match to_wgs84(from, choices, p) {
+                Ok(q) => Some(q),
+                Err(u) => {
+                    why = Some(u);
+                    None
+                }
+            });
+            if !moved {
+                if let Some(u) = why {
+                    tally(&mut unreached, u);
+                }
+                continue;
+            }
+        }
         let b = e.base();
         if b.color.is_some() || b.symbol.is_some() {
             rep.note(
@@ -673,6 +321,7 @@ pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
         rep.count(e.kind());
     }
     out.push_str("\n]}\n");
+    say_unreached(&mut rep, unreached);
     (out.into_bytes(), rep.export())
 }
 
@@ -714,7 +363,8 @@ pub fn input_from_json(text: &str) -> Result<GeoJsonWriteInput, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kentos_contracts::GeoJsonReadOptions;
+    use crate::gis::shoelace;
+    use kentos_contracts::{Entity, GeoJsonReadOptions};
 
     const INPUT: &str = r#"{"entities":[
       {"kind":"point","id":1,"layerId":"k","attrs":{"Ad":"P1","Z":"105.20"},"label":"P1","p":{"x":452345.123,"y":4412345.678},"z":105.2},

@@ -11,6 +11,9 @@ import type { FieldWriteOptions } from '../contracts/generated/FieldWriteOptions
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
 import type { GnssRead } from '../contracts/generated/GnssRead';
+import type { GpxWriteInput } from '../contracts/generated/GpxWriteInput';
+import type { KmlWriteInput } from '../contracts/generated/KmlWriteInput';
+import type { DatumChoice, System } from '../model/geom/crsTransform';
 import type { TableFileRead } from '../contracts/generated/TableFileRead';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
 import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
@@ -46,6 +49,20 @@ export interface WorkerLike {
 export interface WrittenFile {
   bytes: Uint8Array;
   report: ExportReport;
+}
+
+/**
+ * What moving an import into the project's system did (docs/adr/0222 §2): the objects and vertices moved, those left
+ * out (not reached, or not points and straight paths), and what the move rests on.
+ */
+export interface ImportMove {
+  readonly objects: number;
+  readonly vertices: number;
+  readonly left: number;
+  readonly kindsLeft: number;
+  readonly accuracy: number | null;
+  readonly via: string;
+  readonly unofficial: boolean;
 }
 
 /**
@@ -172,6 +189,32 @@ export class FormatsClient {
   /** Writes a GeoJSON FeatureCollection of the objects (docs/adr/0046). */
   async writeGeoJson(input: GeoJsonWriteInput): Promise<WrittenFile> {
     return written(await this.request({ op: 'writeGeoJson', input }, []));
+  }
+
+  /** Writes RFC 7946 GeoJSON, the objects moved from the project's system into WGS 84 (docs/adr/0222 §7). */
+  async writeGeoJsonWgs84(input: GeoJsonWriteInput, from: System, choices: readonly DatumChoice[]): Promise<WrittenFile> {
+    return written(await this.request({ op: 'writeGeoJsonWgs84', input, from, choices }, []));
+  }
+
+  /** Reads a KML file or KMZ archive (docs/adr/0222 §3): its objects in WGS 84; the bytes are handed over. */
+  async readKml(bytes: Uint8Array, max = 0): Promise<ImportResult> {
+    const buffer = handOver(bytes);
+    return json<ImportResult>(await this.request({ op: 'readKml', bytes: buffer, max }, [buffer]));
+  }
+
+  /** Writes KML (or KMZ), the objects moved into WGS 84 (docs/adr/0222 §4). */
+  async writeKml(input: KmlWriteInput, from: System, choices: readonly DatumChoice[]): Promise<WrittenFile> {
+    return written(await this.request({ op: 'writeKml', input, from, choices }, []));
+  }
+
+  /** Writes GPX 1.1, the objects moved into WGS 84 (docs/adr/0222 §5). */
+  async writeGpx(input: GpxWriteInput, from: System, choices: readonly DatumChoice[]): Promise<WrittenFile> {
+    return written(await this.request({ op: 'writeGpx', input, from, choices }, []));
+  }
+
+  /** An import's objects moved from `from` into the project's system `to` (docs/adr/0222 §2). */
+  async reprojectImport(result: ImportResult, from: System, to: System, choices: readonly DatumChoice[]): Promise<{ result: ImportResult; moved: ImportMove }> {
+    return json<{ result: ImportResult; moved: ImportMove }>(await this.request({ op: 'reprojectImport', result: JSON.stringify(result), from, to, choices }, []));
   }
 
   async writeCoords(input: CoordWriteInput): Promise<WrittenFile> {

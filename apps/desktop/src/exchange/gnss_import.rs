@@ -4,10 +4,12 @@
 //! project's system the way Koordinat dönüştür moves them, with the accuracy
 //! and what it rests on said (docs/adr/0167; the rules are
 //! `kentos_interaction::gnss`). The kinds of points to take and how the
-//! unnamed are named are chosen; the points show as they will be written. A
-//! project without a system takes none: GNSS positions have one, and they are
-//! never placed without it (CLAUDE.md §5). The points go in as one undo step,
-//! onto a new layer or one of the drawing's.
+//! unnamed are named are chosen; the points show as they will be written. The
+//! file's routes and tracks (an NMEA log's fixes) come in as polylines too
+//! unless the user unticks them (docs/adr/0222 §6). A project without a system
+//! takes none: GNSS positions have one, and they are never placed without it
+//! (CLAUDE.md §5). The points and lines go in as one undo step, onto a new
+//! layer or one of the drawing's.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -66,6 +68,8 @@ pub struct State {
     reading: bool,
     /// The kinds the user left out; every other kind in the file is taken.
     off: BTreeSet<String>,
+    /// The routes and tracks as lines (docs/adr/0222 §6).
+    lines: bool,
     prefix: String,
     /// The first number as typed; the last good one stands while it is not one.
     start_text: String,
@@ -81,8 +85,13 @@ pub struct State {
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    Read { id: u64, read: Arc<GnssRead> },
+    Read {
+        id: u64,
+        read: Arc<GnssRead>,
+    },
     Kind(&'static str),
+    /// The routes and tracks as lines, or not.
+    Lines,
     Prefix(String),
     Start(String),
     Target(Option<String>),
@@ -157,6 +166,7 @@ impl App {
             reading_id: id,
             reading: true,
             off: BTreeSet::new(),
+            lines: true,
             prefix: "G".to_owned(),
             start_text: "1".to_owned(),
             start: 1,
@@ -197,6 +207,7 @@ impl App {
                     s.off.insert(kind.to_owned());
                 }
             }
+            Event::Lines => s.lines = !s.lines,
             Event::Prefix(p) => s.prefix = p.trim().to_owned(),
             Event::Start(t) => {
                 if let Ok(n) = t.trim().parse::<u32>() {
@@ -249,9 +260,11 @@ impl App {
                     kinds,
                     prefix: s.prefix.clone(),
                     start: s.start,
+                    lines: s.lines,
                 };
-                Some(Arc::new(gnss::place(
+                Some(Arc::new(gnss::place_all(
                     &read.points,
+                    &read.lines,
                     &options,
                     &to,
                     &name,
@@ -301,7 +314,9 @@ impl App {
 
     fn gnss_can_import(&self, s: &State) -> bool {
         !s.reading
-            && s.plan.as_ref().is_some_and(|p| !p.placed.is_empty())
+            && s.plan
+                .as_ref()
+                .is_some_and(|p| !p.placed.is_empty() || !p.lines.is_empty())
             && self.gnss_target(s).is_some()
             && self.gnss_locked(s).is_none()
     }
@@ -318,6 +333,8 @@ impl App {
         };
         let name = s.file.name.clone();
         let problems = s.read.as_ref().map_or(0, |r| r.problems.len());
+        let mut made = gnss::entities(&plan.placed);
+        made.extend(gnss::line_entities(&plan.lines));
         let layer_name = match &target {
             LayerTarget::New { name, .. } => name.clone(),
             LayerTarget::Existing(id) => self.layer_name(id),
@@ -330,12 +347,7 @@ impl App {
         let Some(doc) = &mut self.document else {
             return;
         };
-        match apply::apply_import(
-            &mut doc.model,
-            gnss::entities(&plan.placed),
-            Vec::new(),
-            &import,
-        ) {
+        match apply::apply_import(&mut doc.model, made, Vec::new(), &import) {
             Err(error) => {
                 if let Some(Window::GnssImport(s)) = &mut self.exchange {
                     s.status = Some((true, error));
@@ -343,15 +355,19 @@ impl App {
             }
             Ok(applied) => {
                 self.zoom_to(&applied.slots);
+                let what = match (plan.placed.len(), plan.lines.len()) {
+                    (n, 0) => format!("{n} GNSS noktası"),
+                    (0, l) => format!("{l} GNSS çizgisi"),
+                    (n, l) => format!("{n} GNSS noktası ve {l} çizgi"),
+                };
                 self.say(
                     Level::Success,
                     format!(
-                        "“{name}”: {} GNSS noktası “{layer_name}” katmanına alındı{}. Tek adımda geri alınabilir.",
-                        applied.slots.len(),
+                        "“{name}”: {what} “{layer_name}” katmanına alındı{}. Tek adımda geri alınabilir.",
                         if applied.created.is_empty() { "" } else { " (yeni katman)" }
                     ),
                 );
-                let left = plan.skipped.len() + problems;
+                let left = plan.skipped.len() + plan.lines_skipped.len() + problems;
                 if left > 0 {
                     self.warn(format!(
                         "“{name}”: {left} kayıt alınmadı (okunamayan ya da projenin sistemine çevrilemeyen); nedenleri içe aktarma penceresinde yazılıydı."
@@ -417,6 +433,18 @@ impl App {
                     ));
                 }
                 parts = parts.push(words::field("Alınacak noktalar", boxes, None));
+            }
+            // The routes and tracks as lines (docs/adr/0222 §6).
+            if !r.lines.is_empty() {
+                let what = match r.format.as_str() {
+                    "nmea" => "Kaydın izi".to_owned(),
+                    _ => format!("Rota ve izler ({})", r.lines.len()),
+                };
+                parts = parts.push(words::field(
+                    "Çizgiler",
+                    words::check(s.lines, what, Some(event(Event::Lines))),
+                    None,
+                ));
             }
         }
         let prefix = kentos_ui::widget::focus_ring(
@@ -536,17 +564,29 @@ impl App {
             )),
             (Some(named), Some(plan)) => {
                 let n = plan.placed.len();
-                lines.push(if n > 0 {
-                    words::text_line(Line::Ok, format!("{n} nokta alınacak."))
-                } else if r.points.is_empty() {
-                    words::text_line(Line::Warn, "Dosyada alınacak konum yok.")
-                } else {
-                    words::text_line(
+                let l = plan.lines.len();
+                lines.push(match (n, l) {
+                    (0, 0) if r.points.is_empty() => {
+                        words::text_line(Line::Warn, "Dosyada alınacak konum yok.")
+                    }
+                    (0, 0) => words::text_line(
                         Line::Warn,
-                        "Alınacak nokta yok; türlerden en az birini seçin.",
-                    )
+                        "Alınacak nokta ya da çizgi yok; türlerden en az birini ya da çizgileri seçin.",
+                    ),
+                    (n, 0) => words::text_line(Line::Ok, format!("{n} nokta alınacak.")),
+                    (0, l) => words::text_line(Line::Ok, format!("{l} çizgi (rota ya da iz) alınacak.")),
+                    (n, l) => words::text_line(
+                        Line::Ok,
+                        format!("{n} nokta ve {l} çizgi (rota ya da iz) alınacak."),
+                    ),
                 });
-                if let Some(way) = plan.placed.first().and_then(|p| p.attrs.get("Dönüşüm")) {
+                let way = plan
+                    .placed
+                    .first()
+                    .map(|p| &p.attrs)
+                    .or_else(|| plan.lines.first().map(|l| &l.attrs))
+                    .and_then(|a| a.get("Dönüşüm"));
+                if let Some(way) = way {
                     let kind = if way.ends_with("resmî dönüşüm değil") {
                         Line::Warn
                     } else {
@@ -575,6 +615,12 @@ impl App {
                             plan.skipped.len()
                         ),
                         &plan.skipped,
+                    ));
+                }
+                if !plan.lines_skipped.is_empty() {
+                    lines.push(problems(
+                        format!("{} çizgi alınmayacak:", plan.lines_skipped.len()),
+                        &plan.lines_skipped,
                     ));
                 }
                 if n > 0 && !named.geographic() {

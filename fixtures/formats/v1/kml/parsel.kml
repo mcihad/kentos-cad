@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>101/7 parseli</name>
+  <Style id="parsel"><LineStyle><color>ff2f8f2f</color><width>2.65</width></LineStyle><PolyStyle><color>662f8f2f</color></PolyStyle></Style>
+  <Style id="iz"><LineStyle><color>ff1c6fd9</color><width>1.89</width></LineStyle></Style>
+  <Style id="kuyu"><IconStyle><color>ffd98a1c</color></IconStyle></Style>
+  <Folder>
+    <name>Kadastro</name>
+    <Placemark>
+      <name>101/7</name>
+      <description>Saha ölçüsüyle, 4 Ekim 2026</description>
+      <styleUrl>#parsel</styleUrl>
+      <ExtendedData><Data name="Ada"><value>101</value></Data><Data name="Parsel"><value>7</value></Data></ExtendedData>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>
+        35.842247366,39.915760683 35.842520993,39.915771718 35.842549422,39.916044306 35.842269912,39.916058057 35.842247366,39.915760683
+      </coordinates></LinearRing></outerBoundaryIs></Polygon>
+    </Placemark>
+  </Folder>
+  <Folder>
+    <name>Saha</name>
+    <Placemark>
+      <name>Batı sınırı</name>
+      <styleUrl>#iz</styleUrl>
+      <LineString><altitudeMode>absolute</altitudeMode><coordinates>
+        35.842266011,39.916035122,1062.6 35.842261488,39.915967568,1062.28 35.842256964,39.915900015,1061.96 35.842252441,39.915832461,1061.64 35.842247917,39.915764907,1061.32
+      </coordinates></LineString>
+    </Placemark>
+    <Placemark>
+      <name>Kuyu</name>
+      <styleUrl>#kuyu</styleUrl>
+      <Point><altitudeMode>absolute</altitudeMode><coordinates>35.84238,39.91591,1062.1</coordinates></Point>
+    </Placemark>
+  </Folder>
+</Document>
+</kml>

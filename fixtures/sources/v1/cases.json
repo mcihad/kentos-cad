@@ -8,7 +8,8 @@
   "dxf": "DXF",
   "ncz": "Netcad NCZ",
   "gnss": "GNSS (GPX, NMEA)",
-  "coords": "Koordinat listesi"
+  "coords": "Koordinat listesi",
+  "kml": "KML/KMZ"
  },
  "cases": [
   {
@@ -109,6 +110,14 @@
     {
      "name": "kayit.log",
      "dir": false
+    },
+    {
+     "name": "gezi.kml",
+     "dir": false
+    },
+    {
+     "name": "Alanlar.KMZ",
+     "dir": false
     }
    ],
    "expect": {
@@ -118,6 +127,13 @@
      "Pafta 10"
     ],
     "files": [
+     {
+      "name": "Alanlar.KMZ",
+      "kind": "kml",
+      "parts": [
+       "Alanlar.KMZ"
+      ]
+     },
      {
       "name": "alim.nmea",
       "kind": "gnss",
@@ -137,6 +153,13 @@
       "kind": "gnss",
       "parts": [
        "eski.nma"
+      ]
+     },
+     {
+      "name": "gezi.kml",
+      "kind": "kml",
+      "parts": [
+       "gezi.kml"
       ]
      },
      {

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+<Document>
+  <name>Gezi</name>
+  <Style id="kirmizi"><LineStyle><color>ff0000ff</color><width>3</width></LineStyle><PolyStyle><color>7f00ff00</color></PolyStyle></Style>
+  <Style id="mavi-nokta"><IconStyle><color>ffff0000</color></IconStyle></Style>
+  <StyleMap id="yesil"><Pair><key>normal</key><styleUrl>#yesil-n</styleUrl></Pair><Pair><key>highlight</key><styleUrl>#kirmizi</styleUrl></Pair></StyleMap>
+  <Style id="yesil-n"><LineStyle><color>ff00aa00</color><width>1</width></LineStyle><PolyStyle><color>8000cc00</color><fill>1</fill><outline>0</outline></PolyStyle></Style>
+  <StyleMap id="sari"><Pair><key>normal</key><Style><LineStyle><color>ff00ffff</color><width>5.3</width></LineStyle></Style></Pair></StyleMap>
+  <Placemark>
+    <name>Başlangıç</name>
+    <description><![CDATA[<b>Kamp</b> yeri]]></description>
+    <styleUrl>#mavi-nokta</styleUrl>
+    <TimeStamp><when>2026-10-04T10:15:00Z</when></TimeStamp>
+    <Point><altitudeMode>absolute</altitudeMode><coordinates>32.8597,39.9334,850.25</coordinates></Point>
+  </Placemark>
+  <Folder>
+    <name>Yollar</name>
+    <Folder>
+      <name>Ana yollar</name>
+      <Placemark>
+        <name>D-750</name>
+        <styleUrl>#kirmizi</styleUrl>
+        <ExtendedData><Data name="Şerit"><value>4</value></Data><Data name="Kaplama"><value> asfalt </value></Data></ExtendedData>
+        <LineString><tessellate>1</tessellate><coordinates>
+          32.80,39.90 32.81,39.91
+          32.82 ,39.92 32.83, 39.925
+        </coordinates></LineString>
+      </Placemark>
+      <Placemark><name>Bağlantı</name><styleUrl>#kirmizi</styleUrl><LineString><coordinates>32.83,39.93 32.84,39.94</coordinates></LineString></Placemark>
+    </Folder>
+    <Placemark>
+      <name>Halka yol</name>
+      <Style><LineStyle><color>ff00ffff</color><width>2.5</width></LineStyle></Style>
+      <TimeSpan><begin>2026-01-01</begin><end>2026-12-31</end></TimeSpan>
+      <LinearRing><coordinates>32.85,39.95 32.86,39.95 32.86,39.96 32.85,39.95</coordinates></LinearRing>
+    </Placemark>
+    <Placemark><name>Sarı</name><styleUrl>#sari</styleUrl><LineString><coordinates>32.87,39.97 32.88,39.98 32.89,39.97</coordinates></LineString></Placemark>
+  </Folder>
+  <Folder>
+    <name>Parseller</name>
+    <visibility>0</visibility>
+    <Placemark>
+      <name>Ada 101</name>
+      <styleUrl>#yesil</styleUrl>
+      <ExtendedData><SchemaData schemaUrl="#parsel"><SimpleData name="Ada">101</SimpleData><SimpleData name="Parsel">7</SimpleData></SchemaData></ExtendedData>
+      <Polygon>
+        <altitudeMode>absolute</altitudeMode>
+        <outerBoundaryIs><LinearRing><coordinates>32.90,39.90,10 32.90,39.91,13 32.91,39.91,12 32.91,39.90,11 32.90,39.90,10</coordinates></LinearRing></outerBoundaryIs>
+        <innerBoundaryIs><LinearRing><coordinates>32.902,39.902,10 32.904,39.902,10 32.904,39.904,10 32.902,39.902,10</coordinates></LinearRing></innerBoundaryIs>
+        <innerBoundaryIs><LinearRing><coordinates>32.905,39.905 32.906,39.906 32.905,39.905</coordinates></LinearRing></innerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>Kesişen alanlar</name>
+      <styleUrl>#kirmizi</styleUrl>
+      <MultiGeometry>
+        <Polygon><outerBoundaryIs><LinearRing><coordinates>32.92,39.92 32.93,39.92 32.93,39.93 32.92,39.92</coordinates></LinearRing></outerBoundaryIs></Polygon>
+        <Point><coordinates>32.95,39.95</coordinates></Point>
+        <Polygon><outerBoundaryIs><LinearRing><coordinates>32.94,39.92 32.95,39.92 32.95,39.93 32.94,39.92</coordinates></LinearRing></outerBoundaryIs></Polygon>
+        <Point><coordinates>32.96,39.96,5</coordinates></Point>
+      </MultiGeometry>
+    </Placemark>
+    <Placemark>
+      <name>Kapanışı farklı</name>
+      <Polygon><altitudeMode>absolute</altitudeMode><outerBoundaryIs><LinearRing><coordinates>32.97,39.90,1 32.98,39.90,2 32.98,39.91,3 32.97,39.90,9</coordinates></LinearRing></outerBoundaryIs></Polygon>
+    </Placemark>
+  </Folder>
+  <Folder>
+    <Placemark>
+      <name>İz</name>
+      <gx:Track><altitudeMode>clampToGround</altitudeMode><when>2026-10-04T10:00:00Z</when><gx:coord>32.70 39.80 900</gx:coord><gx:coord>32.71 39.81 905</gx:coord><gx:coord>32.72 39.81 910</gx:coord></gx:Track>
+    </Placemark>
+    <Placemark><name>Göreli</name><Point><coordinates>32.72,39.82,15</coordinates></Point></Placemark>
+    <Placemark>
+      <name>İki iz</name>
+      <gx:MultiTrack><gx:Track><gx:coord>32.73 39.83 0</gx:coord><gx:coord>32.74 39.84 0</gx:coord></gx:Track><gx:Track><altitudeMode>absolute</altitudeMode><gx:coord>32.75 39.85 1</gx:coord><gx:coord>32.76 39.86 2</gx:coord><gx:coord>32.77 39.87 3</gx:coord></gx:Track></gx:MultiTrack>
+    </Placemark>
+  </Folder>
+  <Placemark><name>Bozuk</name><LineString><coordinates>32.1,39.1 abc,39.2</coordinates></LineString></Placemark>
+  <Placemark><name>Taşkın</name><Point><coordinates>190,39.2</coordinates></Point></Placemark>
+  <Placemark><name>Delik bozuk</name><Polygon><outerBoundaryIs><LinearRing><coordinates>32.6,39.6 32.7,39.6 32.7,39.7 32.6,39.6</coordinates></LinearRing></outerBoundaryIs><innerBoundaryIs><LinearRing><coordinates>32.61,39.61 x,y</coordinates></LinearRing></innerBoundaryIs></Polygon></Placemark>
+  <Placemark><name>Dış biçem</name><styleUrl>stiller.kml#a</styleUrl><Point><coordinates>32.5,39.5</coordinates></Point></Placemark>
+  <NetworkLink><name>Uzak</name><Link><href>http://example.com/a.kml</href></Link></NetworkLink>
+  <GroundOverlay><name>Pafta</name><Icon><href>pafta.png</href></Icon><LatLonBox><north>40</north><south>39</south><east>33</east><west>32</west></LatLonBox></GroundOverlay>
+  <Placemark><name>Model</name><Model><Location><longitude>32</longitude><latitude>39</latitude></Location></Model></Placemark>
+  <Placemark><name>İnce</name><Polygon><outerBoundaryIs><LinearRing><coordinates>32.3,39.3 32.4,39.4 32.4,39.4 32.3,39.3</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>
+  <gx:Tour><name>Tur</name></gx:Tour>
+</Document>
+</kml>

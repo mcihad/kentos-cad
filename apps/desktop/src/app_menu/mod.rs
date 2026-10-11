@@ -100,7 +100,7 @@ struct Format {
     badge: &'static str,
 }
 
-const IMPORTS: [Format; 6] = [
+const IMPORTS: [Format; 7] = [
     Format {
         id: "file.import.dxf",
         label: "DXF",
@@ -133,6 +133,12 @@ const IMPORTS: [Format; 6] = [
         badge: "JSON",
     },
     Format {
+        id: "file.import.kml",
+        label: "KML/KMZ",
+        detail: "Google Earth; klasörler katman, yer imleri nesne",
+        badge: "KML",
+    },
+    Format {
         id: "file.import.gnss",
         label: "GNSS",
         detail: "GPX ya da NMEA; WGS 84'ten projenin sistemine",
@@ -140,7 +146,7 @@ const IMPORTS: [Format; 6] = [
     },
 ];
 
-const EXPORTS: [Format; 4] = [
+const EXPORTS: [Format; 6] = [
     Format {
         id: "file.export.dxf",
         label: "DXF",
@@ -156,8 +162,20 @@ const EXPORTS: [Format; 4] = [
     Format {
         id: "file.export.geojson",
         label: "GeoJSON",
-        detail: "Öznitelikleriyle; WGS 84 projesi RFC 7946",
+        detail: "Öznitelikleriyle; istenirse WGS 84'e çevrilir (RFC 7946)",
         badge: "JSON",
+    },
+    Format {
+        id: "file.export.kml",
+        label: "KML/KMZ",
+        detail: "Google Earth için; WGS 84'e çevrilir",
+        badge: "KML",
+    },
+    Format {
+        id: "file.export.gpx",
+        label: "GPX",
+        detail: "El GPS'leri için yol noktası, iz ve rota",
+        badge: "GPX",
     },
     Format {
         id: "file.export.pdf",

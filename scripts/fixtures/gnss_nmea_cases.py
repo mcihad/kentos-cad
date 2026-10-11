@@ -27,6 +27,8 @@ The rules:
 6. A latitude or longitude is its exact value (degrees plus minutes over sixty) rounded once to the nearest float64; a
    number is an optional sign, digits with an optional point, or a point and digits, at most 30 digits (so is a
    latitude or longitude); satellites are ASCII digits, at most 4294967295.
+7. The log's track (docs/adr/0222 §6): every fix read, in the log's order, one line of one part (kind nmea, no name, the
+   first fix's line), when there are two or more.
 """
 
 import argparse
@@ -159,7 +161,10 @@ def read(text):
     if nofix:
         problems.append({"line": nofix[0], "problem": TEXTS["nofix"].format(line=nofix[0], count=nofix[1])})
         problems.sort(key=lambda p: p["line"])
-    return {"points": points, "problems": problems}
+    lines = []
+    if len(points) >= 2:
+        lines.append({"kind": "nmea", "parts": [list(range(len(points)))], "line": points[0]["line"]})
+    return {"points": points, "problems": problems, "lines": lines}
 
 
 def sentence(body):

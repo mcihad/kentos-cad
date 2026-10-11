@@ -6,7 +6,7 @@ import { COORD_FILES } from '../ui/io/coordFiles';
 import type { AppContext } from './context';
 import { verifyDownload } from './cloud/transfer';
 import { otherDrawing, otherSystem } from './drawingExchange';
-import { DXF_FILES, GEOJSON_FILES, GNSS_FILES, NCZ_FILES, SHAPEFILE_FILES } from './fileExchange';
+import { DXF_FILES, GEOJSON_FILES, GNSS_FILES, KML_FILES, NCZ_FILES, SHAPEFILE_FILES } from './fileExchange';
 import type { PickedFile } from './fileIO';
 
 /**
@@ -210,6 +210,8 @@ export async function addFileAsLayer(ctx: AppContext, folder: FolderHandle, file
       return void import('../ui/io/GnssImportDialog').then((m) => m.openGnssImport(ctx, first, GNSS_FILES), failed);
     case 'coords':
       return void import('../ui/io/CoordImportDialog').then((m) => m.openCoordImport(ctx, first, COORD_FILES), failed);
+    case 'kml':
+      return void import('../ui/io/GisImportDialog').then((m) => m.openKmlImport(ctx, first, KML_FILES), failed);
   }
 }
 

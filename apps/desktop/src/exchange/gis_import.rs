@@ -1,15 +1,19 @@
-//! GeoJSON ve Shapefile içe aktar (the web's `ui/io/GisImportDialog.ts`,
-//! docs/adr/0046, 0053). The shared reader reads the file once, off the UI
-//! thread (crates/shared/formats: geojson, shp), into points, lines, paths
-//! and areas with holes, their attributes as text, and a report of what was
-//! converted or left out. A Shapefile layer comes from its files chosen
-//! together, or from a zip archive: each .shp in it is a layer, read one at
-//! a time. The window shows the source's layers and where each goes (a
-//! project layer with the same name, or a new layer in a group named after
-//! the file), the report, and what the file says of its coordinate system:
-//! RFC 7946's WGS 84, a `crs` member or a .prj. Only a file in the project's
-//! system can be imported, and it goes in untouched, as one undo step;
-//! nothing is transformed or guessed (CLAUDE.md §5).
+//! GeoJSON, Shapefile ve KML/KMZ içe aktar (the web's
+//! `ui/io/GisImportDialog.ts`, docs/adr/0046, 0053, 0222). The shared reader
+//! reads the file once, off the UI thread (crates/shared/formats: geojson,
+//! shp, kml), into points, lines, paths and areas with holes, their
+//! attributes as text, and a report of what was converted or left out. A
+//! Shapefile layer comes from its files chosen together, or from a zip
+//! archive: each .shp in it is a layer, read one at a time. The window shows
+//! the source's layers and where each goes (a project layer with the same
+//! name, or a new layer in a group named after the file), the report, and
+//! what the file says of its coordinate system: RFC 7946's WGS 84, a `crs`
+//! member, a .prj or KML's WGS 84. A file in the project's system goes in
+//! untouched; one in another system only when the user ticks “Projenin
+//! sistemine çevir”, its objects then moved off the UI thread
+//! (`kentos_formats::reproject`, docs/adr/0222 §2) before the window shows
+//! what will come in. Nothing is transformed or guessed silently (CLAUDE.md
+//! §5); an import is one undo step.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -45,6 +49,8 @@ const PARTS: [&str; 4] = ["shx", "dbf", "prj", "cpg"];
 #[derive(Debug, Clone)]
 pub enum Source {
     GeoJson(Picked),
+    /// A KML file or a KMZ archive (docs/adr/0222 §3).
+    Kml(Picked),
     /// The files a user chose together for one Shapefile layer.
     Shapefile(Vec<Picked>),
     /// A zipped Shapefile: the archive, its layers (paths without extension,
@@ -155,6 +161,12 @@ pub struct State {
     /// Source layer names left out by the user.
     pub(super) excluded: BTreeSet<String>,
     pub(super) crs: CrsQuestion,
+    /// The objects moved into the project's system, for the source system
+    /// they were moved from (docs/adr/0222 §2); none until the move is asked.
+    pub(super) moved: Option<(u32, Arc<ImportResult>)>,
+    /// The move running: the read it moves and the source system it moves
+    /// from. Another system chosen meanwhile is not waiting for it.
+    pub(super) in_flight: Option<(u64, u32)>,
     /// What the footer says, and whether it is an error.
     pub(super) status: Option<(bool, String)>,
 }
@@ -173,6 +185,14 @@ pub enum Event {
     Toggle(String),
     ToggleAll,
     Crs(u32),
+    /// “Projenin sistemine çevir” ticked or not.
+    Convert(bool),
+    /// The objects moved from the system of `srid` (for the read `read`).
+    Moved {
+        read: u64,
+        srid: u32,
+        result: Arc<ImportResult>,
+    },
     Another,
     Run,
 }
@@ -186,10 +206,39 @@ impl State {
         matches!(self.source, Source::GeoJson(_))
     }
 
+    fn kml(&self) -> bool {
+        matches!(self.source, Source::Kml(_))
+    }
+
+    /// What the window imports: its title and the undo step's kind.
+    fn kind(&self) -> (&'static str, &'static str) {
+        match &self.source {
+            Source::GeoJson(_) => ("GeoJSON içe aktar", "GeoJSON"),
+            Source::Kml(_) => ("KML/KMZ içe aktar", "KML"),
+            Source::Shapefile(_) | Source::Zip { .. } => ("Shapefile içe aktar", "Shapefile"),
+        }
+    }
+
+    /// The objects that will come in: moved when the move is asked and done
+    /// for the system chosen now, else as read.
+    /// Whether the objects are being moved from the system chosen now.
+    fn moving(&self) -> bool {
+        self.crs
+            .srid
+            .is_some_and(|at| self.in_flight == Some((self.read, at)))
+    }
+
+    fn effective(&self) -> Option<&Arc<ImportResult>> {
+        match (&self.moved, self.crs.convert) {
+            (Some((srid, moved)), true) if Some(*srid) == self.crs.srid => Some(moved),
+            _ => self.result.as_ref(),
+        }
+    }
+
     /// The name the import goes by (the undo step, the new layers' group).
     fn name(&self) -> String {
         match &self.source {
-            Source::GeoJson(f) | Source::Zip { file: f, .. } => f.name.clone(),
+            Source::GeoJson(f) | Source::Kml(f) | Source::Zip { file: f, .. } => f.name.clone(),
             Source::Shapefile(files) => match shapefile_set(files) {
                 Ok(set) => format!("{}.shp", set.name),
                 Err(_) => files
@@ -210,6 +259,7 @@ fn read_source(source: &Source) -> (Result<ImportResult, String>, Option<Vec<Str
             };
             (kentos_formats::geojson::read(&f.bytes, &opts), None)
         }
+        Source::Kml(f) => (kentos_formats::kml::read(&f.bytes, 0), None),
         Source::Shapefile(files) => {
             let result = shapefile_set(files).and_then(|set| {
                 let part = |p: usize| set.parts_at[p].map(|i| &*files[i].bytes);
@@ -265,8 +315,7 @@ impl App {
     /// The layers that will be imported: chosen, and not onto a locked layer.
     fn gis_included<'a>(&self, state: &'a State) -> Vec<&'a ImportLayer> {
         state
-            .result
-            .as_ref()
+            .effective()
             .map(|r| {
                 r.layers
                     .iter()
@@ -291,7 +340,9 @@ impl App {
             failed,
             unusable: None,
             excluded: BTreeSet::new(),
-            crs: CrsQuestion::new(project),
+            crs: CrsQuestion::convertible(project),
+            moved: None,
+            in_flight: None,
             status: None,
         };
         if state.failed.is_some() {
@@ -338,6 +389,8 @@ impl App {
             Event::Another => {
                 let kind = if s.geojson() {
                     Kind::GeoJson
+                } else if s.kml() {
+                    Kind::Kml
                 } else {
                     Kind::Shapefile
                 };
@@ -373,6 +426,10 @@ impl App {
                     }
                 }
                 s.unusable = unusable;
+                // A layer read again while the move is asked moves too.
+                if s.crs.convert && s.result.is_some() {
+                    return self.gis_move();
+                }
             }
             Event::Layer(i) => {
                 let Source::Zip { layer, layers, .. } = &mut s.source else {
@@ -389,6 +446,7 @@ impl App {
                 s.unusable = None;
                 s.excluded.clear();
                 s.status = None;
+                s.moved = None;
                 let state = (**s).clone();
                 return self.gis_read(&state);
             }
@@ -406,17 +464,80 @@ impl App {
                     s.excluded.clear();
                 }
             }
-            Event::Crs(srid) => s.crs.pick(srid),
+            Event::Crs(srid) => {
+                s.crs.pick(srid);
+                if s.crs.convert {
+                    return self.gis_move();
+                }
+            }
+            Event::Convert(on) => {
+                s.crs.convert = on;
+                if on {
+                    return self.gis_move();
+                }
+            }
+            Event::Moved { read, srid, result } => {
+                if s.in_flight == Some((read, srid)) {
+                    s.in_flight = None;
+                }
+                if read == s.read && Some(srid) == s.crs.srid {
+                    s.moved = Some((srid, result));
+                }
+            }
         }
         Task::none()
     }
 
+    /// Moves the objects read into the project's system off the UI thread
+    /// (docs/adr/0222 §2), once for each source system chosen.
+    fn gis_move(&mut self) -> Task<Message> {
+        let own = self.project_system();
+        let Some(Window::GisImport(s)) = &mut self.exchange else {
+            return Task::none();
+        };
+        let (Some(result), Some(srid)) = (s.result.clone(), s.crs.srid) else {
+            return Task::none();
+        };
+        if s.moved.as_ref().is_some_and(|(at, _)| *at == srid)
+            || s.in_flight == Some((s.read, srid))
+        {
+            return Task::none();
+        }
+        let Some((from, to, choices)) = s.crs.move_between(&own) else {
+            return Task::none();
+        };
+        let read = s.read;
+        s.in_flight = Some((read, srid));
+        off_thread(
+            move || {
+                let mut moved = (*result).clone();
+                kentos_formats::reproject::reproject(&mut moved, &from, &to, &choices);
+                moved
+            },
+            move |moved| {
+                Exchange::GisImport(Event::Moved {
+                    read,
+                    srid,
+                    result: Arc::new(moved),
+                })
+            },
+        )
+    }
+
     fn gis_can_import(&self, s: &State) -> bool {
+        let own = self.project_system();
+        // Moved: the objects moved for the system chosen now.
+        let placed = s.crs.matches(&own)
+            || (s.crs.ready(&own)
+                && !s.moving()
+                && s.moved
+                    .as_ref()
+                    .is_some_and(|(at, _)| Some(*at) == s.crs.srid));
         !s.reading
             && s.result.is_some()
             && s.unusable.is_none()
             && !self.gis_included(s).is_empty()
-            && s.crs.matches(&self.project_system())
+            && placed
     }
 
     fn run_gis_import(&mut self) {
@@ -426,11 +547,11 @@ impl App {
         if !self.gis_can_import(s) {
             return;
         }
-        let Some(result) = s.result.clone() else {
+        let Some(result) = s.effective().cloned() else {
             return;
         };
         let name = s.name();
-        let kind = if s.geojson() { "GeoJSON" } else { "Shapefile" };
+        let kind = s.kind().1;
         let layers: Vec<(String, LayerTarget)> = self
             .gis_included(s)
             .into_iter()
@@ -539,8 +660,11 @@ impl App {
             // The system before the report: whether the file can go in at all is decided there.
             .push(s.crs.view(&project, &self.number_format(), |srid| {
                 event(Event::Crs(srid))
-            }))
-            .push(self.gis_summary(s));
+            }));
+        if let Some(convert) = s.crs.convert_view(&project, |on| event(Event::Convert(on))) {
+            body = body.push(convert);
+        }
+        body = body.push(self.gis_summary(s));
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
                 if *error { Line::Error } else { Line::Info },
@@ -549,23 +673,19 @@ impl App {
         }
         let can = self.gis_can_import(s);
         overlay::blocking(
-            Dialog::new(if s.geojson() {
-                "GeoJSON içe aktar"
-            } else {
-                "Shapefile içe aktar"
-            })
-            // As tall as its content; a long body (a file with many layers) scrolls, the buttons stay in view.
-            .scroll(body)
-            .action(words::ghost("Başka dosya…", Some(event(Event::Another))))
-            .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-            .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
-            .width(900.0)
-            .max_height(820.0),
+            Dialog::new(s.kind().0)
+                // As tall as its content; a long body (a file with many layers) scrolls, the buttons stay in view.
+                .scroll(body)
+                .action(words::ghost("Başka dosya…", Some(event(Event::Another))))
+                .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
+                .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
+                .width(900.0)
+                .max_height(820.0),
         )
     }
 
     fn gis_layers<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let Some(r) = &s.result else {
+        let Some(r) = s.effective() else {
             return words::empty(if s.failed.is_some() {
                 "Katman yok."
             } else {
@@ -635,7 +755,7 @@ impl App {
     }
 
     fn gis_summary<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let Some(r) = &s.result else {
+        let Some(r) = s.effective() else {
             return words::summary(vec![match &s.failed {
                 Some(e) => words::text_line(Line::Error, e.clone()),
                 None => words::text_line(
@@ -673,7 +793,14 @@ impl App {
         } else {
             words::text_line(Line::Warn, "Alınacak nesne yok; en az bir katman seçin.")
         }];
-        if !s.crs.matches(&self.project_system()) {
+        let own = self.project_system();
+        if s.crs.convert && s.crs.ready(&own) && !s.crs.matches(&own) {
+            lines.push(if s.moving() {
+                words::text_line(Line::Info, "Koordinatlar projenin sistemine çevriliyor…")
+            } else {
+                words::text_line(Line::Ok, "Koordinatlar projenin sistemine çevrildi; aşağıdaki sayılar çevrilmiş nesnelerindir.")
+            });
+        } else if !s.crs.matches(&own) {
             lines.push(words::text_line(
                 Line::Warn,
                 "Koordinatların sistemi projeninki değil: içe aktarma kapalı (yukarıdaki koordinat sistemi notuna bakın).",

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+<name>Örnek çizim</name>
+<Style id="s1"><IconStyle><color>ffcc4400</color></IconStyle><LineStyle><color>ffcc4400</color><width>0.94</width></LineStyle></Style>
+<Style id="s2"><LineStyle><color>ff555555</color><width>1.32</width></LineStyle></Style>
+<Style id="s3"><LineStyle><color>ff2040d0</color><width>2.65</width></LineStyle></Style>
+<Style id="s4"><LineStyle><color>ff0088ff</color><width>1.89</width></LineStyle><PolyStyle><color>660088ff</color><fill>1</fill><outline>1</outline></PolyStyle></Style>
+<Style id="s5"><LineStyle><color>ff00aa00</color><width>0.94</width></LineStyle><PolyStyle><color>6600aa00</color><fill>1</fill><outline>1</outline></PolyStyle></Style>
+<Style id="s6"><LineStyle><color>ff0000aa</color><width>0.94</width></LineStyle><PolyStyle><color>660000aa</color><fill>1</fill><outline>1</outline></PolyStyle></Style>
+<Style id="s7"><LineStyle><color>ff888888</color><width>0.68</width></LineStyle></Style>
+<Style id="s8"><IconStyle><color>ff000000</color></IconStyle><LineStyle><color>ff000000</color><width>0.94</width></LineStyle></Style>
+<Folder><name>Noktalar</name>
+<Placemark><name>N1</name><styleUrl>#s1</styleUrl><ExtendedData><Data name="Ad"><value>P-1</value></Data><Data name="Açıklama"><value>Poligon noktası</value></Data><Data name="Kod"><value>PN</value></Data></ExtendedData><Point><altitudeMode>absolute</altitudeMode><coordinates>4.3837785865,36.8627993406,850.125</coordinates></Point></Placemark>
+<Placemark><name>P-2</name><styleUrl>#s1</styleUrl><ExtendedData><Data name="Ad"><value>P-2</value></Data></ExtendedData><Point><coordinates>4.3840076569,36.8628730093</coordinates></Point></Placemark>
+<Placemark><styleUrl>#s1</styleUrl><MultiGeometry><Point><coordinates>4.3841379126,36.8628352765</coordinates></Point><Point><coordinates>4.3841828284,36.8628424637</coordinates></Point><Point><coordinates>4.3842277441,36.8628496509</coordinates></Point></MultiGeometry></Placemark>
+</Folder>
+<Folder><name>Ulaşım</name>
+<Folder><name>Yollar</name>
+<Placemark><name>Kısa</name><styleUrl>#s2</styleUrl><ExtendedData><Data name="Ad"><value>Kısa</value></Data></ExtendedData><LineString><altitudeMode>absolute</altitudeMode><coordinates>4.3837785865,36.8635180562,840 4.3843175757,36.8637336696,842.5</coordinates></LineString></Placemark>
+<Placemark><name>Ana yol</name><styleUrl>#s3</styleUrl><ExtendedData><Data name="Ad"><value>Ana yol</value></Data><Data name="Şerit"><value>4</value></Data></ExtendedData><LineString><altitudeMode>absolute</altitudeMode><coordinates>4.3837785865,36.8642367651,830 4.3846769018,36.8643086356,831.5 4.3855752171,36.864596117,833</coordinates></LineString></Placemark>
+<Placemark><styleUrl>#s2</styleUrl><LineString><coordinates>4.3837785865,36.8649554672 4.3842277441,36.865027337 4.3845870703,36.8651710765</coordinates></LineString></Placemark>
+<Placemark><name>İki parça</name><styleUrl>#s2</styleUrl><ExtendedData><Data name="Ad"><value>İki parça</value></Data></ExtendedData><MultiGeometry><LineString><coordinates>4.3837785865,36.8656741625 4.3840480811,36.8658179008</coordinates></LineString><LineString><coordinates>4.3842277441,36.8656741625 4.3844972387,36.8657460317 4.3845870703,36.8659616387</coordinates></LineString></MultiGeometry></Placemark>
+</Folder>
+</Folder>
+<Folder><name>Kadastro</name>
+<Folder><name>Ada 101</name>
+<Folder><name>Parseller</name>
+<Placemark><name>101/7</name><styleUrl>#s4</styleUrl><ExtendedData><Data name="Ada"><value>101</value></Data><Data name="Parsel"><value>7</value></Data></ExtendedData><Polygon><outerBoundaryIs><LinearRing><coordinates>4.3864735324,36.8627993406 4.3871921846,36.8627993406 4.3871921846,36.8633743136 4.3864735324,36.8633743136 4.3864735324,36.8627993406</coordinates></LinearRing></outerBoundaryIs><innerBoundaryIs><LinearRing><coordinates>4.3866531954,36.8629430843 4.3866531954,36.8630868276 4.3868328585,36.8630868276 4.3868328585,36.8629430843 4.3866531954,36.8629430843</coordinates></LinearRing></innerBoundaryIs></Polygon></Placemark>
+<Placemark><styleUrl>#s5</styleUrl><ExtendedData><Data name="Ada"><value>101</value></Data><Data name="Parsel"><value>8</value></Data></ExtendedData><MultiGeometry><Polygon><outerBoundaryIs><LinearRing><coordinates>4.3873718476,36.8627993406 4.3878210053,36.8627993406 4.3878210053,36.8631586992 4.3873718476,36.8627993406</coordinates></LinearRing></outerBoundaryIs></Polygon><Polygon><outerBoundaryIs><LinearRing><coordinates>4.3879108368,36.8627993406 4.3882701629,36.8627993406 4.3882701629,36.8630868276 4.3879108368,36.8630868276 4.3879108368,36.8627993406</coordinates></LinearRing></outerBoundaryIs></Polygon></MultiGeometry></Placemark>
+</Folder>
+</Folder>
+<Folder><name>Yapılar</name>
+<Placemark><styleUrl>#s6</styleUrl><ExtendedData><Data name="Kat"><value>3</value></Data></ExtendedData><Polygon><outerBoundaryIs><LinearRing><coordinates>4.3891684782,36.8627993406 4.3894379728,36.8627993406 4.3894379728,36.8629430843 4.3891684782,36.8629430843 4.3891684782,36.8627993406</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>
+</Folder>
+</Folder>
+<Folder><name>Eğriler</name>
+<Placemark><name>Kuyu</name><styleUrl>#s7</styleUrl><ExtendedData><Data name="Ad"><value>Kuyu</value></Data></ExtendedData><LineString><coordinates>4.3901790829,36.8631586992 4.3901786556,36.8631665293 4.390177377,36.8631742997 4.3901752567,36.8631819514 4.390172311,36.8631894261 4.3901685623,36.863196667 4.390164039,36.863203619 4.3901587756,36.863210229 4.3901528122,36.8632164469 4.3901461941,36.8632222253 4.3901389717,36.8632275202 4.3901312001,36.8632322914 4.3901229382,36.8632365025 4.390114249,36.8632401214 4.3901051987,36.8632431207 4.3900958561,36.8632454774 4.3900862923,36.8632471738 4.3900765802,36.8632481968 4.3900667935,36.8632485386 4.3900570068,36.8632481968 4.3900472946,36.8632471738 4.3900377309,36.8632454774 4.3900283883,36.8632431207 4.3900193379,36.8632401214 4.3900106488,36.8632365025 4.3900023869,36.8632322914 4.3899946153,36.8632275202 4.3899873929,36.8632222253 4.3899807748,36.8632164469 4.3899748114,36.863210229 4.389969548,36.863203619 4.3899650247,36.863196667 4.389961276,36.8631894261 4.3899583303,36.8631819514 4.38995621,36.8631742997 4.3899549314,36.8631665293 4.3899545041,36.8631586992 4.3899549314,36.8631508692 4.38995621,36.8631430988 4.3899583303,36.8631354471 4.389961276,36.8631279723 4.3899650247,36.8631207314 4.389969548,36.8631137795 4.3899748114,36.8631071694 4.3899807748,36.8631009515 4.3899873929,36.8630951731 4.3899946153,36.8630898782 4.3900023869,36.863085107 4.3900106488,36.863080896 4.3900193379,36.863077277 4.3900283883,36.8630742777 4.3900377309,36.8630719209 4.3900472946,36.8630702246 4.3900570068,36.8630692016 4.3900667935,36.8630688597 4.3900765802,36.8630692016 4.3900862923,36.8630702246 4.3900958561,36.8630719209 4.3901051987,36.8630742777 4.390114249,36.863077277 4.3901229382,36.863080896 4.3901312001,36.863085107 4.3901389717,36.8630898782 4.3901461941,36.8630951731 4.3901528122,36.8631009515 4.3901587756,36.8631071694 4.390164039,36.8631137795 4.3901685623,36.8631207314 4.390172311,36.8631279723 4.3901752567,36.8631354471 4.390177377,36.8631430988 4.3901786556,36.8631508692 4.3901790829,36.8631586992</coordinates></LineString></Placemark>
+</Folder>
+<Folder><name>Yazılar</name>
+<Placemark><name>Ankara &amp; &lt;Merkez&gt;</name><styleUrl>#s8</styleUrl><Point><coordinates>4.3905159511,36.8632305708</coordinates></Point></Placemark>
+</Folder>
+<Folder><name>kayip</name>
+<Placemark><name>Katmansız</name><styleUrl>#s8</styleUrl><ExtendedData><Data name="Ad"><value>Katmansız</value></Data></ExtendedData><Point><coordinates>4.3909651088,36.8627993406</coordinates></Point></Placemark>
+</Folder>
+</Document>
+</kml>

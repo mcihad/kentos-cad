@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 580,
-      "implemented": 557,
+      "total": 583,
+      "implemented": 560,
       "partial": 0,
       "pending": 23
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 135,
-      "implemented": 135,
+      "total": 138,
+      "implemented": 138,
       "partial": 0,
       "pending": 0
     },
@@ -103,11 +103,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 278,
-    "commandsOnDesktop": 510,
+    "commandsOnDesktop": 513,
     "desktop": {
       "commands": {
-        "total": 580,
-        "implemented": 510,
+        "total": 583,
+        "implemented": 513,
         "partial": 0,
         "pending": 10,
         "none": 58,
@@ -170,11 +170,11 @@
         "n/a": 0
       },
       "screens": {
-        "total": 135,
+        "total": 138,
         "implemented": 112,
         "partial": 2,
         "pending": 0,
-        "none": 20,
+        "none": 23,
         "n/a": 1
       }
     },
@@ -3795,7 +3795,7 @@
       "title": "GeoJSON…",
       "category": "Dosya",
       "icon": "exportGeojson",
-      "description": "Seçili, görünen ya da bütün nesneleri GeoJSON FeatureCollection olarak yazar; koordinatlar tam, dönüştürülmeden. WGS 84 projesi RFC 7946'ya uyar; başka sistemdeki proje kendi koordinatlarıyla ve eski crs üyesiyle yazılır. Eğriler örneklenir, yazı ve ölçüler yazılmaz.",
+      "description": "Seçili, görünen ya da bütün nesneleri GeoJSON FeatureCollection olarak yazar; koordinatlar tam. WGS 84 projesi RFC 7946'ya uyar; başka sistemdeki proje kendi koordinatlarıyla ve eski crs üyesiyle yazılır, ya da “WGS 84'e çevir” ile RFC 7946 olur. Eğriler örneklenir, yazı ve ölçüler yazılmaz.",
       "aliases": [
         "GEOJSONYAZ",
         "GEOJSONVER"
@@ -3825,6 +3825,80 @@
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
+      ]
+    },
+    {
+      "id": "file.export.gpx",
+      "title": "GPX…",
+      "category": "Dosya",
+      "icon": "exportGpx",
+      "description": "Seçili, görünen ya da bütün nesneleri el GPS'lerinin okuduğu GPX 1.1 olarak yazar: koordinatlar projenin sisteminden WGS 84'e çevrilir; noktalar yol noktası, çizgiler iz ya da rota, alanların sınırları kapalı iz olur; ad, açıklama ve kod yazılır.",
+      "aliases": [
+        "GPXVER",
+        "GPXYAZ"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Dosya › Dosya alışverişi › Dışa aktar"
+      ],
+      "ribbon": [
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Çıktı › Dışa aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi",
+        "CBS › Çıktı › Dışa aktar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/appmenu/AppMenu.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "file.export.kml",
+      "title": "KML/KMZ…",
+      "category": "Dosya",
+      "icon": "exportKml",
+      "description": "Seçili, görünen ya da bütün nesneleri Google Earth'ün açtığı KML ya da KMZ olarak yazar: koordinatlar projenin sisteminden WGS 84'e çevrilir; katmanlar klasör, nesneler yer imi olur, renkler ve kalınlıklar biçem, öznitelikler veri olarak yazılır. Eğriler örneklenir, yazılar adlı nokta olur.",
+      "aliases": [
+        "KMLVER",
+        "KMLYAZ",
+        "KMZVER",
+        "KMZYAZ"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Dosya › Dosya alışverişi › Dışa aktar"
+      ],
+      "ribbon": [
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Çıktı › Dışa aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi",
+        "CBS › Çıktı › Dışa aktar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/appmenu/AppMenu.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
       ]
     },
     {
@@ -3940,7 +4014,7 @@
       "title": "GeoJSON…",
       "category": "Dosya",
       "icon": "importGeojson",
-      "description": "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar, çizgiler, çoklu çizgiler ve delikli alanlar, köşe kotlarıyla (Z); özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
+      "description": "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar, çizgiler, çoklu çizgiler ve delikli alanlar, köşe kotlarıyla (Z); özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa koordinatlar ancak “Projenin sistemine çevir” işaretlenince, dönüşümün yolu ve doğruluğu söylenerek çevrilir.",
       "aliases": [
         "GEOJSON",
         "GEOJSONAL"
@@ -4011,6 +4085,44 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts"
+      ]
+    },
+    {
+      "id": "file.import.kml",
+      "title": "KML/KMZ…",
+      "category": "Dosya",
+      "icon": "importKml",
+      "description": "Google Earth'ün KML ya da KMZ dosyasını içe aktarır: klasörler katman, yer imleri nesne olur; adı, açıklaması ve verileri öznitelik, biçemindeki renk ve kalınlık nesnenin olur. Koordinatlar WGS 84 boylam, enlemdir; projenin sistemine ancak “Projenin sistemine çevir” işaretlenince, dönüşümün yolu ve doğruluğu söylenerek çevrilir.",
+      "aliases": [
+        "KML",
+        "KMZ",
+        "KMLAL",
+        "KMZAL",
+        "GOOGLEEARTH"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Dosya › Dosya alışverişi › İçe aktar"
+      ],
+      "ribbon": [
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Ekle › İçe aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/appmenu/AppMenu.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
       ]
     },
     {
@@ -44155,6 +44267,17 @@
       "desktopWhere": "apps/desktop/src/exchange/gis_import.rs (ADR 0053)"
     },
     {
+      "id": "apps/web/src/ui/io/GisImportDialog.ts#openKmlImport",
+      "name": "openKmlImport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/GisImportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "apps/web/src/ui/io/GisImportDialog.ts#openShapefileImport",
       "name": "openShapefileImport",
       "role": "window",
@@ -44195,6 +44318,28 @@
       "name": "openTakeFrom",
       "role": "window",
       "source": "apps/web/src/ui/io/TakeFromDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/io/Wgs84ExportDialog.ts#openGpxExport",
+      "name": "openGpxExport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/Wgs84ExportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/io/Wgs84ExportDialog.ts#openKmlExport",
+      "name": "openKmlExport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/Wgs84ExportDialog.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -45095,7 +45240,8 @@
                       "file.import.dxf",
                       "file.import.ncz",
                       "file.import.shp",
-                      "file.import.geojson"
+                      "file.import.geojson",
+                      "file.import.kml"
                     ]
                   },
                   {
@@ -45115,6 +45261,8 @@
                     "items": [
                       "file.export.dxf",
                       "file.export.geojson",
+                      "file.export.kml",
+                      "file.export.gpx",
                       "file.export.pdf"
                     ]
                   },
@@ -46157,7 +46305,8 @@
                       "file.import.dxf",
                       "file.import.ncz",
                       "file.import.shp",
-                      "file.import.geojson"
+                      "file.import.geojson",
+                      "file.import.kml"
                     ]
                   },
                   {
@@ -46178,6 +46327,8 @@
                     "items": [
                       "file.export.dxf",
                       "file.export.geojson",
+                      "file.export.kml",
+                      "file.export.gpx",
                       "file.export.pdf"
                     ]
                   },
@@ -47173,7 +47324,8 @@
                       "file.import.dxf",
                       "file.import.ncz",
                       "file.import.shp",
-                      "file.import.geojson"
+                      "file.import.geojson",
+                      "file.import.kml"
                     ]
                   },
                   {
@@ -47194,6 +47346,8 @@
                     "items": [
                       "file.export.dxf",
                       "file.export.geojson",
+                      "file.export.kml",
+                      "file.export.gpx",
                       "file.export.pdf"
                     ]
                   },
@@ -49091,6 +49245,14 @@
                 "size": "small"
               },
               {
+                "command": "file.export.kml",
+                "size": "small"
+              },
+              {
+                "command": "file.export.gpx",
+                "size": "small"
+              },
+              {
                 "command": "file.export.ncn",
                 "size": "small"
               }
@@ -49371,7 +49533,8 @@
                         "file.import.dxf",
                         "file.import.ncz",
                         "file.import.shp",
-                        "file.import.geojson"
+                        "file.import.geojson",
+                        "file.import.kml"
                       ]
                     },
                     {
@@ -49392,6 +49555,8 @@
                       "items": [
                         "file.export.dxf",
                         "file.export.geojson",
+                        "file.export.kml",
+                        "file.export.gpx",
                         "file.export.pdf"
                       ]
                     },
@@ -50253,6 +50418,10 @@
                 },
                 {
                   "command": "file.import.geojson",
+                  "size": "small"
+                },
+                {
+                  "command": "file.import.kml",
                   "size": "small"
                 },
                 {
@@ -51501,6 +51670,14 @@
                   "size": "small"
                 },
                 {
+                  "command": "file.export.kml",
+                  "size": "small"
+                },
+                {
+                  "command": "file.export.gpx",
+                  "size": "small"
+                },
+                {
                   "command": "file.export.ncn",
                   "size": "small"
                 }
@@ -51813,7 +51990,8 @@
                         "file.import.dxf",
                         "file.import.ncz",
                         "file.import.shp",
-                        "file.import.geojson"
+                        "file.import.geojson",
+                        "file.import.kml"
                       ]
                     },
                     {
@@ -51834,6 +52012,8 @@
                       "items": [
                         "file.export.dxf",
                         "file.export.geojson",
+                        "file.export.kml",
+                        "file.export.gpx",
                         "file.export.pdf"
                       ]
                     },
@@ -52829,7 +53009,8 @@
                         "file.import.dxf",
                         "file.import.ncz",
                         "file.import.shp",
-                        "file.import.geojson"
+                        "file.import.geojson",
+                        "file.import.kml"
                       ]
                     },
                     {
@@ -52850,6 +53031,8 @@
                       "items": [
                         "file.export.dxf",
                         "file.export.geojson",
+                        "file.export.kml",
+                        "file.export.gpx",
                         "file.export.pdf"
                       ]
                     },
@@ -54747,6 +54930,14 @@
                   "size": "small"
                 },
                 {
+                  "command": "file.export.kml",
+                  "size": "small"
+                },
+                {
+                  "command": "file.export.gpx",
+                  "size": "small"
+                },
+                {
                   "command": "file.export.ncn",
                   "size": "small"
                 }
@@ -55290,8 +55481,11 @@
     "importNcn": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M11.8 9.4h3.7M11.8 12h3.7M11.8 14.6h3.7\" stroke-width=\"1.1\"/><circle cx=\"9.8\" cy=\"9.4\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"12\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"14.6\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/>",
     "importKpafta": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><rect x=\"9.4\" y=\"8.6\" width=\"6.4\" height=\"7\" stroke-width=\"1\"/><path d=\"M9.4 13.4h6.4M13 13.4v2.2\" stroke-width=\"1\"/>",
     "importGnss": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M12.7 15.8c-1.9-2.1-2.9-3.6-2.9-4.8a2.9 2.9 0 0 1 5.8 0c0 1.2-1 2.7-2.9 4.8z\" stroke-width=\"1.1\"/><circle cx=\"12.7\" cy=\"11\" r=\"0.9\" fill=\"currentColor\" stroke=\"none\"/>",
+    "importKml": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><circle cx=\"12.7\" cy=\"12\" r=\"3.3\" stroke-width=\"1.1\"/><path d=\"M9.4 12h6.6M12.7 8.7c-1.2 1-1.7 2.1-1.7 3.3s.5 2.3 1.7 3.3c1.2-1 1.7-2.1 1.7-3.3s-.5-2.3-1.7-3.3z\" stroke-width=\".9\"/>",
     "exportDxf": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"m9.5 14.5 5.75-5.25\" stroke-width=\"1.1\"/><rect x=\"8\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13.75\" y=\"7.75\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "exportGeojson": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M11.4 8.6h-.5a.9.9 0 0 0-.9.9v1.4l-.8.8.8.8v1.4a.9.9 0 0 0 .9.9h.5M14.1 8.6h.5a.9.9 0 0 1 .9.9v1.4l.8.8-.8.8v1.4a.9.9 0 0 1-.9.9h-.5\" stroke-width=\"1.1\"/>",
+    "exportKml": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><circle cx=\"12.7\" cy=\"12\" r=\"3.3\" stroke-width=\"1.1\"/><path d=\"M9.4 12h6.6M12.7 8.7c-1.2 1-1.7 2.1-1.7 3.3s.5 2.3 1.7 3.3c1.2-1 1.7-2.1 1.7-3.3s-.5-2.3-1.7-3.3z\" stroke-width=\".9\"/>",
+    "exportGpx": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"m9.8 15.2 1.6-3.3 2 1.5 2.2-4.3\" stroke-width=\"1.1\"/><circle cx=\"9.8\" cy=\"15.2\" r=\"0.95\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.6\" cy=\"9.1\" r=\"0.95\" fill=\"currentColor\" stroke=\"none\"/>",
     "exportNcn": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M11.8 9.4h3.7M11.8 12h3.7M11.8 14.6h3.7\" stroke-width=\"1.1\"/><circle cx=\"9.8\" cy=\"9.4\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"12\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"14.6\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/>",
     "exportPdf": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M10.6 15.4V8.8h2.5a1.8 1.8 0 0 1 0 3.6h-2.5\" stroke-width=\"1.3\"/>",
     "exportSvg": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M9.5 15C10 11 12 9.5 15.5 9.5\" stroke-width=\"1.1\"/><path d=\"M12.5 9.5h3\" stroke-width=\"1\"/><rect x=\"8\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.5\" cy=\"9.5\" r=\"0.9\" fill=\"currentColor\" stroke=\"none\"/>",

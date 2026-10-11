@@ -159,6 +159,21 @@ scope.onmessage = (e) => {
           const part = (b?: ArrayBuffer) => (b ? new Uint8Array(b) : undefined);
           const json = own(f.readShapefile(new Uint8Array(s.shp), part(s.shx), part(s.dbf), part(s.prj), part(s.cpg), JSON.stringify(m.options)));
           scope.postMessage({ id: m.id, ok: true, json }, [json]);
+        } else if (m.op === 'readKml') {
+          const json = own(f.readKml(new Uint8Array(m.bytes), m.max));
+          scope.postMessage({ id: m.id, ok: true, json }, [json]);
+        } else if (m.op === 'reprojectImport') {
+          const json = own(f.reprojectImport(m.result, JSON.stringify(m.from), JSON.stringify(m.to), JSON.stringify(m.choices)));
+          scope.postMessage({ id: m.id, ok: true, json }, [json]);
+        } else if (m.op === 'writeKml' || m.op === 'writeGpx' || m.op === 'writeGeoJsonWgs84') {
+          const write = m.op === 'writeKml' ? f.writeKml : m.op === 'writeGpx' ? f.writeGpx : f.writeGeoJsonWgs84;
+          const written = write(JSON.stringify(m.input), JSON.stringify(m.from), JSON.stringify(m.choices));
+          try {
+            const file = own(written.takeBytes());
+            scope.postMessage({ id: m.id, ok: true, file, report: written.report }, [file]);
+          } finally {
+            written.free();
+          }
         } else if (m.op === 'v1Identities') {
           const json = own(f.v1Identities(m.text));
           scope.postMessage({ id: m.id, ok: true, json }, [json]);

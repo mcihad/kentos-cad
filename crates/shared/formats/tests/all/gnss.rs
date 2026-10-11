@@ -1,11 +1,11 @@
 //! GNSS files (docs/adr/0169 §1, §6) against fixtures/gnss/v1/gpx.json and
 //! nmea.json (scripts/fixtures/gnss_gpx_cases.py and gnss_nmea_cases.py,
 //! from GPX 1.1's schema and NMEA 0183's sentences alone): the positions,
-//! heights, fixes and times, the points and sentences not read with the
-//! same words. The web runs the same files through WASM
+//! heights, fixes and times, the routes and tracks (docs/adr/0222 §6), the
+//! points and sentences not read with the same words. The web runs the same files through WASM
 //! (`apps/web/src/io/formats.wasm.test.ts`).
 
-use kentos_contracts::GnssPoint;
+use kentos_contracts::{GnssLine, GnssPoint};
 use kentos_formats::gnss::{gpx, nmea, read};
 use serde_json::Value;
 
@@ -47,6 +47,9 @@ fn agree(
                 .map(|p| (u64::from(p.line), p.message.clone()))
                 .collect();
             assert_eq!(got_problems, problems, "{name}");
+            let lines: Vec<GnssLine> =
+                serde_json::from_value(case["expect"]["lines"].clone()).expect("lines");
+            assert_eq!(got.lines, lines, "{name}");
             assert_eq!(got.encoding, "UTF-8", "{name}");
         }
     }

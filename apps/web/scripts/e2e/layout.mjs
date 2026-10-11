@@ -28,6 +28,7 @@ const DIR = join(OUT, 'layout');
 mkdirSync(DIR, { recursive: true });
 
 const gis = new URL('../../../../fixtures/formats/v1/gis/', import.meta.url);
+const kml = new URL('../../../../fixtures/formats/v1/kml/', import.meta.url);
 const formats = new URL('../../../../fixtures/formats/v1/', import.meta.url);
 const raw = (url) => readFileSync(url).toString('base64');
 
@@ -182,6 +183,21 @@ const ITEMS = [
   { id: 'import-shp', open: async (ui) => (await ui.pick(['karisik.shp', 'karisik.shx', 'karisik.dbf', 'karisik.prj', 'karisik.cpg'].map((n) => [n, raw(new URL(n, gis))])), await ui.run('file.import.shp')), ready: '.dialog--io tbody tr' },
   { id: 'export-dxf', open: (ui) => ui.run('file.export.dxf') },
   { id: 'export-geojson', open: (ui) => ui.run('file.export.geojson') },
+  // KML/KMZ, GPX and GeoJSON in WGS 84 (docs/adr/0222): the import before and after “Projenin sistemine çevir”, the exports.
+  { id: 'import-kml', open: async (ui) => (await ui.pick([['parsel.kml', raw(new URL('parsel.kml', kml))]]), await ui.run('file.import.kml')), ready: '.dialog--io tbody tr' },
+  {
+    id: 'import-kml-moved',
+    open: async (ui) => (
+      await ui.pick([['parsel.kml', raw(new URL('parsel.kml', kml))]]),
+      await ui.run('file.import.kml'),
+      await ui.eval(`(async () => { for (let i = 0; i < 100 && !document.querySelector('.dialog--io input[data-key="convert"]'); i++) await new Promise((r) => setTimeout(r, 50)); })()`),
+      await ui.eval(`document.querySelector('.dialog--io input[data-key="convert"]').click()`),
+      await sleep(600)
+    ),
+    ready: '.dialog--io tbody tr',
+  },
+  { id: 'export-kml', open: (ui) => ui.run('file.export.kml') },
+  { id: 'export-gpx', open: (ui) => ui.run('file.export.gpx') },
   { id: 'export-ncn', open: (ui) => ui.run('file.export.ncn') },
   ...['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'transform.fit', 'transform.edgematch', 'crs.transform'].map((c) => ({ id: c.replace('.', '-'), open: (ui) => ui.run(c) })),
   // Vektör oturtma's Kauçuk levha (docs/adr/0158 §5): four kinds and Sabit on every row; Helmert again on closing (what is typed stays for the session).

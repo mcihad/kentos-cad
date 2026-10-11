@@ -1,13 +1,15 @@
 //! GeoJSON dışa aktar (the web's `ui/io/GeoJsonExportDialog.ts`,
 //! docs/adr/0046): the objects of the selection, of the visible layers or of
 //! the whole drawing as a FeatureCollection (the shared writer, off the UI
-//! thread). Coordinates are written exactly and never transformed: a WGS 84
+//! thread). Coordinates are written exactly and not transformed: a WGS 84
 //! project (EPSG:4326) gives RFC 7946 GeoJSON; any other its own coordinates
 //! with the 2008 `crs` member naming them, which the window says before
-//! writing (RFC 7946 knows only WGS 84, and there is no coordinate
-//! transformation yet). What GeoJSON cannot hold is said before writing (the
-//! summary) and after (the writer's report, in the command line). An export
-//! is not a save: the drawing stays unsaved if it was.
+//! writing (RFC 7946 knows only WGS 84), unless the user ticks “WGS 84'e
+//! çevir (RFC 7946)”: then they are moved into WGS 84 longitude and latitude
+//! (docs/adr/0222 §7), the way said first. What GeoJSON cannot hold is said
+//! before writing (the summary) and after (the writer's report, in the
+//! command line). An export is not a save: the drawing stays unsaved if it
+//! was.
 
 use std::collections::BTreeSet;
 
@@ -41,6 +43,8 @@ pub struct State {
     status: Option<(bool, String)>,
     /// What the writer said and the system it wrote in: logged once the file is written.
     written: Option<(ExportReport, u32)>,
+    /// Moved into WGS 84 as RFC 7946 has it (docs/adr/0222 §7).
+    wgs84: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -48,6 +52,7 @@ pub enum Event {
     Scope(Scope),
     Toggle(String),
     ToggleAll,
+    Wgs84(bool),
     Run,
     Bytes(Vec<u8>, ExportReport, u32),
 }
@@ -68,13 +73,14 @@ impl State {
             writing: false,
             status: None,
             written: None,
+            wgs84: false,
         }
     }
 }
 
 /// A path or area with an arc among its edges (a bulge), holes included,
 /// in any part of a multi-part area (docs/adr/0143; the web's `hasArcs`).
-fn bulged(e: &Entity) -> bool {
+pub(super) fn bulged(e: &Entity) -> bool {
     let arcs = |b: &Option<Vec<f64>>| {
         b.as_ref()
             .is_some_and(|b| b.iter().any(|v| v.abs() > 1e-12))
@@ -145,9 +151,19 @@ impl App {
                     s.excluded.extend(ids);
                 }
             }
+            Event::Wgs84(on) => s.wgs84 = on,
             Event::Run | Event::Bytes(..) => {}
         }
         Task::none()
+    }
+
+    /// Whether the project's coordinates can be moved into WGS 84: it has a
+    /// system the transforms read, and it is not WGS 84 already.
+    fn geojson_can_move(&self) -> bool {
+        self.document
+            .as_ref()
+            .is_some_and(|d| d.settings().srid != 4326)
+            && self.wgs84_from().is_some()
     }
 
     fn geojson_export_run(&mut self) -> Task<Message> {
@@ -158,13 +174,17 @@ impl App {
             return Task::none();
         }
         let chosen = self.geojson_chosen(s);
-        let entities: Vec<Entity> = chosen
-            .iter()
-            .flat_map(|(_, list)| list.iter().map(|e| (*e).clone()))
-            .collect();
-        if !entities.iter().any(|e| !UNWRITTEN.contains(&e.kind())) {
+        let list: Vec<&Entity> = chosen.iter().flat_map(|(_, l)| l.iter().copied()).collect();
+        if !list.iter().any(|e| !UNWRITTEN.contains(&e.kind())) {
             return Task::none();
         }
+        // Moved into WGS 84 when asked (docs/adr/0222 §7): written as RFC 7946, SRID 4326.
+        let wgs84 = s.wgs84 && self.geojson_can_move();
+        if wgs84 && !matches!(self.wgs84_way(&list), Some(Ok(_))) {
+            return Task::none();
+        }
+        let from = self.wgs84_from().filter(|_| wgs84);
+        let entities: Vec<Entity> = list.iter().map(|e| (*e).clone()).collect();
         let layers = doc.model.layers();
         let srid = doc.settings().srid;
         let name = doc
@@ -199,8 +219,19 @@ impl App {
             s.status = Some((false, "Yazılıyor…".to_owned()));
         }
         off_thread(
-            move || kentos_formats::geojson::write(&input),
-            move |(bytes, report)| Exchange::GeoJsonExport(Event::Bytes(bytes, report, srid)),
+            move || match &from {
+                Some((system, choices)) => {
+                    kentos_formats::geojson::write_wgs84(&input, system, choices)
+                }
+                None => kentos_formats::geojson::write(&input),
+            },
+            move |(bytes, report)| {
+                Exchange::GeoJsonExport(Event::Bytes(
+                    bytes,
+                    report,
+                    if wgs84 { 4326 } else { srid },
+                ))
+            },
         )
     }
 
@@ -225,6 +256,13 @@ impl App {
                         .as_ref()
                         .is_some_and(|d| d.settings().has_system());
                 let system = match srid {
+                    4326 if self
+                        .document
+                        .as_ref()
+                        .is_some_and(|d| d.settings().srid != 4326) =>
+                    {
+                        ", RFC 7946, WGS 84'e çevrildi".to_owned()
+                    }
                     4326 => ", RFC 7946".to_owned(),
                     0 if defined => ", projenin kendi sistemi, crs üyesi yok".to_owned(),
                     0 => ", koordinat sistemi yok".to_owned(),
@@ -272,18 +310,28 @@ impl App {
             .iter()
             .flat_map(|(_, list)| list.iter())
             .any(|e| !UNWRITTEN.contains(&e.kind()));
-        let mut body = Column::new()
-            .spacing(12)
-            .push(words::field(
-                "Yazılacak nesneler",
-                scope,
-                Some(
-                    "GeoJSON FeatureCollection (UTF-8); koordinatlar yuvarlanmadan, tam yazılır."
-                        .to_owned(),
+        let mut body = Column::new().spacing(12).push(words::field(
+            "Yazılacak nesneler",
+            scope,
+            Some(
+                "GeoJSON FeatureCollection (UTF-8); koordinatlar yuvarlanmadan, tam yazılır."
+                    .to_owned(),
+            ),
+        ));
+        if self.geojson_can_move() {
+            body = body.push(words::field(
+                "Koordinatlar",
+                words::check(
+                    s.wgs84,
+                    "WGS 84'e çevir (RFC 7946)",
+                    Some(event(Event::Wgs84(!s.wgs84))),
                 ),
-            ))
+                None,
+            ));
+        }
+        body = body
             .push(self.geojson_export_layers(s))
-            .push(self.geojson_export_summary(&chosen));
+            .push(self.geojson_export_summary(s, &chosen));
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
                 if *error { Line::Error } else { Line::Info },
@@ -369,6 +417,7 @@ impl App {
 
     fn geojson_export_summary<'a>(
         &'a self,
+        s: &State,
         chosen: &[(String, Vec<&'a Entity>)],
     ) -> Element<'a, Message> {
         let Some(doc) = &self.document else {
@@ -416,7 +465,26 @@ impl App {
                 "Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin; yazı, ölçü ve sonsuz doğrular GeoJSON'a yazılmaz.",
             )
         }];
-        lines.push(if defined {
+        let moving = s.wgs84 && self.geojson_can_move();
+        lines.push(if moving {
+            match self.wgs84_way(&list) {
+                Some(Ok(t)) => words::text_line(
+                    if t.unofficial { Line::Warn } else { Line::Ok },
+                    format!(
+                        "Koordinatlar {system} sisteminden WGS 84 boylam ve enlemine çevrilir (dönüşüm: {}); dosya RFC 7946 GeoJSON olur, crs üyesi yazılmaz. On basamakla (yaklaşık 0,01 mm) yazılır; kotlar olduğu gibi.",
+                        kentos_interaction::second::accuracy_text(&t)
+                    ),
+                ),
+                Some(Err(why)) => words::text_line(
+                    Line::Warn,
+                    format!(
+                        "Koordinatlar WGS 84'e çevrilemez: ortaları {}. Çevirmeden yazmak için “WGS 84'e çevir”i kaldırın.",
+                        kentos_formats::reproject::why(why)
+                    ),
+                ),
+                None => words::text_line(Line::Info, "Dönüşüm, yazılacak nesneler seçilince gösterilir."),
+            }
+        } else if defined {
             words::text_line(
                 Line::Warn,
                 format!("Dosya bir koordinat sistemi adlandırmayacak. Projenin sistemi kendi tanımı ({system}) ve EPSG kodu yok: koordinatlar dönüştürülmeden projenin sisteminde yazılır, crs üyesi yazılmaz. Dosyayı okuyan programa sistemi siz söyleyin; RFC 7946'yı bilen programlar koordinatları WGS 84 boylam, enlem sayar ve yanlış yere koyar."),
@@ -433,7 +501,7 @@ impl App {
                 "Proje WGS 84 (EPSG:4326) sisteminde: dosya RFC 7946 GeoJSON olur (boylam, enlem).",
             )
         } else {
-            words::text_line(Line::Warn, format!("Dosya RFC 7946 GeoJSON olmayacak. Proje {system} (EPSG:{srid}) sisteminde; RFC 7946 yalnız WGS 84 boylam, enlem ister. Koordinatlar dönüştürülmeden projenin sisteminde yazılır ve eski (2008) crs üyesiyle adlandırılır: QGIS ve GDAL doğru okur, yalnız RFC 7946'yı bilen programlar (web haritaları) yanlış yere koyar. WGS 84'e koordinat dönüşümü henüz yok (geliştirme aşamasında)."))
+            words::text_line(Line::Warn, format!("Dosya RFC 7946 GeoJSON olmayacak. Proje {system} (EPSG:{srid}) sisteminde; RFC 7946 yalnız WGS 84 boylam, enlem ister. Koordinatlar dönüştürülmeden projenin sisteminde yazılır ve eski (2008) crs üyesiyle adlandırılır: QGIS ve GDAL doğru okur, yalnız RFC 7946'yı bilen programlar (web haritaları) yanlış yere koyar. Web haritaları için “WGS 84'e çevir”i işaretleyin."))
         });
         if curves > 0 {
             lines.push(words::text_line(Line::Info, format!("{curves} eğri (daire, yay, elips, spline, yaylı çizgi) GeoJSON'da olmadığı için uygulamanın kendi örneklemesiyle (turda 72 adım) çizgiye çevrilir.")));

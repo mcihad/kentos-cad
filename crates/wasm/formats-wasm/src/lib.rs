@@ -1,6 +1,7 @@
 //! The file formats in the browser. The formats Web Worker
 //! (`apps/web/src/io/formatsWorker.ts`) loads this module the first time the user
-//! imports or exports a coordinate list, a GeoJSON or a Shapefile, or opens or
+//! imports or exports a coordinate list, a GeoJSON, a Shapefile, a KML or KMZ or
+//! a GPX file (docs/adr/0222), or opens or
 //! saves a drawing (the `.kcad` v2 codec, `kentos-kcad`; a v1 drawing's
 //! persistent ids); it never loads at start-up (CLAUDE.md §20). DXF and Netcad
 //! NCZ have modules of their own (`kentos-dxf-wasm`, `kentos-ncz-wasm`), loaded
@@ -14,6 +15,8 @@ use kentos_contracts::{
     CoordReadOptions, CoordWriteInput, FORMATS_VERSION, FieldCsvOptions, GeoJsonReadOptions,
     ShapefileReadOptions,
 };
+use kentos_geometry_core::api::json::{FromJson, Json};
+use kentos_geometry_core::crs::{Choice, System};
 use wasm_bindgen::prelude::*;
 
 pub mod multidim;
@@ -339,6 +342,118 @@ pub fn write_geojson(input: &str) -> Result<Written, JsError> {
     Ok(Written {
         bytes,
         report: String::from_utf8(to_json(&report)?).unwrap_or_default(),
+    })
+}
+
+// ── KML/KMZ and GPX; the moves into a project's system and into WGS 84 (docs/adr/0222) ──
+
+/// A coordinate system as the core's JSON writes it (`System`).
+fn system(text: &str) -> Result<System, JsError> {
+    System::from_json(&Json::parse(text).map_err(|e| JsError::new(&e))?)
+        .map_err(|e| JsError::new(&format!("Koordinat sistemi okunamadı: {e}")))
+}
+
+/// The project's datum choices as the core's JSON writes them.
+fn choices(text: &str) -> Result<Vec<Choice>, JsError> {
+    Vec::<Choice>::from_json(&Json::parse(text).map_err(|e| JsError::new(&e))?)
+        .map_err(|e| JsError::new(&format!("Datum seçimleri okunamadı: {e}")))
+}
+
+fn written(bytes: Vec<u8>, report: &kentos_contracts::ExportReport) -> Result<Written, JsError> {
+    Ok(Written {
+        bytes,
+        report: String::from_utf8(to_json(report)?).unwrap_or_default(),
+    })
+}
+
+/// Reads a KML file or a KMZ archive: the result `ImportResult` (JSON bytes)
+/// in WGS 84, at most `max` objects (0: the readers' limit). A file that is
+/// not KML throws the reason.
+#[wasm_bindgen(js_name = readKml)]
+pub fn read_kml(bytes: &[u8], max: u32) -> Result<Vec<u8>, JsError> {
+    let result = kentos_formats::kml::read(bytes, max).map_err(|e| JsError::new(&e))?;
+    to_json(&result)
+}
+
+/// Writes KML (or KMZ) from `KmlWriteInput` (JSON), moved from the project's
+/// system `from` (the core's `System` JSON) into WGS 84 with its datum `choices`.
+#[wasm_bindgen(js_name = writeKml)]
+pub fn write_kml(input: &str, from: &str, choice_list: &str) -> Result<Written, JsError> {
+    let input: kentos_formats::kml::write::WriteInput =
+        serde_json::from_str(input).map_err(|e| bad_input("Yazılacak nesneler", &e))?;
+    let (bytes, report) =
+        kentos_formats::kml::write(&input.0, &system(from)?, &choices(choice_list)?);
+    written(bytes, &report)
+}
+
+/// Writes GPX 1.1 from `GpxWriteInput` (JSON), moved into WGS 84 likewise.
+#[wasm_bindgen(js_name = writeGpx)]
+pub fn write_gpx(input: &str, from: &str, choice_list: &str) -> Result<Written, JsError> {
+    let input: kentos_formats::gnss::gpx_write::WriteInput =
+        serde_json::from_str(input).map_err(|e| bad_input("Yazılacak nesneler", &e))?;
+    let (bytes, report) =
+        kentos_formats::gnss::gpx_write::write(&input.0, &system(from)?, &choices(choice_list)?);
+    written(bytes, &report)
+}
+
+/// Writes RFC 7946 GeoJSON from `GeoJsonWriteInput` (JSON), moved into WGS 84 likewise.
+#[wasm_bindgen(js_name = writeGeoJsonWgs84)]
+pub fn write_geojson_wgs84(input: &str, from: &str, choice_list: &str) -> Result<Written, JsError> {
+    let input: kentos_formats::geojson::WriteInput =
+        serde_json::from_str(input).map_err(|e| bad_input("Yazılacak nesneler", &e))?;
+    let (bytes, report) =
+        kentos_formats::geojson::write_wgs84(&input.0, &system(from)?, &choices(choice_list)?);
+    written(bytes, &report)
+}
+
+/// What a move did, as the import windows say it.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Move {
+    objects: u32,
+    vertices: u64,
+    left: u32,
+    kinds_left: u32,
+    accuracy: Option<f64>,
+    via: String,
+    unofficial: bool,
+}
+
+#[derive(serde::Serialize)]
+struct Moved {
+    result: kentos_contracts::ImportResult,
+    moved: Move,
+}
+
+/// An import's objects (`ImportResult` JSON) moved from `from` into the
+/// project's system `to` with its datum `choices`: `{"result", "moved"}`, the
+/// objects not moved left out and said in the result's report.
+#[wasm_bindgen(js_name = reprojectImport)]
+pub fn reproject_import(
+    result: &str,
+    from: &str,
+    to: &str,
+    choice_list: &str,
+) -> Result<Vec<u8>, JsError> {
+    let mut r: kentos_contracts::ImportResult =
+        serde_json::from_str(result).map_err(|e| bad_input("İçe aktarılan nesneler", &e))?;
+    let m = kentos_formats::reproject::reproject(
+        &mut r,
+        &system(from)?,
+        &system(to)?,
+        &choices(choice_list)?,
+    );
+    to_json(&Moved {
+        result: r,
+        moved: Move {
+            objects: m.objects,
+            vertices: m.vertices,
+            left: m.left.iter().map(|(_, n)| n).sum(),
+            kinds_left: m.kinds_left,
+            accuracy: m.accuracy,
+            via: m.via,
+            unofficial: m.unofficial,
+        },
     })
 }
 

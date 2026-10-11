@@ -8,21 +8,25 @@ import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
 import { segmented } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
-import { exportName, field, kindCounts, reportText, summaryLine } from './common';
+import { checkField, exportName, field, kindCounts, reportText, summaryLine, unreachedWhy } from './common';
 import { saveExport } from './save';
 import { SCOPE_LABEL, scopeEntities, type ExportScope } from './scope';
 import { isLocal, LOCAL_SRID } from '../../geo/crs';
 import { projectCrsName } from '../../model/projectCrs';
+import { accuracyText } from '../../model/secondCrs';
+import { projectSystem, wayToWgs84 } from './wgs84';
 
 /**
  * GeoJSON dışa aktar (docs/adr/0046): the objects of the selection, of the
  * visible layers or of the whole drawing as a FeatureCollection
- * (crates/shared/formats geojson). Coordinates are written exactly and never
+ * (crates/shared/formats geojson). Coordinates are written exactly and not
  * transformed: a WGS 84 project (EPSG:4326) gives RFC 7946 GeoJSON; any
  * other its own coordinates with the 2008 `crs` member naming them, which
- * the window says before writing (RFC 7946 knows only WGS 84, and there is
- * no coordinate transformation yet). What GeoJSON cannot hold is said before
- * writing (the summary) and after (the writer's report, in the log).
+ * the window says before writing (RFC 7946 knows only WGS 84), unless the
+ * user ticks “WGS 84'e çevir (RFC 7946)”: then they are moved into WGS 84
+ * longitude and latitude (docs/adr/0222 §7), the way said first. What GeoJSON
+ * cannot hold is said before writing (the summary) and after (the writer's
+ * report, in the log).
  */
 export function openGeoJsonExport(ctx: AppContext): void {
   new GeoJsonExportDialog(ctx);
@@ -39,6 +43,8 @@ class GeoJsonExportDialog {
   private scope: ExportScope;
   /** Layers the user left out. */
   private readonly excluded = new Set<string>();
+  /** Moved into WGS 84 as RFC 7946 has it (docs/adr/0222 §7). */
+  private wgs84 = false;
   private writing = false;
   private readonly form = h('div', { class: 'io-row' });
   private readonly layersHost = h('div', { class: 'io-table-wrap' });
@@ -91,9 +97,18 @@ class GeoJsonExportDialog {
       value: this.scope,
       onChange: (s) => ((this.scope = s), this.render()),
     });
-    replaceChildren(this.form, field('Yazılacak nesneler', scope, 'GeoJSON FeatureCollection (UTF-8); koordinatlar yuvarlanmadan, tam yazılır.', 'grow'));
+    replaceChildren(
+      this.form,
+      field('Yazılacak nesneler', scope, 'GeoJSON FeatureCollection (UTF-8); koordinatlar yuvarlanmadan, tam yazılır.', 'grow'),
+      this.canMove ? checkField('Koordinatlar', "WGS 84'e çevir (RFC 7946)", this.wgs84, (v) => ((this.wgs84 = v), this.render()), 'wgs84') : null,
+    );
     this.renderLayers();
     this.renderSummary();
+  }
+
+  /** Whether the project's coordinates can be moved into WGS 84: it has a system the transforms read, not WGS 84 already. */
+  private get canMove(): boolean {
+    return this.ctx.doc.crs.value.srid !== 4326 && projectSystem(this.ctx) !== null;
   }
 
   private renderLayers(): void {
@@ -157,12 +172,23 @@ class GeoJsonExportDialog {
     const rfc = crs.srid === 4326;
     // The project's own definition (docs/adr/0168 §1): no EPSG code to name it by.
     const defined = ctx.doc.settings.hasSystem && isLocal(crs);
+    const moving = this.wgs84 && this.canMove;
+    const way = moving ? wayToWgs84(ctx, list.map((e) => e.id)) : null;
     replaceChildren(
       this.summary,
       written.length
         ? summaryLine('ok', `${written.length} nesne yazılacak: ${kindCounts(kinds)}.`)
         : summaryLine('warn', 'Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin; yazı, ölçü ve sonsuz doğrular GeoJSON\'a yazılmaz.'),
-      defined
+      moving
+        ? !way
+          ? summaryLine('info', 'Dönüşüm, yazılacak nesneler seçilince gösterilir.')
+          : 'error' in way
+            ? summaryLine('warn', `Koordinatlar WGS 84'e çevrilemez: ortaları ${unreachedWhy(way.error)}. Çevirmeden yazmak için “WGS 84'e çevir”i kaldırın.`)
+            : summaryLine(
+                way.unofficial ? 'warn' : 'ok',
+                `Koordinatlar ${projectCrsName(ctx.doc.settings)} sisteminden WGS 84 boylam ve enlemine çevrilir (dönüşüm: ${accuracyText(way)}); dosya RFC 7946 GeoJSON olur, crs üyesi yazılmaz. On basamakla (yaklaşık 0,01 mm) yazılır; kotlar olduğu gibi.`,
+              )
+        : defined
         ? summaryLine(
             'warn',
             h('strong', null, 'Dosya bir koordinat sistemi adlandırmayacak. '),
@@ -179,7 +205,7 @@ class GeoJsonExportDialog {
         : summaryLine(
             'warn',
             h('strong', null, 'Dosya RFC 7946 GeoJSON olmayacak. '),
-            `Proje ${crs.name} (EPSG:${crs.srid}) sisteminde; RFC 7946 yalnız WGS 84 boylam, enlem ister. Koordinatlar dönüştürülmeden projenin sisteminde yazılır ve eski (2008) crs üyesiyle adlandırılır: QGIS ve GDAL doğru okur, yalnız RFC 7946'yı bilen programlar (web haritaları) yanlış yere koyar. WGS 84'e koordinat dönüşümü henüz yok (Koordinat → Datum dönüşümü, geliştirme aşamasında).`,
+            `Proje ${crs.name} (EPSG:${crs.srid}) sisteminde; RFC 7946 yalnız WGS 84 boylam, enlem ister. Koordinatlar dönüştürülmeden projenin sisteminde yazılır ve eski (2008) crs üyesiyle adlandırılır: QGIS ve GDAL doğru okur, yalnız RFC 7946'yı bilen programlar (web haritaları) yanlış yere koyar. Web haritaları için “WGS 84'e çevir”i işaretleyin.`,
           ),
       curves ? summaryLine('info', `${curves} eğri (daire, yay, elips, spline, yaylı çizgi) GeoJSON'da olmadığı için uygulamanın kendi örneklemesiyle (turda 72 adım) çizgiye çevrilir.`) : null,
       hatches ? summaryLine('info', `${hatches} tarama alan (Polygon) olarak yazılır; deseni yazılmaz.`) : null,
@@ -189,7 +215,7 @@ class GeoJsonExportDialog {
       data ? summaryLine('info', 'Öznitelikler metin özellik (properties) olarak yazılır; katman ve etiket KentOS\'un “kentos” üyesinde: KentOS geri okur, öbür programlar yok sayar.') : null,
       styled ? summaryLine('info', `${styled} nesnenin kendi rengi ya da sembolü GeoJSON'a yazılmaz.`) : null,
     );
-    this.primary.disabled = this.writing || !written.length;
+    this.primary.disabled = this.writing || !written.length || (moving && (!way || 'error' in way));
   }
 
   private async run(): Promise<void> {
@@ -212,8 +238,9 @@ class GeoJsonExportDialog {
     this.primary.disabled = true;
     this.status.textContent = 'Yazılıyor…';
     this.status.dataset.kind = 'info';
+    const own = this.wgs84 && this.canMove ? projectSystem(ctx) : null;
     try {
-      const out = await formats().writeGeoJson(input);
+      const out = own ? await formats().writeGeoJsonWgs84(input, own.from, own.choices) : await formats().writeGeoJson(input);
       const name = await saveExport(ctx, out.bytes, exportName(ctx, '.geojson'), GEOJSON);
       if (!name) {
         this.status.textContent = '';
@@ -221,8 +248,15 @@ class GeoJsonExportDialog {
       }
       const count = Object.values(out.report.counts).reduce((s, n) => s + (n ?? 0), 0);
       // SRID 0 with a system: the project's own definition (docs/adr/0168 §1).
-      const system =
-        input.srid === 4326 ? ', RFC 7946' : input.srid !== LOCAL_SRID ? `, EPSG:${input.srid}` : ctx.doc.settings.hasSystem ? ', projenin kendi sistemi, crs üyesi yok' : ', koordinat sistemi yok';
+      const system = own
+        ? ", RFC 7946, WGS 84'e çevrildi"
+        : input.srid === 4326
+          ? ', RFC 7946'
+          : input.srid !== LOCAL_SRID
+            ? `, EPSG:${input.srid}`
+            : ctx.doc.settings.hasSystem
+              ? ', projenin kendi sistemi, crs üyesi yok'
+              : ', koordinat sistemi yok';
       ctx.log.success(`“${name}” yazıldı: ${count} nesne (GeoJSON${system}).`);
       for (const item of out.report.notes) ctx.log.info(reportText(item));
       if (out.report.skipped.length) ctx.log.warn(`“${name}” içine yazılmayanlar: ${out.report.skipped.map(reportText).join(' ')}`);

@@ -1,11 +1,12 @@
 //! NMEA 0183 GNSS logs (docs/adr/0169 §1, §6): a receiver's GGA fixes with
 //! the date of the RMC sentences before them, read as the standard's
-//! sentences describe them. Every sentence not read is named with the
+//! sentences describe them; the fixes in order are the log's track (one line
+//! of one part, docs/adr/0222 §6). Every sentence not read is named with the
 //! reason. The independent reference is `scripts/fixtures/gnss_nmea_cases.py`
 //! (fixtures/gnss/v1/nmea.json). Latitudes and longitudes are their exact
 //! values rounded once to the nearest float64 (CLAUDE.md §23).
 
-use kentos_contracts::{GnssPoint, GnssRead, LineError};
+use kentos_contracts::{GnssLine, GnssPoint, GnssRead, LineError};
 
 use crate::field::exact::Exact;
 use crate::text;
@@ -181,6 +182,7 @@ pub fn read(bytes: &[u8]) -> GnssRead {
         encoding: enc.label().to_owned(),
         points: Vec::new(),
         problems: Vec::new(),
+        lines: Vec::new(),
     };
     let mut day: Option<String> = None;
     let mut nofix: Option<(u32, usize)> = None;
@@ -238,6 +240,16 @@ pub fn read(bytes: &[u8]) -> GnssRead {
         read.problems
             .push(said(NOFIX, line, &[("{count}", &count.to_string())]));
         read.problems.sort_by_key(|p| p.line);
+    }
+    // The track: every fix read, in the log's order, when there are two.
+    if read.points.len() >= 2 {
+        let count = u32::try_from(read.points.len()).unwrap_or(u32::MAX);
+        read.lines.push(GnssLine {
+            kind: "nmea".to_owned(),
+            name: None,
+            parts: vec![(0..count).collect()],
+            line: read.points[0].line,
+        });
     }
     read
 }

@@ -38,6 +38,9 @@ const EMBLEM = {
   png: `<path d="m9.4 15.2 2.4-3.2 1.7 2 1.1-1.3 1.4 2.5z" fill="currentColor" fill-opacity=".3" stroke-width="1"/>${dot(14.3, 9.6, 0.9)}`,
   kpafta: '<rect x="9.4" y="8.6" width="6.4" height="7" stroke-width="1"/><path d="M9.4 13.4h6.4M13 13.4v2.2" stroke-width="1"/>',
   gnss: `<path d="M12.7 15.8c-1.9-2.1-2.9-3.6-2.9-4.8a2.9 2.9 0 0 1 5.8 0c0 1.2-1 2.7-2.9 4.8z" stroke-width="1.1"/>${dot(12.7, 11, 0.9)}`,
+  // KML (docs/adr/0222): a globe, its equator and a meridian; GPX out: a track between its two ends.
+  kml: '<circle cx="12.7" cy="12" r="3.3" stroke-width="1.1"/><path d="M9.4 12h6.6M12.7 8.7c-1.2 1-1.7 2.1-1.7 3.3s.5 2.3 1.7 3.3c1.2-1 1.7-2.1 1.7-3.3s-.5-2.3-1.7-3.3z" stroke-width=".9"/>',
+  gpx: `<path d="m9.8 15.2 1.6-3.3 2 1.5 2.2-4.3" stroke-width="1.1"/>${dot(9.8, 15.2, 0.95)}${dot(15.6, 9.1, 0.95)}`,
 };
 
 // Exported for the feature inventory: the desktop draws the same icons from it (docs/adr/0054).
@@ -546,8 +549,11 @@ export const ICONS = {
   importNcn: fileIn(EMBLEM.ncn),
   importKpafta: fileIn(EMBLEM.kpafta),
   importGnss: fileIn(EMBLEM.gnss),
+  importKml: fileIn(EMBLEM.kml),
   exportDxf: fileOut(EMBLEM.dxf),
   exportGeojson: fileOut(EMBLEM.geojson),
+  exportKml: fileOut(EMBLEM.kml),
+  exportGpx: fileOut(EMBLEM.gpx),
   exportNcn: fileOut(EMBLEM.ncn),
   exportPdf: fileOut(EMBLEM.pdf),
   exportSvg: fileOut(EMBLEM.svg),

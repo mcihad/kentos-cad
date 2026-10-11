@@ -13,6 +13,30 @@ pub fn plain(v: f64) -> String {
     }
 }
 
+/// `v` rounded once to `places` decimals (Rust's formatting rounds the exact
+/// binary value, ties to even), trailing zeros left out; negative zero and a
+/// value that rounds to it are written as "0". Coordinates moved into WGS 84
+/// take ten (1e-10° is about 0.01 mm; docs/adr/0222 §4).
+pub fn decimals(v: f64, places: usize) -> String {
+    let mut s = format!("{v:.places$}");
+    if s.contains('.') {
+        while s.ends_with('0') {
+            s.pop();
+        }
+        if s.ends_with('.') {
+            s.pop();
+        }
+    }
+    if s == "-0" { "0".to_owned() } else { s }
+}
+
+/// `v` rounded once to `places` decimals ([`decimals`]) as the float64 nearest to
+/// that decimal: [`plain`] writes it back as the same decimal (13 digits or
+/// fewer read back exactly).
+pub fn rounded(v: f64, places: usize) -> f64 {
+    decimals(v, places).parse().unwrap_or(v)
+}
+
 /// A DXF real: the shortest round-trip decimal, positional for ordinary
 /// magnitudes and with an exponent otherwise ("6.123233995736766E-17",
 /// "1.0E+20"), always with a decimal point as AutoCAD writes them.

@@ -262,6 +262,70 @@ pub fn crc32(data: &[u8]) -> u32 {
         .fold(!0u32, |c, &b| TABLE[usize::from((c as u8) ^ b)] ^ (c >> 8))
 }
 
+/// A zip archive of `entries` (name, bytes), each deflated (stored when that
+/// is no smaller), its name in UTF-8 (the language flag set), dated 1 January
+/// 1980 so the same entries always make the same bytes (KMZ, docs/adr/0222 §4).
+/// No ZIP64: an entry or the archive past 4 GiB is refused.
+pub fn write(entries: &[(&str, &[u8])]) -> Result<Vec<u8>, String> {
+    const UTF8: u16 = 0x0800;
+    // DOS date of 1 January 1980, time 00:00.
+    const DATE: u16 = (1 << 5) | 1;
+    let big = |n: usize| {
+        u32::try_from(n).map_err(|_| "ZIP dosyası 4 GiB'ı aşıyor; yazılmadı.".to_owned())
+    };
+    let mut out = Vec::new();
+    let mut central = Vec::new();
+    for (name, data) in entries {
+        let deflated = miniz_oxide::deflate::compress_to_vec(data, 6);
+        let (method, packed): (u16, &[u8]) = if deflated.len() < data.len() {
+            (8, &deflated)
+        } else {
+            (0, data)
+        };
+        let crc = crc32(data);
+        let local = big(out.len())?;
+        let fields = |out: &mut Vec<u8>| -> Result<(), String> {
+            out.extend(20u16.to_le_bytes());
+            out.extend(UTF8.to_le_bytes());
+            out.extend(method.to_le_bytes());
+            out.extend(0u16.to_le_bytes());
+            out.extend(DATE.to_le_bytes());
+            out.extend(crc.to_le_bytes());
+            out.extend(big(packed.len())?.to_le_bytes());
+            out.extend(big(data.len())?.to_le_bytes());
+            out.extend(
+                u16::try_from(name.len())
+                    .map_err(|_| "ZIP girdisinin adı çok uzun.".to_owned())?
+                    .to_le_bytes(),
+            );
+            out.extend(0u16.to_le_bytes());
+            Ok(())
+        };
+        out.extend(LOCAL.to_le_bytes());
+        fields(&mut out)?;
+        out.extend(name.as_bytes());
+        out.extend(packed);
+        central.extend(CENTRAL.to_le_bytes());
+        central.extend(20u16.to_le_bytes());
+        fields(&mut central)?;
+        // Comment length, disk, internal and external attributes, the local header's place.
+        central.extend([0u8; 10]);
+        central.extend(local.to_le_bytes());
+        central.extend(name.as_bytes());
+    }
+    let offset = big(out.len())?;
+    let count = u16::try_from(entries.len()).map_err(|_| "ZIP'te çok fazla girdi.".to_owned())?;
+    out.extend(&central);
+    out.extend(EOCD.to_le_bytes());
+    out.extend([0u8; 4]);
+    out.extend(count.to_le_bytes());
+    out.extend(count.to_le_bytes());
+    out.extend(big(central.len())?.to_le_bytes());
+    out.extend(offset.to_le_bytes());
+    out.extend(0u16.to_le_bytes());
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -323,6 +387,26 @@ mod tests {
         let limits = Limits::default();
         let listed = list(bytes, &limits)?;
         unpack(bytes, &listed, &limits, |_| true)
+    }
+
+    #[test]
+    fn written_archives_read_back_and_repeat_bit_for_bit() {
+        let text = "<kml>Ada 1244 İÇŞĞÜÖ</kml>".repeat(50);
+        let entries: [(&str, &[u8]); 2] =
+            [("doc.kml", text.as_bytes()), ("files/ç.bin", &[7, 8, 9])];
+        let z = write(&entries).expect("writes");
+        assert_eq!(write(&entries).expect("writes"), z);
+        let got = all(&z).expect("reads");
+        assert_eq!(got.len(), 2);
+        assert_eq!(
+            (got[0].name.as_str(), got[0].data.as_slice()),
+            ("doc.kml", text.as_bytes())
+        );
+        assert_eq!(
+            (got[1].name.as_str(), got[1].data.as_slice()),
+            ("files/ç.bin", &[7u8, 8, 9][..])
+        );
+        assert!(z.len() < text.len());
     }
 
     #[test]

@@ -64,6 +64,10 @@ fn a_gpx_goes_in_as_named_points_on_the_drawing_in_one_undo_step() {
             "101/7-1", "101/7-2", "101/7-3", "101/7-4", "G1", "G2", "G3", "G4", "G5"
         ]
     );
+    // Its track comes in as a line too (docs/adr/0222 §6), unless unticked.
+    assert_eq!(plan.lines.len(), 1);
+    gnss(&mut app, Gnss::Lines);
+    assert!(window(&app).plan().expect("a plan").lines.is_empty());
     gnss(&mut app, Gnss::Run);
     assert_eq!(app.dialog, None, "{:?}", app.exchange);
     assert_eq!(count(&app) - before, 9);
@@ -126,6 +130,41 @@ fn the_kinds_and_the_naming_are_chosen() {
     // A start that is not a number leaves the last good one.
     gnss(&mut app, Gnss::Start("1x".to_owned()));
     assert_eq!(window(&app).plan().expect("a plan").placed[4].name, "İZ-10");
+}
+
+/// The track comes in as a polyline of its moved points (docs/adr/0222 §6),
+/// whatever kinds of points are taken; one undo step takes it back with them.
+#[test]
+fn a_gpx_track_comes_in_as_a_line() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(sample("sample.gpx"));
+    let before = count(&app);
+    run(&mut app, "file.import.gnss");
+    gnss(&mut app, Gnss::Kind("trkpt"));
+    let plan = window(&app).plan().expect("a plan");
+    assert_eq!((plan.placed.len(), plan.lines.len()), (4, 1));
+    gnss(&mut app, Gnss::Run);
+    assert_eq!(count(&app) - before, 5);
+    let doc = app.document.as_ref().expect("open");
+    let track = doc
+        .model
+        .entities()
+        .find_map(|e| match e {
+            Entity::Polyline(p)
+                if p.base.attrs.get("Tür").map(String::as_str) == Some("GNSS izi") =>
+            {
+                Some(p.clone())
+            }
+            _ => None,
+        })
+        .expect("the track");
+    assert_eq!(track.pts.len(), 5);
+    assert_eq!(
+        track.base.attrs.get("Kaynak").map(String::as_str),
+        Some("GPX izi")
+    );
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(count(&app), before);
 }
 
 #[test]

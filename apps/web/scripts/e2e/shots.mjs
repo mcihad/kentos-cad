@@ -37,6 +37,8 @@
 // other layers, docs/adr/0214); fieldbook (Karne editörü: a GSI
 // book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both);
 // gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system);
+// kml (docs/adr/0222: KML/KMZ içe aktar before and after “Projenin sistemine çevir”, imported; KML/KMZ and GPX dışa
+// aktar; GeoJSON dışa aktar in WGS 84; GNSS içe aktar with its track as a line);
 // fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates); ground (docs/adr/0171 §4:
 // Ölçme's reduction to the grid switched on, Kutupsal alım, Aplikasyon and Poligon hesabı reducing at 850 m);
 // vertextable (docs/adr/0172: Köşe tablosu, a row selected, a value typed, a radius refused, a road, two objects);
@@ -5520,6 +5522,61 @@ SCENES.gnss = [
     open: async (ui) => (await ui.eval(`window.kentos.doc.settings.assign({ srid: 0 })`), await gnssOpen(ui, 'sample.gpx')),
     close: async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.doc.settings.assign({ srid: 5256 })`)),
   },
+];
+
+/**
+ * KML/KMZ, GPX and GeoJSON in WGS 84 (docs/adr/0222): fixtures/formats/v1/kml/parsel.kml (the sample drawing's parcel
+ * 101/7 as a receiver measured it in WGS 84, scripts/fixtures/kml_cases.py) into the TUREF / TM36 sample, before and
+ * after “Projenin sistemine çevir”, and imported; KML/KMZ and GPX dışa aktar; GeoJSON dışa aktar with “WGS 84'e çevir”;
+ * GNSS içe aktar with its track as a line. The desktop's are `exchange::kml_tests::screens` (kml-*).
+ */
+const kmlOpen = async (ui) => {
+  const bytes = readFileSync(new URL('../../../../fixtures/formats/v1/kml/parsel.kml', import.meta.url)).toString('base64');
+  await ui.eval(
+    `import('/src/ui/io/GisImportDialog.ts').then((m) => m.openKmlImport(window.kentos, { name: 'parsel.kml', bytes: Uint8Array.from(atob('${bytes}'), (c) => c.charCodeAt(0)) }, { description: 'KML', accept: {} }))`,
+  );
+  await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary') && !document.querySelector('.dialog--io .io-summary')?.textContent?.includes('okunuyor')`);
+  await ui.sleep(400);
+};
+const kmlConvert = async (ui) => {
+  await ui.eval(`document.querySelector('.dialog--io input[data-key="convert"]').click()`);
+  await ui.waitFor(`!document.querySelector('.dialog--io .dialog__foot .btn--primary').disabled`);
+  await ui.sleep(300);
+};
+SCENES.kml = [
+  { id: 'kml-import', open: (ui) => kmlOpen(ui), close: (ui) => ui.escapeAll(2) },
+  { id: 'kml-moved', open: async (ui) => (await kmlOpen(ui), await kmlConvert(ui)), close: (ui) => ui.escapeAll(2) },
+  {
+    id: 'kml-imported',
+    open: async (ui) => (await kmlOpen(ui), await kmlConvert(ui), await ui.clickText('.dialog--io .btn', 'İçe aktar'), await ui.sleep(600)),
+    close: async (ui) => (await ui.escapeAll(1), await ui.eval(gnssUndo)),
+  },
+  {
+    id: 'kml-export',
+    open: async (ui) => (await ui.eval(`window.kentos.commands.execute('file.export.kml')`), await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`), await ui.sleep(400)),
+    close: (ui) => ui.escapeAll(2),
+  },
+  {
+    id: 'kml-gpx',
+    open: async (ui) => (
+      await ui.eval(`window.kentos.commands.execute('file.export.gpx')`),
+      await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary')`),
+      await ui.clickText('.dialog--io .seg__opt', 'Rota (rte)'),
+      await ui.sleep(400)
+    ),
+    close: (ui) => ui.escapeAll(2),
+  },
+  {
+    id: 'kml-geojson-wgs84',
+    open: async (ui) => (
+      await ui.eval(`window.kentos.commands.execute('file.export.geojson')`),
+      await ui.waitFor(`!!document.querySelector('.dialog--io input[data-key="wgs84"]')`),
+      await ui.eval(`document.querySelector('.dialog--io input[data-key="wgs84"]').click()`),
+      await ui.sleep(400)
+    ),
+    close: (ui) => ui.escapeAll(2),
+  },
+  { id: 'kml-gnss-lines', open: (ui) => gnssOpen(ui, 'sample.gpx'), close: (ui) => ui.escapeAll(2) },
 ];
 
 /**

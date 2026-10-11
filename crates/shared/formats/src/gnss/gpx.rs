@@ -1,19 +1,20 @@
 //! GPX 1.1 GNSS files (docs/adr/0169 §1, §6): waypoints, route points and
 //! track points with their WGS 84 positions, heights, fix, satellites, HDOP,
-//! name and time, read as the GPX 1.1 schema describes them. Every point
-//! not read is named with the reason. The independent reference is
+//! name and time, read as the GPX 1.1 schema describes them; its routes and
+//! tracks as lines of those points (docs/adr/0222 §6). Every point not read
+//! is named with the reason. The independent reference is
 //! `scripts/fixtures/gnss_gpx_cases.py` (fixtures/gnss/v1/gpx.json), read with
 //! Python's expat. Values are their exact decimals rounded once to the
 //! nearest float64 (CLAUDE.md §23).
 
 use std::cmp::Ordering;
 
-use kentos_contracts::{GnssPoint, GnssRead, LineError};
+use kentos_contracts::{GnssLine, GnssPoint, GnssRead, LineError};
 use roxmltree::Node;
 
 use crate::field::exact::Exact;
 use crate::text;
-use crate::xml::{DEPTH, Unparsed, document};
+use crate::xml::{DEPTH, Rows, Unparsed, document};
 
 /// What is said of a point not read; `{line}`, `{depth}`, `{root}`, `{lat}`,
 /// `{lon}`, `{what}`, `{data}` and `{count}` are filled in.
@@ -73,31 +74,59 @@ fn values(n: Node<'_, '_>) -> Result<Values, Unread> {
     Ok((ele, geoid, hdop, sat))
 }
 
-/// The points in the file's order: wpt, rte/rtept, trk/trkseg/trkpt.
-fn points<'a, 'i>(root: Node<'a, 'i>) -> Vec<(&'static str, Node<'a, 'i>)> {
+/// A route or a track: its kind (`rte`, `trk`), its element and its parts (a track's `trkseg`s).
+struct Run<'a, 'i> {
+    kind: &'static str,
+    node: Node<'a, 'i>,
+    parts: usize,
+}
+
+/// A point to read: its kind, its element and, for a route's or a track's, its run and part.
+type Place<'a, 'i> = (&'static str, Node<'a, 'i>, Option<(usize, usize)>);
+
+/// The points in the file's order: wpt, rte/rtept, trk/trkseg/trkpt; and the routes and tracks.
+fn points<'a, 'i>(root: Node<'a, 'i>) -> (Vec<Place<'a, 'i>>, Vec<Run<'a, 'i>>) {
     let mut out = Vec::new();
+    let mut runs = Vec::new();
     let elements = |n: Node<'a, 'i>| n.children().filter(Node::is_element);
     for c in elements(root) {
         match c.tag_name().name() {
-            "wpt" => out.push(("wpt", c)),
-            "rte" => out.extend(
-                elements(c)
-                    .filter(|p| p.tag_name().name() == "rtept")
-                    .map(|p| ("rtept", p)),
-            ),
+            "wpt" => out.push(("wpt", c, None)),
+            "rte" => {
+                let run = runs.len();
+                runs.push(Run {
+                    kind: "rte",
+                    node: c,
+                    parts: 1,
+                });
+                out.extend(
+                    elements(c)
+                        .filter(|p| p.tag_name().name() == "rtept")
+                        .map(|p| ("rtept", p, Some((run, 0)))),
+                );
+            }
             "trk" => {
-                for seg in elements(c).filter(|s| s.tag_name().name() == "trkseg") {
+                let run = runs.len();
+                let segments: Vec<Node<'a, 'i>> = elements(c)
+                    .filter(|s| s.tag_name().name() == "trkseg")
+                    .collect();
+                runs.push(Run {
+                    kind: "trk",
+                    node: c,
+                    parts: segments.len(),
+                });
+                for (part, seg) in segments.into_iter().enumerate() {
                     out.extend(
                         elements(seg)
                             .filter(|p| p.tag_name().name() == "trkpt")
-                            .map(|p| ("trkpt", p)),
+                            .map(|p| ("trkpt", p, Some((run, part)))),
                     );
                 }
             }
             _ => {}
         }
     }
-    out
+    (out, runs)
 }
 
 /// GPX's fix as the window names it.
@@ -130,6 +159,7 @@ pub fn read(bytes: &[u8]) -> GnssRead {
         encoding: enc.label().to_owned(),
         points: Vec::new(),
         problems: Vec::new(),
+        lines: Vec::new(),
     };
     let doc = match document(&body) {
         Ok(doc) => doc,
@@ -143,7 +173,8 @@ pub fn read(bytes: &[u8]) -> GnssRead {
             return read;
         }
     };
-    let line_of = |n: Node<'_, '_>| doc.text_pos_at(n.range().start).row;
+    let rows = Rows::new(doc.input_text());
+    let line_of = |n: Node<'_, '_>| rows.row(n.range().start);
     let root = doc.root_element();
     if root.tag_name().name() != "gpx" {
         let line = line_of(root);
@@ -152,7 +183,17 @@ pub fn read(bytes: &[u8]) -> GnssRead {
         return read;
     }
     let mut nofix: Option<(u32, usize)> = None;
-    for (kind, n) in points(root) {
+    let (places, runs) = points(root);
+    let mut lines: Vec<GnssLine> = runs
+        .iter()
+        .map(|r| GnssLine {
+            kind: r.kind.to_owned(),
+            name: child(r.node, "name").map(text_of).filter(|s| !s.is_empty()),
+            parts: vec![Vec::new(); r.parts],
+            line: line_of(r.node),
+        })
+        .collect();
+    for (kind, n, run) in places {
         let line = line_of(n);
         let (lat_t, lon_t) = (
             n.attribute("lat").unwrap_or_default(),
@@ -197,6 +238,17 @@ pub fn read(bytes: &[u8]) -> GnssRead {
             hdop: hdop.map(Exact::value),
             line,
         });
+        if let Some((run, part)) = run {
+            let at = u32::try_from(read.points.len() - 1).unwrap_or(u32::MAX);
+            lines[run].parts[part].push(at);
+        }
+    }
+    // A line's parts are its points read; a part without one, and a line without a part, are not listed.
+    for mut l in lines {
+        l.parts.retain(|p| !p.is_empty());
+        if !l.parts.is_empty() {
+            read.lines.push(l);
+        }
     }
     if let Some((line, count)) = nofix {
         read.problems

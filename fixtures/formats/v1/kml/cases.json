@@ -1,0 +1,1725 @@
+{
+  "format": "kentos.kml",
+  "version": 1,
+  "source": "scripts/fixtures/kml_cases.py (docs/adr/0222; OGC KML 2.2, expat, zipfile, PROJ)",
+  "tolerance": {
+    "metres": 1e-06,
+    "degrees": 1.5e-10
+  },
+  "reads": [
+    {
+      "file": "gezi.kml",
+      "name": "klasörler, biçemler, StyleMap, veriler, zaman, izler, karışık MultiGeometry, bozuk ve atlanan öğeler",
+      "expect": {
+        "objects": [
+          {
+            "kind": "point",
+            "p": [
+              32.8597,
+              39.9334
+            ],
+            "z": 850.25,
+            "layer": "Gezi",
+            "attrs": {
+              "Ad": "Başlangıç",
+              "Açıklama": "<b>Kamp</b> yeri",
+              "Zaman": "2026-10-04T10:15:00Z"
+            },
+            "color": "#0000ff"
+          },
+          {
+            "kind": "polyline",
+            "pts": [
+              [
+                32.8,
+                39.9
+              ],
+              [
+                32.81,
+                39.91
+              ],
+              [
+                32.82,
+                39.92
+              ],
+              [
+                32.83,
+                39.925
+              ]
+            ],
+            "layer": "Yollar / Ana yollar",
+            "attrs": {
+              "Ad": "D-750",
+              "Kaplama": "asfalt",
+              "Şerit": "4"
+            },
+            "color": "#ff0000",
+            "lineWeight": 0.7
+          },
+          {
+            "kind": "line",
+            "a": [
+              32.83,
+              39.93
+            ],
+            "b": [
+              32.84,
+              39.94
+            ],
+            "layer": "Yollar / Ana yollar",
+            "attrs": {
+              "Ad": "Bağlantı"
+            },
+            "color": "#ff0000",
+            "lineWeight": 0.7
+          },
+          {
+            "kind": "polyline",
+            "pts": [
+              [
+                32.85,
+                39.95
+              ],
+              [
+                32.86,
+                39.95
+              ],
+              [
+                32.86,
+                39.96
+              ],
+              [
+                32.85,
+                39.95
+              ]
+            ],
+            "layer": "Yollar",
+            "attrs": {
+              "Ad": "Halka yol",
+              "Başlangıç": "2026-01-01",
+              "Bitiş": "2026-12-31"
+            },
+            "color": "#ffff00",
+            "lineWeight": 0.7
+          },
+          {
+            "kind": "polyline",
+            "pts": [
+              [
+                32.87,
+                39.97
+              ],
+              [
+                32.88,
+                39.98
+              ],
+              [
+                32.89,
+                39.97
+              ]
+            ],
+            "layer": "Yollar",
+            "attrs": {
+              "Ad": "Sarı"
+            },
+            "color": "#ffff00",
+            "lineWeight": 1.4
+          },
+          {
+            "kind": "polygon",
+            "pts": [
+              [
+                32.9,
+                39.9
+              ],
+              [
+                32.9,
+                39.91
+              ],
+              [
+                32.91,
+                39.91
+              ],
+              [
+                32.91,
+                39.9
+              ]
+            ],
+            "zs": [
+              10.0,
+              13.0,
+              12.0,
+              11.0
+            ],
+            "holes": [
+              [
+                [
+                  32.902,
+                  39.902
+                ],
+                [
+                  32.904,
+                  39.902
+                ],
+                [
+                  32.904,
+                  39.904
+                ]
+              ]
+            ],
+            "holeZs": [
+              [
+                10.0,
+                10.0,
+                10.0
+              ]
+            ],
+            "layer": "Parseller",
+            "attrs": {
+              "Ad": "Ada 101",
+              "Ada": "101",
+              "Parsel": "7"
+            },
+            "color": "#00cc00",
+            "lineWeight": 0.25
+          },
+          {
+            "kind": "point",
+            "p": [
+              32.95,
+              39.95
+            ],
+            "parts": [
+              {
+                "p": [
+                  32.96,
+                  39.96
+                ]
+              }
+            ],
+            "layer": "Parseller",
+            "attrs": {
+              "Ad": "Kesişen alanlar"
+            },
+            "color": "#ff0000"
+          },
+          {
+            "kind": "polygon",
+            "pts": [
+              [
+                32.92,
+                39.92
+              ],
+              [
+                32.93,
+                39.92
+              ],
+              [
+                32.93,
+                39.93
+              ]
+            ],
+            "parts": [
+              {
+                "pts": [
+                  [
+                    32.94,
+                    39.92
+                  ],
+                  [
+                    32.95,
+                    39.92
+                  ],
+                  [
+                    32.95,
+                    39.93
+                  ]
+                ]
+              }
+            ],
+            "layer": "Parseller",
+            "attrs": {
+              "Ad": "Kesişen alanlar"
+            },
+            "color": "#ff0000",
+            "lineWeight": 0.7
+          },
+          {
+            "kind": "polygon",
+            "pts": [
+              [
+                32.97,
+                39.9
+              ],
+              [
+                32.98,
+                39.9
+              ],
+              [
+                32.98,
+                39.91
+              ]
+            ],
+            "zs": [
+              1.0,
+              2.0,
+              3.0
+            ],
+            "layer": "Parseller",
+            "attrs": {
+              "Ad": "Kapanışı farklı"
+            }
+          },
+          {
+            "kind": "polyline",
+            "pts": [
+              [
+                32.7,
+                39.8
+              ],
+              [
+                32.71,
+                39.81
+              ],
+              [
+                32.72,
+                39.81
+              ]
+            ],
+            "layer": "Adsız klasör",
+            "attrs": {
+              "Ad": "İz"
+            }
+          },
+          {
+            "kind": "point",
+            "p": [
+              32.72,
+              39.82
+            ],
+            "layer": "Adsız klasör",
+            "attrs": {
+              "Ad": "Göreli"
+            }
+          },
+          {
+            "kind": "polyline",
+            "pts": [
+              [
+                32.73,
+                39.83
+              ],
+              [
+                32.74,
+                39.84
+              ]
+            ],
+            "parts": [
+              {
+                "pts": [
+                  [
+                    32.75,
+                    39.85
+                  ],
+                  [
+                    32.76,
+                    39.86
+                  ],
+                  [
+                    32.77,
+                    39.87
+                  ]
+                ],
+                "zs": [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              }
+            ],
+            "layer": "Adsız klasör",
+            "attrs": {
+              "Ad": "İki iz"
+            }
+          },
+          {
+            "kind": "polygon",
+            "pts": [
+              [
+                32.6,
+                39.6
+              ],
+              [
+                32.7,
+                39.6
+              ],
+              [
+                32.7,
+                39.7
+              ]
+            ],
+            "layer": "Gezi",
+            "attrs": {
+              "Ad": "Delik bozuk"
+            }
+          },
+          {
+            "kind": "point",
+            "p": [
+              32.5,
+              39.5
+            ],
+            "layer": "Gezi",
+            "attrs": {
+              "Ad": "Dış biçem"
+            }
+          }
+        ],
+        "layers": [
+          {
+            "name": "Gezi",
+            "color": "#0000ff",
+            "visible": true,
+            "count": 3
+          },
+          {
+            "name": "Yollar / Ana yollar",
+            "color": "#ff0000",
+            "visible": true,
+            "count": 2
+          },
+          {
+            "name": "Yollar",
+            "color": "#ffff00",
+            "visible": true,
+            "count": 2
+          },
+          {
+            "name": "Parseller",
+            "color": "#ff0000",
+            "visible": false,
+            "count": 4
+          },
+          {
+            "name": "Adsız klasör",
+            "color": "ink",
+            "visible": true,
+            "count": 3
+          }
+        ],
+        "counts": {
+          "line": 1,
+          "point": 4,
+          "polygon": 4,
+          "polyline": 5
+        },
+        "skipped": [
+          {
+            "what": "GroundOverlay",
+            "reason": "resim kaplaması; alınmadı (resmi Resim ekle ile yerleştirin)",
+            "count": 1,
+            "lines": []
+          },
+          {
+            "what": "Model",
+            "reason": "3B model; alınmadı",
+            "count": 1,
+            "lines": []
+          },
+          {
+            "what": "NetworkLink",
+            "reason": "başka bir dosyaya ya da adrese bağlantı; uzaktaki içerik alınmaz",
+            "count": 1,
+            "lines": []
+          },
+          {
+            "what": "gx:Tour",
+            "reason": "gezinti; alınmadı",
+            "count": 1,
+            "lines": []
+          },
+          {
+            "what": "LineString",
+            "reason": "koordinatları okunmuyor (boylam, enlem[, yükseklik] bekleniyordu); alınmadı",
+            "count": 1,
+            "lines": [
+              80
+            ]
+          },
+          {
+            "what": "LinearRing",
+            "reason": "koordinatları okunmuyor (boylam, enlem[, yükseklik] bekleniyordu); alınmadı",
+            "count": 1,
+            "lines": [
+              82
+            ]
+          },
+          {
+            "what": "Point",
+            "reason": "koordinatları okunmuyor (boylam, enlem[, yükseklik] bekleniyordu); alınmadı",
+            "count": 1,
+            "lines": [
+              81
+            ]
+          },
+          {
+            "what": "Halka",
+            "reason": "üçten az farklı köşesi var; alınmadı",
+            "count": 2,
+            "lines": []
+          }
+        ],
+        "notes": [
+          {
+            "what": "Halka kapanışının Z'si",
+            "reason": "kapanış konumu ilkiyle x ve y'de aynı ama Z'si farklı; alanın köşesi ilk konumun Z'sini aldı",
+            "count": 1,
+            "lines": []
+          },
+          {
+            "what": "Yükseklik",
+            "reason": "yükseklik kipi absolute değil (zemine ya da yere göre); kot olarak alınmadı",
+            "count": 4,
+            "lines": []
+          },
+          {
+            "what": "Adsız klasör",
+            "reason": "adı olmayan klasör “Adsız klasör” adıyla katman yolunda yer aldı",
+            "count": 1,
+            "lines": []
+          },
+          {
+            "what": "Karışık MultiGeometry",
+            "reason": "türleri ayrı nesneler oldu (noktalar, çizgiler, alanlar)",
+            "count": 1,
+            "lines": []
+          },
+          {
+            "what": "Dış biçem",
+            "reason": "başka dosyadaki biçeme bağlı; renk alınmadı",
+            "count": 1,
+            "lines": []
+          }
+        ],
+        "source": [
+          [
+            "Biçim",
+            "KML"
+          ],
+          [
+            "Ad",
+            "Gezi"
+          ],
+          [
+            "Koordinat sistemi",
+            "WGS 84 boylam, enlem (EPSG:4326)"
+          ],
+          [
+            "Kotlu nesne",
+            "4"
+          ]
+        ],
+        "declared": {
+          "srid": 4326,
+          "text": "WGS 84 (KML)",
+          "source": "kml"
+        }
+      }
+    },
+    {
+      "file": "alanlar.kmz",
+      "name": "KMZ: doc.kml, adsız belge, göreli yükseklik, yalnız dolgu",
+      "expect": {
+        "objects": [
+          {
+            "kind": "polygon",
+            "pts": [
+              [
+                29.0,
+                41.0
+              ],
+              [
+                29.01,
+                41.0
+              ],
+              [
+                29.01,
+                41.01
+              ],
+              [
+                29.0,
+                41.01
+              ]
+            ],
+            "layer": "KML",
+            "attrs": {
+              "Ad": "Meydan"
+            }
+          },
+          {
+            "kind": "polygon",
+            "pts": [
+              [
+                29.002,
+                41.002
+              ],
+              [
+                29.003,
+                41.002
+              ],
+              [
+                29.003,
+                41.003
+              ]
+            ],
+            "layer": "Bina",
+            "attrs": {
+              "Ad": "Kule"
+            },
+            "color": "#996633"
+          }
+        ],
+        "layers": [
+          {
+            "name": "KML",
+            "color": "ink",
+            "visible": true,
+            "count": 1
+          },
+          {
+            "name": "Bina",
+            "color": "#996633",
+            "visible": true,
+            "count": 1
+          }
+        ],
+        "counts": {
+          "polygon": 2
+        },
+        "skipped": [],
+        "notes": [
+          {
+            "what": "Yükseklik",
+            "reason": "yükseklik kipi absolute değil (zemine ya da yere göre); kot olarak alınmadı",
+            "count": 1,
+            "lines": []
+          }
+        ],
+        "source": [
+          [
+            "Biçim",
+            "KMZ (doc.kml)"
+          ],
+          [
+            "Koordinat sistemi",
+            "WGS 84 boylam, enlem (EPSG:4326)"
+          ]
+        ],
+        "declared": {
+          "srid": 4326,
+          "text": "WGS 84 (KML)",
+          "source": "kml"
+        }
+      }
+    },
+    {
+      "file": "parsel.kml",
+      "name": "örnek çizimin 101/7 parseli, batı sınırı ve kuyu (pencerelerin resimleri ve uygulamaların testleri)",
+      "expect": {
+        "objects": [
+          {
+            "kind": "polygon",
+            "pts": [
+              [
+                35.842247366,
+                39.915760683
+              ],
+              [
+                35.842520993,
+                39.915771718
+              ],
+              [
+                35.842549422,
+                39.916044306
+              ],
+              [
+                35.842269912,
+                39.916058057
+              ]
+            ],
+            "layer": "Kadastro",
+            "attrs": {
+              "Ad": "101/7",
+              "Ada": "101",
+              "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+              "Parsel": "7"
+            },
+            "color": "#2f8f2f",
+            "lineWeight": 0.7
+          },
+          {
+            "kind": "polyline",
+            "pts": [
+              [
+                35.842266011,
+                39.916035122
+              ],
+              [
+                35.842261488,
+                39.915967568
+              ],
+              [
+                35.842256964,
+                39.915900015
+              ],
+              [
+                35.842252441,
+                39.915832461
+              ],
+              [
+                35.842247917,
+                39.915764907
+              ]
+            ],
+            "zs": [
+              1062.6,
+              1062.28,
+              1061.96,
+              1061.64,
+              1061.32
+            ],
+            "layer": "Saha",
+            "attrs": {
+              "Ad": "Batı sınırı"
+            },
+            "color": "#d96f1c",
+            "lineWeight": 0.5
+          },
+          {
+            "kind": "point",
+            "p": [
+              35.84238,
+              39.91591
+            ],
+            "z": 1062.1,
+            "layer": "Saha",
+            "attrs": {
+              "Ad": "Kuyu"
+            },
+            "color": "#1c8ad9"
+          }
+        ],
+        "layers": [
+          {
+            "name": "Kadastro",
+            "color": "#2f8f2f",
+            "visible": true,
+            "count": 1
+          },
+          {
+            "name": "Saha",
+            "color": "#d96f1c",
+            "visible": true,
+            "count": 2
+          }
+        ],
+        "counts": {
+          "point": 1,
+          "polygon": 1,
+          "polyline": 1
+        },
+        "skipped": [],
+        "notes": [],
+        "source": [
+          [
+            "Biçim",
+            "KML"
+          ],
+          [
+            "Ad",
+            "101/7 parseli"
+          ],
+          [
+            "Koordinat sistemi",
+            "WGS 84 boylam, enlem (EPSG:4326)"
+          ],
+          [
+            "Kotlu nesne",
+            "2"
+          ]
+        ],
+        "declared": {
+          "srid": 4326,
+          "text": "WGS 84 (KML)",
+          "source": "kml"
+        }
+      }
+    },
+    {
+      "file": "kml-yok.kmz",
+      "name": "içinde KML olmayan KMZ",
+      "expect": {
+        "error": "KMZ arşivinde .kml dosyası yok; hiçbir şey alınmadı."
+      }
+    },
+    {
+      "file": "bozuk.kml",
+      "name": "XML değil",
+      "expect": {
+        "error": "KML okunamadı: dosya XML değil; hiçbir şey alınmadı."
+      }
+    },
+    {
+      "file": "kok.kml",
+      "name": "KML değil",
+      "expect": {
+        "error": "KML değil: kök öğe “gpx” (kml bekleniyordu); hiçbir şey alınmadı."
+      }
+    },
+    {
+      "file": "derin.kml",
+      "name": "256 düzeyden derin",
+      "expect": {
+        "error": "KML okunamadı: XML öğeleri 256 düzeyden derin iç içe; hiçbir şey alınmadı."
+      }
+    }
+  ],
+  "moves": [
+    {
+      "file": "gezi.kml",
+      "srid": 5255,
+      "system": {
+        "kind": "tm",
+        "datum": "TUREF",
+        "centralMeridian": 33,
+        "scaleFactor": 1,
+        "falseEasting": 500000,
+        "falseNorthing": 0
+      },
+      "objects": [
+        {
+          "kind": "point",
+          "p": [
+            488007.6083396975,
+            4422143.591214942
+          ],
+          "z": 850.25,
+          "layer": "Gezi",
+          "attrs": {
+            "Ad": "Başlangıç",
+            "Açıklama": "<b>Kamp</b> yeri",
+            "Zaman": "2026-10-04T10:15:00Z"
+          },
+          "color": "#0000ff"
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              482896.3350958842,
+              4418444.811338129
+            ],
+            [
+              483753.88098526455,
+              4419553.273544403
+            ],
+            [
+              484611.17861592583,
+              4420661.833187644
+            ],
+            [
+              485467.17070110724,
+              4421215.323652268
+            ]
+          ],
+          "layer": "Yollar / Ana yollar",
+          "attrs": {
+            "Ad": "D-750",
+            "Kaplama": "asfalt",
+            "Şerit": "4"
+          },
+          "color": "#ff0000",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "line",
+          "a": [
+            485468.227914526,
+            4421770.490286642
+          ],
+          "b": [
+            486325.028807699,
+            4422879.244860115
+          ],
+          "layer": "Yollar / Ana yollar",
+          "attrs": {
+            "Ad": "Bağlantı"
+          },
+          "color": "#ff0000",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              487181.5812220528,
+              4423988.096926733
+            ],
+            [
+              488036.1427869139,
+              4423986.708237431
+            ],
+            [
+              488037.8850841727,
+              4425097.046505089
+            ],
+            [
+              487181.5812220528,
+              4423988.096926733
+            ]
+          ],
+          "layer": "Yollar",
+          "attrs": {
+            "Ad": "Halka yol",
+            "Başlangıç": "2026-01-01",
+            "Bitiş": "2026-12-31"
+          },
+          "color": "#ffff00",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              488893.9403206209,
+              4426206.093613719
+            ],
+            [
+              489749.7468579345,
+              4427315.2382710995
+            ],
+            [
+              490602.5652920341,
+              4426203.794807518
+            ]
+          ],
+          "layer": "Yollar",
+          "attrs": {
+            "Ad": "Sarı"
+          },
+          "color": "#ffff00",
+          "lineWeight": 1.4
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              491448.16988488496,
+              4418430.45010875
+            ],
+            [
+              491449.4130738142,
+              4419540.778486845
+            ],
+            [
+              492304.4718993634,
+              4419539.868886603
+            ],
+            [
+              492303.3530296025,
+              4418429.540566101
+            ]
+          ],
+          "zs": [
+            10.0,
+            13.0,
+            12.0,
+            11.0
+          ],
+          "holes": [
+            [
+              [
+                491619.4501619257,
+                4418652.326060516
+              ],
+              [
+                491790.4818202779,
+                4418652.1403199695
+              ],
+              [
+                491790.72050248255,
+                4418874.205914035
+              ]
+            ]
+          ],
+          "holeZs": [
+            [
+              10.0,
+              10.0,
+              10.0
+            ]
+          ],
+          "layer": "Parseller",
+          "attrs": {
+            "Ad": "Ada 101",
+            "Ada": "101",
+            "Parsel": "7"
+          },
+          "color": "#00cc00",
+          "lineWeight": 0.25
+        },
+        {
+          "kind": "point",
+          "p": [
+            495727.1945116197,
+            4423978.519769716
+          ],
+          "parts": [
+            {
+              "p": [
+                496582.2534351079,
+                4425088.426525508
+              ]
+            }
+          ],
+          "layer": "Parseller",
+          "attrs": {
+            "Ad": "Kesişen alanlar"
+          },
+          "color": "#ff0000"
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              493160.52544288494,
+              4420649.385223147
+            ],
+            [
+              494015.45984397974,
+              4420648.667072627
+            ],
+            [
+              494016.3304418519,
+              4421758.99913689
+            ]
+          ],
+          "parts": [
+            {
+              "pts": [
+                [
+                  494870.3942124924,
+                  4420648.044675624
+                ],
+                [
+                  495725.32855307794,
+                  4420647.518032086
+                ],
+                [
+                  495725.9504085077,
+                  4421757.850023878
+                ]
+              ]
+            }
+          ],
+          "layer": "Parseller",
+          "attrs": {
+            "Ad": "Kesişen alanlar"
+          },
+          "color": "#ff0000",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              497434.45117812866,
+              4418426.093880206
+            ],
+            [
+              498289.63412654214,
+              4418425.854527139
+            ],
+            [
+              498289.8827640187,
+              4419536.1826142315
+            ]
+          ],
+          "zs": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "layer": "Parseller",
+          "attrs": {
+            "Ad": "Kapanışı farklı"
+          }
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              474307.2380906782,
+              4407365.544131023
+            ],
+            [
+              475167.262538714,
+              4408473.033014597
+            ],
+            [
+              476023.56509686366,
+              4408470.305931034
+            ]
+          ],
+          "layer": "Adsız klasör",
+          "attrs": {
+            "Ad": "İz"
+          }
+        },
+        {
+          "kind": "point",
+          "p": [
+            476027.0394601279,
+            4409580.619143842
+          ],
+          "layer": "Adsız klasör",
+          "attrs": {
+            "Ad": "Göreli"
+          }
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              476886.5687818192,
+              4410688.302538167
+            ],
+            [
+              477745.85043066373,
+              4411796.083216926
+            ]
+          ],
+          "parts": [
+            {
+              "pts": [
+                [
+                  478604.8843335107,
+                  4412903.961199399
+                ],
+                [
+                  479463.6704171883,
+                  4414011.93650481
+                ],
+                [
+                  480322.208608499,
+                  4415120.009152322
+                ]
+              ],
+              "zs": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            }
+          ],
+          "layer": "Adsız klasör",
+          "attrs": {
+            "Ad": "İki iz"
+          }
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              465643.9345044491,
+              4385193.157185356
+            ],
+            [
+              474232.96825400327,
+              4385159.712763094
+            ],
+            [
+              474270.06381886924,
+              4396262.532813656
+            ]
+          ],
+          "layer": "Gezi",
+          "attrs": {
+            "Ad": "Delik bozuk"
+          }
+        },
+        {
+          "kind": "point",
+          "p": [
+            456993.18502070074,
+            4374133.476891488
+          ],
+          "layer": "Gezi",
+          "attrs": {
+            "Ad": "Dış biçem"
+          }
+        }
+      ],
+      "moved": {
+        "objects": 14,
+        "vertices": 45,
+        "accuracy": 1.0,
+        "via": "EPSG:5261",
+        "unofficial": false
+      }
+    },
+    {
+      "file": "gezi.kml",
+      "srid": 2321,
+      "system": {
+        "kind": "tm",
+        "datum": "ED50",
+        "centralMeridian": 33,
+        "scaleFactor": 1,
+        "falseEasting": 500000,
+        "falseNorthing": 0
+      },
+      "objects": [
+        {
+          "kind": "point",
+          "p": [
+            488036.00573618157,
+            4422327.8286556015
+          ],
+          "z": 850.25,
+          "layer": "Gezi",
+          "attrs": {
+            "Ad": "Başlangıç",
+            "Açıklama": "<b>Kamp</b> yeri",
+            "Zaman": "2026-10-04T10:15:00Z"
+          },
+          "color": "#0000ff"
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              482924.70006574166,
+              4418629.036861601
+            ],
+            [
+              483782.2521341767,
+              4419737.503646972
+            ],
+            [
+              484639.5559377783,
+              4420846.067868348
+            ],
+            [
+              485495.55335423554,
+              4421399.559978065
+            ]
+          ],
+          "layer": "Yollar / Ana yollar",
+          "attrs": {
+            "Ad": "D-750",
+            "Kaplama": "asfalt",
+            "Şerit": "4"
+          },
+          "color": "#ff0000",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "line",
+          "a": [
+            485496.6114032076,
+            4421954.729544517
+          ],
+          "b": [
+            486353.4184571021,
+            4423063.4886941975
+          ],
+          "layer": "Yollar / Ana yollar",
+          "attrs": {
+            "Ad": "Bağlantı"
+          },
+          "color": "#ff0000",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              487209.9770260733,
+              4424172.345336049
+            ],
+            [
+              488064.54307703476,
+              4424170.9553661235
+            ],
+            [
+              488066.287036708,
+              4425281.299488669
+            ],
+            [
+              487209.9770260733,
+              4424172.345336049
+            ]
+          ],
+          "layer": "Yollar",
+          "attrs": {
+            "Ad": "Halka yol",
+            "Başlangıç": "2026-01-01",
+            "Bitiş": "2026-12-31"
+          },
+          "color": "#ffff00",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              488922.34841557214,
+              4426390.351170587
+            ],
+            [
+              489778.1610892052,
+              4427499.500400277
+            ],
+            [
+              490630.9823462087,
+              4426388.049815155
+            ]
+          ],
+          "layer": "Yollar",
+          "attrs": {
+            "Ad": "Sarı"
+          },
+          "color": "#ffff00",
+          "lineWeight": 1.4
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              491476.5798756027,
+              4418614.662816678
+            ],
+            [
+              491477.82471254806,
+              4419724.997065954
+            ],
+            [
+              492332.88803674007,
+              4419724.086197619
+            ],
+            [
+              492331.7675221584,
+              4418613.752006005
+            ]
+          ],
+          "zs": [
+            10.0,
+            13.0,
+            12.0,
+            11.0
+          ],
+          "holes": [
+            [
+              [
+                491647.8613824642,
+                4418836.539689141
+              ],
+              [
+                491818.8939410571,
+                4418836.35369489
+              ],
+              [
+                491819.1329525967,
+                4419058.420463319
+              ]
+            ]
+          ],
+          "holeZs": [
+            [
+              10.0,
+              10.0,
+              10.0
+            ]
+          ],
+          "layer": "Parseller",
+          "attrs": {
+            "Ad": "Ada 101",
+            "Ada": "101",
+            "Parsel": "7"
+          },
+          "color": "#00cc00",
+          "lineWeight": 0.25
+        },
+        {
+          "kind": "point",
+          "p": [
+            495755.63517457095,
+            4424162.755483185
+          ],
+          "parts": [
+            {
+              "p": [
+                496610.7002142021,
+                4425272.666837105
+              ]
+            }
+          ],
+          "layer": "Parseller",
+          "attrs": {
+            "Ad": "Kesişen alanlar"
+          },
+          "color": "#ff0000"
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              493188.94772081106,
+              4420833.6071362635
+            ],
+            [
+              494043.8866172569,
+              4420832.887722498
+            ],
+            [
+              494044.75885422266,
+              4421943.225651116
+            ]
+          ],
+          "parts": [
+            {
+              "pts": [
+                [
+                  494898.82548106887,
+                  4420832.264064703
+                ],
+                [
+                  495753.76431690244,
+                  4420831.736162832
+                ],
+                [
+                  495754.3878050402,
+                  4421942.07401884
+                ]
+              ]
+            }
+          ],
+          "layer": "Parseller",
+          "attrs": {
+            "Ad": "Kesişen alanlar"
+          },
+          "color": "#ff0000",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              497462.8926806525,
+              4418610.297763589
+            ],
+            [
+              498318.08013053983,
+              4418610.057159708
+            ],
+            [
+              498318.33039047266,
+              4419720.391117413
+            ]
+          ],
+          "zs": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "layer": "Parseller",
+          "attrs": {
+            "Ad": "Kapanışı farklı"
+          }
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              474335.54093310307,
+              4407549.7238112455
+            ],
+            [
+              475195.57162148895,
+              4408657.21728338
+            ],
+            [
+              476051.8787110539,
+              4408654.488885434
+            ]
+          ],
+          "layer": "Adsız klasör",
+          "attrs": {
+            "Ad": "İz"
+          }
+        },
+        {
+          "kind": "point",
+          "p": [
+            476055.3547771127,
+            4409764.8080002535
+          ],
+          "layer": "Adsız klasör",
+          "attrs": {
+            "Ad": "Göreli"
+          }
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              476914.89032687206,
+              4410872.49598127
+            ],
+            [
+              477774.17819764814,
+              4411980.281245778
+            ]
+          ],
+          "parts": [
+            {
+              "pts": [
+                [
+                  478633.2183162917,
+                  4413088.163813058
+                ],
+                [
+                  479492.01060963585,
+                  4414196.143702336
+                ],
+                [
+                  480350.55500448454,
+                  4415304.220932761
+                ]
+              ],
+              "zs": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            }
+          ],
+          "layer": "Adsız klasör",
+          "attrs": {
+            "Ad": "İki iz"
+          }
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              465672.1572401559,
+              4385377.231355452
+            ],
+            [
+              474261.2369823194,
+              4385343.773636336
+            ],
+            [
+              474298.34958898294,
+              4396446.653256873
+            ]
+          ],
+          "layer": "Gezi",
+          "attrs": {
+            "Ad": "Delik bozuk"
+          }
+        },
+        {
+          "kind": "point",
+          "p": [
+            457021.3441020631,
+            4374317.504698255
+          ],
+          "layer": "Gezi",
+          "attrs": {
+            "Ad": "Dış biçem"
+          }
+        }
+      ],
+      "moved": {
+        "objects": 14,
+        "vertices": 45,
+        "accuracy": 2.0,
+        "via": "EPSG:1784",
+        "unofficial": true
+      }
+    },
+    {
+      "file": "alanlar.kmz",
+      "srid": 5253,
+      "system": {
+        "kind": "tm",
+        "datum": "TUREF",
+        "centralMeridian": 27,
+        "scaleFactor": 1,
+        "falseEasting": 500000,
+        "falseNorthing": 0
+      },
+      "objects": [
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              668275.1952731061,
+              4542500.529373106
+            ],
+            [
+              669116.6198063561,
+              4542519.854765666
+            ],
+            [
+              669091.0450680646,
+              4543630.491106761
+            ],
+            [
+              668249.7478985318,
+              4543611.164760239
+            ]
+          ],
+          "layer": "KML",
+          "attrs": {
+            "Ad": "Meydan"
+          }
+        },
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              668438.3859646567,
+              4542726.513712765
+            ],
+            [
+              668522.5258528288,
+              4542728.443859045
+            ],
+            [
+              668519.9774233522,
+              4542839.5073838895
+            ]
+          ],
+          "layer": "Bina",
+          "attrs": {
+            "Ad": "Kule"
+          },
+          "color": "#996633"
+        }
+      ],
+      "moved": {
+        "objects": 2,
+        "vertices": 7,
+        "accuracy": 1.0,
+        "via": "EPSG:5261",
+        "unofficial": false
+      }
+    },
+    {
+      "file": "parsel.kml",
+      "srid": 5256,
+      "system": {
+        "kind": "tm",
+        "datum": "TUREF",
+        "centralMeridian": 36,
+        "scaleFactor": 1,
+        "falseEasting": 500000,
+        "falseNorthing": 0
+      },
+      "objects": [
+        {
+          "kind": "polygon",
+          "pts": [
+            [
+              486512.3520294986,
+              4420187.531034513
+            ],
+            [
+              486535.7489586432,
+              4420188.714989182
+            ],
+            [
+              486538.23297134566,
+              4420218.9769913
+            ],
+            [
+              486514.3380095252,
+              4420220.545983969
+            ]
+          ],
+          "layer": "Kadastro",
+          "attrs": {
+            "Ad": "101/7",
+            "Ada": "101",
+            "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+            "Parsel": "7"
+          },
+          "color": "#2f8f2f",
+          "lineWeight": 0.7
+        },
+        {
+          "kind": "polyline",
+          "pts": [
+            [
+              486513.9999818679,
+              4420218.000029107
+            ],
+            [
+              486513.6000221864,
+              4420210.499982599
+            ],
+            [
+              486513.1999764622,
+              4420203.000047384
+            ],
+            [
+              486512.8000152985,
+              4420195.500001091
+            ],
+            [
+              486512.3999678951,
+              4420187.999955055
+            ]
+          ],
+          "zs": [
+            1062.6,
+            1062.28,
+            1061.96,
+            1061.64,
+            1061.32
+          ],
+          "layer": "Saha",
+          "attrs": {
+            "Ad": "Batı sınırı"
+          },
+          "color": "#d96f1c",
+          "lineWeight": 0.5
+        },
+        {
+          "kind": "point",
+          "p": [
+            486523.7213371907,
+            4420204.090136601
+          ],
+          "z": 1062.1,
+          "layer": "Saha",
+          "attrs": {
+            "Ad": "Kuyu"
+          },
+          "color": "#1c8ad9"
+        }
+      ],
+      "moved": {
+        "objects": 3,
+        "vertices": 10,
+        "accuracy": 1.0,
+        "via": "EPSG:5261",
+        "unofficial": false
+      }
+    }
+  ]
+}

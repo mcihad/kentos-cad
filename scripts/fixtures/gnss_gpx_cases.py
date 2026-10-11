@@ -21,6 +21,9 @@ The rules:
 4. A point's height is ele as written; with geoidheight its ellipsoidal height is ele plus geoidheight (exactly, rounded
    once). Its fix is named 2B, 3B, DGPS or PPS; another text is kept as written.
 5. A decimal is its exact value rounded once to the nearest float64.
+6. Routes and tracks (docs/adr/0222 §6): each rte is a line of one part, each trk a line of a part per trkseg (kind rte
+   or trk); a part lists its points read, by their places among the points; a part without one is not listed, nor a
+   line without a part. A line's name is its name child's text when not empty; its line its start tag's.
 """
 
 import argparse
@@ -111,34 +114,38 @@ def decimal(what, node):
     return Fraction(t)
 
 
-def points_of(root):
+def points_of(root, runs):
+    """The points in the file's order with their run and part; `runs` gets each rte and trk with its number of parts."""
     for c in root.children:
         if c.tag == "wpt":
-            yield "wpt", c
+            yield "wpt", c, None
         elif c.tag == "rte":
+            runs.append((c, 1))
             for p in c.children:
                 if p.tag == "rtept":
-                    yield "rtept", p
+                    yield "rtept", p, (len(runs) - 1, 0)
         elif c.tag == "trk":
-            for seg in c.children:
-                if seg.tag == "trkseg":
-                    for p in seg.children:
-                        if p.tag == "trkpt":
-                            yield "trkpt", p
+            segments = [seg for seg in c.children if seg.tag == "trkseg"]
+            runs.append((c, len(segments)))
+            for part, seg in enumerate(segments):
+                for p in seg.children:
+                    if p.tag == "trkpt":
+                        yield "trkpt", p, (len(runs) - 1, part)
 
 
 def read(text):
     try:
         root = parse(text)
     except xml.parsers.expat.ExpatError:
-        return {"points": [], "problems": [{"line": 1, "problem": TEXTS["xml"]}]}
+        return {"points": [], "problems": [{"line": 1, "problem": TEXTS["xml"]}], "lines": []}
     except TooDeep:
-        return {"points": [], "problems": [{"line": 1, "problem": TEXTS["deep"].format(depth=DEPTH)}]}
+        return {"points": [], "problems": [{"line": 1, "problem": TEXTS["deep"].format(depth=DEPTH)}], "lines": []}
     if root.tag != "gpx":
-        return {"points": [], "problems": [{"line": root.line, "problem": TEXTS["root"].format(line=root.line, root=root.tag)}]}
-    points, problems = [], []
+        return {"points": [], "problems": [{"line": root.line, "problem": TEXTS["root"].format(line=root.line, root=root.tag)}], "lines": []}
+    points, problems, runs = [], [], []
+    parts = {}
     nofix = None
-    for kind, n in points_of(root):
+    for kind, n, run in points_of(root, runs):
         line = n.line
         lat_t, lon_t = n.attrs.get("lat", ""), n.attrs.get("lon", "")
         if not is_decimal(lat_t) or not is_decimal(lon_t) or abs(Fraction(lat_t)) > 90 or abs(Fraction(lon_t)) > 180:
@@ -183,10 +190,24 @@ def read(text):
             p["hdop"] = float(hdop)
         p["line"] = line
         points.append(p)
+        if run is not None:
+            parts.setdefault(run, []).append(len(points) - 1)
+    lines = []
+    for i, (node, count) in enumerate(runs):
+        kept = [parts[(i, k)] for k in range(count) if (i, k) in parts]
+        if not kept:
+            continue
+        line = {"kind": node.tag}
+        name = node.child("name")
+        if name is not None and name.text:
+            line["name"] = name.text
+        line["parts"] = kept
+        line["line"] = node.line
+        lines.append(line)
     if nofix:
         problems.append({"line": nofix[0], "problem": TEXTS["nofix"].format(line=nofix[0], count=nofix[1])})
         problems.sort(key=lambda p: p["line"])
-    return {"points": points, "problems": problems}
+    return {"points": points, "problems": problems, "lines": lines}
 
 
 def cases():
@@ -226,8 +247,29 @@ def cases():
             "</gpx>",
         ]
     ) + "\n"
+    tracks = "\n".join(
+        [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<gpx version="1.1" creator="KentOS" xmlns="http://www.topografix.com/GPX/1/1">',
+            '  <wpt lat="39.9" lon="32.8"><name>Başlangıç</name></wpt>',
+            "  <rte>",
+            '    <rtept lat="39.91" lon="32.81"/>',
+            '    <rtept lat="99" lon="32.82"/>',
+            '    <rtept lat="39.93" lon="32.83"/>',
+            "  </rte>",
+            "  <rte><name>Boş rota</name></rte>",
+            "  <trk><name>Sabah turu</name>",
+            '    <trkseg><trkpt lat="39.94" lon="32.84"><ele>850.5</ele></trkpt><trkpt lat="39.95" lon="32.85"/></trkseg>',
+            "    <trkseg></trkseg>",
+            '    <trkseg><trkpt lat="39.96" lon="32.86"><fix>none</fix></trkpt><trkpt lat="39.97" lon="32.87"/></trkseg>',
+            "  </trk>",
+            "  <trk><name> </name><trkseg><trkpt lat=\"x\" lon=\"32.88\"/></trkseg></trk>",
+            "</gpx>",
+        ]
+    ) + "\n"
     return [
         ("yol noktası, rota ve iz noktaları, geoit yüksekliği, fix, uydu, HDOP, ad ve zaman", good),
+        ("rotalar ve izler: parçalar, boş parça ve rota, okunmayan noktalar", tracks),
         ("bozuk konumlar ve değerler, konumu olmayan noktalar, yükseksiz geoit", broken),
         ("XML değil", "<gpx><wpt></gpx>\n"),
         ("GPX değil", '<?xml version="1.0"?>\n<JOBFile version="5.3"/>\n'),

@@ -195,6 +195,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   komşu) ve Ortak kenarları koruyarak sadeleştir (kapsama grafı, GEOS'un CoverageSimplifier'ı); Geometri ▾ kategorilerle başlıklı; kesişim
   çekirdeği TOL ölçeğindeki karmaşada yüz yitirmez: TOL içindeki çemberler bir çember, yakın kesişim üçüncü kenarı da keser, köşelerin
   dengesi onarılır (ADR 0221);
+  KML/KMZ, GPX ve içe aktarmada açık dönüşüm: KML/KMZ içe aktar (klasörler katman, yer imleri nesne; biçemin rengi ve kalınlığı, ad,
+  açıklama, zaman, veriler; gx izleri; resim kaplamaları, modeller ve bağlantılar söylenir) ve dışa aktar (katmanlar grup yollarıyla
+  klasör, paylaşılan biçemler, veriler; KMZ), GPX dışa aktar (yol noktaları, iz ya da rota, alanların sınırı kapalı iz); GeoJSON,
+  Shapefile ve KML içe aktarmada başka sistemdeki dosya “Projenin sistemine çevir” onayıyla, dönüşümün yolu ve doğruluğu söylenerek
+  çevrilir; GeoJSON dışa aktar'da “WGS 84'e çevir (RFC 7946)”; GNSS içe aktar'da rotalar, izler ve NMEA kaydı çizgi; Kaynaklar KML'yi
+  tanır; `FORMATS_VERSION` 49 (ADR 0222);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -627,6 +633,10 @@ cargo test --release -p kentos-processing --test cases generate_timing -- --igno
 python3 scripts/fixtures/sampling_cases.py --check   # örneklemenin durumlarını (ağlar ADR'nin kafes formülleriyle, Nesnelere değenler GEOS'un uzaklığıyla, alan içi kesirlerle, tohumlu sayılar Python'un tam sayılarıyla, yol noktaları yayların tanımından, parçalar GEOS'un kesişimiyle; belirsiz yakınlıklar denetlenir) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/sampling.json ve sampling.kcad (ADR 0220)
 cargo test -p kentos-desktop processing::sampling_tests::screens -- --ignored --nocapture --test-threads=1   # örneklemenin şeridi, pencereleri ve sonuçları, .run/shots/islem-orn-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs sampling); ADR 0220)
 cargo test --release -p kentos-processing --test cases sampling_timing -- --ignored --nocapture   # 100 000 parselde altıgen ağ (değenler), düzenli, rastgele ve hat boyunca noktalar, 100 000 köşelik on yıldızın alt bölümleri bütçeleriyle (ADR 0220 Doğrulama); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; SAMPLING_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/sampling.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
+python3 scripts/fixtures/kml_cases.py --check   # KML ve KMZ okuyucusunun örneklerini (klasörler, biçemler, StyleMap, veriler, izler, karışık MultiGeometry, bozuk ve atlanan öğeler, KMZ) expat ve zipfile ile, taşımaları PROJ'la denetle ve yazıcının kaydedilmiş KML ve KMZ'sini (KENTOS_WRITE_KML=1 cargo test -p kentos-formats --test all kml) girdisine göre okuyup her köşeyi PROJ'la karşılaştır; KentOS kodu olmadan; durumlar fixtures/formats/v1/kml (ADR 0222)
+python3 scripts/fixtures/wgs84_write_cases.py --check   # GPX'in (iz ve rota) ve WGS 84 GeoJSON'un kaydedilmiş çıktılarını (KENTOS_WRITE_WGS84=1 cargo test -p kentos-formats --test all wgs84) girdisine göre okuyup PROJ'la denetle; durumlar fixtures/formats/v1/wgs84 (ADR 0222)
+cargo test -p kentos-desktop exchange::kml_tests::screens -- --ignored --nocapture   # KML/KMZ içe aktar (çevirme onayıyla), KML/KMZ ve GPX dışa aktar, GeoJSON'un WGS 84'ü ve GNSS'in çizgileri, .run/shots/kml-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs kml); ADR 0222)
+cargo test --release -p kentos-formats --test all kml_timing -- --ignored --nocapture   # 100 000 nesnede KML ve KMZ yazma ve okuma, projenin sistemine çevirme, GPX ve WGS 84 GeoJSON yazma bütçeleriyle (ADR 0222 Doğrulama); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; KML_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/kml.test.ts --disable-console-intercept; rm apps/web/src/io/pkg/.stamp
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
 python3 scripts/fixtures/closing_cases.py --check   # dönük binaların 45 bloğunun kapanışını (dışa tampon GEOS'un, içe aşındırma kesin; kesişim çekirdeğinin bir kez yüz yitirdiği bloklar dahil) KentOS kodu olmadan denetle; --stress FILE çekirdeğin rastgele blokların kapanışlarını (KENTOS_CLOSINGS_OUT=FILE cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored) karşılaştırır; durumlar fixtures/geoprocess/v1/closings.json (ADR 0221 §10)
 cargo test -p kentos-desktop processing::generalize_tests::screens -- --ignored --nocapture --test-threads=1   # genelleştirmenin şeridi, pencereleri ve sonuçları, .run/shots/islem-gen-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs generalize); ADR 0221)
@@ -1594,7 +1604,16 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   İşlemler kategorileriyle başlıklı (`headed_menu_of`, `overflowRows`); kesişim çekirdeğinde üç sağlamlık kuralı (`geom::arrangement`'in
   `Circles`'ı, yakın kesişimlerin kesmesi, `balance`; ADR 0201'in eki); bağımsız başvurular `generalize_cases.py` (22 durum) ve
   `closing_cases.py` (45 blok; 2 700 rastgele blokla zorlandı); pencereler `processing::generalize_tests`, `shots.mjs generalize`; süreler
-  `generalize_timing` ve `scripts/perf/generalize.test.ts`. Sıradaki `GIS-26`.
+  `generalize_timing` ve `scripts/perf/generalize.test.ts`. `GIS-26` KML/KMZ, GPX ve içe aktarmada açık dönüşüm
+  ([ADR 0222](docs/adr/0222-kml-gpx-and-explicit-transformation.md); kapsamı ben belirledim) tek parçada bitti (11 Ekim): biçim çekirdeğinde
+  `kml` (`read`, `style`, `write`), `gnss::gpx_write`, `reproject` (içe aktarılanın projenin sistemine çevrilmesi), `export_geom` (GeoJSON,
+  KML ve GPX'in ortak geometrisi, biçimin sözleriyle), `zip::write`, `geojson::write_wgs84`, GPX ve NMEA okuyucularının çizgileri
+  (`GnssLine`); `FORMATS_VERSION` 49; WASM `readKml`, `writeKml`, `writeGpx`, `writeGeoJsonWgs84`, `reprojectImport`; koordinat sistemi
+  sorusunun çevirme onayı iki platformda (`CrsQuestion::convertible`, `way`, `ready`); masaüstü `exchange/wgs84_export.rs`, web
+  `ui/io/Wgs84ExportDialog.ts`; GNSS'in çizgileri `kentos_interaction::gnss::place_all`, `model/gnssImport.ts`'in `placeGnssAll`'ı;
+  bağımsız başvurular `kml_cases.py` (7 örnek, 4 taşıma, yazıcının 3 dosyası) ve `wgs84_write_cases.py` (GPX ve GeoJSON), GNSS
+  başvurularının çizgileri; pencereler `exchange::kml_tests`, `shots.mjs kml`; süreler `kml_timing` ve `scripts/perf/kml.test.ts`.
+  Sıradaki `GIS-27`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

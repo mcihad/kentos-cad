@@ -8,7 +8,7 @@ import { naturalOrder } from './ops/pointEditor';
  * .shx, .dbf, .prj and .cpg as its parts, which are not shown on their own.
  */
 
-export type SourceKind = 'geojson' | 'shapefile' | 'dxf' | 'ncz' | 'gnss' | 'coords';
+export type SourceKind = 'geojson' | 'shapefile' | 'dxf' | 'ncz' | 'gnss' | 'coords' | 'kml';
 
 const KINDS: Readonly<Record<string, SourceKind>> = {
   geojson: 'geojson',
@@ -25,6 +25,8 @@ const KINDS: Readonly<Record<string, SourceKind>> = {
   xyz: 'coords',
   dat: 'coords',
   asc: 'coords',
+  kml: 'kml',
+  kmz: 'kml',
 };
 
 /** What each kind is called in the panel. */
@@ -35,6 +37,7 @@ export const SOURCE_LABELS: Readonly<Record<SourceKind, string>> = {
   ncz: 'Netcad NCZ',
   gnss: 'GNSS (GPX, NMEA)',
   coords: 'Koordinat listesi',
+  kml: 'KML/KMZ',
 };
 
 /** The icon of each kind: its import command's. */
@@ -45,6 +48,7 @@ export const SOURCE_ICONS: Readonly<Record<SourceKind, string>> = {
   ncz: 'importNcz',
   gnss: 'importGnss',
   coords: 'importNcn',
+  kml: 'importKml',
 };
 
 const PARTS = ['shx', 'dbf', 'prj', 'cpg'];

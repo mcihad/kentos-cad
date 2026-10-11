@@ -182,8 +182,8 @@ const HOME_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = {
 };
 const VIEW_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = { Görünüş: { command: 'tools.options', args: 'appearance', title: 'Uygulama ayarları: görünüm' } };
 const AIDS_LAUNCHER: Readonly<Record<string, RibbonLauncher>> = { 'Çizim yardımcıları': { command: 'tools.options', args: 'snap', title: 'Uygulama ayarları: kenetleme' } };
-const IMPORTS = ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', 'file.import.ncn', 'file.import.gnss'];
-const EXPORTS = ['file.export.dxf', 'file.export.pdf', 'file.export.geojson', 'file.export.ncn'];
+const IMPORTS = ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', 'file.import.kml', 'file.import.ncn', 'file.import.gnss'];
+const EXPORTS = ['file.export.dxf', 'file.export.pdf', 'file.export.geojson', 'file.export.kml', 'file.export.gpx', 'file.export.ncn'];
 const SHEET_LAYOUTS = ['sheet.new', 'sheet.fromTemplate'];
 const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 'selection')!;
 

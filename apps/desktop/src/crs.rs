@@ -5,8 +5,10 @@
 //! [`CrsQuestion::declare`])
 //! starts at what it says, or at no choice when that could not be read: a
 //! statement is never guessed into a system. Another system than the
-//! project's blocks the import: datum and zone transformations do not exist
-//! yet and coordinates are never reprojected silently (CLAUDE.md §5). The
+//! project's blocks the import, as coordinates are never reprojected
+//! silently (CLAUDE.md §5); a GeoJSON, Shapefile or KML window may move them
+//! into the project's system when the user ticks “Projenin sistemine çevir”,
+//! the way and its accuracy said first (docs/adr/0222 §2). The
 //! user may say the file is in the project's system after all (a file that
 //! claims WGS 84 but holds TM coordinates); the window then says what that
 //! means. Where the extent is known, coordinates that cannot be in the
@@ -21,6 +23,7 @@ use kentos_contracts::{
     Bounds, Convention, CrsDefinition, CrsPlane, CrsSource, CrsSystem, DatumRef, DeclaredCrs,
     ProjectSettings,
 };
+use kentos_geometry_core::crs as core;
 use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::typography;
@@ -81,6 +84,8 @@ pub enum Said {
     Prj,
     /// A Netcad NCZ's MPROJ and TILED_XML blocks (docs/adr/0138).
     Ncz,
+    /// A KML or KMZ file: WGS 84 longitude, latitude (docs/adr/0222).
+    Kml,
     /// The file says nothing (a Shapefile without .prj).
     Nothing,
 }
@@ -118,6 +123,7 @@ impl Statement {
                 CrsSource::GeoJsonCrs => Said::GeoJsonCrs,
                 CrsSource::Prj => Said::Prj,
                 CrsSource::Ncz => Said::Ncz,
+                CrsSource::Kml => Said::Kml,
             },
         }
     }
@@ -133,11 +139,14 @@ pub enum Note {
 
 /// The project's system as the question sees it: its SRID and, when its
 /// system is its own definition (then the SRID is 0, docs/adr/0168 §1), the
-/// definition's title.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// definition's title; the system as the transforms read it and the
+/// project's datum choices, for a move into it (docs/adr/0222 §2).
+#[derive(Debug, Clone, PartialEq)]
 pub struct Project {
     pub srid: u32,
     pub defined: Option<String>,
+    pub system: Option<core::System>,
+    pub choices: Vec<core::Choice>,
 }
 
 impl Project {
@@ -145,6 +154,8 @@ impl Project {
         Self {
             srid: settings.srid,
             defined: own_definition(settings).map(definition_title),
+            system: kentos_project::systems::own(settings).and_then(|n| n.system),
+            choices: kentos_project::systems::choices(settings),
         }
     }
 
@@ -170,6 +181,8 @@ impl From<u32> for Project {
         Self {
             srid,
             defined: None,
+            system: system(srid).and_then(System::transform_system),
+            choices: Vec::new(),
         }
     }
 }
@@ -181,6 +194,11 @@ pub struct CrsQuestion {
     pub srid: Option<u32>,
     statement: Option<Statement>,
     bounds: Option<Bounds>,
+    /// The window can move the coordinates into the project's system
+    /// (GeoJSON, Shapefile, KML; docs/adr/0222 §2).
+    pub convertible: bool,
+    /// The user asked for the move (“Projenin sistemine çevir”).
+    pub convert: bool,
 }
 
 impl CrsQuestion {
@@ -190,7 +208,50 @@ impl CrsQuestion {
             srid: Some(project),
             statement: None,
             bounds: None,
+            convertible: false,
+            convert: false,
         }
+    }
+
+    /// A question whose window can move the coordinates into the project's system.
+    pub fn convertible(project: u32) -> Self {
+        Self {
+            convertible: true,
+            ..Self::new(project)
+        }
+    }
+
+    /// The move the coordinates would take into the project's system: the
+    /// chosen system and the project's as the transforms read them, and the
+    /// project's datum choices; none when the window cannot move them, none is
+    /// needed (the same system, a local project) or a system is not known.
+    pub fn move_between(
+        &self,
+        own: &Project,
+    ) -> Option<(core::System, core::System, Vec<core::Choice>)> {
+        if !self.convertible || self.matches(own) || own.local() {
+            return None;
+        }
+        let from = system(self.srid?)?.transform_system()?;
+        let to = own.system.clone()?;
+        Some((from, to, own.choices.clone()))
+    }
+
+    /// How the move goes at the middle of the coordinates: its accuracy and
+    /// EPSG steps, or why it does not reach there.
+    pub fn way(&self, own: &Project) -> Option<Result<core::Transformed, core::Unreached>> {
+        let (from, to, choices) = self.move_between(own)?;
+        let b = self.bounds?;
+        let mid =
+            kentos_geometry_core::Vec2::new((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0);
+        Some(core::transform_in(&from, &to, mid, &choices))
+    }
+
+    /// Whether the file can be imported: as it is ([`CrsQuestion::matches`]),
+    /// or moved into the project's system, the user asking and the move
+    /// reaching its coordinates.
+    pub fn ready(&self, own: &Project) -> bool {
+        self.matches(own) || (self.convert && matches!(self.way(own), Some(Ok(_))))
     }
 
     /// The user's answer.
@@ -243,6 +304,7 @@ impl CrsQuestion {
                 "Dosyanın bildirdiği sistem bir EPSG koduna karşılık gelmiyor (“{}”); koordinatların sistemini siz seçin.",
                 st.text
             ),
+            (Said::Kml, _) => "Dosya: KML; koordinatları WGS 84 boylam, enlem (EPSG:4326).".to_owned(),
             (Said::Nothing, _) => "Dosya koordinat sistemini belirtmiyor (.prj yok): projenin sistemi seçili; koordinatların bu sistemde olduğundan emin olun.".to_owned(),
         })
     }
@@ -304,6 +366,34 @@ impl CrsQuestion {
                 source.name, source.srid
             )));
         }
+        // A window that can move the coordinates says how, or why not (docs/adr/0222 §2).
+        if let Some(way) = self.way(own) {
+            notes.push(match way {
+                Ok(t) => {
+                    let how = kentos_interaction::second::accuracy_text(&t);
+                    if self.convert {
+                        let line = format!(
+                            "Koordinatlar içe aktarılırken {} sisteminden projenin sistemine ({project_name}) çevrilecek; dönüşüm: {how}. Kotlar olduğu gibi kalır.",
+                            source.name
+                        );
+                        if t.unofficial { Note::Warn(line) } else { Note::Hint(line) }
+                    } else {
+                        Note::Info(format!(
+                            "Koordinatlar {} sisteminde, proje {project_name} sisteminde: içe aktarmak için çevrilmeleri gerekir (dönüşüm: {how}). Koordinatlar sessizce çevrilmez; çevirmek için “Projenin sistemine çevir”i işaretleyin. Dosya aslında projenin sistemindeyse listede onu seçin.",
+                            source.name
+                        ))
+                    }
+                }
+                Err(why) => Note::Warn(format!(
+                    "Koordinatlar projenin sistemine ({project_name}) çevrilemez: ortaları {}; bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse listede onu seçin.",
+                    kentos_formats::reproject::why(why)
+                )),
+            });
+            if let Some(odd) = self.implausible(source, format) {
+                notes.push(Note::Warn(odd));
+            }
+            return notes;
+        }
         match system(project) {
             _ if own.local() && source.srid != project => notes.push(Note::Info(format!(
                 "Proje yerel (koordinat sistemi yok): {} koordinatları olduğu gibi alınır; dönüştürülmez, yuvarlanmaz ve bir konuma bağlanmaz.",
@@ -333,7 +423,7 @@ impl CrsQuestion {
                     "dilim dönüşümü".to_owned()
                 };
                 notes.push(Note::Warn(format!(
-                    "Koordinatlar dönüştürülemez. Proje {project_name} (EPSG:{project}) sisteminde. {} koordinatlarını almak için {what} gerekir; bu dönüşüm henüz yok (geliştirme aşamasında) ve koordinatlar sessizce dönüştürülmez, bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse onu seçin; proje de bu sistemdeyse projenin sistemini Proje ayarları → Koordinat sistemi'nden atayın.",
+                    "Koordinatlar dönüştürülemez. Proje {project_name} (EPSG:{project}) sisteminde. {} koordinatlarını almak için {what} gerekir; bu dosya türü içe aktarılırken çevrilmez (GeoJSON, Shapefile ve KML çevrilebilir) ve koordinatlar sessizce dönüştürülmez, bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse onu seçin; proje de bu sistemdeyse projenin sistemini Proje ayarları → Koordinat sistemi'nden atayın.",
                     source.name
                 )));
             }
@@ -392,6 +482,32 @@ impl CrsQuestion {
             });
         }
         parts.into()
+    }
+
+    /// “Projenin sistemine çevir” under the question, when the window can move
+    /// the coordinates and the move reaches them (docs/adr/0222 §2).
+    pub fn convert_view<'a, Message: Clone + 'a>(
+        &self,
+        own: &Project,
+        on_toggle: impl Fn(bool) -> Message + 'a,
+    ) -> Option<Element<'a, Message>> {
+        if !matches!(self.way(own), Some(Ok(_))) {
+            return None;
+        }
+        let check = if self.convert {
+            kentos_ui::widget::tree_view::Check::Checked
+        } else {
+            kentos_ui::widget::tree_view::Check::Unchecked
+        };
+        Some(
+            row![
+                kentos_ui::widget::tree_view::check_box(check, Some(on_toggle(!self.convert))),
+                label::body("Projenin sistemine çevir"),
+            ]
+            .spacing(8)
+            .align_y(Center)
+            .into(),
+        )
     }
 }
 

@@ -293,6 +293,7 @@ impl App {
                     SourceKind::Ncz => Kind::Ncz,
                     SourceKind::Gnss => Kind::Gnss,
                     SourceKind::Coords => Kind::Coords,
+                    SourceKind::Kml => Kind::Kml,
                 };
                 let first = parts.drain(..).next();
                 return self.exchange_event(ExchangeEvent::Picked(kind, first.map(Ok)));

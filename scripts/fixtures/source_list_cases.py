@@ -5,7 +5,7 @@ ADR without KentOS code. Given a folder's entries (names, and whether each is a 
 - its folders, but those whose name begins with a dot, in the natural order (`text::natural`, as Noktalar sorts names);
 - its files of the kinds the panel adds as layers, but those whose name begins with a dot, in the natural order; the
   kind by the extension, case aside: GeoJSON (.geojson, .json), Shapefile (.shp), DXF (.dxf), Netcad NCZ (.ncz), GNSS
-  (.gpx, .nmea, .nma), coordinate list (.ncn, .txt, .csv, .xyz, .dat, .asc);
+  (.gpx, .nmea, .nma), coordinate list (.ncn, .txt, .csv, .xyz, .dat, .asc), KML (.kml, .kmz; docs/adr/0222);
 - a Shapefile as its .shp, with the files of the same name (exactly) and the extensions .shx, .dbf, .prj and .cpg (case
   aside) as its parts, in that order; those files are not shown on their own, nor without their .shp.
 
@@ -34,6 +34,7 @@ KINDS = {
     "ncz": "ncz",
     "gpx": "gnss", "nmea": "gnss", "nma": "gnss",
     "ncn": "coords", "txt": "coords", "csv": "coords", "xyz": "coords", "dat": "coords", "asc": "coords",
+    "kml": "kml", "kmz": "kml",
 }
 LABELS = {
     "geojson": "GeoJSON",
@@ -42,6 +43,7 @@ LABELS = {
     "ncz": "Netcad NCZ",
     "gnss": "GNSS (GPX, NMEA)",
     "coords": "Koordinat listesi",
+    "kml": "KML/KMZ",
 }
 PARTS = ["shx", "dbf", "prj", "cpg"]
 
@@ -85,7 +87,7 @@ CASES = [
      entries(["Pafta 10", "Pafta 2", ".git", "arşiv"],
              ["yol.dxf", "imar.NCZ", "rota.gpx", "alim.nmea", "eski.nma", "noktalar.ncn", "liste.csv", "not.txt",
               "olcu.xyz", "veri.dat", "kot.asc", "veri.geojson", "ayarlar.json", "rapor.pdf", ".gizli.dxf",
-              "parsel.shp", "parsel.shx", "parsel.dbf", "parsel.prj", "kayit.log"])),
+              "parsel.shp", "parsel.shx", "parsel.dbf", "parsel.prj", "kayit.log", "gezi.kml", "Alanlar.KMZ"])),
     ("Shapefile'ın parçaları: aynı ad, uzantının büyük küçük harfi önemsiz; parçası olmayan .dbf gösterilmez",
      entries([], ["Bina.SHP", "Bina.shx", "Bina.DBF", "Bina.prj", "Bina.cpg", "bina.dbf", "binalar.dbf", "Bina.sbn"])),
     ("parçasız Shapefile ve sahipsiz parçalar",

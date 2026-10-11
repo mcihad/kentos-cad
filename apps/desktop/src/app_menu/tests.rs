@@ -159,9 +159,12 @@ fn the_keyboard_walks_the_rows_and_enter_runs_one() {
     assert_eq!(state(&app).focus, Some(Focus::Pane(3)), "Shapefile");
     key(&mut app, Named::ArrowDown);
     assert_eq!(state(&app).focus, Some(Focus::Pane(4)), "GeoJSON");
+    // KML/KMZ too (docs/adr/0222).
+    key(&mut app, Named::ArrowDown);
+    assert_eq!(state(&app).focus, Some(Focus::Pane(5)), "KML/KMZ");
     // GNSS (GPX, NMEA) too (docs/adr/0169 §6).
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(5)), "GNSS");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(6)), "GNSS");
     key(&mut app, Named::ArrowDown);
     assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "round to DXF");
     key(&mut app, Named::ArrowLeft);

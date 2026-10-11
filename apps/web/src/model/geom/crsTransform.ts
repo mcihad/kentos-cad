@@ -90,6 +90,9 @@ export interface Transformed {
  */
 export type Unreached = 'outside' | 'noLink' | 'noGrid' | 'outsideGrid';
 
+/** WGS 84 longitude and latitude (KML, GPX and RFC 7946 GeoJSON; docs/adr/0222). */
+export const WGS84_SYSTEM: System = { kind: 'geographic', datum: 'WGS84' };
+
 /** `p` of `from` in `to` (x east or longitude, y north or latitude); null where a projection cannot take or give it. */
 export const crsTransform = op<(from: System, to: System, p: Vec2) => Transformed | null>('crsTransform');
 

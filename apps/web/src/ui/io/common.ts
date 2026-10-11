@@ -7,7 +7,10 @@ import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { note } from '../widgets/controls';
-import { definitionTitle } from '../../model/projectCrs';
+import { crsSettings, datumChoices, definitionTitle, ownSystem } from '../../model/projectCrs';
+import { systemOf } from '../../model/geom/crsSystem';
+import { crsTransformIn, type DatumChoice, type System, type Transformed, type Unreached } from '../../model/geom/crsTransform';
+import { accuracyText } from '../../model/secondCrs';
 
 /**
  * Parts the import and export windows share: the picked file, the source
@@ -96,18 +99,41 @@ export interface CrsStatement {
   srid: number | null;
   /** The statement as the file writes it ("urn:ogc:def:crs:EPSG::5256", "TUREF_TM36"); empty when the file says nothing. */
   text: string;
-  /** RFC 7946 (no `crs` member), a GeoJSON `crs` member, a .prj, an NCZ's projection blocks; `none`: the file says nothing. */
-  source: 'rfc7946' | 'geoJsonCrs' | 'prj' | 'ncz' | 'none';
+  /** RFC 7946 (no `crs` member), a GeoJSON `crs` member, a .prj, an NCZ's projection blocks, KML's WGS 84; `none`: the file says nothing. */
+  source: 'rfc7946' | 'geoJsonCrs' | 'prj' | 'ncz' | 'kml' | 'none';
+}
+
+/** Why a move does not reach a point, in a few words (the desktop's `kentos_formats::reproject::why`). */
+export function unreachedWhy(u: Unreached): string {
+  switch (u) {
+    case 'outside':
+      return 'projenin sisteminin ulaştığı yerin dışında';
+    case 'noLink':
+      return "datumlardan birinin WGS 84'e dönüşümü yok";
+    case 'noGrid':
+      return 'datum dönüşümünün ızgarası bu cihazda yok';
+    case 'outsideGrid':
+      return 'datum dönüşümünün ızgarasının dışında';
+  }
+}
+
+/** A move into another system: from, to and the project's datum choices (docs/adr/0222 §2). */
+export interface Move {
+  readonly from: System;
+  readonly to: System;
+  readonly choices: DatumChoice[];
 }
 
 /**
  * "Bu koordinatlar hangi sistemde?" A file that says nothing of its system
  * (DXF, a coordinate list, a Shapefile without .prj) starts at the project's
- * system; one that says (GeoJSON, a .prj, an NCZ; `declare`) starts at what it says,
+ * system; one that says (GeoJSON, a .prj, an NCZ, KML; `declare`) starts at what it says,
  * or at no choice when that could not be read: a statement is never guessed
- * into a system. Another system than the project's blocks the import:
- * coordinate transformations do not exist yet and coordinates are never
- * reprojected silently (CLAUDE.md §5). The user may say the file is in the
+ * into a system. Another system than the project's blocks the import, as
+ * coordinates are never reprojected silently (CLAUDE.md §5); a GeoJSON,
+ * Shapefile or KML window may move them into the project's system when the
+ * user ticks “Projenin sistemine çevir”, the way and its accuracy said first
+ * (docs/adr/0222 §2; the desktop's `crs::CrsQuestion`). The user may say the file is in the
  * project's system after all (a file that claims WGS 84 but holds TM
  * coordinates); the window then says what that means. Where the extent is
  * known, coordinates that cannot be in the chosen system are pointed out.
@@ -121,15 +147,60 @@ export class CrsQuestion {
   private readonly ctx: AppContext;
   private readonly host = h('div');
   private readonly notes = h('div');
+  private readonly convertHost = h('div');
   private readonly onChange: () => void;
+  /** The window can move the coordinates into the project's system (GeoJSON, Shapefile, KML; docs/adr/0222 §2). */
+  private readonly convertible: boolean;
+  /** The user asked for the move (“Projenin sistemine çevir”). */
+  private wanted = false;
 
-  constructor(ctx: AppContext, onChange: () => void) {
+  constructor(ctx: AppContext, onChange: () => void, options: { readonly convertible?: boolean } = {}) {
     this.ctx = ctx;
     this.onChange = onChange;
+    this.convertible = options.convertible ?? false;
     this.srid = ctx.doc.crs.value.srid;
-    this.el = h('div', { class: 'io-field' }, h('span', { class: 'io-field__label' }, 'Bu koordinatlar hangi sistemde?'), this.host, this.notes);
+    this.el = h('div', { class: 'io-field' }, h('span', { class: 'io-field__label' }, 'Bu koordinatlar hangi sistemde?'), this.host, this.notes, this.convertHost);
     replaceChildren(this.host, this.select());
     this.render();
+  }
+
+  /** The chosen system's SRID; null when none is chosen yet. */
+  get chosen(): number | null {
+    return this.srid;
+  }
+
+  /** Whether the user asked for the move. */
+  get convert(): boolean {
+    return this.wanted;
+  }
+
+  /**
+   * The move the coordinates would take into the project's system: the chosen system and the project's as the
+   * transforms read them, and the project's datum choices; null when the window cannot move them, none is needed (the
+   * same system, a local project) or a system is not known.
+   */
+  moveBetween(): Move | null {
+    if (!this.convertible || this.matches || !this.ctx.doc.settings.hasSystem || this.srid === null) return null;
+    const source = crsBySrid(this.srid);
+    const from = source ? systemOf(source) : null;
+    const settings = crsSettings(this.ctx.doc.settings);
+    const to = ownSystem(settings)?.system ?? null;
+    return from && to ? { from, to, choices: datumChoices(settings) } : null;
+  }
+
+  /** How the move goes at the middle of the coordinates: its accuracy and EPSG steps, or why it does not reach there. */
+  way(): Transformed | { readonly error: Unreached } | null {
+    const m = this.moveBetween();
+    const b = this.bounds;
+    if (!m || !b) return null;
+    return crsTransformIn(m.from, m.to, { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 }, m.choices);
+  }
+
+  /** Whether the file can be imported: as it is (`matches`), or moved into the project's system, the user asking and the move reaching its coordinates. */
+  get ready(): boolean {
+    if (this.matches) return true;
+    const way = this.wanted ? this.way() : null;
+    return way !== null && !('error' in way);
   }
 
   /**
@@ -210,6 +281,8 @@ export class CrsQuestion {
         return st.srid !== null
           ? `Dosyanın bildirdiği sistem: “${st.text}”${code}.`
           : `Dosyanın bildirdiği sistem bir EPSG koduna karşılık gelmiyor (“${st.text}”); koordinatların sistemini siz seçin.`;
+      case 'kml':
+        return 'Dosya: KML; koordinatları WGS 84 boylam, enlem (EPSG:4326).';
       case 'none':
         return "Dosya koordinat sistemini belirtmiyor (.prj yok): projenin sistemi seçili; koordinatların bu sistemde olduğundan emin olun.";
     }
@@ -240,6 +313,7 @@ export class CrsQuestion {
     if (!source) {
       if (this.srid === null) lines.push(note('info', 'Koordinatların hangi sistemde olduğunu seçin; içe aktarma ancak seçilen sistem projeninki olunca açılır.'));
       replaceChildren(this.notes, lines);
+      this.renderConvert(null);
       return;
     }
     const overridden = st && st.source !== 'none' && st.srid !== null && st.srid !== source.srid;
@@ -252,6 +326,35 @@ export class CrsQuestion {
         ),
       );
     const defined = this.defined;
+    // A window that can move the coordinates says how, or why not (docs/adr/0222 §2).
+    const way = this.way();
+    if (way) {
+      const projectName = defined ?? project.name;
+      if ('error' in way) {
+        lines.push(
+          note(
+            'warn',
+            h('strong', null, `Koordinatlar projenin sistemine (${projectName}) çevrilemez: `),
+            `ortaları ${unreachedWhy(way.error)}; bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse listede onu seçin.`,
+          ),
+        );
+      } else if (this.wanted) {
+        const line = `Koordinatlar içe aktarılırken ${source.name} sisteminden projenin sistemine (${projectName}) çevrilecek; dönüşüm: ${accuracyText(way)}. Kotlar olduğu gibi kalır.`;
+        lines.push(way.unofficial ? note('warn', line) : h('p', { class: 'io-field__hint' }, line));
+      } else {
+        lines.push(
+          note(
+            'info',
+            `Koordinatlar ${source.name} sisteminde, proje ${projectName} sisteminde: içe aktarmak için çevrilmeleri gerekir (dönüşüm: ${accuracyText(way)}). Koordinatlar sessizce çevrilmez; çevirmek için “Projenin sistemine çevir”i işaretleyin. Dosya aslında projenin sistemindeyse listede onu seçin.`,
+          ),
+        );
+      }
+      const odd = this.implausible(source);
+      if (odd) lines.push(note('warn', odd));
+      replaceChildren(this.notes, lines);
+      this.renderConvert(way);
+      return;
+    }
     if (!this.ctx.doc.settings.hasSystem && source.srid !== project.srid) {
       lines.push(
         note(
@@ -281,13 +384,29 @@ export class CrsQuestion {
         note(
           'warn',
           h('strong', null, 'Koordinatlar dönüştürülemez. '),
-          `Proje ${project.name} (EPSG:${project.srid}) sisteminde. ${source.name} koordinatlarını almak için ${what} gerekir; koordinat dönüşümü henüz yok (Koordinat → Datum dönüşümü, geliştirme aşamasında) ve koordinatlar sessizce dönüştürülmez, bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse onu seçin; proje de bu sistemdeyse projenin sistemini Proje ayarları → Koordinat sistemi'nden atayın.`,
+          `Proje ${project.name} (EPSG:${project.srid}) sisteminde. ${source.name} koordinatlarını almak için ${what} gerekir; bu dosya türü içe aktarılırken çevrilmez (GeoJSON, Shapefile ve KML çevrilebilir) ve koordinatlar sessizce dönüştürülmez, bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse onu seçin; proje de bu sistemdeyse projenin sistemini Proje ayarları → Koordinat sistemi'nden atayın.`,
         ),
       );
     }
     const odd = this.implausible(source);
     if (odd) lines.push(note('warn', odd));
     replaceChildren(this.notes, lines);
+    this.renderConvert(null);
+  }
+
+  /** “Projenin sistemine çevir” under the notes, when the move reaches the coordinates. */
+  private renderConvert(way: Transformed | { readonly error: Unreached } | null): void {
+    if (!way || 'error' in way) {
+      replaceChildren(this.convertHost);
+      return;
+    }
+    const box = h('input', { type: 'checkbox', checked: this.wanted, dataset: { key: 'convert' } });
+    box.addEventListener('change', () => {
+      this.wanted = box.checked;
+      this.render();
+      this.onChange();
+    });
+    replaceChildren(this.convertHost, h('label', { class: 'io-check' }, box, 'Projenin sistemine çevir'));
   }
 }
 

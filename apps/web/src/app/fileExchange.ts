@@ -4,11 +4,14 @@ import type { AppContext } from './context';
 import type { FileKind, PickedFile } from './fileIO';
 
 /**
- * File exchange commands: coordinate lists (Netcad NCN, TXT, CSV), DXF and
- * GeoJSON in and out, Shapefile, Netcad NCZ and GNSS (GPX, NMEA) in (docs/adr/0046, 0138, 0169). The dialogs, the formats worker and its Rust modules load on first
+ * File exchange commands: coordinate lists (Netcad NCN, TXT, CSV), DXF,
+ * GeoJSON and KML/KMZ in and out, Shapefile, Netcad NCZ and GNSS (GPX, NMEA)
+ * in, GPX out (docs/adr/0046, 0138, 0169, 0222). The dialogs, the formats worker and its Rust modules load on first
  * use (CLAUDE.md §20): nothing of them is in the start-up bundle. Reading
  * and writing run in the worker (§6.2 rule 6); the source coordinate system
- * is always asked, never guessed, and nothing is reprojected (§5).
+ * is always asked, never guessed, and nothing is reprojected silently (§5):
+ * a GeoJSON, Shapefile or KML import moves into the project's system only
+ * when the user asks; KML, GPX and GeoJSON (asked) are written in WGS 84.
  */
 
 export const DXF_FILES: FileKind = { description: 'AutoCAD DXF (DWG değil)', accept: { 'application/dxf': ['.dxf'] } };
@@ -18,6 +21,8 @@ export const GEOJSON_FILES: FileKind = { description: 'GeoJSON', accept: { 'appl
 export const SHAPEFILE_FILES: FileKind = { description: 'Shapefile katmanı (.shp, .shx, .dbf, .prj, .cpg)', accept: { 'application/x-shapefile': ['.shp', '.shx', '.dbf', '.prj', '.cpg'] } };
 /** A receiver's file: GPX, or an NMEA log under any of the names receivers give it (docs/adr/0169 §6). */
 export const GNSS_FILES: FileKind = { description: 'GNSS dosyası (GPX, NMEA)', accept: { 'application/gpx+xml': ['.gpx'], 'text/plain': ['.nmea', '.nma', '.txt', '.log'] } };
+/** A KML file or KMZ archive (docs/adr/0222). */
+export const KML_FILES: FileKind = { description: 'KML ya da KMZ', accept: { 'application/vnd.google-earth.kml+xml': ['.kml'], 'application/vnd.google-earth.kmz': ['.kmz'] } };
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -73,9 +78,20 @@ export function registerFileExchangeCommands(ctx: AppContext): void {
       category: 'Dosya',
       icon: 'importGeojson',
       description:
-        "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar, çizgiler, çoklu çizgiler ve delikli alanlar, köşe kotlarıyla (Z); özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
+        "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar, çizgiler, çoklu çizgiler ve delikli alanlar, köşe kotlarıyla (Z); özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa koordinatlar ancak “Projenin sistemine çevir” işaretlenince, dönüşümün yolu ve doğruluğu söylenerek çevrilir.",
       aliases: ['GEOJSON', 'GEOJSONAL'],
       run: () => importWith(ctx, GEOJSON_FILES, 'GeoJSON', () => import('../ui/io/GisImportDialog'), (m, file) => m.openGeoJsonImport(ctx, file, GEOJSON_FILES)),
+    },
+    {
+      // KML/KMZ içe aktar (docs/adr/0222 §3): Google Earth's placemarks, folders as layers.
+      id: 'file.import.kml',
+      title: 'KML/KMZ…',
+      category: 'Dosya',
+      icon: 'importKml',
+      description:
+        "Google Earth'ün KML ya da KMZ dosyasını içe aktarır: klasörler katman, yer imleri nesne olur; adı, açıklaması ve verileri öznitelik, biçemindeki renk ve kalınlık nesnenin olur. Koordinatlar WGS 84 boylam, enlemdir; projenin sistemine ancak “Projenin sistemine çevir” işaretlenince, dönüşümün yolu ve doğruluğu söylenerek çevrilir.",
+      aliases: ['KML', 'KMZ', 'KMLAL', 'KMZAL', 'GOOGLEEARTH'],
+      run: () => importWith(ctx, KML_FILES, 'KML', () => import('../ui/io/GisImportDialog'), (m, file) => m.openKmlImport(ctx, file, KML_FILES)),
     },
     {
       id: 'file.import.shp',
@@ -133,9 +149,31 @@ export function registerFileExchangeCommands(ctx: AppContext): void {
       category: 'Dosya',
       icon: 'exportGeojson',
       description:
-        "Seçili, görünen ya da bütün nesneleri GeoJSON FeatureCollection olarak yazar; koordinatlar tam, dönüştürülmeden. WGS 84 projesi RFC 7946'ya uyar; başka sistemdeki proje kendi koordinatlarıyla ve eski crs üyesiyle yazılır. Eğriler örneklenir, yazı ve ölçüler yazılmaz.",
+        "Seçili, görünen ya da bütün nesneleri GeoJSON FeatureCollection olarak yazar; koordinatlar tam. WGS 84 projesi RFC 7946'ya uyar; başka sistemdeki proje kendi koordinatlarıyla ve eski crs üyesiyle yazılır, ya da “WGS 84'e çevir” ile RFC 7946 olur. Eğriler örneklenir, yazı ve ölçüler yazılmaz.",
       aliases: ['GEOJSONYAZ', 'GEOJSONVER'],
       run: () => void import('../ui/io/GeoJsonExportDialog').then((m) => m.openGeoJsonExport(ctx)).catch(loadFailed(ctx, 'GeoJSON')),
+    },
+    {
+      // KML/KMZ dışa aktar (docs/adr/0222 §4).
+      id: 'file.export.kml',
+      title: 'KML/KMZ…',
+      category: 'Dosya',
+      icon: 'exportKml',
+      description:
+        "Seçili, görünen ya da bütün nesneleri Google Earth'ün açtığı KML ya da KMZ olarak yazar: koordinatlar projenin sisteminden WGS 84'e çevrilir; katmanlar klasör, nesneler yer imi olur, renkler ve kalınlıklar biçem, öznitelikler veri olarak yazılır. Eğriler örneklenir, yazılar adlı nokta olur.",
+      aliases: ['KMLVER', 'KMLYAZ', 'KMZVER', 'KMZYAZ'],
+      run: () => void import('../ui/io/Wgs84ExportDialog').then((m) => m.openKmlExport(ctx)).catch(loadFailed(ctx, 'KML')),
+    },
+    {
+      // GPX dışa aktar (docs/adr/0222 §5).
+      id: 'file.export.gpx',
+      title: 'GPX…',
+      category: 'Dosya',
+      icon: 'exportGpx',
+      description:
+        "Seçili, görünen ya da bütün nesneleri el GPS'lerinin okuduğu GPX 1.1 olarak yazar: koordinatlar projenin sisteminden WGS 84'e çevrilir; noktalar yol noktası, çizgiler iz ya da rota, alanların sınırları kapalı iz olur; ad, açıklama ve kod yazılır.",
+      aliases: ['GPXVER', 'GPXYAZ'],
+      run: () => void import('../ui/io/Wgs84ExportDialog').then((m) => m.openGpxExport(ctx)).catch(loadFailed(ctx, 'GPX')),
     },
     {
       id: 'file.export.ncn',

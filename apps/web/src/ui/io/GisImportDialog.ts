@@ -3,7 +3,7 @@ import type { FileKind, PickedFile } from '../../app/fileIO';
 import type { ImportLayer } from '../../contracts/generated/ImportLayer';
 import type { ImportResult } from '../../contracts/generated/ImportResult';
 import { applyImport, layerNamed, type LayerTarget } from '../../io/apply';
-import { formats } from '../../io/client';
+import { formats, type ImportMove } from '../../io/client';
 import { shapefileSet } from '../../io/shapefile';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
@@ -12,18 +12,26 @@ import { baseName, CrsQuestion, extentLine, fileLine, kindCounts, reportLines, r
 import { zoomToImported } from './zoom';
 
 /**
- * GeoJSON ve Shapefile içe aktar (docs/adr/0046). The worker reads the file
- * once (crates/shared/formats: geojson, shp) into points, lines, paths and
- * areas with holes, their attributes as text, and a report of what was
- * converted or left out. The window shows the source's layers and where
- * each goes (a project layer with the same name, or a new layer in a group
- * named after the file), the report, and what the file says of its
- * coordinate system: RFC 7946's WGS 84, a `crs` member or a .prj. Only a
- * file in the project's system can be imported, and it goes in untouched,
- * as one undo step; nothing is transformed or guessed (CLAUDE.md §5).
+ * GeoJSON, Shapefile ve KML/KMZ içe aktar (docs/adr/0046, 0222). The worker
+ * reads the file once (crates/shared/formats: geojson, shp, kml) into points,
+ * lines, paths and areas with holes, their attributes as text, and a report
+ * of what was converted or left out. The window shows the source's layers
+ * and where each goes (a project layer with the same name, or a new layer in
+ * a group named after the file), the report, and what the file says of its
+ * coordinate system: RFC 7946's WGS 84, a `crs` member, a .prj or KML's WGS
+ * 84. A file in the project's system goes in untouched; one in another system
+ * only when the user ticks “Projenin sistemine çevir”, its objects then moved
+ * in the worker (docs/adr/0222 §2) before the window shows what will come in.
+ * Nothing is transformed or guessed silently (CLAUDE.md §5); an import is one
+ * undo step. The desktop's `exchange/gis_import.rs`.
  */
 export function openGeoJsonImport(ctx: AppContext, file: PickedFile, kind: FileKind): void {
   new GisImportDialog(ctx, { kind: 'geojson', file }, kind);
+}
+
+/** A KML file or KMZ archive (docs/adr/0222 §3). */
+export function openKmlImport(ctx: AppContext, file: PickedFile, kind: FileKind): void {
+  new GisImportDialog(ctx, { kind: 'kml', file }, kind);
 }
 
 /** A Shapefile layer from the files the user chose together. */
@@ -31,7 +39,10 @@ export function openShapefileImport(ctx: AppContext, files: PickedFile[], kind: 
   new GisImportDialog(ctx, { kind: 'shp', files }, kind);
 }
 
-type Source = { kind: 'geojson'; file: PickedFile } | { kind: 'shp'; files: PickedFile[] };
+type Source = { kind: 'geojson'; file: PickedFile } | { kind: 'kml'; file: PickedFile } | { kind: 'shp'; files: PickedFile[] };
+
+/** The window's title and the undo step's kind. */
+const KIND = { geojson: ['GeoJSON içe aktar', 'GeoJSON'], kml: ['KML/KMZ içe aktar', 'KML'], shp: ['Shapefile içe aktar', 'Shapefile'] } as const;
 
 /** What the file says of its coordinate system, for the question. */
 function statement(r: ImportResult, source: Source): CrsStatement {
@@ -54,6 +65,10 @@ class GisImportDialog {
   /** Source layer names left out by the user. */
   private readonly excluded = new Set<string>();
   private readonly crs: CrsQuestion;
+  /** The objects moved into the project's system, for the source system they were moved from (docs/adr/0222 §2). */
+  private moved: { srid: number; result: ImportResult; move: ImportMove } | null = null;
+  /** The move running: the read it moves and the source system it moves from. Another system chosen meanwhile is not waiting for it. */
+  private inFlight: { gen: number; srid: number } | null = null;
   private readonly fileHost = h('div');
   private readonly layersHost = h('div', { class: 'io-table-wrap' });
   private readonly summaryHost = h('div', { class: 'io-summary' });
@@ -65,11 +80,11 @@ class GisImportDialog {
     this.ctx = ctx;
     this.source = source;
     this.kind = kind;
-    this.crs = new CrsQuestion(ctx, () => (this.renderSummary(), this.updateButton()));
+    this.crs = new CrsQuestion(ctx, () => this.crsChanged(), { convertible: true });
     const other = h('button', { class: 'btn btn--ghost', type: 'button' }, 'Başka dosya…');
     const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
     this.dialog = new Dialog({
-      title: source.kind === 'geojson' ? 'GeoJSON içe aktar' : 'Shapefile içe aktar',
+      title: KIND[source.kind][0],
       width: 900,
       className: 'dialog--io',
       // The system before the report: whether the file can go in at all is decided there.
@@ -88,7 +103,7 @@ class GisImportDialog {
 
   /** The name the import goes by (the undo step, the new layers' group). */
   private get name(): string {
-    if (this.source.kind === 'geojson') return this.source.file.name;
+    if (this.source.kind !== 'shp') return this.source.file.name;
     const set = shapefileSet(this.source.files);
     return 'error' in set ? (this.source.files[0]?.name ?? 'Shapefile') : `${set.name}.shp`;
   }
@@ -97,6 +112,7 @@ class GisImportDialog {
     const gen = ++this.generation;
     this.result = null;
     this.failed = null;
+    this.moved = null;
     this.excluded.clear();
     const src = this.source;
     const set = src.kind === 'shp' ? shapefileSet(src.files) : null;
@@ -114,7 +130,9 @@ class GisImportDialog {
         src.kind === 'geojson'
           ? // The bytes go to the worker without a copy (the window does not need them again).
             await formats().readGeoJson(src.file.bytes, { layer: baseName(src.file.name), maxEntities: 0 })
-          : await formats().readShapefile(set!.files, { layer: set!.name, maxEntities: 0 });
+          : src.kind === 'kml'
+            ? await formats().readKml(src.file.bytes)
+            : await formats().readShapefile(set!.files, { layer: set!.name, maxEntities: 0 });
       if (gen !== this.generation || this.closed) return;
       this.result = r;
       this.crs.declare(statement(r, src), r.bounds ?? null);
@@ -128,13 +146,57 @@ class GisImportDialog {
       if (gen === this.generation) this.reading = false;
     }
     this.render();
+    if (this.crs.convert) void this.move();
+  }
+
+  /** The question changed: the move again when it is asked for a system not yet moved from. */
+  private crsChanged(): void {
+    if (this.crs.convert) void this.move();
+    this.render();
+  }
+
+  /** The objects moved into the project's system in the worker (docs/adr/0222 §2), once for each source system chosen. */
+  private async move(): Promise<void> {
+    const r = this.result;
+    const srid = this.crs.chosen;
+    const m = this.crs.moveBetween();
+    const gen = this.generation;
+    if (!r || srid === null || !m || this.moved?.srid === srid || this.isMoving(gen, srid)) return;
+    this.inFlight = { gen, srid };
+    this.render();
+    try {
+      const done = await formats().reprojectImport(r, m.from, m.to, m.choices);
+      if (gen !== this.generation || this.closed) return;
+      if (srid === this.crs.chosen) this.moved = { srid, result: done.result, move: done.moved };
+    } catch (e) {
+      if (gen !== this.generation || this.closed) return;
+      if (srid === this.crs.chosen) this.say(message(e), 'error');
+    } finally {
+      if (this.isMoving(gen, srid)) this.inFlight = null;
+    }
+    this.render();
+  }
+
+  private isMoving(gen: number, srid: number): boolean {
+    return this.inFlight !== null && this.inFlight.gen === gen && this.inFlight.srid === srid;
+  }
+
+  /** Whether the objects are being moved from the system chosen now. */
+  private get moving(): boolean {
+    return this.crs.chosen !== null && this.isMoving(this.generation, this.crs.chosen);
+  }
+
+  /** The objects that will come in: moved when the move is asked and done for the system chosen now, else as read. */
+  private get effective(): ImportResult | null {
+    const m = this.moved;
+    return this.crs.convert && m && m.srid === this.crs.chosen ? m.result : this.result;
   }
 
   private async pickAnother(): Promise<void> {
-    if (this.source.kind === 'geojson') {
+    if (this.source.kind !== 'shp') {
       const f = await this.ctx.files.pickForImport(this.kind);
       if (!f || this.closed) return;
-      this.source = { kind: 'geojson', file: f };
+      this.source = { kind: this.source.kind, file: f };
     } else {
       const files = await this.ctx.files.pickManyForImport(this.kind);
       if (!files || this.closed) return;
@@ -150,7 +212,7 @@ class GisImportDialog {
   }
 
   private included(): ImportLayer[] {
-    return (this.result?.layers ?? []).filter((l) => !this.excluded.has(l.name) && !this.target(l).locked);
+    return (this.effective?.layers ?? []).filter((l) => !this.excluded.has(l.name) && !this.target(l).locked);
   }
 
   private render(): void {
@@ -168,7 +230,7 @@ class GisImportDialog {
   }
 
   private renderLayers(): void {
-    const r = this.result;
+    const r = this.effective;
     if (!r) {
       replaceChildren(this.layersHost, h('p', { class: 'io-empty' }, this.failed ? 'Katman yok.' : 'Dosya okunuyor…'));
       return;
@@ -214,7 +276,7 @@ class GisImportDialog {
   }
 
   private renderSummary(): void {
-    const r = this.result;
+    const r = this.effective;
     if (!r) {
       replaceChildren(this.summaryHost, this.failed ? summaryLine('error', this.failed) : summaryLine('info', 'Dosya okunuyor; büyük dosyalar biraz sürebilir.'));
       return;
@@ -228,7 +290,13 @@ class GisImportDialog {
       total
         ? summaryLine('ok', `${total} nesne alınacak: ${kindCounts(counts)}.${created ? ` ${created} yeni katman “${this.name}” grubunda kurulacak.` : ''}`)
         : summaryLine('warn', 'Alınacak nesne yok; en az bir katman seçin.'),
-      this.crs.matches ? null : summaryLine('warn', 'Koordinatların sistemi projeninki değil: içe aktarma kapalı (yukarıdaki koordinat sistemi notuna bakın).'),
+      this.crs.matches
+        ? null
+        : this.crs.convert && this.crs.ready
+          ? this.moving
+            ? summaryLine('info', 'Koordinatlar projenin sistemine çevriliyor…')
+            : summaryLine('ok', 'Koordinatlar projenin sistemine çevrildi; aşağıdaki sayılar çevrilmiş nesnelerindir.')
+          : summaryLine('warn', 'Koordinatların sistemi projeninki değil: içe aktarma kapalı (yukarıdaki koordinat sistemi notuna bakın).'),
       ...reportLines(r.report.notes, 'info'),
       ...reportLines(r.report.skipped, 'warn'),
     ];
@@ -241,7 +309,9 @@ class GisImportDialog {
   }
 
   private updateButton(): void {
-    this.primary.disabled = this.reading || !this.result || !this.included().length || !this.crs.matches;
+    // Moved: the objects moved for the system chosen now.
+    const placed = this.crs.matches || (this.crs.ready && !this.moving && this.moved?.srid === this.crs.chosen);
+    this.primary.disabled = this.reading || !this.result || !this.included().length || !placed;
   }
 
   private say(text: string, kind: 'info' | 'error' = 'info'): void {
@@ -250,7 +320,7 @@ class GisImportDialog {
   }
 
   private run(): void {
-    const r = this.result;
+    const r = this.effective;
     if (this.primary.disabled || !r) return;
     const { ctx } = this;
     const name = this.name;
@@ -264,7 +334,7 @@ class GisImportDialog {
           : { kind: 'new', name: l.name, style: { color: l.color, lineType: l.lineType }, visible: l.visible, locked: l.locked, fields: l.fields ?? [] },
       );
     }
-    const label = `${this.source.kind === 'geojson' ? 'GeoJSON' : 'Shapefile'}: ${name}`;
+    const label = `${KIND[this.source.kind][1]}: ${name}`;
     const applied = applyImport(ctx.doc, r.entities, { label, layers, group: name });
     if (!applied.ok) {
       this.say(applied.error, 'error');

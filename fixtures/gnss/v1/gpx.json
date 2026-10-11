@@ -61,7 +61,116 @@
             "line": 13
           }
         ],
-        "problems": []
+        "problems": [],
+        "lines": [
+          {
+            "kind": "rte",
+            "name": "Yol",
+            "parts": [
+              [
+                2
+              ]
+            ],
+            "line": 8
+          },
+          {
+            "kind": "trk",
+            "name": "İz",
+            "parts": [
+              [
+                3,
+                4
+              ]
+            ],
+            "line": 11
+          }
+        ]
+      }
+    },
+    {
+      "name": "rotalar ve izler: parçalar, boş parça ve rota, okunmayan noktalar",
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gpx version=\"1.1\" creator=\"KentOS\" xmlns=\"http://www.topografix.com/GPX/1/1\">\n  <wpt lat=\"39.9\" lon=\"32.8\"><name>Başlangıç</name></wpt>\n  <rte>\n    <rtept lat=\"39.91\" lon=\"32.81\"/>\n    <rtept lat=\"99\" lon=\"32.82\"/>\n    <rtept lat=\"39.93\" lon=\"32.83\"/>\n  </rte>\n  <rte><name>Boş rota</name></rte>\n  <trk><name>Sabah turu</name>\n    <trkseg><trkpt lat=\"39.94\" lon=\"32.84\"><ele>850.5</ele></trkpt><trkpt lat=\"39.95\" lon=\"32.85\"/></trkseg>\n    <trkseg></trkseg>\n    <trkseg><trkpt lat=\"39.96\" lon=\"32.86\"><fix>none</fix></trkpt><trkpt lat=\"39.97\" lon=\"32.87\"/></trkseg>\n  </trk>\n  <trk><name> </name><trkseg><trkpt lat=\"x\" lon=\"32.88\"/></trkseg></trk>\n</gpx>\n",
+      "expect": {
+        "points": [
+          {
+            "kind": "wpt",
+            "name": "Başlangıç",
+            "lat": 39.9,
+            "lon": 32.8,
+            "line": 3
+          },
+          {
+            "kind": "rtept",
+            "lat": 39.91,
+            "lon": 32.81,
+            "line": 5
+          },
+          {
+            "kind": "rtept",
+            "lat": 39.93,
+            "lon": 32.83,
+            "line": 7
+          },
+          {
+            "kind": "trkpt",
+            "lat": 39.94,
+            "lon": 32.84,
+            "height": 850.5,
+            "line": 11
+          },
+          {
+            "kind": "trkpt",
+            "lat": 39.95,
+            "lon": 32.85,
+            "line": 11
+          },
+          {
+            "kind": "trkpt",
+            "lat": 39.97,
+            "lon": 32.87,
+            "line": 13
+          }
+        ],
+        "problems": [
+          {
+            "line": 6,
+            "problem": "Satır 6: konum (lat “99”, lon “32.82”) okunmuyor; nokta okunmadı."
+          },
+          {
+            "line": 13,
+            "problem": "Satır 13: konumu olmayan noktalar (1 nokta, fix none) okunmadı."
+          },
+          {
+            "line": 15,
+            "problem": "Satır 15: konum (lat “x”, lon “32.88”) okunmuyor; nokta okunmadı."
+          }
+        ],
+        "lines": [
+          {
+            "kind": "rte",
+            "parts": [
+              [
+                1,
+                2
+              ]
+            ],
+            "line": 4
+          },
+          {
+            "kind": "trk",
+            "name": "Sabah turu",
+            "parts": [
+              [
+                3,
+                4
+              ],
+              [
+                5
+              ]
+            ],
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -110,7 +219,8 @@
             "line": 10,
             "problem": "Satır 10: konumu olmayan noktalar (2 nokta, fix none) okunmadı."
           }
-        ]
+        ],
+        "lines": []
       }
     },
     {
@@ -123,7 +233,8 @@
             "line": 1,
             "problem": "Satır 1: dosya XML olarak okunamadı; GNSS noktaları okunmadı."
           }
-        ]
+        ],
+        "lines": []
       }
     },
     {
@@ -136,7 +247,8 @@
             "line": 2,
             "problem": "Satır 2: XML dosyası GPX değil (kök öğe JOBFile); GNSS noktaları okunmadı."
           }
-        ]
+        ],
+        "lines": []
       }
     },
     {
@@ -149,7 +261,8 @@
             "line": 1,
             "problem": "Satır 1: XML öğeleri 256 düzeyden derin iç içe; GNSS noktaları okunmadı."
           }
-        ]
+        ],
+        "lines": []
       }
     }
   ]

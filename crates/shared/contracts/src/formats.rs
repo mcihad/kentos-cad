@@ -107,7 +107,10 @@ use crate::layer::LineType;
 ///    `variables`.
 /// 48: mesh and multidimensional data (docs/adr/0243): `.kcad` document schema 38, a raster's
 ///    `dataset` and its look's `edges` (the typed columns' `LOOK_EDGES` bit and raster `OPT[4]`).
-pub const FORMATS_VERSION: u32 = 48;
+/// 49: KML/KMZ and GPX (docs/adr/0222): `readKml` (`CrsSource::Kml`), `writeKml`
+///    (`KmlWriteInput`), `writeGpx` (`GpxWriteInput`), an import moved into the project's system
+///    (`reprojectImport`), GeoJSON written in WGS 84 (`writeGeoJsonWgs84`) and `GnssRead.lines`.
+pub const FORMATS_VERSION: u32 = 49;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -205,6 +208,8 @@ pub enum CrsSource {
     /// A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the
     /// SRS its TILED_XML block names (docs/adr/0138).
     Ncz,
+    /// A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).
+    Kml,
 }
 
 /// The coordinate system a file declares: what the file says, never a
@@ -531,6 +536,29 @@ pub struct GnssRead {
     pub encoding: String,
     pub points: Vec<GnssPoint>,
     pub problems: Vec<LineError>,
+    /// The file's routes and tracks (docs/adr/0222 §6): their points' places in `points`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GnssLine>>", optional))]
+    pub lines: Vec<GnssLine>,
+}
+
+/// A route or a track of a GNSS file (docs/adr/0222 §6): GPX's `rte` (one
+/// part) or `trk` (a part per `trkseg`), or an NMEA log's positions in order
+/// (`nmea`, one part); its name when the file gives one; each part its points
+/// as their places in `GnssRead.points` (a point not read is not there); the
+/// file's line.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GnssLine {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    pub parts: Vec<Vec<u32>>,
+    pub line: u32,
 }
 
 /// A point sent to an instrument (docs/adr/0169 §4): its name, east, north
@@ -889,4 +917,66 @@ pub struct GeoJsonWriteInput {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
+}
+
+// ── KML/KMZ and GPX (docs/adr/0222) ─────────────────────────────────────
+
+/// A layer as KML writes it (docs/adr/0222 §4): what the objects' `layerId`
+/// holds, its name, the groups it sits in (outermost first; a Folder each),
+/// its colour (hex) and plot line weight (mm).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct KmlLayer {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub path: Vec<String>,
+    pub color: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_weight: Option<f64>,
+}
+
+/// What `file.export.kml` writes (docs/adr/0222 §4): the objects in WGS 84
+/// (the writer is given the project's system and datum choices), a Folder
+/// per layer, a Placemark per object; a KMZ archive (`doc.kml` in it) when
+/// `kmz`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct KmlWriteInput {
+    pub entities: Vec<Entity>,
+    pub layers: Vec<KmlLayer>,
+    /// The Document's name (the drawing's).
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
+    pub blocks: Vec<BlockDefinition>,
+    #[serde(default)]
+    pub kmz: bool,
+}
+
+/// What `file.export.gpx` writes (docs/adr/0222 §5): points as waypoints,
+/// lines as tracks or (`routes`) routes, areas' outlines as closed tracks, in
+/// WGS 84 (the writer is given the project's system and datum choices).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GpxWriteInput {
+    pub entities: Vec<Entity>,
+    /// The metadata's name (the drawing's).
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
+    pub blocks: Vec<BlockDefinition>,
+    #[serde(default)]
+    pub routes: bool,
 }

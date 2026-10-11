@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 580 | 557 | 0 | 23 |
+| Komutlar | 583 | 560 | 0 | 23 |
 | Araçlar | 130 | 128 | 0 | 2 |
 | İşlem araçları | 130 | 130 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,7 +12,7 @@
 | Ayarlar | 95 | 95 | 0 | 0 |
 | Tarayıcı depoları | 12 | 12 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 800 | 800 | 0 | 0 |
-| Pencereler ve paneller | 135 | 135 | 0 | 0 |
+| Pencereler ve paneller | 138 | 138 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -60,7 +60,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 510 | 0 | 58 | 10 | 2 | 580 |
+| Komutlar | 513 | 0 | 58 | 10 | 2 | 583 |
 | Araçlar | 128 | 0 | 0 | 2 | 0 | 130 |
 | İşlem araçları | 130 | 0 | 0 | 0 | 0 | 130 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -68,7 +68,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 91 | 0 | 3 | 0 | 1 | 95 |
 | Tarayıcı depoları | 10 | 0 | 0 | 0 | 2 | 12 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 800 | 0 | 0 | 0 | 0 | 800 |
-| Pencereler ve paneller | 112 | 2 | 20 | 0 | 1 | 135 |
+| Pencereler ve paneller | 112 | 2 | 23 | 0 | 1 | 138 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -87,7 +87,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 580; ayrıca 10 iki platformda da bekliyor)
+#### Komutlar (58 / 583; ayrıca 10 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -190,9 +190,12 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (22 / 135)
+#### Pencereler ve paneller (25 / 138)
 
+- `apps/web/src/ui/io/GisImportDialog.ts#openKmlImport` openKmlImport
 - `apps/web/src/ui/io/TakeFromDialog.ts#openTakeFrom` openTakeFrom
+- `apps/web/src/ui/io/Wgs84ExportDialog.ts#openGpxExport` openGpxExport
+- `apps/web/src/ui/io/Wgs84ExportDialog.ts#openKmlExport` openKmlExport
 - `apps/web/src/ui/raster/MultidimDialog.ts#openMeshAdd` openMeshAdd
 - `apps/web/src/ui/raster/MultidimDialog.ts#openMeshFiles` openMeshFiles
 - `apps/web/src/ui/raster/MultidimDialog.ts#openNetcdf` openNetcdf
@@ -217,4 +220,4 @@ Yok.
 
 ## Test başvurusu
 
-278 / 580 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+278 / 583 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

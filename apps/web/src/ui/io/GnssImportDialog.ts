@@ -6,7 +6,7 @@ import { applyImport, layerNamed, type LayerTarget } from '../../io/apply';
 import { formats } from '../../io/client';
 import { POINT_LAYER_STYLE } from '../../io/coords';
 import { formatDd } from '../../model/geom/crsTransform';
-import { gnssEntities, placeGnss, type GnssPlan, type PlacedPoint } from '../../model/gnssImport';
+import { gnssEntities, gnssLineEntities, placeGnssAll, type GnssPlan, type PlacedPoint } from '../../model/gnssImport';
 import { crsSettings, datumChoices, ownSystem, type NamedSystem } from '../../model/projectCrs';
 import { h, replaceChildren } from '../dom';
 import { Dialog } from '../widgets/Dialog';
@@ -14,12 +14,13 @@ import { baseName, extentLine, field, fileLine, select, summaryLine } from './co
 import { zoomToImported } from './zoom';
 
 /**
- * GNSS içe aktar (docs/adr/0169 §6; the desktop's `exchange/gnss_import.rs`): a receiver's GPX or NMEA file, read by
+ * GNSS içe aktar (docs/adr/0169 §6, 0222 §6; the desktop's `exchange/gnss_import.rs`): a receiver's GPX or NMEA file, read by
  * the formats worker (crates/shared/formats/src/gnss), its positions moved from WGS 84 into the project's system the way
  * Koordinat dönüştür moves them, with the accuracy and what it rests on said (docs/adr/0167). The kinds of points to
- * take and how the unnamed are named are chosen; the points show as they will be written. A project without a system
- * takes none: GNSS positions have one, and they are never placed without it (CLAUDE.md §5). The points go in as one
- * undo step, onto a new layer or one of the drawing's.
+ * take and how the unnamed are named are chosen; the points show as they will be written. The file's routes and tracks
+ * (an NMEA log's fixes) come in as polylines too unless the user unticks them. A project without a system takes none:
+ * GNSS positions have one, and they are never placed without it (CLAUDE.md §5). The points and lines go in as one undo
+ * step, onto a new layer or one of the drawing's.
  */
 export function openGnssImport(ctx: AppContext, file: PickedFile, kind: FileKind): void {
   new GnssImportDialog(ctx, file, kind);
@@ -54,6 +55,8 @@ class GnssImportDialog {
   private closed = false;
   /** The kinds the user left out; every other kind in the file is taken. */
   private readonly off = new Set<string>();
+  /** The routes and tracks as lines (docs/adr/0222 §6). */
+  private lines = true;
   private prefix = 'G';
   private start = 1;
   private target = NEW;
@@ -158,7 +161,14 @@ class GnssImportDialog {
       return;
     }
     const kinds = [...this.counts().keys()].filter((k) => !this.off.has(k));
-    this.plan = placeGnss(r.points, { kinds, prefix: this.prefix, start: this.start }, to, this.system.name, datumChoices(crsSettings(this.ctx.doc.settings)));
+    this.plan = placeGnssAll(
+      r.points,
+      r.lines ?? [],
+      { kinds, prefix: this.prefix, start: this.start, lines: this.lines },
+      to,
+      this.system.name,
+      datumChoices(crsSettings(this.ctx.doc.settings)),
+    );
   }
 
   /** A choice changed: the points again, the table and the summary. */
@@ -195,9 +205,22 @@ class GnssImportDialog {
       return h('label', { class: 'io-check' }, box, `${k.label} (${(counts.get(k.kind) ?? 0).toLocaleString('tr-TR')})`);
     });
     const naming = h('div', { class: 'gnss-naming' }, this.prefixInput, this.startInput);
+    // The routes and tracks as lines (docs/adr/0222 §6).
+    const read = this.read;
+    const runs = read?.lines?.length ?? 0;
+    let lines: HTMLElement | null = null;
+    if (runs) {
+      const box = h('input', { type: 'checkbox', checked: this.lines, dataset: { key: 'lines' } });
+      box.addEventListener('change', () => {
+        this.lines = box.checked;
+        this.update();
+      });
+      lines = field('Çizgiler', h('label', { class: 'io-check' }, box, read?.format === 'nmea' ? 'Kaydın izi' : `Rota ve izler (${runs.toLocaleString('tr-TR')})`));
+    }
     replaceChildren(
       this.optionsHost,
       boxes.length ? field('Alınacak noktalar', h('div', { class: 'gnss-kinds' }, boxes)) : null,
+      lines,
       field('Adsız noktalar', naming, 'Dosyada adı olmayan noktalar ön ek ve sırayla artan numarayla adlanır.', 'grow'),
     );
   }
@@ -257,9 +280,16 @@ class GnssImportDialog {
       lines.push(summaryLine('error', `“${this.system.name}” sisteminin tanımı dönüşümlerde kullanılamıyor (yerel sistemin tabanı kayıttaki izdüşümlü bir sistem değil); GNSS konumları ona çevrilemez.`));
     } else if (plan) {
       const n = plan.placed.length;
-      if (n) lines.push(summaryLine('ok', `${n.toLocaleString('tr-TR')} nokta alınacak.`));
-      else lines.push(summaryLine('warn', r.points.length ? 'Alınacak nokta yok; türlerden en az birini seçin.' : 'Dosyada alınacak konum yok.'));
-      const way = plan.placed[0]?.attrs['Dönüşüm'];
+      const l = plan.lines.length;
+      const tr = (v: number) => v.toLocaleString('tr-TR');
+      if (n && l) lines.push(summaryLine('ok', `${tr(n)} nokta ve ${tr(l)} çizgi (rota ya da iz) alınacak.`));
+      else if (n) lines.push(summaryLine('ok', `${tr(n)} nokta alınacak.`));
+      else if (l) lines.push(summaryLine('ok', `${tr(l)} çizgi (rota ya da iz) alınacak.`));
+      else
+        lines.push(
+          summaryLine('warn', r.points.length ? 'Alınacak nokta ya da çizgi yok; türlerden en az birini ya da çizgileri seçin.' : 'Dosyada alınacak konum yok.'),
+        );
+      const way = plan.placed[0]?.attrs['Dönüşüm'] ?? plan.lines[0]?.attrs['Dönüşüm'];
       if (way) lines.push(summaryLine(way.endsWith('resmî dönüşüm değil') ? 'warn' : 'info', `Dönüşüm: ${way}.`));
       if (n) {
         const bare = plan.placed.filter((p) => p.z === null).length;
@@ -267,6 +297,7 @@ class GnssImportDialog {
         lines.push(summaryLine('info', bare ? `${heights} ${bare.toLocaleString('tr-TR')} noktanın elipsoit yüksekliği bilinmiyor: kotu boş, dosyadaki yüksekliği öznitelikte.` : heights));
       }
       if (plan.skipped.length) lines.push(this.problems(`${plan.skipped.length.toLocaleString('tr-TR')} nokta projenin sistemine çevrilemedi; alınmayacak:`, plan.skipped));
+      if (plan.linesSkipped.length) lines.push(this.problems(`${plan.linesSkipped.length.toLocaleString('tr-TR')} çizgi alınmayacak:`, plan.linesSkipped));
       if (n && this.system.system.kind !== 'geographic') lines.push(extentLine(this.ctx, bounds(plan.placed)));
     }
     if (r.problems.length) lines.push(this.problems(`Dosyanın ${r.problems.length.toLocaleString('tr-TR')} kaydı okunmadı:`, r.problems));
@@ -313,7 +344,7 @@ class GnssImportDialog {
   private updateButton(): void {
     const t = this.layerTarget();
     const locked = t?.kind === 'existing' && this.ctx.doc.layers.isLocked(t.id);
-    this.primary.disabled = this.reading || !this.plan || this.plan.placed.length === 0 || !t || locked;
+    this.primary.disabled = this.reading || !this.plan || (this.plan.placed.length === 0 && this.plan.lines.length === 0) || !t || locked;
     if (locked) this.say(`“${this.ctx.doc.layers.get((t as { id: string }).id)?.name}” katmanı kilitli; kilidini Katmanlar panelinden açın ya da başka bir katman seçin.`, 'error');
     else if (this.status.dataset.kind === 'error') this.say('');
   }
@@ -328,15 +359,19 @@ class GnssImportDialog {
     const target = this.layerTarget();
     if (this.primary.disabled || !plan || !target) return;
     const { ctx } = this;
-    const applied = applyImport(ctx.doc, gnssEntities(plan.placed), { label: `GNSS: ${this.file.name}`, layers: new Map([['', target]]) });
+    const made = [...gnssEntities(plan.placed), ...gnssLineEntities(plan.lines)];
+    const applied = applyImport(ctx.doc, made, { label: `GNSS: ${this.file.name}`, layers: new Map([['', target]]) });
     if (!applied.ok) {
       this.say(applied.error, 'error');
       return;
     }
     const layerName = target.kind === 'new' ? target.name : (ctx.doc.layers.get(target.id)?.name ?? '');
     zoomToImported(ctx, applied.ids);
-    ctx.log.success(`“${this.file.name}”: ${applied.ids.length} GNSS noktası “${layerName}” katmanına alındı${applied.created.length ? ' (yeni katman)' : ''}. Tek adımda geri alınabilir.`);
-    const left = plan.skipped.length + (this.read?.problems.length ?? 0);
+    const n = plan.placed.length;
+    const l = plan.lines.length;
+    const what = n && l ? `${n} GNSS noktası ve ${l} çizgi` : l ? `${l} GNSS çizgisi` : `${n} GNSS noktası`;
+    ctx.log.success(`“${this.file.name}”: ${what} “${layerName}” katmanına alındı${applied.created.length ? ' (yeni katman)' : ''}. Tek adımda geri alınabilir.`);
+    const left = plan.skipped.length + plan.linesSkipped.length + (this.read?.problems.length ?? 0);
     if (left) ctx.log.warn(`“${this.file.name}”: ${left} kayıt alınmadı (okunamayan ya da projenin sistemine çevrilemeyen); nedenleri içe aktarma penceresinde yazılıydı.`);
     this.dialog.close();
   }

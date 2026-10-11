@@ -13,7 +13,7 @@ use kentos_contracts::{FieldBookRead, FieldObservation, FieldStation, LineError}
 use roxmltree::Node;
 
 use crate::text;
-use crate::xml::{DEPTH, Unparsed, document};
+use crate::xml::{DEPTH, Rows, Unparsed, document};
 
 /// What is said of a record not read; `{line}`, `{depth}`, `{root}`,
 /// `{data}`, `{name}`, `{method}` and `{id}` are filled in.
@@ -136,7 +136,8 @@ pub fn read(bytes: &[u8]) -> FieldBookRead {
             return read;
         }
     };
-    let line_of = |n: Node<'_, '_>| doc.text_pos_at(n.range().start).row;
+    let rows = Rows::new(doc.input_text());
+    let line_of = |n: Node<'_, '_>| rows.row(n.range().start);
     let root = doc.root_element();
     if root.tag_name().name() != "JOBFile" {
         let line = line_of(root);

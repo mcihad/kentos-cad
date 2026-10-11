@@ -2386,11 +2386,21 @@ try {
     await b.waitFor(`document.querySelector('.dialog--io .io-table tbody tr')`, 20000).catch(() => {});
     const wgs = await gisDialog();
     check(
-      'GeoJSON import: an RFC 7946 file (WGS 84) in a TM project is not taken; the window says there is no coordinate transformation yet',
-      wgs?.crs === '4326' && !wgs.enabled && /RFC 7946/.test(wgs.crsText) && /koordinat dönüşümü henüz yok/.test(wgs.crsText),
+      "GeoJSON import: an RFC 7946 file (WGS 84) in a TM project is not taken as it is; the window offers the move into the project's system (docs/adr/0222 §2)",
+      wgs?.crs === '4326' && !wgs.enabled && /RFC 7946/.test(wgs.crsText) && /“Projenin sistemine çevir”i işaretleyin/.test(wgs.crsText) && /EPSG:5261/.test(wgs.crsText),
       JSON.stringify(wgs).slice(0, 600),
     );
     await gisThemed('io-geojson-wgs84');
+    // Ticked, the objects are moved in the worker and the import opens; unticked again for the steps below.
+    const moved = await b.eval(`(async () => {
+      document.querySelector('.dialog--io input[data-key="convert"]').click();
+      const d = document.querySelector('.dialog--io');
+      for (let i = 0; i < 200 && d.querySelector('.dialog__foot .btn--primary').disabled; i++) await new Promise((r) => setTimeout(r, 50));
+      return { enabled: !d.querySelector('.dialog__foot .btn--primary').disabled, summary: d.querySelector('.io-summary').textContent };
+    })()`);
+    check('GeoJSON import: “Projenin sistemine çevir” moves the objects and opens the import', moved?.enabled && /projenin sistemine çevrildi/.test(moved.summary), JSON.stringify(moved).slice(0, 400));
+    await gisThemed('io-geojson-moved');
+    await b.eval(`document.querySelector('.dialog--io input[data-key="convert"]').click()`);
     const chosen = await b.eval(`(() => {
       const s = document.querySelector('.dialog--io select[aria-label="Bu koordinatlar hangi sistemde?"]');
       s.value = '5256';
@@ -2435,8 +2445,8 @@ try {
     await b.waitFor(`document.querySelector('.dialog--io .io-summary')`, 10000).catch(() => {});
     const ex = await gisDialog();
     check(
-      'GeoJSON export: the selection by layer, and that a TM project gives no RFC 7946 file (no transformation yet)',
-      ex?.title === 'GeoJSON dışa aktar' && JSON.stringify(ex.rows.map((r) => [r[0], r[1], r[2]])) === '[["noktalar.shp / noktalar","3","kentos.layer: “noktalar”"]]' && /3 nesne yazılacak/.test(ex.summary) && /RFC 7946 GeoJSON olmayacak/.test(ex.summary) && /dönüşümü henüz yok/.test(ex.summary),
+      "GeoJSON export: the selection by layer, and that a TM project gives no RFC 7946 file unless “WGS 84'e çevir” is ticked",
+      ex?.title === 'GeoJSON dışa aktar' && JSON.stringify(ex.rows.map((r) => [r[0], r[1], r[2]])) === '[["noktalar.shp / noktalar","3","kentos.layer: “noktalar”"]]' && /3 nesne yazılacak/.test(ex.summary) && /RFC 7946 GeoJSON olmayacak/.test(ex.summary) && /WGS 84'e çevir/.test(ex.summary),
       JSON.stringify(ex).slice(0, 600),
     );
     await gisThemed('io-geojson-export');

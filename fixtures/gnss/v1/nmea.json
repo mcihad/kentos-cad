@@ -63,7 +63,21 @@
             "line": 6
           }
         ],
-        "problems": []
+        "problems": [],
+        "lines": [
+          {
+            "kind": "nmea",
+            "parts": [
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            "line": 2
+          }
+        ]
       }
     },
     {
@@ -150,6 +164,19 @@
           {
             "line": 12,
             "problem": "Satır 12: “1.0a” sayı değil; cümle okunmadı."
+          }
+        ],
+        "lines": [
+          {
+            "kind": "nmea",
+            "parts": [
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            "line": 5
           }
         ]
       }

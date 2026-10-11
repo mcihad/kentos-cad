@@ -1,7 +1,7 @@
 {
   "format": "kentos.gnss-import",
   "version": 1,
-  "source": "scripts/fixtures/gnss_import_cases.py (docs/adr/0169 §6; PROJ)",
+  "source": "scripts/fixtures/gnss_import_cases.py (docs/adr/0169 §6, 0222 §6; PROJ)",
   "tolerance": {
     "metres": 1e-06
   },
@@ -17,7 +17,8 @@
           "gga"
         ],
         "prefix": "G",
-        "start": 1
+        "start": 1,
+        "lines": true
       },
       "points": [
         {
@@ -70,6 +71,42 @@
           "satellites": 8,
           "hdop": 1.25,
           "line": 6
+        }
+      ],
+      "lines": [
+        {
+          "kind": "trk",
+          "name": "Sabah turu",
+          "parts": [
+            [
+              0,
+              1,
+              2
+            ],
+            [
+              3
+            ]
+          ],
+          "line": 10
+        },
+        {
+          "kind": "rte",
+          "parts": [
+            [
+              3,
+              4
+            ]
+          ],
+          "line": 8
+        },
+        {
+          "kind": "trk",
+          "parts": [
+            [
+              4
+            ]
+          ],
+          "line": 14
         }
       ],
       "expect": [
@@ -169,7 +206,77 @@
             "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261"
           }
         }
-      ]
+      ],
+      "expectLines": {
+        "placed": [
+          {
+            "line": 10,
+            "name": "Sabah turu",
+            "parts": [
+              [
+                {
+                  "p": [
+                    448097.67290360364,
+                    4513426.1628419785
+                  ],
+                  "z": 141.357
+                },
+                {
+                  "p": [
+                    448098.58869634976,
+                    4513436.340223483
+                  ]
+                },
+                {
+                  "p": [
+                    448097.74395097926,
+                    4513426.258592587
+                  ],
+                  "z": 141.363
+                }
+              ]
+            ],
+            "attrs": {
+              "Ad": "Sabah turu",
+              "Tür": "GNSS izi",
+              "Kaynak": "GPX izi",
+              "Nokta": "3",
+              "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261"
+            }
+          },
+          {
+            "line": 8,
+            "parts": [
+              [
+                {
+                  "p": [
+                    744455.9528009866,
+                    4426051.867710871
+                  ]
+                },
+                {
+                  "p": [
+                    563578.1100176874,
+                    4085306.889067485
+                  ]
+                }
+              ]
+            ],
+            "attrs": {
+              "Tür": "GNSS rotası",
+              "Kaynak": "GPX rotası",
+              "Nokta": "2",
+              "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261"
+            }
+          }
+        ],
+        "skipped": [
+          {
+            "line": 14,
+            "message": "Satır 14: Adsız iz çizgisinin iki noktalı parçası yok; eklenmedi."
+          }
+        ]
+      }
     },
     {
       "name": "ED50 / TM30: yalnız yol noktaları ve GGA, GPS-7'den; resmî olmayan yol",
@@ -180,7 +287,8 @@
           "gga"
         ],
         "prefix": "GPS-",
-        "start": 7
+        "start": 7,
+        "lines": false
       },
       "points": [
         {
@@ -233,6 +341,42 @@
           "satellites": 8,
           "hdop": 1.25,
           "line": 6
+        }
+      ],
+      "lines": [
+        {
+          "kind": "trk",
+          "name": "Sabah turu",
+          "parts": [
+            [
+              0,
+              1,
+              2
+            ],
+            [
+              3
+            ]
+          ],
+          "line": 10
+        },
+        {
+          "kind": "rte",
+          "parts": [
+            [
+              3,
+              4
+            ]
+          ],
+          "line": 8
+        },
+        {
+          "kind": "trk",
+          "parts": [
+            [
+              4
+            ]
+          ],
+          "line": 14
         }
       ],
       "expect": [
@@ -300,7 +444,11 @@
             "Dönüşüm": "WGS 84 → ED50 / TM30: ±2 m, EPSG:1784; resmî dönüşüm değil"
           }
         }
-      ]
+      ],
+      "expectLines": {
+        "placed": [],
+        "skipped": []
+      }
     },
     {
       "name": "WGS 84 / UTM 35N: yalnız izdüşüm",
@@ -313,7 +461,8 @@
           "gga"
         ],
         "prefix": "",
-        "start": 100
+        "start": 100,
+        "lines": false
       },
       "points": [
         {
@@ -366,6 +515,42 @@
           "satellites": 8,
           "hdop": 1.25,
           "line": 6
+        }
+      ],
+      "lines": [
+        {
+          "kind": "trk",
+          "name": "Sabah turu",
+          "parts": [
+            [
+              0,
+              1,
+              2
+            ],
+            [
+              3
+            ]
+          ],
+          "line": 10
+        },
+        {
+          "kind": "rte",
+          "parts": [
+            [
+              3,
+              4
+            ]
+          ],
+          "line": 8
+        },
+        {
+          "kind": "trk",
+          "parts": [
+            [
+              4
+            ]
+          ],
+          "line": 14
         }
       ],
       "expect": [
@@ -465,7 +650,11 @@
             "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon"
           }
         }
-      ]
+      ],
+      "expectLines": {
+        "placed": [],
+        "skipped": []
+      }
     }
   ]
 }

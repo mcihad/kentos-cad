@@ -1,4 +1,4 @@
-//! XML documents for the formats that are XML (Trimble JobXML; GPX next):
+//! XML documents for the formats that are XML (Trimble JobXML, GPX, KML):
 //! roxmltree's parser, guarded. The parser recurses once per nested
 //! element, so a document nested deeper than [`DEPTH`] is refused before it
 //! is parsed: a hostile or broken file must not overflow the stack, on the
@@ -9,6 +9,33 @@ use roxmltree::Document;
 
 /// The deepest element a document may hold (the root is level 1).
 pub const DEPTH: usize = 256;
+
+/// The rows of a text's byte offsets as roxmltree's `text_pos_at` counts
+/// them (1, and one more for each `\n` before), by a binary search over the
+/// newlines' offsets taken once: `text_pos_at` scans the text from its start
+/// at each call, which a file of many elements read element by element
+/// cannot afford (100 000 placemarks of a 32 MB KML took minutes;
+/// docs/adr/0222 §9).
+pub struct Rows {
+    newlines: Vec<usize>,
+}
+
+impl Rows {
+    pub fn new(text: &str) -> Rows {
+        Rows {
+            newlines: text
+                .bytes()
+                .enumerate()
+                .filter_map(|(i, b)| (b == b'\n').then_some(i))
+                .collect(),
+        }
+    }
+
+    /// The row of the byte offset `pos`.
+    pub fn row(&self, pos: usize) -> u32 {
+        u32::try_from(self.newlines.partition_point(|&i| i < pos) + 1).unwrap_or(u32::MAX)
+    }
+}
 
 /// Why a text is not parsed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -96,6 +123,21 @@ pub fn document(text: &str) -> Result<Document<'_>, Unparsed> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rows_are_roxmltrees() {
+        let text = "<a>\n  <b/>\r\n<c>\n\n</c><d/></a>\n";
+        let doc = document(text).expect("XML");
+        let rows = Rows::new(text);
+        for n in doc.descendants() {
+            let at = n.range().start;
+            assert_eq!(rows.row(at), doc.text_pos_at(at).row, "{n:?}");
+        }
+        assert_eq!(
+            rows.row(text.len() + 5),
+            doc.text_pos_at(text.len() + 5).row
+        );
+    }
 
     #[test]
     fn depth_is_the_deepest_elements_level() {

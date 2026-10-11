@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent reference of the GNSS import's points (docs/adr/0169 §6; step 6b).
+"""Independent reference of the GNSS import's points and lines (docs/adr/0169 §6, 0222 §6).
 
 Writes fixtures/gnss/v1/import.json from the ADR's rules and PROJ (pyproj), no KentOS code: a GNSS file's positions as
 the points the import writes into the project.
@@ -20,6 +20,14 @@ The rules:
    how “kesin, yalnız projeksiyon” within WGS 84, else “±{accuracy} m, {EPSG}”, then “; resmî dönüşüm değil” on ED50's
    way (docs/adr/0167 §5). Numbers are written by the display rule (docs/adr/0149); a value the file does not give
    is no attribute.
+5. Lines (docs/adr/0222 §6), when asked for, whatever kinds of points are taken: each route, track or NMEA log of the
+   file is one polyline, its parts the file's parts of two points or more (a part of one is left out), each vertex its
+   point moved as the points are, its elevation the point's ellipsoidal height when the file gives one. Its label and
+   Ad its name when it has one; Tür “GNSS izi” (a track, an NMEA log) or “GNSS rotası”; Kaynak “GPX izi”, “GPX rotası”
+   or “NMEA kaydı”; Nokta its vertices' count; Dönüşüm as a point's. A line with no part left, or one of whose points
+   the project's system does not reach, is not taken and said: “Satır {line}: {name} çizgisinin iki noktalı parçası
+   yok; eklenmedi.”, “Satır {line}: {name} çizgisi projenin sistemine çevrilemedi ({why}); eklenmedi.”, an unnamed
+   line named “Adsız iz”, “Adsız rota” or “NMEA kaydı”.
 """
 
 import argparse
@@ -35,6 +43,8 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "gnss" / "v1" / "import.json"
 REGISTRY = ROOT / "fixtures" / "crs" / "v1" / "registry.json"
 SOURCE = {"wpt": "GPX yol noktası", "rtept": "GPX rota noktası", "trkpt": "GPX iz noktası", "gga": "NMEA GGA"}
+LINE_KIND = {"trk": ("GNSS izi", "GPX izi", "Adsız iz"), "rte": ("GNSS rotası", "GPX rotası", "Adsız rota"), "nmea": ("GNSS izi", "NMEA kaydı", "NMEA kaydı")}
+THIN = "Satır {line}: {name} çizgisinin iki noktalı parçası yok; eklenmedi."
 
 POINTS = [
     {"kind": "wpt", "name": "N1", "lat": 40.7539083, "lon": 29.38539, "height": 105.234, "geoid": 36.123, "ellipsoidal": 141.357,
@@ -103,6 +113,48 @@ def place(points, srid, kinds, prefix, start):
     return out
 
 
+# The file's lines over POINTS: a track of two parts (the second of one point), a route, a track of one point.
+LINES = [
+    {"kind": "trk", "name": "Sabah turu", "parts": [[0, 1, 2], [3]], "line": 10},
+    {"kind": "rte", "parts": [[3, 4]], "line": 8},
+    {"kind": "trk", "parts": [[4]], "line": 14},
+]
+
+
+def place_lines(points, lines, srid):
+    reg = registry()
+    src, dst = reg[4326], reg[srid]
+    t, _, _ = transformer(src, dst)
+    way = f"WGS 84 → {dst['name']}: {how(src, dst)}"
+    placed, skipped = [], []
+    for line in lines:
+        kind, source, unnamed = LINE_KIND[line["kind"]]
+        name = line.get("name") or unnamed
+        parts = [p for p in line["parts"] if len(p) >= 2]
+        if not parts:
+            skipped.append({"line": line["line"], "message": THIN.format(line=line["line"], name=name)})
+            continue
+        out = []
+        for part in parts:
+            run = []
+            for i in part:
+                p = points[i]
+                x, y = t.transform(p["lon"], p["lat"])
+                run.append({"p": [x, y], **({"z": p["ellipsoidal"]} if "ellipsoidal" in p else {})})
+            out.append(run)
+        attrs = {}
+        if line.get("name"):
+            attrs["Ad"] = line["name"]
+        attrs.update({"Tür": kind, "Kaynak": source, "Nokta": str(sum(len(r) for r in out)), "Dönüşüm": way})
+        item = {"line": line["line"]}
+        if line.get("name"):
+            item["name"] = line["name"]
+        item["parts"] = out
+        item["attrs"] = attrs
+        placed.append(item)
+    return {"placed": placed, "skipped": skipped}
+
+
 def cases():
     every = ["wpt", "rtept", "trkpt", "gga"]
     return [
@@ -115,9 +167,13 @@ def cases():
 def build():
     out = []
     for name, srid, kinds, prefix, start in cases():
-        out.append({"name": name, "srid": srid, "options": {"kinds": kinds, "prefix": prefix, "start": start}, "points": POINTS,
-                    "expect": place(POINTS, srid, kinds, prefix, start)})
-    return {"format": "kentos.gnss-import", "version": 1, "source": "scripts/fixtures/gnss_import_cases.py (docs/adr/0169 §6; PROJ)",
+        # The first case takes the lines too (docs/adr/0222 §6); the others only points.
+        lines = srid == 5254
+        case = {"name": name, "srid": srid, "options": {"kinds": kinds, "prefix": prefix, "start": start, "lines": lines},
+                "points": POINTS, "lines": LINES, "expect": place(POINTS, srid, kinds, prefix, start)}
+        case["expectLines"] = place_lines(POINTS, LINES, srid) if lines else {"placed": [], "skipped": []}
+        out.append(case)
+    return {"format": "kentos.gnss-import", "version": 1, "source": "scripts/fixtures/gnss_import_cases.py (docs/adr/0169 §6, 0222 §6; PROJ)",
             "tolerance": {"metres": 1e-6}, "cases": out}
 
 

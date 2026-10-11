@@ -135,6 +135,12 @@ pub const PORTED: &[&str] = &[
     // GNSS içe aktar (exchange/gnss_import.rs, docs/adr/0169 §6): a receiver's GPX or
     // NMEA positions moved from WGS 84 into the project's system, with their accuracy.
     "file.import.gnss",
+    // KML/KMZ in (exchange/gis_import.rs) and out, GPX out (exchange/wgs84_export.rs;
+    // docs/adr/0222): moved into WGS 84 on the way out, into the project's system on the
+    // way in only when the user asks.
+    "file.import.kml",
+    "file.export.kml",
+    "file.export.gpx",
     // Cihaza gönder (exchange/field_send.rs, docs/adr/0169 §4): the selected points as an
     // instrument's coordinate file, through the shared writer.
     "field.send",

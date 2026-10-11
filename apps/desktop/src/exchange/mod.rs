@@ -2,12 +2,16 @@
 //! lists (Netcad NCN, TXT, CSV) and DXF, in and out; Netcad NCZ in
 //! (docs/adr/0138); GeoJSON in and out and Shapefile in, from its files or a
 //! zip archive; GNSS (GPX, NMEA) in, moved from WGS 84 into the project's
-//! system (docs/adr/0169 §6); through the shared
+//! system (docs/adr/0169 §6); KML and KMZ in and out and GPX out
+//! (docs/adr/0222); through the shared
 //! readers and writers (`crates/shared/formats`, the ones the web runs in its
 //! formats worker; CLAUDE.md §9.7, docs/adr/0009). Files are read and
 //! written off the UI thread. The source coordinate system is always asked,
-//! never guessed, and nothing is reprojected (§5); an import is one undo
-//! step; what a reader or writer converted or left out is said.
+//! never guessed, and nothing is reprojected silently (§5): a GeoJSON,
+//! Shapefile or KML import moves into the project's system only when the
+//! user asks, and KML, GPX and GeoJSON (asked) are written in WGS 84; an
+//! import is one undo step; what a reader or writer converted or left out is
+//! said.
 //!
 //! One window at a time ([`Window`]), shown as `Dialog::Exchange`; its
 //! messages are [`Event`]s. A late answer to an older read, or to a window
@@ -31,7 +35,10 @@ mod gnss_import;
 #[cfg(test)]
 mod gnss_tests;
 #[cfg(test)]
+mod kml_tests;
+#[cfg(test)]
 mod tests;
+mod wgs84_export;
 pub(crate) mod words;
 
 pub(crate) use coord_export::TableRows;
@@ -71,6 +78,8 @@ pub enum Kind {
     Shapefile,
     /// A receiver's GPX or NMEA file (docs/adr/0169 §6).
     Gnss,
+    /// A KML file or KMZ archive (docs/adr/0222).
+    Kml,
 }
 
 /// The open exchange window.
@@ -88,6 +97,8 @@ pub enum Window {
     GnssImport(Box<gnss_import::State>),
     /// Cihaza gönder (docs/adr/0169 §4); boxed: the points and the file.
     FieldSend(Box<field_send::State>),
+    /// KML/KMZ or GPX out (docs/adr/0222 §4, §5).
+    Wgs84Export(wgs84_export::State),
 }
 
 #[derive(Debug, Clone)]
@@ -105,6 +116,7 @@ pub enum Event {
     GeoJsonExport(geojson_export::Event),
     GnssImport(gnss_import::Event),
     FieldSend(field_send::Event),
+    Wgs84Export(wgs84_export::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -112,7 +124,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 11] = [
+pub const COMMANDS: [&str; 14] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -124,6 +136,9 @@ pub const COMMANDS: [&str; 11] = [
     "file.export.geojson",
     "file.import.gnss",
     "field.send",
+    "file.import.kml",
+    "file.export.kml",
+    "file.export.gpx",
 ];
 
 fn message(event: Event) -> Message {
@@ -154,7 +169,18 @@ impl App {
             "file.import.geojson" => self.pick(Kind::GeoJson),
             "file.import.shp" => self.pick(Kind::Shapefile),
             "file.import.gnss" => self.pick(Kind::Gnss),
+            "file.import.kml" => self.pick(Kind::Kml),
             "field.send" => self.field_send_selection(),
+            "file.export.kml" => {
+                let state = wgs84_export::State::new(self, wgs84_export::Format::Kml);
+                self.open_window(Window::Wgs84Export(state));
+                Task::none()
+            }
+            "file.export.gpx" => {
+                let state = wgs84_export::State::new(self, wgs84_export::Format::Gpx);
+                self.open_window(Window::Wgs84Export(state));
+                Task::none()
+            }
             "file.export.dxf" => {
                 let state = dxf_export::State::new(self);
                 self.open_window(Window::DxfExport(state));
@@ -228,6 +254,7 @@ impl App {
                 "GNSS dosyası (GPX, NMEA)",
                 &["gpx", "nmea", "nma", "txt", "log"],
             ),
+            Kind::Kml => ("KML/KMZ içe aktar", "KML ya da KMZ", &["kml", "kmz"]),
         };
         if kind == Kind::Shapefile {
             // A layer's parts are chosen together.
@@ -293,6 +320,9 @@ impl App {
                 self.gis_import_picked(gis_import::shapefile_source(vec![file]))
             }
             Event::Picked(Kind::Gnss, Some(Ok(file))) => self.gnss_import_picked(file),
+            Event::Picked(Kind::Kml, Some(Ok(file))) => {
+                self.gis_import_picked(Ok(gis_import::Source::Kml(file)))
+            }
             Event::PickedMany(_, None) => Task::none(),
             Event::PickedMany(_, Some(Err(e))) => {
                 self.error(e);
@@ -313,6 +343,7 @@ impl App {
             Event::GeoJsonExport(e) => self.geojson_export_event(e),
             Event::GnssImport(e) => self.gnss_import_event(e),
             Event::FieldSend(e) => self.field_send_event(e),
+            Event::Wgs84Export(e) => self.wgs84_export_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -347,6 +378,7 @@ impl App {
             Some(Window::GeoJsonExport(s)) => self.geojson_export_view(s),
             Some(Window::GnssImport(s)) => self.gnss_import_view(s),
             Some(Window::FieldSend(s)) => self.field_send_view(s),
+            Some(Window::Wgs84Export(s)) => self.wgs84_export_view(s),
             None => iced::widget::text("").into(),
         }
     }
@@ -429,6 +461,7 @@ impl App {
             Some(Window::CoordExport(_)) => self.coord_export_written(outcome),
             Some(Window::GeoJsonExport(_)) => self.geojson_export_written(outcome),
             Some(Window::FieldSend(_)) => self.field_send_written(outcome),
+            Some(Window::Wgs84Export(_)) => self.wgs84_export_written(outcome),
             _ => Task::none(),
         }
     }

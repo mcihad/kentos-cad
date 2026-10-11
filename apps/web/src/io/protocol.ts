@@ -7,6 +7,9 @@ import type { FieldPoint } from '../contracts/generated/FieldPoint';
 import type { FieldWriteOptions } from '../contracts/generated/FieldWriteOptions';
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
+import type { GpxWriteInput } from '../contracts/generated/GpxWriteInput';
+import type { KmlWriteInput } from '../contracts/generated/KmlWriteInput';
+import type { DatumChoice, System } from '../model/geom/crsTransform';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
 import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
 import type { DrawingColumns, PackedDrawing } from './columns';
@@ -45,6 +48,14 @@ export type FormatsRequest =
   | { id: number; op: 'readGeoJson'; bytes: ArrayBuffer; options: GeoJsonReadOptions }
   | { id: number; op: 'writeGeoJson'; input: GeoJsonWriteInput }
   | { id: number; op: 'readShapefile'; files: ShapefileBuffers; options: ShapefileReadOptions }
+  /** A KML file or KMZ archive (docs/adr/0222 §3): its objects in WGS 84, at most `max` (0: the readers' limit). */
+  | { id: number; op: 'readKml'; bytes: ArrayBuffer; max: number }
+  /** Written moved from the project's system `from` into WGS 84 with its datum choices (docs/adr/0222 §4, §5, §7). */
+  | { id: number; op: 'writeKml'; input: KmlWriteInput; from: System; choices: readonly DatumChoice[] }
+  | { id: number; op: 'writeGpx'; input: GpxWriteInput; from: System; choices: readonly DatumChoice[] }
+  | { id: number; op: 'writeGeoJsonWgs84'; input: GeoJsonWriteInput; from: System; choices: readonly DatumChoice[] }
+  /** An import's objects (`ImportResult` JSON) moved into the project's system (docs/adr/0222 §2): `{result, moved}` JSON back. */
+  | { id: number; op: 'reprojectImport'; result: string; from: System; to: System; choices: readonly DatumChoice[] }
   /** The persistent ids of a v1 drawing's objects (`V1Identities`, docs/adr/0014), from the drawing's text. */
   | { id: number; op: 'v1Identities'; text: string }
   /** A packed drawing to write as `.kcad` v2 (docs/specs/kcad-v2.md): its bytes come back verified. */

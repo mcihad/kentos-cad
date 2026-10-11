@@ -95,8 +95,8 @@ export const MAIN_MENU: TopMenu[] = [
       'cloud.rename',
       'cloud.delete',
       sec('Dosya alışverişi'),
-      { label: 'İçe aktar', icon: 'import', items: ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', '-', 'file.import.ncn', 'file.import.gnss'] },
-      { label: 'Dışa aktar', icon: 'export', items: ['file.export.dxf', 'file.export.geojson', 'file.export.pdf', '-', 'file.export.ncn'] },
+      { label: 'İçe aktar', icon: 'import', items: ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', 'file.import.kml', '-', 'file.import.ncn', 'file.import.gnss'] },
+      { label: 'Dışa aktar', icon: 'export', items: ['file.export.dxf', 'file.export.geojson', 'file.export.kml', 'file.export.gpx', 'file.export.pdf', '-', 'file.export.ncn'] },
       // Çizimler arası alışveriş (docs/adr/0193).
       'file.takeFrom',
       'file.saveSelection',

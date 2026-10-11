@@ -19,6 +19,8 @@ pub enum SourceKind {
     Ncz,
     Gnss,
     Coords,
+    /// KML or KMZ (docs/adr/0222).
+    Kml,
 }
 
 impl SourceKind {
@@ -31,6 +33,7 @@ impl SourceKind {
             SourceKind::Ncz => "Netcad NCZ",
             SourceKind::Gnss => "GNSS (GPX, NMEA)",
             SourceKind::Coords => "Koordinat listesi",
+            SourceKind::Kml => "KML/KMZ",
         }
     }
 
@@ -43,6 +46,7 @@ impl SourceKind {
             SourceKind::Ncz => "ncz",
             SourceKind::Gnss => "gnss",
             SourceKind::Coords => "coords",
+            SourceKind::Kml => "kml",
         }
     }
 
@@ -55,16 +59,18 @@ impl SourceKind {
             SourceKind::Ncz => "importNcz",
             SourceKind::Gnss => "importGnss",
             SourceKind::Coords => "importNcn",
+            SourceKind::Kml => "importKml",
         }
     }
 
-    pub const ALL: [SourceKind; 6] = [
+    pub const ALL: [SourceKind; 7] = [
         SourceKind::GeoJson,
         SourceKind::Shapefile,
         SourceKind::Dxf,
         SourceKind::Ncz,
         SourceKind::Gnss,
         SourceKind::Coords,
+        SourceKind::Kml,
     ];
 }
 
@@ -111,6 +117,7 @@ pub fn source_kind(name: &str) -> Option<SourceKind> {
         "ncz" => SourceKind::Ncz,
         "gpx" | "nmea" | "nma" => SourceKind::Gnss,
         "ncn" | "txt" | "csv" | "xyz" | "dat" | "asc" => SourceKind::Coords,
+        "kml" | "kmz" => SourceKind::Kml,
         _ => return None,
     })
 }

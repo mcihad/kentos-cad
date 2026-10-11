@@ -3,13 +3,15 @@
 //! content ([`read`]): a file whose first character that is not blank is
 //! `<` is read as GPX, any other as NMEA (whose reader passes over lines
 //! without a sentence). The positions are moved into the project's system
-//! by the app (docs/adr/0167), not here.
+//! by the app (docs/adr/0167), not here. The objects are written as GPX by
+//! [`gpx_write`] (docs/adr/0222 §5).
 
 use kentos_contracts::GnssRead;
 
 use crate::text;
 
 pub mod gpx;
+pub mod gpx_write;
 pub mod nmea;
 
 /// Reads a GNSS file: GPX when it begins with `<`, else NMEA.
