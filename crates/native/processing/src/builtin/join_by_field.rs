@@ -111,11 +111,11 @@ pub fn tool() -> Tool {
                 "file",
                 "Dosya",
                 ParamKind::File {
-                    accept: [".csv", ".txt", ".xlsx"].map(String::from).to_vec(),
+                    accept: [".csv", ".txt", ".xlsx", ".ods"].map(String::from).to_vec(),
                 },
             )
             .shown_when(|v| v.get("sourceKind").and_then(Value::as_str) == Some("file"))
-            .describe("İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası."),
+            .describe("İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası."),
             source_field("sourceKey", "Kaynak anahtar", false)
                 .describe("Boş bırakılırsa hedef anahtarla aynı ad."),
             source_field("fields", "Aktarılacak alanlar", true)

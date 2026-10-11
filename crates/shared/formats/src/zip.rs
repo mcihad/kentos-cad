@@ -262,11 +262,31 @@ pub fn crc32(data: &[u8]) -> u32 {
         .fold(!0u32, |c, &b| TABLE[usize::from((c as u8) ^ b)] ^ (c >> 8))
 }
 
+/// How an entry is packed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Pack {
+    /// Deflated, or stored when that is no smaller.
+    Best,
+    /// Deflated at a lighter level, or stored when that is no smaller: a
+    /// workbook's sheet of tens of megabytes packs three times as fast for a
+    /// tenth more bytes (docs/adr/0223 §8).
+    Fast,
+    /// Stored as it is (an OpenDocument's mimetype, docs/adr/0223 §2).
+    Stored,
+}
+
 /// A zip archive of `entries` (name, bytes), each deflated (stored when that
 /// is no smaller), its name in UTF-8 (the language flag set), dated 1 January
 /// 1980 so the same entries always make the same bytes (KMZ, docs/adr/0222 §4).
 /// No ZIP64: an entry or the archive past 4 GiB is refused.
 pub fn write(entries: &[(&str, &[u8])]) -> Result<Vec<u8>, String> {
+    let packed: Vec<(&str, &[u8], Pack)> =
+        entries.iter().map(|(n, d)| (*n, *d, Pack::Best)).collect();
+    write_with(&packed)
+}
+
+/// `write` with each entry's packing given.
+pub fn write_with(entries: &[(&str, &[u8], Pack)]) -> Result<Vec<u8>, String> {
     const UTF8: u16 = 0x0800;
     // DOS date of 1 January 1980, time 00:00.
     const DATE: u16 = (1 << 5) | 1;
@@ -275,9 +295,14 @@ pub fn write(entries: &[(&str, &[u8])]) -> Result<Vec<u8>, String> {
     };
     let mut out = Vec::new();
     let mut central = Vec::new();
-    for (name, data) in entries {
-        let deflated = miniz_oxide::deflate::compress_to_vec(data, 6);
-        let (method, packed): (u16, &[u8]) = if deflated.len() < data.len() {
+    for (name, data, pack) in entries {
+        let deflated = match pack {
+            Pack::Best => miniz_oxide::deflate::compress_to_vec(data, 6),
+            Pack::Fast => miniz_oxide::deflate::compress_to_vec(data, 3),
+            Pack::Stored => Vec::new(),
+        };
+        let (method, packed): (u16, &[u8]) = if *pack != Pack::Stored && deflated.len() < data.len()
+        {
             (8, &deflated)
         } else {
             (0, data)

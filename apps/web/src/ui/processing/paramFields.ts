@@ -115,7 +115,7 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
     case 'expression':
       return expressionField(def, String(value ?? ''), set, env);
     case 'file':
-      return fileField(def, value as FileValue | null, env);
+      return fileField(def, value as FileValue | null, set, env);
     case 'network':
       return networkField(def, value as NetworkValue | null, set, env);
     case 'rasterValues':
@@ -337,15 +337,27 @@ function networkField(def: Extract<ParamDef, { type: 'network' }>, value: Networ
   return h('div', { class: 'pfield__pickrow pfield__network' }, pick.el, costPick.el, manage);
 }
 
-/** A file: its button, its name and what it holds (or that it must be chosen again). */
-function fileField(def: Extract<ParamDef, { type: 'file' }>, value: FileValue | null, env: FieldEnv): HTMLElement {
+/** A file: its button, its name and what it holds (or that it must be chosen again); a workbook's sheet to read. */
+function fileField(def: Extract<ParamDef, { type: 'file' }>, value: FileValue | null, set: Setter, env: FieldEnv): HTMLElement {
   const view = fileView(value);
   const b = h('button', { class: 'btn pfield__pick', type: 'button' }, icon('tableFile', 14), view.button);
   b.addEventListener('click', () => env.chooseFile(def.name));
+  const sheets = value?.sheets ?? [];
+  let sheet: HTMLElement | null = null;
+  if (value && sheets.length > 1) {
+    const pick = new Dropdown({
+      ariaLabel: 'Sayfa',
+      className: 'pfield__dropdown',
+      items: () => sheets.map((s): MenuItem => ({ label: s.name, radio: true, checked: s.name === value.sheet, run: () => set({ ...value, sheet: s.name, rows: s.rows }, true) })),
+    });
+    pick.set(h('span', { class: 'dropdown__text' }, value.sheet ?? sheets[0].name));
+    sheet = h('div', { class: 'pfield__pickrow pfield__sheet' }, h('span', { class: 'pfield__label-inline' }, 'Sayfa'), pick.el);
+  }
   return h(
     'div',
     { class: 'pfield__stack' },
     h('div', { class: 'pfield__point' }, h('span', { class: 'pfield__coord pfield__file', title: view.text, 'data-muted': view.chosen ? null : '' }, view.text), b),
+    sheet,
     view.note ? h('div', { class: 'pfield__hint' }, view.note) : null,
   );
 }

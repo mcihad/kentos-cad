@@ -235,6 +235,14 @@ const ITEMS = [
   // Geometri dönüştürme (docs/adr/0218 §12): the table tools' source and columns, Köşe ekle's method.
   { id: 'processing-convert-bearing', open: (ui) => ui.run('processing.run.convert.bearingLine'), ready: '.dialog--ptool' },
   { id: 'processing-convert-densify', open: (ui) => ui.run('processing.run.convert.densify'), ready: '.dialog--ptool' },
+  // Tablo alışverişi (docs/adr/0223): Tablodan nokta's window; Öznitelik tablosu's Dışa aktar ▾ with its three formats.
+  { id: 'processing-convert-points', open: (ui) => ui.run('processing.run.convert.tablePoints'), ready: '.dialog--ptool' },
+  {
+    id: 'table-export-menu',
+    open: async (ui) => (await ui.run('data.featureTable'), await ui.clickText('.ftable .ptable__btn', 'Dışa aktar')),
+    ready: '.menu',
+    close: async (ui) => (await ui.escapeAll(1), await ui.eval(`(() => { const u = window.kentos.ui; u.bottomTab.set('history'); u.bottomExpanded.set(false); })()`)),
+  },
   { id: 'processing-generate-voronoi', open: (ui) => ui.run('processing.run.generate.voronoi'), ready: '.dialog--ptool' },
   {
     id: 'processing-generate-bounding',

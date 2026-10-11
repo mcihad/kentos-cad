@@ -63,7 +63,7 @@ export const transfer = defineTool({
       ],
       default: 'file',
     },
-    { name: 'file', label: 'Dosya', type: 'file', accept: ['.csv', '.txt', '.xlsx'], visibleWhen: (v: Shown) => v.sourceKind !== 'layer', description: 'İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası.' },
+    { name: 'file', label: 'Dosya', type: 'file', accept: ['.csv', '.txt', '.xlsx', '.ods'], visibleWhen: (v: Shown) => v.sourceKind !== 'layer', description: 'İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası.' },
     { name: 'source', label: 'Kaynak nesneler', type: 'features', scopes: ['layer', 'all', 'visible', 'selection'], visibleWhen: (v: Shown) => v.sourceKind === 'layer', description: 'Özniteliklerin ve geometrinin alınacağı nesneler.' },
     { name: 'sourceKey', label: 'Kaynak anahtar', type: 'field', of: ['source', 'file'], optional: true, description: 'Boş bırakılırsa hedef anahtarla aynı ad.' },
     {

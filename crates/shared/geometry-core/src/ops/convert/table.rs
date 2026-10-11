@@ -1,23 +1,30 @@
 //! Semt ve uzunluktan çizgi and Tablodan elips (docs/adr/0218 §5, §7):
 //! a line from a place along a bearing, an ellipse from its centre, semi-axes
 //! and the bearing of its major axis. Bearings are a surveyor's: from north,
-//! clockwise, in grads or degrees.
+//! clockwise, in grads or degrees. Tablodan nokta (docs/adr/0223 §5): a point
+//! from its east and north, moved from the table's system into the project's.
 
+use crate::crs::{Choice, System, Unreached, parse_angle, transform_in};
 use crate::entity::Shape;
 use crate::jsmath::{cos, sin};
 use crate::ops::cogo::read_number;
 use crate::tools::point_text::js_trim;
 use crate::vec2::Vec2;
 
-/// Why a row gives nothing (§5–§7): a cell (by its place in the row) empty,
-/// no number (docs/adr/0180's rule: a sign, digits and one decimal point or
-/// comma), or not more than zero where it must be; a line's two ends in one place.
+/// Why a row gives nothing (§5–§7; docs/adr/0223 §5): a cell (by its place
+/// in the row) empty, no number (docs/adr/0180's rule: a sign, digits and one
+/// decimal point or comma; in a geographic system degrees, minutes and
+/// seconds too), not more than zero where it must be, a latitude past ±90 or
+/// a longitude past ±180; a line's two ends in one place; a point the move
+/// into the project's system does not reach.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RowFault {
     Empty(usize),
     NotNumber(usize),
     NotPositive(usize),
     SamePlace,
+    OutOfRange(usize),
+    Unreached(Unreached),
 }
 
 /// A row's cells as numbers; an empty cell is `None` where `optional`.
@@ -93,6 +100,70 @@ pub fn ellipse_rows(rows: &[Vec<String>], unit: &str) -> Vec<Result<Shape, RowFa
         .collect()
 }
 
+/// A cell of a geographic system's coordinate: decimal degrees (a point or a
+/// comma, docs/adr/0180's rule), else degrees, minutes and seconds
+/// (`crs::parse_angle`: spaces or ° ′ ″, a hemisphere letter).
+fn angle(text: &str) -> Option<f64> {
+    read_number(text).or_else(|| parse_angle(text))
+}
+
+/// Tablodan nokta's rows (docs/adr/0223 §5): east and north (in a geographic
+/// system longitude within ±180 and latitude within ±90, `angle`'s way), and
+/// an elevation (an empty cell none), each a point. With `from` and `to` both
+/// given and not the same, the point is moved from `from` into `to` with the
+/// project's datum choices (`transform_in`); its elevation stays as it is.
+/// Which system the cells are in: `from`, else `to` (none: a plane's numbers).
+pub fn point_rows(
+    rows: &[Vec<String>],
+    from: Option<&System>,
+    to: Option<&System>,
+    choices: &[Choice],
+) -> Vec<Result<(Vec2, Option<f64>), RowFault>> {
+    let geographic = matches!(from.or(to), Some(System::Geographic { .. }));
+    let way = match (from, to) {
+        (Some(f), Some(t)) if f != t => Some((f, t)),
+        _ => None,
+    };
+    rows.iter()
+        .map(|r| {
+            let cell = |k: usize| r.get(k).map_or("", String::as_str);
+            let coordinate = |k: usize| -> Result<f64, RowFault> {
+                let text = cell(k);
+                if js_trim(text).is_empty() {
+                    return Err(RowFault::Empty(k));
+                }
+                let v = if geographic {
+                    angle(text)
+                } else {
+                    read_number(text)
+                };
+                let v = v.ok_or(RowFault::NotNumber(k))?;
+                let most = if k == 0 { 180.0 } else { 90.0 };
+                if geographic && !(v.abs() <= most) {
+                    return Err(RowFault::OutOfRange(k));
+                }
+                Ok(v)
+            };
+            let (e, n) = (coordinate(0)?, coordinate(1)?);
+            let z = if js_trim(cell(2)).is_empty() {
+                None
+            } else {
+                Some(read_number(cell(2)).ok_or(RowFault::NotNumber(2))?)
+            };
+            let p = Vec2::new(e, n);
+            let p = match way {
+                Some((f, t)) => {
+                    transform_in(f, t, p, choices)
+                        .map_err(RowFault::Unreached)?
+                        .point
+                }
+                None => p,
+            };
+            Ok((p, z))
+        })
+        .collect()
+}
+
 /// A bearing in radians from its value in `unit` (`deg` degrees, otherwise grads).
 pub fn radians(value: f64, unit: &str) -> f64 {
     match unit {
@@ -135,6 +206,82 @@ pub fn table_ellipse(east: f64, north: f64, a: f64, b: f64, bearing: f64, unit: 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crs::Datum;
+
+    fn row(cells: &[&str]) -> Vec<String> {
+        cells.iter().map(|c| (*c).to_owned()).collect()
+    }
+
+    #[test]
+    fn point_rows_read_plane_and_geographic_cells() {
+        let plane = point_rows(
+            &[
+                row(&["452345,125", "4412345.5", "812.40"]),
+                row(&["1", "2"]),
+                row(&["", "2"]),
+                row(&["1", "iki"]),
+                row(&["1", "2", "x"]),
+            ],
+            None,
+            None,
+            &[],
+        );
+        assert_eq!(
+            plane[0],
+            Ok((Vec2::new(452_345.125, 4_412_345.5), Some(812.4)))
+        );
+        assert_eq!(plane[1], Ok((Vec2::new(1.0, 2.0), None)));
+        assert_eq!(plane[2], Err(RowFault::Empty(0)));
+        assert_eq!(plane[3], Err(RowFault::NotNumber(1)));
+        assert_eq!(plane[4], Err(RowFault::NotNumber(2)));
+        let wgs84 = System::Geographic {
+            datum: Datum::Wgs84,
+        };
+        let geo = point_rows(
+            &[
+                row(&["32°51'54\"", "39 55 12.5 K"]),
+                row(&["32,865", "-39.92"]),
+                row(&["181", "39"]),
+                row(&["32", "90.5"]),
+            ],
+            Some(&wgs84),
+            None,
+            &[],
+        );
+        let (p, _) = geo[0].expect("a point");
+        assert!((p.x - (32.0 + 51.0 / 60.0 + 54.0 / 3600.0)).abs() < 1e-12);
+        assert!((p.y - (39.0 + 55.0 / 60.0 + 12.5 / 3600.0)).abs() < 1e-12);
+        assert_eq!(geo[1], Ok((Vec2::new(32.865, -39.92), None)));
+        assert_eq!(geo[2], Err(RowFault::OutOfRange(0)));
+        assert_eq!(geo[3], Err(RowFault::OutOfRange(1)));
+    }
+
+    #[test]
+    fn point_rows_move_into_the_projects_system() {
+        let wgs84 = System::Geographic {
+            datum: Datum::Wgs84,
+        };
+        let tm33 = System::Tm {
+            datum: Datum::Turef,
+            latitude_of_origin: None,
+            central_meridian: 33.0,
+            scale_factor: 1.0,
+            false_easting: 500_000.0,
+            false_northing: 0.0,
+        };
+        let got = point_rows(
+            &[row(&["32.865", "39.92", "900"])],
+            Some(&wgs84),
+            Some(&tm33),
+            &[],
+        );
+        let want = transform_in(&wgs84, &tm33, Vec2::new(32.865, 39.92), &[])
+            .expect("reached")
+            .point;
+        assert_eq!(got[0], Ok((want, Some(900.0))));
+        let far = point_rows(&[row(&["150", "39"])], Some(&wgs84), Some(&tm33), &[]);
+        assert!(matches!(far[0], Err(RowFault::Unreached(_)) | Ok(_)));
+    }
 
     #[test]
     fn a_bearing_of_100_grads_is_east() {

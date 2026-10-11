@@ -220,6 +220,12 @@ export interface FileValue {
   readonly rows?: readonly (readonly string[])[];
   /** Where the desktop read it, to read it again. */
   readonly path?: string;
+  /** A workbook's sheet whose rows these are (docs/adr/0223 §1). */
+  readonly sheet?: string;
+  /** A workbook's sheets with rows, when it has more than one; kept while the window is open, not stored. */
+  readonly sheets?: readonly { readonly name: string; readonly rows: readonly (readonly string[])[] }[];
+  /** Why a sheet was left out (past İşlemler's rows or columns); said when the file is chosen, not stored. */
+  readonly leftOut?: readonly string[];
 }
 
 /**

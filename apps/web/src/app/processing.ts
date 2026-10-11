@@ -13,6 +13,7 @@ import type { ProcessingModel } from '../processing/model';
 import { ProcessingRegistry } from '../processing/registry';
 import { clientExecutor, type Executor } from '../processing/job';
 import { ProcessingRunner, type TargetChoice } from '../processing/runner';
+import type { TableFileRead } from '../contracts/generated/TableFileRead';
 import type { FileValue } from '../processing/types';
 import { workerExecutor, type WorkerLike } from '../processing/worker/workerExecutor';
 import type { AppContext } from './context';
@@ -102,6 +103,36 @@ export function createProcessing(
 /** The most a table file may be (the core's `table_file::MAX_BYTES`, as Tablo ekle has it). */
 const MAX_FILE_BYTES = 64 * 1024 * 1024;
 
+/** The most rows and columns of a sheet İşlemler takes (`table_file::PROCESSING_ROWS`, `PROCESSING_COLUMNS`). */
+const PROCESSING_ROWS = 250_000;
+const PROCESSING_COLUMNS = 500;
+
+/**
+ * A file parameter's value from a file read within İşlemler's limits (docs/adr/0200 §7, 0223 §1; the desktop's
+ * `dialog::file_value`): its first sheet with rows, a workbook's sheets when it has more, a sheet past the limits left
+ * out and said; or why it cannot be read.
+ */
+export function fileValue(name: string, read: TableFileRead): FileValue | { problem: string } {
+  if (read.problem) return { problem: `“${name}” okunamadı: ${read.problem}` };
+  const most = PROCESSING_ROWS.toLocaleString('tr-TR').replace(/\./g, ' ');
+  const sheets: { name: string; rows: (readonly string[])[] }[] = [];
+  const leftOut: string[] = [];
+  for (const s of read.sheets) {
+    const which = s.name ? `“${name}” dosyasının “${s.name}” sayfası` : `“${name}”`;
+    if (s.cut) leftOut.push(`${which} ${most} satırdan uzun; İşlemler en çok ${most} satır alır.`);
+    else if (s.rows.some((r) => r.length > PROCESSING_COLUMNS)) leftOut.push(`${which} ${PROCESSING_COLUMNS} sütundan geniş; İşlemler en çok ${PROCESSING_COLUMNS} sütun alır.`);
+    else if (s.rows.length) sheets.push({ name: s.name ?? '', rows: s.rows });
+  }
+  if (!sheets.length) return { problem: leftOut.length ? `${leftOut[0]} Tabloyu bölün ya da süzün.` : `“${name}” boş: okunacak satır yok.` };
+  return {
+    name,
+    rows: sheets[0].rows,
+    ...(sheets[0].name && { sheet: sheets[0].name }),
+    ...(sheets.length > 1 && { sheets }),
+    ...(leftOut.length && { leftOut }),
+  };
+}
+
 async function chooseFile(accept: readonly string[]): Promise<FileValue | { problem: string } | null> {
   const file = await new Promise<File | null>((done) => {
     const input = document.createElement('input');
@@ -116,11 +147,7 @@ async function chooseFile(accept: readonly string[]): Promise<FileValue | { prob
   try {
     const bytes = await readFile(file);
     if (!bytes) return null;
-    const read = await formats().readTableFile(bytes);
-    if (read.problem) return { problem: `“${file.name}” okunamadı: ${read.problem}` };
-    const sheet = read.sheets[0];
-    if (!sheet?.rows.length) return { problem: `“${file.name}” boş: okunacak satır yok.` };
-    return { name: file.name, rows: sheet.rows };
+    return fileValue(file.name, await formats().readTableFile(bytes, true));
   } catch (e) {
     return { problem: `“${file.name}” okunamadı: ${e instanceof Error ? e.message : String(e)}` };
   }

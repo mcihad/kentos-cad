@@ -1,0 +1,10 @@
+﻿Tür;Ada;Parsel;Alan (m²);Tescil tarihi;Tescilli;Malik;Kod;Not
+Alan;101;5;1340.13;2024-10-01;true;Ayşe Öztürk;0.5;Köşe parseli
+Alan;101;6;747.00;1999-02-28;false;Çağrı & Şükrü <ortak>;101/5;"İki
+satır"
+Alan;102;7;-12.50;;;  Başta ve sonda  ;007;"Sekme	ile, CR LF
+ve tek CRson"
+Çizgi;1234567890123456;1,5;0.000000000000001234;1899-12-31;Evet;_x0041_ kalır;1.10;zilsesi
+Nokta;;;;01.10.2024;;;-0;
+Nokta;9007199254740991;8;452345.123;2023-02-29;true;Son;-3.25;  
+

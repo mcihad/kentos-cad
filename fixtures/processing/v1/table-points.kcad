@@ -1,0 +1,99 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: Tablodan nokta",
+ "settings": {
+  "srid": 32636,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 488000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "olcum",
+   "name": "Ölçüm",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "id": 1,
+   "kind": "point",
+   "layerId": "olcum",
+   "attrs": {
+    "Nokta": "K1",
+    "Boylam": "32.8597",
+    "Enlem": "39.9334",
+    "Not": "kuzey"
+   },
+   "p": {
+    "x": 488000,
+    "y": 4420000
+   }
+  },
+  {
+   "id": 2,
+   "kind": "point",
+   "layerId": "olcum",
+   "attrs": {
+    "Nokta": "K2",
+    "Boylam": "32°51'40\"",
+    "Enlem": "39°56'05\"K"
+   },
+   "p": {
+    "x": 488010,
+    "y": 4420010
+   }
+  },
+  {
+   "id": 3,
+   "kind": "point",
+   "layerId": "olcum",
+   "attrs": {
+    "Nokta": "K3",
+    "Boylam": "",
+    "Enlem": "39.9"
+   },
+   "p": {
+    "x": 488020,
+    "y": 4420020
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

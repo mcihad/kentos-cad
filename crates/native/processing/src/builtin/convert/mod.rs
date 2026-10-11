@@ -75,7 +75,7 @@ pub fn source_params(what: &str) -> Vec<ParamDef> {
             "Kaynak",
             ParamKind::Choice {
                 options: vec![
-                    EnumOption::new("file", "Dosya").hint("CSV, TXT ya da Excel dosyası"),
+                    EnumOption::new("file", "Dosya").hint("CSV, TXT, Excel ya da ODS dosyası"),
                     EnumOption::new("layer", "Katman").hint("Nesnelerin öznitelikleri satırdır"),
                 ],
             },
@@ -85,12 +85,12 @@ pub fn source_params(what: &str) -> Vec<ParamDef> {
             "file",
             "Dosya",
             ParamKind::File {
-                accept: [".csv", ".txt", ".xlsx"].map(String::from).to_vec(),
+                accept: [".csv", ".txt", ".xlsx", ".ods"].map(String::from).to_vec(),
             },
         )
         .shown_when(|v| !from_layer(v))
         .describe(&format!(
-            "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası; her satır bir {what}."
+            "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir {what}."
         )),
         ParamDef::new(
             "source",
@@ -205,6 +205,17 @@ pub fn read_rows(v: &crate::types::Resolved<'_>, columns: &[String]) -> Result<R
     })
 }
 
+/// Why a point is not reached, as the notes say it (docs/adr/0201 §8).
+pub fn unreached_text(u: kentos_geometry_core::crs::Unreached) -> &'static str {
+    use kentos_geometry_core::crs::Unreached;
+    match u {
+        Unreached::Outside => "izdüşümün dışında",
+        Unreached::NoLink => "datumlar arasında yol yok",
+        Unreached::NoGrid => "datum seçiminin ızgarası bu cihazda yok",
+        Unreached::OutsideGrid => "ızgaranın dışında",
+    }
+}
+
 /// Why a row gave nothing, in the report (§5).
 pub fn reason(fault: RowFault, names: &[String], cells: &[String]) -> String {
     let name = |k: usize| names.get(k).map_or("", String::as_str);
@@ -217,5 +228,11 @@ pub fn reason(fault: RowFault, names: &[String], cells: &[String]) -> String {
             js_trim(cells.get(k).map_or("", String::as_str))
         ),
         RowFault::NotPositive(k) => format!("“{}” sıfırdan büyük değil", name(k)),
+        RowFault::OutOfRange(k) => format!(
+            "“{}” coğrafi sınırın dışında (boylam ±180, enlem ±90): {}",
+            name(k),
+            js_trim(cells.get(k).map_or("", String::as_str))
+        ),
+        RowFault::Unreached(u) => format!("Projenin sistemine çevrilemedi ({})", unreached_text(u)),
     }
 }

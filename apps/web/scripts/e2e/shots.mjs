@@ -3186,6 +3186,127 @@ SCENES.geoconvert = [
   },
 ];
 
+// Tablo alışverişi (docs/adr/0223) on fixtures/processing/v1/table-points.kcad, the scenes the desktop's
+// `processing::table_points_tests::screens` draws: CBS's Veri with its Toplu çevir ▾ open on Tablodan nokta, its window
+// on the ODS file (the report; the Sayfa list open; Kaydet ▾ open), both files' points drawn, Öznitelik tablosu's
+// Dışa aktar ▾ on them, a workbook in Koordinat listesi içe aktar.
+const TABLE_POINTS_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/table-points.kcad', import.meta.url), 'utf8');
+const TABLE_POINTS_CASES = JSON.parse(readFileSync(new URL('../../../../fixtures/processing/v1/table-points.json', import.meta.url), 'utf8'));
+const tablePointsBytes = (name) => readFileSync(new URL(`../../../../fixtures/processing/v1/${name}`, import.meta.url)).toString('base64');
+const tablePointsLoad = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(TABLE_POINTS_DRAWING)}, null))) throw new Error('table-points.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+};
+/** A case's window, its file read by the formats worker as the window reads a chosen one; run unless said. */
+const openTablePoints = async (ui, id, run = true, load = true) => {
+  const c = TABLE_POINTS_CASES.cases.find((x) => x.id === id);
+  if (load) await tablePointsLoad(ui);
+  const { file, ...values } = c.values;
+  const read = file
+    ? `const { formats } = await import('/src/io/client.ts');
+       const { fileValue } = await import('/src/app/processing.ts');
+       const bytes = Uint8Array.from(atob('${tablePointsBytes(file)}'), (c) => c.charCodeAt(0));
+       values.file = fileValue(${JSON.stringify(file)}, await formats().readTableFile(bytes, true));`
+    : '';
+  await ui.eval(`(async () => {
+    const values = ${JSON.stringify(values)};
+    ${read}
+    const m = await import('/src/ui/processing/ToolDialog.ts');
+    m.openToolDialog(window.kentos, ${JSON.stringify(c.run.tool)}, values);
+  })()`);
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (run) {
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+    await ui.sleep(300);
+  }
+};
+/** Both files' points drawn, the windows closed, the view on them (A4, 3.7 km south, aside). */
+const tablePointsDrawn = async (ui) => {
+  await tablePointsLoad(ui);
+  for (const id of ['plane-csv', 'wgs84-ods']) {
+    await openTablePoints(ui, id, true, false);
+    await ui.escapeAll(2);
+  }
+  await ui.eval(`(() => {
+    const k = window.kentos;
+    k.selection.set([...k.doc.all()].filter((e) => e.layerId !== 'olcum' && e.attrs?.Ad !== 'A4').map((e) => e.id));
+    k.commands.execute('view.zoomSelection');
+    k.selection.clear();
+  })()`);
+  await ui.move(2, 2);
+  await ui.sleep(400);
+};
+SCENES.tableexchange = [
+  {
+    id: 'tablo-serit',
+    open: async (ui) => {
+      await tablePointsLoad(ui);
+      await ribbonOn(ui, { ribbonTab: 'data' });
+      await ui.sleep(300);
+      const open = await ui.eval(`!!document.querySelector('.rpanel[data-panel="Toplu çevir"] .rpanel__more')?.offsetParent`);
+      if (open) await ui.clickSel('.rpanel[data-panel="Toplu çevir"] .rpanel__more');
+      else {
+        await ui.clickSel('.ribbon__strip .rpanel__collapsed[aria-label="Toplu çevir"]');
+        await ui.sleep(300);
+        await ui.clickSel('.ribbon-pop .rpanel__more');
+      }
+      await ui.sleep(400);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ribbonOff(ui)),
+  },
+  { id: 'tablo-nokta', open: async (ui) => (await openTablePoints(ui, 'wgs84-ods'), await formEnd(ui), await ui.sleep(200)), close: queryClose },
+  { id: 'tablo-sayfa', open: async (ui) => (await openTablePoints(ui, 'wgs84-ods', false), await ui.clickSel('.pfield__sheet .dropdown'), await ui.sleep(300)), close: queryClose },
+  {
+    id: 'tablo-kaydet',
+    open: async (ui) => {
+      await openTablePoints(ui, 'wgs84-ods');
+      await formEnd(ui);
+      await ui.sleep(200);
+      await ui.clickText('.ptool__result-actions .btn', 'Kaydet');
+      await ui.sleep(300);
+    },
+    close: queryClose,
+  },
+  { id: 'tablo-nokta-cizim', open: tablePointsDrawn, close: queryClose },
+  {
+    id: 'tablo-disa-aktar',
+    open: async (ui) => {
+      await tablePointsDrawn(ui);
+      await ui.eval(`import('/src/ui/bottom/FeatureTable.ts').then((m) => {
+        m.resetFeatureTable('islem-noktalar');
+        const u = window.kentos.ui;
+        u.bottomHeight.set(Math.min(300, Math.round(innerHeight * 0.4)));
+        u.bottomTab.set('table');
+        u.bottomExpanded.set(true);
+      })`);
+      await ui.sleep(500);
+      await ui.clickText('.ftable .ptable__btn', 'Dışa aktar');
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.ui.bottomTab.set('history')`), await queryClose(ui)),
+  },
+  {
+    id: 'tablo-koordinat',
+    open: async (ui) => {
+      await tablePointsLoad(ui);
+      await ui.eval(
+        `import('/src/ui/io/CoordImportDialog.ts').then((m) => m.openCoordImport(window.kentos, { name: 'nokta-wgs84.ods', bytes: Uint8Array.from(atob('${tablePointsBytes('nokta-wgs84.ods')}'), (c) => c.charCodeAt(0)) }, { description: 'Koordinat listesi', accept: {} }))`,
+      );
+      await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary') && !document.querySelector('.dialog--io .io-summary')?.textContent?.includes('okunuyor')`);
+      await ui.sleep(400);
+    },
+    close: (ui) => ui.escapeAll(2),
+  },
+];
+
 // Geometri üretimi (docs/adr/0219) on fixtures/processing/v1/generate.kcad, the scenes the desktop's
 // `processing::generate_tests::screens` draws: CBS's Analiz with the Geometri panel's ▾ open, Voronoi alanları's window
 // and its cells with the Delaunay triangles, Sınırlayıcı geometri's window and the rotated boxes and circles, the

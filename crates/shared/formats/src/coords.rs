@@ -7,6 +7,10 @@
 //!
 //! Axis names follow Turkish surveying: Y is to the right (east, the
 //! model's x) and X is up (north, the model's y) (§5).
+//!
+//! A workbook (an Excel or OpenDocument file, or another archive) is no
+//! text: nothing is read from it, and the hint says where its points come
+//! in, İşlemler's Tablodan nokta (docs/adr/0223 §6).
 
 use std::collections::{BTreeMap, HashSet};
 
@@ -24,6 +28,11 @@ use crate::text;
 const SAMPLE: usize = 200;
 /// Line errors returned with their text (all are counted).
 const ERRORS_KEPT: usize = 200;
+
+/// What the reader says of a workbook or another archive (docs/adr/0223 §6).
+pub const NOT_TEXT: &str = "Bu dosya metin değil: bir çalışma kitabı (Excel, ODS) ya da arşiv. Koordinat listesi NCN, TXT ya da CSV dosyasıdır; Excel ya da ODS tablosundaki noktaları İşlemler › Tablodan nokta ile alın.";
+/// How the preview names the encoding of a file that is no text.
+const NOT_TEXT_ENCODING: &str = "metin değil";
 
 /// Attribute names of an imported point (as the app's own point layers use them).
 pub const ATTR_NAME: &str = "Ad";
@@ -481,8 +490,19 @@ fn point_entity(row: Row) -> Entity {
 
 /// Reads a coordinate list. Never fails: an unreadable file yields no points and says why.
 pub fn read(bytes: &[u8], opts: &CoordReadOptions) -> CoordRead {
+    // A ZIP archive (XLSX, ODS) or an old Excel file (OLE2) is no text: no line is read.
+    let binary = crate::zip::sniff(bytes) || bytes.starts_with(&[0xD0, 0xCF, 0x11, 0xE0]);
     let (enc, bom) = text::sniff(bytes);
-    let body = text::decode(&bytes[bom..], enc);
+    let encoding = if binary {
+        NOT_TEXT_ENCODING
+    } else {
+        enc.label()
+    };
+    let body = if binary {
+        String::new()
+    } else {
+        text::decode(&bytes[bom..], enc)
+    };
     let lines: Vec<(u32, &str)> = body
         .split('\n')
         .enumerate()
@@ -574,7 +594,7 @@ pub fn read(bytes: &[u8], opts: &CoordReadOptions) -> CoordRead {
     }
 
     let mut report = Report::default();
-    report.fact("Kodlama", enc.label());
+    report.fact("Kodlama", encoding);
     let mut preview = Vec::new();
     let mut errors = Vec::new();
     let mut error_count = 0u32;
@@ -667,12 +687,15 @@ pub fn read(bytes: &[u8], opts: &CoordReadOptions) -> CoordRead {
             duplicate_names,
         );
     }
-    if lines.is_empty() {
+    if binary {
+        // The column hints of an empty file say nothing of a workbook.
+        hints = vec![NOT_TEXT.to_string()];
+    } else if lines.is_empty() {
         hints.push("Dosyada okunacak satır yok.".to_string());
     }
 
     CoordRead {
-        encoding: enc.label().to_string(),
+        encoding: encoding.to_string(),
         delimiter,
         decimal,
         header,

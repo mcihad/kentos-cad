@@ -297,6 +297,16 @@
   width: calc(32px * var(--ui-scale));
   padding: 0;
 }
+/* A workbook's sheet (docs/adr/0223 §1): its word, then the choice taking the room. */
+.pfield__sheet > .pfield__label-inline {
+  flex: none;
+  color: var(--c-text-2);
+}
+.pfield__sheet > .pfield__dropdown {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
 /* The choice's option that the pick gives is chosen. */
 .pfield__pick[data-on] .icon {
   color: var(--c-accent);

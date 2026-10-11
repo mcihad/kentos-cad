@@ -41,7 +41,7 @@ export const sourceParams = (what: string) =>
       label: 'Kaynak',
       type: 'enum',
       options: [
-        { value: 'file', label: 'Dosya', hint: 'CSV, TXT ya da Excel dosyası' },
+        { value: 'file', label: 'Dosya', hint: 'CSV, TXT, Excel ya da ODS dosyası' },
         { value: 'layer', label: 'Katman', hint: 'Nesnelerin öznitelikleri satırdır' },
       ],
       default: 'file',
@@ -50,9 +50,9 @@ export const sourceParams = (what: string) =>
       name: 'file',
       label: 'Dosya',
       type: 'file',
-      accept: ['.csv', '.txt', '.xlsx'],
+      accept: ['.csv', '.txt', '.xlsx', '.ods'],
       visibleWhen: (v: { sourceKind?: unknown }) => v.sourceKind !== 'layer',
-      description: `İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası; her satır bir ${what}.`,
+      description: `İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir ${what}.`,
     },
     {
       name: 'source',
@@ -112,13 +112,26 @@ export function readRows(objects: readonly Entity[] | null, file: FileValue | nu
   return { cells, labels, attrs };
 }
 
-/** Why a row gave nothing, in the report (§5): an empty cell, one that is no number, one not more than zero, ends in one place. */
+/** Why a point is not reached, as the notes say it (docs/adr/0201 §8). */
+const UNREACHED: Record<string, string> = {
+  outside: 'izdüşümün dışında',
+  noLink: 'datumlar arasında yol yok',
+  noGrid: 'datum seçiminin ızgarası bu cihazda yok',
+  outsideGrid: 'ızgaranın dışında',
+};
+
+/**
+ * Why a row gave nothing, in the report (§5; docs/adr/0223 §5): an empty cell, one that is no number, one not more
+ * than zero, a coordinate past its bound, ends in one place, a point not moved into the project's system.
+ */
 export function reason(r: Exclude<RowResult, { shape: unknown }>, names: readonly string[], cells: readonly string[]): string {
   if (r.fault === 'same') return 'Başlangıç ve bitiş aynı yerde';
+  if (r.fault.startsWith('unreached:')) return `Projenin sistemine çevrilemedi (${UNREACHED[r.fault.slice(10)] ?? r.fault.slice(10)})`;
   const k = r.column ?? 0;
   const name = names[k];
   if (r.fault === 'empty') return `“${name}” boş`;
   if (r.fault === 'number') return `“${name}” sayı değil: ${(cells[k] ?? '').trim()}`;
+  if (r.fault === 'range') return `“${name}” coğrafi sınırın dışında (boylam ±180, enlem ±90): ${(cells[k] ?? '').trim()}`;
   return `“${name}” sıfırdan büyük değil`;
 }
 

@@ -766,6 +766,31 @@ fn file<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
     ]
     .spacing(6)
     .width(Fill);
+    // A workbook's sheets (docs/adr/0223 §1): the one whose rows are read.
+    let sheets: Vec<String> = v["sheets"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|s| s["name"].as_str().map(str::to_owned))
+        .collect();
+    if sheets.len() > 1 {
+        let at = v["sheet"]
+            .as_str()
+            .and_then(|c| sheets.iter().position(|s| s == c));
+        let param = def.name.clone();
+        let names = sheets.clone();
+        let select = Select::new(sheets.into_iter().map(Choice::new), at, move |i| {
+            ev(Event::Sheet(param.clone(), names[i].clone()))
+        });
+        out = out.push(
+            row![
+                container(label::muted("Sayfa")).width(Length::Shrink),
+                container(select).width(Fill)
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
+    }
     if !note.is_empty() {
         out = out.push(label::caption(note).style(style::text::muted));
     }

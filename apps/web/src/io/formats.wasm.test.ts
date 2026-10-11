@@ -29,7 +29,7 @@ interface Formats {
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
   readFieldBook(bytes: Uint8Array, options: string): Uint8Array;
   readGnss(bytes: Uint8Array): Uint8Array;
-  readTableFile(bytes: Uint8Array): Uint8Array;
+  readTableFile(bytes: Uint8Array, processing?: boolean): Uint8Array;
   writeField(points: string, options: string): Uint8Array;
 }
 
@@ -89,6 +89,15 @@ describe.skipIf(!loader)('formats WASM module', () => {
     ]);
     expect(bad.result).toBeUndefined();
     expect(bad.preview[1]).toEqual({ line: 2, fields: ['P2', 'abc', '4412345.3', '11'], error: 'Y (sağa) değeri “abc” sayı değil.' });
+  });
+
+  it('reads nothing from a workbook and sends its points to Tablodan nokta (docs/adr/0223 §6)', async () => {
+    const book = fs.readFileSync(new URL('../../../../fixtures/table/v1/files/tablo.ods', import.meta.url));
+    const r = decode((await load()).readCoords(book, options()));
+    expect([r.encoding, r.dataLines, r.points, r.preview.length]).toEqual(['metin değil', 0, 0, 0]);
+    expect(r.hints).toEqual([
+      'Bu dosya metin değil: bir çalışma kitabı (Excel, ODS) ya da arşiv. Koordinat listesi NCN, TXT ya da CSV dosyasıdır; Excel ya da ODS tablosundaki noktaları İşlemler › Tablodan nokta ile alın.',
+    ]);
   });
 
   it('writes points that read back bit for bit', async () => {
@@ -181,19 +190,24 @@ describe.skipIf(!loader)('formats WASM module', () => {
     }
   });
 
-  it('reads a table’s files as the reference does (fixtures/table/v1/files.json, docs/adr/0184 §4)', async () => {
+  it('reads a table’s files as the reference does (fixtures/table/v1/files.json, docs/adr/0184 §4, 0223 §1)', async () => {
     const w = await load();
     const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL('../../../../fixtures/table/v1/files.json', import.meta.url)))) as {
       format: string;
-      cases: { file: string; want: TableFileRead }[];
+      cases: { file: string; limits?: unknown; want: TableFileRead }[];
     };
     expect(file.format).toBe('kentos.table-file-cases');
-    expect(file.cases.length).toBeGreaterThanOrEqual(10);
-    for (const c of file.cases) {
+    expect(file.cases.length).toBeGreaterThanOrEqual(20);
+    // The cases read within other limits than the two the app asks for are the native test's (the same code).
+    for (const c of file.cases.filter((c) => !c.limits)) {
       const bytes = fs.readFileSync(new URL(`../../../../fixtures/table/v1/files/${c.file}`, import.meta.url));
       const got = JSON.parse(new TextDecoder().decode(w.readTableFile(bytes))) as TableFileRead;
       expect(got, c.file).toEqual(c.want);
     }
+    // İşlemler's limits: the 10 003 records of cok-satir.csv come whole.
+    const many = JSON.parse(new TextDecoder().decode(w.readTableFile(fs.readFileSync(new URL('../../../../fixtures/table/v1/files/cok-satir.csv', import.meta.url)), true))) as TableFileRead;
+    expect(many.sheets[0].rows.length).toBe(10_003);
+    expect(many.sheets[0].cut).toBeUndefined();
   });
 
   it('writes instrument coordinate files as the reference does (fixtures/field/v1/write.json, docs/adr/0169 §4)', async () => {

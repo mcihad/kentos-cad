@@ -1,3 +1,5 @@
+import type { CellKind } from '../contracts/generated/CellKind';
+import type { WorkbookSheet } from '../contracts/generated/WorkbookSheet';
 import { ENTITY_KIND_LABEL, type Entity } from './entities';
 import { checkValue, displayValue, fieldLabel, type LayerField } from './layerFields';
 import type { ColumnOrder, TableColumn, TableRow } from './ops/featureTable';
@@ -94,3 +96,38 @@ export function featureTableModel(
 
 /** The column headers as the table and the data's search see them: the key, its alias for a field. */
 export const columnTable = (columns: readonly FeatureColumn[]): TableColumn[] => columns.map((c) => ({ order: c.order, searched: c.key !== null }));
+
+/** Whether a field writes its values' labels (a value list). */
+const listed = (f: LayerField) => !!f.values?.length;
+
+/**
+ * The table as a workbook's sheet (docs/adr/0223 §3; the desktop's `kentos_interaction::feature_table::workbook_sheet`):
+ * its rows `shown` (indices in the model), in that order; its columns Tür, the fields by their names and the other
+ * keys, a field's written by its kind (a whole number a number with no fraction digits, a decimal one with the field's,
+ * a date, yes or no; a value list's labels and text as text), the others text. A cell: Tür the object's kind; a field's
+ * value its canonical text (a value list's label), one that does not keep its field's rules as written; another key's
+ * as written.
+ */
+export function featureSheet(model: FeatureTableModel, shown: readonly number[], name: string): WorkbookSheet {
+  const columns = model.columns.map((c) => {
+    const f = c.field;
+    let kind: CellKind = 'text';
+    let decimals: number | undefined;
+    if (f && !listed(f)) {
+      if (f.kind === 'integer') [kind, decimals] = ['number', 0];
+      else if (f.kind === 'decimal') [kind, decimals] = ['number', f.scale ?? undefined];
+      else if (f.kind === 'date') kind = 'date';
+      else if (f.kind === 'boolean') kind = 'boolean';
+    }
+    return { name: c.key ?? 'Tür', kind, ...(decimals !== undefined && { decimals }) };
+  });
+  const rows = shown
+    .filter((i) => i < model.rows.length)
+    .map((i) =>
+      model.rows[i].cells.map((cell, j) => {
+        const f = model.columns[j].field;
+        return f && !listed(f) && cell.key != null && !model.problems.has(`${i}:${j}`) ? cell.key : cell.shown;
+      }),
+    );
+  return { name, columns, rows };
+}

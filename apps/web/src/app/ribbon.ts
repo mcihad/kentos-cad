@@ -281,10 +281,12 @@ const PROXIMITY_COMMANDS = ['nearest', 'matrix', 'hub', 'neighbors', 'shortestLi
 /**
  * Geometri dönüştürme's ten (docs/adr/0218 §12) in Veri's Toplu çevir panel beside Öznitelik (Düzenle is full at 1100 px,
  * and its Dönüştür is the move, turn and scale tools'): Nesneden nokta and Köşeleri noktaya çevir on it, the rest under
- * its ▾.
+ * its ▾; Tablodan nokta (docs/adr/0223 §5) after the other tables' tools.
  */
 const CONVERT_COMMANDS = ['toPoints', 'vertices'].map((t) => `processing.run.convert.${t}`);
-const CONVERT_UNDER = ['pointsToPath', 'bearingLine', 'xyLine', 'tableEllipse', 'substring', 'polygonsToLines', 'linesToPolygons', 'densify'].map((t) => `processing.run.convert.${t}`);
+const CONVERT_UNDER = ['pointsToPath', 'bearingLine', 'xyLine', 'tableEllipse', 'tablePoints', 'substring', 'polygonsToLines', 'linesToPolygons', 'densify'].map(
+  (t) => `processing.run.convert.${t}`,
+);
 /**
  * Geometri üretimi's tools (docs/adr/0219 §7) under the Analiz tab's Geometri panel's ▾: the tab is full at 1100 pixels.
  * Örnekleme's (docs/adr/0220 §1) and Genelleştirme's (docs/adr/0221 §9) after them; the ▾ heads each category's tools

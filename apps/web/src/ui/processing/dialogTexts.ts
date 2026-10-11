@@ -102,7 +102,8 @@ export const DIALOG_TEXTS = {
   result: {
     title: 'Sonuç',
     copy: 'Panoya kopyala',
-    save: 'CSV olarak kaydet',
+    save: 'Kaydet',
+    saveHint: 'Tabloyu Excel (XLSX), OpenDocument (ODS) ya da CSV dosyasına yazar; sayılar sayı olarak.',
     copied: 'Tablo panoya kopyalandı.',
   },
   expression: {

@@ -1,0 +1,860 @@
+{
+ "format": "kentos.workbook-cases",
+ "version": 1,
+ "cases": [
+  {
+   "name": "oznitelik.xlsx",
+   "input": {
+    "format": "xlsx",
+    "sheets": [
+     {
+      "name": "Parseller",
+      "columns": [
+       {
+        "name": "Tür",
+        "kind": "text"
+       },
+       {
+        "name": "Ada",
+        "kind": "number",
+        "decimals": 0
+       },
+       {
+        "name": "Parsel",
+        "kind": "number",
+        "decimals": 0
+       },
+       {
+        "name": "Alan (m²)",
+        "kind": "number",
+        "decimals": 2
+       },
+       {
+        "name": "Tescil tarihi",
+        "kind": "date"
+       },
+       {
+        "name": "Tescilli",
+        "kind": "boolean"
+       },
+       {
+        "name": "Malik",
+        "kind": "text"
+       },
+       {
+        "name": "Kod",
+        "kind": "auto"
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       }
+      ],
+      "rows": [
+       [
+        "Alan",
+        "101",
+        "5",
+        "1340.13",
+        "2024-10-01",
+        "true",
+        "Ayşe Öztürk",
+        "0.5",
+        "Köşe parseli"
+       ],
+       [
+        "Alan",
+        "101",
+        "6",
+        "747.00",
+        "1999-02-28",
+        "false",
+        "Çağrı & Şükrü <ortak>",
+        "101/5",
+        "İki\nsatır"
+       ],
+       [
+        "Alan",
+        "102",
+        "7",
+        "-12.50",
+        "",
+        "",
+        "  Başta ve sonda  ",
+        "007",
+        "Sekme\tile, CR LF\r\nve tek CR\rson"
+       ],
+       [
+        "Çizgi",
+        "1234567890123456",
+        "1,5",
+        "0.000000000000001234",
+        "1899-12-31",
+        "Evet",
+        "_x0041_ kalır",
+        "1.10",
+        "zil\u0007sesi"
+       ],
+       [
+        "Nokta",
+        "",
+        "",
+        "",
+        "01.10.2024",
+        "",
+        "",
+        "-0",
+        ""
+       ],
+       [
+        "Nokta",
+        "9007199254740991",
+        "8",
+        "452345.123",
+        "2023-02-29",
+        "true",
+        "Son",
+        "-3.25",
+        "  "
+       ],
+       []
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "sheets": [
+     {
+      "name": "Parseller",
+      "rows": [
+       [
+        "Tür",
+        "Ada",
+        "Parsel",
+        "Alan (m²)",
+        "Tescil tarihi",
+        "Tescilli",
+        "Malik",
+        "Kod",
+        "Not"
+       ],
+       [
+        "Alan",
+        "101",
+        "5",
+        "1340.13",
+        "2024-10-01",
+        "DOĞRU",
+        "Ayşe Öztürk",
+        "0.5",
+        "Köşe parseli"
+       ],
+       [
+        "Alan",
+        "101",
+        "6",
+        "747.00",
+        "1999-02-28",
+        "YANLIŞ",
+        "Çağrı & Şükrü <ortak>",
+        "101/5",
+        "İki\nsatır"
+       ],
+       [
+        "Alan",
+        "102",
+        "7",
+        "-12.50",
+        "",
+        "",
+        "  Başta ve sonda  ",
+        "007",
+        "Sekme\tile, CR LF\r\nve tek CR\rson"
+       ],
+       [
+        "Çizgi",
+        "1234567890123456",
+        "1,5",
+        "0.000000000000001234",
+        "1899-12-31",
+        "Evet",
+        "_x0041_ kalır",
+        "1.10",
+        "zil\u0007sesi"
+       ],
+       [
+        "Nokta",
+        "",
+        "",
+        "",
+        "01.10.2024",
+        "",
+        "",
+        "-0"
+       ],
+       [
+        "Nokta",
+        "9007199254740991",
+        "8",
+        "452345.123",
+        "2023-02-29",
+        "DOĞRU",
+        "Son",
+        "-3.25",
+        "  "
+       ]
+      ]
+     }
+    ],
+    "notes": {
+     "Uzun sayı": 2,
+     "Sayı olmayan değer": 1,
+     "Tarih olmayan değer": 2,
+     "Eski tarih": 1,
+     "Evet/hayır olmayan değer": 1
+    }
+   }
+  },
+  {
+   "name": "oznitelik.ods",
+   "input": {
+    "format": "ods",
+    "sheets": [
+     {
+      "name": "Parseller",
+      "columns": [
+       {
+        "name": "Tür",
+        "kind": "text"
+       },
+       {
+        "name": "Ada",
+        "kind": "number",
+        "decimals": 0
+       },
+       {
+        "name": "Parsel",
+        "kind": "number",
+        "decimals": 0
+       },
+       {
+        "name": "Alan (m²)",
+        "kind": "number",
+        "decimals": 2
+       },
+       {
+        "name": "Tescil tarihi",
+        "kind": "date"
+       },
+       {
+        "name": "Tescilli",
+        "kind": "boolean"
+       },
+       {
+        "name": "Malik",
+        "kind": "text"
+       },
+       {
+        "name": "Kod",
+        "kind": "auto"
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       }
+      ],
+      "rows": [
+       [
+        "Alan",
+        "101",
+        "5",
+        "1340.13",
+        "2024-10-01",
+        "true",
+        "Ayşe Öztürk",
+        "0.5",
+        "Köşe parseli"
+       ],
+       [
+        "Alan",
+        "101",
+        "6",
+        "747.00",
+        "1999-02-28",
+        "false",
+        "Çağrı & Şükrü <ortak>",
+        "101/5",
+        "İki\nsatır"
+       ],
+       [
+        "Alan",
+        "102",
+        "7",
+        "-12.50",
+        "",
+        "",
+        "  Başta ve sonda  ",
+        "007",
+        "Sekme\tile, CR LF\r\nve tek CR\rson"
+       ],
+       [
+        "Çizgi",
+        "1234567890123456",
+        "1,5",
+        "0.000000000000001234",
+        "1899-12-31",
+        "Evet",
+        "_x0041_ kalır",
+        "1.10",
+        "zil\u0007sesi"
+       ],
+       [
+        "Nokta",
+        "",
+        "",
+        "",
+        "01.10.2024",
+        "",
+        "",
+        "-0",
+        ""
+       ],
+       [
+        "Nokta",
+        "9007199254740991",
+        "8",
+        "452345.123",
+        "2023-02-29",
+        "true",
+        "Son",
+        "-3.25",
+        "  "
+       ],
+       []
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "sheets": [
+     {
+      "name": "Parseller",
+      "rows": [
+       [
+        "Tür",
+        "Ada",
+        "Parsel",
+        "Alan (m²)",
+        "Tescil tarihi",
+        "Tescilli",
+        "Malik",
+        "Kod",
+        "Not"
+       ],
+       [
+        "Alan",
+        "101",
+        "5",
+        "1340.13",
+        "2024-10-01",
+        "DOĞRU",
+        "Ayşe Öztürk",
+        "0.5",
+        "Köşe parseli"
+       ],
+       [
+        "Alan",
+        "101",
+        "6",
+        "747.00",
+        "1999-02-28",
+        "YANLIŞ",
+        "Çağrı & Şükrü <ortak>",
+        "101/5",
+        "İki\nsatır"
+       ],
+       [
+        "Alan",
+        "102",
+        "7",
+        "-12.50",
+        "",
+        "",
+        "  Başta ve sonda  ",
+        "007",
+        "Sekme\tile, CR LF\nve tek CR\nson"
+       ],
+       [
+        "Çizgi",
+        "1234567890123456",
+        "1,5",
+        "0.000000000000001234",
+        "1899-12-31",
+        "Evet",
+        "_x0041_ kalır",
+        "1.10",
+        "zilsesi"
+       ],
+       [
+        "Nokta",
+        "",
+        "",
+        "",
+        "01.10.2024",
+        "",
+        "",
+        "-0"
+       ],
+       [
+        "Nokta",
+        "9007199254740991",
+        "8",
+        "452345.123",
+        "2023-02-29",
+        "DOĞRU",
+        "Son",
+        "-3.25",
+        "  "
+       ]
+      ]
+     }
+    ],
+    "notes": {
+     "Uzun sayı": 2,
+     "Sayı olmayan değer": 1,
+     "Tarih olmayan değer": 2,
+     "Evet/hayır olmayan değer": 1
+    }
+   }
+  },
+  {
+   "name": "oznitelik.csv",
+   "input": {
+    "format": "csv",
+    "sheets": [
+     {
+      "name": "Parseller",
+      "columns": [
+       {
+        "name": "Tür",
+        "kind": "text"
+       },
+       {
+        "name": "Ada",
+        "kind": "number",
+        "decimals": 0
+       },
+       {
+        "name": "Parsel",
+        "kind": "number",
+        "decimals": 0
+       },
+       {
+        "name": "Alan (m²)",
+        "kind": "number",
+        "decimals": 2
+       },
+       {
+        "name": "Tescil tarihi",
+        "kind": "date"
+       },
+       {
+        "name": "Tescilli",
+        "kind": "boolean"
+       },
+       {
+        "name": "Malik",
+        "kind": "text"
+       },
+       {
+        "name": "Kod",
+        "kind": "auto"
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       }
+      ],
+      "rows": [
+       [
+        "Alan",
+        "101",
+        "5",
+        "1340.13",
+        "2024-10-01",
+        "true",
+        "Ayşe Öztürk",
+        "0.5",
+        "Köşe parseli"
+       ],
+       [
+        "Alan",
+        "101",
+        "6",
+        "747.00",
+        "1999-02-28",
+        "false",
+        "Çağrı & Şükrü <ortak>",
+        "101/5",
+        "İki\nsatır"
+       ],
+       [
+        "Alan",
+        "102",
+        "7",
+        "-12.50",
+        "",
+        "",
+        "  Başta ve sonda  ",
+        "007",
+        "Sekme\tile, CR LF\r\nve tek CR\rson"
+       ],
+       [
+        "Çizgi",
+        "1234567890123456",
+        "1,5",
+        "0.000000000000001234",
+        "1899-12-31",
+        "Evet",
+        "_x0041_ kalır",
+        "1.10",
+        "zil\u0007sesi"
+       ],
+       [
+        "Nokta",
+        "",
+        "",
+        "",
+        "01.10.2024",
+        "",
+        "",
+        "-0",
+        ""
+       ],
+       [
+        "Nokta",
+        "9007199254740991",
+        "8",
+        "452345.123",
+        "2023-02-29",
+        "true",
+        "Son",
+        "-3.25",
+        "  "
+       ],
+       []
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "adlar.xlsx",
+   "input": {
+    "format": "xlsx",
+    "sheets": [
+     {
+      "name": "Ada/Parsel",
+      "columns": [
+       {
+        "name": "A",
+        "kind": "text"
+       }
+      ],
+      "rows": [
+       [
+        "bir"
+       ]
+      ]
+     },
+     {
+      "name": "ada_parsel",
+      "columns": [
+       {
+        "name": "B",
+        "kind": "auto"
+       }
+      ],
+      "rows": [
+       [
+        "2"
+       ],
+       [
+        "3.5"
+       ]
+      ]
+     },
+     {
+      "name": "'Yol'",
+      "columns": [],
+      "rows": []
+     },
+     {
+      "name": "",
+      "columns": [
+       {
+        "name": "C",
+        "kind": "text"
+       }
+      ],
+      "rows": [
+       [
+        "üç"
+       ]
+      ]
+     },
+     {
+      "name": "Çok uzun bir katman adı ki otuz bir karakteri aşar",
+      "columns": [
+       {
+        "name": "D",
+        "kind": "number",
+        "decimals": 3
+       }
+      ],
+      "rows": [
+       [
+        "1.5"
+       ]
+      ]
+     },
+     {
+      "name": "History",
+      "columns": [
+       {
+        "name": "E",
+        "kind": "date"
+       }
+      ],
+      "rows": [
+       [
+        "2000-01-01"
+       ]
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "sheets": [
+     {
+      "name": "Ada_Parsel",
+      "rows": [
+       [
+        "A"
+       ],
+       [
+        "bir"
+       ]
+      ]
+     },
+     {
+      "name": "ada_parsel (2)",
+      "rows": [
+       [
+        "B"
+       ],
+       [
+        "2"
+       ],
+       [
+        "3.5"
+       ]
+      ]
+     },
+     {
+      "name": "Yol",
+      "rows": []
+     },
+     {
+      "name": "Sayfa4",
+      "rows": [
+       [
+        "C"
+       ],
+       [
+        "üç"
+       ]
+      ]
+     },
+     {
+      "name": "Çok uzun bir katman adı ki otuz",
+      "rows": [
+       [
+        "D"
+       ],
+       [
+        "1.5"
+       ]
+      ]
+     },
+     {
+      "name": "History_",
+      "rows": [
+       [
+        "E"
+       ],
+       [
+        "2000-01-01"
+       ]
+      ]
+     }
+    ],
+    "notes": {}
+   }
+  },
+  {
+   "name": "adlar.ods",
+   "input": {
+    "format": "ods",
+    "sheets": [
+     {
+      "name": "Ada/Parsel",
+      "columns": [
+       {
+        "name": "A",
+        "kind": "text"
+       }
+      ],
+      "rows": [
+       [
+        "bir"
+       ]
+      ]
+     },
+     {
+      "name": "ada_parsel",
+      "columns": [
+       {
+        "name": "B",
+        "kind": "auto"
+       }
+      ],
+      "rows": [
+       [
+        "2"
+       ],
+       [
+        "3.5"
+       ]
+      ]
+     },
+     {
+      "name": "'Yol'",
+      "columns": [],
+      "rows": []
+     },
+     {
+      "name": "",
+      "columns": [
+       {
+        "name": "C",
+        "kind": "text"
+       }
+      ],
+      "rows": [
+       [
+        "üç"
+       ]
+      ]
+     },
+     {
+      "name": "Çok uzun bir katman adı ki otuz bir karakteri aşar",
+      "columns": [
+       {
+        "name": "D",
+        "kind": "number",
+        "decimals": 3
+       }
+      ],
+      "rows": [
+       [
+        "1.5"
+       ]
+      ]
+     },
+     {
+      "name": "History",
+      "columns": [
+       {
+        "name": "E",
+        "kind": "date"
+       }
+      ],
+      "rows": [
+       [
+        "2000-01-01"
+       ]
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "sheets": [
+     {
+      "name": "Ada_Parsel",
+      "rows": [
+       [
+        "A"
+       ],
+       [
+        "bir"
+       ]
+      ]
+     },
+     {
+      "name": "ada_parsel (2)",
+      "rows": [
+       [
+        "B"
+       ],
+       [
+        "2"
+       ],
+       [
+        "3.5"
+       ]
+      ]
+     },
+     {
+      "name": "Yol",
+      "rows": []
+     },
+     {
+      "name": "Sayfa4",
+      "rows": [
+       [
+        "C"
+       ],
+       [
+        "üç"
+       ]
+      ]
+     },
+     {
+      "name": "Çok uzun bir katman adı ki otuz",
+      "rows": [
+       [
+        "D"
+       ],
+       [
+        "1.5"
+       ]
+      ]
+     },
+     {
+      "name": "History_",
+      "rows": [
+       [
+        "E"
+       ],
+       [
+        "2000-01-01"
+       ]
+      ]
+     }
+    ],
+    "notes": {}
+   }
+  }
+ ]
+}

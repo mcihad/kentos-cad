@@ -1,5 +1,5 @@
 import type { AppContext } from '../../app/context';
-import { layerListCsv, layerListTsv } from '../../app/layerList';
+import { layerListTsv } from '../../app/layerList';
 import { DisposableStore } from '../../core/disposable';
 import type { Vec2 } from '../../model/geometry';
 import type { ProcessingModel } from '../../processing/model';
@@ -11,6 +11,9 @@ import { PickObjectsTool } from '../../tools/pickObjectsTool';
 import { PickPointTool } from '../../tools/pickPointTool';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
+import { exportItems } from '../bottom/featureExport';
+import { PopupMenu } from '../widgets/PopupMenu';
+import { tooltip } from '../widgets/tooltip';
 import { Dialog } from '../widgets/Dialog';
 import {
   attempted,
@@ -220,13 +223,13 @@ class ToolDialog {
     this.paintResult(frame.result);
   }
 
-  /** The run's table with its Panoya kopyala and CSV olarak kaydet; nothing without one. */
+  /** The run's table with its Panoya kopyala and Kaydet ▾ (XLSX, ODS, CSV; docs/adr/0223 §2); nothing without one. */
   private paintResult(table: TableOutput | null): void {
     this.result.hidden = !table;
     if (!table) return void this.result.replaceChildren();
     const rows = [table.columns, ...table.rows];
     const copy = h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, icon('copy', 14), T.result.copy);
-    const save = h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, icon('export', 14), T.result.save);
+    const save = h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, icon('export', 14), T.result.save, icon('chevronDown', 12));
     const { log } = this.ctx;
     copy.addEventListener('click', () => {
       void navigator.clipboard.writeText(layerListTsv(rows)).then(
@@ -234,17 +237,11 @@ class ToolDialog {
         () => log.warn('Tablo panoya kopyalanamadı: tarayıcı izin vermedi.'),
       );
     });
-    save.addEventListener('click', () => {
-      const url = URL.createObjectURL(new Blob([layerListCsv(rows)], { type: 'text/csv;charset=utf-8' }));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${this.tool.label}.csv`;
-      document.body.append(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      log.success(`${this.tool.label}: tablo CSV olarak kaydedildi: ${a.download} (${table.rows.length} satır).`);
-    });
+    // A tool's table has no field kinds: a plain number is written as a number, anything else as text.
+    const sheet = () => ({ name: this.tool.label, columns: table.columns.map((name) => ({ name, kind: 'auto' as const })), rows: table.rows.map((r) => [...r]) });
+    save.addEventListener('click', () => PopupMenu.open(exportItems(this.ctx, sheet, () => this.tool.label), save.getBoundingClientRect(), { owner: save }));
+    // The button's listeners go with it when the result is painted again.
+    tooltip(save, () => ({ title: T.result.save, description: T.result.saveHint }), 'top');
     // A column of numbers (every filled cell one) is right-aligned in figures; names and texts read from the left.
     const numeric = table.columns.map((_, i) => table.rows.some((r) => !!r[i]) && table.rows.every((r) => !r[i] || NUMBER_CELL.test(r[i])));
     const cell = (tag: 'th' | 'td', text: string, i: number) => h(tag, numeric[i] ? { class: 'num' } : null, text);
@@ -415,6 +412,7 @@ class ToolDialog {
     const read = await this.ctx.processing.chooseFile(def.accept);
     if (!read) return;
     if ('problem' in read) return void this.ctx.log.warn(read.problem);
+    for (const why of read.leftOut ?? []) this.ctx.log.warn(why);
     this.set(name, read, true);
   }
 

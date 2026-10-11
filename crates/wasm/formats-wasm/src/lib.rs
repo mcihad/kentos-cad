@@ -87,12 +87,30 @@ pub fn read_gnss(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
     to_json(&kentos_formats::gnss::read(bytes))
 }
 
-/// Reads a table's file (Tablo ekle, docs/adr/0184 §4): an Excel workbook
-/// (`.xlsx`) sheet by sheet, else a text file's records by its separator; the
-/// result `TableFileRead` (JSON bytes).
+/// Reads a table's file (docs/adr/0184 §4, 0223 §1): an Excel workbook or
+/// an OpenDocument spreadsheet sheet by sheet, else a text file's records by
+/// its separator; within Tablo ekle's limits, or İşlemler's when
+/// `processing`; the result `TableFileRead` (JSON bytes).
 #[wasm_bindgen(js_name = readTableFile)]
-pub fn read_table_file(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
-    to_json(&kentos_formats::table_file::read(bytes))
+pub fn read_table_file(bytes: &[u8], processing: Option<bool>) -> Result<Vec<u8>, JsError> {
+    use kentos_formats::table_file::Limits;
+    let limits = if processing.unwrap_or(false) {
+        Limits::PROCESSING
+    } else {
+        Limits::TABLE
+    };
+    to_json(&kentos_formats::table_file::read_with(bytes, limits))
+}
+
+/// Writes a table as an Excel workbook, an OpenDocument spreadsheet or a CSV
+/// file (docs/adr/0223 §2): `input` a `WorkbookWriteInput` (JSON). A table
+/// past a sheet's rows throws the reason.
+#[wasm_bindgen(js_name = writeWorkbook)]
+pub fn write_workbook(input: &str) -> Result<Written, JsError> {
+    let input: kentos_contracts::WorkbookWriteInput =
+        serde_json::from_str(input).map_err(|e| bad_input("Yazılacak tablo", &e))?;
+    let (bytes, report) = kentos_formats::workbook::write(&input).map_err(|e| JsError::new(&e))?;
+    written(bytes, &report)
 }
 
 /// Writes points as an instrument's coordinate file (docs/adr/0169 §4):

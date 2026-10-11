@@ -32,9 +32,11 @@ pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
 #[cfg(test)]
 mod convert_tests;
 #[cfg(test)]
-mod generate_tests;
-#[cfg(test)]
 mod distance_tests;
+#[cfg(test)]
+mod generalize_tests;
+#[cfg(test)]
+mod generate_tests;
 #[cfg(test)]
 mod geometry_tests;
 #[cfg(test)]
@@ -54,8 +56,6 @@ mod raster_vector_tests;
 #[cfg(test)]
 mod remote_tests;
 #[cfg(test)]
-mod generalize_tests;
-#[cfg(test)]
 mod sampling_tests;
 #[cfg(test)]
 mod stats_tests;
@@ -64,12 +64,15 @@ mod suitability_tests;
 #[cfg(test)]
 pub(crate) mod surface_tests;
 #[cfg(test)]
+mod table_points_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod transfer_tests;
 mod window;
 
 use iced::Task;
+use iced::futures::channel::mpsc;
 use kentos_domain::Slot;
 use kentos_expression::Variable;
 use kentos_interaction::pick::PickPoint;
@@ -218,14 +221,16 @@ pub enum Event {
     Command(&'static str),
     /// The file chosen for a parameter: its name, where it is and its bytes; none when given up.
     FileChosen(String, Option<(String, std::path::PathBuf, Vec<u8>)>),
+    /// A chosen file read off the UI thread (docs/adr/0223 §1): its value, or why not.
+    FileRead(String, Result<Value, String>),
+    /// A workbook's sheet chosen for a file parameter.
+    Sheet(String, String),
     /// Konum…: where a result is written asked for (docs/adr/0207 §7).
     ChooseSave(String),
     /// Panoya kopyala for the run's table (Özet istatistik).
     CopyTable,
-    /// CSV olarak kaydet for the run's table.
-    SaveTable,
-    /// Where the run's table is saved; none when given up.
-    TableSaved(Option<std::path::PathBuf>),
+    /// Kaydet ▾ for the run's table (docs/adr/0223 §2): written in a format.
+    SaveTableAs(kentos_contracts::WorkbookFormat),
     /// Sonuçları seç, or Seçime yakınlaştır after a selecting tool.
     Results,
     /// Geri al after a run.
@@ -411,9 +416,21 @@ impl App {
             Event::ChooseFile(name) => return self.processing_choose_file(name),
             Event::Command(id) => return self.run(id),
             Event::ChooseSave(name) => return self.processing_choose_save(name),
-            Event::FileChosen(_, None) | Event::TableSaved(None) => return Task::none(),
+            Event::FileChosen(_, None) => return Task::none(),
             Event::FileChosen(name, Some((file, path, bytes))) => {
-                self.processing_file_read(name, &file, &path, &bytes);
+                self.processing_file_read(name, dialog::file_value(&file, &path, &bytes, None));
+            }
+            Event::FileRead(name, read) => self.processing_file_read(name, read),
+            Event::Sheet(name, sheet) => {
+                let value = self
+                    .processing
+                    .dialog
+                    .as_ref()
+                    .and_then(|w| w.values.get(&name))
+                    .and_then(|v| dialog::with_sheet(v, &sheet));
+                if let Some(value) = value {
+                    self.processing_file_read(name, Ok(value));
+                }
             }
             Event::CopyTable => {
                 let Some(table) = self.processing_table() else {
@@ -422,27 +439,28 @@ impl App {
                 self.say(Level::Success, "Tablo panoya kopyalandı.".to_owned());
                 return iced::clipboard::write(crate::layer_list::tsv(&table.lines()));
             }
-            Event::SaveTable => {
-                let Some(window) = &self.processing.dialog else {
+            Event::SaveTableAs(format) => {
+                let (Some(table), Some(window)) =
+                    (self.processing_table(), &self.processing.dialog)
+                else {
                     return Task::none();
                 };
                 let label = window.tool.label.clone();
-                return Task::perform(
-                    async move {
-                        let file = rfd::AsyncFileDialog::new()
-                            .set_title(format!("{label}: tabloyu kaydet"))
-                            .add_filter("CSV (.csv)", &["csv"])
-                            .set_file_name(format!("{label}.csv"))
-                            .save_file()
-                            .await?;
-                        Some(file.path().to_path_buf())
-                    },
-                    |path| Message::Processing(Event::TableSaved(path)),
-                );
-            }
-            Event::TableSaved(Some(path)) => {
-                self.processing_save_table(&path);
-                return Task::none();
+                // A tool's table has no field kinds: a plain number is written as a number, anything else as text.
+                let sheet = kentos_contracts::WorkbookSheet {
+                    name: label.clone(),
+                    columns: table
+                        .columns
+                        .iter()
+                        .map(|name| kentos_contracts::WorkbookColumn {
+                            name: name.clone(),
+                            kind: kentos_contracts::CellKind::Auto,
+                            decimals: None,
+                        })
+                        .collect(),
+                    rows: table.rows,
+                };
+                return crate::table_write::save(vec![sheet], format, label);
             }
             Event::Undo => {
                 self.undo();
@@ -834,8 +852,22 @@ impl App {
                 let bytes = file.read().await;
                 Some((file.file_name(), file.path().to_path_buf(), bytes))
             },
-            move |read| Message::Processing(Event::FileChosen(name.clone(), read)),
+            |read| read,
         )
+        .then(move |read| match read {
+            // Read on its own thread: a big workbook takes a while (docs/adr/0223 §1).
+            Some((file, path, bytes)) => {
+                let name = name.clone();
+                iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
+                    let read = dialog::file_value(&file, &path, &bytes, None);
+                    let answer = Message::Processing(Event::FileRead(name, read));
+                    let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
+                        &mut out, answer,
+                    ));
+                })
+            }
+            None => Task::none(),
+        })
     }
 
     /// Konum… (docs/adr/0207 §7): where a result goes, asked with the
@@ -874,18 +906,17 @@ impl App {
         )
     }
 
-    /// A chosen file read as Tablo ekle reads one, its first sheet's rows
-    /// the parameter's value; a file that cannot be read is said and
+    /// A chosen file's value (its sheet's rows) the parameter's; what was
+    /// left out of it is said; a file that cannot be read is said and
     /// changes nothing.
-    fn processing_file_read(
-        &mut self,
-        name: String,
-        file: &str,
-        path: &std::path::Path,
-        bytes: &[u8],
-    ) {
-        match dialog::file_value(file, path, bytes) {
+    fn processing_file_read(&mut self, name: String, read: Result<Value, String>) {
+        match read {
             Ok(value) => {
+                for why in value["leftOut"].as_array().into_iter().flatten() {
+                    if let Some(why) = why.as_str() {
+                        self.warn(why.to_owned());
+                    }
+                }
                 let active = self
                     .document
                     .as_ref()
@@ -903,31 +934,6 @@ impl App {
         match &self.processing.dialog.as_ref()?.status {
             RunStatus::Ok { table, .. } => table.clone(),
             _ => None,
-        }
-    }
-
-    /// CSV olarak kaydet: the run's table written where the user said.
-    fn processing_save_table(&mut self, path: &std::path::Path) {
-        let (Some(table), Some(window)) = (self.processing_table(), &self.processing.dialog) else {
-            return;
-        };
-        let label = window.tool.label.clone();
-        match std::fs::write(path, crate::layer_list::csv(&table.lines())) {
-            Ok(()) => {
-                let file = path
-                    .file_name()
-                    .map_or_else(String::new, |f| f.to_string_lossy().into_owned());
-                self.say(
-                    Level::Success,
-                    format!(
-                        "{label}: tablo CSV olarak kaydedildi: {file} ({} satır).",
-                        table.rows.len()
-                    ),
-                );
-            }
-            Err(e) => self.warn(format!(
-                "{label}: tablo kaydedilemedi: {e}. Başka bir klasör seçin."
-            )),
         }
     }
 

@@ -41,7 +41,7 @@ export const joinByField = defineTool({
       default: 'layer',
     },
     { name: 'source', label: 'Kaynak nesneler', type: 'features', scopes: ['layer', 'all', 'visible', 'selection'], visibleWhen: (v: Shown) => v.sourceKind !== 'file', description: 'Özniteliklerin alınacağı nesneler.' },
-    { name: 'file', label: 'Dosya', type: 'file', accept: ['.csv', '.txt', '.xlsx'], visibleWhen: (v: Shown) => v.sourceKind === 'file', description: 'İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası.' },
+    { name: 'file', label: 'Dosya', type: 'file', accept: ['.csv', '.txt', '.xlsx', '.ods'], visibleWhen: (v: Shown) => v.sourceKind === 'file', description: 'İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası.' },
     { name: 'sourceKey', label: 'Kaynak anahtar', type: 'field', of: ['source', 'file'], optional: true, description: 'Boş bırakılırsa hedef anahtarla aynı ad.' },
     { name: 'fields', label: 'Aktarılacak alanlar', type: 'field', of: ['source', 'file'], multiple: true, optional: true, description: 'Boş bırakılırsa anahtardan başka bütün alanlar.' },
     { name: 'prefix', label: 'Önek', type: 'string', allowEmpty: true, default: '', placeholder: 'Tapu ', description: 'Aktarılan alanların adının başına eklenir.' },

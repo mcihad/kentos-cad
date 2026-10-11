@@ -103,10 +103,10 @@ export function fileTable(v: FileValue | null | undefined): { header: string[]; 
   return { header: first.map((c) => c.trim()), rows };
 }
 
-/** A value as the last values keep it: a file's name (and path) without its rows. */
+/** A value as the last values keep it: a file's name (and path, and the sheet chosen) without its rows, its sheets' or what was left out. */
 export function storedValue(def: ParamDef, v: unknown): unknown {
   if (def.type !== 'file' || !v || typeof v !== 'object') return v;
-  const { rows: _rows, ...rest } = v as FileValue;
+  const { rows: _rows, sheets: _sheets, leftOut: _left, ...rest } = v as FileValue;
   return rest;
 }
 

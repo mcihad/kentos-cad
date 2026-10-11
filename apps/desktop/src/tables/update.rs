@@ -48,7 +48,10 @@ fn ask(name: String) -> Task<Message> {
         async move {
             let file = rfd::AsyncFileDialog::new()
                 .set_title(format!("“{name}” dosyasını seçin"))
-                .add_filter("Tablo (.xlsx, .csv, .txt)", &["xlsx", "csv", "txt", "tsv"])
+                .add_filter(
+                    "Tablo (.xlsx, .ods, .csv, .txt)",
+                    &["xlsx", "ods", "csv", "txt", "tsv"],
+                )
                 .pick_file()
                 .await;
             let bytes = match file {

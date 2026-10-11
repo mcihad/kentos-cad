@@ -1,9 +1,10 @@
 // Geometri dönüştürme on the web (docs/adr/0218 §13), the same work as the desktop's `convert_timing`
 // (crates/native/processing/tests/cases.rs, `layer_scene`, `route_points_scene`, `bearing_table`): 100 000 parcels'
 // interior points, all their vertices as points and their edges densified at 5 m, 100 000 points joined into 1000
-// ordered routes, 100 000 table rows as lines from a bearing and a length; each whole run through the runner on the
-// page (the check, the tool, its one undo step), each run undone before the next, p50 and p95 after a warm-up against
-// the ADR's budgets. Runs only on purpose, with the WASM that ships:
+// ordered routes, 100 000 table rows as lines from a bearing and a length; and Tablodan nokta's (docs/adr/0223 §8,
+// the desktop's `table_points_timing` and `point_table`): 100 000 rows in the project's plane and from WGS 84; each
+// whole run through the runner on the page (the check, the tool, its one undo step), each run undone before the next,
+// p50 and p95 after a warm-up against the ADRs' budgets. Runs only on purpose, with the WASM that ships:
 //   KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; CONVERT_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/convert.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 import { expect, it } from 'vitest';
 import { CadDocument } from '../../src/model/document';
@@ -11,7 +12,7 @@ import { LayerStore } from '../../src/model/layers';
 import { readSnapshot } from '../../src/model/snapshot';
 import { densify } from '../../src/processing/builtin/convert/paths';
 import { pointsToPath } from '../../src/processing/builtin/convert/pointsToPath';
-import { bearingLine } from '../../src/processing/builtin/convert/tables';
+import { bearingLine, tablePoints } from '../../src/processing/builtin/convert/tables';
 import { toPoints } from '../../src/processing/builtin/convert/toPoints';
 import { vertices } from '../../src/processing/builtin/convert/vertices';
 import { clientExecutor } from '../../src/processing/job';
@@ -113,7 +114,31 @@ function bearingTable(): { name: string; rows: string[][] } {
   return { name: 'semt.csv', rows };
 }
 
+/** The desktop's `point_table`, value for value: the project's plane, or WGS 84 (every tenth row in DMS). */
+function pointTable(geographic: boolean): { name: string; rows: string[][] } {
+  const rows = [['Ad', 'Doğu', 'Kuzey', 'Kot', 'Kod']];
+  const dms = (v: number) => {
+    const d = Math.trunc(v);
+    const m = Math.trunc((v - d) * 60);
+    return `${d} ${m} ${(((v - d) * 60 - m) * 60).toFixed(3)}`;
+  };
+  for (let i = 0; i < 100_000; i++) {
+    let e: string;
+    let n: string;
+    if (geographic) {
+      const [lon, lat] = [35.95 + (i % 400) * 0.0002, 39.85 + Math.floor(i / 400) * 0.0002];
+      [e, n] = i % 10 === 0 ? [dms(lon), dms(lat)] : [lon.toFixed(7), lat.toFixed(7)];
+    } else {
+      const [x, y] = [487_000 + (i % 400) * 5 + 0.125, 4_420_000 + Math.floor(i / 400) * 5 + 0.5];
+      [e, n] = i % 10 === 0 ? [String(x).replace('.', ','), String(y).replace('.', ',')] : [String(x), String(y)];
+    }
+    rows.push([`N${i}`, e, n, String(800 + (i % 97)), ['SN', 'YL', 'BN'][i % 3]]);
+  }
+  return { name: geographic ? 'wgs84.csv' : 'duzlem.csv', rows };
+}
+
 const ALL = { scope: 'all' };
+const POINT_COLUMNS = { sourceKind: 'file', east: 'Doğu', north: 'Kuzey', elevation: 'Kot', name: 'Ad' };
 const RUNS_OF: readonly { tool: ProcessingTool; title: string; scene: () => CadDocument; values: Record<string, unknown>; budget: number }[] = [
   { tool: toPoints, title: 'Nesneden nokta, 100 000 parsel, iç nokta', scene: parcels, values: { input: ALL, location: 'inside', parts: false }, budget: 800 },
   { tool: vertices, title: 'Köşeleri noktaya çevir, 100 000 parsel, bütün köşeler (400 000 nokta)', scene: parcels, values: { input: ALL, which: 'all' }, budget: 2000 },
@@ -126,6 +151,8 @@ const RUNS_OF: readonly { tool: ProcessingTool; title: string; scene: () => CadD
     values: { sourceKind: 'file', file: bearingTable(), east: 'Doğu', north: 'Kuzey', bearing: 'Semt', length: 'Uzunluk', unit: 'grad' },
     budget: 800,
   },
+  { tool: tablePoints, title: 'Tablodan nokta, 100 000 satır, projenin düzleminde', scene: parcels, values: { ...POINT_COLUMNS, file: pointTable(false), system: 'project' }, budget: 800 },
+  { tool: tablePoints, title: "Tablodan nokta, 100 000 satır, WGS 84'ten projenin sistemine", scene: parcels, values: { ...POINT_COLUMNS, file: pointTable(true), system: '4326' }, budget: 900 },
 ];
 
 it.runIf(!!process.env.CONVERT_BENCH)('measures Geometri dönüştürme against its budgets', async () => {

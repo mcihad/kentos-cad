@@ -4,7 +4,7 @@ import { watchAll } from '../../core/signal';
 import type { Entity } from '../../model/entities';
 import { attributeFields, entityObjects } from '../../model/expression/builderObjects';
 import { compileExpression, expressionError } from '../../model/expression/expression';
-import { featureTableModel, columnTable, type FeatureTableModel } from '../../model/featureTable';
+import { featureSheet, featureTableModel, columnTable, type FeatureTableModel } from '../../model/featureTable';
 import { checkValue, displayValue, type LayerField } from '../../model/layerFields';
 import { featureTable, type TableShow } from '../../model/ops/featureTable';
 import { entitiesSet } from '../../product/entitiesSet';
@@ -13,11 +13,12 @@ import { h, replaceChildren } from '../dom';
 import { builderButton } from '../expression/builderApi';
 import { icon } from '../icons';
 import { Dropdown } from '../widgets/Dropdown';
-import type { MenuItem } from '../widgets/PopupMenu';
+import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { clickPick } from './PointTable';
 import { appVariables } from '../../app/expressionVariables';
+import { exportItems } from './featureExport';
 
 /**
  * Öznitelik tablosu, the bottom panel's Tablo tab (docs/adr/0199 §4): a layer's objects in a table, their attributes
@@ -47,6 +48,8 @@ export const FEATURE_TEXTS = {
   zoomHint: 'Seçili nesnelere yakınlaştırır',
   fields: 'Alanlar…',
   fieldsHint: 'Katmanın alanları: adları, türleri, kuralları, varsayılanları ve değer listeleri',
+  export: 'Dışa aktar',
+  exportHint: 'Tablonun gösterilen satırlarını Excel (XLSX), OpenDocument (ODS) ya da CSV dosyasına yazar; alanlar türleriyle (sayı, tarih, evet/hayır).',
   noLayers: 'Çizimde katman yok.',
   none: 'Katmanda nesne yok.',
   noMatch: 'Süzgece uyan nesne yok.',
@@ -151,6 +154,16 @@ export class FeatureTable extends Component {
     };
     this.zoomBtn = button('zoomSelection', FEATURE_TEXTS.zoom, FEATURE_TEXTS.zoomHint, () => ctx.commands.execute('view.zoomSelection'));
     this.fieldsBtn = button('layerFields', FEATURE_TEXTS.fields, FEATURE_TEXTS.fieldsHint, () => this.openFields());
+    // Dışa aktar ▾ (docs/adr/0223 §3): the rows shown, as the table shows them.
+    const layerName = () => {
+      const id = this.layerId();
+      return (id && ctx.doc.layers.get(id)?.name) || 'Tablo';
+    };
+    const exportBtn = button('export', FEATURE_TEXTS.export, FEATURE_TEXTS.exportHint, () => {
+      const items = exportItems(ctx, () => featureSheet(this.model, this.shown, layerName()), layerName);
+      PopupMenu.open(items, exportBtn.getBoundingClientRect(), { owner: exportBtn });
+    });
+    exportBtn.append(icon('chevronDown', 12));
 
     this.scroller = h('div', { class: 'ptable__scroll' }, h('table', { class: 'ftable__table' }, h('thead', null, this.head), this.body), this.empty);
     this.el = h(
@@ -160,7 +173,7 @@ export class FeatureTable extends Component {
         'div',
         { class: 'ptable__bar' },
         h('div', { class: 'ptable__group' }, this.layerPick.el, search, this.showPick.el, h('span', { class: 'ftable__expr' }, this.filterBox, builder)),
-        h('div', { class: 'ptable__group ptable__group--end' }, this.count, this.zoomBtn, this.fieldsBtn),
+        h('div', { class: 'ptable__group ptable__group--end' }, this.count, this.zoomBtn, exportBtn, this.fieldsBtn),
       ),
       this.scroller,
     );

@@ -1,8 +1,12 @@
 {
  "format": "kentos.table-file-cases",
- "version": 1,
+ "version": 2,
  "generatedBy": "scripts/fixtures/table_file_cases.py",
- "title": "Tablo ekle: CSV, TXT ve XLSX dosyalarının satırları (ADR 0184 §4)",
+ "title": "Tablo dosyaları: CSV, TXT, XLSX ve ODS dosyalarının satırları (ADR 0184 §4, 0223 §1)",
+ "processing": {
+  "rows": 250001,
+  "columns": 501
+ },
  "cases": [
   {
    "file": "noktali-virgul.csv",
@@ -40277,7 +40281,399 @@
    "file": "baska.zip",
    "want": {
     "sheets": [],
-    "problem": "Arşiv bir Excel çalışma kitabı (XLSX) değil. Tabloyu XLSX, CSV ya da TXT olarak seçin."
+    "problem": "Arşiv bir Excel (XLSX) ya da OpenDocument (ODS) çalışma kitabı değil. Tabloyu XLSX, ODS, CSV ya da TXT olarak seçin."
+   }
+  },
+  {
+   "file": "tarihler.xlsx",
+   "want": {
+    "sheets": [
+     {
+      "name": "Tarihler",
+      "rows": [
+       [
+        "Tarih",
+        "_x0041_ A"
+       ],
+       [
+        "2024-10-01",
+        "2024-10-01",
+        "2024-10-01"
+       ],
+       [
+        "2024-10-01T12:30:00",
+        "18:00:00",
+        "06:00:00"
+       ],
+       [
+        "1.5",
+        "12.5",
+        "3"
+       ],
+       [
+        "1900-02-28",
+        "1900-02-28",
+        "1900-03-01"
+       ],
+       [
+        "06:00:00",
+        "-1",
+        "01.10.2024"
+       ],
+       [
+        "a\rb",
+        "Satır\r\nsonu",
+        "2024-10-01"
+       ],
+       [
+        "2024-10-02T00:00:00",
+        "9999-12-31",
+        "2958467"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "file": "tarihler-1904.xlsx",
+   "want": {
+    "sheets": [
+     {
+      "name": "Tarihler",
+      "rows": [
+       [
+        "2024-10-01",
+        "1904-01-02T12:00:00",
+        "00:00:00"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "file": "tablo.ods",
+   "want": {
+    "sheets": [
+     {
+      "name": "Noktalar",
+      "rows": [
+       [
+        "Ad",
+        "Y",
+        "X",
+        "Tarih",
+        "Not"
+       ],
+       [
+        "P1",
+        "452345.125",
+        "4412345.0625",
+        "2024-10-01",
+        "Sınır  taşı\tsol\nalt ek son\nikinci satır"
+       ],
+       [
+        "P2",
+        "0.25",
+        "1340.5",
+        "2024-10-01T12:30:00",
+        "36:05:10"
+       ],
+       [
+        "DOĞRU",
+        "YANLIŞ",
+        "12,5 metin",
+        "öznitelik",
+        "birleşik"
+       ],
+       [
+        "tekrar",
+        "tekrar",
+        "",
+        "",
+        "7"
+       ],
+       [
+        "tekrar",
+        "tekrar",
+        "",
+        "",
+        "7"
+       ],
+       [
+        "\n    girintili  satır\t\n    ve  devamı\n  "
+       ],
+       [],
+       [],
+       [],
+       [
+        "grupta"
+       ]
+      ]
+     },
+     {
+      "name": "Boş",
+      "rows": []
+     }
+    ]
+   }
+  },
+  {
+   "file": "metin.odt",
+   "want": {
+    "sheets": [],
+    "problem": "Arşiv bir OpenDocument belgesi ama hesap tablosu değil. Tabloyu ODS, XLSX, CSV ya da TXT olarak seçin."
+   }
+  },
+  {
+   "file": "libre.xlsx",
+   "want": {
+    "sheets": [
+     {
+      "name": "Noktalar",
+      "rows": [
+       [
+        "Ad",
+        "Y",
+        "X",
+        "Tarih",
+        "Not"
+       ],
+       [
+        "P1",
+        "452345.125",
+        "4412345.0625",
+        "2024-10-01T00:00:00",
+        "Sınır  taşı\tsol\nalt ek son\nikinci satır"
+       ],
+       [
+        "P2",
+        "0.25",
+        "1340.5",
+        "2024-10-01T12:30:00",
+        "12:05:10"
+       ],
+       [
+        "DOĞRU",
+        "YANLIŞ",
+        "0",
+        "öznitelik",
+        "birleşik",
+        "gizli"
+       ],
+       [
+        "tekrar",
+        "tekrar",
+        "",
+        "",
+        "7"
+       ],
+       [
+        "tekrar",
+        "tekrar",
+        "",
+        "",
+        "7"
+       ],
+       [
+        "\n    girintili  satır\t\n    ve  devamı\n  "
+       ],
+       [],
+       [],
+       [],
+       [
+        "grupta"
+       ]
+      ]
+     },
+     {
+      "name": "Boş",
+      "rows": []
+     }
+    ]
+   }
+  },
+  {
+   "file": "libre.ods",
+   "want": {
+    "sheets": [
+     {
+      "name": "Tarihler",
+      "rows": [
+       [
+        "Tarih",
+        "_x0041_ A"
+       ],
+       [
+        "2024-10-01",
+        "2024-10-01",
+        "2024-10-01T18:00:00"
+       ],
+       [
+        "2024-10-01T12:30:00",
+        "18:00:00",
+        "1093590:00:00"
+       ],
+       [
+        "36:00:00",
+        "12.5",
+        "3"
+       ],
+       [
+        "1900-02-27",
+        "1900-02-28",
+        "1900-03-01"
+       ],
+       [
+        "1899-12-30T06:00:00",
+        "1899-12-29",
+        "01.10.2024"
+       ],
+       [
+        "a_x000D_b",
+        "Satır\nsonu",
+        "2024-10-02T00:00:00"
+       ],
+       [
+        "2024-10-02T00:00:00",
+        "9999-12-31",
+        "10000-01-02"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "file": "tablo.ods",
+   "limits": {
+    "rows": 3,
+    "columns": 2
+   },
+   "want": {
+    "sheets": [
+     {
+      "name": "Noktalar",
+      "rows": [
+       [
+        "Ad",
+        "Y"
+       ],
+       [
+        "P1",
+        "452345.125"
+       ],
+       [
+        "P2",
+        "0.25"
+       ]
+      ],
+      "cut": true
+     },
+     {
+      "name": "Boş",
+      "rows": []
+     }
+    ]
+   }
+  },
+  {
+   "file": "kitap.xlsx",
+   "limits": {
+    "rows": 2,
+    "columns": 2
+   },
+   "want": {
+    "sheets": [
+     {
+      "name": "Koordinatlar",
+      "rows": [
+       [
+        "Nokta",
+        "Y"
+       ],
+       [
+        "101",
+        "487000.125"
+       ]
+      ],
+      "cut": true
+     },
+     {
+      "name": "Notlar",
+      "rows": [
+       [],
+       [
+        "",
+        "İlçe"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "file": "tarihler.xlsx",
+   "limits": {
+    "rows": 4,
+    "columns": 3
+   },
+   "want": {
+    "sheets": [
+     {
+      "name": "Tarihler",
+      "rows": [
+       [
+        "Tarih",
+        "_x0041_ A"
+       ],
+       [
+        "2024-10-01",
+        "2024-10-01",
+        "2024-10-01"
+       ],
+       [
+        "2024-10-01T12:30:00",
+        "18:00:00",
+        "06:00:00"
+       ],
+       [
+        "1.5",
+        "12.5",
+        "3"
+       ]
+      ],
+      "cut": true
+     }
+    ]
+   }
+  },
+  {
+   "file": "noktali-virgul.csv",
+   "limits": {
+    "rows": 2,
+    "columns": 3
+   },
+   "want": {
+    "sheets": [
+     {
+      "rows": [
+       [
+        "Ada",
+        "Parsel",
+        "Nitelik"
+       ],
+       [
+        "101",
+        "5",
+        "Arsa; bahçe"
+       ]
+      ],
+      "cut": true
+     }
+    ],
+    "encoding": "UTF-8"
    }
   }
  ]

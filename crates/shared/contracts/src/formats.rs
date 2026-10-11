@@ -110,7 +110,9 @@ use crate::layer::LineType;
 /// 49: KML/KMZ and GPX (docs/adr/0222): `readKml` (`CrsSource::Kml`), `writeKml`
 ///    (`KmlWriteInput`), `writeGpx` (`GpxWriteInput`), an import moved into the project's system
 ///    (`reprojectImport`), GeoJSON written in WGS 84 (`writeGeoJsonWgs84`) and `GnssRead.lines`.
-pub const FORMATS_VERSION: u32 = 49;
+/// 50: table exchange (docs/adr/0223): `readTableFile` reads ODS and a workbook's dates, within
+///    İşlemler's limits when asked; `writeWorkbook` (`WorkbookWriteInput`) writes XLSX, ODS and CSV.
+pub const FORMATS_VERSION: u32 = 50;
 
 // ── Every import ────────────────────────────────────────────────────────
 

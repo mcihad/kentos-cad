@@ -48,7 +48,9 @@ pub mod table_file;
 pub mod text;
 pub mod units;
 pub mod watch;
+pub mod workbook;
 pub mod xml;
+pub mod xml_scan;
 pub mod zip;
 
 pub use kentos_contracts as contracts;

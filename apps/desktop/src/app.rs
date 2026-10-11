@@ -329,6 +329,8 @@ pub enum Message {
     Points(crate::points::Event),
     /// The Tablo tab, Öznitelik tablosu (features/, docs/adr/0199 §4).
     Features(crate::features::Event),
+    /// A table written as a file (docs/adr/0223 §2): what was written, or why not.
+    TableWritten(crate::table_write::Outcome),
     /// Alanlar, a layer's fields (layer_fields.rs, docs/adr/0199 §3).
     LayerFields(crate::layer_fields::Event),
     /// The Arama tab (search/, docs/adr/0178).
@@ -1428,6 +1430,15 @@ impl App {
             Message::BottomTab(tab) => self.show_bottom(tab),
             Message::Points(event) => return self.points_event(event),
             Message::Features(event) => return self.features_event(event),
+            Message::TableWritten(outcome) => match outcome {
+                crate::table_write::Outcome::Written { file, rows, notes } => {
+                    self.say(Level::Success, format!("“{file}” yazıldı: {rows} satır."));
+                    for n in notes {
+                        self.say(Level::Info, format!("“{file}”: {n}"));
+                    }
+                }
+                crate::table_write::Outcome::Failed(why) => self.warn(why),
+            },
             Message::LayerFields(event) => return self.layer_fields_event(event),
             Message::Search(event) => return self.data_event(event),
             Message::Topology(event) => return self.topology_event(event),

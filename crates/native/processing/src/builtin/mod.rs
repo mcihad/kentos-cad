@@ -69,6 +69,7 @@ pub fn tools() -> Vec<Tool> {
         convert::tables::bearing_line(),
         convert::tables::xy_line(),
         convert::tables::table_ellipse(),
+        convert::tables::table_points(),
         convert::paths::substring_tool(),
         convert::paths::polygons_to_lines(),
         convert::paths::lines_to_polygons(),

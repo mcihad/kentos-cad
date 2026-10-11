@@ -10,7 +10,10 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use kentos_contracts::{Entity, LayerField, LayerFieldKind, check_value, display_value, js_trim};
+use kentos_contracts::{
+    CellKind, Entity, LayerField, LayerFieldKind, WorkbookColumn, WorkbookSheet, check_value,
+    display_value, js_trim,
+};
 use kentos_geometry_core::ops::feature_table::{Cell, Column, Row};
 use kentos_geometry_core::ops::point_editor::natural_order;
 
@@ -179,6 +182,65 @@ pub fn feature_table_of(
         columns,
         rows,
         problems,
+    }
+}
+
+/// Whether a field writes its values' labels (a value list).
+fn listed(f: &LayerField) -> bool {
+    f.values.as_ref().is_some_and(|v| !v.is_empty())
+}
+
+/// The table as a workbook's sheet (docs/adr/0223 §3; the web's
+/// `featureSheet`): its rows `shown`, in that order; its columns Tür, the
+/// fields by their names and the other keys, a field's written by its kind
+/// (a whole number a number with no fraction digits, a decimal one with the
+/// field's, a date, yes or no; a value list's labels and text as text), the
+/// others text. A cell: Tür the object's kind; a field's value its canonical
+/// text (a value list's label), one that does not keep its field's rules as
+/// written; another key's as written.
+pub fn workbook_sheet(table: &FeatureTable, shown: &[usize], name: &str) -> WorkbookSheet {
+    let columns = table
+        .columns
+        .iter()
+        .map(|c| {
+            let (kind, decimals) = match &c.field {
+                Some(f) if listed(f) => (CellKind::Text, None),
+                Some(f) => match f.kind {
+                    LayerFieldKind::Integer => (CellKind::Number, Some(0)),
+                    LayerFieldKind::Decimal => (CellKind::Number, f.scale),
+                    LayerFieldKind::Date => (CellKind::Date, None),
+                    LayerFieldKind::Boolean => (CellKind::Boolean, None),
+                    LayerFieldKind::Text => (CellKind::Text, None),
+                },
+                None => (CellKind::Text, None),
+            };
+            WorkbookColumn {
+                name: c.key.clone().unwrap_or_else(|| "Tür".to_owned()),
+                kind,
+                decimals,
+            }
+        })
+        .collect();
+    let rows = shown
+        .iter()
+        .filter_map(|&i| Some((i, table.rows.get(i)?)))
+        .map(|(i, row)| {
+            row.cells
+                .iter()
+                .enumerate()
+                .map(|(j, cell)| match (&table.columns[j].field, &cell.key) {
+                    (Some(f), Some(key)) if !listed(f) && !table.problems.contains_key(&(i, j)) => {
+                        key.clone()
+                    }
+                    _ => cell.shown.clone(),
+                })
+                .collect()
+        })
+        .collect();
+    WorkbookSheet {
+        name: name.to_owned(),
+        columns,
+        rows,
     }
 }
 

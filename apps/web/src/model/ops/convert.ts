@@ -1,5 +1,6 @@
 import { op } from '../../wasm/core';
 import type { EntityGeometry } from '../entities';
+import type { DatumChoice, System } from '../geom/crsTransform';
 import type { Vec2 } from '../geometry';
 
 /**
@@ -57,8 +58,14 @@ export const convertDensifyCount = op<(entities: readonly EntityGeometry[], by: 
 
 export const convertDensify = op<(entities: readonly EntityGeometry[], zs: readonly (Zs | null)[], by: Density) => (Elevated & { added: number })[]>('convertDensify');
 
-/** A table row's object, or why it has none (an empty cell, no number, not more than zero, by its place; ends in one place). */
-export type RowResult = { readonly shape: EntityGeometry } | { readonly fault: 'empty' | 'number' | 'positive' | 'same'; readonly column?: number };
+/**
+ * A table row's object, or why it has none: an empty cell, no number, not more than zero, a longitude or latitude past
+ * its bound (by the cell's place); ends in one place; a point the move into the project's system does not reach
+ * (`unreached:` and why: `outside`, `noLink`, `noGrid`, `outsideGrid`).
+ */
+export type RowResult =
+  | { readonly shape: EntityGeometry }
+  | { readonly fault: 'empty' | 'number' | 'positive' | 'range' | 'same' | `unreached:${string}`; readonly column?: number };
 
 /** Semt ve uzunluktan çizgi (§5): rows of east, north, bearing and length cells. */
 export const convertBearingRows = op<(rows: readonly (readonly string[])[], unit: string) => RowResult[]>('convertBearingRows');
@@ -68,3 +75,12 @@ export const convertXyRows = op<(rows: readonly (readonly string[])[]) => RowRes
 
 /** Tablodan elips (§7): rows of east, north, the two semi-axes and the bearing cells. */
 export const convertEllipseRows = op<(rows: readonly (readonly string[])[], unit: string) => RowResult[]>('convertEllipseRows');
+
+/**
+ * Tablodan nokta (docs/adr/0223 §5): rows of east, north and elevation cells (in a geographic system longitude and
+ * latitude, degrees, minutes and seconds too), each a point moved from `from` into `to` with the project's datum
+ * choices when both are given and differ; its elevation as it is.
+ */
+export const convertPointRows = op<(rows: readonly (readonly string[])[], from: System | null, to: System | null, choices: readonly DatumChoice[]) => RowResult[]>(
+  'convertPointRows',
+);

@@ -35,7 +35,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   seçeneği (Çok satırlı yazı'nın Satır aralığı R), Öznitelikler'in stil satırları; DXF STYLE ve DIMSTYLE iki yönde, içe aktarılan stiller
   projeye adıyla eklenir, Standard Standart'tır (ADR 0183);
   tablo: hücreler, birleşik alanlar, sütun hizası, başlık satırı, çizgiler ve kalın çerçeve (`.kcad` şema 22); CAD projesinde Tablo ekle
-  (boş, Excel .xlsx ya da CSV/TXT dosyasından, koordinat, alan ve öznitelik çizelgesi; önizleme, imleçten yerleştirme), Tabloyu düzenle
+  (boş, Excel .xlsx, ODS ya da CSV/TXT dosyasından, koordinat, alan ve öznitelik çizelgesi; önizleme, imleçten yerleştirme), Tabloyu düzenle
   (elektronik tablo gibi; çift tıkla), Tabloyu güncelle (kaynağına bağlı: çizelgenin nesneleri ya da yeniden seçilen dosya), Öznitelikler'in
   satırları; DXF'e adsız blok olarak gider, KENTOS verisiyle tablo olarak gelir (ADR 0184);
   koordinat yazımı: CAD projesinde Koordinat yaz (tıklanan, yazılan ya da `#ad` noktaya; yerindeki noktanın adı ve kotu) ve Köşelere koordinat
@@ -201,6 +201,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Shapefile ve KML içe aktarmada başka sistemdeki dosya “Projenin sistemine çevir” onayıyla, dönüşümün yolu ve doğruluğu söylenerek
   çevrilir; GeoJSON dışa aktar'da “WGS 84'e çevir (RFC 7946)”; GNSS içe aktar'da rotalar, izler ve NMEA kaydı çizgi; Kaynaklar KML'yi
   tanır; `FORMATS_VERSION` 49 (ADR 0222);
+  tablo alışverişi: XLSX ve ODS okuma (sayfalar akışla, `xml_scan`; tarih ve saat biçimli hücre ISO metniyle, 1900 ve 1904; ODS'nin
+  tekrarları ve paragrafları LibreOffice Calc'ın okuduğu gibi) ve yazma (XLSX, ODS, CSV; sütunun türüyle sayı, tarih, evet/hayır, metin;
+  kalın, donmuş ve süzgeçli başlık, Excel'in sayfa adı kuralı; başka yazılanlar raporda); İşlemler'in dosya parametresi 250 000 satıra
+  kadar, Sayfa listesiyle, sınırı aşan söylenerek; Öznitelik tablosunda Dışa aktar ▾, İşlemler'in tablolarında Kaydet ▾; Tablodan nokta
+  (dosya ya da katman, düzlem ya da kayıttaki bir sistemden açık dönüşümle, coğrafide DMS); Koordinat listesi çalışma kitabını Tablodan
+  nokta'ya yönlendirir; `FORMATS_VERSION` 50 (ADR 0223);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -465,7 +471,7 @@ python3 scripts/fixtures/annotation_style_cases.py --check   # yazı ve ölçü 
 python3 scripts/fixtures/paragraph_cases.py --check   # çok satırlı yazının satırlarını, sarmasını, kutusunu ve düzenleyicinin dilimlerini yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/text/v1/paragraph.json (ADR 0182)
 cargo test -p kentos-desktop paragraph_editor::tests::screens -- --ignored --nocapture   # çok satırlı yazının resimleri, .run/shots/paragraf-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs paragraph); ADR 0182)
 python3 scripts/fixtures/table_cases.py --check   # tablonun yerleşimini, çerçevesini, tutamaçlarını, boylarını, çizelgelerini, düzenlemelerini ve güncellemesini yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/table/v1/cases.json (ADR 0184)
-python3 scripts/fixtures/table_file_cases.py --check   # Tablo ekle'nin dosya okuyucusunu (CSV/TXT ayırıcı ve kodlama, XLSX sayfaları; .xls ve bozuk dosya) Python'un zipfile ve xml.etree'siyle yazılmış örneklerden denetle; durumlar fixtures/table/v1/files.json (ADR 0184 §4)
+python3 scripts/fixtures/table_file_cases.py --check   # tablo dosyası okuyucusunu (metin tabloları, XLSX'in tarihleri, 1904 sistemi ve kaçışları, ODS'nin tekrarları, örtülü hücreleri, türleri ve paragrafları, LibreOffice'in yazdıkları, retler, sınırlar) zipfile ve xml.etree'yle yazılmış kuraldan, XLSX'leri openpyxl'le ve ODS'leri LibreOffice'le çapraz denetle; durumlar fixtures/table/v1/files.json (ADR 0184 §4, 0223 §1)
 python3 scripts/fixtures/coordinate_label_cases.py --check   # Koordinat yaz'ın yerlerini ve adlarını, şablonun satırlarını (yer tutucular, değeri olmayan satır, birimler, basamak) ve yerleşimi (kol, dirsek, çizgi, dört yön, Otomatik, kolsuz satırlar) kesirlerle ve yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/coordinate-labels/v1/cases.json (ADR 0185)
 KENTOS_SHOTS_ONLY=koordinat-yaz,koordinat-koseler,koordinat-cizelge,koordinat-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Koordinat yaz'ın resimleri, .run/shots/arac-koordinat-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs coordinates); ADR 0185)
 python3 scripts/fixtures/hatch_pattern_cases.py --check   # tarama desenlerinin kitaplığını, kesiklerin çizilişini, boyalarını, bölgeye kesilen çizgi ve noktalarını, taşınmasını ve taramanın bölgesini ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/hatch/v1/cases.json (ADR 0186)
@@ -637,6 +643,10 @@ python3 scripts/fixtures/kml_cases.py --check   # KML ve KMZ okuyucusunun örnek
 python3 scripts/fixtures/wgs84_write_cases.py --check   # GPX'in (iz ve rota) ve WGS 84 GeoJSON'un kaydedilmiş çıktılarını (KENTOS_WRITE_WGS84=1 cargo test -p kentos-formats --test all wgs84) girdisine göre okuyup PROJ'la denetle; durumlar fixtures/formats/v1/wgs84 (ADR 0222)
 cargo test -p kentos-desktop exchange::kml_tests::screens -- --ignored --nocapture   # KML/KMZ içe aktar (çevirme onayıyla), KML/KMZ ve GPX dışa aktar, GeoJSON'un WGS 84'ü ve GNSS'in çizgileri, .run/shots/kml-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs kml); ADR 0222)
 cargo test --release -p kentos-formats --test all kml_timing -- --ignored --nocapture   # 100 000 nesnede KML ve KMZ yazma ve okuma, projenin sistemine çevirme, GPX ve WGS 84 GeoJSON yazma bütçeleriyle (ADR 0222 Doğrulama); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; KML_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/kml.test.ts --disable-console-intercept; rm apps/web/src/io/pkg/.stamp
+python3 scripts/fixtures/workbook_cases.py --check   # çalışma kitabı yazıcısının kaydedilmiş dosyalarını (KENTOS_WRITE_WORKBOOK=1 cargo test -p kentos-formats --test all workbook) okuyucunun kuralıyla, XLSX'leri openpyxl'le ve ODS'leri LibreOffice'le denetle; durumlar fixtures/table/v1/written (ADR 0223 §2)
+python3 scripts/fixtures/table_points_cases.py --check; python3 scripts/fixtures/feature_export_cases.py --check   # Tablodan nokta'nın durumlarını (düzlem ve WGS 84 ODS'si PROJ'la, katman, retler; fixtures/processing/v1/table-points*) ve Öznitelik tablosunun dışa aktarılan sayfasını (fixtures/feature-table/v1/export.json) KentOS kodu olmadan denetle (ADR 0223 §3, §5)
+cargo test -p kentos-desktop processing::table_points_tests::screens -- --ignored --nocapture --test-threads=1   # Tablodan nokta'nın şeridi, penceresi, Sayfa listesi, Kaydet ▾, noktalar, Öznitelik tablosunun Dışa aktar ▾'si ve koordinat listesinde çalışma kitabı, .run/shots/islem-tablo-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs tableexchange); ADR 0223)
+cargo test --release -p kentos-formats --test all workbook_timing -- --ignored --nocapture; cargo test --release -p kentos-processing --test cases table_points_timing -- --ignored --nocapture   # 100 000 satırın XLSX, ODS ve CSV yazılması, 250 000 satırlık XLSX ve ODS'nin okunması, 100 000 satırdan Tablodan nokta bütçeleriyle (ADR 0223 Doğrulama); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; WORKBOOK_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/workbook.test.ts --disable-console-intercept; rm apps/web/src/io/pkg/.stamp (Tablodan nokta scripts/perf/convert.test.ts'te)
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
 python3 scripts/fixtures/closing_cases.py --check   # dönük binaların 45 bloğunun kapanışını (dışa tampon GEOS'un, içe aşındırma kesin; kesişim çekirdeğinin bir kez yüz yitirdiği bloklar dahil) KentOS kodu olmadan denetle; --stress FILE çekirdeğin rastgele blokların kapanışlarını (KENTOS_CLOSINGS_OUT=FILE cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored) karşılaştırır; durumlar fixtures/geoprocess/v1/closings.json (ADR 0221 §10)
 cargo test -p kentos-desktop processing::generalize_tests::screens -- --ignored --nocapture --test-threads=1   # genelleştirmenin şeridi, pencereleri ve sonuçları, .run/shots/islem-gen-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs generalize); ADR 0221)
@@ -1613,7 +1623,16 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `ui/io/Wgs84ExportDialog.ts`; GNSS'in çizgileri `kentos_interaction::gnss::place_all`, `model/gnssImport.ts`'in `placeGnssAll`'ı;
   bağımsız başvurular `kml_cases.py` (7 örnek, 4 taşıma, yazıcının 3 dosyası) ve `wgs84_write_cases.py` (GPX ve GeoJSON), GNSS
   başvurularının çizgileri; pencereler `exchange::kml_tests`, `shots.mjs kml`; süreler `kml_timing` ve `scripts/perf/kml.test.ts`.
-  Sıradaki `GIS-27`.
+  `GIS-27` tablo alışverişi ([ADR 0223](docs/adr/0223-table-exchange.md); kapsamı ben belirledim) tek parçada bitti (11 Ekim): biçim
+  çekirdeğinde `xml_scan` (akış okuyucusu: önekler önbellekte, etiketin türü baytından), `table_file`'ın `Limits`'i ve `read_with`'i
+  (Tablo ekle 10 001 × 101, İşlemler 250 001 × 501, sessiz kısaltma kalktı), `xlsx`, `ods`, `dates` (openpyxl'in tarih kuralı),
+  `workbook` (XLSX, ODS, CSV yazıcısı; hücreler dilim dilim, büyük parçalar `zip::Pack::Fast`'la), `coords::NOT_TEXT`; geometri
+  çekirdeğinde `ops::convert::table::point_rows` (`convertPointRows`); `FORMATS_VERSION` 50; WASM `readTableFile(bytes, processing)`,
+  `writeWorkbook`; İşlemler'in dosya alanında Sayfa listesi ve ayrı iş parçacığında okuma (masaüstü `FileRead`, `Sheet`), Tablodan nokta iki
+  platformda, sonuç tablolarında Kaydet ▾ (`SaveTableAs`); masaüstü `table_write.rs`, web `ui/bottom/featureExport.ts`; Öznitelik tablosunun
+  Dışa aktar ▾'si (`workbook_sheet`, `featureSheet`); bağımsız başvurular `table_file_cases.py`, `workbook_cases.py`, `table_points_cases.py`,
+  `feature_export_cases.py`; pencereler `processing::table_points_tests`, `shots.mjs tableexchange`; süreler `workbook_timing`,
+  `table_points_timing`, `scripts/perf/workbook.test.ts`, `scripts/perf/convert.test.ts`. Sıradaki `GIS-28`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

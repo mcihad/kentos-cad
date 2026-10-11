@@ -137,7 +137,7 @@ export function chooseTableFile(): Promise<File | null> {
   return new Promise((done) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.xlsx,.csv,.txt,.tsv,.XLSX,.CSV,.TXT,.TSV';
+    input.accept = '.xlsx,.ods,.csv,.txt,.tsv,.XLSX,.ODS,.CSV,.TXT,.TSV';
     input.addEventListener('change', () => done(input.files?.[0] ?? null), { once: true });
     input.addEventListener('cancel', () => done(null), { once: true });
     input.click();
@@ -231,7 +231,7 @@ export function registerTableCommands(ctx: AppContext, open: { insert: () => voi
     icon: 'tableInsert',
     aliases: ['TABLO', 'TABLE', 'TB', 'TABLOEKLE'],
     description:
-      'Çizime tablo ekler: boş, Excel (.xlsx) ya da CSV/TXT dosyasından, ya da seçili nesnelerin koordinat, alan veya öznitelik çizelgesi; yazı stili, yüksekliği, çizgileri ve kalın çerçevesiyle. Sol üst köşesine tıklanarak yerleştirilir.',
+      'Çizime tablo ekler: boş, Excel (.xlsx), ODS ya da CSV/TXT dosyasından, ya da seçili nesnelerin koordinat, alan veya öznitelik çizelgesi; yazı stili, yüksekliği, çizgileri ve kalın çerçevesiyle. Sol üst köşesine tıklanarak yerleştirilir.',
     run: () => open.insert(),
   });
   ctx.commands.register({

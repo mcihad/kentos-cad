@@ -7,14 +7,14 @@
 use iced::widget::{button, container, mouse_area, row, space, text_input};
 use iced::{Center, Color, Element, Fill, Length, Theme};
 use kentos_contracts::{LayerField, LayerFieldKind, check_value};
-use kentos_ui::icon::icon;
+use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::search_box::SearchBox;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, SortOrder, Table};
-use kentos_ui::widget::{Tip, tip};
+use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 
 use super::{Event, Rows, Show, texts};
 use crate::app::{App, Message};
@@ -48,8 +48,8 @@ fn bar_button<'a>(
 
 /// What the bar needs in one row, logical pixels at the default type size:
 /// the layer (220), the search (180), Göster (190), the filter (220 and its
-/// ε), the count and the two buttons, their gaps and margins.
-const BAR_ONE_ROW: f32 = 1240.0;
+/// ε), the count and the three buttons, their gaps and margins.
+const BAR_ONE_ROW: f32 = 1370.0;
 
 /// A list editor's choices for a field: none, then its codes by their labels,
 /// or yes and no; with the one written now.
@@ -146,6 +146,25 @@ impl App {
         .wrap()
         .vertical_spacing(6);
         let count = format!("{} / {}", rows.shown.len(), rows.slots.len());
+        // Dışa aktar ▾ (docs/adr/0223 §3): the rows shown, as the table shows them.
+        let face = container(
+            row![
+                icon(from_web(Some("export"))).size(14.0),
+                label::body(texts::EXPORT),
+                icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
+        .padding([4, 10])
+        .style(style::container::field_box);
+        let export = tip(
+            MenuButton::new(face, || {
+                crate::table_write::items(Menu::new(), |f| msg(Event::Export(f)))
+            }),
+            Tip::new(texts::EXPORT).body(texts::EXPORT_HINT),
+            iced::widget::tooltip::Position::Top,
+        );
         let actions = row![
             label::muted(count),
             bar_button(
@@ -154,6 +173,7 @@ impl App {
                 texts::ZOOM_HINT,
                 (!self.selection.is_empty()).then(|| msg(Event::ZoomSelection)),
             ),
+            export,
             bar_button(
                 "layerFields",
                 texts::FIELDS,

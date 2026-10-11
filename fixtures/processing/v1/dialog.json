@@ -156,7 +156,8 @@
   "result": {
    "title": "Sonuç",
    "copy": "Panoya kopyala",
-   "save": "CSV olarak kaydet",
+   "save": "Kaydet",
+   "saveHint": "Tabloyu Excel (XLSX), OpenDocument (ODS) ya da CSV dosyasına yazar; sayılar sayı olarak.",
    "copied": "Tablo panoya kopyalandı."
   },
   "expression": {
@@ -1456,7 +1457,7 @@
     {
      "name": "file",
      "label": "Dosya",
-     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası.",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası.",
      "optional": false,
      "stacked": false,
      "control": {
@@ -1464,7 +1465,8 @@
       "accept": [
        ".csv",
        ".txt",
-       ".xlsx"
+       ".xlsx",
+       ".ods"
       ]
      }
     },
@@ -1604,7 +1606,7 @@
     {
      "name": "file",
      "label": "Dosya",
-     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası.",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası.",
      "optional": false,
      "stacked": false,
      "control": {
@@ -1612,7 +1614,8 @@
       "accept": [
        ".csv",
        ".txt",
-       ".xlsx"
+       ".xlsx",
+       ".ods"
       ]
      }
     },
@@ -3217,7 +3220,7 @@
        {
         "value": "file",
         "label": "Dosya",
-        "hint": "CSV, TXT ya da Excel dosyası"
+        "hint": "CSV, TXT, Excel ya da ODS dosyası"
        },
        {
         "value": "layer",
@@ -3230,7 +3233,7 @@
     {
      "name": "file",
      "label": "Dosya",
-     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası; her satır bir çizgi.",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir çizgi.",
      "optional": false,
      "stacked": false,
      "control": {
@@ -3238,7 +3241,8 @@
       "accept": [
        ".csv",
        ".txt",
-       ".xlsx"
+       ".xlsx",
+       ".ods"
       ]
      }
     },
@@ -3386,7 +3390,7 @@
        {
         "value": "file",
         "label": "Dosya",
-        "hint": "CSV, TXT ya da Excel dosyası"
+        "hint": "CSV, TXT, Excel ya da ODS dosyası"
        },
        {
         "value": "layer",
@@ -3399,7 +3403,7 @@
     {
      "name": "file",
      "label": "Dosya",
-     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası; her satır bir çizgi.",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir çizgi.",
      "optional": false,
      "stacked": false,
      "control": {
@@ -3407,7 +3411,8 @@
       "accept": [
        ".csv",
        ".txt",
-       ".xlsx"
+       ".xlsx",
+       ".ods"
       ]
      }
     },
@@ -3532,7 +3537,7 @@
        {
         "value": "file",
         "label": "Dosya",
-        "hint": "CSV, TXT ya da Excel dosyası"
+        "hint": "CSV, TXT, Excel ya da ODS dosyası"
        },
        {
         "value": "layer",
@@ -3545,7 +3550,7 @@
     {
      "name": "file",
      "label": "Dosya",
-     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası; her satır bir elips.",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir elips.",
      "optional": false,
      "stacked": false,
      "control": {
@@ -3553,7 +3558,8 @@
       "accept": [
        ".csv",
        ".txt",
-       ".xlsx"
+       ".xlsx",
+       ".ods"
       ]
      }
     },
@@ -3694,6 +3700,300 @@
     "preview": false,
     "aliases": [
      "TABLODANELIPS"
+    ]
+   }
+  },
+  "convert.tablePoints": {
+   "title": "Tablodan nokta",
+   "rows": [
+    {
+     "name": "sourceKind",
+     "label": "Kaynak",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "file",
+        "label": "Dosya",
+        "hint": "CSV, TXT, Excel ya da ODS dosyası"
+       },
+       {
+        "value": "layer",
+        "label": "Katman",
+        "hint": "Nesnelerin öznitelikleri satırdır"
+       }
+      ]
+     }
+    },
+    {
+     "name": "file",
+     "label": "Dosya",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir nokta.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "file",
+      "accept": [
+       ".csv",
+       ".txt",
+       ".xlsx",
+       ".ods"
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Kaynak nesneler",
+     "description": "Öznitelikleri satır olan nesneler; her nesne bir nokta.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "east",
+     "label": "Doğu sütunu",
+     "description": "Noktanın doğusu (CBS projesinde Y); coğrafi sistemde boylam.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "north",
+     "label": "Kuzey sütunu",
+     "description": "Noktanın kuzeyi (CBS projesinde X); coğrafi sistemde enlem.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "elevation",
+     "label": "Kot sütunu",
+     "description": "Noktanın kotu; boşsa kotsuz.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "name",
+     "label": "Ad sütunu",
+     "description": "Noktanın adı: Ad özniteliği olur, nokta #ad ile bulunur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "system",
+     "label": "Koordinat sistemi",
+     "description": "Tablonun koordinatlarının sistemi; başkaysa noktalar projenin sistemine çevrilir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "project",
+        "label": "Projenin sistemi",
+        "hint": "Koordinatlar projenin sistemindedir"
+       },
+       {
+        "value": "5253",
+        "label": "TUREF / TM27 (EPSG:5253)",
+        "hint": "25.5°–28.5° D (3° dilim)"
+       },
+       {
+        "value": "5254",
+        "label": "TUREF / TM30 (EPSG:5254)",
+        "hint": "28.5°–31.5° D (3° dilim)"
+       },
+       {
+        "value": "5255",
+        "label": "TUREF / TM33 (EPSG:5255)",
+        "hint": "31.5°–34.5° D (3° dilim)"
+       },
+       {
+        "value": "5256",
+        "label": "TUREF / TM36 (EPSG:5256)",
+        "hint": "34.5°–37.5° D (3° dilim)"
+       },
+       {
+        "value": "5257",
+        "label": "TUREF / TM39 (EPSG:5257)",
+        "hint": "37.5°–40.5° D (3° dilim)"
+       },
+       {
+        "value": "5258",
+        "label": "TUREF / TM42 (EPSG:5258)",
+        "hint": "40.5°–43.5° D (3° dilim)"
+       },
+       {
+        "value": "5259",
+        "label": "TUREF / TM45 (EPSG:5259)",
+        "hint": "43.5°–46.5° D (3° dilim)"
+       },
+       {
+        "value": "5252",
+        "label": "TUREF (EPSG:5252)",
+        "hint": "Türkiye, coğrafi (enlem/boylam)"
+       },
+       {
+        "value": "2319",
+        "label": "ED50 / TM27 (EPSG:2319)",
+        "hint": "25.5°–28.5° D (3° dilim)"
+       },
+       {
+        "value": "2320",
+        "label": "ED50 / TM30 (EPSG:2320)",
+        "hint": "28.5°–31.5° D (3° dilim)"
+       },
+       {
+        "value": "2321",
+        "label": "ED50 / TM33 (EPSG:2321)",
+        "hint": "31.5°–34.5° D (3° dilim)"
+       },
+       {
+        "value": "2322",
+        "label": "ED50 / TM36 (EPSG:2322)",
+        "hint": "34.5°–37.5° D (3° dilim)"
+       },
+       {
+        "value": "2323",
+        "label": "ED50 / TM39 (EPSG:2323)",
+        "hint": "37.5°–40.5° D (3° dilim)"
+       },
+       {
+        "value": "2324",
+        "label": "ED50 / TM42 (EPSG:2324)",
+        "hint": "40.5°–43.5° D (3° dilim)"
+       },
+       {
+        "value": "2325",
+        "label": "ED50 / TM45 (EPSG:2325)",
+        "hint": "43.5°–46.5° D (3° dilim)"
+       },
+       {
+        "value": "23035",
+        "label": "ED50 / UTM 35N (EPSG:23035)",
+        "hint": "24°–30° D (6° dilim)"
+       },
+       {
+        "value": "23036",
+        "label": "ED50 / UTM 36N (EPSG:23036)",
+        "hint": "30°–36° D (6° dilim)"
+       },
+       {
+        "value": "23037",
+        "label": "ED50 / UTM 37N (EPSG:23037)",
+        "hint": "36°–42° D (6° dilim)"
+       },
+       {
+        "value": "23038",
+        "label": "ED50 / UTM 38N (EPSG:23038)",
+        "hint": "42°–48° D (6° dilim)"
+       },
+       {
+        "value": "32635",
+        "label": "WGS 84 / UTM 35N (EPSG:32635)",
+        "hint": "24°–30° D (6° dilim)"
+       },
+       {
+        "value": "32636",
+        "label": "WGS 84 / UTM 36N (EPSG:32636)",
+        "hint": "30°–36° D (6° dilim)"
+       },
+       {
+        "value": "32637",
+        "label": "WGS 84 / UTM 37N (EPSG:32637)",
+        "hint": "36°–42° D (6° dilim)"
+       },
+       {
+        "value": "32638",
+        "label": "WGS 84 / UTM 38N (EPSG:32638)",
+        "hint": "42°–48° D (6° dilim)"
+       },
+       {
+        "value": "4326",
+        "label": "WGS 84 (EPSG:4326)",
+        "hint": "Dünya, coğrafi (enlem/boylam)"
+       },
+       {
+        "value": "3857",
+        "label": "WGS 84 / Pseudo-Mercator (EPSG:3857)",
+        "hint": "Web haritaları (altlık karolar)"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "tablePoints",
+    "about": "Bir tablonun her satırındaki doğu ve kuzeyden (coğrafi sistemde boylam ve enlemden) nokta yazar.",
+    "help": [
+     "Örnekler: bir Excel ya da ODS dosyasındaki nokta listesini (ad, Y, X, kot) çizime almak, GPS'ten ya da bir web haritasından gelen boylam ve enlemleri projenin sistemine çevirip nokta yapmak, bir katmanın özniteliklerindeki koordinatlardan nokta yazmak.",
+     "Kaynak bir dosya (CSV, TXT, Excel ya da ODS; ilk satırı sütun adları, çalışma kitabında seçilen sayfa) ya da nesneler olabilir; nesnelerde öznitelikler satırdır. Sayılar ondalık nokta ya da virgülle okunur; coğrafi sistemde boylam ve enlem derece, dakika ve saniye de olabilir (39 55 12,5 ya da 39°55′12.5″K).",
+     "Koordinat sistemi tablonun sistemidir. Projeninkinden başkaysa noktalar projenin datum seçimleriyle projenin sistemine çevrilir; kot olduğu gibi kalır. Boş ya da sayı olmayan hücreli, sınır dışı ya da çevrilemeyen satır atlanır ve tabloda nedeniyle söylenir.",
+     "Nokta satırın dolu hücrelerini öznitelik olarak alır; Ad sütunu verilirse Ad özniteliği onun değeridir (nokta #ad ile bulunur)."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "TABLODANNOKTA",
+     "XYNOKTA",
+     "EXCELNOKTA"
     ]
    }
   },

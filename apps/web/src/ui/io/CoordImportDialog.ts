@@ -243,7 +243,9 @@ class CoordImportDialog {
       return;
     }
     const lines = [];
-    lines.push(r.points ? summaryLine('ok', `${r.points} nokta alınacak.`) : summaryLine('warn', 'Alınacak nokta yok; ayırıcıyı ve sütunları denetleyin.'));
+    // A file with no lines says why in its hints (empty, a workbook: docs/adr/0223 §6).
+    if (r.points) lines.push(summaryLine('ok', `${r.points} nokta alınacak.`));
+    else if (r.dataLines) lines.push(summaryLine('warn', 'Alınacak nokta yok; ayırıcıyı ve sütunları denetleyin.'));
     if (r.errorCount) {
       const shown = r.errors.slice(0, 5);
       lines.push(

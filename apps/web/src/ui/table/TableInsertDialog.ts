@@ -34,7 +34,7 @@ export const INSERT_TITLE = 'Tablo ekle';
 /** The sources, in the window's order, with their icons. */
 const SOURCES: readonly { value: InsertSource; label: string; icon: IconName; hint: string }[] = [
   { value: 'blank', label: 'Boş tablo', icon: 'table', hint: 'Satır ve sütun sayısı verilen boş tablo: hücreler Tabloyu düzenle ile yazılır.' },
-  { value: 'file', label: 'Dosyadan', icon: 'tableFile', hint: 'Excel (.xlsx) çalışma kitabının bir sayfası ya da CSV/TXT dosyası; ayırıcı ve kodlama dosyadan anlaşılır.' },
+  { value: 'file', label: 'Dosyadan', icon: 'tableFile', hint: 'Excel (.xlsx) ya da OpenDocument (.ods) çalışma kitabının bir sayfası ya da CSV/TXT dosyası; ayırıcı ve kodlama dosyadan anlaşılır.' },
   { value: 'coordinates', label: 'Koordinat', icon: 'tableCoordinates', hint: 'Koordinat çizelgesi: noktaların ve çizgi, çoklu çizgi ve alan köşelerinin adları, koordinatları ve kotları; ortak köşe bir kez.' },
   { value: 'areas', label: 'Alan', icon: 'tableAreas', hint: 'Alan çizelgesi: alanların ve dairelerin adları, alanları ve çevreleri; birden çoksa toplamı.' },
   { value: 'attributes', label: 'Öznitelik', icon: 'tableAttributes', hint: 'Öznitelik tablosu: nesnelerin adları ve öznitelikleri, her öznitelik bir sütun.' },
@@ -84,7 +84,7 @@ export function openTableInsert(ctx: AppContext, picked = false): void {
   function cellsNow(): { cells: TableCells; source?: TableSource } | { why: string; kind: 'info' | 'error' } {
     if (s.source === 'blank') return { cells: blankCells(s.rows, s.columns) };
     if (s.source === 'file') {
-      if (!s.file) return { why: 'Bir Excel (.xlsx), CSV ya da TXT dosyası seçin.', kind: 'info' };
+      if (!s.file) return { why: 'Bir Excel (.xlsx), ODS, CSV ya da TXT dosyası seçin.', kind: 'info' };
       if (s.file.read.problem) return { why: s.file.read.problem, kind: 'error' };
       const sheet = s.file.read.sheets[s.sheet] ?? s.file.read.sheets[0];
       if (!sheet) return { why: 'Dosyada okunacak sayfa yok.', kind: 'error' };

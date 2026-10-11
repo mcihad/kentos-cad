@@ -269,7 +269,11 @@ fn with_values(tool: &Tool, doc: &Document, over: Option<&Value>, files: &Value)
                 .as_str()
                 .unwrap_or_else(|| panic!("dosya yok: {name}"));
             let bytes = std::fs::read(folder().join(path)).expect("the file reads");
-            let read = kentos_formats::table_file::read(&bytes);
+            // As the dialog reads a chosen file: İşlemler's limits (docs/adr/0223 §1).
+            let read = kentos_formats::table_file::read_with(
+                &bytes,
+                kentos_formats::table_file::Limits::PROCESSING,
+            );
             let rows = read
                 .sheets
                 .first()
@@ -899,6 +903,56 @@ fn the_conversion_cases_do_what_they_say() {
     }
     println!("{}", report.join("\n"));
     assert!(report.len() >= 23, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
+/// Tablodan nokta's cases (docs/adr/0223 §5): written by the independent
+/// reference (scripts/fixtures/table_points_cases.py: the tables read by the
+/// table reader's rule, the points moved with PROJ); the same run here and on
+/// the drawing's reading copy as the background runs it.
+#[test]
+fn the_table_point_cases_do_what_they_say() {
+    let file = case_file("table-points.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let more: Vec<String> = file["toleranceFields"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v.as_str().map(str::to_owned))
+        .collect();
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_full(
+            c,
+            play(c, &registry, false, &file["files"]),
+            tol,
+            tol,
+            &more,
+        );
+        found.extend(check_full(
+            c,
+            play(c, &registry, true, &file["files"]),
+            tol,
+            tol,
+            &more,
+        ));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 4, "{} cases", report.len());
     assert!(
         problems.is_empty(),
         "\n{}\n\n{}",
@@ -1603,6 +1657,131 @@ fn convert_timing() {
             "  hazırlık {prepared:.1} ms, araç {computed:.1} ms, uygulama {:.1} ms",
             t.elapsed().as_secs_f64() * 1e3
         );
+        if p50 > budget {
+            over.push(format!("{title}: p50 {p50:.1} ms > {budget} ms"));
+        }
+    }
+    assert!(over.is_empty(), "{over:#?}");
+}
+
+/// A table of 100 000 surveyed points (name, east, north, elevation, code;
+/// a decimal comma in every tenth) in the project's plane, or as longitudes
+/// and latitudes in WGS 84 (degrees and fractions, every tenth in degrees,
+/// minutes and seconds), as a chosen file's value holds it.
+pub fn point_table(geographic: bool) -> Value {
+    let mut rows = vec![json!(["Ad", "Doğu", "Kuzey", "Kot", "Kod"])];
+    for i in 0..100_000usize {
+        let (e, n) = if geographic {
+            let (lon, lat) = (
+                35.95 + (i % 400) as f64 * 0.0002,
+                39.85 + (i / 400) as f64 * 0.0002,
+            );
+            if i % 10 == 0 {
+                let dms = |v: f64| {
+                    let d = v.trunc();
+                    let m = ((v - d) * 60.0).trunc();
+                    format!("{d} {m} {:.3}", ((v - d) * 60.0 - m) * 60.0)
+                };
+                (dms(lon), dms(lat))
+            } else {
+                (format!("{lon:.7}"), format!("{lat:.7}"))
+            }
+        } else {
+            let (e, n) = (
+                487_000.0 + (i % 400) as f64 * 5.0 + 0.125,
+                4_420_000.0 + (i / 400) as f64 * 5.0 + 0.5,
+            );
+            if i % 10 == 0 {
+                (
+                    format!("{e}").replace('.', ","),
+                    format!("{n}").replace('.', ","),
+                )
+            } else {
+                (format!("{e}"), format!("{n}"))
+            }
+        };
+        let code = ["SN", "YL", "BN"][i % 3];
+        rows.push(json!([
+            format!("N{i}"),
+            e,
+            n,
+            format!("{}", 800 + i % 97),
+            code
+        ]));
+    }
+    json!({ "name": if geographic { "wgs84.csv" } else { "duzlem.csv" }, "rows": rows })
+}
+
+/// Tablodan nokta's whole runs (docs/adr/0223 §8): 100 000 rows in the
+/// project's plane and from WGS 84, the runner's check, the tool and its one
+/// undo step, after a warm-up, each run undone before the next; p50 and p95
+/// against the ADR's budgets. Run on purpose:
+/// `cargo test --release -p kentos-processing --test cases table_points_timing -- --ignored --nocapture`.
+#[test]
+#[ignore = "timings, run by hand in release"]
+fn table_points_timing() {
+    use std::time::Instant;
+    let registry = Registry::builtin();
+    let tool = registry.tool("convert.tablePoints").expect("the tool");
+    let values = |file: Value, system: &str| -> Values {
+        [
+            ("sourceKind", json!("file")),
+            ("file", file),
+            ("east", json!("Doğu")),
+            ("north", json!("Kuzey")),
+            ("elevation", json!("Kot")),
+            ("name", json!("Ad")),
+            ("system", json!(system)),
+            ("layer", json!({ "newName": "Noktalar" })),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_owned(), v))
+        .collect()
+    };
+    let runs = [
+        (
+            "Tablodan nokta, 100 000 satır, projenin düzleminde",
+            values(point_table(false), "project"),
+            300.0,
+        ),
+        (
+            "Tablodan nokta, 100 000 satır, WGS 84'ten projenin sistemine",
+            values(point_table(true), "4326"),
+            400.0,
+        ),
+    ];
+    let mut over = Vec::new();
+    for (title, values, budget) in runs {
+        let mut host = TestHost {
+            doc: layer_scene(),
+            selection: Vec::new(),
+            view: None,
+        };
+        let mut runner = Runner::new();
+        let mut ms = Vec::new();
+        let mut summary = String::new();
+        for run in 0..8 {
+            let mut log = Vec::new();
+            let t = Instant::now();
+            let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+            let took = t.elapsed().as_secs_f64() * 1e3;
+            let Outcome::Ok { record, .. } = outcome else {
+                panic!("{title}: {log:?}");
+            };
+            summary = record.summary;
+            assert!(host.doc.undo().is_some(), "{title}: one step");
+            // A run lets a big table's values go off its thread; the next starts when they are gone.
+            std::thread::sleep(std::time::Duration::from_millis(400));
+            if run >= 2 {
+                ms.push(took);
+            }
+        }
+        ms.sort_by(f64::total_cmp);
+        let (p50, p95) = (
+            ms[ms.len() / 2],
+            ms[(ms.len() * 95 / 100).min(ms.len() - 1)],
+        );
+        println!("{title}: p50 {p50:.1} ms, p95 {p95:.1} ms, bütçe {budget} ms\n  {summary}");
         if p50 > budget {
             over.push(format!("{title}: p50 {p50:.1} ms > {budget} ms"));
         }
@@ -2503,11 +2682,7 @@ pub fn buildings_scene(blocks: usize) -> Document {
                     )
                 })
                 .collect();
-            polygons.push((
-                id,
-                format!(r#"{{"Bina":"{id}","Blok":"{}"}}"#, b + 1),
-                ring,
-            ));
+            polygons.push((id, format!(r#"{{"Bina":"{id}","Blok":"{}"}}"#, b + 1), ring));
         }
     }
     polygons_scene("Binalar", polygons)

@@ -80,24 +80,99 @@ impl ResultTable {
     }
 }
 
-/// A file parameter's value from a chosen file (docs/adr/0200 §7): its name,
-/// where it is and its first sheet's rows, read as Tablo ekle reads one; or
-/// why it cannot be read.
-pub fn file_value(file: &str, path: &std::path::Path, bytes: &[u8]) -> Result<Value, String> {
-    let read = kentos_formats::table_file::read(bytes);
+/// A file parameter's value from a chosen file (docs/adr/0200 §7, 0223 §1):
+/// its name, where it is and a sheet's rows, read within İşlemler's limits;
+/// a workbook's sheets with rows (`sheets`), the one asked for (`sheet`,
+/// else the first) giving `rows`; a sheet past the limits left out and said
+/// (`leftOut`); or why it cannot be read.
+pub fn file_value(
+    file: &str,
+    path: &std::path::Path,
+    bytes: &[u8],
+    sheet: Option<&str>,
+) -> Result<Value, String> {
+    use kentos_formats::table_file::{Limits, PROCESSING_COLUMNS, PROCESSING_ROWS, read_with};
+    let read = read_with(bytes, Limits::PROCESSING);
     if let Some(problem) = read.problem {
         return Err(format!("“{file}” okunamadı: {problem}"));
     }
-    let rows = read
-        .sheets
-        .into_iter()
-        .next()
-        .map(|s| s.rows)
-        .unwrap_or_default();
-    if rows.is_empty() {
-        return Err(format!("“{file}” boş: okunacak satır yok."));
+    let mut sheets = Vec::new();
+    let mut left_out = Vec::new();
+    for s in read.sheets {
+        let name = s.name.unwrap_or_default();
+        let which = if name.is_empty() {
+            format!("“{file}”")
+        } else {
+            format!("“{file}” dosyasının “{name}” sayfası")
+        };
+        if s.cut {
+            let most = grouped(PROCESSING_ROWS);
+            left_out.push(format!(
+                "{which} {most} satırdan uzun; İşlemler en çok {most} satır alır."
+            ));
+        } else if s.rows.iter().any(|r| r.len() > PROCESSING_COLUMNS) {
+            left_out.push(format!(
+                "{which} {PROCESSING_COLUMNS} sütundan geniş; İşlemler en çok {PROCESSING_COLUMNS} sütun alır."
+            ));
+        } else if !s.rows.is_empty() {
+            sheets.push((name, s.rows));
+        }
     }
-    Ok(json!({ "name": file, "path": path.to_string_lossy(), "rows": rows }))
+    if sheets.is_empty() {
+        return Err(match left_out.first() {
+            Some(why) => format!("{why} Tabloyu bölün ya da süzün."),
+            None => format!("“{file}” boş: okunacak satır yok."),
+        });
+    }
+    let at = sheet
+        .and_then(|n| sheets.iter().position(|(name, _)| name == n))
+        .unwrap_or(0);
+    let mut value = json!({
+        "name": file,
+        "path": path.to_string_lossy(),
+        "rows": sheets[at].1,
+    });
+    if !sheets[at].0.is_empty() {
+        value["sheet"] = json!(sheets[at].0);
+    }
+    if sheets.len() > 1 {
+        value["sheets"] = json!(
+            sheets
+                .iter()
+                .map(|(name, rows)| json!({ "name": name, "rows": rows }))
+                .collect::<Vec<_>>()
+        );
+    }
+    if !left_out.is_empty() {
+        value["leftOut"] = json!(left_out);
+    }
+    Ok(value)
+}
+
+/// A count with its thousands apart: 250 000.
+fn grouped(n: usize) -> String {
+    let digits = n.to_string();
+    let mut out = String::new();
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push(' ');
+        }
+        out.push(c);
+    }
+    out
+}
+
+/// The value of a workbook's file parameter with the sheet `name` chosen: its rows.
+pub fn with_sheet(value: &Value, name: &str) -> Option<Value> {
+    let rows = value["sheets"]
+        .as_array()?
+        .iter()
+        .find(|s| s["name"] == name)?["rows"]
+        .clone();
+    let mut out = value.clone();
+    out["rows"] = rows;
+    out["sheet"] = json!(name);
+    Some(out)
 }
 
 /// One tool's or model's window.
@@ -175,9 +250,10 @@ impl ToolDialog {
                 continue;
             };
             let path = std::path::PathBuf::from(path);
+            let sheet = v.get("sheet").and_then(Value::as_str);
             if let Some(value) = std::fs::read(&path)
                 .ok()
-                .and_then(|bytes| file_value(file, &path, &bytes).ok())
+                .and_then(|bytes| file_value(file, &path, &bytes, sheet).ok())
             {
                 self.values.insert(p.name.clone(), value);
             }

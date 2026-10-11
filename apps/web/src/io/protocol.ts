@@ -12,6 +12,7 @@ import type { KmlWriteInput } from '../contracts/generated/KmlWriteInput';
 import type { DatumChoice, System } from '../model/geom/crsTransform';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
 import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
+import type { WorkbookWriteInput } from '../contracts/generated/WorkbookWriteInput';
 import type { DrawingColumns, PackedDrawing } from './columns';
 import type { KcadProgress } from './kcad';
 
@@ -34,8 +35,10 @@ export type FormatsRequest =
   | { id: number; op: 'readFieldBook'; bytes: ArrayBuffer; options: FieldCsvOptions | null }
   /** A GNSS file (docs/adr/0169 §1, §6): GPX 1.1 when it begins with “<”, else an NMEA 0183 log; WGS 84 positions as written. */
   | { id: number; op: 'readGnss'; bytes: ArrayBuffer }
-  /** A table's file (Tablo ekle, docs/adr/0184 §4): an Excel workbook (.xlsx) sheet by sheet, else a text file by its separator. */
-  | { id: number; op: 'readTableFile'; bytes: ArrayBuffer }
+  /** A table's file (docs/adr/0184 §4, 0223 §1): an Excel workbook or ODS sheet by sheet, else a text file by its separator; İşlemler's limits when `processing`. */
+  | { id: number; op: 'readTableFile'; bytes: ArrayBuffer; processing: boolean }
+  /** A table written as XLSX, ODS or CSV (docs/adr/0223 §2). */
+  | { id: number; op: 'writeWorkbook'; input: WorkbookWriteInput }
   /** Points as an instrument's coordinate file (docs/adr/0169 §4): Leica GSI, Topcon GTS-7, Trimble JobXML, Nikon RAW or CSV. */
   | { id: number; op: 'writeField'; points: readonly FieldPoint[]; options: FieldWriteOptions }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }

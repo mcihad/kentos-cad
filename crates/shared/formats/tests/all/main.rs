@@ -23,3 +23,5 @@ mod raster_pyramid;
 mod raster_timing;
 mod table_file;
 mod wgs84_write;
+mod workbook;
+mod workbook_timing;

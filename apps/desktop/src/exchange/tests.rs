@@ -155,6 +155,27 @@ fn a_coordinate_list_goes_to_a_new_point_layer_named_after_the_file() {
     );
 }
 
+/// A workbook is no coordinate list (docs/adr/0223 §6): the window reads
+/// nothing from it, says where its points come in and imports nothing.
+#[test]
+fn a_workbook_in_the_coordinate_list_window_points_to_tablodan_nokta() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/processing/v1/nokta-wgs84.ods"),
+    );
+    let before = count(&app);
+    run(&mut app, "file.import.ncn");
+    let Some(Window::CoordImport(state)) = &app.exchange else {
+        panic!("the coordinate list window");
+    };
+    let read = state.last_read().expect("read");
+    assert_eq!((read.points, read.data_lines), (0, 0));
+    assert_eq!(read.hints, vec![kentos_formats::coords::NOT_TEXT.to_owned()]);
+    send(&mut app, Event::CoordImport(coord_import::Event::Run));
+    assert_eq!(count(&app), before, "nothing is imported");
+}
+
 #[test]
 fn a_coordinate_list_merges_into_the_layer_of_the_same_name() {
     let mut app = app_with_drawing();

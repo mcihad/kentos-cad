@@ -83,7 +83,7 @@ impl Source {
                 "Satır ve sütun sayısı verilen boş tablo: hücreler Tabloyu düzenle ile yazılır."
             }
             Source::File => {
-                "Excel (.xlsx) çalışma kitabının bir sayfası ya da CSV/TXT dosyası; ayırıcı ve kodlama dosyadan anlaşılır."
+                "Excel (.xlsx) ya da OpenDocument (.ods) çalışma kitabının bir sayfası ya da CSV/TXT dosyası; ayırıcı ve kodlama dosyadan anlaşılır."
             }
             Source::Coordinates => {
                 "Koordinat çizelgesi: noktaların ve çizgi, çoklu çizgi ve alan köşelerinin adları, koordinatları ve kotları; ortak köşe bir kez."
@@ -303,7 +303,7 @@ impl App {
                 let Some((name, read)) = &w.file else {
                     return Now::Why(
                         Kind::Info,
-                        "Bir Excel (.xlsx), CSV ya da TXT dosyası seçin.".to_owned(),
+                        "Bir Excel (.xlsx), ODS, CSV ya da TXT dosyası seçin.".to_owned(),
                     );
                 };
                 if let Some(problem) = &read.problem {
@@ -405,7 +405,10 @@ impl App {
                     async {
                         let file = rfd::AsyncFileDialog::new()
                             .set_title("Tablo dosyası")
-                            .add_filter("Tablo (.xlsx, .csv, .txt)", &["xlsx", "csv", "txt", "tsv"])
+                            .add_filter(
+                                "Tablo (.xlsx, .ods, .csv, .txt)",
+                                &["xlsx", "ods", "csv", "txt", "tsv"],
+                            )
                             .pick_file()
                             .await?;
                         let bytes = file.read().await;

@@ -1,0 +1,360 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-06,
+ "toleranceFields": [
+  "z"
+ ],
+ "documents": {},
+ "files": {
+  "nokta-duzlem.csv": "nokta-duzlem.csv",
+  "nokta-wgs84.ods": "nokta-wgs84.ods"
+ },
+ "cases": [
+  {
+   "id": "plane-csv",
+   "title": "Tablodan nokta: projenin sistemindeki CSV; boş, sayı olmayan ve kotu sayı olmayan satırlar atlanır",
+   "document": "table-points.kcad",
+   "run": {
+    "tool": "convert.tablePoints"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "nokta-duzlem.csv",
+    "east": "Y",
+    "north": "X",
+    "elevation": "Z",
+    "name": "Ad",
+    "system": "project"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 satırdan 3 nokta yazıldı.",
+    "undo": "Tablodan nokta",
+    "layers": [
+     {
+      "id": "islem-noktalar",
+      "name": "Noktalar",
+      "style": {
+       "color": "#0D74CE",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0D74CE26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Ad": "P1",
+       "Y": "488100,125",
+       "X": "4420200,5",
+       "Z": "812,40",
+       "Kod": "SN"
+      },
+      "p": {
+       "x": 488100.125,
+       "y": 4420200.5
+      },
+      "z": 812.4
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Ad": "P2",
+       "Y": "488150",
+       "X": "4420250.75",
+       "Kod": "YL"
+      },
+      "p": {
+       "x": 488150.0,
+       "y": 4420250.75
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Ad": "P6",
+       "Y": "488300.5",
+       "X": "4420400",
+       "Z": "805.125"
+      },
+      "p": {
+       "x": 488300.5,
+       "y": 4420400.0
+      },
+      "z": 805.125
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "3 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "4",
+        "“Y” boş"
+       ],
+       [
+        "5",
+        "“X” sayı değil: kuzey"
+       ],
+       [
+        "6",
+        "“Z” sayı değil: yüksek"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "wgs84-ods",
+   "title": "Tablodan nokta: ODS'deki boylam ve enlemler (ondalık, virgüllü, derece dakika saniye, yarım küre) WGS 84'ten UTM 36N'ye",
+   "document": "table-points.kcad",
+   "run": {
+    "tool": "convert.tablePoints"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "nokta-wgs84.ods",
+    "east": "Boylam",
+    "north": "Enlem",
+    "elevation": "Yükseklik",
+    "name": "Nokta",
+    "system": "4326"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 satırdan 4 nokta yazıldı.",
+    "undo": "Tablodan nokta",
+    "layers": [
+     {
+      "id": "islem-noktalar",
+      "name": "Noktalar",
+      "style": {
+       "color": "#0D74CE",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0D74CE26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Nokta": "A1",
+       "Boylam": "32.8597",
+       "Enlem": "39.9334",
+       "Yükseklik": "938.5",
+       "Tarih": "2024-10-01",
+       "Ad": "A1"
+      },
+      "p": {
+       "x": 488012.40529644216,
+       "y": 4420374.733892243
+      },
+      "z": 938.5
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Nokta": "A2",
+       "Boylam": "32,86",
+       "Enlem": "39,93",
+       "Ad": "A2"
+      },
+      "p": {
+       "x": 488037.44622685853,
+       "y": 4419997.331160675
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Nokta": "A3",
+       "Boylam": "32°51′35″",
+       "Enlem": "39 55 48.2 K",
+       "Yükseklik": "901",
+       "Ad": "A3"
+      },
+      "p": {
+       "x": 488013.72068233584,
+       "y": 4420003.5344744595
+      },
+      "z": 901.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Nokta": "A4",
+       "Boylam": "32 51 35 D",
+       "Enlem": "39.9",
+       "Ad": "A4"
+      },
+      "p": {
+       "x": 488008.4802250478,
+       "y": 4416667.709046359
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "3 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "6",
+        "“Boylam” coğrafi sınırın dışında (boylam ±180, enlem ±90): 190"
+       ],
+       [
+        "7",
+        "“Enlem” sayı değil: kuzey"
+       ],
+       [
+        "8",
+        "“Yükseklik” sayı değil: çok"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "wgs84-layer",
+   "title": "Tablodan nokta: Ölçüm katmanının nesnelerinin öznitelikleri satırdır",
+   "document": "table-points.kcad",
+   "run": {
+    "tool": "convert.tablePoints"
+   },
+   "values": {
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "olcum"
+    },
+    "east": "Boylam",
+    "north": "Enlem",
+    "name": "Nokta",
+    "system": "4326"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 satırdan 2 nokta yazıldı.",
+    "undo": "Tablodan nokta",
+    "layers": [
+     {
+      "id": "islem-noktalar",
+      "name": "Noktalar",
+      "style": {
+       "color": "#0D74CE",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0D74CE26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Boylam": "32.8597",
+       "Enlem": "39.9334",
+       "Nokta": "K1",
+       "Not": "kuzey",
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 488012.40529644216,
+       "y": 4420374.733892243
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Boylam": "32°51'40\"",
+       "Enlem": "39°56'05\"K",
+       "Nokta": "K2",
+       "Ad": "K2"
+      },
+      "p": {
+       "x": 488133.20267024863,
+       "y": 4420521.29746929
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "#3",
+        "“Boylam” boş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "missing-column",
+   "title": "Tablodan nokta: kaynakta olmayan sütun çalıştırmayı reddeder",
+   "document": "table-points.kcad",
+   "run": {
+    "tool": "convert.tablePoints"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "nokta-duzlem.csv",
+    "east": "Y",
+    "north": "X",
+    "elevation": "Kot",
+    "name": "Ad",
+    "system": "project"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Kaynakta “Kot” alanı yok; alanları: Ad, Y, X, Z, Kod."
+   }
+  }
+ ]
+}

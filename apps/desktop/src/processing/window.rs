@@ -18,7 +18,7 @@ use kentos_ui::theme::typography;
 use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::widget::radio::RadioGroup;
 use kentos_ui::widget::table::{self, Table};
-use kentos_ui::widget::{Dialog, horizontal_divider, overlay};
+use kentos_ui::widget::{Dialog, Menu, MenuButton, horizontal_divider, overlay};
 
 use super::dialog::ToolDialog;
 use super::fields::{Env, control};
@@ -253,7 +253,20 @@ fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
             )
             .width(Fill),
             small("copy", "Panoya kopyala", Event::CopyTable),
-            small("export", "CSV olarak kaydet", Event::SaveTable),
+            // Kaydet ▾ (docs/adr/0223 §2): the table as XLSX, ODS or CSV.
+            MenuButton::new(
+                container(
+                    row![
+                        icon(crate::icons::from_web(Some("export"))).size(14.0),
+                        label::caption("Kaydet"),
+                        icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+                    ]
+                    .spacing(5)
+                    .align_y(Center),
+                )
+                .padding([3, 8]),
+                || crate::table_write::items(Menu::new(), |f| ev(Event::SaveTableAs(f))),
+            ),
         ]
         .spacing(4)
         .align_y(Center),

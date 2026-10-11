@@ -53,6 +53,8 @@ pub mod texts {
     pub const FIELDS: &str = "Alanlar…";
     pub const FIELDS_HINT: &str =
         "Katmanın alanları: adları, türleri, kuralları, varsayılanları ve değer listeleri";
+    pub const EXPORT: &str = "Dışa aktar";
+    pub const EXPORT_HINT: &str = "Tablonun gösterilen satırlarını Excel (XLSX), OpenDocument (ODS) ya da CSV dosyasına yazar; alanlar türleriyle (sayı, tarih, evet/hayır).";
     pub const NO_LAYERS: &str = "Çizimde katman yok.";
     pub const NONE: &str = "Katmanda nesne yok.";
     pub const NO_MATCH: &str = "Süzgece uyan nesne yok.";
@@ -120,6 +122,8 @@ pub enum Event {
     ZoomSelection,
     /// Alanlar….
     Fields,
+    /// Dışa aktar ▾ (docs/adr/0223 §3): the rows shown written in a format.
+    Export(kentos_contracts::WorkbookFormat),
     /// A value cell double-clicked: the row and the model's column.
     Edit(usize, usize),
     /// The editor's text typed.
@@ -436,6 +440,30 @@ impl App {
                 }
             }
             Event::ZoomSelection => self.navigating(Self::zoom_selection),
+            Event::Export(format) => {
+                let Some(doc) = &self.document else {
+                    return Task::none();
+                };
+                let rows = self.feature_rows(doc);
+                let name = rows
+                    .layer
+                    .as_deref()
+                    .and_then(|id| doc.model.layers().get(id))
+                    .map_or_else(|| "Tablo".to_owned(), |n| n.name.clone());
+                if rows.shown.is_empty() {
+                    self.say(
+                        kentos_interaction::Level::Info,
+                        "Dışa aktarılacak satır yok.",
+                    );
+                    return Task::none();
+                }
+                let sheet = kentos_interaction::feature_table::workbook_sheet(
+                    &rows.table,
+                    &rows.shown,
+                    &name,
+                );
+                return crate::table_write::save(vec![sheet], format, name);
+            }
             Event::Fields => {
                 let layer = self
                     .document

@@ -74,6 +74,7 @@ const PROXIMITY = JSON.parse(file('proximity.json')) as CaseFile;
 const TRANSFER = JSON.parse(file('transfer.json')) as CaseFile;
 const LAYER_OPS = JSON.parse(file('layers.json')) as CaseFile;
 const CONVERT = JSON.parse(file('convert.json')) as CaseFile;
+const TABLE_POINTS = JSON.parse(file('table-points.json')) as CaseFile;
 const GENERATE = JSON.parse(file('generate.json')) as CaseFile;
 const SAMPLING = JSON.parse(file('sampling.json')) as CaseFile;
 const GENERALIZE = JSON.parse(file('generalize.json')) as CaseFile;
@@ -96,7 +97,7 @@ const RASTER_OPS = JSON.parse(file('raster-ops.json')) as CaseFile & {
 
 interface Formats {
   initSync(o: { module: BufferSource }): unknown;
-  readTableFile(bytes: Uint8Array): Uint8Array;
+  readTableFile(bytes: Uint8Array, processing?: boolean): Uint8Array;
 }
 const glue = import.meta.glob<Formats>('../io/pkg/kentos_formats_wasm.js');
 const loader = Object.values(glue)[0];
@@ -112,7 +113,8 @@ async function fileValue(cases: CaseFile, name: string): Promise<FileValue> {
     w.initSync({ module: fs.readFileSync(new URL('../io/pkg/kentos_formats_wasm_bg.wasm', import.meta.url)) });
     formats = w;
   }
-  const read = JSON.parse(new TextDecoder().decode(formats.readTableFile(fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${path}`, import.meta.url))))) as TableFileRead;
+  // As the dialog reads a chosen file: İşlemler's limits (docs/adr/0223 §1).
+  const read = JSON.parse(new TextDecoder().decode(formats.readTableFile(fs.readFileSync(new URL(`../../../../fixtures/processing/v1/${path}`, import.meta.url)), true))) as TableFileRead;
   return { name, rows: read.sheets[0]?.rows ?? [] };
 }
 
@@ -452,6 +454,16 @@ describe('geometry conversion cases (fixtures/processing/v1/convert.json, docs/a
       const more = CONVERT.toleranceFields ?? [];
       check(c, await play(CONVERT, c, 'client'), CONVERT.tolerance, CONVERT.tolerance, more);
       check(c, await play(CONVERT, c, 'worker'), CONVERT.tolerance, CONVERT.tolerance, more);
+    });
+  }
+});
+
+describe('Tablodan nokta cases (fixtures/processing/v1/table-points.json, docs/adr/0223 §5)', () => {
+  for (const c of TABLE_POINTS.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const more = TABLE_POINTS.toleranceFields ?? [];
+      check(c, await play(TABLE_POINTS, c, 'client'), TABLE_POINTS.tolerance, TABLE_POINTS.tolerance, more);
+      check(c, await play(TABLE_POINTS, c, 'worker'), TABLE_POINTS.tolerance, TABLE_POINTS.tolerance, more);
     });
   }
 });

@@ -474,3 +474,67 @@ pub struct TableSheet {
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub cut: bool,
 }
+
+/// A workbook to write (docs/adr/0223 §2): Öznitelik tablosu's, İşlemler's
+/// tables, as an Excel workbook, an OpenDocument spreadsheet or a CSV file.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkbookWriteInput {
+    pub format: WorkbookFormat,
+    pub sheets: Vec<WorkbookSheet>,
+}
+
+/// A written table's file format.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WorkbookFormat {
+    Xlsx,
+    Ods,
+    Csv,
+}
+
+/// One sheet to write: its name, its columns (the first row names them) and
+/// its rows of words (a CSV file takes the first sheet).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkbookSheet {
+    pub name: String,
+    pub columns: Vec<WorkbookColumn>,
+    pub rows: Vec<Vec<String>>,
+}
+
+/// A column to write: its name and what its words are written as.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkbookColumn {
+    pub name: String,
+    pub kind: CellKind,
+    /// A number's fraction digits shown (a decimal field's scale); none: as written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub decimals: Option<u32>,
+}
+
+/// What a column's words are written as (docs/adr/0223 §2): text; a number
+/// (a decimal number's text, at most 15 significant digits); a date
+/// (YYYY-MM-DD); yes or no (true, false); or, for a column of no kind, a
+/// number when the word is a plain one, else text.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CellKind {
+    Text,
+    Number,
+    Date,
+    Boolean,
+    Auto,
+}

@@ -370,6 +370,7 @@ pub const PORTED: &[&str] = &[
     "processing.run.convert.bearingLine",
     "processing.run.convert.xyLine",
     "processing.run.convert.tableEllipse",
+    "processing.run.convert.tablePoints",
     "processing.run.convert.substring",
     "processing.run.convert.polygonsToLines",
     "processing.run.convert.linesToPolygons",

@@ -1,13 +1,15 @@
-import { convertBearingRows, convertEllipseRows, convertXyRows, type RowResult } from '../../../model/ops/convert';
-import type { Entity } from '../../../model/entities';
+import { CRS_REGISTRY, crsBySrid, crsTitle } from '../../../geo/crs';
+import { systemOf, type System } from '../../../model/geom/crsTransform';
+import { convertBearingRows, convertEllipseRows, convertPointRows, convertXyRows, type RowResult } from '../../../model/ops/convert';
+import type { Entity, NewEntity } from '../../../model/entities';
 import type { FileValue, Feedback, RunResult, TableOutput } from '../../types';
 import { defineTool } from '../../types';
-import { column, fromRows, outputLayer, readRows, sourceParams, unitParam } from './shared';
+import { column, fromRows, outputLayer, readRows, reason, sourceParams, unitParam } from './shared';
 
 /**
- * The table tools (docs/adr/0218 §5–§7): lines from a place, a bearing and a length (ArcGIS Bearing Distance To
- * Line), lines from two places (XY To Line), ellipses from a centre, two semi-axes and a bearing (Table To Ellipse),
- * a row each, from a file or from objects' attributes. The cells are read and the shapes made in the core (one call
+ * The table tools (docs/adr/0218 §5–§7, 0223 §5): lines from a place, a bearing and a length (ArcGIS Bearing Distance
+ * To Line), lines from two places (XY To Line), ellipses from a centre, two semi-axes and a bearing (Table To Ellipse),
+ * points from a place (XY Table To Point), a row each, from a file or from objects' attributes. The cells are read and the shapes made in the core (one call
  * a run, docs/adr/0180's number rule); a row that gives nothing is in the report with its line (a file's) or object
  * number and why.
  */
@@ -124,5 +126,75 @@ export const tableEllipse = defineTool({
   run: (v, _ctx, feedback) => {
     const columns = [v.east, v.north, v.major, v.minor, v.bearing].map((c) => (c ?? '').trim());
     return run(v, columns, columns, (cells) => convertEllipseRows(cells, v.unit), 'elips', feedback);
+  },
+});
+
+/** The table's coordinate systems: the project's, then the registry's but the local one. */
+const SYSTEMS = [
+  { value: 'project', label: 'Projenin sistemi', hint: 'Koordinatlar projenin sistemindedir' },
+  ...CRS_REGISTRY.filter((c) => c.kind !== 'local').map((c) => ({ value: String(c.srid), label: crsTitle(c), hint: c.area })),
+];
+
+export const tablePoints = defineTool({
+  id: 'convert.tablePoints',
+  label: 'Tablodan nokta',
+  category: 'conversion',
+  icon: 'tablePoints',
+  description: 'Bir tablonun her satırındaki doğu ve kuzeyden (coğrafi sistemde boylam ve enlemden) nokta yazar.',
+  help: [
+    "Örnekler: bir Excel ya da ODS dosyasındaki nokta listesini (ad, Y, X, kot) çizime almak, GPS'ten ya da bir web haritasından gelen boylam ve enlemleri projenin sistemine çevirip nokta yapmak, bir katmanın özniteliklerindeki koordinatlardan nokta yazmak.",
+    'Kaynak bir dosya (CSV, TXT, Excel ya da ODS; ilk satırı sütun adları, çalışma kitabında seçilen sayfa) ya da nesneler olabilir; nesnelerde öznitelikler satırdır. Sayılar ondalık nokta ya da virgülle okunur; coğrafi sistemde boylam ve enlem derece, dakika ve saniye de olabilir (39 55 12,5 ya da 39°55′12.5″K).',
+    'Koordinat sistemi tablonun sistemidir. Projeninkinden başkaysa noktalar projenin datum seçimleriyle projenin sistemine çevrilir; kot olduğu gibi kalır. Boş ya da sayı olmayan hücreli, sınır dışı ya da çevrilemeyen satır atlanır ve tabloda nedeniyle söylenir.',
+    'Nokta satırın dolu hücrelerini öznitelik olarak alır; Ad sütunu verilirse Ad özniteliği onun değeridir (nokta #ad ile bulunur).',
+  ].join('\n\n'),
+  keywords: ['xy', 'tablo', 'nokta', 'excel', 'xlsx', 'ods', 'csv', 'koordinat listesi', 'boylam', 'enlem', 'nokta listesi', 'xy table to point', 'create points layer from table', 'excel dosyası yükle'],
+  aliases: ['TABLODANNOKTA', 'XYNOKTA', 'EXCELNOKTA'],
+  targets: ['client', 'worker'],
+  parameters: [
+    ...sourceParams('nokta'),
+    column('east', 'Doğu sütunu', 'Noktanın doğusu (CBS projesinde Y); coğrafi sistemde boylam.'),
+    column('north', 'Kuzey sütunu', 'Noktanın kuzeyi (CBS projesinde X); coğrafi sistemde enlem.'),
+    column('elevation', 'Kot sütunu', 'Noktanın kotu; boşsa kotsuz.', true),
+    column('name', 'Ad sütunu', 'Noktanın adı: Ad özniteliği olur, nokta #ad ile bulunur.', true),
+    { name: 'system', label: 'Koordinat sistemi', type: 'enum', options: SYSTEMS, default: 'project', description: 'Tablonun koordinatlarının sistemi; başkaysa noktalar projenin sistemine çevrilir.' },
+    outputLayer('Noktalar', '#0D74CE'),
+  ] as const,
+  outputs: OUTPUTS,
+  run: (v, ctx, feedback) => {
+    const to = ctx.crs?.system ?? null;
+    let from: System | null = null;
+    if (v.system !== 'project') {
+      const src = crsBySrid(Number(v.system));
+      from = src ? systemOf(src) : null;
+      if (!from) return { refused: `Koordinat sistemi bilinmiyor: ${v.system}.` };
+      if (!to) return { refused: "Projenin koordinat sistemi yok; tablonun sisteminden çevrilemez. Proje ayarları'nda sistem seçin ya da Koordinat sistemi'ni “Projenin sistemi” yapın." };
+    }
+    const names = [v.east, v.north, v.elevation, v.name].map((c) => (c ?? '').trim());
+    const rows = readRows(v.sourceKind === 'layer' ? (v.source?.entities ?? []) : null, v.sourceKind === 'layer' ? null : v.file, names);
+    if ('refused' in rows) return { refused: rows.refused };
+    feedback.progress(0, 'Satırlar okunuyor');
+    const results = convertPointRows(
+      rows.cells.map((c) => c.slice(0, 3)),
+      from,
+      to,
+      ctx.crs?.choices ?? [],
+    );
+    const add: NewEntity[] = [];
+    const report: string[][] = [];
+    results.forEach((r, i) => {
+      if ('shape' in r) {
+        const attrs = { ...rows.attrs[i] };
+        const name = rows.cells[i][3] ?? '';
+        if (names[3] && name.trim()) attrs.Ad = name;
+        add.push({ ...r.shape, layerId: v.layer.id, attrs } as NewEntity);
+      } else report.push([rows.labels[i], reason(r, names, rows.cells[i])]);
+    });
+    if (report.length) feedback.warn(`${report.length} satır atlandı; nedenleri tabloda.`);
+    const table: TableOutput = { columns: ['Satır', 'Neden'], rows: report };
+    return {
+      changes: { add },
+      outputs: report.length ? { count: add.length, table } : { count: add.length },
+      summary: `${rows.cells.length} satırdan ${add.length} nokta yazıldı.`,
+    };
   },
 });

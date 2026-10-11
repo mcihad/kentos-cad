@@ -187,6 +187,14 @@ pub struct State {
     for_table: bool,
 }
 
+#[cfg(test)]
+impl State {
+    /// The file as last read (the tests'; docs/adr/0223 §6).
+    pub(super) fn last_read(&self) -> Option<&CoordRead> {
+        self.read.as_deref()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Event {
     Read {
@@ -707,14 +715,19 @@ impl App {
                 None => words::text_line(Line::Info, "Dosya okunuyor…"),
             }]);
         };
-        let mut lines = vec![if r.points > 0 {
-            words::text_line(Line::Ok, format!("{} nokta alınacak.", r.points))
-        } else {
-            words::text_line(
+        let mut lines = Vec::new();
+        if r.points > 0 {
+            lines.push(words::text_line(
+                Line::Ok,
+                format!("{} nokta alınacak.", r.points),
+            ));
+        } else if r.data_lines > 0 {
+            // A file with no lines says why in its hints (empty, a workbook: docs/adr/0223 §6).
+            lines.push(words::text_line(
                 Line::Warn,
                 "Alınacak nokta yok; ayırıcıyı ve sütunları denetleyin.",
-            )
-        }];
+            ));
+        }
         if r.error_count > 0 {
             let shown: Vec<Element<'a, Message>> = r
                 .errors

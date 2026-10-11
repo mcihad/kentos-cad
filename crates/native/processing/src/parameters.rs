@@ -161,12 +161,13 @@ pub fn file_table(v: &Value) -> Option<(Vec<String>, Vec<Vec<&str>>)> {
     Some((header, rows))
 }
 
-/// A value as the last values keep it: a file's name (and path) without its rows.
+/// A value as the last values keep it: a file's name (and path, and the
+/// sheet chosen) without its rows, its sheets' or what was left out.
 pub fn stored_value(def: &ParamDef, v: &Value) -> Value {
     match (&def.kind, v) {
         (ParamKind::File { .. }, Value::Object(o)) => Value::Object(
             o.iter()
-                .filter(|(k, _)| *k != "rows")
+                .filter(|(k, _)| !matches!(k.as_str(), "rows" | "sheets" | "leftOut"))
                 .map(|(k, v)| (k.clone(), v.clone()))
                 .collect(),
         ),

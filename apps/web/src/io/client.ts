@@ -15,6 +15,7 @@ import type { GpxWriteInput } from '../contracts/generated/GpxWriteInput';
 import type { KmlWriteInput } from '../contracts/generated/KmlWriteInput';
 import type { DatumChoice, System } from '../model/geom/crsTransform';
 import type { TableFileRead } from '../contracts/generated/TableFileRead';
+import type { WorkbookWriteInput } from '../contracts/generated/WorkbookWriteInput';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
 import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
 import type { ImportResult } from '../contracts/generated/ImportResult';
@@ -125,12 +126,18 @@ export class FormatsClient {
   }
 
   /**
-   * Reads a table's file (Tablo ekle, docs/adr/0184 §4): an Excel workbook (.xlsx) sheet by sheet, else a CSV or text
-   * file's records by its separator, and its encoding; why not when it cannot. The caller keeps `bytes`.
+   * Reads a table's file (docs/adr/0184 §4, 0223 §1): an Excel workbook (.xlsx) or an OpenDocument spreadsheet (.ods)
+   * sheet by sheet, else a CSV or text file's records by its separator, and its encoding; why not when it cannot.
+   * Tablo ekle's limits, or İşlemler's with `processing`. The caller keeps `bytes`.
    */
-  async readTableFile(bytes: Uint8Array): Promise<TableFileRead> {
+  async readTableFile(bytes: Uint8Array, processing = false): Promise<TableFileRead> {
     const copy = bytes.slice().buffer;
-    return json<TableFileRead>(await this.request({ op: 'readTableFile', bytes: copy }, [copy]));
+    return json<TableFileRead>(await this.request({ op: 'readTableFile', bytes: copy, processing }, [copy]));
+  }
+
+  /** Writes a table as an Excel workbook, an OpenDocument spreadsheet or a CSV file (docs/adr/0223 §2); a table past a sheet's rows throws why. */
+  async writeWorkbook(input: WorkbookWriteInput): Promise<WrittenFile> {
+    return written(await this.request({ op: 'writeWorkbook', input }, []));
   }
 
   /**

@@ -561,8 +561,9 @@ impl App {
             | F::PickObjects(_)
             | F::FileChosen(..)
             | F::CopyTable
-            | F::SaveTable
-            | F::TableSaved(_) => {
+            | F::SaveTableAs(_)
+            | F::FileRead(..)
+            | F::Sheet(..) => {
                 return Task::none();
             }
             F::Advanced => {

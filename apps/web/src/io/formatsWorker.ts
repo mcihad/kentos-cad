@@ -149,7 +149,7 @@ scope.onmessage = (e) => {
           const json = own(f.readGnss(new Uint8Array(m.bytes)));
           scope.postMessage({ id: m.id, ok: true, json }, [json]);
         } else if (m.op === 'readTableFile') {
-          const json = own(f.readTableFile(new Uint8Array(m.bytes)));
+          const json = own(f.readTableFile(new Uint8Array(m.bytes), m.processing));
           scope.postMessage({ id: m.id, ok: true, json }, [json]);
         } else if (m.op === 'writeField') {
           const json = own(f.writeField(JSON.stringify(m.points), JSON.stringify(m.options)));
@@ -168,6 +168,14 @@ scope.onmessage = (e) => {
         } else if (m.op === 'writeKml' || m.op === 'writeGpx' || m.op === 'writeGeoJsonWgs84') {
           const write = m.op === 'writeKml' ? f.writeKml : m.op === 'writeGpx' ? f.writeGpx : f.writeGeoJsonWgs84;
           const written = write(JSON.stringify(m.input), JSON.stringify(m.from), JSON.stringify(m.choices));
+          try {
+            const file = own(written.takeBytes());
+            scope.postMessage({ id: m.id, ok: true, file, report: written.report }, [file]);
+          } finally {
+            written.free();
+          }
+        } else if (m.op === 'writeWorkbook') {
+          const written = f.writeWorkbook(JSON.stringify(m.input));
           try {
             const file = own(written.takeBytes());
             scope.postMessage({ id: m.id, ok: true, file, report: written.report }, [file]);

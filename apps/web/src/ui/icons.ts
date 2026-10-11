@@ -41,6 +41,11 @@ const EMBLEM = {
   // KML (docs/adr/0222): a globe, its equator and a meridian; GPX out: a track between its two ends.
   kml: '<circle cx="12.7" cy="12" r="3.3" stroke-width="1.1"/><path d="M9.4 12h6.6M12.7 8.7c-1.2 1-1.7 2.1-1.7 3.3s.5 2.3 1.7 3.3c1.2-1 1.7-2.1 1.7-3.3s-.5-2.3-1.7-3.3z" stroke-width=".9"/>',
   gpx: `<path d="m9.8 15.2 1.6-3.3 2 1.5 2.2-4.3" stroke-width="1.1"/>${dot(9.8, 15.2, 0.95)}${dot(15.6, 9.1, 0.95)}`,
+  // Table exchange (docs/adr/0223): an Excel workbook its X, an OpenDocument spreadsheet its O, CSV its values
+  // between separators.
+  xlsx: '<path d="m10.2 9 5 6.2m0-6.2-5 6.2" stroke-width="1.3"/>',
+  ods: '<circle cx="12.7" cy="12.1" r="3" stroke-width="1.3"/>',
+  csv: `<path d="M9.4 10h2.4M13.6 10h2.4M9.4 14.2h2.4M13.6 14.2h2.4" stroke-width="1.2"/>${dot(12.7, 10.9, 0.65)}${dot(12.7, 15.1, 0.65)}`,
 };
 
 // Exported for the feature inventory: the desktop draws the same icons from it (docs/adr/0054).
@@ -554,6 +559,9 @@ export const ICONS = {
   exportGeojson: fileOut(EMBLEM.geojson),
   exportKml: fileOut(EMBLEM.kml),
   exportGpx: fileOut(EMBLEM.gpx),
+  exportXlsx: fileOut(EMBLEM.xlsx),
+  exportOds: fileOut(EMBLEM.ods),
+  exportCsv: fileOut(EMBLEM.csv),
   exportNcn: fileOut(EMBLEM.ncn),
   exportPdf: fileOut(EMBLEM.pdf),
   exportSvg: fileOut(EMBLEM.svg),
@@ -658,6 +666,9 @@ export const ICONS = {
     '<path d="M4.5 15.5 15.5 4.5" stroke-width="1.5"/><path d="M4.5 12.5v6M1.5 15.5h6M15.5 1.5v6M12.5 4.5h6" stroke-width="1"/>',
   tableEllipse:
     '<ellipse cx="10" cy="10" rx="7.8" ry="4" transform="rotate(-35 10 10)" stroke-width="1.2"/><path d="M3.6 14.5 16.4 5.5" stroke-width="1" stroke-dasharray="1.5 1.2"/><circle cx="10" cy="10" r="1.3" fill="currentColor" stroke="none"/>',
+  // Tablodan nokta (docs/adr/0223 §5): a table's rows becoming points.
+  tablePoints:
+    '<rect x="1.5" y="2.5" width="10" height="8" rx="1" stroke-width="1.1"/><path d="M1.5 5.2h10M1.5 7.8h10M5 5.2v5.3" stroke-width="1"/><path d="m11.8 10.8 1.6 1.6" stroke-width="1.1"/><circle cx="12" cy="16" r="1.7" fill="currentColor" stroke="none"/><circle cx="16.6" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="17" cy="17" r="1.7" fill="currentColor" stroke="none"/>',
   lineSubstring:
     '<path d="M2 15.5 6.5 10H12l5.5-6.5" stroke-width="1" stroke-opacity=".45"/><path d="M4.4 12.6 6.5 10H12l1.9-2.3" stroke-width="2.4"/><path d="m3 11.2 2.8 2.8M12.6 6.6l2.6 2.2" stroke-width="1.1"/>',
   polygonToLine:

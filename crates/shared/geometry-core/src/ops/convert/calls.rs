@@ -4,10 +4,11 @@
 
 use super::paths::{Density, NoArea, densify, densify_added, line_area, rings_as_lines, substring};
 use super::points::{Which, centroid, interior_point, vertex_points};
-use super::table::{RowFault, bearing_rows, ellipse_rows, xy_rows};
+use super::table::{RowFault, bearing_rows, ellipse_rows, point_rows, xy_rows};
 use super::{Elevations, Zs};
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
+use crate::crs::{Choice, System};
 use crate::entity::{Entity, Shape, area_parts};
 use crate::op;
 use crate::vec2::Vec2;
@@ -208,6 +209,24 @@ pub(crate) static OPS: &[Op] = &[
             .map(|r| RowOut(r.map(|[a, b]| Entity::new(Shape::Line { a, b }))))
             .collect::<Vec<_>>()
     }),
+    // Tablodan nokta: rows of east, north and elevation cells, moved from `from` into `to`.
+    op!(
+        "convertPointRows",
+        |rows: Vec<Vec<String>>,
+         from: Option<System>,
+         to: Option<System>,
+         choices: Option<Vec<Choice>>| {
+            point_rows(
+                &rows,
+                from.as_ref(),
+                to.as_ref(),
+                choices.as_deref().unwrap_or_default(),
+            )
+            .into_iter()
+            .map(|r| RowOut(r.map(|(p, z)| Entity::new(Shape::Point { p, z, parts: None }))))
+            .collect::<Vec<_>>()
+        }
+    ),
     // Tablodan elips: rows of east, north, the two semi-axes and the bearing cells.
     op!(
         "convertEllipseRows",
@@ -222,6 +241,20 @@ pub(crate) static OPS: &[Op] = &[
 
 /// A row's object, or why it has none: `{ fault, column? }` (`empty`,
 /// `number`, `positive` with the cell's place in the row; `same`).
+/// A fault as the web reads it: its name and the cell's place in the row,
+/// if any (`empty`, `number`, `positive`, `range` with one; `same`; a point
+/// not reached, `unreached` with its reason after a colon: `unreached:noGrid`).
+fn fault_of(fault: RowFault) -> (String, Option<usize>) {
+    match fault {
+        RowFault::Empty(k) => ("empty".into(), Some(k)),
+        RowFault::NotNumber(k) => ("number".into(), Some(k)),
+        RowFault::NotPositive(k) => ("positive".into(), Some(k)),
+        RowFault::OutOfRange(k) => ("range".into(), Some(k)),
+        RowFault::SamePlace => ("same".into(), None),
+        RowFault::Unreached(u) => (format!("unreached:{}", u.as_str()), None),
+    }
+}
+
 struct RowOut(Result<Entity, RowFault>);
 
 impl ToJson for RowOut {
@@ -231,13 +264,8 @@ impl ToJson for RowOut {
         match &self.0 {
             Ok(e) => field(out, &mut first, "shape", e),
             Err(fault) => {
-                let (why, column) = match *fault {
-                    RowFault::Empty(k) => ("empty", Some(k)),
-                    RowFault::NotNumber(k) => ("number", Some(k)),
-                    RowFault::NotPositive(k) => ("positive", Some(k)),
-                    RowFault::SamePlace => ("same", None),
-                };
-                field(out, &mut first, "fault", &why.to_owned());
+                let (why, column) = fault_of(*fault);
+                field(out, &mut first, "fault", &why);
                 field(out, &mut first, "column", &column);
             }
         }

@@ -194,6 +194,7 @@ mod suitability_scenes;
 mod surface_scenes;
 #[cfg(test)]
 mod table_scenes;
+mod table_write;
 mod tables;
 mod template_editor;
 mod template_members;

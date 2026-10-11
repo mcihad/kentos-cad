@@ -153,3 +153,43 @@ fn excel_unicode_text_is_utf16() {
     assert!(r.header);
     same(&points(&r), &[("Ş1", 452345.5, 4412345.25, None)]);
 }
+
+/// A workbook is no coordinate list (docs/adr/0223 §6): nothing is read, and
+/// the hint sends its points to İşlemler's Tablodan nokta.
+#[test]
+fn a_workbook_is_no_coordinate_list() {
+    let table = |name: &str| {
+        let path = format!(
+            "{}/../../../fixtures/table/v1/files/{name}",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        std::fs::read(&path).unwrap_or_else(|e| panic!("{path}: {e}"))
+    };
+    let mut old_excel = vec![0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
+    old_excel.extend_from_slice(b"P1 100 200\n");
+    for bytes in [table("tablo.ods"), table("kitap.xlsx"), old_excel] {
+        let r = coords::read(
+            &bytes,
+            &CoordReadOptions {
+                preview_rows: 20,
+                entities: true,
+                ..Default::default()
+            },
+        );
+        assert_eq!(r.encoding, "metin değil");
+        assert_eq!((r.data_lines, r.points, r.error_count), (0, 0, 0));
+        assert!(r.preview.is_empty());
+        assert_eq!(r.hints, vec![coords::NOT_TEXT.to_string()]);
+        assert!(r.result.expect("objects").entities.is_empty());
+    }
+    // Text is read as before, a "PK" at its start or not.
+    let r = coords::read(
+        b"PK1 100 200\nPK2 110 210\n",
+        &CoordReadOptions {
+            preview_rows: 20,
+            entities: true,
+            ..Default::default()
+        },
+    );
+    assert_eq!(r.points, 2);
+}
