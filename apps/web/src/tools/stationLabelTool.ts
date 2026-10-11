@@ -1,8 +1,9 @@
 import type { AppContext } from '../app/context';
 import { Signal } from '../core/signal';
 import type { Entity, EntityGeometry } from '../model/entities';
+import { measured, routeOf, type Route } from '../model/ops/lrs';
 import type { ViewTransform } from '../viewport/Camera';
-import { kmText, kmValue, stationing, type Stationing, type StationLook, type StationRules } from './constructions';
+import { kmText, kmValue, stationing, stationingMeasure, type Stationing, type StationLook, type StationRules } from './constructions';
 import { writeObjectsEach } from './createCommand';
 import { MAX_GHOSTS } from './modifyTools';
 import { NO_ROUTE, pickRoute } from './pointCalcRoute';
@@ -17,7 +18,9 @@ import type { OptionChoice, Tool, ToolPointer } from './Tool';
  * square to the route, a cross-section and a point. Where and what is the core's (`ops::stationing`); the tool picks
  * the route, shows everything faint and writes it through `cad.entities.create` (step “Km yaz”) on the active layer.
  * Enter, Uygula or a quick right click writes and the tool waits for the next route; Esc and Ctrl+Z let the route go,
- * Esc with none leaves. The options are the session's (`stationOptions`).
+ * Esc with none leaves. The options are the session's (`stationOptions`). On a route with measures (docs/adr/0224 §6)
+ * Ölçü (M) shows, on when the route is picked: the km are its measures (`ops::stationing::measure_stations`), and
+ * Başlangıç and Ters, which the measures settle, are not offered.
  */
 
 export const LABEL = 'Km yaz';
@@ -74,6 +77,10 @@ export class StationLabelTool implements Tool {
   private readonly ctx: AppContext;
   private route: Entity | null = null;
   private reverse = false;
+  /** Ölçü: the km are the route's measures (each route's own, on when it is picked). */
+  private byMeasure = false;
+  /** The route's measures when it has any. */
+  private measures: Route | null = null;
   private asking: Asking | null = null;
   private plan: Stationing | null = null;
   private problem: string | null = null;
@@ -86,8 +93,30 @@ export class StationLabelTool implements Tool {
     // A single selected route is taken at once.
     const ids = [...this.ctx.selection.ids.value];
     const e = ids.length === 1 ? this.ctx.doc.get(ids[0]) : undefined;
-    if (e && hasRoute(e)) this.route = e;
+    if (e && hasRoute(e)) this.take(e);
     this.refresh();
+  }
+
+  /** Takes a route: its own Ters off, Ölçü on when it has measures. */
+  private take(e: Entity): void {
+    const route = routeOf(e);
+    this.route = e;
+    this.reverse = false;
+    this.measures = route && measured(route) ? route : null;
+    this.byMeasure = this.measures !== null;
+  }
+
+  /** Lets the route go, with its own options. */
+  private dropRoute(): void {
+    this.route = null;
+    this.reverse = false;
+    this.measures = null;
+    this.byMeasure = false;
+  }
+
+  /** Whether the km are the route's measures: Ölçü is on and the route has them. */
+  private measuring(): boolean {
+    return this.byMeasure && this.measures !== null;
   }
 
   /** The texts' height (m), face and width factor as they are written now. */
@@ -107,7 +136,7 @@ export class StationLabelTool implements Tool {
       const scale = this.ctx.doc.settings.plotScale.value / 1000;
       const rules: StationRules = { interval: O.interval, start: O.start, reverse: this.reverse, ends: O.ends, decimals: this.ctx.doc.settings.lengthDecimals.value };
       const look: StationLook = { text: O.text, height: this.look().height, tick: O.tick ? TICK_MM * scale : 0, section: O.section, point: O.point };
-      const got = stationing(this.route, rules, look);
+      const got = this.measuring() ? stationingMeasure(this.measures!, rules, look) : stationing(this.route, rules, look);
       this.plan = got.stationing ?? null;
       this.problem = got.problem ?? null;
       if (this.problem && this.problem !== problem) this.ctx.log.warn(this.problem);
@@ -131,8 +160,9 @@ export class StationLabelTool implements Tool {
         : 'güzergâha tıklayın (km’si ilk köşesinde başlar)';
     const parts = [
       `Aralık (A): ${O.interval} m`,
-      `Başlangıç (B): ${kmText(O.start, f.lengthDecimals)}`,
-      this.reverse ? 'Ters (T): açık' : 'Ters (T)',
+      ...(this.measures ? [`Ölçü (M): ${on(this.byMeasure)}`] : []),
+      // The measures settle where the km start and which way they run.
+      ...(this.measuring() ? [] : [`Başlangıç (B): ${kmText(O.start, f.lengthDecimals)}`, this.reverse ? 'Ters (T): açık' : 'Ters (T)']),
       `Yazı (Y): ${sideName(O.text)}`,
       `Yükseklik (H): ${annotationHeightMm(this.ctx, 'station')} mm`,
       ...(stylesShown(this.ctx) ? [`Stil (S): ${textStyleName(this.ctx)}`] : []),
@@ -154,8 +184,7 @@ export class StationLabelTool implements Tool {
     if (p.button !== 0 || this.asking) return;
     const route = pickRoute(this.ctx, p.screen, p.raw, false);
     if (!route) return;
-    this.route = route.entity;
-    this.reverse = false;
+    this.take(route.entity);
     this.refresh();
   }
 
@@ -173,10 +202,16 @@ export class StationLabelTool implements Tool {
       case 'A':
         this.asking = 'interval';
         break;
+      case 'M':
+        if (!this.measures) return false;
+        this.byMeasure = !this.byMeasure;
+        break;
       case 'B':
+        if (this.measuring()) return false;
         this.asking = 'start';
         break;
       case 'T':
+        if (this.measuring()) return false;
         this.reverse = !this.reverse;
         break;
       case 'Y': {
@@ -302,8 +337,7 @@ export class StationLabelTool implements Tool {
       return true;
     }
     if (this.route) {
-      this.route = null;
-      this.reverse = false;
+      this.dropRoute();
       this.refresh();
       return true;
     }
@@ -341,8 +375,7 @@ export class StationLabelTool implements Tool {
     if (!items.length) return this.ctx.log.warn(`${LABEL}: yazılacak bir şey yok; Yazı, İşaret, Enkesit ya da Nokta’yı açın.`);
     if (!writeObjectsEach(this.ctx, items, 'stations')) return;
     this.ctx.log.success(`${LABEL}: ${plan.stations.length} istasyon yazıldı.`);
-    this.route = null;
-    this.reverse = false;
+    this.dropRoute();
   }
 
   /** Everything to be written, faint: ticks, cross-sections dashed, points as rings, the texts in their face. */

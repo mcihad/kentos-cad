@@ -18,12 +18,17 @@
 //!   (H, paper mm), Stil (S, a CAD project's), İşaret (İ), Enkesit (E, the
 //!   half width; 0 none), Nokta (N, the offset, the right positive; an empty
 //!   Enter none), Uçlar (U).
+//! - On a route with measures (docs/adr/0224 §6) Ölçü (M) shows, on when the
+//!   route is picked: the km are its measures (`ops::stationing::
+//!   measure_stations`), and Başlangıç and Ters, which the measures settle,
+//!   are not offered.
 
 use std::collections::BTreeMap;
 
 use kentos_contracts::{AnnotationKind, CreateOperation, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::ops::lrs::{self, Route as Measures};
 use kentos_geometry_core::ops::stationing::{self as rules, Look, Rules, Side, Stationing};
 use kentos_geometry_core::tools::point_calc::{km_text, km_value, route_of};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
@@ -70,21 +75,40 @@ enum Asking {
     Style,
 }
 
-/// The route walked: the object's slot and its shape as it was picked.
+/// The route walked: the object's slot and its shape as it was picked, and
+/// its measures when it has any (docs/adr/0224 §6).
 #[derive(Clone, Debug)]
 struct Route {
     slot: Slot,
     shape: Shape,
+    measures: Option<Measures>,
+}
+
+impl Route {
+    /// The object at `slot` as a route Km yaz walks; none when it has no way.
+    fn of(slot: Slot, e: &kentos_contracts::Entity) -> Option<Route> {
+        let shape = kentos_native_application::geometry::shape(e);
+        route_of(&shape)?;
+        let measures = kentos_native_application::geometry::route(e)
+            .filter(|r| lrs::measure_range(r).is_some());
+        Some(Route {
+            slot,
+            shape,
+            measures,
+        })
+    }
 }
 
 pub struct StationLabels {
     route: Option<Route>,
     reverse: bool,
+    /// Ölçü: the km are the route's measures (each route's own, on when it is picked).
+    by_measure: bool,
     asking: Option<Asking>,
     /// What the route takes now, or why nothing; worked out again when the
     /// options, the project or the route changed.
     plan: Option<Result<Stationing, String>>,
-    seen: Option<(Memory, Format, styles::Seen, bool, Option<Slot>)>,
+    seen: Option<(Memory, Format, styles::Seen, bool, bool, Option<Slot>)>,
     /// What the plan was written with: the texts' height (m), face and width.
     height: f64,
     face: kentos_contracts::TextFace,
@@ -120,6 +144,7 @@ impl StationLabels {
         Self {
             route: None,
             reverse: false,
+            by_measure: false,
             asking: None,
             plan: None,
             seen: None,
@@ -127,6 +152,25 @@ impl StationLabels {
             face: kentos_contracts::TextFace::default(),
             width_factor: 1.0,
         }
+    }
+
+    /// Whether the km are the route's measures: Ölçü is on and the route has them.
+    fn measuring(&self) -> bool {
+        self.by_measure && self.route.as_ref().is_some_and(|r| r.measures.is_some())
+    }
+
+    /// Takes a route: its own Ters off, Ölçü on when it has measures.
+    fn take(&mut self, route: Route) {
+        self.by_measure = route.measures.is_some();
+        self.route = Some(route);
+        self.reverse = false;
+    }
+
+    /// Lets the route go, with its own options.
+    fn drop_route(&mut self) {
+        self.route = None;
+        self.reverse = false;
+        self.by_measure = false;
     }
 
     /// The plan for the route as the options are now; worked out again only
@@ -137,6 +181,7 @@ impl StationLabels {
             cx.format(),
             styles::Seen::text(cx),
             self.reverse,
+            self.by_measure,
             self.route.as_ref().map(|r| r.slot),
         );
         if self.seen.as_ref() == Some(&key) {
@@ -167,7 +212,10 @@ impl StationLabels {
             section: m.station_section,
             point: m.station_point,
         };
-        let plan = rules::stationing(&route.shape, &r, &look);
+        let plan = match route.measures.as_ref().filter(|_| self.by_measure) {
+            Some(measures) => rules::measure_stationing(measures, &r, &look),
+            None => rules::stationing(&route.shape, &r, &look),
+        };
         if let Err(why) = &plan {
             cx.say(Level::Warn, why.clone());
         }
@@ -181,14 +229,12 @@ impl StationLabels {
             cx.say(Level::Warn, NO_OBJECT_HERE);
             return;
         }
-        let found = hits.into_iter().find_map(|slot| {
-            let shape = kentos_native_application::geometry::shape(cx.doc.get(slot)?);
-            route_of(&shape).map(|_| Route { slot, shape })
-        });
+        let found = hits
+            .into_iter()
+            .find_map(|slot| Route::of(slot, cx.doc.get(slot)?));
         match found {
             Some(route) => {
-                self.route = Some(route);
-                self.reverse = false;
+                self.take(route);
                 self.seen = None;
                 self.see(cx);
             }
@@ -258,19 +304,22 @@ impl StationLabels {
             Level::Success,
             format!("{LABEL}: {count} istasyon yazıldı."),
         );
-        self.route = None;
-        self.reverse = false;
+        self.drop_route();
         self.plan = None;
         self.seen = None;
     }
 
     /// A key's option: what became of it, `None` when it is none.
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> Option<()> {
+        let measuring = self.measuring();
         let m = &mut cx.memory;
         match key {
             "A" => self.asking = Some(Asking::Interval),
-            "B" => self.asking = Some(Asking::Start),
-            "T" => self.reverse = !self.reverse,
+            "M" if self.route.as_ref().is_some_and(|r| r.measures.is_some()) => {
+                self.by_measure = !self.by_measure;
+            }
+            "B" if !measuring => self.asking = Some(Asking::Start),
+            "T" if !measuring => self.reverse = !self.reverse,
             "Y" => {
                 let at = SIDES
                     .iter()
@@ -386,7 +435,7 @@ impl Tool for StationLabels {
             };
             return Prompt::new(LABEL, step);
         }
-        let Some((m, f, style, _, _)) = &self.seen else {
+        let Some((m, f, style, ..)) = &self.seen else {
             return Prompt::new(LABEL, "güzergâha tıklayın (km’si ilk köşesinde başlar)");
         };
         let on = |b: bool| if b { "açık" } else { "kapalı" };
@@ -406,18 +455,25 @@ impl Tool for StationLabels {
         let point = m
             .station_point
             .map_or_else(|| "yok".to_owned(), |o| f.length(o));
-        let prompt = Prompt::new(LABEL, step)
+        let measured = self.route.as_ref().is_some_and(|r| r.measures.is_some());
+        let mut prompt = Prompt::new(LABEL, step)
             .option_with(
                 "Aralık",
                 "A",
                 format!("{} m", js_number(m.station_interval)),
             )
-            .option_with(
-                "Başlangıç",
-                "B",
-                km_text(m.station_start, f.length_decimals),
-            )
-            .toggle("Ters", "T", self.reverse)
+            .option_if(measured, "Ölçü", "M", on(self.by_measure));
+        // The measures settle where the km start and which way they run.
+        if !self.measuring() {
+            prompt = prompt
+                .option_with(
+                    "Başlangıç",
+                    "B",
+                    km_text(m.station_start, f.length_decimals),
+                )
+                .toggle("Ters", "T", self.reverse);
+        }
+        let prompt = prompt
             .option_with("Yazı", "Y", side_name(m.station_text))
             .option_with(
                 "Yükseklik",
@@ -444,12 +500,9 @@ impl Tool for StationLabels {
         // A single selected route is taken at once.
         let selected: Vec<Slot> = cx.selection.ids().to_vec();
         if let [slot] = selected[..]
-            && let Some(e) = cx.doc.get(slot)
+            && let Some(route) = cx.doc.get(slot).and_then(|e| Route::of(slot, e))
         {
-            let shape = kentos_native_application::geometry::shape(e);
-            if route_of(&shape).is_some() {
-                self.route = Some(Route { slot, shape });
-            }
+            self.take(route);
         }
         self.see(cx);
         Flow::Stay
@@ -553,8 +606,8 @@ impl Tool for StationLabels {
         if self.asking.take().is_some() {
             return true;
         }
-        if self.route.take().is_some() {
-            self.reverse = false;
+        if self.route.is_some() {
+            self.drop_route();
             self.seen = None;
             self.see(cx);
             return true;
@@ -567,8 +620,8 @@ impl Tool for StationLabels {
         if self.asking.take().is_some() {
             return true;
         }
-        if self.route.take().is_some() {
-            self.reverse = false;
+        if self.route.is_some() {
+            self.drop_route();
             self.seen = None;
             self.see(cx);
             return true;

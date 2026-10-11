@@ -24,6 +24,7 @@ use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
 use kentos_geometry_core::geom::hatch_pattern::{
     Gradient as CoreGradient, PatternLine as CoreLine,
 };
+use kentos_geometry_core::ops::lrs::{Route, RoutePart};
 use kentos_geometry_core::text::face::Face;
 use kentos_geometry_core::text::paragraph::{Run, Script};
 use kentos_geometry_core::text::{Font, TextAlign};
@@ -730,6 +731,39 @@ pub fn shape(entity: &Entity) -> Shape {
                     .collect(),
             )),
         },
+    }
+}
+
+/// An object as a route (docs/adr/0224): a line's two ends and their
+/// measures, a polyline's own part and its parts, a vertex without a
+/// measure none; none of another kind. Km yaz and the Doğrusal referans
+/// tools read routes through here.
+pub fn route(entity: &Entity) -> Option<Route> {
+    let part =
+        |pts: &[Point], bulges: &Option<Vec<f64>>, ms: &Option<Vec<Option<f64>>>| RoutePart {
+            pts: points(pts),
+            bulges: bulges.clone(),
+            ms: ms.clone().unwrap_or_else(|| vec![None; pts.len()]),
+        };
+    match entity {
+        Entity::Line(l) => Some(Route {
+            parts: vec![RoutePart {
+                pts: vec![v(&l.a), v(&l.b)],
+                bulges: None,
+                ms: vec![l.ma, l.mb],
+            }],
+        }),
+        Entity::Polyline(p) => Some(Route {
+            parts: std::iter::once(part(&p.pts, &p.bulges, &p.ms))
+                .chain(
+                    p.parts
+                        .iter()
+                        .flatten()
+                        .map(|r| part(&r.pts, &r.bulges, &r.ms)),
+                )
+                .collect(),
+        }),
+        _ => None,
     }
 }
 

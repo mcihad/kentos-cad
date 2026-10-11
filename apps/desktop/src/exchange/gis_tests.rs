@@ -182,7 +182,8 @@ fn a_zipped_shapefile_offers_its_layers_one_at_a_time() {
 }
 
 /// docs/adr/0142: the file's line says how many objects came with elevations, as the
-/// DXF and NCZ windows say it (`words::facts`), and only when some did.
+/// DXF and NCZ windows say it (`words::facts`), and only when some did; and after it
+/// how many came with measures (M, docs/adr/0224 §3), only when some did.
 #[test]
 fn the_file_line_says_how_many_objects_came_with_elevations_and_only_when_some_did() {
     let elevated = |app: &App| {
@@ -220,8 +221,21 @@ fn the_file_line_says_how_many_objects_came_with_elevations_and_only_when_some_d
     );
     let n = elevated(&app);
     assert!(n > 0, "the fixture has lines with a Z");
+    // PolyLineZ's M values are its vertices' measures.
+    let m = window(&app)
+        .result
+        .as_ref()
+        .expect("read")
+        .entities
+        .iter()
+        .filter(|e| kentos_formats::import::has_measure(e))
+        .count();
+    assert!(m > 0, "the fixture's lines have M values");
     let text = line(&app);
-    assert!(text.ends_with(&format!(", Kotlu nesne: {n}")), "{text}");
+    assert!(
+        text.ends_with(&format!(", Kotlu nesne: {n}, Ölçülü nesne: {m}")),
+        "{text}"
+    );
     // The same roads without a Z.
     let plain = ["yollar.shp", "yollar.shx", "yollar.dbf", "yollar.prj"]
         .map(picked)
@@ -232,6 +246,7 @@ fn the_file_line_says_how_many_objects_came_with_elevations_and_only_when_some_d
         Event::PickedMany(Kind::Shapefile, Some(Ok(plain))),
     );
     assert!(!line(&app).contains("Kotlu"), "{}", line(&app));
+    assert!(!line(&app).contains("Ölçülü"), "{}", line(&app));
 }
 
 #[test]

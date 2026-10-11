@@ -1,0 +1,267 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "stationing-measure",
+ "title": "Km yaz ölçüyle: ölçülü rotada Ölçü açık gelir, km'ler rotanın M'si (1+005.000 … 1+062.000), Başlangıç ve Ters sunulmaz; Ölçü kapalıyken km uzunluktan; beş istasyon işaret, yazı ve noktayla tek adımda yazılır (son nokta Km özniteliğiyle), Ctrl+Z geri alır; ölçüsüz çizgide Ölçü yok; seçili rota başta alınır; bellek başladığı gibi bırakılır",
+ "source": "tools/stationLabelTool.ts; kentos_interaction::station_labels; docs/adr/0224 §6",
+ "covers": [
+  "GIS-28",
+  "CAD-27"
+ ],
+ "document": "stationing-measure.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.stationLabels",
+   "expect": {
+    "tool": "stationLabels",
+    "points": 0,
+    "prompt": "Km yaz: güzergâha tıklayın (km’si ilk köşesinde başlar) [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık]"
+   }
+  },
+  {
+   "click": [
+    -20,
+    -10
+   ],
+   "note": "Ölçülü rota (M 1005 → 1050 → 1062): Ölçü açık gelir, km'ler ölçüdür: 1+005.000, 1+020, 1+040, 1+060 ve 1+062.000; Başlangıç ve Ters sunulmaz.",
+   "expect": {
+    "points": 1,
+    "prompt": "Km yaz: 5 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Ölçü (M): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık / Uygula (Enter)]",
+    "options": [
+     "A",
+     "M",
+     "Y",
+     "H",
+     "S",
+     "İ",
+     "E",
+     "N",
+     "U",
+     "Enter"
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "N"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: noktaların sapmasını yazın (sağa artı; boş Enter: nokta yok)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "2"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 5 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Ölçü (M): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): 2.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "M"
+  },
+  {
+   "key": "Enter",
+   "note": "Ölçü kapalı: km uzunluktan, 0+000 … 0+060; Başlangıç ve Ters döner.",
+   "expect": {
+    "prompt": "Km yaz: 4 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Ölçü (M): kapalı / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): 2.000 m / Uçlar (U): açık / Uygula (Enter)]",
+    "options": [
+     "A",
+     "M",
+     "B",
+     "T",
+     "Y",
+     "H",
+     "S",
+     "İ",
+     "E",
+     "N",
+     "U",
+     "Enter"
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "M"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km yaz: 5 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Ölçü (M): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): 2.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Enter",
+   "note": "Beş istasyonda işaret, yazı ve nokta tek adımda; son nokta rotanın sonunda, ölçü yönünün (kuzey) sağında 2 m.",
+   "expect": {
+    "tool": "stationLabels",
+    "points": 0,
+    "entities": 17,
+    "logged": [
+     "Km yaz: 5 istasyon yazıldı."
+    ],
+    "newest": {
+     "kind": "point",
+     "points": [
+      [
+       12,
+       10
+      ]
+     ],
+     "attrs": {
+      "Km": "1+062.000"
+     }
+    },
+    "prompt": "Km yaz: güzergâha tıklayın (km’si ilk köşesinde başlar) [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): 2.000 m / Uçlar (U): açık]"
+   }
+  },
+  {
+   "click": [
+    -20,
+    10
+   ],
+   "note": "Ölçüsüz çizgide Ölçü yok: km uzunluktan.",
+   "expect": {
+    "points": 1,
+    "prompt": "Km yaz: 2 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): 2.000 m / Uçlar (U): açık / Uygula (Enter)]",
+    "options": [
+     "A",
+     "B",
+     "T",
+     "Y",
+     "H",
+     "S",
+     "İ",
+     "E",
+     "N",
+     "U",
+     "Enter"
+    ]
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Önce güzergâh bırakılır, çizim geri alınmaz.",
+   "expect": {
+    "points": 0,
+    "entities": 17
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Güzergâh yokken Ctrl+Z çizimi geri alır: tek adım.",
+   "expect": {
+    "entities": 2
+   }
+  },
+  {
+   "click": [
+    -20,
+    10
+   ],
+   "expect": {
+    "points": 1,
+    "prompt": "Km yaz: 2 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): 2.000 m / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "N"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "key": "Enter",
+   "note": "Nokta'nın boş Enter'ı: nokta yok.",
+   "expect": {
+    "prompt": "Km yaz: 2 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Esc güzergâhı bırakır.",
+   "expect": {
+    "points": 0,
+    "prompt": "Km yaz: güzergâha tıklayın (km’si ilk köşesinde başlar) [Aralık (A): 20 m / Başlangıç (B): 0+000.000 / Ters (T) / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık]"
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 2
+   }
+  },
+  {
+   "click": [
+    -20,
+    -10
+   ],
+   "note": "Seçili ölçülü rota aracın başında alınır, Ölçü açık.",
+   "expect": {
+    "selected": [
+     1
+    ]
+   }
+  },
+  {
+   "run": "tool.stationLabels",
+   "expect": {
+    "tool": "stationLabels",
+    "points": 1,
+    "prompt": "Km yaz: 5 istasyon; Enter ile yazın ya da başka bir güzergâha tıklayın [Aralık (A): 20 m / Ölçü (M): açık / Yazı (Y): sol / Yükseklik (H): 2 mm / Stil (S): Standart / İşaret (İ): açık / Enkesit (E): yok / Nokta (N): yok / Uçlar (U): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "points": 0
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 2
+   }
+  }
+ ]
+}

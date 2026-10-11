@@ -496,12 +496,20 @@ impl<'a, Message> Prompt<'a, Message> {
             return None;
         }
 
-        self.options
-            .iter()
-            .chain(&self.hidden)
-            .find(|option| keyword_matches(&option.label, &input))
+        // The option whose key is what was typed, before one whose name or value merely starts so.
+        let mut all = self.options.iter().chain(&self.hidden);
+        all.clone()
+            .find(|option| keyed(option, &input))
+            .or_else(|| all.find(|option| keyword_matches(&option.label, &input)))
             .map(|option| &option.message)
     }
+}
+
+/// Sadeleştirilmiş `input` seçeneğin tuşu mu (`Ölçü (M)`'nin M'si): tuşu
+/// yazmak, adı ya da değeri o harfle başlayan başka bir seçeneği değil, onu
+/// seçer (“Aralık: 20 m”nin “m”si “M”yi almaz).
+fn keyed<Message>(option: &Keyword<'_, Message>, input: &str) -> bool {
+    option.key.as_ref().is_some_and(|key| fold(key) == input)
 }
 
 /// Sadeleştirilmiş `input`, seçeneğin adıyla ya da adındaki bir sözcükle
@@ -1273,11 +1281,18 @@ fn suggestions<'a, Message: Clone>(
     let input = fold(value.trim());
 
     let options = prompt.into_iter().flat_map(|prompt| {
-        prompt
-            .options
-            .iter()
-            .chain(&prompt.hidden)
-            .filter(|option| input.is_empty() || keyword_matches(&option.label, &input))
+        let input = input.as_str();
+        let all = move || prompt.options.iter().chain(&prompt.hidden);
+        // The option whose key was typed first: Enter chooses it.
+        let typed_key = (!input.is_empty())
+            .then(|| all().find(|option| keyed(option, input)))
+            .flatten();
+        typed_key
+            .into_iter()
+            .chain(all().filter(move |option| {
+                !typed_key.is_some_and(|k| std::ptr::eq(k, *option))
+                    && (input.is_empty() || keyword_matches(&option.label, input))
+            }))
             .map(|option| Suggestion {
                 target: Target::Option {
                     label: option.label.to_string(),
@@ -2616,6 +2631,44 @@ mod tests {
             }]
         );
         assert!(suggested::<()>(&CATALOG, None, "xyz").is_empty());
+    }
+
+    #[test]
+    fn a_typed_key_chooses_its_option_before_a_value_that_starts_so() {
+        let prompt = Prompt::new("güzergâha tıklayın")
+            .command("Km yaz")
+            .option("Aralık: 20 m", 1)
+            .key("A")
+            .option("Ölçü: açık", 2)
+            .key("M")
+            .option("Yükseklik: 2 mm", 3)
+            .key("H")
+            .option("İşaret: açık", 4)
+            .key("İ");
+        // “m” is Ölçü's key: it comes first, Aralık and Yükseklik (their values' “m” and “mm”) after.
+        assert_eq!(
+            suggested(&CATALOG, Some(&prompt), "m"),
+            [
+                Suggested::Option {
+                    label: "Ölçü: açık".to_owned(),
+                    message: 2
+                },
+                Suggested::Option {
+                    label: "Aralık: 20 m".to_owned(),
+                    message: 1
+                },
+                Suggested::Option {
+                    label: "Yükseklik: 2 mm".to_owned(),
+                    message: 3
+                },
+            ]
+        );
+        assert_eq!(prompt.find("M"), Some(&2));
+        assert_eq!(prompt.find("h"), Some(&3));
+        assert_eq!(prompt.find("i"), Some(&4));
+        // No key typed: the words of the names and values, in order, as before.
+        assert_eq!(prompt.find("mm"), Some(&3));
+        assert_eq!(prompt.find("ara"), Some(&1));
     }
 
     #[test]

@@ -23,7 +23,7 @@ pub const NO_ROUTE: &str = "Bu nesnenin üzerinde yürünecek tek bir yolu yok: 
 pub const BAD_INTERVAL: &str = "Aralık sıfırdan büyük bir uzunluk olmalı.";
 /// Km yaz by measure on a route without one (docs/adr/0224 §6).
 pub const NO_MEASURES: &str =
-    "Bu güzergâhın ölçüsü (M) yok: Ölçü'yü Uzunluk yapın ya da ölçülü bir rota seçin.";
+    "Bu güzergâhın ölçüsü (M) yok: Ölçü’yü kapatın ya da ölçülü bir rota seçin.";
 
 /// Where the stations are (docs/adr/0189 §2).
 #[derive(Clone, Debug, PartialEq)]
@@ -413,6 +413,16 @@ pub fn stationing(
     stations(e, rules).map(|s| objects(s, look))
 }
 
+/// Km yaz's whole answer by a measured route's measures (docs/adr/0224 §6):
+/// its stations by measure and the objects at them.
+pub fn measure_stationing(
+    route: &crate::ops::lrs::Route,
+    rules: &Rules,
+    look: &Look,
+) -> Result<Stationing, String> {
+    measure_stations(route, rules).map(|s| objects(s, look))
+}
+
 /// The op's answer: what is written, or why nothing is.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Answer {
@@ -442,9 +452,9 @@ pub(crate) static OPS: &[Op] = &[
     // By a measured route's measures (docs/adr/0224 §6).
     op!(
         "stationingMeasure",
-        |route: crate::ops::lrs::Route, rules: Rules, look: Look| answer(
-            measure_stations(&route, &rules).map(|s| objects(s, &look))
-        )
+        |route: crate::ops::lrs::Route, rules: Rules, look: Look| answer(measure_stationing(
+            &route, &rules, &look
+        ))
     ),
 ];
 

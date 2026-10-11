@@ -90,44 +90,12 @@ pub fn side_param(label: &str) -> ParamDef {
     .default_value(json!("right"))
 }
 
-fn v(p: &Point) -> Vec2 {
-    Vec2::new(p.x, p.y)
-}
-
 fn p(q: Vec2) -> Point {
     Point { x: q.x, y: q.y }
 }
 
-/// An object as a route: a line's two ends and their measures, a polyline's
-/// own part and its parts; none of another kind.
-pub fn route_of(e: &Entity) -> Option<Route> {
-    let part =
-        |pts: &[Point], bulges: &Option<Vec<f64>>, ms: &Option<Vec<Option<f64>>>| RoutePart {
-            pts: pts.iter().map(v).collect(),
-            bulges: bulges.clone(),
-            ms: ms.clone().unwrap_or_else(|| vec![None; pts.len()]),
-        };
-    match e {
-        Entity::Line(l) => Some(Route {
-            parts: vec![RoutePart {
-                pts: vec![v(&l.a), v(&l.b)],
-                bulges: None,
-                ms: vec![l.ma, l.mb],
-            }],
-        }),
-        Entity::Polyline(q) => Some(Route {
-            parts: std::iter::once(part(&q.pts, &q.bulges, &q.ms))
-                .chain(
-                    q.parts
-                        .iter()
-                        .flatten()
-                        .map(|r| part(&r.pts, &r.bulges, &r.ms)),
-                )
-                .collect(),
-        }),
-        _ => None,
-    }
-}
+/// An object as a route (the application's, which Km yaz reads too).
+pub use kentos_native_application::geometry::route as route_of;
 
 /// The routes of objects by their id: the id field's value, trimmed (an
 /// empty one no route); of several objects of an id the first.

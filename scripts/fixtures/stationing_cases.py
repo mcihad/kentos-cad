@@ -48,7 +48,7 @@ SLACK = mp.mpf("1e-9")
 MOST = 20000
 NO_ROUTE = "Bu nesnenin üzerinde yürünecek tek bir yolu yok: çizgi, çoklu çizgi, yay, daire, elips, eğri ya da tek parçalı alan seçin."
 BAD_INTERVAL = "Aralık sıfırdan büyük bir uzunluk olmalı."
-NO_MEASURES = "Bu güzergâhın ölçüsü (M) yok: Ölçü'yü Uzunluk yapın ya da ölçülü bir rota seçin."
+NO_MEASURES = "Bu güzergâhın ölçüsü (M) yok: Ölçü’yü kapatın ya da ölçülü bir rota seçin."
 
 
 def interval_decimals(interval):

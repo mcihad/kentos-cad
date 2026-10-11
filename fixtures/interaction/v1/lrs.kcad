@@ -1,0 +1,450 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Doğrusal referans",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 5000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "kaza",
+   "name": "Kazalar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#D6409F",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "ring",
+     "size": 5
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "km",
+   "name": "Km taşları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#F76B15",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "point": {
+     "symbol": "triangle",
+     "size": 6
+    }
+   },
+   "children": []
+  },
+  {
+   "id": "rota",
+   "name": "Ölçülü rotalar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#0D74CE",
+    "lineType": "continuous",
+    "lineWeight": 0.7
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol parçaları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8C9AAA",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "kaza",
+ "entities": [
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 486100.0,
+     "y": 4419860.0
+    },
+    {
+     "x": 486700.0,
+     "y": 4419860.0
+    },
+    {
+     "x": 487131.483,
+     "y": 4419970.176
+    },
+    {
+     "x": 487701.912,
+     "y": 4420281.803
+    }
+   ],
+   "bulges": [
+    0.0,
+    0.12565513657513097,
+    0.0
+   ],
+   "ms": [
+    12000.0,
+    12600.0,
+    13050.0,
+    13700.0
+   ],
+   "id": 1,
+   "layerId": "rota",
+   "attrs": {
+    "Rota": "D-100",
+    "Ad": "Devlet yolu"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 486700.0,
+     "y": 4419860.0
+    },
+    {
+     "x": 486670.0,
+     "y": 4420160.0
+    },
+    {
+     "x": 486580.0,
+     "y": 4420470.0
+    }
+   ],
+   "ms": [
+    0.0,
+    301.496,
+    624.297
+   ],
+   "id": 2,
+   "layerId": "rota",
+   "attrs": {
+    "Rota": "D-200",
+    "Ad": "Kuzey bağlantısı"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 486100.0,
+    "y": 4419860.0
+   },
+   "b": {
+    "x": 486700.0,
+    "y": 4419860.0
+   },
+   "id": 3,
+   "layerId": "yol",
+   "attrs": {
+    "Yol": "D-100"
+   }
+  },
+  {
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 486700.0,
+     "y": 4419860.0
+    },
+    {
+     "x": 487131.483,
+     "y": 4419970.176
+    }
+   ],
+   "bulges": [
+    0.12565513657513097
+   ],
+   "id": 4,
+   "layerId": "yol",
+   "attrs": {
+    "Yol": "D-100"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 487131.483,
+    "y": 4419970.176
+   },
+   "b": {
+    "x": 487701.912,
+    "y": 4420281.803
+   },
+   "id": 5,
+   "layerId": "yol",
+   "attrs": {
+    "Yol": "D-100"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 486700.0,
+    "y": 4419860.0
+   },
+   "b": {
+    "x": 486670.0,
+    "y": 4420160.0
+   },
+   "id": 6,
+   "layerId": "yol",
+   "attrs": {
+    "Yol": "D-200"
+   }
+  },
+  {
+   "kind": "line",
+   "a": {
+    "x": 486670.0,
+    "y": 4420160.0
+   },
+   "b": {
+    "x": 486580.0,
+    "y": 4420470.0
+   },
+   "id": 7,
+   "layerId": "yol",
+   "attrs": {
+    "Yol": "D-200"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486600.0,
+    "y": 4419860.0
+   },
+   "id": 8,
+   "layerId": "km",
+   "attrs": {
+    "Rota": "D-100",
+    "Km": "12510"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487086.961,
+    "y": 4419947.436
+   },
+   "id": 9,
+   "layerId": "km",
+   "attrs": {
+    "Rota": "D-100",
+    "Km": "13015"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487526.395,
+    "y": 4420185.918
+   },
+   "id": 10,
+   "layerId": "km",
+   "attrs": {
+    "Rota": "D-100",
+    "Km": "13520"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486220.0,
+    "y": 4419854.0
+   },
+   "id": 11,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K01",
+    "Tür": "Çarpışma",
+    "Yıl": "2023"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486510.0,
+    "y": 4419869.0
+   },
+   "id": 12,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K02",
+    "Tür": "Yaya",
+    "Yıl": "2024"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486740.165,
+    "y": 4419856.893
+   },
+   "id": 13,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K03",
+    "Tür": "Kayma",
+    "Yıl": "2025"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486818.049,
+    "y": 4419879.882
+   },
+   "id": 14,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K04",
+    "Tür": "Çarpışma",
+    "Yıl": "2024"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487071.678,
+    "y": 4419932.652
+   },
+   "id": 15,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K05",
+    "Tür": "Devrilme",
+    "Yıl": "2023"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487269.499,
+    "y": 4420051.272
+   },
+   "id": 16,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K06",
+    "Tür": "Çarpışma",
+    "Yıl": "2025"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487496.086,
+    "y": 4420157.965
+   },
+   "id": 17,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K07",
+    "Tür": "Yaya",
+    "Yıl": "2024"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 487691.697,
+    "y": 4420279.641
+   },
+   "id": 18,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K08",
+    "Tür": "Kayma",
+    "Yıl": "2023"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486697.015,
+    "y": 4419940.1
+   },
+   "id": 19,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K09",
+    "Tür": "Çarpışma",
+    "Yıl": "2025"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486662.189,
+    "y": 4420157.715
+   },
+   "id": 20,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K10",
+    "Tür": "Yaya",
+    "Yıl": "2023"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486640.12,
+    "y": 4420305.961
+   },
+   "id": 21,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K11",
+    "Tür": "Devrilme",
+    "Yıl": "2024"
+   }
+  },
+  {
+   "kind": "point",
+   "p": {
+    "x": 486582.933,
+    "y": 4420445.552
+   },
+   "id": 22,
+   "layerId": "kaza",
+   "attrs": {
+    "No": "K12",
+    "Tür": "Çarpışma",
+    "Yıl": "2025"
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

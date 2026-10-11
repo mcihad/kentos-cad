@@ -98,5 +98,10 @@ export function tooltip(
     listen(target, 'focus', enter),
     listen(target, 'blur', () => hideTooltip()),
   ];
-  return () => subs.forEach((d) => d());
+  // Marked: a name shortened with an ellipsis inside it says its whole self on hover (the layout check reads it).
+  target.dataset.tooltip = '';
+  return () => {
+    subs.forEach((d) => d());
+    delete target.dataset.tooltip;
+  };
 }

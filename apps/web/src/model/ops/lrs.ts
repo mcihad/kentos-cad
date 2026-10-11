@@ -1,5 +1,5 @@
 import { op } from '../../wasm/core';
-import type { EntityGeometry } from '../entities';
+import type { Entity, EntityGeometry } from '../entities';
 import type { Vec2 } from '../geometry';
 
 /**
@@ -21,6 +21,25 @@ export interface RoutePart {
 export interface Route {
   parts: RoutePart[];
 }
+
+/**
+ * An object as a route: a line's two ends and their measures, a polyline's own part and its parts, a vertex without a
+ * measure null; none of another kind (the desktop's `kentos_native_application::geometry::route`). Km yaz and the
+ * Doğrusal referans tools read routes through here.
+ */
+export function routeOf(e: Entity): Route | null {
+  if (e.kind === 'line') return { parts: [{ pts: [e.a, e.b], ms: [e.ma ?? null, e.mb ?? null] }] };
+  if (e.kind !== 'polyline') return null;
+  const part = (q: { pts: RoutePart['pts']; bulges?: number[]; ms?: (number | null)[] }): RoutePart => ({
+    pts: q.pts,
+    ...(q.bulges && { bulges: q.bulges }),
+    ms: q.ms ?? q.pts.map(() => null),
+  });
+  return { parts: [part(e), ...(e.parts ?? []).map(part)] };
+}
+
+/** Whether a route has a measure at any vertex. */
+export const measured = (route: Route): boolean => route.parts.some((q) => q.ms.some((m) => m !== null));
 
 /** Why a route gives no place. (A field the core has none of is left out, not null.) */
 export type Fault =

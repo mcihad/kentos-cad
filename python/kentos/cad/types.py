@@ -1954,11 +1954,14 @@ class AreaPart(_Model):
     the area's own fields hold the first part's. A multi-part polyline's
     part is the same, open and without holes (docs/adr/0174).
     Attributes:
+        ms: A polyline's part's measures, as the polyline's own `ms`
+            (docs/adr/0224 §1); an area's part has none.
         zs: Each vertex's elevation, as the area's own `zs` (docs/adr/0142).
     """
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
+    ms: list[float | None] | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -1968,6 +1971,8 @@ class AreaPart(_Model):
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
         if self.holes is not UNSET:
             out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
+        if self.ms is not UNSET:
+            out["ms"] = None if self.ms is None else [None if e0 is None else float(e0) for e0 in self.ms]
         if self.zs is not UNSET:
             out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
@@ -1978,6 +1983,7 @@ class AreaPart(_Model):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
+            ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
@@ -6805,6 +6811,9 @@ class LineEntity(Entity):
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
+        ma: The start's measure (M) on a route, in the route's own unit; absent =
+            none (docs/adr/0224 §1).
+        mb: The end's measure; absent = none.
         symbol: Library symbol overriding the layer's style.
         za: The start's elevation, m; absent = none (docs/adr/0142).
         zb: The end's elevation, m; absent = none.
@@ -6819,6 +6828,8 @@ class LineEntity(Entity):
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    ma: float | None | Unset = UNSET
+    mb: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     za: float | None | Unset = UNSET
     zb: float | None | Unset = UNSET
@@ -6838,6 +6849,10 @@ class LineEntity(Entity):
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.ma is not UNSET:
+            out["ma"] = None if self.ma is None else float(self.ma)
+        if self.mb is not UNSET:
+            out["mb"] = None if self.mb is None else float(self.mb)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.za is not UNSET:
@@ -6858,6 +6873,8 @@ class LineEntity(Entity):
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            ma=UNSET if "ma" not in data else None if data["ma"] is None else float(data["ma"]),
+            mb=UNSET if "mb" not in data else None if data["mb"] is None else float(data["mb"]),
             symbol=data.get("symbol", UNSET),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
@@ -7170,6 +7187,9 @@ class PathEntity(_Model):
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
+        ms: A polyline's vertices' measures (M) on a route, as many as `pts`;
+            `null` for a vertex without one; absent when none has one
+            (docs/adr/0224 §1). A polygon has none: a route is a line.
         parts: A polygon's or a polyline's parts past its first, whose own are the
             fields above; absent for one part (docs/adr/0143, 0174). A
             polyline's parts are open, of two vertices or more, without holes.
@@ -7187,6 +7207,7 @@ class PathEntity(_Model):
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    ms: list[float | None] | None | Unset = UNSET
     parts: list[AreaPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
@@ -7209,6 +7230,8 @@ class PathEntity(_Model):
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.ms is not UNSET:
+            out["ms"] = None if self.ms is None else [None if e0 is None else float(e0) for e0 in self.ms]
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.symbol is not UNSET:
@@ -7230,6 +7253,7 @@ class PathEntity(_Model):
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
@@ -10985,18 +11009,23 @@ class PointEntityGeometry(EntityGeometry):
 class LineEntityGeometry(EntityGeometry):
     """
     Attributes:
+        ms: The ends' measures (M) as written (docs/adr/0224 §2), as `zs`;
+            absent: each takes one from the objects the edit names.
         zs: The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
             each vertex takes one from the objects the edit names.
     """
     TAG_VALUE: ClassVar[str] = "line"
     a: Vec2
     b: Vec2
+    ms: list[float | None] | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "line"}
         out["a"] = _vec2_out(self.a)
         out["b"] = _vec2_out(self.b)
+        if self.ms is not UNSET:
+            out["ms"] = None if self.ms is None else [None if e0 is None else float(e0) for e0 in self.ms]
         if self.zs is not UNSET:
             out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
@@ -11006,6 +11035,7 @@ class LineEntityGeometry(EntityGeometry):
         return cls(
             a=Vec2.from_json(data["a"]),
             b=Vec2.from_json(data["b"]),
+            ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
@@ -11015,6 +11045,9 @@ class PolylineEntityGeometry(EntityGeometry):
     """An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
     one at vertex i bending the edge to vertex i + 1.
     Attributes:
+        ms: The vertices' measures (M) as written (docs/adr/0224 §2), as
+            `zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex
+            takes one from the objects the edit names.
         parts: A multi-part polyline's parts past its first, each its vertices,
             arcs and elevations, without holes (docs/adr/0174). The geometry
             is the whole polyline: absent, it has one part, so an edit of a
@@ -11026,6 +11059,7 @@ class PolylineEntityGeometry(EntityGeometry):
     TAG_VALUE: ClassVar[str] = "polyline"
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
+    ms: list[float | None] | None | Unset = UNSET
     parts: list[AreaPart] | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
@@ -11034,6 +11068,8 @@ class PolylineEntityGeometry(EntityGeometry):
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.ms is not UNSET:
+            out["ms"] = None if self.ms is None else [None if e0 is None else float(e0) for e0 in self.ms]
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.zs is not UNSET:
@@ -11045,6 +11081,7 @@ class PolylineEntityGeometry(EntityGeometry):
         return cls(
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )

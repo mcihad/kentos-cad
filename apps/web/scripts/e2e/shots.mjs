@@ -3526,6 +3526,145 @@ SCENES.generalize = [
   { id: 'gen-kat-cizim', open: (ui) => openGeneralize(ui, 'eliminate-longest'), close: queryClose },
 ];
 
+// Doğrusal referans (docs/adr/0224) on the pictures' road (fixtures/interaction/v1/lrs.kcad and lrs/,
+// scripts/fixtures/lrs_scene.py), the scenes the desktop's `processing::lrs_tests::screens` draws: CBS's Analiz with Ağ
+// analizi's ▾ open on the six, each tool's window and what it wrote (the routes made from the road pieces with the new
+// D-100's measures in Öznitelikler, the guardrails and the signs beside the routes), the tables of Rota boyunca konumla
+// and Olayları çakıştır, D-100's measures in Öznitelikler, in Koordinat listesi's M column and on the hover card.
+const LRS_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/lrs.kcad', import.meta.url), 'utf8');
+/** An event table as the window takes it: its name with its rows, cells split at the semicolons. */
+const lrsFile = (name) => ({
+  name,
+  rows: readFileSync(new URL(`../../../../fixtures/interaction/v1/lrs/${name}`, import.meta.url), 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => line.split(';')),
+});
+const LRS_ROAD = [486080, 4419830, 487730, 4420500];
+const LRS_RUNS = {
+  create: ['linearRef.createRoutes', { input: QUERY_LAYER('yol'), idField: 'Yol', method: 'length' }],
+  calibrate: ['linearRef.calibrateRoutes', { routes: QUERY_LAYER('rota'), routeField: 'Rota', points: QUERY_LAYER('km'), pointRoute: 'Rota', measure: 'Km', radius: 1 }],
+  signs: [
+    'linearRef.routeEvents',
+    { routes: QUERY_LAYER('rota'), routeField: 'Rota', sourceKind: 'file', file: lrsFile('levhalar.csv'), eventRoute: 'Rota', eventKind: 'point', measure: 'Km', offset: 'Ofset', side: 'right' },
+  ],
+  rails: [
+    'linearRef.routeEvents',
+    { routes: QUERY_LAYER('rota'), routeField: 'Rota', sourceKind: 'file', file: lrsFile('korkuluk.csv'), eventRoute: 'Rota', eventKind: 'line', from: 'Bas', to: 'Son', offset: 'Ofset', side: 'right' },
+  ],
+  locate: ['linearRef.locateAlong', { input: QUERY_LAYER('kaza'), routes: QUERY_LAYER('rota'), routeField: 'Rota', radius: 20, all: false, side: 'right', write: false }],
+  overlay: [
+    'linearRef.overlayEvents',
+    { aSourceKind: 'file', aFile: lrsFile('kaplama.csv'), aRoute: 'Rota', aFrom: 'Bas', aTo: 'Son', bSourceKind: 'file', bFile: lrsFile('hiz.csv'), bRoute: 'Rota', bFrom: 'Bas', bTo: 'Son', how: 'union' },
+  ],
+  extract: ['linearRef.extractMeasures', { input: QUERY_LAYER('rota'), prefix: 'M_' }],
+};
+/** The road open, the roads in view. */
+const lrsLoad = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(LRS_SCENE)}, null))) throw new Error('lrs.kcad did not load');
+    k.selection.clear();
+    k.view.camera.fit({ minX: ${LRS_ROAD[0]}, minY: ${LRS_ROAD[1]}, maxX: ${LRS_ROAD[2]}, maxY: ${LRS_ROAD[3]} }, 24);
+    k.view.requestRender();
+    k.log.clear();
+  })()`);
+  await ui.sleep(300);
+};
+/** A tool's window with its values; run when asked, the form scrolled to its end. */
+const lrsWindow = async (ui, what, run) => {
+  const [tool, values] = LRS_RUNS[what];
+  await ui.eval(openTool(tool, values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (!run) return;
+  await ui.clickSel('.ptool__run');
+  await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+  await ui.sleep(300);
+  await formEnd(ui);
+  await ui.sleep(200);
+};
+/** Tools run and their windows closed: what they wrote in the drawing. */
+const lrsDrawn = async (ui, whats) => {
+  for (const what of whats) {
+    await lrsWindow(ui, what, true);
+    await ui.escapeAll(2);
+  }
+  await ui.move(2, 2);
+  await ui.sleep(400);
+};
+/** Öznitelikler over the dock (the layer tree at its least) with Genel folded, objects selected. */
+const lrsProps = async (ui, select) => {
+  await ui.eval(layoutSet({ layersFraction: 0.15 }));
+  await ui.eval(select);
+  await ui.move(2, 2);
+  await ui.sleep(400);
+  const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes('Genel'))`;
+  if (await ui.eval(`(() => { const b = ${head}; return !!b && b.getAttribute('aria-expanded') === 'true'; })()`)) await ui.clickText('.panel--props .props__section', 'Genel');
+  await ui.move(2, 2);
+  await ui.sleep(300);
+};
+const lrsPropsClose = async (ui) => {
+  const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes('Genel'))`;
+  if (await ui.eval(`(() => { const b = ${head}; return !!b && b.getAttribute('aria-expanded') === 'false'; })()`)) await ui.clickText('.panel--props .props__section', 'Genel');
+  await queryClose(ui);
+  await ui.eval(LAYOUT_BACK);
+};
+SCENES.lrs = [
+  {
+    id: 'dr-serit',
+    open: async (ui) => {
+      await lrsLoad(ui);
+      await ribbonOn(ui, { ribbonTab: 'analysis' });
+      await ui.sleep(300);
+      const open = await ui.eval(`!!document.querySelector('.rpanel[data-panel="Ağ analizi"] .rpanel__more')?.offsetParent`);
+      if (open) await ui.clickSel('.rpanel[data-panel="Ağ analizi"] .rpanel__more');
+      else {
+        await ui.clickSel('.ribbon__strip .rpanel__collapsed[aria-label="Ağ analizi"]');
+        await ui.sleep(300);
+        await ui.clickSel('.ribbon-pop .rpanel__more');
+      }
+      await ui.sleep(400);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ribbonOff(ui)),
+  },
+  { id: 'dr-olustur', open: async (ui) => (await lrsLoad(ui), await lrsWindow(ui, 'create', false)), close: queryClose },
+  {
+    // The routes made: Ölçülü rotalar hidden, the new D-100 selected, its measures in Öznitelikler.
+    id: 'dr-olustur-cizim',
+    open: async (ui) => {
+      await lrsLoad(ui);
+      await lrsDrawn(ui, ['create']);
+      await ui.eval(`window.kentos.doc.layers.setVisible('rota', false)`);
+      await lrsProps(ui, `(() => { const k = window.kentos; const made = [...k.doc.all()].find((e) => e.layerId === 'islem-rotalar' && e.attrs.Yol === 'D-100'); k.selection.set([made.id]); })()`);
+    },
+    close: lrsPropsClose,
+  },
+  { id: 'dr-kalibre', open: async (ui) => (await lrsLoad(ui), await lrsWindow(ui, 'calibrate', true)), close: queryClose },
+  { id: 'dr-olay', open: async (ui) => (await lrsLoad(ui), await lrsWindow(ui, 'rails', true)), close: queryClose },
+  { id: 'dr-olay-cizim', open: async (ui) => (await lrsLoad(ui), await lrsDrawn(ui, ['rails', 'signs'])), close: queryClose },
+  { id: 'dr-konum', open: async (ui) => (await lrsLoad(ui), await lrsWindow(ui, 'locate', true)), close: queryClose },
+  { id: 'dr-cakistir', open: async (ui) => (await lrsLoad(ui), await lrsWindow(ui, 'overlay', true)), close: queryClose },
+  { id: 'dr-m-degerleri', open: async (ui) => (await lrsLoad(ui), await lrsWindow(ui, 'extract', true)), close: queryClose },
+  // D-100 selected: M (başlangıç) and M (bitiş) among its geometry's rows.
+  { id: 'dr-oznitelik', open: async (ui) => (await lrsLoad(ui), await lrsProps(ui, `window.kentos.selection.set([1])`)), close: lrsPropsClose },
+  {
+    // D-100 in Koordinat listesi: its M column.
+    id: 'dr-koordinat',
+    open: async (ui) => {
+      await lrsLoad(ui);
+      await ui.eval(layoutSet({ bottomExpanded: true, bottomTab: 'coords', bottomHeight: 300 }));
+      await ui.eval(`window.kentos.selection.set([1])`);
+      await ui.move(2, 2);
+      await ui.sleep(600);
+    },
+    close: async (ui) => (await queryClose(ui), await ui.eval(LAYOUT_BACK)),
+  },
+  // The pointer resting on D-100's first straight: the card's M.
+  { id: 'dr-kart', open: async (ui) => (await lrsLoad(ui), await hoverAt(ui, 486400, 4419860), await ui.sleep(700)), close: queryClose },
+];
+
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
 // `networks::tests::screens` draws: Ağlar with Yollar and with İçme suyu after Denetle (the form scrolled to its answer),
 // En yakın tesis and Maliyet matrisi after a run, En yakın tesis's ways and Hizmet alanları's areas in the drawing, the
@@ -6447,8 +6586,30 @@ function stationingScenes() {
       open: async (ui) => (await sections(ui), await ui.eval(`window.kentos.commands.execute('tool.confirm')`), await ui.sleep(300), await hover(ui, 12, 12)),
       close,
     },
+    // Km yaz on a measured route (docs/adr/0224 §6; the shared trace's stationing-measure.kcad): Ölçü on, the km its
+    // measures; the desktop's `km-yaz-olcu`.
+    {
+      id: 'stationing-measure',
+      open: async (ui) => {
+        await ui.eval(`(async () => {
+          const k = window.kentos;
+          k.files.ask = async () => 'drop';
+          if (!(await k.files.load(${JSON.stringify(STATIONING_MEASURED)}, null))) throw new Error('stationing-measure.kcad did not load');
+        })()`);
+        await ribbonOn(ui, { ribbonTab: 'annotate' });
+        await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: 486962, minY: 4419980, maxX: 487022, maxY: 4420016 }, 24); k.view.requestRender(); k.log.clear(); })()`);
+        await ui.move(2, 2);
+        await ui.sleep(300);
+        await startTool(ui, 'stationLabels');
+        await ui.clickAt(...(await ui.eval(PAGE_AT(486980, 4419990))));
+        await ui.sleep(300);
+        await hoverAt(ui, 487000, 4420012);
+      },
+      close,
+    },
   ];
 }
+const STATIONING_MEASURED = readFileSync(new URL('../../../../fixtures/interaction/v1/stationing-measure.kcad', import.meta.url), 'utf8');
 
 function edgeShiftScenes() {
   const DRAWN = SCRATCH(`

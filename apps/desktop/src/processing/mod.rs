@@ -46,6 +46,8 @@ mod interpolation_tests;
 #[cfg(test)]
 mod layer_tools_tests;
 #[cfg(test)]
+mod lrs_tests;
+#[cfg(test)]
 mod proximity_tests;
 #[cfg(test)]
 mod query_tests;

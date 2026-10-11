@@ -16258,6 +16258,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/stationing-measure.json",
         "fixtures/interaction/v1/stationing.json"
       ]
     },
@@ -21413,6 +21414,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/stationing-measure.json",
         "fixtures/interaction/v1/stationing.json"
       ]
     },

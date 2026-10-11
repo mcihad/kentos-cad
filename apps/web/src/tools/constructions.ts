@@ -4,6 +4,7 @@ import type { Affine } from '../model/geom/affine';
 import type { ArcGeom } from '../model/geom/arc';
 import type { EllipseGeom } from '../model/geom/ellipse';
 import type { Edge } from '../model/geom/intersect';
+import type { Route } from '../model/ops/lrs';
 import { op } from '../wasm/core';
 
 /**
@@ -71,6 +72,13 @@ export interface Stationing {
 
 /** A route's stations and what is written at them, or why nothing is. */
 export const stationing = op<(e: Entity, rules: StationRules, look: StationLook) => { stationing?: Stationing | null; problem?: string | null }>('stationing');
+
+/**
+ * A measured route's stations by its measures and what is written at them, or why nothing is (docs/adr/0224 §6): the
+ * multiples of the interval within its least and most measure and its first and last measure; `start` and `reverse`
+ * are the measures' own and not read.
+ */
+export const stationingMeasure = op<(route: Route, rules: StationRules, look: StationLook) => { stationing?: Stationing | null; problem?: string | null }>('stationingMeasure');
 
 // Orta hat (docs/adr/0190; crates/shared/geometry-core/src/ops/centerline.rs).
 

@@ -79,3 +79,12 @@ M değerli hatlar ve ölçülü tarama (KentOS geometrisinde M yok; `GIS-28`), g
 - Ortak iz `stationing.json` (`stationing.kcad`) iki platformda üç varyantta, web'de tek tarayıcıda art arda da geçer.
 - Resimler: masaüstü `arac-km-yaz-*`, web `shots.mjs stationing`, iki temada, 1440×900 ve 1100×650.
 
+
+## Ek (11 Ekim): ölçüyle Km yaz
+
+Geometride M yoktu, bu yüzden ölçülü hatta km yazmak kapsam dışıydı. Doğrusal referanslama ([ADR 0224](0224-linear-referencing.md))
+çizgiye ve çoklu çizgiye köşe başına ölçüyü getirdi; Km yaz ölçülü hatta **Ölçü (M)** seçeneğini sunar, hat alınınca açıktır. Açıkken
+km'ler rotanın ölçüleridir (`ops::stationing::measure_stations`, işlem `stationingMeasure`): aralığın en küçük ile en büyük ölçü arasındaki
+katları ve istenirse yürüme sırasındaki ilk ve son ölçü, her biri o ölçünün ilk yerinde ve rotanın ölçü yönünde; Başlangıç ve Ters o
+sırada sunulmaz. İşaretler, yazılar, enkesitler ve noktalar bu ADR'nin kurallarıyla yazılır. Bağımsız başvuru `stationing_cases.py`'nin
+`measureCases`'i (4 durum), ortak iz `stationing-measure.json`; ayrıntı ADR 0224 §6.

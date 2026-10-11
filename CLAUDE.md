@@ -207,6 +207,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kadar, Sayfa listesiyle, sınırı aşan söylenerek; Öznitelik tablosunda Dışa aktar ▾, İşlemler'in tablolarında Kaydet ▾; Tablodan nokta
   (dosya ya da katman, düzlem ya da kayıttaki bir sistemden açık dönüşümle, coğrafide DMS); Koordinat listesi çalışma kitabını Tablodan
   nokta'ya yönlendirir; `FORMATS_VERSION` 50 (ADR 0223);
+  doğrusal referanslama: köşede ölçü (M; çizginin `ma`, `mb`'si, çoklu çizginin ve parçalarının `ms`'i; alanın yok; `.kcad` şema 39,
+  `FORMATS_VERSION` 51), düzenlemeler M'yi kotun kurallarıyla taşır (`measure_lost`, `invalid_measures`), dönüşümler korur; Shapefile
+  PolyLineM ve PolyLineZ'nin M'si okunur; İşlemler'in Doğrusal referans kategorisinde Rota oluştur (Uzunluk, Tek alan, İki alan;
+  Koordinat önceliği, boşluklar), Rotayı kalibre et, Olayları rotada göster (nokta ve çizgi, öteleme, dosya ya da nesneler), Rota boyunca
+  konumla (nokta, çizgi, alan; rotaların R-ağacı), Olayları çakıştır (Kesişim, Birleşim) ve M değerlerini çıkar; çekirdek `ops::lrs`;
+  Öznitelikler'de, Koordinat listesinde ve kartta M; Km yaz'ın Ölçü (M)'si ölçülü rotada km'yi M'den yazar; CBS'de Analiz › Ağ analizi ▾
+  (ADR 0224);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -647,6 +654,10 @@ python3 scripts/fixtures/workbook_cases.py --check   # çalışma kitabı yazıc
 python3 scripts/fixtures/table_points_cases.py --check; python3 scripts/fixtures/feature_export_cases.py --check   # Tablodan nokta'nın durumlarını (düzlem ve WGS 84 ODS'si PROJ'la, katman, retler; fixtures/processing/v1/table-points*) ve Öznitelik tablosunun dışa aktarılan sayfasını (fixtures/feature-table/v1/export.json) KentOS kodu olmadan denetle (ADR 0223 §3, §5)
 cargo test -p kentos-desktop processing::table_points_tests::screens -- --ignored --nocapture --test-threads=1   # Tablodan nokta'nın şeridi, penceresi, Sayfa listesi, Kaydet ▾, noktalar, Öznitelik tablosunun Dışa aktar ▾'si ve koordinat listesinde çalışma kitabı, .run/shots/islem-tablo-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs tableexchange); ADR 0223)
 cargo test --release -p kentos-formats --test all workbook_timing -- --ignored --nocapture; cargo test --release -p kentos-processing --test cases table_points_timing -- --ignored --nocapture   # 100 000 satırın XLSX, ODS ve CSV yazılması, 250 000 satırlık XLSX ve ODS'nin okunması, 100 000 satırdan Tablodan nokta bütçeleriyle (ADR 0223 Doğrulama); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; WORKBOOK_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/workbook.test.ts --disable-console-intercept; rm apps/web/src/io/pkg/.stamp (Tablodan nokta scripts/perf/convert.test.ts'te)
+python3 scripts/fixtures/lrs_cases.py --check   # doğrusal referanslamayı (konum, ölçünün yeri, iki ölçü arası parçalar ötelemeyle, rota oluşturma, kalibrasyon, çakıştırma, özet, çizgi ve alanın konumu; yaylar açıyla) ADR'den, KentOS kodu olmadan 50 basamaklı mpmath'le denetle; durumlar fixtures/lrs/v1/cases.json (ADR 0224)
+python3 scripts/fixtures/lrs_processing_cases.py --check; python3 scripts/fixtures/lrs_scene.py --check   # Doğrusal referans araçlarının İşlemler durumlarını (fixtures/processing/v1/lrs.json, lrs.kcad, lrs-*.csv) ve resimlerin yolunu (fixtures/interaction/v1/lrs.kcad ve lrs/: D-100 ve D-200, parçaları, km taşları, kazalar, kaplama, hız, korkuluk ve levha tabloları) denetle (ADR 0224)
+cargo test -p kentos-desktop processing::lrs_tests::screens -- --ignored --nocapture --test-threads=1   # Doğrusal referans'ın şeridi, pencereleri, yeni rotalar ve M'leri, olaylar, tablolar, Öznitelikler'in M'si, Koordinat listesinin M sütunu ve kart, .run/shots/islem-dr-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs lrs); Km yaz ölçüyle KENTOS_SHOTS_ONLY=km-yaz-olcu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture ve shots.mjs stationing --only stationing-measure; ADR 0224)
+cargo test --release -p kentos-geometry-core --test all lrs::timing -- --ignored --nocapture   # 1 000 rotada 100 000 nokta ve 10 000 çizgi olayı, 100 000 noktanın konumlanması, 10 000 parçadan rota, 100 000 olayın çakıştırılması ve kalibrasyon bütçeleriyle (ADR 0224 §4); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; LRS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/lrs.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
 python3 scripts/fixtures/closing_cases.py --check   # dönük binaların 45 bloğunun kapanışını (dışa tampon GEOS'un, içe aşındırma kesin; kesişim çekirdeğinin bir kez yüz yitirdiği bloklar dahil) KentOS kodu olmadan denetle; --stress FILE çekirdeğin rastgele blokların kapanışlarını (KENTOS_CLOSINGS_OUT=FILE cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored) karşılaştırır; durumlar fixtures/geoprocess/v1/closings.json (ADR 0221 §10)
 cargo test -p kentos-desktop processing::generalize_tests::screens -- --ignored --nocapture --test-threads=1   # genelleştirmenin şeridi, pencereleri ve sonuçları, .run/shots/islem-gen-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs generalize); ADR 0221)
@@ -1633,8 +1644,15 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   Dışa aktar ▾'si (`workbook_sheet`, `featureSheet`); bağımsız başvurular `table_file_cases.py`, `workbook_cases.py`, `table_points_cases.py`,
   `feature_export_cases.py`; pencereler `processing::table_points_tests`, `shots.mjs tableexchange`; süreler `workbook_timing`,
   `table_points_timing`, `scripts/perf/workbook.test.ts`, `scripts/perf/convert.test.ts`. `GIS-28` doğrusal referanslama
-  (ADR 0224) sürüyor: 11 Ekim'de sahibin isteğiyle yarıda bırakıldı, yapılanlar ve kalanlar
-  [docs/devir/2026-10-11-gis-28.md](docs/devir/2026-10-11-gis-28.md)'de; o bitince sıradaki `GIS-29`.
+  ([ADR 0224](docs/adr/0224-linear-referencing.md); kapsamı ben belirledim) bitti (11 Ekim; iki commit: sahibin isteğiyle yarıda
+  bırakılıp WIP olarak gitti, kalanı ikinci commit'te): sözleşmenin `ma`, `mb`, `ms`'i, `.kcad` şema 39
+  (`FORMATS_VERSION` 51); düzenlemelerde M kotun kurallarıyla (`measure_lost`, `invalid_measures`); Shapefile'ın M'si; çekirdek `ops::lrs`
+  (`Walk`, `create`, `calibrate`, `overlay`, `area`, `index`, `calls`; bağımsız başvuru `lrs_cases.py`, 59 durum); İşlemler'in
+  `builtin/lrs/`'ı iki platformda (`lrs_processing_cases.py`, 14 durum; masaüstünde pencereden `processing::lrs_tests`); Öznitelikler,
+  köşe tablosu ve kartta M; Km yaz'ın Ölçü (M)'si (`measure_stations`, `stationingMeasure`; ortak iz `stationing-measure.json`; hattın
+  rotası web'de `model/ops/lrs.ts`'in `routeOf`'u, masaüstünde `kentos_native_application::geometry::route`); masaüstünün komut
+  satırında yazılan tuş kendi seçeneğini seçer (KentOS UI `keyed`); resimlerin yolu `lrs_scene.py`; süreler `lrs::timing` ve
+  `scripts/perf/lrs.test.ts`. Sıradaki `GIS-29`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

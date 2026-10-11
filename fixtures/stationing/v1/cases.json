@@ -2996,7 +2996,7 @@
     "point": null
    },
    "expect": {
-    "problem": "Bu güzergâhın ölçüsü (M) yok: Ölçü'yü Uzunluk yapın ya da ölçülü bir rota seçin."
+    "problem": "Bu güzergâhın ölçüsü (M) yok: Ölçü’yü kapatın ya da ölçülü bir rota seçin."
    }
   }
  ]

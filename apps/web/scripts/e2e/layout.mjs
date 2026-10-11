@@ -473,10 +473,11 @@ const FAULTS = `(() => {
       for (const b of foot.querySelectorAll('button')) if (seen(b) && (rect(b).left < fr.left - 0.5 || rect(b).right > fr.right + 0.5)) out.push('düğme dışarıda: ' + words(b));
     }
     for (const b of card.querySelectorAll('button')) if (seen(b) && words(b) && !b.closest('.dropdown') && cut(b)) out.push('düğme yazısı sığmıyor: ' + words(b));
-    // Text shortened with an ellipsis must say its whole self on hover (a title on it or its row).
+    // Text shortened with an ellipsis must say its whole self on hover (a title or a rich tooltip on it or its row:
+    // ui/widgets/tooltip.ts marks its target with data-tooltip).
     for (const el of card.querySelectorAll('*')) {
       if (el.children.length || !seen(el) || !cut(el) || getComputedStyle(el).textOverflow !== 'ellipsis') continue;
-      if (!el.closest('[title]') && !el.closest('.dropdown')) out.push('yazı kesik: ' + words(el));
+      if (!el.closest('[title], [data-tooltip]') && !el.closest('.dropdown')) out.push('yazı kesik: ' + words(el));
     }
   }
   // Cards beside the pointer or a control: the information card stays in the drawing area, a tooltip in the

@@ -70,7 +70,7 @@ pub(crate) const CIRCLE: Slot = Slot(7);
 
 /// Objects selected, as a click and a window would leave them; the geometry store follows the
 /// drawing, so that their grips are there to rest on.
-fn select(app: &mut App, slots: &[Slot]) {
+pub(crate) fn select(app: &mut App, slots: &[Slot]) {
     app.selection.set(slots.iter().copied());
     if let Some(doc) = app.document.as_ref() {
         app.spatial.sync(&doc.model);
@@ -79,7 +79,7 @@ fn select(app: &mut App, slots: &[Slot]) {
 
 /// Öznitelikler with the room to show its Geometri rows: the dock's upper stack (Katmanlar,
 /// İşlemler) folded to its header and the drawing's own rows (Genel) shut.
-fn panel_room(app: &mut App) {
+pub(crate) fn panel_room(app: &mut App) {
     fold_upper_stack(app);
     let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
         "general",
@@ -87,13 +87,13 @@ fn panel_room(app: &mut App) {
 }
 
 /// The dock's upper stack folded to its header: Öznitelikler has the height of the dock.
-fn fold_upper_stack(app: &mut App) {
+pub(crate) fn fold_upper_stack(app: &mut App) {
     let upper = docking::Slot::Docked(docking::Side::Right, 0);
     let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
 }
 
 /// The pointer resting on an object long enough for its rollover card to show.
-fn rest(app: &mut App, at: [f64; 2]) {
+pub(crate) fn rest(app: &mut App, at: [f64; 2]) {
     hover(app, at);
     app.hover_card_due(app.selection.hover_version());
 }

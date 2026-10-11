@@ -1,13 +1,13 @@
 import type { Entity, EntityKind, NewEntity } from '../../../model/entities';
-import type { Route, RoutePart } from '../../../model/ops/lrs';
+import { routeOf, type Route, type RoutePart } from '../../../model/ops/lrs';
 import type { DefaultsContext, FeatureSet, FileValue } from '../../types';
 import { outputStyle } from '../geometry/shared';
 import { sourceTable } from '../joinSource';
 import { lengthText } from '../proximity/shared';
 
 /**
- * What the Doğrusal referans tools share (docs/adr/0224 §5; the desktop's `builtin/lrs/mod.rs`): a route of an object,
- * the routes of a layer by their id, the number rule of a table's cells (docs/adr/0180, the core's
+ * What the Doğrusal referans tools share (docs/adr/0224 §5; the desktop's `builtin/lrs/mod.rs`): the routes of a layer
+ * by their id (an object's route is the model's `routeOf`, which Km yaz reads too), the number rule of a table's cells (docs/adr/0180, the core's
  * `ops::cogo::read_number`), how a cell that gives no number is said, how numbers are written (the project's length
  * decimals, the display rule) and the tools' output layers. The routes' rules are the core's (`model/ops/lrs`).
  */
@@ -16,18 +16,6 @@ import { lengthText } from '../proximity/shared';
 export const ROUTE_KINDS: readonly EntityKind[] = ['line', 'polyline'];
 /** The scopes the tools offer, a layer first. */
 export const LRS_SCOPES = ['layer', 'selection', 'visible', 'all'] as const;
-
-/** An object as a route: a line's two ends and their measures, a polyline's own part and its parts; none of another kind. */
-export function routeOf(e: Entity): Route | null {
-  if (e.kind === 'line') return { parts: [{ pts: [e.a, e.b], ms: [e.ma ?? null, e.mb ?? null] }] };
-  if (e.kind !== 'polyline') return null;
-  const part = (q: { pts: RoutePart['pts']; bulges?: number[]; ms?: (number | null)[] }): RoutePart => ({
-    pts: q.pts,
-    ...(q.bulges && { bulges: q.bulges }),
-    ms: q.ms ?? q.pts.map(() => null),
-  });
-  return { parts: [part(e), ...(e.parts ?? []).map(part)] };
-}
 
 /** The routes of objects by their id: the id field's value, trimmed (an empty one no route); of several objects of an id the first. */
 export interface Routes {
