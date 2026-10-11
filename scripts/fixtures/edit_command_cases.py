@@ -2104,6 +2104,135 @@ cases.append({
     ],
 })
 
+# Measures (M, ADR 0224 §2): a route's measures are carried by the elevations' rules (on a source vertex its
+# own, a moved vertex its own, on an edge linear along it, an extended end the edge's rate on); an area has
+# none: a route turned into an area loses them and is warned of (measure_lost). Written measures (the vertex
+# table) are written as they are; not one for each vertex, or on an area's part, is refused (invalid_measures).
+M_ENTITIES = [
+    {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420050), "b": P(487020, 4420050), "ma": 100, "mb": 120},
+    {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [P(487000, 4420060), P(487010, 4420060), P(487010, 4420070)], "ms": [1000, 1010, 1020]},
+]
+M_SETUP = {**SETUP, "entities": M_ENTITIES}
+M_IDS = [e["id"] for e in M_ENTITIES]
+M_BY_ID = {e["id"]: e for e in M_ENTITIES}
+MEASURES_MESSAGE = "Ölçülerin sayısı köşelerin sayısıyla aynı olmalı; {} köşeye {} ölçü verildi. Her köşeye bir ölçü verin; ölçüsüz köşeye null."
+
+
+def ME(i):
+    return json.loads(json.dumps(M_BY_ID[i]))
+
+
+def m_line(ax, ay, bx, by, slot, ma=None, mb=None):
+    """A line an edit writes from object 1 (replace or add): its layer, no attributes; its measures."""
+    out = {**line(ax, ay, bx, by), "id": slot, "layerId": "yapi", "attrs": {}}
+    if ma is not None:
+        out["ma"] = ma
+    if mb is not None:
+        out["mb"] = mb
+    return out
+
+
+def m_updated(i, geometry, **fields):
+    """`update` of object i: the geometry replaced, the measures as given."""
+    out = {k: v for k, v in ME(i).items() if k not in ("kind", "ma", "mb", "ms") and k not in GEOMETRY[ME(i)["kind"]]}
+    out.update(json.loads(json.dumps(geometry)))
+    out.update(fields)
+    return out
+
+
+M_PATH = [P(487000, 4420060), P(487010, 4420060), P(487010, 4420070)]
+
+cases.append({
+    "name": "Ölçü, Kır: iki parçanın yeni uçları ölçüyü kenar boyunca doğrusal alır (100–120 kenarın 8. metresi 108, 12. metresi 112); tek adımda geri alınır",
+    "setup": M_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "break", "changes": [{"kind": "replace", "uid": uid(1), "geometry": line(487000, 4420050, 487008, 4420050)}, {"kind": "add", "from": uid(1), "geometry": line(487012, 4420050, 487020, 4420050)}]},
+         "result": done(changed=[uid(1)], created=[uid(3)]),
+         "expect": {"ids": M_IDS + [3], "entities": {"1": m_line(487000, 4420050, 487008, 4420050, 1, 100, 108), "3": m_line(487012, 4420050, 487020, 4420050, 3, 112, 120)}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Kır", "expect": {"ids": M_IDS, "entities": {"1": ME(1)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Ölçü, Uzat: uzayan uç kenarın ölçü artışını sürdürür (metrede 1; 30. metre 130)",
+    "setup": M_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "extend", "changes": [{"kind": "update", "uid": uid(1), "geometry": line(487000, 4420050, 487030, 4420050)}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": m_updated(1, line(487000, 4420050, 487030, 4420050), ma=100, mb=130)}, "revision": "changed"}},
+    ],
+})
+
+m_added = {"kind": "polyline", "pts": [P(487000, 4420060), P(487005, 4420060), P(487010, 4420060), P(487010, 4420070)]}
+cases.append({
+    "name": "Ölçü, Köşe ekle: yeni köşe kenarının iki ucu arasında (1000 ile 1010 arası 1005)",
+    "setup": M_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "vertexAdd", "changes": [{"kind": "update", "uid": uid(2), "geometry": m_added}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": m_updated(2, m_added, ms=[1000, 1005, 1010, 1020])}, "revision": "changed"}},
+    ],
+})
+
+m_moved = {"kind": "polyline", "pts": [P(487000, 4420060), P(487012, 4420058), P(487010, 4420070)]}
+cases.append({
+    "name": "Ölçü, tutamaç: taşınan köşe kendi ölçüsünü korur",
+    "setup": M_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(2), "geometry": m_moved}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": m_updated(2, m_moved, ms=[1000, 1010, 1020])}, "revision": "changed"}},
+    ],
+})
+
+m_turned = {"kind": "polyline", "pts": list(reversed(M_PATH))}
+cases.append({
+    "name": "Ölçü, Yönü çevir: ölçüler köşeleriyle döner, rota azalan olur",
+    "setup": M_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "reverse", "changes": [{"kind": "update", "uid": uid(2), "geometry": m_turned}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": m_updated(2, m_turned, ms=[1020, 1010, 1000])}, "revision": "changed"}},
+    ],
+})
+
+m_area = {"kind": "polygon", "pts": M_PATH}
+cases.append({
+    "name": "Ölçü, Alana çevir: alanın ölçüsü olmaz; yazılır ve uyarılır (measure_lost)",
+    "setup": M_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "toArea", "changes": [{"kind": "replace", "uid": uid(2), "geometry": m_area, "keepData": True}]},
+         "result": {**done(changed=[uid(2)]), "warnings": [{"code": "measure_lost", "message": "1 nesnenin ölçüleri (M) bu işlemde korunmadı.", "path": "changes"}]},
+         "expect": {"entities": {"2": {**m_area, "id": 2, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+    ],
+})
+
+M_PATH2 = {"kind": "polyline", "pts": M_PATH}
+cases.append({
+    "name": "Ölçü, yazılan (köşe tablosu): yazıldığı gibi, ölçüsüz köşe null; çizginin iki ucu ma ve mb olur",
+    "setup": M_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**M_PATH2, "ms": [0, None, 25.5]}}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": m_updated(2, M_PATH2, ms=[0, None, 25.5])}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"2": ME(2)}}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**line(487000, 4420050, 487020, 4420050), "ms": [None, 7]}}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": m_updated(1, line(487000, 4420050, 487020, 4420050), mb=7)}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**M_PATH2, "ms": [None, None, None]}}]}, "result": done(changed=[uid(2)]),
+         "note": "Hepsi null olan ölçüler ölçü yok demektir: alan yazılmaz.",
+         "expect": {"entities": {"2": m_updated(2, M_PATH2)}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "Ölçü, reddedilen: köşe sayısı kadar olmayan ölçüler ve alanın parçasının ölçüleri (invalid_measures)",
+    "setup": M_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**M_PATH2, "ms": [1, 2]}}]},
+         "result": failed("invalid_measures", MEASURES_MESSAGE.format(3, 2), "changes[0].geometry.ms"), "expect": {"ids": M_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**line(487000, 4420050, 487020, 4420050), "ms": [1, 2, 3]}}]},
+         "result": failed("invalid_measures", MEASURES_MESSAGE.format(2, 3), "changes[0].geometry.ms"), "expect": {"ids": M_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "toArea", "changes": [{"kind": "replace", "uid": uid(2), "geometry": {**m_area, "parts": [{"pts": [P(487020, 4420060), P(487030, 4420060), P(487030, 4420070)], "ms": [1, 2, 3]}]}}]},
+         "result": failed("invalid_measures", "Kapalı alanın ölçüsü (M) olamaz; ölçü yalnız çizginin ve çoklu çizginin köşelerinde olur. Parçanın ölçülerini kaldırın.", "changes[0].geometry.parts[0].ms"),
+         "expect": {"ids": M_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",

@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 584,
-      "implemented": 561,
+      "total": 590,
+      "implemented": 567,
       "partial": 0,
       "pending": 23
     },
@@ -31,8 +31,8 @@
       "pending": 2
     },
     "processing": {
-      "total": 131,
-      "implemented": 131,
+      "total": 137,
+      "implemented": 137,
       "partial": 0,
       "pending": 0
     },
@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 800,
-      "implemented": 800,
+      "total": 804,
+      "implemented": 804,
       "partial": 0,
       "pending": 0
     },
@@ -102,12 +102,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 278,
-    "commandsOnDesktop": 514,
+    "commandsWithoutTests": 284,
+    "commandsOnDesktop": 520,
     "desktop": {
       "commands": {
-        "total": 584,
-        "implemented": 514,
+        "total": 590,
+        "implemented": 520,
         "partial": 0,
         "pending": 10,
         "none": 58,
@@ -122,8 +122,8 @@
         "n/a": 0
       },
       "processing": {
-        "total": 131,
-        "implemented": 131,
+        "total": 137,
+        "implemented": 137,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -162,8 +162,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 800,
-        "implemented": 800,
+        "total": 804,
+        "implemented": 804,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -7358,6 +7358,174 @@
       "tests": [
         "apps/web/scripts/e2e/layout.mjs"
       ]
+    },
+    {
+      "id": "processing.run.linearRef.calibrateRoutes",
+      "title": "Rotayı kalibre et…",
+      "category": "İşlemler",
+      "icon": "routeCalibrate",
+      "description": "Rotaların ölçülerini (M) üzerlerindeki ölçüsü bilinen noktalardan yeniden verir.",
+      "aliases": [
+        "ROTAKALIBRE",
+        "CALIBRATEROUTES"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.linearRef.createRoutes",
+      "title": "Rota oluştur…",
+      "category": "İşlemler",
+      "icon": "routeCreate",
+      "description": "Çizgileri kimliklerine göre uç uca birleştirip köşelerine ölçü (M) veren rotalar yazar.",
+      "aliases": [
+        "ROTAOLUSTUR",
+        "CREATEROUTES"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.linearRef.extractMeasures",
+      "title": "M değerlerini çıkar…",
+      "category": "İşlemler",
+      "icon": "routeMeasures",
+      "description": "Rotaların ilk, son, en küçük ve en büyük ölçüsünü (M) özniteliklerine yazar.",
+      "aliases": [
+        "MCIKAR",
+        "EXTRACTM"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.linearRef.locateAlong",
+      "title": "Rota boyunca konumla…",
+      "category": "İşlemler",
+      "icon": "routeLocate",
+      "description": "Nesnelerin rotalardaki yerini ölçüleriyle bulur: noktanın ölçüsü ve uzaklığı, çizginin ve alanın başlangıç ve bitiş ölçüsü.",
+      "aliases": [
+        "ROTAKONUM",
+        "LOCATEALONG"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.linearRef.overlayEvents",
+      "title": "Olayları çakıştır…",
+      "category": "İşlemler",
+      "icon": "routeOverlay",
+      "description": "İki çizgi olayı tablosunu aynı rotalarda keser; ortak (Kesişim) ya da bütün (Birleşim) parçaların tablosunu verir.",
+      "aliases": [
+        "OLAYCAKISTIR",
+        "OVERLAYEVENTS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.linearRef.routeEvents",
+      "title": "Olayları rotada göster…",
+      "category": "İşlemler",
+      "icon": "routeEvents",
+      "description": "Bir tablonun rota ve ölçüyle verilen nokta ve çizgi olaylarını rotaların üstünde nesne olarak yazar.",
+      "aliases": [
+        "OLAYGOSTER",
+        "ROUTEEVENTS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Analiz › Ağ analizi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     },
     {
       "id": "processing.run.multidim.meshCalculator",
@@ -26398,6 +26566,532 @@
       ]
     },
     {
+      "id": "linearRef.calibrateRoutes",
+      "label": "Rotayı kalibre et",
+      "category": "Doğrusal referans",
+      "description": "Rotaların ölçülerini (M) üzerlerindeki ölçüsü bilinen noktalardan yeniden verir.",
+      "aliases": [
+        "ROTAKALIBRE",
+        "CALIBRATEROUTES"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "routes",
+          "type": "features",
+          "label": "Rotalar",
+          "optional": false
+        },
+        {
+          "name": "routeField",
+          "type": "field",
+          "label": "Rota kimliği alanı",
+          "optional": false
+        },
+        {
+          "name": "points",
+          "type": "features",
+          "label": "Kalibrasyon noktaları",
+          "optional": false
+        },
+        {
+          "name": "pointRoute",
+          "type": "field",
+          "label": "Noktanın rota alanı",
+          "optional": false
+        },
+        {
+          "name": "measure",
+          "type": "field",
+          "label": "Ölçü alanı",
+          "optional": false
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "label": "Arama yarıçapı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "before",
+          "type": "boolean",
+          "label": "İlk noktadan öncesini uzat",
+          "optional": false
+        },
+        {
+          "name": "after",
+          "type": "boolean",
+          "label": "Son noktadan sonrasını uzat",
+          "optional": false
+        },
+        {
+          "name": "ignoreGaps",
+          "type": "boolean",
+          "label": "Boşlukları yok say",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.linearRef.calibrateRoutes",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "linearRef.createRoutes",
+      "label": "Rota oluştur",
+      "category": "Doğrusal referans",
+      "description": "Çizgileri kimliklerine göre uç uca birleştirip köşelerine ölçü (M) veren rotalar yazar.",
+      "aliases": [
+        "ROTAOLUSTUR",
+        "CREATEROUTES"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Girdi çizgileri",
+          "optional": false
+        },
+        {
+          "name": "idField",
+          "type": "field",
+          "label": "Rota kimliği alanı",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Ölçü kaynağı",
+          "optional": false
+        },
+        {
+          "name": "lengthField",
+          "type": "field",
+          "label": "Uzunluk alanı",
+          "optional": false
+        },
+        {
+          "name": "fromField",
+          "type": "field",
+          "label": "Başlangıç ölçüsü alanı",
+          "optional": false
+        },
+        {
+          "name": "toField",
+          "type": "field",
+          "label": "Bitiş ölçüsü alanı",
+          "optional": false
+        },
+        {
+          "name": "priority",
+          "type": "enum",
+          "label": "Başlangıç köşesi",
+          "optional": false
+        },
+        {
+          "name": "factor",
+          "type": "number",
+          "label": "Ölçü çarpanı",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "number",
+          "label": "Başlangıç ölçüsü",
+          "optional": false
+        },
+        {
+          "name": "ignoreGaps",
+          "type": "boolean",
+          "label": "Boşlukları yok say",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.linearRef.createRoutes",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "linearRef.extractMeasures",
+      "label": "M değerlerini çıkar",
+      "category": "Doğrusal referans",
+      "description": "Rotaların ilk, son, en küçük ve en büyük ölçüsünü (M) özniteliklerine yazar.",
+      "aliases": [
+        "MCIKAR",
+        "EXTRACTM"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Rotalar",
+          "optional": false
+        },
+        {
+          "name": "prefix",
+          "type": "string",
+          "label": "Önek",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.linearRef.extractMeasures",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "linearRef.locateAlong",
+      "label": "Rota boyunca konumla",
+      "category": "Doğrusal referans",
+      "description": "Nesnelerin rotalardaki yerini ölçüleriyle bulur: noktanın ölçüsü ve uzaklığı, çizginin ve alanın başlangıç ve bitiş ölçüsü.",
+      "aliases": [
+        "ROTAKONUM",
+        "LOCATEALONG"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Konumlanacak nesneler",
+          "optional": false
+        },
+        {
+          "name": "routes",
+          "type": "features",
+          "label": "Rotalar",
+          "optional": false
+        },
+        {
+          "name": "routeField",
+          "type": "field",
+          "label": "Rota kimliği alanı",
+          "optional": false
+        },
+        {
+          "name": "radius",
+          "type": "number",
+          "label": "Arama yarıçapı",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "all",
+          "type": "boolean",
+          "label": "Yarıçaptaki bütün rotalar",
+          "optional": false
+        },
+        {
+          "name": "side",
+          "type": "enum",
+          "label": "Artı uzaklık",
+          "optional": false
+        },
+        {
+          "name": "write",
+          "type": "boolean",
+          "label": "Özniteliklere yaz",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.linearRef.locateAlong",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "linearRef.overlayEvents",
+      "label": "Olayları çakıştır",
+      "category": "Doğrusal referans",
+      "description": "İki çizgi olayı tablosunu aynı rotalarda keser; ortak (Kesişim) ya da bütün (Birleşim) parçaların tablosunu verir.",
+      "aliases": [
+        "OLAYCAKISTIR",
+        "OVERLAYEVENTS"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "aSourceKind",
+          "type": "enum",
+          "label": "Birinci tablo kaynağı",
+          "optional": false
+        },
+        {
+          "name": "aFile",
+          "type": "file",
+          "label": "Birinci tablo dosyası",
+          "optional": false
+        },
+        {
+          "name": "aSource",
+          "type": "features",
+          "label": "Birinci tablo nesneleri",
+          "optional": false
+        },
+        {
+          "name": "aRoute",
+          "type": "field",
+          "label": "Birinci tablonun rota sütunu",
+          "optional": false
+        },
+        {
+          "name": "aFrom",
+          "type": "field",
+          "label": "Birinci tablonun başlangıç sütunu",
+          "optional": false
+        },
+        {
+          "name": "aTo",
+          "type": "field",
+          "label": "Birinci tablonun bitiş sütunu",
+          "optional": false
+        },
+        {
+          "name": "bSourceKind",
+          "type": "enum",
+          "label": "İkinci tablo kaynağı",
+          "optional": false
+        },
+        {
+          "name": "bFile",
+          "type": "file",
+          "label": "İkinci tablo dosyası",
+          "optional": false
+        },
+        {
+          "name": "bSource",
+          "type": "features",
+          "label": "İkinci tablo nesneleri",
+          "optional": false
+        },
+        {
+          "name": "bRoute",
+          "type": "field",
+          "label": "İkinci tablonun rota sütunu",
+          "optional": false
+        },
+        {
+          "name": "bFrom",
+          "type": "field",
+          "label": "İkinci tablonun başlangıç sütunu",
+          "optional": false
+        },
+        {
+          "name": "bTo",
+          "type": "field",
+          "label": "İkinci tablonun bitiş sütunu",
+          "optional": false
+        },
+        {
+          "name": "how",
+          "type": "enum",
+          "label": "İşlem",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.linearRef.overlayEvents",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "linearRef.routeEvents",
+      "label": "Olayları rotada göster",
+      "category": "Doğrusal referans",
+      "description": "Bir tablonun rota ve ölçüyle verilen nokta ve çizgi olaylarını rotaların üstünde nesne olarak yazar.",
+      "aliases": [
+        "OLAYGOSTER",
+        "ROUTEEVENTS"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "routes",
+          "type": "features",
+          "label": "Rotalar",
+          "optional": false
+        },
+        {
+          "name": "routeField",
+          "type": "field",
+          "label": "Rota kimliği alanı",
+          "optional": false
+        },
+        {
+          "name": "sourceKind",
+          "type": "enum",
+          "label": "Olay kaynağı",
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "label": "Olay dosyası",
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": "features",
+          "label": "Olay nesneleri",
+          "optional": false
+        },
+        {
+          "name": "eventRoute",
+          "type": "field",
+          "label": "Olayın rota sütunu",
+          "optional": false
+        },
+        {
+          "name": "eventKind",
+          "type": "enum",
+          "label": "Olay türü",
+          "optional": false
+        },
+        {
+          "name": "measure",
+          "type": "field",
+          "label": "Ölçü sütunu",
+          "optional": false
+        },
+        {
+          "name": "from",
+          "type": "field",
+          "label": "Başlangıç ölçüsü sütunu",
+          "optional": false
+        },
+        {
+          "name": "to",
+          "type": "field",
+          "label": "Bitiş ölçüsü sütunu",
+          "optional": false
+        },
+        {
+          "name": "offset",
+          "type": "field",
+          "label": "Öteleme sütunu",
+          "optional": true
+        },
+        {
+          "name": "side",
+          "type": "enum",
+          "label": "Artı öteleme",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.linearRef.routeEvents",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "multidim.meshCalculator",
       "label": "Mesh hesaplayıcı",
       "category": "Çok boyutlu veri",
@@ -33343,6 +34037,19 @@
       }
     },
     {
+      "id": "AreaPart.ms",
+      "contract": "AreaPart",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "ms",
+      "type": "Array<number | null>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "AreaPart.pts",
       "contract": "AreaPart",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -39137,6 +39844,32 @@
       }
     },
     {
+      "id": "LineEntity.ma",
+      "contract": "LineEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "ma",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LineEntity.mb",
+      "contract": "LineEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "mb",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LineEntity.symbol",
       "contract": "LineEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -39724,6 +40457,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "lineWeight",
       "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PathEntity.ms",
+      "contract": "PathEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "ms",
+      "type": "Array<number | null>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -46183,6 +46929,12 @@
               "processing.run.network.closestFacility",
               "processing.run.network.odMatrix",
               "processing.run.network.serviceAreas",
+              "processing.run.linearRef.createRoutes",
+              "processing.run.linearRef.calibrateRoutes",
+              "processing.run.linearRef.routeEvents",
+              "processing.run.linearRef.locateAlong",
+              "processing.run.linearRef.overlayEvents",
+              "processing.run.linearRef.extractMeasures",
               "processing.run.surface.slope",
               "processing.run.surface.aspect",
               "processing.run.surface.hillshade",
@@ -48555,7 +49307,14 @@
                 "size": "small"
               }
             ],
-            "overflow": [],
+            "overflow": [
+              "processing.run.linearRef.createRoutes",
+              "processing.run.linearRef.calibrateRoutes",
+              "processing.run.linearRef.routeEvents",
+              "processing.run.linearRef.locateAlong",
+              "processing.run.linearRef.overlayEvents",
+              "processing.run.linearRef.extractMeasures"
+            ],
             "keep": false
           },
           {
@@ -54241,7 +55000,14 @@
                   "size": "small"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "processing.run.linearRef.createRoutes",
+                "processing.run.linearRef.calibrateRoutes",
+                "processing.run.linearRef.routeEvents",
+                "processing.run.linearRef.locateAlong",
+                "processing.run.linearRef.overlayEvents",
+                "processing.run.linearRef.extractMeasures"
+              ],
               "keep": false
             },
             {
@@ -55722,6 +56488,13 @@
     "topologyRules": "<path d=\"M2.5 2.5h7v6h-7zM6 2.5v6\" stroke-width=\"1.2\"/><path d=\"M8 12h9.5M8 15.5h9.5M2.5 12h2M2.5 15.5h2\" stroke-width=\"1.3\"/><path d=\"M12 5.5h5.5\" stroke-width=\"1.3\"/>",
     "topologyException": "<path d=\"M5 17.5V2.5\" stroke-width=\"1.5\"/><path d=\"M5 3h10.5l-2.4 3.6 2.4 3.6H5z\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><path d=\"M5 3h10.5l-2.4 3.6 2.4 3.6H5z\" stroke-width=\"1.3\"/>",
     "topologyFix": "<path d=\"M2.5 17.5V8.5h6\" stroke-width=\"1.3\"/><path d=\"M2.5 17.5h9\" stroke-width=\"1.3\"/><path d=\"M17.3 5.6a3 3 0 0 1-3.9 3L7 15l-1.6-1.6 6.4-6.4a3 3 0 0 1 3-3.9l-1.8 1.8.4 1.6 1.6.4z\" stroke-width=\"1.2\"/>",
+    "linearRef": "<path d=\"M2 15.5C5.2 15.5 6.2 9 10 9s5-5.5 8-5.5\" stroke-width=\"1.4\"/><path d=\"m5.3 11.9 1.7 1.7M10 7.4v3.2m4.3-7.2 1.5 1.9\" stroke-width=\"1.1\"/>",
+    "routeCreate": "<path d=\"M2.5 16 8 10.5h4.5L17.5 4\" stroke-width=\"1.4\"/><circle cx=\"2.5\" cy=\"16\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m5.8 11.1 1.9 1.9M10.3 8.9v3.2m4.7-6.7 1.8 1.6\" stroke-width=\"1\"/>",
+    "routeCalibrate": "<path d=\"M2 15c4 0 5-3.5 8-3.5s4 2.5 8 2.5\" stroke-width=\"1.4\"/><path d=\"M4.5 3.5h3.4v3.4H4.5zm7.6 1.5h3.4v3.4h-3.4z\" stroke-width=\"1.1\"/><path d=\"M6.2 7v5m7.6-3.6v3.8\" stroke-width=\"1\" stroke-dasharray=\"1.2 1\"/>",
+    "routeEvents": "<path d=\"M2 15h16\" stroke-width=\"1.3\"/><path d=\"M10 11.8h6.5\" stroke-width=\"2.6\"/><circle cx=\"5.2\" cy=\"10.6\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M5.2 12.6V15M10 11.8V15m6.5-3.2V15\" stroke-width=\"1\" stroke-dasharray=\"1 .9\"/><path d=\"M2.5 2.5h7.5v4.5H2.5zm0 2.2H10\" stroke-width=\".9\"/>",
+    "routeLocate": "<path d=\"M2 16C6 16 8.5 6.5 18 5.5\" stroke-width=\"1.4\"/><circle cx=\"5.5\" cy=\"8.5\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15\" cy=\"13\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m6.3 10.2 1.6 2.4m6.3-.9-.9-3.4\" stroke-width=\"1\" stroke-dasharray=\"1.1 .9\"/>",
+    "routeOverlay": "<path d=\"M2.5 4.5h9m-3.5 4h9.5\" stroke-width=\"2.4\"/><path d=\"M8 13h3.5\" stroke-width=\"2.8\"/><path d=\"M2 16.5h16\" stroke-width=\"1.1\"/><path d=\"M8 3v14.5M11.5 3v14.5\" stroke-width=\".9\" stroke-dasharray=\"1.2 1\"/>",
+    "routeMeasures": "<path d=\"M3 10V3.5L6.4 7l3.4-3.5V10\" stroke-width=\"1.4\"/><path d=\"M2 15.5h16M2 13.5v4m8-4v4m8-4v4\" stroke-width=\"1.1\"/><path d=\"M12.5 5h5M12.5 8.5h5\" stroke-width=\"1.1\"/>",
     "networks": "<path d=\"M3.5 15.5 8 4.5l8.5 1.5L13 15.5zM8 4.5l5 11\" stroke-width=\"1.2\"/><circle cx=\"3.5\" cy=\"15.5\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"8\" cy=\"4.5\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.5\" cy=\"6\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13\" cy=\"15.5\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/>",
     "netRoute": "<path d=\"M2 6h16M2 14h16M6 2v16M14 2v16\" stroke-width=\".9\" stroke-opacity=\".5\"/><path d=\"M3.5 14H14V4.5\" stroke-width=\"2.2\"/><circle cx=\"3.5\" cy=\"14\" r=\"2\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M14 4.5V1.8l3.2 1.3L14 4.4\" fill=\"currentColor\" stroke-width=\"1\"/>",
     "netServiceArea": "<path d=\"M10 2.2 15.6 4.8 18 10.4 14.6 16.9 8.2 18 2.6 13.2 2.8 6.6z\" fill=\"currentColor\" fill-opacity=\".18\" stroke-width=\"1.1\"/><path d=\"M10 6.2 13.5 8.2 14 11.6 11.4 14.1 7.5 13.6 5.9 10.3 7.2 7.3z\" fill=\"currentColor\" fill-opacity=\".38\" stroke-width=\"1.1\"/><circle cx=\"10\" cy=\"10.2\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/>",

@@ -28,6 +28,7 @@ mod label_engine;
 mod leader;
 mod line_parts;
 mod locks;
+mod lrs;
 mod measure;
 mod navigation;
 mod network;

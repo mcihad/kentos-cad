@@ -961,6 +961,56 @@ fn the_table_point_cases_do_what_they_say() {
     );
 }
 
+/// Doğrusal referans (docs/adr/0224 §5) against the independent
+/// reference (scripts/fixtures/lrs_processing_cases.py on lrs_cases.py's
+/// rules); the same run here and on the drawing's reading copy as the
+/// background runs it.
+#[test]
+fn the_linear_referencing_cases_do_what_they_say() {
+    let file = case_file("lrs.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let more: Vec<String> = file["toleranceFields"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v.as_str().map(str::to_owned))
+        .collect();
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_full(
+            c,
+            play(c, &registry, false, &file["files"]),
+            tol,
+            tol,
+            &more,
+        );
+        found.extend(check_full(
+            c,
+            play(c, &registry, true, &file["files"]),
+            tol,
+            tol,
+            &more,
+        ));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 14, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Geometri üretimi's cases (docs/adr/0219): written by the independent
 /// reference (scripts/fixtures/generate_cases.py: exact cells and triangles,
 /// GEOS beside them); the same run here and on the drawing's reading copy as

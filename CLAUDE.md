@@ -1632,7 +1632,9 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   platformda, sonuç tablolarında Kaydet ▾ (`SaveTableAs`); masaüstü `table_write.rs`, web `ui/bottom/featureExport.ts`; Öznitelik tablosunun
   Dışa aktar ▾'si (`workbook_sheet`, `featureSheet`); bağımsız başvurular `table_file_cases.py`, `workbook_cases.py`, `table_points_cases.py`,
   `feature_export_cases.py`; pencereler `processing::table_points_tests`, `shots.mjs tableexchange`; süreler `workbook_timing`,
-  `table_points_timing`, `scripts/perf/workbook.test.ts`, `scripts/perf/convert.test.ts`. Sıradaki `GIS-28`.
+  `table_points_timing`, `scripts/perf/workbook.test.ts`, `scripts/perf/convert.test.ts`. `GIS-28` doğrusal referanslama
+  (ADR 0224) sürüyor: 11 Ekim'de sahibin isteğiyle yarıda bırakıldı, yapılanlar ve kalanlar
+  [docs/devir/2026-10-11-gis-28.md](docs/devir/2026-10-11-gis-28.md)'de; o bitince sıradaki `GIS-29`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

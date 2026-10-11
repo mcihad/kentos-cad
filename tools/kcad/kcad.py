@@ -145,6 +145,8 @@ BUILTIN_VARIABLES = ("proje_adi", "koordinat_sistemi", "epsg", "olcek", "tarih",
 # Schema 38: schema 37 and multidimensional rasters (docs/adr/0243 §6): a raster's `dataset` (a NetCDF variable and its
 # slice) and its look's `edges` (a mesh's lines).
 SCHEMA_WITH_MULTIDIM = 38
+# Schema 39: schema 38 and vertex measures (M), a line's `ma`, `mb`, a polyline's and its parts' `ms` (docs/adr/0224 §1).
+SCHEMA_WITH_MEASURES = 39
 # A dataset's bounds (kentos_contracts::raster).
 MAX_DATASET_NAME = 256
 MAX_DATASET_DIMS = 8
@@ -277,7 +279,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1552,6 +1554,7 @@ class _Schema:
         self.rasters = version >= SCHEMA_WITH_RASTERS
         self.point_clouds = version >= SCHEMA_WITH_POINT_CLOUDS
         self.multidim = version >= SCHEMA_WITH_MULTIDIM
+        self.measures = version >= SCHEMA_WITH_MEASURES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3381,6 +3384,10 @@ class _Schema:
         if "zs" in obj and len(obj["zs"]) != len(obj["pts"]):
             self.path.append("zs")
             self.fail("bad_value", f"{len(obj['zs'])} kot var ama {len(obj['pts'])} köşe var; her köşenin bir kotu olmalı (kotsuz köşe için null)")
+        # One measure per vertex (schema 39, §6.6), alike.
+        if "ms" in obj and len(obj["ms"]) != len(obj["pts"]):
+            self.path.append("ms")
+            self.fail("bad_value", f"{len(obj['ms'])} ölçü var ama {len(obj['pts'])} köşe var; her köşenin bir ölçüsü olmalı (ölçüsüz köşe için null)")
 
     def ring(self, v):
         table = {"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False)}
@@ -3396,6 +3403,9 @@ class _Schema:
         table = {"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False)}
         if self.elevations:
             table["zs"] = (self.array(self.elevation), False)
+        # A polyline's part's measures from schema 39 on (docs/adr/0224).
+        if self.measures:
+            table["ms"] = (self.array(self.elevation), False)
         part = self.fields(table)(v)
         if len(part["pts"]) < 2:
             self.path.append("pts")
@@ -3429,13 +3439,22 @@ def _path(s, holes):
         table["parts"] = (s.array(s.line_part), False)
     if s.elevations:
         table["zs"] = (s.array(s.elevation), False)
+    # A polyline's measures from schema 39 on (docs/adr/0224): a route's; an area has none.
+    if s.measures and not holes:
+        table["ms"] = (s.array(s.elevation), False)
     return table
 
 
 ENTITY_KINDS = {
     "point": lambda s: {"p": (s.point, True), "z": (s.float, False), **({"parts": (s.array(s.point_part), False)} if s.line_parts else {})},
     # A line's end without an elevation has no key: `null` is not written there (§5.2).
-    "line": lambda s: {"a": (s.point, True), "b": (s.point, True), **({"za": (s.float, False), "zb": (s.float, False)} if s.elevations else {})},
+    "line": lambda s: {
+        "a": (s.point, True),
+        "b": (s.point, True),
+        **({"za": (s.float, False), "zb": (s.float, False)} if s.elevations else {}),
+        # Its ends' measures from schema 39 on (docs/adr/0224), as its elevations.
+        **({"ma": (s.float, False), "mb": (s.float, False)} if s.measures else {}),
+    },
     "polyline": lambda s: _path(s, holes=False),
     "polygon": lambda s: _path(s, holes=True),
     "circle": lambda s: {"c": (s.point, True), "r": (s.float, True)},

@@ -5,8 +5,11 @@
 //!
 //! Points keep their height (PointZ, MultiPointZ) and so does every vertex
 //! of a line or an area (PolyLineZ, PolygonZ; docs/adr/0142): a Z that is
-//! not a number is a vertex without an elevation, and said. M (measure)
-//! values are always dropped, and said. An area's rings are sorted as the
+//! not a number is a vertex without an elevation, and said. A line's M
+//! values (PolyLineM, PolyLineZ's M block) are its vertices' measures
+//! (docs/adr/0224): one below −10³⁸ (the specification's “no data”) or not
+//! a number is a vertex without one. A point's and an area's M values are
+//! dropped, and said: only a route has measures. An area's rings are sorted as the
 //! specification defines them: clockwise rings are outlines,
 //! counter-clockwise ones holes of the first outline that contains them (the
 //! rules, which the independent reader in tools/formats/gis.py follows too,
@@ -32,7 +35,7 @@ pub struct Found {
     pub z_missing: u32,
     /// Areas whose closing point held another Z than the first point (the first's is kept).
     pub closing_z: u32,
-    /// Records with M values (dropped).
+    /// Records of points or areas with M values (dropped: only a line has measures).
     pub m: u32,
     /// Records shorter than their shape needs.
     pub short: u32,
@@ -150,6 +153,9 @@ fn point(x: f64, y: f64) -> Vec2 {
     Vec2 { x, y }
 }
 
+/// Below this an M value is “no data” (the specification: any value less than −10³⁸).
+const NO_DATA: f64 = -1e38;
+
 /// Bytes a record needs up to its point list, given counts (None: out of range).
 fn need(base: usize, parts: usize, points: usize) -> Option<usize> {
     base.checked_add(parts.checked_mul(4)?)?
@@ -255,7 +261,16 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
                 found.short += 1;
                 return;
             };
-            if n > 0 && (m_type || (z_type && block(end, n).is_some_and(|e| e <= c.len()))) {
+            // An M block: right after the points for an M type, after the Z block for a Z type (optional there).
+            let m_at = if m_type {
+                Some(pts_end)
+            } else if z_type && block(end, n).is_some_and(|e| e <= c.len()) {
+                Some(end)
+            } else {
+                None
+            };
+            let line = matches!(t, 3 | 13 | 23);
+            if n > 0 && m_at.is_some() && !line {
                 found.m += 1;
             }
             // Parts: starting indices, from 0, in order, within the points.
@@ -294,14 +309,21 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
             if (0..n).any(|i| z_raw(i).is_some_and(|z| !z.is_finite())) {
                 found.z_missing += 1;
             }
+            // A line's measures: one a vertex, none where it is “no data” or not a number.
+            let m_raw = |i: usize| -> Option<f64> {
+                m_at.filter(|_| line)
+                    .and_then(|at| f64_le(c, at + 16 + 8 * i))
+                    .filter(|m| m.is_finite() && *m >= NO_DATA)
+            };
             let parts: Vec<Ring> = (0..np)
                 .map(|k| {
                     let end = starts.get(k + 1).copied().unwrap_or(n);
                     let range = starts[k]..end;
                     Ring::new(
                         range.clone().map(at).collect(),
-                        range.map(|i| z_raw(i).filter(|z| z.is_finite())),
+                        range.clone().map(|i| z_raw(i).filter(|z| z.is_finite())),
                     )
+                    .measured(range.map(m_raw))
                 })
                 .collect();
             let finite = |r: &Ring| r.pts.iter().all(|p| p.x.is_finite() && p.y.is_finite());
@@ -534,7 +556,9 @@ mod tests {
                 a: v(0.0, 0.0),
                 b: v(10.0, 0.0),
                 za: Some(1.5),
-                zb: Some(-2.5)
+                zb: Some(-2.5),
+                ma: None,
+                mb: None,
             }]
         );
         // Without a Z block the same shapes are flat.
@@ -548,7 +572,9 @@ mod tests {
                 a: v(0.0, 0.0),
                 b: v(10.0, 0.0),
                 za: None,
-                zb: None
+                zb: None,
+                ma: None,
+                mb: None,
             }]
         );
         // A PolygonZ: the outline and its hole each keep their heights; the closing point's own

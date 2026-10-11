@@ -192,6 +192,7 @@ fn check_ring(ring: Ring, pts: &[Vec2], bulges: Option<&[f64]>) -> Result<(), St
 /// document's to give (0 in a plan).
 fn polygon(input: PolygonCreate, id: u32) -> Entity {
     Entity::Polygon(PathEntity {
+        ms: None,
         base: EntityBase {
             id,
             layer_id: input.layer_id,

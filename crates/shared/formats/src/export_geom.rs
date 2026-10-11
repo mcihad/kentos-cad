@@ -36,6 +36,8 @@ pub(crate) struct Words {
     pub block_empty: &'static str,
     pub block: &'static str,
     pub infinite: &'static str,
+    /// A route's measures (M, docs/adr/0224), which the format does not hold.
+    pub measure: &'static str,
     /// A vertex without an elevation beside ones with: none when the format writes heights its own way.
     pub mixed_z: Option<&'static str>,
 }
@@ -57,6 +59,7 @@ pub(crate) const GEOJSON: Words = Words {
     block_empty: "bloğunda GeoJSON'a yazılabilecek nesne yok; yazılmadı",
     block: "yerleştirmeler bloklarının nesneleriyle, açılmış olarak (GeometryCollection) yazıldı; GeoJSON'da blok yoktur, KentOS'a ayrı nesneler olarak geri okunur",
     infinite: "uçsuz doğru ve ışın GeoJSON'da gösterilemez; yazılmadı",
+    measure: "GeoJSON köşenin ölçüsünü (M) taşımaz; çizgi yazıldı, ölçüleri yazılmadı",
     mixed_z: Some(
         "kotu olmayan köşeler iki sayıyla yazıldı (RFC 7946 iki ve üç sayılı konumların bir dizide karışmasına izin verir; bazı programlar onları 0 kotlu okur)",
     ),
@@ -204,6 +207,10 @@ pub(crate) fn geometry(
     rep: &mut Report,
     w: &Words,
 ) -> Option<Geometry> {
+    // A route's measures (docs/adr/0224): the line is written, its measures are not.
+    if crate::import::has_measure(e) {
+        rep.note("Ölçü (M)", w.measure, 0);
+    }
     let g = match e {
         Entity::Point(p) => Some(match p.parts.as_deref() {
             Some(parts) if !parts.is_empty() => Geometry::Points(

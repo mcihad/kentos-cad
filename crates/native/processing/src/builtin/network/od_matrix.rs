@@ -116,6 +116,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                     (name.clone(), value),
                 ]);
                 let g = EntityGeometry::Line {
+                    ms: None,
                     a: kentos_contracts::Vec2 { x: a.x, y: a.y },
                     b: kentos_contracts::Vec2 { x: b.x, y: b.y },
                     zs: None,

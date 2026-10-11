@@ -48,6 +48,7 @@ fn area(b: &mut Bench, pts: &[[f64; 2]], zs: Option<Vec<Option<f64>>>) -> Slot {
     add(
         b,
         Entity::Polygon(PathEntity {
+            ms: None,
             base: common::base("cizim"),
             pts: pts.iter().map(|p| pt(p[0], p[1])).collect(),
             bulges: None,

@@ -14,6 +14,7 @@ pub mod interpolation;
 pub mod join_by_field;
 pub mod join_source;
 pub mod layers;
+pub mod lrs;
 pub mod models;
 pub mod multidim;
 pub mod network;
@@ -106,6 +107,13 @@ pub fn tools() -> Vec<Tool> {
         network::closest_facility::tool(),
         network::od_matrix::tool(),
         network::service_areas::tool(),
+        // Doğrusal referans (docs/adr/0224 §5): routes, their events and measures.
+        lrs::routes::create_routes(),
+        lrs::routes::calibrate_routes(),
+        lrs::events::route_events(),
+        lrs::locate::locate_along(),
+        lrs::events::overlay_events(),
+        lrs::routes::extract_measures(),
         // Nokta bulutu (docs/adr/0207 §7): the desktop's; the web's side waits.
         pointcloud::area_stats::tool(),
         pointcloud::thin::tool(),

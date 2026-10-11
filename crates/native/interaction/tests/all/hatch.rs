@@ -274,6 +274,7 @@ fn too_dense_a_pattern_is_refused() {
     // A 100 km square around everything: 3 m apart, far too many lines.
     let far = |x: f64, y: f64| Wire { x: E + x, y: N + y };
     let square = Entity::Polygon(PathEntity {
+        ms: None,
         base: EntityBase {
             id: 0,
             layer_id: "cizim".to_owned(),
@@ -332,6 +333,7 @@ fn a_click_in_a_part_of_a_multi_part_parcel_fills_that_part() {
     let at = |x: f64, y: f64| Wire { x: E + x, y: N + y };
     let mut two = parcel;
     two.parts = Some(vec![kentos_contracts::AreaPart {
+        ms: None,
         pts: vec![
             at(40.0, 20.0),
             at(50.0, 20.0),

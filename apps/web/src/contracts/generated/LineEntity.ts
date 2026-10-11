@@ -10,7 +10,16 @@ za?: number,
 /**
  * The end's elevation, m; absent = none.
  */
-zb?: number, id: number, layerId: string, 
+zb?: number, 
+/**
+ * The start's measure (M) on a route, in the route's own unit; absent =
+ * none (docs/adr/0224 §1).
+ */
+ma?: number, 
+/**
+ * The end's measure; absent = none.
+ */
+mb?: number, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

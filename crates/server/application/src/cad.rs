@@ -349,15 +349,17 @@ fn geometry_is_source(e: &Entity) -> bool {
             .parts
             .as_ref()
             .is_none_or(|ps| !ps.is_empty() && x.z.is_none() && ps.iter().all(|q| q.z.is_none())),
-        Entity::Line(x) => x.za.is_none() && x.zb.is_none(),
+        // A route's measures (docs/adr/0224 §1) are the source's as its elevations are: the projection is 2D.
+        Entity::Line(x) => x.za.is_none() && x.zb.is_none() && x.ma.is_none() && x.mb.is_none(),
         Entity::Polyline(x) => {
             flat(&x.bulges, &x.zs)
+                && x.ms.is_none()
                 && x.holes.is_none()
                 && x.parts.as_ref().is_none_or(|ps| {
                     !ps.is_empty()
                         && ps
                             .iter()
-                            .all(|q| flat(&q.bulges, &q.zs) && q.holes.is_none())
+                            .all(|q| flat(&q.bulges, &q.zs) && q.ms.is_none() && q.holes.is_none())
                 })
         }
         Entity::Polygon(x) => {
@@ -1071,6 +1073,25 @@ mod tests {
             serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "p", "attrs": {},
                 "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }, { "x": 10, "y": 10 }],
                 "holes": [{ "pts": [{ "x": 5, "y": 1 }, { "x": 8, "y": 1 }, { "x": 8, "y": 4 }], "zs": [1, 2, 3] }] }),
+        ] {
+            let e = entity(json);
+            let s = to_stored(&e, 5256, &none()).unwrap();
+            assert_eq!(s.source_kind, "cad", "{e:?}");
+            assert_eq!(back(&s, 1), e);
+        }
+    }
+
+    #[test]
+    fn vertex_measures_keep_the_definition() {
+        // docs/adr/0224 §1: a route's measures are the source's, as its elevations; the projection stays 2D.
+        for json in [
+            serde_json::json!({ "kind": "line", "id": 1, "layerId": "p", "attrs": {},
+                "a": { "x": 0, "y": 0 }, "b": { "x": 10, "y": 0 }, "mb": 1000.5 }),
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "ms": [0, null] }),
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }],
+                "parts": [{ "pts": [{ "x": 0, "y": 5 }, { "x": 10, "y": 5 }], "ms": [10, 20] }] }),
         ] {
             let e = entity(json);
             let s = to_stored(&e, 5256, &none()).unwrap();

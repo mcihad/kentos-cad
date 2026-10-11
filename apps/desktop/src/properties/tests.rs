@@ -190,6 +190,8 @@ fn a_line_shows_its_own_weight_and_kalinlik_sets_it_or_gives_it_back_to_the_laye
     let line = add(
         &mut app,
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: own,
             a: Wire { x: E, y: N },
             b: Wire { x: E + 10.0, y: N },
@@ -755,6 +757,8 @@ fn line_z(app: &mut App, za: Option<f64>, zb: Option<f64>) -> u32 {
     add(
         app,
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("cizim"),
             a: wire(0.0, 30.0),
             b: wire(40.0, 30.0),
@@ -769,6 +773,7 @@ fn path_z(app: &mut App, zs: Option<Vec<Option<f64>>>) -> u32 {
     add(
         app,
         Entity::Polyline(kentos_contracts::PathEntity {
+            ms: None,
             base: base("cizim"),
             pts: vec![wire(0.0, 40.0), wire(10.0, 40.0), wire(20.0, 40.0)],
             bulges: None,
@@ -784,6 +789,7 @@ fn area_z(app: &mut App, zs: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f
     add(
         app,
         Entity::Polygon(kentos_contracts::PathEntity {
+            ms: None,
             base: base("parsel"),
             pts: vec![
                 wire(0.0, 50.0),
@@ -1095,6 +1101,8 @@ fn an_object_on_a_locked_layer_names_its_elevations_without_a_cell_to_edit() {
     let line = add(
         &mut app,
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("kilitli"),
             a: wire(0.0, 30.0),
             b: wire(40.0, 30.0),
@@ -1233,6 +1241,8 @@ fn a_locked_layer_among_several_takes_the_row_s_cell_away() {
     let locked = add(
         &mut app,
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("kilitli"),
             a: wire(0.0, 30.0),
             b: wire(40.0, 30.0),
@@ -1333,6 +1343,7 @@ fn a_multi_part_area_counts_every_part() {
     };
     let at = |x: f64, y: f64| Wire { x: E + x, y: N + y };
     p.parts = Some(vec![kentos_contracts::AreaPart {
+        ms: None,
         pts: vec![at(30.0, 0.0), at(40.0, 0.0), at(40.0, 10.0), at(30.0, 10.0)],
         bulges: None,
         holes: Some(vec![kentos_contracts::RingGeometry {
@@ -1363,12 +1374,14 @@ fn multi_part_lines_and_points_count_every_part() {
         panic!("the line");
     };
     let road = Entity::Polyline(kentos_contracts::PathEntity {
+        ms: None,
         base: line.base.clone(),
         pts: vec![at(-24.0, -12.0), at(-8.0, -12.0)],
         bulges: None,
         holes: None,
         zs: None,
         parts: Some(vec![kentos_contracts::AreaPart {
+            ms: None,
             pts: vec![at(0.0, -20.0), at(0.0, -10.0), at(5.0, -10.0)],
             bulges: None,
             holes: None,

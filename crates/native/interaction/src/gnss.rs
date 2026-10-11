@@ -288,6 +288,7 @@ pub fn line_entities(lines: &[PlacedLine]) -> Vec<Entity> {
                 .map(|r| {
                     let (pts, zs) = run(r);
                     AreaPart {
+                        ms: None,
                         pts,
                         bulges: None,
                         holes: None,
@@ -296,6 +297,7 @@ pub fn line_entities(lines: &[PlacedLine]) -> Vec<Entity> {
                 })
                 .collect();
             Some(Entity::Polyline(PathEntity {
+                ms: None,
                 base: EntityBase {
                     id: 0,
                     layer_id: String::new(),

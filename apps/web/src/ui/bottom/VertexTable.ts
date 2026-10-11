@@ -6,6 +6,7 @@ import { bearingGrad } from '../../model/geometry';
 import type { Elevated } from '../../model/ops/elevation';
 import type { VertexKind, VertexRow } from '../../model/ops/vertexTable';
 import { UNIT_PER_METRE } from '../../model/projectSettings';
+import { fixed } from '../../core/displayNumber';
 import { elevatedPaths } from '../../product/elevation';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
@@ -18,6 +19,7 @@ import {
   cellText,
   emptyVertexDraft,
   isEditable,
+  isMeasured,
   removeVertices,
   VERTEX_COLUMNS,
   vertexRows,
@@ -26,6 +28,7 @@ import {
   type At,
   type Editable,
   type Outcome,
+  type TableRow,
   type VertexColumn,
   type VertexDraft,
 } from './vertexEdit';
@@ -133,7 +136,7 @@ export class VertexTable extends Component {
   private readonly removeBtn: HTMLButtonElement;
   private readonly rowsView: VirtualRows;
   private cols: Col[] = [];
-  private rows: VertexRow[] = [];
+  private rows: TableRow[] = [];
   private paths: Elevated[] = [];
   private keys: string[] = [];
   private rings: string[] = [];
@@ -315,6 +318,8 @@ export class VertexTable extends Component {
       { key: 'north', label: f.axesText('X (yukarı)'), numeric: true, edit: 'north' },
       { key: 'z', label: 'Z (kot)', numeric: true, edit: 'z' },
     );
+    // A measured route's measures (docs/adr/0224 §6): their own unit, written as they are.
+    if (isMeasured(e)) cols.push({ key: 'm', label: 'M (ölçü)', numeric: true, edit: 'm' });
     // A line's edge takes no arc: its column would stay empty.
     if (e.kind !== 'line') cols.push({ key: 'radius', label: `Yarıçap (${unit})`, numeric: true, edit: 'radius' });
     cols.push({ key: 'chord', label: `Kenar (${unit})`, numeric: true, edit: null }, { key: 'bearing', label: `${f.directionName} (${f.angleUnitLabel})`, numeric: true, edit: null });
@@ -399,6 +404,8 @@ export class VertexTable extends Component {
           return f.coord(r.p.y);
         case 'z':
           return r.z != null ? f.length(r.z, false) : '';
+        case 'm':
+          return r.m != null ? fixed(r.m, f.lengthDecimals) : '';
         case 'radius':
           return r.radius != null ? f.length(r.radius, false) : '';
         case 'chord':

@@ -15,7 +15,7 @@ import { colorSwatch, layerSwatch } from '../layers/swatch';
 import { DRAW_COLORS, LINE_WEIGHTS, weightText } from '../ribbon/fields';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
-import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './elevationRows';
+import { commonElevationRow, lineEndRow, measureRows, pathElevationRow, spaceRow } from './elevationRows';
 import { cornerRows, holeRows } from './pathRows';
 import { dimensionRows } from './dimensionRows';
 import { hatchRows } from './hatchRows';
@@ -274,6 +274,7 @@ export class PropertiesPanel extends Panel {
           num('Bitiş Y', e.b.x),
           num('Bitiş X', e.b.y),
           lineEndRow(this.ctx, e, 1, locked),
+          ...measureRows(this.ctx, e),
           num('Uzunluk', dist(e.a, e.b), 'm'),
           ...spaceRow(this.ctx, e),
           { label: f.directionName, value: f.direction(bearingGrad(e.a, e.b), false), numeric: true, unit: f.angleUnitLabel },
@@ -282,7 +283,7 @@ export class PropertiesPanel extends Panel {
       case 'polyline':
       case 'polygon': {
         geo.push(...cornerRows(e));
-        geo.push(pathElevationRow(this.ctx, e, locked));
+        geo.push(pathElevationRow(this.ctx, e, locked), ...measureRows(this.ctx, e));
         geo.push(num(e.kind === 'polygon' ? 'Çevre' : 'Uzunluk', entityLength(e)!, 'm'), ...spaceRow(this.ctx, e));
         if (e.kind === 'polygon') {
           // Net area: holes (adalar) are already taken out.

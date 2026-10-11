@@ -7708,6 +7708,1042 @@
     ]
    }
   },
+  "linearRef.createRoutes": {
+   "title": "Rota oluştur",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Girdi çizgileri",
+     "description": "Rotaların parçaları: çizgiler, çoklu çizgiler ve yaylar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "idField",
+     "label": "Rota kimliği alanı",
+     "description": "Aynı değerli parçalar bir rotadır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "method",
+     "label": "Ölçü kaynağı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "length",
+        "label": "Uzunluk",
+        "hint": "Çizginin uzunluğu"
+       },
+       {
+        "value": "oneField",
+        "label": "Tek alan",
+        "hint": "Her parçanın uzunluk alanı"
+       },
+       {
+        "value": "twoFields",
+        "label": "İki alan",
+        "hint": "Her parçanın başlangıç ve bitiş ölçüsü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "lengthField",
+     "label": "Uzunluk alanı",
+     "description": "Parçanın rotadaki uzunluğu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "fromField",
+     "label": "Başlangıç ölçüsü alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "toField",
+     "label": "Bitiş ölçüsü alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "priority",
+     "label": "Başlangıç köşesi",
+     "description": "Ölçü, rotanın kutusunun bu köşesine en yakın uçtan başlar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "upperLeft",
+        "label": "Sol üst"
+       },
+       {
+        "value": "lowerLeft",
+        "label": "Sol alt"
+       },
+       {
+        "value": "upperRight",
+        "label": "Sağ üst"
+       },
+       {
+        "value": "lowerRight",
+        "label": "Sağ alt"
+       }
+      ]
+     }
+    },
+    {
+     "name": "factor",
+     "label": "Ölçü çarpanı",
+     "description": "Uzunluk bununla çarpılır: 0,001 ile metreden kilometreye.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "start",
+     "label": "Başlangıç ölçüsü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "ignoreGaps",
+     "label": "Boşlukları yok say",
+     "description": "Kapalıyken parçalar arası boşluk ölçüye katılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "linearRef",
+     "text": "Doğrusal referans"
+    },
+    "icon": "routeCreate",
+    "about": "Çizgileri kimliklerine göre uç uca birleştirip köşelerine ölçü (M) veren rotalar yazar.",
+    "help": [
+     "Örnekler: yol parçalarından karayolu rotaları, boru hattı parçalarından hat rotaları, kanal ve dere eksenlerinden ölçülü rotalar.",
+     "Aynı kimlikli çizgiler bir rotadır. Uzunluk ve Tek alan yöntemlerinde parçalar başlangıç köşesine en yakın uçtan başlayarak uç uca eklenir; ters çizilen parça çevrilir; değmeyen parçalar rotanın ayrı parçalarıdır ve aralarındaki boşluk istenirse ölçüye katılır. Ölçü çizginin uzunluğundan (Uzunluk) ya da her parçanın kendi uzunluk alanından (Tek alan) gelir; çarpanla çarpılıp başlangıç ölçüsüne eklenir. İki alan yönteminde her parça başlangıç ve bitiş ölçüsü alanlarıyla, başlangıcına göre sırada yazılır.",
+     "Yaylar yay olarak kalır; ölçü yay boyunca açıyla doğrusaldır. Kimliği boş, ölçü alanı sayı olmayan nesne atlanır ve tabloda nedeniyle söylenir. Rotalar yeni katmana çoklu çizgi olarak yazılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ROTAOLUSTUR",
+     "CREATEROUTES"
+    ]
+   }
+  },
+  "linearRef.calibrateRoutes": {
+   "title": "Rotayı kalibre et",
+   "rows": [
+    {
+     "name": "routes",
+     "label": "Rotalar",
+     "description": "Ölçüleri yeniden verilecek çizgi ve çoklu çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "routeField",
+     "label": "Rota kimliği alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "points",
+     "label": "Kalibrasyon noktaları",
+     "description": "Ölçüsü bilinen noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "pointRoute",
+     "label": "Noktanın rota alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "measure",
+     "label": "Ölçü alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "radius",
+     "label": "Arama yarıçapı",
+     "description": "Rotaya bundan uzak nokta alınmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "before",
+     "label": "İlk noktadan öncesini uzat",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "after",
+     "label": "Son noktadan sonrasını uzat",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "ignoreGaps",
+     "label": "Boşlukları yok say",
+     "description": "Kapalıyken rotanın parçaları arası boşluk uzunluğa katılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "linearRef",
+     "text": "Doğrusal referans"
+    },
+    "icon": "routeCalibrate",
+    "about": "Rotaların ölçülerini (M) üzerlerindeki ölçüsü bilinen noktalardan yeniden verir.",
+    "help": [
+     "Örnekler: kilometre taşlarının ölçüleriyle karayolu rotası, vana ve muayene bacalarının bilinen kilometreleriyle boru hattı.",
+     "Her rotanın noktaları, nokta rota alanı rotanın kimliğine eşit olanlardır; arama yarıçapındaki nokta rotadaki en yakın yerine konur. En az iki nokta gerekir. Çoklu çizgide noktaların yerine köşe eklenir; çizgi iki köşesini korur, uçlarının ölçüsü verilir. Her köşenin ölçüsü çevresindeki iki noktanın arasında rota uzunluğuyla doğrusaldır; ilk noktadan önce ve sonuncudan sonra istenirse uç aralığın oranıyla uzatılır, istenmezse eski ölçüsü kalır.",
+     "Rotalar yerinde, tek adımda değişir; yeni köşenin kotu kenarı boyunca doğrusaldır. Tabloda her rotanın kullanılan nokta sayısı ve durumu söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ROTAKALIBRE",
+     "CALIBRATEROUTES"
+    ]
+   }
+  },
+  "linearRef.routeEvents": {
+   "title": "Olayları rotada göster",
+   "rows": [
+    {
+     "name": "routes",
+     "label": "Rotalar",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "routeField",
+     "label": "Rota kimliği alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "sourceKind",
+     "label": "Olay kaynağı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "file",
+        "label": "Dosya",
+        "hint": "CSV, TXT, Excel ya da ODS dosyası"
+       },
+       {
+        "value": "layer",
+        "label": "Katman",
+        "hint": "Nesnelerin öznitelikleri satırdır"
+       }
+      ]
+     }
+    },
+    {
+     "name": "file",
+     "label": "Olay dosyası",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir olay.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "file",
+      "accept": [
+       ".csv",
+       ".txt",
+       ".xlsx",
+       ".ods"
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Olay nesneleri",
+     "description": "Öznitelikleri satır olan nesneler; her nesne bir olay.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "eventRoute",
+     "label": "Olayın rota sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "eventKind",
+     "label": "Olay türü",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "point",
+        "label": "Nokta",
+        "hint": "Bir ölçü"
+       },
+       {
+        "value": "line",
+        "label": "Çizgi",
+        "hint": "Başlangıç ve bitiş ölçüsü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "measure",
+     "label": "Ölçü sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "from",
+     "label": "Başlangıç ölçüsü sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "to",
+     "label": "Bitiş ölçüsü sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "offset",
+     "label": "Öteleme sütunu",
+     "description": "Rotaya dik uzaklık (m); boşsa olay rotanın üstündedir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "side",
+     "label": "Artı öteleme",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "right",
+        "label": "Sağa",
+        "hint": "Ölçü yönünün sağı"
+       },
+       {
+        "value": "left",
+        "label": "Sola",
+        "hint": "Ölçü yönünün solu"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "linearRef",
+     "text": "Doğrusal referans"
+    },
+    "icon": "routeEvents",
+    "about": "Bir tablonun rota ve ölçüyle verilen nokta ve çizgi olaylarını rotaların üstünde nesne olarak yazar.",
+    "help": [
+     "Örnekler: kaza kayıtlarının kilometreleri, yol kaplamasının başlangıç ve bitiş kilometreleri, trafik levhaları, bakım kesimleri.",
+     "Nokta olayı rotanın o ölçüdeki yerine, çizgi olayı başlangıç ölçüsünden bitiş ölçüsüne rotanın parçası olarak yazılır (ters verilen olay ters çizilir; rotanın boşluğunda parçalara ayrılır). Öteleme sütunu verilirse olay rotaya dik o kadar kaydırılır: artı öteleme ölçü yönünün sağına (ya da seçilirse soluna).",
+     "Kaynak bir dosya (ilk satırı sütun adları) ya da nesneler olabilir; nesnelerde öznitelikler satırdır. Olay satırın dolu hücrelerini öznitelik olarak alır. Rotası olmayan, ölçüsü sayı olmayan ya da rotanın ölçüleri dışında kalan satır atlanır ve tabloda nedeniyle söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "OLAYGOSTER",
+     "ROUTEEVENTS"
+    ]
+   }
+  },
+  "linearRef.locateAlong": {
+   "title": "Rota boyunca konumla",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Konumlanacak nesneler",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "routes",
+     "label": "Rotalar",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "routeField",
+     "label": "Rota kimliği alanı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "radius",
+     "label": "Arama yarıçapı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "all",
+     "label": "Yarıçaptaki bütün rotalar",
+     "description": "Kapalıyken yalnız en yakın rota.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "side",
+     "label": "Artı uzaklık",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "right",
+        "label": "Sağa",
+        "hint": "Ölçü yönünün sağı"
+       },
+       {
+        "value": "left",
+        "label": "Sola",
+        "hint": "Ölçü yönünün solu"
+       }
+      ]
+     }
+    },
+    {
+     "name": "write",
+     "label": "Özniteliklere yaz",
+     "description": "İlk satırı Rota, Ölçü (Başlangıç, Bitiş) ve Uzaklık alanlarına yazar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "linearRef",
+     "text": "Doğrusal referans"
+    },
+    "icon": "routeLocate",
+    "about": "Nesnelerin rotalardaki yerini ölçüleriyle bulur: noktanın ölçüsü ve uzaklığı, çizginin ve alanın başlangıç ve bitiş ölçüsü.",
+    "help": [
+     "Örnekler: kazaların hangi kilometrede olduğu, bir kaplama çizgisinin yolun hangi kesimine düştüğü, bir parselin yolun hangi kesimini kapladığı.",
+     "Nokta rotadaki en yakın yerine konumlanır; arama yarıçapı içinde değilse konumlanmaz. Uzaklık ölçü yönünün sağına artıdır (ya da seçilirse soluna). Yarıçaptaki bütün rotalar istenirse her biri bir satırdır, istenmezse yalnız en yakını. Çizgi bütün köşeleri yarıçap içindeyse ilk ve son köşesinin ölçüleriyle, alan içinden geçen rotaların parçalarıyla konumlanır.",
+     "Sonuç tablodadır. Özniteliklere yaz açıkken ilk satır nesnenin Rota, Ölçü ya da Başlangıç ve Bitiş, Uzaklık alanlarına yazılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ROTAKONUM",
+     "LOCATEALONG"
+    ]
+   }
+  },
+  "linearRef.overlayEvents": {
+   "title": "Olayları çakıştır",
+   "rows": [
+    {
+     "name": "aSourceKind",
+     "label": "Birinci tablo kaynağı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "file",
+        "label": "Dosya",
+        "hint": "CSV, TXT, Excel ya da ODS dosyası"
+       },
+       {
+        "value": "layer",
+        "label": "Katman",
+        "hint": "Nesnelerin öznitelikleri satırdır"
+       }
+      ]
+     }
+    },
+    {
+     "name": "aFile",
+     "label": "Birinci tablo dosyası",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir olay.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "file",
+      "accept": [
+       ".csv",
+       ".txt",
+       ".xlsx",
+       ".ods"
+      ]
+     }
+    },
+    {
+     "name": "aSource",
+     "label": "Birinci tablo nesneleri",
+     "description": "Öznitelikleri satır olan nesneler; her nesne bir olay.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "aRoute",
+     "label": "Birinci tablonun rota sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "aFrom",
+     "label": "Birinci tablonun başlangıç sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "aTo",
+     "label": "Birinci tablonun bitiş sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "bSourceKind",
+     "label": "İkinci tablo kaynağı",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "file",
+        "label": "Dosya",
+        "hint": "CSV, TXT, Excel ya da ODS dosyası"
+       },
+       {
+        "value": "layer",
+        "label": "Katman",
+        "hint": "Nesnelerin öznitelikleri satırdır"
+       }
+      ]
+     }
+    },
+    {
+     "name": "bFile",
+     "label": "İkinci tablo dosyası",
+     "description": "İlk satırı sütun adları olan CSV, TXT, Excel (.xlsx) ya da ODS dosyası; her satır bir olay.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "file",
+      "accept": [
+       ".csv",
+       ".txt",
+       ".xlsx",
+       ".ods"
+      ]
+     }
+    },
+    {
+     "name": "bSource",
+     "label": "İkinci tablo nesneleri",
+     "description": "Öznitelikleri satır olan nesneler; her nesne bir olay.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "bRoute",
+     "label": "İkinci tablonun rota sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "bFrom",
+     "label": "İkinci tablonun başlangıç sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "bTo",
+     "label": "İkinci tablonun bitiş sütunu",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "how",
+     "label": "İşlem",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "intersect",
+        "label": "Kesişim",
+        "hint": "İki tablonun da kapladığı parçalar"
+       },
+       {
+        "value": "union",
+        "label": "Birleşim",
+        "hint": "Herhangi birinin kapladığı parçalar"
+       }
+      ]
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "linearRef",
+     "text": "Doğrusal referans"
+    },
+    "icon": "routeOverlay",
+    "about": "İki çizgi olayı tablosunu aynı rotalarda keser; ortak (Kesişim) ya da bütün (Birleşim) parçaların tablosunu verir.",
+    "help": [
+     "Örnekler: kaplama türü ile hız sınırının birlikte geçerli olduğu kesimler, kaza kesimleriyle bakım kesimlerinin ortak parçaları, iki envanterin birleşimi.",
+     "Olaylar bir olayın başladığı ya da bittiği her ölçüde bölünür. Kesişim iki tablonun da kapladığı, Birleşim herhangi birinin kapladığı parçaları verir; bir parçayı kaplayan her olay çifti bir satırdır, aynı çiftin komşu parçaları birleşir.",
+     "Tablo Rota, Başlangıç ve Bitiş ile birinci tablonun, sonra ikinci tablonun öbür sütunlarını taşır (birincide de olan ad “ (2)” ekiyle). Rotası boş ya da ölçüsü sayı olmayan satır alınmaz. Tablo Kaydet ile XLSX, ODS ya da CSV olarak kaydedilir ve yeniden Olayları rotada göster'e verilebilir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "OLAYCAKISTIR",
+     "OVERLAYEVENTS"
+    ]
+   }
+  },
+  "linearRef.extractMeasures": {
+   "title": "M değerlerini çıkar",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Rotalar",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "prefix",
+     "label": "Önek",
+     "description": "Yazılan alanların adlarının başı: “M_bas”, “M_son”.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "string",
+      "short": false,
+      "maxLength": 24
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "linearRef",
+     "text": "Doğrusal referans"
+    },
+    "icon": "routeMeasures",
+    "about": "Rotaların ilk, son, en küçük ve en büyük ölçüsünü (M) özniteliklerine yazar.",
+    "help": [
+     "Örnekler: her yol rotasının başlangıç ve bitiş kilometresi, ölçü aralıklarının bir tabloda listelenmesi, ölçüsüz rotaların bulunması.",
+     "Yazılan alanlar önekle adlanır: “<önek>bas” ilk ölçülü köşenin, “<önek>son” sonuncunun ölçüsü, “<önek>min” en küçüğü, “<önek>max” en büyüğü; sayılar projenin uzunluk basamağıyla. Ölçüsü olmayan nesneye yazılmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": true,
+    "aliases": [
+     "MCIKAR",
+     "EXTRACTM"
+    ]
+   }
+  },
   "surface.slope": {
    "title": "Eğim",
    "rows": [

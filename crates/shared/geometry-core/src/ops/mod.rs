@@ -33,6 +33,7 @@ pub mod image;
 pub mod join;
 pub mod label_text;
 pub mod lengthen;
+pub mod lrs;
 pub mod network;
 pub mod offset;
 pub mod order;

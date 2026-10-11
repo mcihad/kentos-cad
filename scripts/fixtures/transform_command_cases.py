@@ -768,13 +768,14 @@ def warped(e, t, new_id=None):
 
 OTURT = [
     {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "101"}, "label": "101", "p": P(487010.5, 4420020.25), "z": 101.5},
-    {"kind": "line", "id": 2, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420000), "b": P(487030, 4420010), "za": 100.0, "zb": 102.0},
+    # A route's measures (ADR 0224 §2) stay with its vertices as its elevations do.
+    {"kind": "line", "id": 2, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420000), "b": P(487030, 4420010), "za": 100.0, "zb": 102.0, "ma": 0.0, "mb": 31.25},
     {"kind": "polygon", "id": 3, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [P(487000, 4420000), P(487040, 4420000), P(487040, 4420030), P(487000, 4420030)],
      "zs": [100.0, 100.5, None, 101.0], "holes": [{"pts": [P(487010, 4420010), P(487015, 4420010), P(487015, 4420015)], "zs": [99.0, 99.5, 99.25]}]},
     {"kind": "text", "id": 4, "layerId": "yapi", "attrs": {}, "p": P(487005, 4420025), "text": "Ada 101", "height": 2, "rotation": 0},
     {"kind": "circle", "id": 5, "layerId": "yapi", "attrs": {}, "c": P(487030, 4420010), "r": 2.5},
     {"kind": "polyline", "id": 6, "layerId": "yapi", "attrs": {}, "pts": [P(487000, 4420040), P(487010, 4420040), P(487020, 4420050)], "bulges": [0.0, 0.4, 0.0],
-     "zs": [100.0, 101.0, 102.0]},
+     "zs": [100.0, 101.0, 102.0], "ms": [1000.0, 1010.0, 1025.5]},
     {"kind": "line", "id": 7, "layerId": "kilitli", "attrs": {}, "a": P(487005, 4420005), "b": P(487015, 4420005)},
     {"kind": "arc", "id": 8, "layerId": "yapi", "attrs": {}, "c": P(487020, 4420020), "r": 4, "a0": 0, "a1": HALF_PI},
 ]

@@ -40,12 +40,12 @@ use crate::{
     SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
-    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
-    SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM,
+    SCHEMA_WITH_NETWORKS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
+    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -174,6 +174,8 @@ pub(super) struct Features {
     pub(super) variables: bool,
     /// Schema 38: a raster's `dataset` and its look's `edges` (docs/adr/0243 §6).
     multidim: bool,
+    /// Schema 39: the vertex measures (`ma`, `mb`, a polyline's and its parts' `ms`; docs/adr/0224).
+    measures: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -219,6 +221,7 @@ impl Features {
             temporal: schema >= SCHEMA_WITH_TEMPORAL,
             filters: schema >= SCHEMA_WITH_FILTERS,
             multidim: schema >= SCHEMA_WITH_MULTIDIM,
+            measures: schema >= SCHEMA_WITH_MEASURES,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -246,12 +249,15 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
         || match kind {
             Kind::Point => matches!(key, "p" | "z") || (has.line_parts && key == "parts"),
             Kind::Line => {
-                matches!(key, "a" | "b") || (has.elevations && matches!(key, "za" | "zb"))
+                matches!(key, "a" | "b")
+                    || (has.elevations && matches!(key, "za" | "zb"))
+                    || (has.measures && matches!(key, "ma" | "mb"))
             }
             Kind::Polyline => {
                 matches!(key, "pts" | "bulges")
                     || (has.elevations && key == "zs")
                     || (has.line_parts && key == "parts")
+                    || (has.measures && key == "ms")
             }
             Kind::Polygon => {
                 matches!(key, "pts" | "bulges" | "holes")
@@ -415,6 +421,8 @@ struct Fields {
     z: Option<f64>,
     za: Option<f64>,
     zb: Option<f64>,
+    ma: Option<f64>,
+    mb: Option<f64>,
     /// Where a dimension's `angle`, `za` and `zb` are (for a refusal).
     angle_at: usize,
     za_at: usize,
@@ -435,6 +443,9 @@ struct Fields {
     /// A path's elevations, and where in the payload they start (for a length error).
     zs: Option<Vec<Option<f64>>>,
     zs_at: usize,
+    /// A polyline's measures, alike (docs/adr/0224).
+    ms: Option<Vec<Option<f64>>>,
+    ms_at: usize,
     rings: Option<Vec<RingGeometry>>,
     parts: Option<Vec<AreaPart>>,
     /// A multi-point object's points past its first (schema 17).
@@ -673,6 +684,8 @@ pub(super) fn object(
                 f.zb_at = r.position();
                 f.zb = Some(r.float()?);
             }
+            "ma" => f.ma = Some(r.float()?),
+            "mb" => f.mb = Some(r.float()?),
             "r" => f.r = Some(r.float()?),
             "a0" => f.a0 = Some(r.float()?),
             "a1" => f.a1 = Some(r.float()?),
@@ -817,6 +830,10 @@ pub(super) fn object(
             "zs" => {
                 f.zs_at = r.position();
                 f.zs = Some(elevations(r)?);
+            }
+            "ms" => {
+                f.ms_at = r.position();
+                f.ms = Some(elevations(r)?);
             }
             "holes" if kind == Kind::Polygon => f.rings = Some(list(r, |r, _| ring(r, has))?),
             "holes" => f.loops = Some(list(r, |r, _| points(r))?),
@@ -1180,16 +1197,20 @@ fn build(
             b: required(r, f.b, "b")?,
             za: f.za,
             zb: f.zb,
+            ma: f.ma,
+            mb: f.mb,
         }),
         Kind::Polyline | Kind::Polygon => {
             let pts = required(r, f.pts.take(), "pts")?;
             let zs = as_long_as(r, f.zs.take(), f.zs_at, pts.len())?;
+            let ms = measures_as_long_as(r, f.ms.take(), f.ms_at, pts.len())?;
             let path = PathEntity {
                 base,
                 pts,
                 bulges: f.bulges.take(),
                 holes: f.rings.take(),
                 zs,
+                ms,
                 parts: f.parts.take(),
             };
             if kind == Kind::Polygon {
@@ -1874,6 +1895,7 @@ fn part(r: &mut Reader<'_>, has: Features) -> Result<AreaPart, KcadError> {
         bulges,
         holes,
         zs,
+        ms: None,
     })
 }
 
@@ -1881,6 +1903,7 @@ fn part(r: &mut Reader<'_>, has: Features) -> Result<AreaPart, KcadError> {
 /// vertices or more, its arcs and elevations; no holes (an unknown field).
 fn line_part(r: &mut Reader<'_>, has: Features) -> Result<AreaPart, KcadError> {
     let (mut pts, mut bulges, mut zs, mut zs_at, mut pts_at) = (None, None, None, 0, 0);
+    let (mut ms, mut ms_at) = (None, 0);
     map(r, |r, key| {
         match key {
             "pts" => {
@@ -1891,6 +1914,11 @@ fn line_part(r: &mut Reader<'_>, has: Features) -> Result<AreaPart, KcadError> {
             "zs" if has.elevations => {
                 zs_at = r.position();
                 zs = Some(elevations(r)?);
+            }
+            // Its measures from schema 39 on (docs/adr/0224).
+            "ms" if has.measures => {
+                ms_at = r.position();
+                ms = Some(elevations(r)?);
             }
             _ => return Err(unknown(r)),
         }
@@ -1908,11 +1936,13 @@ fn line_part(r: &mut Reader<'_>, has: Features) -> Result<AreaPart, KcadError> {
         ));
     }
     let zs = as_long_as(r, zs, zs_at, pts.len())?;
+    let ms = measures_as_long_as(r, ms, ms_at, pts.len())?;
     Ok(AreaPart {
         pts,
         bulges,
         holes: None,
         zs,
+        ms,
     })
 }
 
@@ -1964,6 +1994,32 @@ fn as_long_as(
         return Err(e);
     }
     Ok(zs)
+}
+
+/// `ms` as it is when it has one measure per vertex, else a bad value
+/// (§6.6, docs/adr/0224), as [`as_long_as`]: `ms` comes before `pts`.
+fn measures_as_long_as(
+    r: &mut Reader<'_>,
+    ms: Option<Vec<Option<f64>>>,
+    at: usize,
+    vertices: usize,
+) -> Result<Option<Vec<Option<f64>>>, KcadError> {
+    if let Some(list) = &ms
+        && list.len() != vertices
+    {
+        r.push(Seg::Name("ms"));
+        let e = r.fail_at(
+            Code::BadValue,
+            at,
+            &format!(
+                "{} ölçü var ama {vertices} köşe var; her köşenin bir ölçüsü olmalı (ölçüsüz köşe için null)",
+                list.len()
+            ),
+        );
+        r.pop();
+        return Err(e);
+    }
+    Ok(ms)
 }
 
 /// A hatch's pattern (§6.6): schema 23 adds the `pattern` and `gradient`

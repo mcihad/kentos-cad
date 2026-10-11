@@ -44,6 +44,7 @@ fn parcel(i: usize, shift: f64) -> Entity {
         })
         .collect();
     Entity::Polygon(PathEntity {
+        ms: None,
         base: EntityBase {
             id: i as u32 + 1,
             layer_id: "parsel".into(),

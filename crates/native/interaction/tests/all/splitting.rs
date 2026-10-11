@@ -423,6 +423,8 @@ fn cleanup_leaves_a_locked_layer_alone_and_repeats_on_another_layer_are_not_repe
 /// A line on the layer `parsel` with its own colour, weight and symbol.
 fn styled(b: &mut Bench, at: [f64; 2], to: [f64; 2]) -> Slot {
     let line = Entity::Line(LineEntity {
+        ma: None,
+        mb: None,
         base: EntityBase {
             color: Some("#3E63DD".to_owned()),
             line_weight: Some(0.7),

@@ -59,6 +59,7 @@ fn square(x: f64) -> Vec<Vec2> {
 
 fn part(x: f64) -> AreaPart {
     AreaPart {
+        ms: None,
         pts: square(x),
         bulges: None,
         holes: None,
@@ -68,6 +69,7 @@ fn part(x: f64) -> AreaPart {
 
 fn area(parts: Option<Vec<AreaPart>>) -> Entity {
     Entity::Polygon(PathEntity {
+        ms: None,
         base: base(0),
         pts: square(0.0),
         bulges: None,
@@ -242,9 +244,10 @@ fn the_typed_columns_carry_parts() {
     // its 4 vertices, 1 hole (flags 0, 4 vertices); 2 parts, the first with bulges and
     // elevations (flags 3).
     assert_eq!(cols.ints[4..10], [4, 1, 0, 4, 2, 3]);
-    // A part's flags beyond bulges, elevations and holes are no columns this layout knows.
+    // A part's flags beyond bulges, elevations, holes and measures (docs/adr/0224) are no columns
+    // this layout knows.
     let mut broken = cols.clone();
-    broken.ints[9] = 8;
+    broken.ints[9] = 16;
     let e = kentos_kcad::columns::unpack(&broken).expect_err("refused");
-    assert!(e.message.contains("parçanın bayrakları 0x8"), "{e}");
+    assert!(e.message.contains("parçanın bayrakları 0x10"), "{e}");
 }

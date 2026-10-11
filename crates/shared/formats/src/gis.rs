@@ -31,20 +31,37 @@ pub type Zs = Option<Vec<Option<f64>>>;
 pub struct Ring {
     pub pts: Vec<Vec2>,
     pub zs: Zs,
+    /// A path's measures (M, docs/adr/0224), as its elevations; a ring of an area has none.
+    pub ms: Zs,
 }
 
 impl Ring {
     /// A run of vertices with the height (if any) the file gave each: none at
     /// all leaves the run flat, as does a count that does not match.
     pub fn new(pts: Vec<Vec2>, heights: impl IntoIterator<Item = Option<f64>>) -> Ring {
-        let zs: Vec<Option<f64>> = heights.into_iter().collect();
-        let zs = (zs.len() == pts.len() && zs.iter().any(Option::is_some)).then_some(zs);
-        Ring { pts, zs }
+        let zs = Self::per_vertex(&pts, heights);
+        Ring { pts, zs, ms: None }
     }
 
     /// A run of vertices without heights.
     pub fn flat(pts: Vec<Vec2>) -> Ring {
-        Ring { pts, zs: None }
+        Ring {
+            pts,
+            zs: None,
+            ms: None,
+        }
+    }
+
+    /// The run with the measure (if any) the file gave each vertex (a
+    /// Shapefile PolyLineM's or PolyLineZ's M, docs/adr/0224), as its heights.
+    pub fn measured(self, measures: impl IntoIterator<Item = Option<f64>>) -> Ring {
+        let ms = Self::per_vertex(&self.pts, measures);
+        Ring { ms, ..self }
+    }
+
+    fn per_vertex(pts: &[Vec2], values: impl IntoIterator<Item = Option<f64>>) -> Zs {
+        let list: Vec<Option<f64>> = values.into_iter().collect();
+        (list.len() == pts.len() && list.iter().any(Option::is_some)).then_some(list)
     }
 }
 
@@ -60,6 +77,8 @@ pub enum Shape {
         b: Vec2,
         za: Option<f64>,
         zb: Option<f64>,
+        ma: Option<f64>,
+        mb: Option<f64>,
     },
     Polyline(Ring),
     /// A polyline of two or more parts, each a path of two vertices or more,
@@ -92,11 +111,20 @@ impl Shape {
     pub fn path(r: Ring) -> Shape {
         match r.pts.as_slice() {
             &[a, b] => {
-                let (za, zb) = match r.zs.as_deref() {
-                    Some(&[za, zb]) => (za, zb),
+                let ends = |list: Option<&[Option<f64>]>| match list {
+                    Some(&[x, y]) => (x, y),
                     _ => (None, None),
                 };
-                Shape::Line { a, b, za, zb }
+                let (za, zb) = ends(r.zs.as_deref());
+                let (ma, mb) = ends(r.ms.as_deref());
+                Shape::Line {
+                    a,
+                    b,
+                    za,
+                    zb,
+                    ma,
+                    mb,
+                }
             }
             _ => Shape::Polyline(r),
         }
@@ -263,13 +291,29 @@ impl Collect {
                 z,
                 parts: None,
             }),
-            Shape::Line { a, b, za, zb } => Entity::Line(LineEntity { base, a, b, za, zb }),
+            Shape::Line {
+                a,
+                b,
+                za,
+                zb,
+                ma,
+                mb,
+            } => Entity::Line(LineEntity {
+                base,
+                a,
+                b,
+                za,
+                zb,
+                ma,
+                mb,
+            }),
             Shape::Polyline(r) => Entity::Polyline(PathEntity {
                 base,
                 pts: r.pts,
                 bulges: None,
                 holes: None,
                 zs: r.zs,
+                ms: r.ms,
                 parts: None,
             }),
             // The first path is the polyline's own fields, the others its parts (docs/adr/0174).
@@ -284,6 +328,7 @@ impl Collect {
                     bulges: None,
                     holes: None,
                     zs: r.zs,
+                    ms: r.ms,
                     parts: Some(
                         paths
                             .map(|r| AreaPart {
@@ -291,6 +336,7 @@ impl Collect {
                                 bulges: None,
                                 holes: None,
                                 zs: r.zs,
+                                ms: r.ms,
                             })
                             .collect(),
                     ),
@@ -310,6 +356,7 @@ impl Collect {
                 })
             }
             Shape::Polygon(r, holes) => Entity::Polygon(PathEntity {
+                ms: None,
                 base,
                 pts: r.pts,
                 bulges: None,
@@ -324,6 +371,7 @@ impl Collect {
                     return;
                 };
                 Entity::Polygon(PathEntity {
+                    ms: None,
                     base,
                     pts: r.pts,
                     bulges: None,
@@ -332,6 +380,7 @@ impl Collect {
                     parts: Some(
                         parts
                             .map(|(r, holes)| AreaPart {
+                                ms: None,
                                 pts: r.pts,
                                 bulges: None,
                                 holes: holes_of(holes),
@@ -497,6 +546,8 @@ mod tests {
                 b: v(5.0, -1.0),
                 za: None,
                 zb: None,
+                ma: None,
+                mb: None,
             },
             "",
             &none,

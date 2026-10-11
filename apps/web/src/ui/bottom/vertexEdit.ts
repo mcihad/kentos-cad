@@ -5,7 +5,7 @@ import type { Entity, LineEntity, PolylineEntity } from '../../model/entities';
 import type { Elevated } from '../../model/ops/elevation';
 import { vertexTableInsert, vertexTableMove, vertexTableRadius, vertexTableRemove, vertexTableRows, vertexTableZ, type VertexAnswer, type VertexKind, type VertexRefusal, type VertexRow } from '../../model/ops/vertexTable';
 import { UNIT_PER_METRE } from '../../model/projectSettings';
-import { elevatedPaths, withoutElevations } from '../../product/elevation';
+import { elevatedPaths, hasElevation, measuredPaths, withoutElevations } from '../../product/elevation';
 import { entitiesEdit } from '../../product/entitiesEdit';
 import { parseNumber } from '../../tools/coordinateInput';
 import { neighbourLines, type Neighbours } from '../../tools/neighbours';
@@ -19,9 +19,12 @@ import { inStep } from './pointEdit';
  * `apps/desktop/src/vertices/edit.rs`.
  */
 
-/** The cells that are edited, in the order Tab takes them. */
-export type VertexColumn = 'east' | 'north' | 'z' | 'radius';
-export const VERTEX_COLUMNS: readonly VertexColumn[] = ['east', 'north', 'z', 'radius'];
+/** The cells that are edited, in the order Tab takes them; a route's measure (M) only on a measured one (docs/adr/0224 §6). */
+export type VertexColumn = 'east' | 'north' | 'z' | 'm' | 'radius';
+export const VERTEX_COLUMNS: readonly VertexColumn[] = ['east', 'north', 'z', 'm', 'radius'];
+
+/** A row of the table: the core's, and on a measured route its vertex's measure (`measured`: the object has one). */
+export type TableRow = VertexRow & { m?: number | null; measured?: boolean };
 
 /** The table's own messages start so; the command's refusals are said as they are. */
 export const PREFIX = 'Köşe tablosu: ';
@@ -78,6 +81,7 @@ const nothing: Outcome = { said: [], step: null, stay: false };
 /** What a column is called in a message: east and north as the project's type names them (docs/adr/0165 §4). */
 function word(doc: CadDocument, col: VertexColumn): string {
   if (col === 'z') return 'Z';
+  if (col === 'm') return 'M';
   if (col === 'radius') return 'Yarıçap';
   const cad = doc.settings.workspace.value === 'cad';
   return col === 'east' ? (cad ? 'X' : 'Y') : cad ? 'Y' : 'X';
@@ -107,13 +111,19 @@ export function refusalText(r: VertexRefusal, length: LengthText, adding = false
   }
 }
 
-/** The object's paths and rows. */
-export function vertexRows(e: Editable): VertexRow[] {
-  return vertexTableRows(elevatedPaths(e));
+/** Whether the object is a measured route (docs/adr/0224): a line or a polyline with a vertex measure. */
+export const isMeasured = (e: Editable): boolean => e.kind !== 'polygon' && hasElevation(measuredPaths(e));
+
+/** The object's paths and rows, a measured route's with each vertex's measure (`measuredPaths`' order is the rows'). */
+export function vertexRows(e: Editable): TableRow[] {
+  const rows: TableRow[] = vertexTableRows(elevatedPaths(e));
+  if (!isMeasured(e)) return rows;
+  const ms = measuredPaths(e);
+  return rows.map((r) => ({ ...r, m: ms[r.path]?.zs[r.index] ?? null, measured: true }));
 }
 
 /** The text a cell's editor opens with: the value whole (the shortest that reads back), in a local project's unit. */
-export function cellText(row: VertexRow, col: VertexColumn, perMetre = 1): string {
+export function cellText(row: TableRow, col: VertexColumn, perMetre = 1): string {
   // In a local project's unit (docs/adr/0165 §2), without the multiplication's last-digit noise.
   const shown = (v: number) => String(perMetre === 1 ? v : Number((v * perMetre).toPrecision(15)));
   switch (col) {
@@ -123,13 +133,17 @@ export function cellText(row: VertexRow, col: VertexColumn, perMetre = 1): strin
       return shown(row.p.y);
     case 'z':
       return row.z == null ? '' : shown(row.z);
+    // A measure is the route's own unit's: never converted.
+    case 'm':
+      return row.m == null ? '' : String(row.m);
     case 'radius':
       return row.radius == null ? '' : shown(row.radius);
   }
 }
 
 /** Whether the row's cell is edited: a line's edge takes no arc, and no edge leaves an open path's last vertex. */
-export function cellEditable(kind: VertexKind, row: VertexRow, col: VertexColumn): boolean {
+export function cellEditable(kind: VertexKind, row: TableRow, col: VertexColumn): boolean {
+  if (col === 'm') return row.measured === true;
   return col !== 'radius' || (kind !== 'line' && row.chord != null);
 }
 
@@ -220,9 +234,10 @@ export function writeVertexCell(doc: CadDocument, e: Editable, at: At, col: Vert
   const row = vertexTableRows(paths).find((r) => r.path === at.path && r.index === at.index);
   if (!row) return { said: [`${PREFIX}Köşe bulunamadı.`], step: null, stay: false };
   const blank = text.trim() === '';
-  const empty = blank && (col === 'z' || col === 'radius');
+  const empty = blank && (col === 'z' || col === 'm' || col === 'radius');
   const typed = empty ? null : parseNumber(text);
   if (typed === null && !empty) return { said: [`${PREFIX}${word(doc, col)} bir sayı olmalı.`], step: null, stay: true };
+  if (col === 'm') return writeMeasure(doc, e, at, typed);
   const v = typed === null ? null : metresOf(doc)(typed);
   const kind = e.kind as VertexKind;
   if (col === 'east' || col === 'north') {
@@ -239,6 +254,32 @@ export function writeVertexCell(doc: CadDocument, e: Editable, at: At, col: Vert
   const same = v !== null && radius !== null && Math.abs(v - radius) <= 1e-9 * Math.abs(radius);
   if (((v === null || v === 0) && radius === null) || same) return nothing;
   return written(doc, e, vertexTableRadius(kind, paths, at.path, at.index, v === 0 ? null : v, radiusSlack(doc)), STEP, 'properties', length, neighbours);
+}
+
+/**
+ * A vertex's measure (docs/adr/0224 §6): the route's measures written with its geometry as they are (empty removes
+ * that vertex's), one step “Köşe düzenle”; an unchanged one writes nothing.
+ */
+function writeMeasure(doc: CadDocument, e: Editable, at: At, m: number | null): Outcome {
+  const ms = measuredPaths(e).map((p) => [...p.zs]);
+  const was = ms[at.path]?.[at.index];
+  if (was === undefined) return { said: [`${PREFIX}Köşe bulunamadı.`], step: null, stay: false };
+  if (was === m) return nothing;
+  ms[at.path][at.index] = m;
+  const base = geometryOf(e, e.kind as VertexKind, elevatedPaths(e));
+  const geometry = (
+    base.kind === 'line'
+      ? { ...base, ms: ms[0] }
+      : base.kind === 'polyline'
+        ? { ...base, ms: ms[0], ...(base.parts && { parts: base.parts.map((q, k) => ({ ...q, ms: ms[k + 1] })) }) }
+        : base
+  ) as EditGeometry;
+  const uid = doc.uidOf(e.id) ?? '';
+  const refused = inStep(doc, STEP, () => {
+    const r = entitiesEdit.execute({ doc }, { operation: 'properties', changes: [{ kind: 'update', uid, geometry }] });
+    return r.status === 'completed' || !('error' in r) ? null : r.error.message;
+  });
+  return refused ? { said: [refused], step: null, stay: false } : { said: [], step: STEP, stay: false };
 }
 
 /**

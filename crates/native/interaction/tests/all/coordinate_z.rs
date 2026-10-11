@@ -28,6 +28,7 @@ fn zs(v: &[Option<f64>]) -> Option<Vec<Option<f64>>> {
 fn polyline(b: &mut Bench) -> Slot {
     b.doc
         .add(Entity::Polyline(PathEntity {
+            ms: None,
             base: base(),
             pts: vec![pt(0.0, 22.0), pt(6.0, 22.0), pt(12.0, 22.0)],
             bulges: None,
@@ -43,6 +44,7 @@ fn polyline(b: &mut Bench) -> Slot {
 fn area(b: &mut Bench) -> Slot {
     b.doc
         .add(Entity::Polygon(PathEntity {
+            ms: None,
             base: base(),
             pts: vec![pt(0.0, 30.0), pt(10.0, 30.0), pt(10.0, 40.0), pt(0.0, 40.0)],
             bulges: None,
@@ -60,6 +62,8 @@ fn area(b: &mut Bench) -> Slot {
 fn line(b: &mut Bench) -> Slot {
     b.doc
         .add(Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base(),
             a: pt(20.0, 22.0),
             b: pt(30.0, 22.0),
@@ -98,6 +102,7 @@ fn an_edge_s_middle_is_no_vertex_and_reads_without_one() {
     let mut b = Bench::on(EMPTY);
     b.doc
         .add(Entity::Polyline(PathEntity {
+            ms: None,
             base: base(),
             pts: vec![pt(0.0, 22.0), pt(6.0, 22.0)],
             bulges: None,

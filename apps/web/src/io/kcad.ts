@@ -137,8 +137,9 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
   Object.entries({
     // A multi-point object's and a multi-part polyline's other parts (docs/adr/0174).
     point: ['p', 'z', 'parts'],
-    line: ['a', 'b', 'za', 'zb'],
-    polyline: ['pts', 'bulges', 'zs', 'parts'],
+    // A route's measures (docs/adr/0224): a line's ends, a polyline's vertices.
+    line: ['a', 'b', 'za', 'zb', 'ma', 'mb'],
+    polyline: ['pts', 'bulges', 'zs', 'ms', 'parts'],
     polygon: ['pts', 'bulges', 'holes', 'zs', 'parts'],
     circle: ['c', 'r'],
     arc: ['c', 'r', 'a0', 'a1'],

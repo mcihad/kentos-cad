@@ -52,6 +52,7 @@ fn v(x: f64, y: f64) -> Vec2 {
 
 fn line_part(x: f64, n: usize) -> AreaPart {
     AreaPart {
+        ms: None,
         pts: (0..n).map(|i| v(x + i as f64, 0.0)).collect(),
         bulges: None,
         holes: None,
@@ -61,6 +62,7 @@ fn line_part(x: f64, n: usize) -> AreaPart {
 
 fn polyline(parts: Option<Vec<AreaPart>>) -> Entity {
     Entity::Polyline(PathEntity {
+        ms: None,
         base: base(0),
         pts: vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0)],
         bulges: None,

@@ -1,0 +1,234 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Ölçüler",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0
+ },
+ "origin": {
+  "x": 487000.0,
+  "y": 4420000.0
+ },
+ "layers": [
+  {
+   "id": "rota",
+   "name": "Rotalar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "rota",
+ "entities": [
+  {
+   "kind": "line",
+   "id": 1,
+   "layerId": "rota",
+   "attrs": {
+    "Rota": "D-100"
+   },
+   "a": {
+    "x": 487000.0,
+    "y": 4420000.0
+   },
+   "b": {
+    "x": 487250.0,
+    "y": 4420000.0
+   },
+   "za": 812.5,
+   "zb": 815.25,
+   "ma": 0.0,
+   "mb": 250.0
+  },
+  {
+   "kind": "line",
+   "id": 2,
+   "layerId": "rota",
+   "attrs": {},
+   "a": {
+    "x": 487000.0,
+    "y": 4420010.0
+   },
+   "b": {
+    "x": 487010.0,
+    "y": 4420010.0
+   },
+   "mb": 1000.125
+  },
+  {
+   "kind": "polyline",
+   "id": 3,
+   "layerId": "rota",
+   "attrs": {
+    "Rota": "D-200"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420050.0
+    },
+    {
+     "x": 487100.0,
+     "y": 4420050.0
+    },
+    {
+     "x": 487200.0,
+     "y": 4420050.0
+    },
+    {
+     "x": 487200.0,
+     "y": 4420150.0
+    }
+   ],
+   "bulges": [
+    0.0,
+    0.5,
+    0.0
+   ],
+   "zs": [
+    810.0,
+    null,
+    812.0,
+    813.5
+   ],
+   "ms": [
+    1000.0,
+    1100.0,
+    null,
+    1350.75
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 4,
+   "layerId": "rota",
+   "attrs": {
+    "Rota": "D-300"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420300.0
+    },
+    {
+     "x": 487100.0,
+     "y": 4420300.0
+    }
+   ],
+   "ms": [
+    0.0,
+    100.0
+   ],
+   "parts": [
+    {
+     "pts": [
+      {
+       "x": 487150.0,
+       "y": 4420300.0
+      },
+      {
+       "x": 487250.0,
+       "y": 4420300.0
+      }
+     ],
+     "ms": [
+      100.0,
+      200.0
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 5,
+   "layerId": "rota",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420400.0
+    },
+    {
+     "x": 487050.0,
+     "y": 4420400.0
+    }
+   ],
+   "ms": [
+    null,
+    null
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "rota",
+   "attrs": {
+    "Rota": "D-400"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420500.0
+    },
+    {
+     "x": 487100.0,
+     "y": 4420500.0
+    },
+    {
+     "x": 487100.0,
+     "y": 4420600.0
+    }
+   ],
+   "ms": [
+    -0.0,
+    -100.0,
+    -200.5
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "rota",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487300.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487310.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487310.0,
+     "y": 4420010.0
+    }
+   ]
+  }
+ ],
+ "uids": [
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e01",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e02",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e03",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e04",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e05",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e06",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e07"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

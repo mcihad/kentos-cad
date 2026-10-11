@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Formatter } from '../../app/format';
 import { Signal } from '../../core/signal';
 import type { Entity, NewEntity } from '../../model/entities';
-import { elevatedPaths } from '../../product/elevation';
+import { elevatedPaths, hasElevation, measuredPaths } from '../../product/elevation';
 import { neighboursOf } from '../../tools/neighbours';
 import { toolHarness } from '../../tools/toolHarness';
 import { cellText, removeVertices, vertexRows, writeVertexCell, writeVertexDraft, type Editable, type VertexColumn } from './vertexEdit';
@@ -51,13 +51,16 @@ function differ(a: unknown, e: unknown, path: string): string | null {
 /** An object as the cases compare it: line work's paths with their elevations and bulges (null when straight). */
 function view(e: Entity): unknown {
   if (e.kind !== 'line' && e.kind !== 'polyline' && e.kind !== 'polygon') return { kind: e.kind };
-  return {
+  const v = {
     kind: e.kind,
     paths: elevatedPaths(e).map((p) => {
       const b = p.pts.map((_, i) => p.bulges?.[i] ?? 0);
       return { pts: p.pts.map((q) => [q.x, q.y]), zs: p.zs, bulges: b.some((x) => Math.abs(x) > 1e-12) ? b : null };
     }),
   };
+  // A measured route's measures, path by path (docs/adr/0224 §6).
+  const ms = measuredPaths(e);
+  return hasElevation(ms) ? { ...v, ms: ms.map((p) => p.zs) } : v;
 }
 
 describe('Köşe tablosu: yazma', () => {

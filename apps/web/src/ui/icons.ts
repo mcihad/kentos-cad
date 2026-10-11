@@ -773,6 +773,23 @@ export const ICONS = {
   // reaches; Şebeke izleme, a pipe and its branch traced up to a valve. İşlemler's: En yakın tesis, an incident and two
   // facilities, the nearer one's way bold; Maliyet matrisi, every origin to every destination; Hizmet alanları, two
   // facilities' overlapping areas.
+  // Doğrusal referans (docs/adr/0224): a curved route with measure ticks; a route from its start dot with ticks;
+  // two stones dropping their measures onto a route; a table's point and line events standing on a route; points
+  // dropping onto a route; two event bars and their common piece; an M beside two attribute lines over a measured line.
+  linearRef:
+    '<path d="M2 15.5C5.2 15.5 6.2 9 10 9s5-5.5 8-5.5" stroke-width="1.4"/><path d="m5.3 11.9 1.7 1.7M10 7.4v3.2m4.3-7.2 1.5 1.9" stroke-width="1.1"/>',
+  routeCreate:
+    '<path d="M2.5 16 8 10.5h4.5L17.5 4" stroke-width="1.4"/><circle cx="2.5" cy="16" r="1.7" fill="currentColor" stroke="none"/><path d="m5.8 11.1 1.9 1.9M10.3 8.9v3.2m4.7-6.7 1.8 1.6" stroke-width="1"/>',
+  routeCalibrate:
+    '<path d="M2 15c4 0 5-3.5 8-3.5s4 2.5 8 2.5" stroke-width="1.4"/><path d="M4.5 3.5h3.4v3.4H4.5zm7.6 1.5h3.4v3.4h-3.4z" stroke-width="1.1"/><path d="M6.2 7v5m7.6-3.6v3.8" stroke-width="1" stroke-dasharray="1.2 1"/>',
+  routeEvents:
+    '<path d="M2 15h16" stroke-width="1.3"/><path d="M10 11.8h6.5" stroke-width="2.6"/><circle cx="5.2" cy="10.6" r="1.9" fill="currentColor" stroke="none"/><path d="M5.2 12.6V15M10 11.8V15m6.5-3.2V15" stroke-width="1" stroke-dasharray="1 .9"/><path d="M2.5 2.5h7.5v4.5H2.5zm0 2.2H10" stroke-width=".9"/>',
+  routeLocate:
+    '<path d="M2 16C6 16 8.5 6.5 18 5.5" stroke-width="1.4"/><circle cx="5.5" cy="8.5" r="1.7" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1.7" fill="currentColor" stroke="none"/><path d="m6.3 10.2 1.6 2.4m6.3-.9-.9-3.4" stroke-width="1" stroke-dasharray="1.1 .9"/>',
+  routeOverlay:
+    '<path d="M2.5 4.5h9m-3.5 4h9.5" stroke-width="2.4"/><path d="M8 13h3.5" stroke-width="2.8"/><path d="M2 16.5h16" stroke-width="1.1"/><path d="M8 3v14.5M11.5 3v14.5" stroke-width=".9" stroke-dasharray="1.2 1"/>',
+  routeMeasures:
+    '<path d="M3 10V3.5L6.4 7l3.4-3.5V10" stroke-width="1.4"/><path d="M2 15.5h16M2 13.5v4m8-4v4m8-4v4" stroke-width="1.1"/><path d="M12.5 5h5M12.5 8.5h5" stroke-width="1.1"/>',
   networks:
     '<path d="M3.5 15.5 8 4.5l8.5 1.5L13 15.5zM8 4.5l5 11" stroke-width="1.2"/><circle cx="3.5" cy="15.5" r="1.9" fill="currentColor" stroke="none"/><circle cx="8" cy="4.5" r="1.9" fill="currentColor" stroke="none"/><circle cx="16.5" cy="6" r="1.9" fill="currentColor" stroke="none"/><circle cx="13" cy="15.5" r="1.9" fill="currentColor" stroke="none"/>',
   netRoute:

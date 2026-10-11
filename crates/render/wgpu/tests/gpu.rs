@@ -255,6 +255,8 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         filter: None,
     }];
     doc.entities = vec![Entity::Line(LineEntity {
+        ma: None,
+        mb: None,
         base: EntityBase {
             id: 1,
             layer_id: "l".into(),

@@ -62,6 +62,7 @@ pub struct ResultWrite<'a> {
 pub fn line_geometry(l: &Line) -> EntityGeometry {
     let arcs = l.bulges.iter().any(|b| *b != 0.0);
     EntityGeometry::Polyline {
+        ms: None,
         pts: l
             .pts
             .iter()

@@ -181,6 +181,7 @@ fn geometries(labels: &Labels, look: &Look) -> Vec<EntityGeometry> {
     for l in &labels.labels {
         if let Some(leader) = &l.leader {
             out.push(EntityGeometry::Polyline {
+                ms: None,
                 pts: wire_all(leader),
                 bulges: None,
                 zs: None,

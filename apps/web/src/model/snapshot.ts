@@ -814,12 +814,20 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       pointAt(v.b, w, 'b');
       if (v.za !== undefined) numAt(v.za, w, 'başlangıcın kotu');
       if (v.zb !== undefined) numAt(v.zb, w, 'bitişin kotu');
+      // A route's measures (docs/adr/0224).
+      if (v.ma !== undefined) numAt(v.ma, w, 'başlangıcın ölçüsü');
+      if (v.mb !== undefined) numAt(v.mb, w, 'bitişin ölçüsü');
       break;
     case 'polyline':
     case 'polygon': {
       const n = pointsAt(v.pts, w, 'köşeler', 2);
       if (v.bulges !== undefined && numbersAt(v.bulges, w, 'bulge') > n) fail(at(w, 'bulge'), 'köşe sayısından uzun olamaz');
       if (v.zs !== undefined) elevationsAt(v.zs, n, w, 'kotlar');
+      // A polyline's measures (docs/adr/0224): an area has none.
+      if (v.ms !== undefined) {
+        if (kind !== 'polyline') fail(at(w, 'ölçüler'), 'yalnız çizgide ve çoklu çizgide olur');
+        elevationsAt(v.ms, n, w, 'ölçüler');
+      }
       if (v.holes !== undefined) {
         if (kind !== 'polygon' || !Array.isArray(v.holes)) fail(at(w, 'adalar'), 'yalnızca kapalı alanda, liste olarak');
         holesAt(v.holes as unknown[], w, '');
@@ -835,6 +843,10 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
           const k = pointsAt(part.pts, w, name, 2);
           if (part.bulges !== undefined && numbersAt(part.bulges, w, `${name} › bulge`) > k) fail(at(w, `${name} › bulge`), 'köşe sayısından uzun olamaz');
           if (part.zs !== undefined) elevationsAt(part.zs, k, w, `${name} › kotlar`);
+          if (part.ms !== undefined) {
+            if (kind !== 'polyline') fail(at(w, `${name} › ölçüler`), 'yalnız çizgide ve çoklu çizgide olur');
+            elevationsAt(part.ms, k, w, `${name} › ölçüler`);
+          }
           if (part.holes !== undefined) {
             if (kind !== 'polygon' || !Array.isArray(part.holes)) fail(at(w, `${name} › adalar`), 'yalnızca kapalı alanda, liste olarak');
             holesAt(part.holes as unknown[], w, `${name} › `);

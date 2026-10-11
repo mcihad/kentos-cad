@@ -630,6 +630,44 @@ fn turn(deg: f64) -> String {
     fixed(((deg % 360.0) + 360.0) % 360.0, 4)
 }
 
+/// A route's measures (docs/adr/0224 §6), read-only (the vertex table
+/// writes them): a line's `M (başlangıç)` and `M (bitiş)`, a polyline's `M`
+/// from its first measured vertex to its last, with a note when some
+/// vertices have none; nothing for an object without a measure. The
+/// numbers are the route's own, with the project's length decimals.
+fn measure_rows(e: &Entity, f: &Format) -> Vec<Row> {
+    let t = |m: f64| fixed(m, f.length_decimals);
+    let shown = |m: Option<f64>| m.map_or_else(|| "ölçü yok".to_owned(), t);
+    match e {
+        Entity::Line(l) if l.ma.is_some() || l.mb.is_some() => vec![
+            Row::figure("M (başlangıç)", shown(l.ma)),
+            Row::figure("M (bitiş)", shown(l.mb)),
+        ],
+        Entity::Polyline(p) => {
+            let own = p.ms.clone().unwrap_or_else(|| vec![None; p.pts.len()]);
+            let all: Vec<Option<f64>> = own
+                .into_iter()
+                .chain(
+                    p.parts
+                        .iter()
+                        .flatten()
+                        .flat_map(|q| q.ms.clone().unwrap_or_else(|| vec![None; q.pts.len()])),
+                )
+                .collect();
+            let ms: Vec<f64> = all.iter().flatten().copied().collect();
+            let (Some(first), Some(last)) = (ms.first(), ms.last()) else {
+                return Vec::new();
+            };
+            let mut rows = vec![Row::figure("M", format!("{} → {}", t(*first), t(*last)))];
+            if ms.len() < all.len() {
+                rows.push(Row::note("(bazı köşeler ölçüsüz)"));
+            }
+            rows
+        }
+        _ => Vec::new(),
+    }
+}
+
 /// `3B uzunluk` of a line or a polyline, `3B çevre` of an area, when every
 /// vertex has an elevation (docs/adr/0142): the length in space beside the
 /// plan one, which stays the measure of record.
@@ -742,6 +780,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 &f,
                 number(Field::Elevation(slot, Spot::End)),
             ));
+            geo.extend(measure_rows(e, &f));
             geo.push(metres("Uzunluk", dist(v(l.a), v(l.b))));
             geo.extend(space_length(e, &f));
             geo.push(bearing(v(l.a), v(l.b)));
@@ -761,6 +800,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 &f,
                 number(Field::Elevation(slot, Spot::All)),
             ));
+            geo.extend(measure_rows(e, &f));
             geo.push(metres(
                 if polygon { "Çevre" } else { "Uzunluk" },
                 length_of.unwrap_or(0.0),

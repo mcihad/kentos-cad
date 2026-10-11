@@ -29,6 +29,7 @@ fn uid(doc: &Document, slot: u32) -> String {
 
 fn line(ax: f64, ay: f64, bx: f64, by: f64) -> EntityGeometry {
     EntityGeometry::Line {
+        ms: None,
         a: Vec2 { x: ax, y: ay },
         b: Vec2 { x: bx, y: by },
         zs: None,

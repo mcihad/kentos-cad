@@ -55,6 +55,7 @@ fn drawing(side: usize) -> Document {
             b.id = id;
             id += 1;
             snapshot.entities.push(Entity::Polygon(PathEntity {
+                ms: None,
                 base: b,
                 pts,
                 bulges: None,
@@ -68,6 +69,8 @@ fn drawing(side: usize) -> Document {
         id += 1;
         let y = N + row as f64 * 20.0 + 19.0;
         snapshot.entities.push(Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: b,
             a: Wire { x: E, y },
             b: Wire {
@@ -120,6 +123,8 @@ fn store_sync_and_queries_on_a_large_drawing() {
         // Following edits: one object added, changed, removed; a thousand removed and undone.
         let line = |x: f64| {
             Entity::Line(LineEntity {
+                ma: None,
+                mb: None,
                 base: base("cizim"),
                 a: Wire { x, y: N - 5.0 },
                 b: Wire {

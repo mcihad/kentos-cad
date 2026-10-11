@@ -137,6 +137,7 @@ fn wires(pts: &[kentos_geometry_core::Vec2]) -> Vec<kentos_contracts::Vec2> {
 pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
     match e {
         Entity::Line(_) => Some(EntityGeometry::Line {
+            ms: None,
             a: wire(ps[0].pts[0]),
             b: wire(ps[0].pts[1]),
             zs: Some(ps[0].zs.clone()),
@@ -149,6 +150,7 @@ pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
                 .flatten()
                 .zip(ps.iter().skip(1))
                 .map(|(part, p)| AreaPart {
+                    ms: None,
                     pts: wires(&p.pts),
                     bulges: part.bulges.clone(),
                     zs: Some(p.zs.clone()),
@@ -156,6 +158,7 @@ pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
                 })
                 .collect();
             Some(EntityGeometry::Polyline {
+                ms: None,
                 pts: wires(&ps[0].pts),
                 bulges: l.bulges.clone(),
                 zs: Some(ps[0].zs.clone()),
@@ -182,6 +185,7 @@ pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
                 .map(|part| {
                     let own = ring(&part.bulges);
                     AreaPart {
+                        ms: None,
                         pts: own.pts,
                         bulges: own.bulges,
                         zs: own.zs,

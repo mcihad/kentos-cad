@@ -42,13 +42,24 @@ parts?: Array<PointPart>, } | { "kind": "line", a: Vec2, b: Vec2,
  * The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
  * each vertex takes one from the objects the edit names.
  */
-zs?: Array<number | null>, } | { "kind": "polyline", pts: Array<Vec2>, bulges?: Array<number>, 
+zs?: Array<number | null>, 
+/**
+ * The ends' measures (M) as written (docs/adr/0224 §2), as `zs`;
+ * absent: each takes one from the objects the edit names.
+ */
+ms?: Array<number | null>, } | { "kind": "polyline", pts: Array<Vec2>, bulges?: Array<number>, 
 /**
  * The vertices' elevations as written (docs/adr/0142): as many as
  * the vertices, `null` for one without; all `null`: none. Absent:
  * each vertex takes one from the objects the edit names.
  */
 zs?: Array<number | null>, 
+/**
+ * The vertices' measures (M) as written (docs/adr/0224 §2), as
+ * `zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex
+ * takes one from the objects the edit names.
+ */
+ms?: Array<number | null>, 
 /**
  * A multi-part polyline's parts past its first, each its vertices,
  * arcs and elevations, without holes (docs/adr/0174). The geometry

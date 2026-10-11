@@ -313,6 +313,7 @@ pub fn grip_elevation(e: &Entity, index: usize) -> Option<f64> {
         } else {
             let part = p.parts.as_ref()?.get(k - 1)?;
             kentos_contracts::PathEntity {
+                ms: None,
                 base: p.base.clone(),
                 pts: part.pts.clone(),
                 bulges: part.bulges.clone(),
@@ -512,6 +513,8 @@ mod tests {
 
     fn line(za: Option<f64>, zb: Option<f64>) -> Entity {
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base(),
             a: pt(0.0, 0.0),
             b: pt(30.0, 0.0),
@@ -523,6 +526,7 @@ mod tests {
     /// A 10 m square with a 2 m square hole.
     fn area(zs: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f64>>>) -> Entity {
         Entity::Polygon(PathEntity {
+            ms: None,
             base: base(),
             pts: vec![pt(0.0, 0.0), pt(10.0, 0.0), pt(10.0, 10.0), pt(0.0, 10.0)],
             bulges: None,
@@ -538,6 +542,7 @@ mod tests {
 
     fn polyline(zs: Option<Vec<Option<f64>>>) -> Entity {
         Entity::Polyline(PathEntity {
+            ms: None,
             base: base(),
             pts: vec![pt(0.0, 0.0), pt(10.0, 0.0), pt(10.0, 10.0)],
             bulges: None,

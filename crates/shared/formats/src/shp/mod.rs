@@ -249,7 +249,7 @@ pub fn read(files: &Files, opts: &ShapefileReadOptions) -> Result<ImportResult, 
     );
     r.note_n(
         "M (ölçü) değerleri",
-        "KentOS nesneleri M taşımaz; alınmadı",
+        "noktanın ve alanın ölçüsü olmaz (ölçü yalnız rotanın, çizginin köşesindedir); alınmadı",
         0,
         found.m,
     );

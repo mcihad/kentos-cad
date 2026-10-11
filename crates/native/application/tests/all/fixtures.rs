@@ -589,6 +589,12 @@ fn elevation_number<'a>(zs: &'a mut Option<Vec<Option<f64>>>, rest: &str) -> Opt
     zs.as_mut()?.get_mut(i)?.as_mut()
 }
 
+/// A measure `ms[i]` written with a geometry (docs/adr/0224 §2), as an elevation.
+fn measure_number<'a>(ms: &'a mut Option<Vec<Option<f64>>>, rest: &str) -> Option<&'a mut f64> {
+    let i: usize = rest.strip_prefix("ms[")?.strip_suffix(']')?.parse().ok()?;
+    ms.as_mut()?.get_mut(i)?.as_mut()
+}
+
 /// The number of a geometry at `rest`: `a.x`, `r`, `pts[1].y`, `bulges[0]`,
 /// `major.y`, `ratio`, `dir.x`, a text's `height`, `ring[2].x`, `pattern.angle` …
 fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&'a mut f64> {
@@ -597,19 +603,28 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             "z" => z.as_mut(),
             _ => coordinate(p, "p", rest),
         },
-        EntityGeometry::Line { a, b, zs } => {
+        EntityGeometry::Line { a, b, zs, ms } => {
             if rest.starts_with("zs[") {
                 return elevation_number(zs, rest);
+            }
+            if rest.starts_with("ms[") {
+                return measure_number(ms, rest);
             }
             coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
         }
         EntityGeometry::Polyline {
-            pts, bulges, zs, ..
+            pts,
+            bulges,
+            zs,
+            ms,
+            ..
         } => {
             if rest.starts_with("pts[") {
                 point_number(pts, rest)
             } else if rest.starts_with("zs[") {
                 elevation_number(zs, rest)
+            } else if rest.starts_with("ms[") {
+                measure_number(ms, rest)
             } else {
                 bulge_number(bulges, rest)
             }

@@ -97,17 +97,25 @@ def elevations(vertices):
     return zs if any(z is not None for z in zs) else None
 
 
-def line_geometry(a, b):
+def line_geometry(a, b, ms=None):
+    """A line of two vertices; `ms` their measures (a Shapefile line's M, docs/adr/0224), None for none."""
     geometry = {"a": [a[0], a[1]], "b": [b[0], b[1]]}
     for key, vertex in (("za", a), ("zb", b)):
         if vertex[2] is not None:
             geometry[key] = vertex[2]
+    for key, m in zip(("ma", "mb"), ms or (None, None)):
+        if m is not None:
+            geometry[key] = m
     return geometry
 
 
-def path_geometry(vertices):
+def path_geometry(vertices, ms=None):
+    """A path's vertices, their elevations and their measures (none: no key, as elevations)."""
     zs = elevations(vertices)
-    return {"pts": xy(vertices)} if zs is None else {"pts": xy(vertices), "zs": zs}
+    geometry = {"pts": xy(vertices)} if zs is None else {"pts": xy(vertices), "zs": zs}
+    if ms is not None and any(m is not None for m in ms):
+        geometry["ms"] = list(ms)
+    return geometry
 
 
 def polygon_geometry(outline, holes):
@@ -119,20 +127,23 @@ def polygon_geometry(outline, holes):
     return geometry
 
 
-def lines_geometry(paths):
+def lines_geometry(paths, measures=None):
     """One polyline of paths (each of two vertices or more): the first the object's own keys, the others in `parts`."""
-    geometry = path_geometry(paths[0])
-    geometry["parts"] = [path_geometry(path) for path in paths[1:]]
+    ms = measures or [None] * len(paths)
+    geometry = path_geometry(paths[0], ms[0])
+    geometry["parts"] = [path_geometry(path, m) for path, m in zip(paths[1:], ms[1:])]
     return geometry
 
 
-def lines_object(paths):
-    """The one (kind, geometry) of paths that read: a line (two vertices) or a path of one, a multi-part polyline of more; None of none."""
+def lines_object(paths, measures=None):
+    """The one (kind, geometry) of paths that read: a line (two vertices) or a path of one, a multi-part polyline of more; None of none.
+    `measures`: each path's measures (a Shapefile line's M), None for none."""
     if not paths:
         return None
     if len(paths) > 1:
-        return "polyline", lines_geometry(paths)
-    return ("line", line_geometry(*paths[0])) if len(paths[0]) == 2 else ("polyline", path_geometry(paths[0]))
+        return "polyline", lines_geometry(paths, measures)
+    ms = measures[0] if measures else None
+    return ("line", line_geometry(*paths[0], ms=ms)) if len(paths[0]) == 2 else ("polyline", path_geometry(paths[0], ms))
 
 
 def points_object(vertices):
@@ -633,6 +644,26 @@ def shp_parts(content, shape_type):
     return [points[starts[i] : starts[i + 1]] for i in range(nparts)]
 
 
+# Below this an M value is "no data" (the specification: any value less than -10^38).
+NO_DATA = -1e38
+
+
+def shp_measures(content, shape_type):
+    """A PolyLineM's or a PolyLineZ's M values (docs/adr/0224), one a point (None where "no data" or not a number), or
+    None when the record has no M block: an M type's comes right after the points, a Z type's after its Z block (and
+    may be missing there)."""
+    nparts, npoints = struct.unpack_from("<2i", content, 36)
+    at = 44 + 4 * nparts + 16 * npoints
+    if shape_type == 13:
+        at += 16 + 8 * npoints
+    elif shape_type != 23:
+        return None
+    if len(content) < at + 16 + 8 * npoints:
+        return None
+    ms = struct.unpack_from(f"<{npoints}d", content, at + 16)
+    return [m if math.isfinite(m) and m >= NO_DATA else None for m in ms]
+
+
 def signed_area(ring):
     """Half the shoelace sum over the ring without its closing point: negative is clockwise."""
     total = 0.0
@@ -707,8 +738,16 @@ def shp_objects(content):
         return [obj] if obj is not None else []
     if shape_type in POLYLINES:
         # A bad point: that part nothing; a part of fewer than two points nothing; the others one object (docs/adr/0174).
-        paths = [part for part in shp_parts(content, shape_type) or [] if all(finite(x, y) for x, y, _ in part) and len(part) >= 2]
-        obj = lines_object(paths)
+        # Each part with its M values as its vertices' measures (docs/adr/0224).
+        parts = shp_parts(content, shape_type) or []
+        ms = shp_measures(content, shape_type) if parts else None
+        kept, measures, start = [], [], 0
+        for part in parts:
+            if all(finite(x, y) for x, y, _ in part) and len(part) >= 2:
+                kept.append(part)
+                measures.append(ms[start : start + len(part)] if ms is not None else None)
+            start += len(part)
+        obj = lines_object(kept, measures)
         return [obj] if obj is not None else []
     if shape_type in POLYGONS:
         parts = shp_parts(content, shape_type)

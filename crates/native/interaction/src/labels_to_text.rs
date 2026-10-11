@@ -258,6 +258,7 @@ impl LabelsToText {
             .collect();
         objects.extend(r.callouts.iter().map(|c| {
             bare(EntityGeometry::Line {
+                ms: None,
                 a: v(c.from),
                 b: v(c.to),
                 zs: None,

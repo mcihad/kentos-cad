@@ -73,6 +73,7 @@ pub fn join_lines(slots: &[Slot], cx: &mut Context<'_>) {
     for &slot in slots {
         match doc.get(slot) {
             Some(Entity::Line(l)) => parts.push(AreaPart {
+                ms: None,
                 pts: vec![l.a, l.b],
                 bulges: None,
                 holes: None,
@@ -80,6 +81,7 @@ pub fn join_lines(slots: &[Slot], cx: &mut Context<'_>) {
             }),
             Some(Entity::Polyline(p)) => {
                 parts.push(AreaPart {
+                    ms: None,
                     pts: p.pts.clone(),
                     bulges: p.bulges.clone(),
                     holes: None,
@@ -99,6 +101,7 @@ pub fn join_lines(slots: &[Slot], cx: &mut Context<'_>) {
         return;
     };
     let geometry = EntityGeometry::Polyline {
+        ms: None,
         pts: first.pts,
         bulges: first.bulges,
         zs: first.zs,
@@ -184,6 +187,7 @@ pub fn split(e: &Entity, uid: &str) -> Option<(Vec<EntityEdit>, usize)> {
             let mut changes = vec![EntityEdit::Update {
                 uid: uid.to_owned(),
                 geometry: EntityGeometry::Polyline {
+                    ms: None,
                     pts: p.pts.clone(),
                     bulges: p.bulges.clone(),
                     zs: p.zs.clone(),
@@ -192,6 +196,7 @@ pub fn split(e: &Entity, uid: &str) -> Option<(Vec<EntityEdit>, usize)> {
             }];
             changes.extend(parts.iter().map(|q| {
                 add(EntityGeometry::Polyline {
+                    ms: None,
                     pts: q.pts.clone(),
                     bulges: q.bulges.clone(),
                     zs: q.zs.clone(),

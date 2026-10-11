@@ -298,6 +298,8 @@ const GENERATE_UNDER = [
   ...['smooth', 'orthogonalize', 'building', 'aggregate', 'dropParts', 'eliminate', 'coverageSimplify'].map((t) => `processing.run.generalize.${t}`),
 ];
 const SPATIAL_STATS_COMMANDS = ['moransI', 'hotSpot'].map((t) => `processing.run.stats.${t}`);
+/** Doğrusal referans's six (docs/adr/0224 §6), under Ağ analizi's ▾: a panel of their own made the tab wider than 1100 pixels. */
+const LRS_UNDER = ['createRoutes', 'calibrateRoutes', 'routeEvents', 'locateAlong', 'overlayEvents', 'extractMeasures'].map((t) => `processing.run.linearRef.${t}`);
 const SPATIAL_STATS_UNDER = ['meanCenter', 'medianCenter', 'standardDistance', 'directionalDistribution', 'nearestNeighbor', 'dbscan', 'kMeans'].map(
   (t) => `processing.run.stats.${t}`,
 );
@@ -511,7 +513,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       // tab (docs/adr/0231 §10), the Katman tools in the Veri tab's Katman panel (docs/adr/0217 §8), Dönüştürme's in its
       // Toplu çevir panel (docs/adr/0218 §12), Geometri üretimi's, Örnekleme's and Genelleştirme's under the Geometri panel's ▾
       // (docs/adr/0219 §7, 0220 §1, 0221 §9).
-      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity', 'spatialStats', 'layers', 'conversion', 'generation', 'sampling', 'generalization'] },
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'linearRef', 'proximity', 'spatialStats', 'layers', 'conversion', 'generation', 'sampling', 'generalization'] },
       { pick: 'Geometri', icon: 'polygon', commands: [], under: GENERATE_UNDER },
       // Yakınlık's five (docs/adr/0215 §5) and Mekânsal istatistik's (docs/adr/0238 §11) join Özet istatistik in the Analiz
       // panel: panels of their own made the tab wider than 1100 pixels.
@@ -523,7 +525,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       // The data's checks together (docs/adr/0202 §8; Düzenle is full): Topoloji kuralları and Veri karşılaştır, one panel
       // since docs/adr/0209 §10 made room for Ağ analizi at 1100 pixels.
       { pick: 'Denetim', icon: 'topologyCheck', commands: ['topology.check', 'topology.rules', 'data.compare'] },
-      // Ağ analizi (docs/adr/0209 §10): Ağlar, the three tools and İşlemler's three, one panel.
+      // Ağ analizi (docs/adr/0209 §10): Ağlar, the three tools and İşlemler's three, one panel; Doğrusal referans's six
+      // under its ▾ (docs/adr/0224 §6).
       {
         pick: 'Ağ analizi',
         icon: 'networks',
@@ -536,6 +539,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
           'processing.run.network.odMatrix',
           'processing.run.network.serviceAreas',
         ],
+        under: LRS_UNDER,
       },
       { menu: 'tools', sections: ['Komut'] },
     ],

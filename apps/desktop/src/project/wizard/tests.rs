@@ -394,6 +394,7 @@ fn axes_screens() {
         let plate = doc
             .model
             .add(Entity::Polygon(PathEntity {
+                ms: None,
                 base: EntityBase {
                     id: 0,
                     layer_id: doc.model.layers().active().to_owned(),

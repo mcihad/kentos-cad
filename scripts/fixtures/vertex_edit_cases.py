@@ -65,8 +65,8 @@ STEP_ADD = "Köşe ekle"
 STEP_REMOVE = "Köşe sil"
 SLACK = 0.0005
 WORDS = {
-    "gis": {"east": "Y", "north": "X", "z": "Z", "radius": "Yarıçap"},
-    "cad": {"east": "X", "north": "Y", "z": "Z", "radius": "Yarıçap"},
+    "gis": {"east": "Y", "north": "X", "z": "Z", "m": "M", "radius": "Yarıçap"},
+    "cad": {"east": "X", "north": "Y", "z": "Z", "m": "M", "radius": "Yarıçap"},
 }
 REFUSALS = {
     "ontoNeighbour": "Köşe komşu köşesinin yerine taşınamaz; köşeyi kaldırmak için satırı silin.",
@@ -175,6 +175,15 @@ def with_paths(o, kind, ps):
     return o
 
 
+def measures_of(o):
+    """A route's measures path by path (docs/adr/0224 §6): a line's ends, a polyline's vertices; none for an area."""
+    if o["kind"] == "line":
+        return [[o.get("ma"), o.get("mb")]]
+    if o["kind"] == "polyline":
+        return [list(o.get("ms") or [None] * len(o["pts"]))]
+    return []
+
+
 def view(o):
     if o["kind"] not in ("line", "polyline", "polygon"):
         return {"kind": o["kind"]}
@@ -184,7 +193,12 @@ def view(o):
         b = [vt.bulge_at(p, i) for i in range(n)]
         out.append({"pts": [[q["x"], q["y"]] for q in p["pts"]], "zs": p["zs"],
                     "bulges": b if any(abs(x) > 1e-12 for x in b) else None})
-    return {"kind": o["kind"], "paths": out}
+    v = {"kind": o["kind"], "paths": out}
+    # A measured route's measures, path by path; none on an object without one.
+    ms = measures_of(o)
+    if any(m is not None for path in ms for m in path):
+        v["ms"] = ms
+    return v
 
 
 def shape(o):
@@ -207,9 +221,29 @@ def cell(objects, a, workspace):
     sh = shape(o)
     p = sh["paths"][k]
     blank = trim(text) == ""
-    v = None if blank and col in ("z", "radius") else number(text)
-    if v is None and not (blank and col in ("z", "radius")):
+    v = None if blank and col in ("z", "m", "radius") else number(text)
+    if v is None and not (blank and col in ("z", "m", "radius")):
         return objects, [f"{PREFIX}{WORDS[workspace][col]} bir sayı olmalı."], None, True
+    if col == "m":
+        # A route's measure (docs/adr/0224 §6): written as it is, empty removes it; the same one writes nothing.
+        ms = measures_of(o)
+        if v == ms[k][i]:
+            return objects, [], None, False
+        if o["layerId"] in LOCKED:
+            return objects, [locked_words(o)], None, False
+        new = copy.deepcopy(o)
+        ms[k][i] = v
+        if o["kind"] == "line":
+            for key, m in zip(("ma", "mb"), ms[0]):
+                if m is None:
+                    new.pop(key, None)
+                else:
+                    new[key] = m
+        elif any(m is not None for m in ms[0]):
+            new["ms"] = ms[0]
+        else:
+            new.pop("ms", None)
+        return replace(objects, new), [], STEP_CELL, False
     if col in ("east", "north"):
         at = p["pts"][i]
         to = {"x": v, "y": at["y"]} if col == "east" else {"x": at["x"], "y": v}
@@ -296,6 +330,10 @@ def drawing():
          "b": vt.LINE["paths"][0]["pts"][1], "za": 812.4},
         {"kind": "polyline", "id": 4, "layerId": "kilitli", "attrs": {}, "pts": [P(0, 0), P(10, 0), P(10, 10)]},
         {"kind": "polygon", "id": 5, "layerId": "cizim", "attrs": {}, "pts": vt.TRIANGLE["paths"][0]["pts"]},
+        # Routes with measures (docs/adr/0224 §6): a polyline with a vertex without one, a line with its start's.
+        {"kind": "polyline", "id": 6, "layerId": "cizim", "attrs": {"Rota": "D-1"}, "pts": [P(486900, 4420100), P(486950, 4420100), P(487000, 4420120)],
+         "ms": [0.0, 50.0, None]},
+        {"kind": "line", "id": 7, "layerId": "cizim", "attrs": {"Rota": "D-2"}, "a": P(486900, 4420200), "b": P(486950, 4420200), "ma": 100.0},
     ]
 
 
@@ -341,6 +379,12 @@ def cases():
     run_cell("Z: aynı kot, yazılmaz", 1, 0, 3, "z", "802.5")
     run_cell("Z: sayı değil", 1, 0, 3, "z", "q")
     run_cell("Z: çizginin kotsuz ucu", 3, 0, 1, "z", "813")
+    # A route's measures (docs/adr/0224 §6): written as they are, in their own unit.
+    run_cell("M: ölçüsüz köşeye ölçü", 6, 0, 2, "m", "120,5")
+    run_cell("M: boş, ölçü kalkar", 6, 0, 1, "m", "")
+    run_cell("M: aynı ölçü, yazılmaz", 6, 0, 0, "m", "0")
+    run_cell("M: sayı değil", 6, 0, 0, "m", "km")
+    run_cell("M: çizginin ölçüsüz ucu", 7, 0, 1, "m", "-40")
     run_cell("Yarıçap: düz kenar yay olur", 1, 0, 0, "radius", "40")
     run_cell("Yarıçap: yay sağa döner", 1, 0, 1, "radius", "-35")
     run_cell("Yarıçap: büyük yay büyük kalır", 1, 0, 3, "radius", "30")

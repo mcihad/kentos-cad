@@ -183,6 +183,7 @@ impl Tool for TangentLine {
             return;
         };
         let line = EntityGeometry::Line {
+            ms: None,
             a: wire(t.a),
             b: wire(t.b),
             zs: None,
@@ -566,6 +567,7 @@ impl RangeRings {
             .iter()
             .map(|&r| EntityGeometry::Circle { c: wire(c), r });
         let rays = rings.rays.iter().map(|&end| EntityGeometry::Line {
+            ms: None,
             a: wire(c),
             b: wire(end),
             zs: None,

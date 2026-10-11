@@ -623,10 +623,14 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 kept += usize::from(w.kept);
                 bent += usize::from(b > CHORD);
                 bend = js_max(bend, b);
-                // Kinds stay on a sheet; the elevations stay with their vertices.
+                // Kinds stay on a sheet; the elevations stay with their vertices, a route's measures too
+                // (docs/adr/0224 §2).
                 let mut e = with_shape(entity, w.shape);
                 if let Some(e) = e.as_mut() {
                     elevation::assign(e, &w.zs);
+                    if let Some(ms) = measures_of(entity) {
+                        elevation::assign_measures(e, &sheet_shape(&before, &ms, sheet).0.zs);
+                    }
                 }
                 e
             }
@@ -649,6 +653,12 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                         });
                         if let Some(e) = e.as_mut() {
                             elevation::assign(e, &w.zs);
+                            // A route's measures stay with their vertices, new ones on an edge linear along it.
+                            if let Some(ms) = measures_of(entity)
+                                && let Ok(wm) = warp_shape(&before, &ms, warp)
+                            {
+                                elevation::assign_measures(e, &wm.zs);
+                            }
                         }
                         e
                     }
@@ -927,4 +937,12 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
                 && assoc.as_ref().is_none_or(|a| pt(&a.seed))
         }
     }
+}
+
+/// A route's measures path by path (`elevation::measure_paths`' order) when
+/// a vertex has one (docs/adr/0224 §2), for a warp to carry as it carries
+/// elevations.
+fn measures_of(entity: &Entity) -> Option<Vec<Vec<Option<f64>>>> {
+    let paths = elevation::measure_paths(entity);
+    elevation::elevated(&paths).then(|| paths.into_iter().map(|p| p.zs).collect())
 }

@@ -14,6 +14,12 @@ export type PathEntity = { pts: Array<Vec2>, bulges?: Array<number>, holes?: Arr
  */
 zs?: Array<number | null>, 
 /**
+ * A polyline's vertices' measures (M) on a route, as many as `pts`;
+ * `null` for a vertex without one; absent when none has one
+ * (docs/adr/0224 §1). A polygon has none: a route is a line.
+ */
+ms?: Array<number | null>, 
+/**
  * A polygon's or a polyline's parts past its first, whose own are the
  * fields above; absent for one part (docs/adr/0143, 0174). A
  * polyline's parts are open, of two vertices or more, without holes.

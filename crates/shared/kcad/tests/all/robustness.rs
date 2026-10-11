@@ -392,6 +392,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 parts: None,
             }),
             1 => Entity::Polyline(PathEntity {
+                ms: None,
                 base: b,
                 pts: points(rng, 2),
                 bulges: rng
@@ -402,6 +403,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 parts: None,
             }),
             2 => Entity::Polygon(PathEntity {
+                ms: None,
                 base: b,
                 pts: points(rng, 3),
                 bulges: rng.chance(50).then(|| vec![rng.float(); 3]),
@@ -534,6 +536,8 @@ fn with_features(doc: &mut DocumentSnapshotV2, mode: u64, rng: &mut Rng) -> u8 {
     let layer = doc.active_layer.clone();
     let b = base(rng, &layer);
     doc.entities.push(Entity::Line(LineEntity {
+        ma: None,
+        mb: None,
         base: b,
         a: point(rng),
         b: point(rng),
@@ -712,6 +716,7 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
     refuse(
         &|d| {
             d.entities[0] = Entity::Polyline(PathEntity {
+                ms: None,
                 base: d.entities[0].base().clone(),
                 pts: vec![Vec2 { x: 0.0, y: 0.0 }; 2],
                 bulges: None,

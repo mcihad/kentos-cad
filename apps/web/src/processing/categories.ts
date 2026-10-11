@@ -26,6 +26,13 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   // docs/adr/0238: where objects lie and how their values sit among their neighbours.
   { id: 'spatialStats', label: 'Mekânsal istatistik', icon: 'statsHotSpot', description: 'Merkezler ve yayılım, en yakın komşu, Moran I, sıcak noktalar, kümeleme' },
   { id: 'network', label: 'Ağ analizi', icon: 'networks', description: 'En yakın tesis, maliyet matrisi ve hizmet alanları' },
+  // docs/adr/0224: routes with measures (M) and the events along them.
+  {
+    id: 'linearRef',
+    label: 'Doğrusal referans',
+    icon: 'linearRef',
+    description: 'Rota oluşturma ve kalibrasyon, olayları rotada gösterme ve çakıştırma, rota boyunca konumlama, M değerleri',
+  },
   // docs/adr/0218: points from objects, lines from points and tables, a path's piece, rings and areas, densified edges.
   { id: 'conversion', label: 'Dönüştürme', icon: 'conversion', description: 'Nesneden nokta, noktalardan ve tablolardan çizgi, çizginin parçası, alan ve çizgi çevirme, köşe ekleme' },
   // docs/adr/0219: cells and triangles of points, bounding geometries, concave hulls, poles of inaccessibility.

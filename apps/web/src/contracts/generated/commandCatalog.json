@@ -226,6 +226,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -4141,6 +4155,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -4527,6 +4557,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -11379,6 +11423,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -15221,6 +15279,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -15607,6 +15681,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -24031,6 +24119,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -25857,6 +25959,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -25963,6 +26081,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -27803,6 +27935,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -29629,6 +29775,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -29735,6 +29897,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -31536,6 +31712,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -33362,6 +33552,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -33468,6 +33674,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -35404,6 +35624,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -37230,6 +37464,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -37336,6 +37586,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -39122,6 +39386,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -40948,6 +41226,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -41054,6 +41348,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -42850,6 +43158,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -44676,6 +44998,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -44782,6 +45120,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -46852,6 +47204,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -48678,6 +49044,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -48784,6 +49166,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -50429,6 +50825,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -51198,6 +51608,20 @@
                     "const": "line",
                     "type": "string"
                   },
+                  "ms": {
+                    "description": "The ends' measures (M) as written (docs/adr/0224 §2), as `zs`;\nabsent: each takes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
                   "zs": {
                     "description": "The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:\neach vertex takes one from the objects the edit names.",
                     "items": {
@@ -51236,6 +51660,20 @@
                   "kind": {
                     "const": "polyline",
                     "type": "string"
+                  },
+                  "ms": {
+                    "description": "The vertices' measures (M) as written (docs/adr/0224 §2), as\n`zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex\ntakes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "parts": {
                     "description": "A multi-part polyline's parts past its first, each its vertices,\narcs and elevations, without holes (docs/adr/0174). The geometry\nis the whole polyline: absent, it has one part, so an edit of a\nmulti-part polyline writes every part.",
@@ -53451,6 +53889,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -55277,6 +55729,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -55383,6 +55851,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -57301,6 +57783,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -59127,6 +59623,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -59233,6 +59745,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -60847,6 +61373,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -61357,6 +61897,20 @@
                     "const": "line",
                     "type": "string"
                   },
+                  "ms": {
+                    "description": "The ends' measures (M) as written (docs/adr/0224 §2), as `zs`;\nabsent: each takes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
                   "zs": {
                     "description": "The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:\neach vertex takes one from the objects the edit names.",
                     "items": {
@@ -61395,6 +61949,20 @@
                   "kind": {
                     "const": "polyline",
                     "type": "string"
+                  },
+                  "ms": {
+                    "description": "The vertices' measures (M) as written (docs/adr/0224 §2), as\n`zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex\ntakes one from the objects the edit names.",
+                    "items": {
+                      "format": "double",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "parts": {
                     "description": "A multi-part polyline's parts past its first, each its vertices,\narcs and elevations, without holes (docs/adr/0174). The geometry\nis the whole polyline: absent, it has one part, so an edit of a\nmulti-part polyline writes every part.",
@@ -63685,6 +64253,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -65511,6 +66093,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -65617,6 +66215,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -67545,6 +68157,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -69371,6 +69997,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -69477,6 +70119,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -71281,6 +71937,20 @@
               "holes": {
                 "items": {
                   "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
                 },
                 "type": [
                   "array",
@@ -73218,6 +73888,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -73324,6 +74010,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },
@@ -75298,6 +75998,20 @@
                   "null"
                 ]
               },
+              "ms": {
+                "description": "A polyline's part's measures, as the polyline's own `ms`\n(docs/adr/0224 §1); an area's part has none.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "pts": {
                 "items": {
                   "$ref": "#/$defs/Vec2"
@@ -77229,6 +77943,22 @@
                   "null"
                 ]
               },
+              "ma": {
+                "description": "The start's measure (M) on a route, in the route's own unit; absent =\nnone (docs/adr/0224 §1).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mb": {
+                "description": "The end's measure; absent = none.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -77335,6 +78065,20 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "ms": {
+                "description": "A polyline's vertices' measures (M) on a route, as many as `pts`;\n`null` for a vertex without one; absent when none has one\n(docs/adr/0224 §1). A polygon has none: a route is a line.",
+                "items": {
+                  "format": "double",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "type": [
+                  "array",
                   "null"
                 ]
               },

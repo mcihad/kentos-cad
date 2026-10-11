@@ -45,6 +45,7 @@ pub(crate) const KML: Words = Words {
     block_empty: "bloğunda KML'ye yazılabilecek nesne yok; yazılmadı",
     block: "yerleştirmeler bloklarının nesneleriyle, açılmış olarak (MultiGeometry) yazıldı; KML'de blok yoktur",
     infinite: "uçsuz doğru ve ışın KML'de gösterilemez; yazılmadı",
+    measure: "KML köşenin ölçüsünü (M) taşımaz; çizgi yazıldı, ölçüleri yazılmadı",
     mixed_z: None,
 };
 

@@ -138,6 +138,8 @@ fn objects() -> Vec<Entity> {
             parts: None,
         }),
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: with("parsel", |b| b.color = Some("#FF0000".into())),
             a: tm(0.0, 0.0),
             b: tm(12.345678, -0.001),
@@ -145,6 +147,7 @@ fn objects() -> Vec<Entity> {
             zb: None,
         }),
         Entity::Polyline(PathEntity {
+            ms: None,
             base: with("yol", |b| b.color = Some("fg".into())),
             pts: vec![tm(0.0, 0.0), tm(10.0, 0.0), tm(10.0, 10.0), tm(0.0, 0.0)],
             bulges: Some(vec![0.0, 0.4142135623730951, 0.0]),
@@ -153,6 +156,7 @@ fn objects() -> Vec<Entity> {
             parts: None,
         }),
         Entity::Polyline(PathEntity {
+            ms: None,
             base: base("yol"),
             pts: vec![tm(0.0, 5.0), tm(3.0, 7.0)],
             bulges: None,
@@ -161,6 +165,7 @@ fn objects() -> Vec<Entity> {
             parts: None,
         }),
         Entity::Polygon(PathEntity {
+            ms: None,
             base: with("parsel", |b| {
                 b.label = Some("123".into());
                 b.attrs.insert("Ada".into(), "45".into());
@@ -186,6 +191,7 @@ fn objects() -> Vec<Entity> {
             parts: None,
         }),
         Entity::Polygon(PathEntity {
+            ms: None,
             base: with("yapi", |b| b.color = Some("#7fb2e5".into())),
             pts: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
             bulges: None,
@@ -911,6 +917,8 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             parts: None,
         }),
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("dup"),
             a: tm(0.0, 0.0),
             b: tm(1.0, 0.0),
@@ -918,6 +926,8 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             zb: None,
         }),
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("yok"),
             a: tm(0.0, 0.0),
             b: tm(0.0, 1.0),
@@ -1029,6 +1039,8 @@ fn an_objects_line_weight_goes_out_as_370_and_comes_back_exactly() {
     // data and comes back exactly, while the file's 370 still is the weight it rounds to.
     let line = |w: Option<f64>, dy: f64| {
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: with("parsel", |b| b.line_weight = w),
             a: tm(dy, 0.0),
             b: tm(dy, 10.0),
@@ -1107,6 +1119,8 @@ fn elevated() -> Vec<Entity> {
     vec![
         // 0-2: a line with both ends, one with an end without, and one at 0 on purpose.
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("parsel"),
             a: tm(0.0, 0.0),
             b: tm(12.5, 3.25),
@@ -1114,6 +1128,8 @@ fn elevated() -> Vec<Entity> {
             zb: Some(-107.25),
         }),
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("parsel"),
             a: tm(1.0, 1.0),
             b: tm(2.0, 2.0),
@@ -1121,6 +1137,8 @@ fn elevated() -> Vec<Entity> {
             zb: Some(12.0),
         }),
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("parsel"),
             a: tm(3.0, 3.0),
             b: tm(4.0, 4.0),
@@ -1129,6 +1147,7 @@ fn elevated() -> Vec<Entity> {
         }),
         // 3-4: a path whose second vertex has none, with the label and attributes DXF cannot hold; one at 0 on purpose.
         Entity::Polyline(PathEntity {
+            ms: None,
             base: with("yol", |b| {
                 b.label = Some("Y1".into());
                 b.attrs.insert("Ad".into(), "Cadde".into());
@@ -1140,6 +1159,7 @@ fn elevated() -> Vec<Entity> {
             parts: None,
         }),
         Entity::Polyline(PathEntity {
+            ms: None,
             base: base("yol"),
             pts: vec![tm(0.0, 5.0), tm(3.0, 7.0), tm(9.0, 9.0)],
             bulges: None,
@@ -1149,6 +1169,7 @@ fn elevated() -> Vec<Entity> {
         }),
         // 5: an area whose outline has a vertex without a height, with a hole that has them and one that has none.
         Entity::Polygon(PathEntity {
+            ms: None,
             base: with("parsel", |b| b.label = Some("123".into())),
             pts: square(),
             bulges: None,
@@ -1169,6 +1190,7 @@ fn elevated() -> Vec<Entity> {
         }),
         // 6-7: arcs at one height (a LWPOLYLINE holds one), at 0 on purpose.
         Entity::Polyline(PathEntity {
+            ms: None,
             base: base("yol"),
             pts: vec![tm(0.0, 20.0), tm(10.0, 20.0), tm(10.0, 30.0)],
             bulges: Some(vec![0.5, 0.0]),
@@ -1177,6 +1199,7 @@ fn elevated() -> Vec<Entity> {
             parts: None,
         }),
         Entity::Polygon(PathEntity {
+            ms: None,
             base: base("yapi"),
             pts: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
             bulges: Some(vec![0.0, -0.25, 0.0]),
@@ -1186,6 +1209,7 @@ fn elevated() -> Vec<Entity> {
         }),
         // 8: arcs at several heights: DXF has no 3D polyline with arcs.
         Entity::Polyline(PathEntity {
+            ms: None,
             base: base("yol"),
             pts: vec![tm(0.0, 40.0), tm(10.0, 40.0), tm(10.0, 50.0)],
             bulges: Some(vec![1.0, 0.0]),
@@ -1335,6 +1359,8 @@ fn a_path_with_arcs_keeps_them_and_holds_one_elevation_at_most() {
 fn what_cannot_be_written_is_left_out_and_said() {
     let bad = |za: f64| {
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("parsel"),
             a: tm(0.0, 0.0),
             b: tm(1.0, 1.0),
@@ -1343,6 +1369,7 @@ fn what_cannot_be_written_is_left_out_and_said() {
         })
     };
     let path = Entity::Polyline(PathEntity {
+        ms: None,
         base: base("yol"),
         pts: vec![tm(0.0, 0.0), tm(1.0, 0.0)],
         bulges: None,
@@ -1364,6 +1391,7 @@ fn what_cannot_be_written_is_left_out_and_said() {
     );
     // A list of elevations that does not match the vertices is flat: nothing to write it from.
     let short = Entity::Polyline(PathEntity {
+        ms: None,
         base: base("yol"),
         pts: vec![tm(0.0, 0.0), tm(1.0, 0.0), tm(2.0, 0.0)],
         bulges: None,
@@ -1394,6 +1422,7 @@ fn a_multi_part_area_is_one_closed_polyline_a_part() {
         zs: None,
     };
     let area = Entity::Polygon(PathEntity {
+        ms: None,
         base: with("parsel", |b| {
             b.attrs.insert("Ada".into(), "101".into());
             b.label = Some("101/5".into());
@@ -1403,6 +1432,7 @@ fn a_multi_part_area_is_one_closed_polyline_a_part() {
         holes: None,
         zs: None,
         parts: Some(vec![kentos_contracts::AreaPart {
+            ms: None,
             pts: ring(20.0),
             bulges: None,
             holes: Some(vec![hole.clone()]),
@@ -1496,6 +1526,8 @@ fn lights() -> DxfWriteInput {
         r: 0.4,
     });
     let arm = Entity::Line(LineEntity {
+        ma: None,
+        mb: None,
         base: base("yapi"),
         a: v(-0.5, 0.0),
         b: v(0.5, 0.0),
@@ -1503,6 +1535,8 @@ fn lights() -> DxfWriteInput {
         zb: None,
     });
     let pole = Entity::Line(LineEntity {
+        ma: None,
+        mb: None,
         base: base(""),
         a: v(1.0, 2.0),
         b: v(1.0, 8.0),
@@ -1510,6 +1544,7 @@ fn lights() -> DxfWriteInput {
         zb: None,
     });
     let foot = Entity::Polygon(PathEntity {
+        ms: None,
         base: base(""),
         pts: vec![v(0.0, 1.0), v(2.0, 1.0), v(2.0, 3.0), v(0.0, 3.0)],
         bulges: None,

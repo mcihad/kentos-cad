@@ -42,12 +42,12 @@ use crate::{
     SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
     SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
-    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
-    SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM,
+    SCHEMA_WITH_NETWORKS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
+    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, line_type, point_symbol, workspace,
@@ -981,7 +981,8 @@ fn has_heights(s: &ProjectSettings) -> bool {
         .is_some_and(|a| *a != AnnotationHeights::default())
 }
 
-/// The oldest schema that holds the drawing: 35 when a layer has a filter
+/// The oldest schema that holds the drawing: 39 when an object of it or of a
+/// block definition has a vertex measure (docs/adr/0224), 35 when a layer has a filter
 /// (docs/adr/0211), 34 when a layer has a time
 /// setting, a group is a scenario or a layer stands for a base layer
 /// (docs/adr/0210), 33 when the project has a
@@ -1047,6 +1048,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                     .is_some_and(labels::has_engine_fields)
                 || labelled(&n.children)
         })
+    }
+    // Schema 39 (docs/adr/0224): a vertex measure of an object of the drawing or of a block definition.
+    if doc.entities.iter().any(has_measure)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(has_measure))
+    {
+        return SCHEMA_WITH_MEASURES;
     }
     // Schema 38 (docs/adr/0243): a raster showing a NetCDF variable, or a mesh's lines.
     if doc.entities.iter().any(|e| match e {
@@ -1278,6 +1288,21 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     schema
 }
 
+/// Whether an object has a vertex measure (a line's end, a polyline's or a
+/// part's `ms`, even one whose every vertex is without): schema 39's fields.
+fn has_measure(e: &Entity) -> bool {
+    match e {
+        Entity::Line(l) => l.ma.is_some() || l.mb.is_some(),
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            p.ms.is_some()
+                || p.parts
+                    .as_ref()
+                    .is_some_and(|parts| parts.iter().any(|q| q.ms.is_some()))
+        }
+        _ => false,
+    }
+}
+
 /// Whether an object has a vertex elevation (a line's end, a path's or a
 /// hole's `zs`, even one whose every vertex is without): schema 4's fields.
 fn has_elevation(e: &Entity) -> bool {
@@ -1391,8 +1416,8 @@ mod tests {
             &["type", "angle", "spacing"],
             // A polygon's hole (docs/adr/0142).
             &["zs", "pts", "bulges"],
-            // A polygon's part (docs/adr/0143).
-            &["zs", "pts", "holes", "bulges"],
+            // A polygon's part (docs/adr/0143), a polyline's with its measures (docs/adr/0224).
+            &["ms", "zs", "pts", "holes", "bulges"],
             // A block definition and an attribute definition (docs/adr/0144).
             &[
                 "id",

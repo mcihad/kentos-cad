@@ -393,6 +393,8 @@ impl Emitter {
                 self.push(
                     layer,
                     Entity::Line(LineEntity {
+                        ma: None,
+                        mb: None,
                         base: b,
                         a: v(a),
                         b: v(z),
@@ -417,6 +419,7 @@ impl Emitter {
                 self.push(
                     layer,
                     Entity::Polyline(PathEntity {
+                        ms: None,
                         base: b,
                         pts,
                         bulges: None,
@@ -533,6 +536,7 @@ impl Emitter {
                 self.push(
                     layer,
                     Entity::Polygon(PathEntity {
+                        ms: None,
                         base: b,
                         pts,
                         bulges: None,
@@ -587,6 +591,7 @@ impl Emitter {
         self.push(
             layer,
             Entity::Polygon(PathEntity {
+                ms: None,
                 base: b,
                 pts,
                 bulges: None,
@@ -762,6 +767,8 @@ impl Emitter {
                     let base = next_base();
                     let entity = match (pts.as_slice(), closed) {
                         ([a, z], false) => Entity::Line(LineEntity {
+                            ma: None,
+                            mb: None,
                             base,
                             a: *a,
                             b: *z,
@@ -769,6 +776,7 @@ impl Emitter {
                             zb: None,
                         }),
                         (_, true) => Entity::Polygon(PathEntity {
+                            ms: None,
                             base,
                             pts,
                             bulges: None,
@@ -777,6 +785,7 @@ impl Emitter {
                             parts: None,
                         }),
                         _ => Entity::Polyline(PathEntity {
+                            ms: None,
                             base,
                             pts,
                             bulges: None,

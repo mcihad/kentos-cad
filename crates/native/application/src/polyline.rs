@@ -131,6 +131,7 @@ fn check(doc: &Document, input: &PolylineCreate) -> Result<Vec<CommandWarning>, 
 /// point, see the module); `id` is the document's to give (0 in a plan).
 fn polyline(input: PolylineCreate, id: u32) -> Entity {
     Entity::Polyline(PathEntity {
+        ms: None,
         base: EntityBase {
             id,
             layer_id: input.layer_id,

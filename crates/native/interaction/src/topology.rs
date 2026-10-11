@@ -468,6 +468,7 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
         Entity::Line(_) => {
             let p = paths.first()?;
             Some(EntityGeometry::Line {
+                ms: None,
                 a: w(*p.pts.first()?),
                 b: w(*p.pts.get(1)?),
                 zs: Some(p.zs.clone()),
@@ -481,6 +482,7 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
                 .map(|q| {
                     let own = ring(q);
                     AreaPart {
+                        ms: None,
                         pts: own.pts,
                         bulges: own.bulges,
                         holes: None,
@@ -489,6 +491,7 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
                 })
                 .collect();
             Some(EntityGeometry::Polyline {
+                ms: None,
                 pts: pts(p),
                 bulges: bulges_of(p.pts.len(), p.bulges.as_deref()),
                 zs: Some(p.zs.clone()),
@@ -510,6 +513,7 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
                     part_holes.push(ring(next.next()?));
                 }
                 parts.push(AreaPart {
+                    ms: None,
                     pts: own.pts,
                     bulges: own.bulges,
                     holes: (!part_holes.is_empty()).then_some(part_holes),

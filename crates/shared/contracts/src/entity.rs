@@ -113,6 +113,15 @@ pub struct LineEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zb: Option<f64>,
+    /// The start's measure (M) on a route, in the route's own unit; absent =
+    /// none (docs/adr/0224 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ma: Option<f64>,
+    /// The end's measure; absent = none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mb: Option<f64>,
 }
 
 /// A closed ring in vertex + bulge form (a polygon hole).
@@ -152,6 +161,11 @@ pub struct AreaPart {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zs: Option<Vec<Option<f64>>>,
+    /// A polyline's part's measures, as the polyline's own `ms`
+    /// (docs/adr/0224 §1); an area's part has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ms: Option<Vec<Option<f64>>>,
 }
 
 /// Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
@@ -175,6 +189,12 @@ pub struct PathEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zs: Option<Vec<Option<f64>>>,
+    /// A polyline's vertices' measures (M) on a route, as many as `pts`;
+    /// `null` for a vertex without one; absent when none has one
+    /// (docs/adr/0224 §1). A polygon has none: a route is a line.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ms: Option<Vec<Option<f64>>>,
     /// A polygon's or a polyline's parts past its first, whose own are the
     /// fields above; absent for one part (docs/adr/0143, 0174). A
     /// polyline's parts are open, of two vertices or more, without holes.

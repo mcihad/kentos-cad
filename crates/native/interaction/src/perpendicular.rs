@@ -158,6 +158,7 @@ impl Perpendicular {
             CreateOperation::PerpendicularIn
         };
         let line = EntityGeometry::Line {
+            ms: None,
             a: wire(a),
             b: wire(b),
             zs: None,

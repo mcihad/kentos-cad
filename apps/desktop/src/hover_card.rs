@@ -87,6 +87,14 @@ fn plain_decimal(text: &str) -> bool {
     }
 }
 
+/// A route's first and last measure in walked order (docs/adr/0224 §6); none without one.
+fn measure_span(e: &Entity) -> Option<(f64, f64)> {
+    let paths = kentos_native_application::elevation::measure_paths(e);
+    let mut ms = paths.iter().flat_map(|p| p.zs.iter().flatten().copied());
+    let first = ms.next()?;
+    Some((first, ms.last().unwrap_or(first)))
+}
+
 /// What a card shows: its title, the object's layer and colour, its rows
 /// (label, value, whether the value is a number).
 #[derive(Clone, Debug, PartialEq)]
@@ -172,6 +180,11 @@ pub(crate) fn card(
         if let Some((name, length)) = space_length(e) {
             rows.push((name, format.length(length), true));
         }
+    }
+    // A route's measures (docs/adr/0224 §6): from its first measured vertex to its last.
+    if let Some((first, last)) = measure_span(e) {
+        let t = |m: f64| kentos_geometry_core::display::fixed(m, format.length_decimals);
+        rows.push(("M", format!("{} → {}", t(first), t(last)), true));
     }
     match e {
         Entity::Circle(c) => rows.push(("Yarıçap", format.length(c.r), true)),
@@ -348,6 +361,7 @@ mod tests {
             panic!("an area");
         };
         two.parts = Some(vec![kentos_contracts::AreaPart {
+            ms: None,
             pts: two.pts.clone(),
             bulges: None,
             holes: two.holes.clone(),
@@ -405,12 +419,14 @@ mod tests {
                 .collect()
         };
         let road = Entity::Polyline(PathEntity {
+            ms: None,
             base: base(),
             pts: vec![at(0.0, 0.0), at(10.0, 0.0)],
             bulges: None,
             holes: None,
             zs: None,
             parts: Some(vec![AreaPart {
+                ms: None,
                 pts: vec![at(20.0, 0.0), at(25.0, 0.0)],
                 bulges: None,
                 holes: None,
@@ -472,6 +488,8 @@ mod tests {
         // 40 m in plan rising 9 m: 41 m in space.
         let line = |za, zb| {
             Entity::Line(LineEntity {
+                ma: None,
+                mb: None,
                 base: base(),
                 a: at(0.0, 0.0),
                 b: at(40.0, 0.0),
@@ -493,6 +511,7 @@ mod tests {
         // An area: the perimeter, its hole's too, then the one in space; the hole is counted closed.
         let area = |hole: Option<Vec<Option<f64>>>| {
             Entity::Polygon(PathEntity {
+                ms: None,
                 base: base(),
                 pts: vec![at(0.0, 0.0), at(20.0, 0.0), at(20.0, 10.0), at(0.0, 10.0)],
                 bulges: None,

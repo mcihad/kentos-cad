@@ -114,11 +114,13 @@ export function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E
     if (Array.isArray(out.parts) && was) out.parts = (out.parts as ElevatedPart[]).map((part, k) => withPartElevations(part, was[k]));
   }
   if (Array.isArray(out.zs) && (!Array.isArray(out.pts) || out.zs.length !== out.pts.length)) out.zs = undefined;
+  // A route's measures stay with their vertices too (docs/adr/0224 §2).
+  if (Array.isArray(out.ms) && (!Array.isArray(out.pts) || out.ms.length !== out.pts.length)) out.ms = undefined;
   return out as unknown as E;
 }
 
-/** A ring of an area (a hole) and a part of it, with the elevations their vertices may carry. */
-type Ring = { pts: unknown[]; zs?: (number | null)[] };
+/** A ring of an area (a hole) and a part of it, with the elevations (and a polyline's part the measures) their vertices may carry. */
+type Ring = { pts: unknown[]; zs?: (number | null)[]; ms?: (number | null)[] };
 type ElevatedPart = Ring & { holes?: Ring[] };
 
 /** `now`, the rings a transform gave back, with the elevations of `was` (the same ring before it) where the vertex count is the same. */
@@ -131,6 +133,7 @@ function withPartElevations(part: ElevatedPart, was: ElevatedPart | undefined): 
   if (!was) return part;
   const out = { ...part };
   if (was.zs && was.pts.length === part.pts.length) out.zs = was.zs;
+  if (was.ms && was.pts.length === part.pts.length) out.ms = was.ms;
   if (Array.isArray(out.holes) && was.holes?.some((h) => h.zs)) out.holes = withElevations(out.holes, was.holes);
   return out;
 }

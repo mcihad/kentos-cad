@@ -787,8 +787,8 @@ fn holes_back(
     })
 }
 
-/// The core's parts back, each keeping its own elevations and its holes'
-/// as `holes_back` does (docs/adr/0143).
+/// The core's parts back, each keeping its own elevations, measures
+/// (docs/adr/0224) and its holes' as `holes_back` does (docs/adr/0143).
 fn parts_back(parts: Option<Vec<Part>>, before: Option<&[AreaPart]>) -> Option<Vec<AreaPart>> {
     parts.map(|ps| {
         ps.into_iter()
@@ -796,14 +796,13 @@ fn parts_back(parts: Option<Vec<Part>>, before: Option<&[AreaPart]>) -> Option<V
             .map(|(i, p)| {
                 let was = before.and_then(|b| b.get(i));
                 let pts = back(p.pts);
-                let zs = was
-                    .filter(|w| w.pts.len() == pts.len())
-                    .and_then(|w| w.zs.clone());
+                let same = was.filter(|w| w.pts.len() == pts.len());
                 AreaPart {
+                    zs: same.and_then(|w| w.zs.clone()),
+                    ms: same.and_then(|w| w.ms.clone()),
                     holes: holes_back(p.holes, was.and_then(|w| w.holes.as_deref())),
                     pts,
                     bulges: p.bulges,
-                    zs,
                 }
             })
             .collect()
@@ -841,11 +840,14 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.bulges = bulges;
             let before = e.holes.take();
             e.holes = holes_back(holes, before.as_deref());
-            // Every part too, with its elevations (docs/adr/0174).
+            // Every part too, with its elevations and measures (docs/adr/0174, 0224).
             let was = e.parts.take();
             e.parts = parts_back(parts, was.as_deref());
             if e.zs.as_ref().is_some_and(|zs| zs.len() != e.pts.len()) {
                 e.zs = None;
+            }
+            if e.ms.as_ref().is_some_and(|ms| ms.len() != e.pts.len()) {
+                e.ms = None;
             }
         }
         (
@@ -1107,20 +1109,25 @@ pub fn unlinked(mut entity: Entity) -> Entity {
 pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
     match geometry.clone() {
         EntityGeometry::Point { p, z, parts } => Entity::Point(PointEntity { base, p, z, parts }),
-        EntityGeometry::Line { a, b, zs } => {
-            let z = |k: usize| zs.as_ref().and_then(|zs| zs.get(k).copied().flatten());
+        EntityGeometry::Line { a, b, zs, ms } => {
+            let at = |list: &Option<Vec<Option<f64>>>, k: usize| {
+                list.as_ref().and_then(|l| l.get(k).copied().flatten())
+            };
             Entity::Line(LineEntity {
                 base,
                 a,
                 b,
-                za: z(0),
-                zb: z(1),
+                za: at(&zs, 0),
+                zb: at(&zs, 1),
+                ma: at(&ms, 0),
+                mb: at(&ms, 1),
             })
         }
         EntityGeometry::Polyline {
             pts,
             bulges,
             zs,
+            ms,
             parts,
         } => Entity::Polyline(PathEntity {
             base,
@@ -1128,11 +1135,13 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             bulges,
             holes: None,
             zs: held(zs),
-            // Every part as written, its elevations held as the polyline's (docs/adr/0174).
+            ms: held(ms),
+            // Every part as written, its elevations and measures held as the polyline's (docs/adr/0174, 0224).
             parts: parts.map(|ps| {
                 ps.into_iter()
                     .map(|mut p| {
                         p.zs = held(p.zs);
+                        p.ms = held(p.ms);
                         p.holes = None;
                         p
                     })
@@ -1157,6 +1166,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                 })
             };
             Entity::Polygon(PathEntity {
+                ms: None,
                 base,
                 pts,
                 bulges,
@@ -1355,6 +1365,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             a: p(a),
             b: p(b),
             zs: None,
+            ms: None,
         },
         Shape::Polyline {
             pts, bulges, parts, ..
@@ -1362,6 +1373,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             pts: back(pts),
             bulges,
             zs: None,
+            ms: None,
             parts: parts_back(parts, None).map(|ps| {
                 ps.into_iter()
                     .map(|mut q| {

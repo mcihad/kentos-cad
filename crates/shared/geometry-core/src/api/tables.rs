@@ -109,4 +109,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::ops::georef::OPS,
     crate::ops::contour_elevations::OPS,
     crate::time::OPS,
+    crate::ops::lrs::OPS,
 ];

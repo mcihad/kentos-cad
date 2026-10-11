@@ -138,6 +138,15 @@ impl App {
                 Length::FillPortion(2),
             ),
         ]);
+        // A measured route's measures (docs/adr/0224 §6): their own unit, written as they are.
+        if super::edit::is_measured(e) {
+            cols.push(col(
+                Key::Value(Column::M),
+                "M (ölçü)".into(),
+                true,
+                Length::FillPortion(2),
+            ));
+        }
         // A line's edge takes no arc: its column would stay empty.
         if kind != kentos_geometry_core::ops::vertex_table::Kind::Line {
             cols.push(col(
@@ -228,9 +237,11 @@ impl App {
                             label::muted(value).into()
                         };
                         match c.edit() {
-                            Some(col) if col != Column::Radius => mouse_area(shown)
-                                .on_double_click(msg(Event::Edit(i, col)))
-                                .into(),
+                            Some(col) if !matches!(col, Column::Radius | Column::M) => {
+                                mouse_area(shown)
+                                    .on_double_click(msg(Event::Edit(i, col)))
+                                    .into()
+                            }
                             _ => shown,
                         }
                     });
@@ -265,6 +276,12 @@ impl App {
                         Key::Value(Column::North) => format.coord(r.p.y),
                         Key::Value(Column::Z) => {
                             r.z.map(|z| format.length_bare(z)).unwrap_or_default()
+                        }
+                        Key::Value(Column::M) => {
+                            r.m.map(|m| {
+                                kentos_geometry_core::display::fixed(m, format.length_decimals)
+                            })
+                            .unwrap_or_default()
                         }
                         Key::Value(Column::Radius) => {
                             r.radius.map(|v| format.length_bare(v)).unwrap_or_default()

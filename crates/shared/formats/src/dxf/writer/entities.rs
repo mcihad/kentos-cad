@@ -476,6 +476,14 @@ impl Writer<'_> {
                 0,
             );
         }
+        // A route's measures (docs/adr/0224): DXF has no vertex measure; the line is written without them.
+        if crate::import::has_measure(e) {
+            self.report.note(
+                "Ölçü (M)",
+                "DXF köşenin ölçüsünü (M) taşımaz; çizgi yazıldı, ölçüleri yazılmadı",
+                0,
+            );
+        }
         let written = match e {
             Entity::Point(p) => {
                 // A multi-point object's every point a POINT with the object's data (docs/adr/0174).
@@ -956,6 +964,7 @@ impl Writer<'_> {
         let parts = p.parts.as_deref().unwrap_or(&[]);
         for part in parts {
             let part = PathEntity {
+                ms: None,
                 base: p.base.clone(),
                 pts: part.pts.clone(),
                 bulges: part.bulges.clone(),

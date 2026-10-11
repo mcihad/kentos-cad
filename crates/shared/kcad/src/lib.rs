@@ -332,8 +332,16 @@ pub const SCHEMA_WITH_VARIABLES: u32 = 37;
 /// or older, byte for byte; a reader of those refuses them rather than lose them.
 pub const SCHEMA_WITH_MULTIDIM: u32 = 38;
 
+/// Document schema 39 (docs/specs/kcad-v2.md §6.6): schema 38 and vertex
+/// measures (M), a line's `ma` and `mb`, a polyline's and its parts' `ms`
+/// (docs/adr/0224 §1). A writer writes it only when an object of the
+/// drawing or of a block definition has one: any other drawing stays 38 or
+/// older, byte for byte; a reader of those refuses them rather than lose
+/// them. An area has none.
+pub const SCHEMA_WITH_MEASURES: u32 = 39;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 37] = [
+pub const SCHEMAS: [u32; 38] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -371,6 +379,7 @@ pub const SCHEMAS: [u32; 37] = [
     SCHEMA_WITH_LABELS,
     SCHEMA_WITH_VARIABLES,
     SCHEMA_WITH_MULTIDIM,
+    SCHEMA_WITH_MEASURES,
 ];
 
 /// The file a drawing is saved as.

@@ -60,6 +60,8 @@ fn triangle() -> Vec<Vec2> {
 
 fn line(id: u32, za: Option<f64>, zb: Option<f64>) -> Entity {
     Entity::Line(LineEntity {
+        ma: None,
+        mb: None,
         base: base(id),
         a: v(1.0, 2.0),
         b: v(3.0, 4.0),
@@ -70,6 +72,7 @@ fn line(id: u32, za: Option<f64>, zb: Option<f64>) -> Entity {
 
 fn path(id: u32, polygon: bool, zs: Option<Vec<Option<f64>>>) -> Entity {
     let p = PathEntity {
+        ms: None,
         base: base(id),
         pts: triangle(),
         bulges: None,
@@ -345,8 +348,8 @@ fn the_readers_errors_name_their_places() {
     let e = refused("broken/elevation-in-schema-3.kcad");
     assert_eq!(e.code, Code::UnknownField);
     assert!(e.message.contains("document/entities/0/polyline/zs"), "{e}");
-    // The newest schema this codec knows is 38 (multidimensional rasters, docs/adr/0243).
-    let e = refused("broken/schema-version-39.kcad");
+    // The newest schema this codec knows is 39 (vertex measures, docs/adr/0224).
+    let e = refused("broken/schema-version-40.kcad");
     assert_eq!(e.code, Code::SchemaVersion);
     assert!(
         e.message

@@ -44,6 +44,7 @@ pub(crate) const GPX: Words = Words {
     block_empty: "bloğunda GPX'e yazılabilecek nesne yok; yazılmadı",
     block: "yerleştirmeler bloklarının nesneleriyle, açılmış olarak yazıldı; GPX'te blok yoktur",
     infinite: "uçsuz doğru ve ışın GPX'te gösterilemez; yazılmadı",
+    measure: "GPX köşenin ölçüsünü (M) taşımaz; iz yazıldı, ölçüleri yazılmadı",
     mixed_z: None,
 };
 

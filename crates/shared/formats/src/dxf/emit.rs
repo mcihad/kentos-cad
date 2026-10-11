@@ -1050,6 +1050,8 @@ impl<'l> Emitter<'l> {
                 };
                 let (a, bb) = (ctx.tf.apply(xy(*a)), ctx.tf.apply(xy(*bb)));
                 self.push(Entity::Line(LineEntity {
+                    ma: None,
+                    mb: None,
                     base: b(),
                     a,
                     b: bb,
@@ -1269,6 +1271,7 @@ impl<'l> Emitter<'l> {
                     return self.skip(&e.name, "alanı olmayan (köşeleri çakışık) yüzey", e.line);
                 }
                 self.push(Entity::Polygon(PathEntity {
+                    ms: None,
                     base: b(),
                     pts: ring,
                     bulges: None,
@@ -1688,6 +1691,7 @@ impl<'l> Emitter<'l> {
         let bulges = bulges.iter().any(|&x| x != 0.0).then_some(bulges);
         if closed && (pts.len() >= 3 || bulges.is_some()) {
             self.push(Entity::Polygon(PathEntity {
+                ms: None,
                 base: b,
                 pts,
                 bulges,
@@ -1697,6 +1701,7 @@ impl<'l> Emitter<'l> {
             }));
         } else {
             self.push(Entity::Polyline(PathEntity {
+                ms: None,
                 base: b,
                 pts,
                 bulges,

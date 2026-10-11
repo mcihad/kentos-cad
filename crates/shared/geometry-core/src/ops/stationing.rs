@@ -21,6 +21,9 @@ pub const MOST_STATIONS: usize = 20_000;
 pub const NO_ROUTE: &str = "Bu nesnenin üzerinde yürünecek tek bir yolu yok: çizgi, çoklu çizgi, yay, daire, elips, eğri ya da tek parçalı alan seçin.";
 /// The interval is no length.
 pub const BAD_INTERVAL: &str = "Aralık sıfırdan büyük bir uzunluk olmalı.";
+/// Km yaz by measure on a route without one (docs/adr/0224 §6).
+pub const NO_MEASURES: &str =
+    "Bu güzergâhın ölçüsü (M) yok: Ölçü'yü Uzunluk yapın ya da ölçülü bir rota seçin.";
 
 /// Where the stations are (docs/adr/0189 §2).
 #[derive(Clone, Debug, PartialEq)]
@@ -254,6 +257,82 @@ pub fn stations(e: &crate::entity::Shape, rules: &Rules) -> Result<Vec<Station>,
         .collect())
 }
 
+/// The stations of a measured route by its measures (docs/adr/0224 §6):
+/// the multiples of the interval within its least and most measure, and
+/// its first and last measure (walked order) when asked; each at the first
+/// place in walked order with that measure, the route running there in its
+/// measure direction; a station within 10⁻⁹ m of another is one. `start`
+/// and `reverse` are the measures' own here and not read.
+pub fn measure_stations(
+    route: &crate::ops::lrs::Route,
+    rules: &Rules,
+) -> Result<Vec<Station>, String> {
+    if !(rules.interval > 0.0 && rules.interval.is_finite()) {
+        return Err(BAD_INTERVAL.to_owned());
+    }
+    let walk = crate::ops::lrs::Walk::new(route);
+    let (Some((least, most)), Some((first_m, last_m))) = (walk.range(), walk.ends()) else {
+        return Err(NO_MEASURES.to_owned());
+    };
+    let interval = rules.interval;
+    let first = ((least - 1e-9) / interval).ceil();
+    let last = js_floor((most + 1e-9) / interval);
+    let count = if last >= first {
+        last - first + 1.0
+    } else {
+        0.0
+    };
+    if count > MOST_STATIONS as f64 {
+        return Err(format!(
+            "Bu aralıkla {} istasyon olur, en çok {} yazılır; aralığı büyütün.",
+            count as u64, MOST_STATIONS
+        ));
+    }
+    let step = interval_decimals(interval);
+    let mut values: Vec<(f64, usize)> = Vec::new();
+    if rules.ends {
+        values.push((first_m, rules.decimals));
+    }
+    let mut k = first;
+    while k <= last {
+        values.push(((k * interval).clamp(least, most), step));
+        k += 1.0;
+    }
+    if rules.ends {
+        values.push((last_m, rules.decimals));
+    }
+    let mut at: Vec<(f64, f64, usize, Vec2, Vec2)> = values
+        .into_iter()
+        .filter_map(|(m, d)| {
+            let (point, tangent, s) = walk.frame_at(m)?;
+            Some((s, m, d, point, tangent))
+        })
+        .collect();
+    at.sort_by(|a, b| a.0.total_cmp(&b.0));
+    // One station where two meet: the multiple's, written with the interval's decimals.
+    let mut kept: Vec<(f64, f64, usize, Vec2, Vec2)> = Vec::new();
+    for x in at {
+        match kept.last_mut() {
+            Some(last) if (x.0 - last.0).abs() <= 1e-9 => {
+                if x.2 == step && last.2 != step {
+                    *last = x;
+                }
+            }
+            _ => kept.push(x),
+        }
+    }
+    Ok(kept
+        .into_iter()
+        .map(|(s, km, d, point, tangent)| Station {
+            s,
+            km,
+            text: km_text(km, d),
+            point,
+            tangent,
+        })
+        .collect())
+}
+
 /// The objects at the stations (docs/adr/0189 §3): a tick square to the
 /// route, the km text past it on its side, square to the route and upright
 /// (past a right angle either way it turns half a turn and hangs on its
@@ -343,20 +422,31 @@ pub struct Answer {
 
 crate::json_struct!(out Answer { stationing, problem });
 
-pub(crate) static OPS: &[Op] =
-    &[op!(
-        "stationing",
-        |e: Entity, rules: Rules, look: Look| match stationing(&e.shape, &rules, &look) {
-            Ok(s) => Answer {
-                stationing: Some(s),
-                problem: None,
-            },
-            Err(why) => Answer {
-                stationing: None,
-                problem: Some(why),
-            },
-        }
-    )];
+fn answer(got: Result<Stationing, String>) -> Answer {
+    match got {
+        Ok(s) => Answer {
+            stationing: Some(s),
+            problem: None,
+        },
+        Err(why) => Answer {
+            stationing: None,
+            problem: Some(why),
+        },
+    }
+}
+
+pub(crate) static OPS: &[Op] = &[
+    op!("stationing", |e: Entity, rules: Rules, look: Look| answer(
+        stationing(&e.shape, &rules, &look)
+    )),
+    // By a measured route's measures (docs/adr/0224 §6).
+    op!(
+        "stationingMeasure",
+        |route: crate::ops::lrs::Route, rules: Rules, look: Look| answer(
+            measure_stations(&route, &rules).map(|s| objects(s, &look))
+        )
+    ),
+];
 
 #[cfg(test)]
 mod tests {

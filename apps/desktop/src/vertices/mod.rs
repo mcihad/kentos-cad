@@ -30,7 +30,7 @@ use std::rc::Rc;
 use iced::Task;
 use kentos_contracts::Entity;
 use kentos_domain::Slot;
-use kentos_geometry_core::ops::vertex_table::{Kind, Row};
+use kentos_geometry_core::ops::vertex_table::Kind;
 
 use crate::app::{App, Message};
 
@@ -39,7 +39,7 @@ pub mod edit;
 mod tests;
 mod view;
 
-use edit::{At, Column, cell_editable, cell_text, kind_of, rows_of};
+use edit::{At, Column, TableRow, cell_editable, cell_text, kind_of, rows_of};
 
 /// The tab's words (the web's `VERTEX_TEXTS`).
 pub mod texts {
@@ -150,7 +150,7 @@ pub(crate) struct VertexPanel {
     /// Whether the table has the keyboard: a row was pressed last (Delete
     /// is then the table's, not the drawing's Sil).
     pub(crate) keyboard: bool,
-    cache: RefCell<Option<(Key, Rc<Vec<Row>>)>>,
+    cache: RefCell<Option<(Key, Rc<Vec<TableRow>>)>>,
 }
 
 impl VertexPanel {
@@ -180,7 +180,7 @@ impl VertexPanel {
 
     /// Where the draft's row stands among the rows shown (under its
     /// vertex's row), when there is a draft and its vertex is there.
-    fn draft_at(&self, rows: &[Row]) -> Option<usize> {
+    fn draft_at(&self, rows: &[TableRow]) -> Option<usize> {
         let (after, _) = self.draft.as_ref()?;
         rows.iter()
             .position(|r| r.path == after.path && r.index == after.index)
@@ -188,7 +188,7 @@ impl VertexPanel {
     }
 
     /// What the row shown at `i` is.
-    fn shown(&self, rows: &[Row], i: usize) -> Shown {
+    fn shown(&self, rows: &[TableRow], i: usize) -> Shown {
         match self.draft_at(rows) {
             Some(d) if i == d => Shown::Draft,
             Some(d) if i > d => Shown::Row(i - 1),
@@ -233,7 +233,7 @@ pub fn click_rows(
 /// Shift+Tab left; none past the ends.
 pub fn next_cell(
     kind: Kind,
-    rows: &[Row],
+    rows: &[TableRow],
     at: usize,
     col: Column,
     walk: Walk,
@@ -337,7 +337,7 @@ impl App {
     }
 
     /// The object's rows, worked out again only when the drawing changed.
-    pub(crate) fn vertex_rows(&self, slot: Slot) -> Rc<Vec<Row>> {
+    pub(crate) fn vertex_rows(&self, slot: Slot) -> Rc<Vec<TableRow>> {
         let Some(doc) = &self.document else {
             return Rc::default();
         };
@@ -442,7 +442,9 @@ impl App {
                     return Task::none();
                 }
                 return match self.vertices.shown(&rows, i) {
-                    Shown::Draft if col != Column::Radius => self.edit_draft(col),
+                    Shown::Draft if !matches!(col, Column::Radius | Column::M) => {
+                        self.edit_draft(col)
+                    }
                     Shown::Draft => Task::none(),
                     Shown::Row(i) => {
                         let (Some(at), Some(row)) = (at_of(i), rows.get(i)) else {
@@ -542,7 +544,7 @@ impl App {
     }
 
     /// The cell edited from now (none: no editor), its text the value's.
-    fn edit_vertex(&mut self, to: Option<(At, Column)>, row: &Row) -> Task<Message> {
+    fn edit_vertex(&mut self, to: Option<(At, Column)>, row: &TableRow) -> Task<Message> {
         self.vertices.editing = to.map(|(at, col)| (Cell::Vertex(at), col));
         let Some((_, col)) = to else {
             return Task::none();
@@ -565,7 +567,7 @@ impl App {
             Column::East => d.east.clone(),
             Column::North => d.north.clone(),
             Column::Z => d.z.clone(),
-            Column::Radius => return Task::none(),
+            Column::M | Column::Radius => return Task::none(),
         };
         self.vertices.editing = Some((Cell::Draft, col));
         focus_field()
@@ -574,7 +576,12 @@ impl App {
     /// The edit ends with the editor's text: written, then the editor goes
     /// `walk`'s way (none: it stops). A value refused keeps the cell open
     /// with what was typed when a key ended it.
-    fn finish_vertex(&mut self, slot: Slot, rows: &[Row], walk: Option<Walk>) -> Task<Message> {
+    fn finish_vertex(
+        &mut self,
+        slot: Slot,
+        rows: &[TableRow],
+        walk: Option<Walk>,
+    ) -> Task<Message> {
         let Some((cell, col)) = self.vertices.editing else {
             return Task::none();
         };
@@ -655,7 +662,7 @@ impl App {
             Column::East => d.east = text,
             Column::North => d.north = text,
             Column::Z => d.z = text,
-            Column::Radius => {}
+            Column::M | Column::Radius => {}
         }
         self.vertices.draft = Some((after, d.clone()));
         let cells = [Column::East, Column::North, Column::Z];

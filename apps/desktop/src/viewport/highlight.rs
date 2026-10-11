@@ -298,6 +298,7 @@ mod tests {
                     .map(|(x, y)| Wire { x, y })
                     .to_vec();
                     snapshot.entities.push(Entity::Polygon(PathEntity {
+                        ms: None,
                         base: base(id, &layer),
                         pts,
                         bulges: None,
@@ -309,6 +310,8 @@ mod tests {
                 }
                 let y = n + row as f64 * 20.0 + 19.0;
                 snapshot.entities.push(Entity::Line(LineEntity {
+                    ma: None,
+                    mb: None,
                     base: base(id, &layer),
                     a: Wire { x: e, y },
                     b: Wire {

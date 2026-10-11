@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 28] = [
+pub const CATEGORIES: [Category; 29] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -90,6 +90,13 @@ pub const CATEGORIES: [Category; 28] = [
         "Ağ analizi",
         "networks",
         "En yakın tesis, maliyet matrisi ve hizmet alanları",
+    ),
+    // docs/adr/0224: routes with measures (M) and the events along them.
+    category(
+        "linearRef",
+        "Doğrusal referans",
+        "linearRef",
+        "Rota oluşturma ve kalibrasyon, olayları rotada gösterme ve çakıştırma, rota boyunca konumlama, M değerleri",
     ),
     // docs/adr/0218: points from objects, lines from points and tables, a path's piece, rings and areas, densified edges.
     category(

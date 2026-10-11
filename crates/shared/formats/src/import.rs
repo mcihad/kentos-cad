@@ -82,6 +82,17 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
     b
 }
 
+/// Whether an object has a measure (M, docs/adr/0224): an end of a line, a
+/// vertex of a polyline or of its part.
+pub fn has_measure(e: &Entity) -> bool {
+    let some = |ms: &Option<Vec<Option<f64>>>| ms.iter().flatten().any(Option::is_some);
+    match e {
+        Entity::Line(l) => l.ma.is_some() || l.mb.is_some(),
+        Entity::Polyline(p) => some(&p.ms) || p.parts.iter().flatten().any(|q| some(&q.ms)),
+        _ => false,
+    }
+}
+
 /// Whether an object has an elevation: a point's, an end of a line, a vertex
 /// of a path, or of a hole or a part of an area (docs/adr/0142, 0143).
 pub fn has_elevation(e: &Entity) -> bool {
@@ -241,6 +252,14 @@ pub fn summarise(result: &mut ImportResult) {
         result.report.source.push(SourceFact {
             label: "Kotlu nesne".into(),
             value: elevated.to_string(),
+        });
+    }
+    // A route's measures (docs/adr/0224): how many objects brought theirs.
+    let measured = result.entities.iter().filter(|e| has_measure(e)).count();
+    if measured > 0 {
+        result.report.source.push(SourceFact {
+            label: "Ölçülü nesne".into(),
+            value: measured.to_string(),
         });
     }
 }

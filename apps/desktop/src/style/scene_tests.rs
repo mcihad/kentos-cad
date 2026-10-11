@@ -81,6 +81,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             })
             .collect();
         entities.push(Entity::Polygon(PathEntity {
+            ms: None,
             base: base(i as u32 + 1, "parsel"),
             pts,
             bulges: None,
@@ -92,6 +93,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
     for i in 0..10 {
         let y = 4_420_000.0 + f64::from(i) * 100.0;
         entities.push(Entity::Polyline(PathEntity {
+            ms: None,
             base: base(n as u32 + i + 1, "yol"),
             pts: vec![
                 Vec2 { x: 486_000.0, y },

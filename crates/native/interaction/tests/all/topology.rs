@@ -47,6 +47,8 @@ fn line(
     add(
         b,
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: common::base(layer),
             a: pt(a[0], a[1]),
             b: pt(bb[0], bb[1]),
@@ -390,6 +392,7 @@ fn joins_the_vertices_of_areas_only_with_koseler_the_holes_kept() {
     let right = add(
         &mut b,
         Entity::Polygon(PathEntity {
+            ms: None,
             base: common::base("cizim"),
             pts: vec![
                 pt(10.004, 0.0),
@@ -442,6 +445,7 @@ fn the_objects_it_takes_are_paths_with_their_elevations_and_come_back_the_same()
     let path = add(
         &mut b,
         Entity::Polyline(PathEntity {
+            ms: None,
             base: common::base("cizim"),
             pts: vec![pt(0.0, 0.0), pt(1.0, 0.0), pt(2.0, 1.0)],
             bulges: Some(vec![0.5, 0.0]),
@@ -462,6 +466,7 @@ fn the_objects_it_takes_are_paths_with_their_elevations_and_come_back_the_same()
     let area = add(
         &mut b,
         Entity::Polygon(PathEntity {
+            ms: None,
             base: common::base("cizim"),
             pts: vec![pt(0.0, 0.0), pt(4.0, 0.0), pt(4.0, 4.0)],
             bulges: None,
@@ -472,6 +477,7 @@ fn the_objects_it_takes_are_paths_with_their_elevations_and_come_back_the_same()
             }]),
             zs: None,
             parts: Some(vec![kentos_contracts::AreaPart {
+                ms: None,
                 pts: vec![pt(10.0, 0.0), pt(14.0, 0.0), pt(14.0, 4.0)],
                 bulges: None,
                 holes: Some(vec![RingGeometry {

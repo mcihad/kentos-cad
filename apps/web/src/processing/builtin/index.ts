@@ -33,6 +33,7 @@ import { MULTIDIM_TOOLS } from './multidim/tools';
 import { REMOTE_TOOLS } from './remote/tools';
 import { SAMPLE_TOOLS } from './sampling';
 import { GENERALIZE_TOOLS } from './generalize';
+import { LRS_TOOLS } from './lrs';
 import { SURFACE_TOOLS } from './surface/tools';
 import { vertexNumbering } from './vertexNumbering';
 
@@ -70,6 +71,8 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   networkClosestFacility,
   networkOdMatrix,
   networkServiceAreas,
+  // Doğrusal referans (docs/adr/0224): routes, their events and measures.
+  ...LRS_TOOLS,
   // Yüzey analizi (docs/adr/0231): the raster core's jobs in the page's analysis worker.
   ...SURFACE_TOOLS,
   // İnterpolasyon and Yoğunluk (docs/adr/0232): the raster core's point jobs, in the same worker.

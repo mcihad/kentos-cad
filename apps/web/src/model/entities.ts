@@ -76,6 +76,9 @@ export interface LineEntity extends EntityBase {
   /** The ends' elevations, m; undefined means none (docs/adr/0142). */
   za?: number;
   zb?: number;
+  /** The ends' measures (M) on a route, in the route's own unit; undefined means none (docs/adr/0224). */
+  ma?: number;
+  mb?: number;
 }
 export interface PolylineEntity extends EntityBase {
   kind: 'polyline' | 'polygon';
@@ -99,18 +102,24 @@ export interface PolylineEntity extends EntityBase {
    */
   zs?: (number | null)[];
   /**
+   * A polyline's vertices' measures (M) on a route, as many as `pts`; null for a vertex without one; undefined when
+   * none has one (docs/adr/0224). A polygon has none: a route is a line.
+   */
+  ms?: (number | null)[];
+  /**
    * A multi-part area's or polyline's parts past its first, whose own are the
    * fields above (docs/adr/0143, 0174); undefined for one part. A polyline's
    * parts have no holes.
    */
   parts?: AreaPart[];
 }
-/** A part of a multi-part area or polyline past its first: its path, arcs, holes (an area's only) and elevations. */
+/** A part of a multi-part area or polyline past its first: its path, arcs, holes (an area's only), elevations and a polyline's measures (docs/adr/0224). */
 export interface AreaPart {
   pts: Vec2[];
   bulges?: number[];
   holes?: RingGeometry[];
   zs?: (number | null)[];
+  ms?: (number | null)[];
 }
 /** A closed ring of vertices with DXF bulges (outer boundary or hole). */
 export interface RingGeometry {

@@ -579,6 +579,27 @@ SHAPEFILES = {
         rows=[(False, ["Kotlu Yol", "1"]), (False, ["Çevre Yolu", "2"]), (False, ["Tek Nokta", "3"]), (False, ["Sıfır Kotlu", "4"])],
         prj=ED50_TM30_OGC,
     ),
+    "rotalarm": dict(
+        type=23,  # PolyLineM: routes (docs/adr/0224), ED50 / TM30
+        shapes=[
+            # A record of two parts is one polyline, each part with its measures.
+            [
+                [(415000.0, 4540000.0, 0.0), (415100.0, 4540000.0, 100.0), (415100.0, 4540050.0, 150.0)],
+                [(415200.0, 4540100.0, 200.0), (415300.0, 4540100.0, 300.0)],
+            ],
+            # A measure below -1e38 is "no data": that vertex has none; a negative one above it is a measure.
+            [[(416000.0, 4541000.0, 1000.0), (416050.0, 4541000.0, -1e39), (416100.0, 4541000.0, -5.25)]],
+            # A part of two points is a line: its ends' measures.
+            [[(417000.0, 4542000.0, 5.5), (417010.0, 4542000.0, 15.5)]],
+            # Every measure "no data": a line without measures.
+            [[(418000.0, 4543000.0, -1e39), (418010.0, 4543000.0, -2e39)]],
+        ],
+        codec="cp1254",
+        ldid=0xCA,
+        fields=[("ROTA", "C", 20, 0)],
+        rows=[(False, ["D-100"]), (False, ["D-200"]), (False, ["Bağlantı"]), (False, ["Ölçüsüz"])],
+        prj=ED50_TM30_OGC,
+    ),
     "alanlarz": dict(
         type=15,  # PolygonZ
         shapes=[
@@ -825,6 +846,7 @@ FIELDS = {
     "kuyular": {"kuyular": [{"name": "AD", "kind": "text", "length": 25}, {"name": "DERINLIK", "kind": "decimal", "scale": 2}, {"name": "SU", "kind": "boolean"}, {"name": "OLCUM", "kind": "date"}]},
     "karisik": {"karisik": [{"name": "AD", "kind": "text", "length": 10}, {"name": "NO", "kind": "integer"}]},
     "yollarz": {"yollarz": [{"name": "AD", "kind": "text", "length": 30}, {"name": "KOD", "kind": "integer"}]},
+    "rotalarm": {"rotalarm": [{"name": "ROTA", "kind": "text", "length": 20}]},
     "alanlarz": {"alanlarz": [{"name": "AD", "kind": "text", "length": 30}, {"name": "KOD", "kind": "integer"}]},
 }
 
@@ -1025,11 +1047,32 @@ SUMMARY = {
                 "layer": "yollarz",
                 "pts": [[415000.5, 4540000.25], [415100.75, 4540050.5]],
                 "zs": [812.5, 815.25],
-                "parts": [{"pts": [[415200.0, 4540100.0], [415250.5, 4540180.25], [415330.125, 4540210.0], [415400.0, 4540300.5]], "zs": [820.0, 0.0, -1.5, 830.75]}],
+                # A PolyLineZ's M values are its vertices' measures (docs/adr/0224), a 0 a measure.
+                "ms": [0.0, 1.0],
+                "parts": [{"pts": [[415200.0, 4540100.0], [415250.5, 4540180.25], [415330.125, 4540210.0], [415400.0, 4540300.5]], "zs": [820.0, 0.0, -1.5, 830.75], "ms": [2.0, 3.0, 4.0, 5.0]}],
                 "attrs": YOLZ[0],
             },
-            {"kind": "polyline", "pts": [[415600.0, 4540500.0], [415650.25, 4540575.5], [415700.5, 4540600.0]], "zs": [900.0, None, 905.5], "attrs": YOLZ[1]},
-            {"kind": "polyline", "pts": [[416000.0, 4540800.0], [416050.0, 4540850.0], [416100.0, 4540900.0]], "zs": [0.0, 0.0, 0.0], "attrs": YOLZ[3]},
+            {"kind": "polyline", "pts": [[415600.0, 4540500.0], [415650.25, 4540575.5], [415700.5, 4540600.0]], "zs": [900.0, None, 905.5], "ms": [10.0, 11.0, 12.0], "attrs": YOLZ[1]},
+            {"kind": "polyline", "pts": [[416000.0, 4540800.0], [416050.0, 4540850.0], [416100.0, 4540900.0]], "zs": [0.0, 0.0, 0.0], "ms": [30.0, 31.0, 32.0], "attrs": YOLZ[3]},
+        ],
+    },
+    # A PolyLineM's records (docs/adr/0224): each part's M values its vertices' measures; "no data" (below -1e38)
+    # a vertex without one; a part of two points a line with its ends' measures.
+    "rotalarm": {
+        "declaredSrid": 2320,
+        "encoding": "Windows-1254",
+        "objects": [
+            {
+                "kind": "polyline",
+                "layer": "rotalarm",
+                "pts": [[415000.0, 4540000.0], [415100.0, 4540000.0], [415100.0, 4540050.0]],
+                "ms": [0.0, 100.0, 150.0],
+                "parts": [{"pts": [[415200.0, 4540100.0], [415300.0, 4540100.0]], "ms": [200.0, 300.0]}],
+                "attrs": {"ROTA": "D-100"},
+            },
+            {"kind": "polyline", "pts": [[416000.0, 4541000.0], [416050.0, 4541000.0], [416100.0, 4541000.0]], "ms": [1000.0, None, -5.25], "attrs": {"ROTA": "D-200"}},
+            {"kind": "line", "a": [417000.0, 4542000.0], "b": [417010.0, 4542000.0], "ma": 5.5, "mb": 15.5, "attrs": {"ROTA": "Bağlantı"}},
+            {"kind": "line", "a": [418000.0, 4543000.0], "b": [418010.0, 4543000.0], "attrs": {"ROTA": "Ölçüsüz"}},
         ],
     },
     "kotlu": {
@@ -1101,8 +1144,9 @@ SUMMARY = {
 
 KEYS = {
     "point": ("kind", "layer", "p", "z", "parts", "label", "attrs"),
-    "line": ("kind", "layer", "a", "b", "za", "zb", "label", "attrs"),
-    "polyline": ("kind", "layer", "pts", "zs", "parts", "label", "attrs"),
+    # A route's measures (docs/adr/0224) after the elevations.
+    "line": ("kind", "layer", "a", "b", "za", "zb", "ma", "mb", "label", "attrs"),
+    "polyline": ("kind", "layer", "pts", "zs", "ms", "parts", "label", "attrs"),
     "polygon": ("kind", "layer", "pts", "zs", "holes", "holeZs", "parts", "label", "attrs"),
 }
 

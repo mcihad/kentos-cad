@@ -4,6 +4,8 @@ import { watchAll } from '../../core/signal';
 import { ENTITY_KIND_LABEL, entityArea, entityLength, type Entity } from '../../model/entities';
 import { pathCounts } from '../../model/pathCounts';
 import { spaceLength } from '../../product/elevationValues';
+import { measuredPaths } from '../../product/elevation';
+import { fixed } from '../../core/displayNumber';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
@@ -132,6 +134,9 @@ export function cardRows(e: Entity, format: Formatter): [string, string][] {
   if (length !== null) rows.push([e.kind === 'polygon' || e.kind === 'circle' ? 'Çevre' : 'Uzunluk', format.length(length)]);
   const space = spaceLength(e);
   if (space) rows.push([space.label, format.length(space.value)]);
+  // A route's measures (docs/adr/0224 §6): from its first measured vertex to its last.
+  const ms = measuredPaths(e).flatMap((p) => p.zs.filter((m): m is number => m !== null));
+  if (ms.length) rows.push(['M', `${fixed(ms[0], format.lengthDecimals)} → ${fixed(ms[ms.length - 1], format.lengthDecimals)}`]);
   if (e.kind === 'circle' || e.kind === 'arc') rows.push(['Yarıçap', format.length(e.r)]);
   // A multi-line text's breaks as ⏎ (docs/adr/0182): the card's rows are one line each.
   if (e.kind === 'text') rows.push(['Metin', e.text.replaceAll('\n', ' ⏎ ')]);

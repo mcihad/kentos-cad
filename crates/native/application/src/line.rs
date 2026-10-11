@@ -90,6 +90,8 @@ fn check(doc: &Document, input: &LineCreate) -> Result<Vec<CommandWarning>, Stop
 /// document's to give (0 in a plan).
 fn line(input: LineCreate, id: u32) -> Entity {
     Entity::Line(LineEntity {
+        ma: None,
+        mb: None,
         base: EntityBase {
             id,
             layer_id: input.layer_id,

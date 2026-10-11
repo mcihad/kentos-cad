@@ -354,6 +354,7 @@ fn the_grip_menu_edits_the_part_its_grip_is_on() {
         y: N + dn,
     };
     area.parts = Some(vec![AreaPart {
+        ms: None,
         pts: vec![at(0.0, 20.0), at(6.0, 20.0), at(6.0, 26.0), at(0.0, 26.0)],
         bulges: None,
         holes: None,

@@ -388,6 +388,12 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         .flat_map(|(_, e)| elevation::paths(e))
         .filter(|p| elevation::elevated(std::slice::from_ref(p)))
         .collect();
+    // The routes' measures alike, by the same rules (docs/adr/0224 §2).
+    let measured: Vec<Elevated> = found
+        .iter()
+        .flat_map(|(_, e)| elevation::measure_paths(e))
+        .filter(|p| elevation::elevated(std::slice::from_ref(p)))
+        .collect();
     let how = if input.operation == EditOperation::Offset {
         Carry::Offset
     } else {
@@ -405,23 +411,32 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             | EditOperation::Offset
             | EditOperation::EdgeShift
     );
-    let mut lost = 0;
+    let (mut lost, mut lost_m) = (0, 0);
     // Deliği doldur's area takes its hole's elevations, if it has any: its
     // area keeps its own (docs/adr/0173 §5).
     let keeps = input.operation == EditOperation::HoleFill;
     // Elevations written with the geometry are written as they are (Kot ver,
-    // Öznitelikler, a script): `entity_of` already holds them.
+    // Öznitelikler, a script): `entity_of` already holds them. Measures alike
+    // (docs/adr/0224 §2).
     let mut elevate = |mut entity: Entity, from: &Entity, geometry: &EntityGeometry| -> Entity {
-        if written(geometry) || sources.is_empty() {
-            return entity;
+        if !written(geometry) && !sources.is_empty() {
+            let before = elevation::paths(from);
+            let same = if by_place { before.as_slice() } else { &[] };
+            if !elevation::carry(&mut entity, &sources, same, how)
+                && elevation::elevated(&before)
+                && !keeps
+            {
+                lost += 1;
+            }
         }
-        let before = elevation::paths(from);
-        let same = if by_place { before.as_slice() } else { &[] };
-        if !elevation::carry(&mut entity, &sources, same, how)
-            && elevation::elevated(&before)
-            && !keeps
-        {
-            lost += 1;
+        if !written_m(geometry) && !measured.is_empty() {
+            let before = elevation::measure_paths(from);
+            let same = if by_place { before.as_slice() } else { &[] };
+            if !elevation::carry_measures(&mut entity, &measured, same, how)
+                && elevation::elevated(&before)
+            {
+                lost_m += 1;
+            }
         }
         entity
     };
@@ -496,6 +511,13 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         checked.warnings.push(CommandWarning {
             code: codes::ELEVATION_LOST.into(),
             message: format!("{lost} nesnenin kotu bu işlemde korunmadı."),
+            path: Some("changes".into()),
+        });
+    }
+    if lost_m > 0 {
+        checked.warnings.push(CommandWarning {
+            code: codes::MEASURE_LOST.into(),
+            message: format!("{lost_m} nesnenin ölçüleri (M) bu işlemde korunmadı."),
             path: Some("changes".into()),
         });
     }
@@ -722,6 +744,28 @@ pub(crate) fn check_geometry(
                 format!(
                     "Kotların sayısı köşelerin sayısıyla aynı olmalı; {n} köşeye {} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null.",
                     zs.len()
+                ),
+                at(&path),
+            )));
+        }
+    }
+    // Measures as written (docs/adr/0224 §2): a route's, one for each vertex; an area has none.
+    if let EntityGeometry::Polygon { parts, .. } = g
+        && let Some(k) = parts.iter().flatten().position(|q| q.ms.is_some())
+    {
+        return Err(Stop::Failed(error(
+            codes::INVALID_MEASURES,
+            "Kapalı alanın ölçüsü (M) olamaz; ölçü yalnız çizginin ve çoklu çizginin köşelerinde olur. Parçanın ölçülerini kaldırın.".into(),
+            at(&format!(".parts[{k}].ms")),
+        )));
+    }
+    for (ms, n, path) in written_measures(g) {
+        if ms.len() != n {
+            return Err(Stop::Failed(error(
+                codes::INVALID_MEASURES,
+                format!(
+                    "Ölçülerin sayısı köşelerin sayısıyla aynı olmalı; {n} köşeye {} ölçü verildi. Her köşeye bir ölçü verin; ölçüsüz köşeye null.",
+                    ms.len()
                 ),
                 at(&path),
             )));
@@ -1109,6 +1153,39 @@ fn written(g: &EntityGeometry) -> bool {
     }
 }
 
+/// Whether measures are written with the geometry (docs/adr/0224 §2): a
+/// line's or a polyline's own or a part's list.
+fn written_m(g: &EntityGeometry) -> bool {
+    match g {
+        EntityGeometry::Line { ms, .. } => ms.is_some(),
+        EntityGeometry::Polyline { ms, parts, .. } => {
+            ms.is_some() || parts.iter().flatten().any(|p| p.ms.is_some())
+        }
+        _ => false,
+    }
+}
+
+/// A geometry's written measures (docs/adr/0224 §2): each list with its
+/// vertex count and its path.
+fn written_measures(g: &EntityGeometry) -> Vec<(&[Option<f64>], usize, String)> {
+    let mut out: Vec<(&[Option<f64>], usize, String)> = Vec::new();
+    match g {
+        EntityGeometry::Line { ms: Some(ms), .. } => out.push((ms, 2, ".ms".into())),
+        EntityGeometry::Polyline { pts, ms, parts, .. } => {
+            if let Some(ms) = ms {
+                out.push((ms, pts.len(), ".ms".into()));
+            }
+            for (k, part) in parts.iter().flatten().enumerate() {
+                if let Some(ms) = &part.ms {
+                    out.push((ms, part.pts.len(), format!(".parts[{k}].ms")));
+                }
+            }
+        }
+        _ => {}
+    }
+    out
+}
+
 /// A geometry's written elevations (docs/adr/0142): each list with its
 /// vertex count and its path.
 fn written_elevations(g: &EntityGeometry) -> Vec<(&[Option<f64>], usize, String)> {
@@ -1181,20 +1258,22 @@ fn finite(g: &EntityGeometry) -> bool {
                     .flatten()
                     .all(|q| pt(&q.p) && q.z.is_none_or(f64::is_finite))
         }
-        EntityGeometry::Line { a, b, zs } => pt(a) && pt(b) && heights(zs),
+        EntityGeometry::Line { a, b, zs, ms } => pt(a) && pt(b) && heights(zs) && heights(ms),
         EntityGeometry::Polyline {
             pts: p,
             bulges,
             zs,
+            ms,
             parts,
         } => {
             pts(p)
                 && values(bulges)
                 && heights(zs)
+                && heights(ms)
                 && parts
                     .iter()
                     .flatten()
-                    .all(|q| pts(&q.pts) && values(&q.bulges) && heights(&q.zs))
+                    .all(|q| pts(&q.pts) && values(&q.bulges) && heights(&q.zs) && heights(&q.ms))
         }
         EntityGeometry::Polygon {
             pts: p,

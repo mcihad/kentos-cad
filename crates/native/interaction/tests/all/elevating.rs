@@ -44,6 +44,8 @@ fn line(b: &mut Bench, layer: &str, y: f64, za: Option<f64>, zb: Option<f64>) ->
     add(
         b,
         Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base(layer),
             a: pt(0.0, y),
             b: pt(30.0, y),
@@ -57,6 +59,7 @@ fn polyline(b: &mut Bench, y: f64, z: Option<Vec<Option<f64>>>) -> Slot {
     add(
         b,
         Entity::Polyline(PathEntity {
+            ms: None,
             base: base("cizim"),
             pts: vec![pt(0.0, y), pt(5.0, y), pt(9.0, y)],
             bulges: None,
@@ -72,6 +75,7 @@ fn area(b: &mut Bench, z: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f64>
     add(
         b,
         Entity::Polygon(PathEntity {
+            ms: None,
             base: base("parsel"),
             pts: vec![pt(0.0, 34.0), pt(10.0, 34.0), pt(10.0, 44.0), pt(0.0, 44.0)],
             bulges: None,
@@ -405,6 +409,7 @@ fn it_can_be_done_again_on_the_next_objects_without_leaving_the_tool() {
 fn everything_but_the_elevations_stays_layer_colour_attributes_label_geometry() {
     let mut b = bench();
     let mut e = PathEntity {
+        ms: None,
         base: base("parsel"),
         pts: vec![pt(0.0, 22.0), pt(10.0, 22.0), pt(10.0, 32.0), pt(0.0, 32.0)],
         bulges: None,

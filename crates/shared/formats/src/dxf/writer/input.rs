@@ -204,6 +204,7 @@ impl Fields {
                     ps.into_iter()
                         .map(|q| {
                             Ok(AreaPart {
+                                ms: None,
                                 pts: need(q.pts, "pts")?,
                                 bulges: q.bulges,
                                 holes: q.holes,
@@ -235,6 +236,7 @@ impl Fields {
                     parts|
          -> Result<PathEntity, E> {
             Ok(PathEntity {
+                ms: None,
                 base,
                 pts: need(pts, "pts")?,
                 bulges,
@@ -261,6 +263,8 @@ impl Fields {
                 parts: point_parts(parts)?,
             }),
             "line" => Entity::Line(LineEntity {
+                ma: None,
+                mb: None,
                 base,
                 a: need(self.a, "a")?,
                 b: need(self.b, "b")?,

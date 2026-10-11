@@ -4,6 +4,7 @@ import { spaceLength, summarizeElevations, takesElevation, uniformElevation, ver
 import { parseNumber } from '../../tools/coordinateInput';
 import { writeElevations } from '../../tools/editCommand';
 import type { PropRow } from '../widgets/PropertyGrid';
+import { fixed } from '../../core/displayNumber';
 
 /**
  * The elevation rows of Öznitelikler (docs/adr/0142), as data: what the panel says of the vertices' elevations and
@@ -82,6 +83,29 @@ export function lineEndRow(ctx: AppContext, e: Extract<Entity, { kind: 'line' }>
 export function pathElevationRow(ctx: AppContext, e: Extract<Entity, { kind: 'polyline' | 'polygon' | 'point' }>, locked: boolean): PropRow {
   const write = locked ? undefined : (v: number | null) => void writeElevations(ctx, [e], () => v);
   return elevationRow(ctx, 'Kot', vertexElevations(e), write);
+}
+
+/**
+ * A route's measures (docs/adr/0224 §6), read-only (the vertex table writes them): a line's `M (başlangıç)` and
+ * `M (bitiş)`, a polyline's `M` from its first measured vertex to its last, with a note when some vertices have none;
+ * nothing for an object without a measure. The numbers are the route's own, with the project's length decimals.
+ */
+export function measureRows(ctx: AppContext, e: Entity): PropRow[] {
+  const t = (m: number) => fixed(m, ctx.format.lengthDecimals);
+  const shown = (m: number | undefined) => (m === undefined ? 'ölçü yok' : t(m));
+  if (e.kind === 'line') {
+    if (e.ma === undefined && e.mb === undefined) return [];
+    return [
+      { label: 'M (başlangıç)', value: shown(e.ma), numeric: true },
+      { label: 'M (bitiş)', value: shown(e.mb), numeric: true },
+    ];
+  }
+  if (e.kind !== 'polyline') return [];
+  const all = [e, ...(e.parts ?? [])].flatMap((q) => q.ms ?? q.pts.map(() => null));
+  const ms = all.filter((m): m is number => m !== null);
+  if (!ms.length) return [];
+  const row: PropRow = { label: 'M', value: `${t(ms[0])} → ${t(ms[ms.length - 1])}`, numeric: true };
+  return [ms.length < all.length ? { ...row, note: '(bazı köşeler ölçüsüz)' } : row];
 }
 
 /** `3B uzunluk` or `3B çevre`, when every vertex has an elevation; none otherwise. */

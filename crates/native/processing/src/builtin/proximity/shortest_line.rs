@@ -113,6 +113,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             ("Uzaklık".to_owned(), length_text(ctx.units, f.d)),
         ]);
         let line = EntityGeometry::Line {
+            ms: None,
             a: f.a,
             b: f.b,
             zs: None,

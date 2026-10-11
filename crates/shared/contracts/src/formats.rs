@@ -112,7 +112,11 @@ use crate::layer::LineType;
 ///    (`reprojectImport`), GeoJSON written in WGS 84 (`writeGeoJsonWgs84`) and `GnssRead.lines`.
 /// 50: table exchange (docs/adr/0223): `readTableFile` reads ODS and a workbook's dates, within
 ///    İşlemler's limits when asked; `writeWorkbook` (`WorkbookWriteInput`) writes XLSX, ODS and CSV.
-pub const FORMATS_VERSION: u32 = 50;
+/// 51: vertex measures (docs/adr/0224 §1): `.kcad` document schema 39, a line's `ma` and `mb`, a
+///    polyline's and its parts' `ms` (the typed columns' line and path measure flags); Shapefile's
+///    PolyLineM and PolyLineZ read with their measures; DXF, GeoJSON, KML and GPX leave them out
+///    and say so.
+pub const FORMATS_VERSION: u32 = 51;
 
 // ── Every import ────────────────────────────────────────────────────────
 

@@ -194,6 +194,7 @@ impl Centerline {
             return;
         };
         let geometry = EntityGeometry::Polyline {
+            ms: None,
             pts: wire_all(&axis.pts),
             bulges: axis.bulges.clone().filter(|b| b.iter().any(|&x| x != 0.0)),
             zs: None,

@@ -140,6 +140,7 @@ pub(crate) fn clipped_geometry(areas: &[Area]) -> Option<EntityGeometry> {
         .map(|a| {
             let r = ring(&a.outer);
             AreaPart {
+                ms: None,
                 pts: r.pts,
                 bulges: r.bulges,
                 holes: holes(a),

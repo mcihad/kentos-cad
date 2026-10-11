@@ -959,7 +959,9 @@ def line_part(pt):
     elevations; no holes."""
     assert len(pt["pts"]) >= 2, "çoklu çizginin parçası: en az iki köşe"
     assert "zs" not in pt or len(pt["zs"]) == len(pt["pts"]), "parça: kot sayısı köşe sayısına eşit olmalı"
-    return cmap(fields(pt, {"pts": (points, True), "bulges": (floats, False), "zs": (elevations, False)}, "line part"))
+    assert "ms" not in pt or len(pt["ms"]) == len(pt["pts"]), "parça: ölçü sayısı köşe sayısına eşit olmalı"
+    # Schema 39 (docs/adr/0224): its measures, as its elevations.
+    return cmap(fields(pt, {"pts": (points, True), "bulges": (floats, False), "zs": (elevations, False), "ms": (elevations, False)}, "line part"))
 
 
 def point_part(pp):
@@ -983,6 +985,8 @@ def path_fields(holes):
     else:
         # Schema 17 (docs/adr/0174): a polyline's parts.
         table["parts"] = (lambda ps: array([line_part(pt) for pt in ps]), False)
+        # Schema 39 (docs/adr/0224): a polyline's measures, a route's; an area has none.
+        table["ms"] = (elevations, False)
     return table
 
 
@@ -1090,7 +1094,8 @@ KINDS = {
     # Schema 17 (docs/adr/0174): a multi-point object's points past its first.
     "point": {"p": (point, True), "z": (f64, False), "parts": (lambda ps: array([point_part(pp) for pp in ps]), False)},
     # A line's end without an elevation has no key (spec §5.2): `null` is only for a vertex in `zs`.
-    "line": {"a": (point, True), "b": (point, True), "za": (f64, False), "zb": (f64, False)},
+    # Schema 39 (docs/adr/0224): its ends' measures, as its elevations.
+    "line": {"a": (point, True), "b": (point, True), "za": (f64, False), "zb": (f64, False), "ma": (f64, False), "mb": (f64, False)},
     "polyline": path_fields(False),
     "polygon": path_fields(True),
     "circle": {"c": (point, True), "r": (f64, True)},
@@ -1279,6 +1284,7 @@ def entity(e, uid, index):
     kind = e["kind"]
     assert e["id"] == index + 1, f"nesne {index}: kimlik {e['id']}, dosya sırası {index + 1} vermeli"
     assert "zs" not in e or len(e["zs"]) == len(e["pts"]), f"nesne {index} ({kind}): kot sayısı köşe sayısına eşit olmalı"
+    assert "ms" not in e or len(e["ms"]) == len(e["pts"]), f"nesne {index} ({kind}): ölçü sayısı köşe sayısına eşit olmalı"
     table = {
         "layerId": (text, True),
         "color": (text, False),
@@ -1442,6 +1448,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def labelled(nodes):
         return any(engine(n["style"]) or labelled(n["children"]) for n in nodes)
 
+    def measured(es):
+        return any(any(k in e for k in ("ma", "mb", "ms")) or any("ms" in pt for pt in e.get("parts", []) if e["kind"] == "polyline") for e in es)
+
+    if measured(entities) or any(measured(b["entities"]) for b in blocks or []):
+        return 39
     if any(e["kind"] == "raster" and ("dataset" in e or "edges" in e["style"]) for e in entities):
         return 38
     if settings and "variables" in settings:
@@ -1712,7 +1723,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-39.kcad"] = container(root(cmap(parts), version=uint(39)))
+    files["schema-version-40.kcad"] = container(root(cmap(parts), version=uint(40)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1743,6 +1754,7 @@ def broken(minimal_content, minimal_file):
         return container(root(cmap({**parts, "entities": array([entity_bytes])}), version=uint(n)))
 
     nan, infinity = b"\xfb\x7f\xf8" + bytes(5), b"\xfb\xff\xf0" + bytes(5)
+    square_line = lambda dx: array([point({"x": one["p"]["x"] + dx + x, "y": one["p"]["y"]}) for x in (0, 1)])
     files["elevation-in-schema-2.kcad"] = in_schema(2, line(za=f64(105.25)))
     files["elevation-in-schema-3.kcad"] = in_schema(3, path("polyline", 3, zs=elevations([101.5, None, 103.25])))
     files["elevation-wrong-length.kcad"] = in_schema(4, path("polyline", 3, zs=elevations([101.5, 103.25])))
@@ -1752,6 +1764,13 @@ def broken(minimal_content, minimal_file):
     files["elevation-infinity.kcad"] = in_schema(4, line(zb=infinity))
     files["elevation-int.kcad"] = in_schema(4, path("polyline", 3, zs=array([f64(101.5), uint(102), f64(103.25)])))
     files["line-elevation-null.kcad"] = in_schema(4, line(za=b"\xf6"))
+    # Vertex measures are schema 39's (docs/adr/0224): in schema 38 unknown fields; an area has none (an unknown
+    # field there); `ms` has one entry per vertex, a line's end without one no key, as the elevations.
+    files["measures-in-schema-38.kcad"] = in_schema(38, line(ma=f64(0.0), mb=f64(10.0)))
+    files["measures-in-polygon.kcad"] = in_schema(39, path("polygon", 4, ms=elevations([0.0, 1.0, 2.0, 3.0])))
+    files["measure-wrong-length.kcad"] = in_schema(39, path("polyline", 3, ms=elevations([0.0, 1.0])))
+    files["line-measure-null.kcad"] = in_schema(39, line(mb=b"\xf6"))
+    files["part-measure-wrong-length.kcad"] = in_schema(39, path("polyline", 3, parts=array([cmap({"pts": square_line(5), "ms": elevations([1.0])})])))
     # An area's parts are schema 5's (docs/adr/0143): in schema 4 an unknown field, on a polyline too; a part's `zs`
     # has one entry per vertex, as the area's own.
     square = lambda dx: array([point({"x": one["p"]["x"] + dx + x, "y": one["p"]["y"] + y}) for x, y in ((0, 0), (1, 0), (1, 1), (0, 1))])
@@ -2673,6 +2692,7 @@ def build():
     out["labels.kcad"] = container(document(load("labels.json")))
     out["variables.kcad"] = container(document(load("variables.json")))
     out["multidim.kcad"] = container(document(load("multidim.json")))
+    out["measures.kcad"] = container(document(load("measures.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

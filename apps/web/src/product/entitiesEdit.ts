@@ -19,7 +19,7 @@ import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import { checkDimension } from './dimension';
 import type { ProductCommand } from './command';
-import { carryInto, elevatedPaths, hasElevation } from './elevation';
+import { carryInto, carryMeasuresInto, elevatedPaths, hasElevation, measuredPaths } from './elevation';
 
 /**
  * `cad.entities.edit` v1 (docs/adr/0047): objects named by their persistent
@@ -122,8 +122,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
 const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   point: ['p', 'z', 'parts'],
-  line: ['a', 'b', 'zs'],
-  polyline: ['pts', 'bulges', 'zs', 'parts'],
+  line: ['a', 'b', 'zs', 'ms'],
+  polyline: ['pts', 'bulges', 'zs', 'ms', 'parts'],
   polygon: ['pts', 'bulges', 'holes', 'zs', 'parts'],
   circle: ['c', 'r'],
   arc: ['c', 'r', 'a0', 'a1'],
@@ -211,7 +211,7 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
 }
 
 /** The elevations an object holds beside its geometry fields (docs/adr/0142): a line's two ends, a path's vertices. */
-const ELEVATION_FIELDS: Partial<Record<Entity['kind'], readonly string[]>> = { line: ['za', 'zb'], polyline: ['zs'], polygon: ['zs'] };
+const ELEVATION_FIELDS: Partial<Record<Entity['kind'], readonly string[]>> = { line: ['za', 'zb', 'ma', 'mb'], polyline: ['zs', 'ms'], polygon: ['zs'] };
 
 /**
  * `e` with another geometry: every field but its geometry kept (`update`),
@@ -355,7 +355,19 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   for (const [zs, n, path] of elevations)
     if (zs.length !== n)
       return failed(error('invalid_elevations', `Kotların sayısı köşelerin sayısıyla aynı olmalı; ${n} köşeye ${zs.length} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null.`, at(path)));
-  if (!geometryIsFinite(g as unknown as Entity) || elevations.some(([zs]) => zs.some((z) => z !== null && !Number.isFinite(z))))
+  // Measures as written (docs/adr/0224 §2): a route's, one for each vertex; an area has none.
+  if (g.kind === 'polygon') {
+    const k = (g.parts ?? []).findIndex((part) => part.ms !== undefined);
+    if (k >= 0)
+      return failed(
+        error('invalid_measures', 'Kapalı alanın ölçüsü (M) olamaz; ölçü yalnız çizginin ve çoklu çizginin köşelerinde olur. Parçanın ölçülerini kaldırın.', at(`.parts[${k}].ms`)),
+      );
+  }
+  const measures = writtenMeasures(g);
+  for (const [ms, n, path] of measures)
+    if (ms.length !== n)
+      return failed(error('invalid_measures', `Ölçülerin sayısı köşelerin sayısıyla aynı olmalı; ${n} köşeye ${ms.length} ölçü verildi. Her köşeye bir ölçü verin; ölçüsüz köşeye null.`, at(path)));
+  if (!geometryIsFinite(g as unknown as Entity) || [...elevations, ...measures].some(([zs]) => zs.some((z) => z !== null && !Number.isFinite(z))))
     return failed(error('not_finite', `${i + 1}. ${whose} geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.`, at('')));
   // A dimension its kind's rules and the core can draw (docs/adr/0147 §6).
   const dimension = checkDimension(g, at);
@@ -523,6 +535,21 @@ function writtenElevations(g: EntityGeometry): [readonly (number | null)[], numb
   return out;
 }
 
+/** A geometry's written measures (docs/adr/0224 §2): each list with its vertex count and its path. */
+function writtenMeasures(g: EntityGeometry): [readonly (number | null)[], number, string][] {
+  const out: [readonly (number | null)[], number, string][] = [];
+  if (g.kind === 'line' && g.ms) out.push([g.ms, 2, '.ms']);
+  if (g.kind === 'polyline') {
+    if (g.ms) out.push([g.ms, g.pts.length, '.ms']);
+    for (const [k, part] of (g.parts ?? []).entries()) if (part.ms) out.push([part.ms, part.pts.length, `.parts[${k}].ms`]);
+  }
+  return out;
+}
+
+/** Whether measures are written with the geometry (docs/adr/0224 §2): a line's or a polyline's own or a part's list. */
+const writtenM = (g: EntityGeometry): boolean =>
+  (g.kind === 'line' && g.ms !== undefined) || (g.kind === 'polyline' && (g.ms !== undefined || !!g.parts?.some((part) => part.ms !== undefined)));
+
 /** Whether the geometry carries its elevations (docs/adr/0142): a multi-part area's or polyline's when its own or a part's list is given (docs/adr/0143, 0174). */
 const written = (g: EntityGeometry): boolean =>
   ('zs' in g && g.zs !== undefined) || ((g.kind === 'polygon' || g.kind === 'polyline') && !!g.parts?.some((part) => part.zs !== undefined));
@@ -548,6 +575,28 @@ function held(init: NewEntity): NewEntity {
   // A part's elevations, and its holes', are held as the area's own are (docs/adr/0143); a polyline's part's as the polyline's (docs/adr/0174).
   if (init.kind === 'polygon' && init.parts) init.parts = init.parts.map((part) => ({ ...bare(part), ...(part.holes && { holes: part.holes.map(bare) }) }));
   if (init.kind === 'polyline' && init.parts) init.parts = init.parts.map(bare);
+  return init;
+}
+
+/**
+ * Written measures as the object holds them (docs/adr/0224 §2): a line's two as `ma` and `mb`, a polyline's or a
+ * part's all null as none.
+ */
+function heldMeasures(init: NewEntity): NewEntity {
+  const out = init as unknown as Record<string, unknown>;
+  const none = (ms: unknown) => Array.isArray(ms) && ms.every((m) => m === null);
+  if (init.kind === 'line' && Array.isArray(out.ms)) {
+    const [ma, mb] = out.ms as (number | null)[];
+    delete out.ms;
+    if (ma != null) out.ma = ma;
+    else delete out.ma;
+    if (mb != null) out.mb = mb;
+    else delete out.mb;
+  }
+  if (init.kind === 'polyline') {
+    if (none(out.ms)) delete out.ms;
+    if (init.parts) init.parts = init.parts.map((part) => (none(part.ms) ? (({ ms: _ms, ...rest }) => rest)(part) : part));
+  }
   return init;
 }
 
@@ -630,10 +679,18 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
   // reshapes, and its vertices take theirs by where they lie.
   const byPlace = offset || input.operation === 'grip' || input.operation === 'stretch' || input.operation === 'properties' || input.operation === 'edgeShift';
   let lost = 0;
+  // The routes' measures alike, by the same rules (docs/adr/0224 §2).
+  const measured = found.flatMap((e) => measuredPaths(e)).filter((p) => hasElevation([p]));
+  let lostM = 0;
   // Deliği doldur's area takes its hole's elevations, if it has any: its area keeps its own (docs/adr/0173 §5).
   const keeps = input.operation === 'holeFill';
-  // Elevations written with the geometry are written as they are (Kot ver, Öznitelikler, a script).
+  // Elevations written with the geometry are written as they are (Kot ver, Öznitelikler, a script); measures alike.
   const elevate = (init: NewEntity, from: Entity, g: EntityGeometry): NewEntity => {
+    if (writtenM(g)) heldMeasures(init);
+    else if (measured.length) {
+      const before = measuredPaths(from);
+      if (!carryMeasuresInto(init, measured, byPlace ? before : [], offset) && hasElevation(before)) lostM++;
+    }
     if (written(g)) return held(init);
     if (!sources.length) return init;
     const before = elevatedPaths(from);
@@ -648,6 +705,7 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
     else checked.removed.push({ id: e.id, uid: c.uid });
   }
   if (lost) checked.warnings.push({ code: 'elevation_lost', message: `${lost} nesnenin kotu bu işlemde korunmadı.`, path: 'changes' });
+  if (lostM) checked.warnings.push({ code: 'measure_lost', message: `${lostM} nesnenin ölçüleri (M) bu işlemde korunmadı.`, path: 'changes' });
   return checked;
 }
 

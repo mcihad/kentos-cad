@@ -84,6 +84,12 @@ pub const ELEVATION_LOST: &str = "elevation_lost";
 /// Elevations written with a geometry that are not one for each vertex
 /// (`cad.entities.edit`, docs/adr/0142).
 pub const INVALID_ELEVATIONS: &str = "invalid_elevations";
+/// A warning: an edit could not carry the measures (M) of a route's
+/// vertices to what it wrote (docs/adr/0224 §2).
+pub const MEASURE_LOST: &str = "measure_lost";
+/// Measures written with a geometry that are not one for each vertex, or
+/// measures given to an area (`cad.entities.edit` and `.create`, docs/adr/0224 §2).
+pub const INVALID_MEASURES: &str = "invalid_measures";
 /// No object given (`cad.entities.create`).
 pub const NO_OBJECTS: &str = "no_objects";
 /// A text whose text is empty or only white space (`cad.entities.edit`, `cad.entities.create`).

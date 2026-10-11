@@ -358,6 +358,7 @@ impl StationLabels {
 
 fn line(a: Vec2, b: Vec2) -> EntityGeometry {
     EntityGeometry::Line {
+        ms: None,
         a: wire(a),
         b: wire(b),
         zs: None,

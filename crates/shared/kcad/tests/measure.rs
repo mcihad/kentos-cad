@@ -37,6 +37,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             ("Nitelik".to_owned(), "Arsa".to_owned()),
         ]);
         entities.push(Entity::Polygon(PathEntity {
+            ms: None,
             base: EntityBase {
                 id: i as u32 + 1,
                 layer_id: "parsel".into(),

@@ -8,6 +8,11 @@ from the ADR's rules without KentOS code, at 50 digits with mpmath.
   multiple's text), and round a closed route the end is the start's.
 - The km text: the multiples with the interval's decimals (its shortest
   writing), the ends with the project's; the display rule (ADR 0149).
+- By a measured route's measures (docs/adr/0224 §6, `measureCases`): the
+  multiples of the interval within its least and most measure and its first
+  and last measure (walked order) when asked, each at the first place in
+  walked order with that measure (lrs_cases.py's routes), the route running
+  there in its measure direction; ordered by the length walked to them.
 - At each station: a tick square to the route, the km text past it on its
   side square to the route and upright (past a right angle either way half
   a turn, hung on its baseline's right), beside the tick's line (its
@@ -31,6 +36,7 @@ from pathlib import Path
 import mpmath as mp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import lrs_cases as lrs  # noqa: E402
 import point_calc_cases as pc  # noqa: E402
 
 mp.mp.dps = 50
@@ -42,6 +48,7 @@ SLACK = mp.mpf("1e-9")
 MOST = 20000
 NO_ROUTE = "Bu nesnenin üzerinde yürünecek tek bir yolu yok: çizgi, çoklu çizgi, yay, daire, elips, eğri ya da tek parçalı alan seçin."
 BAD_INTERVAL = "Aralık sıfırdan büyük bir uzunluk olmalı."
+NO_MEASURES = "Bu güzergâhın ölçüsü (M) yok: Ölçü'yü Uzunluk yapın ya da ölçülü bir rota seçin."
 
 
 def interval_decimals(interval):
@@ -109,6 +116,58 @@ def stations(e, rules):
     return {"stations": out}
 
 
+def measure_frame(route, m):
+    """The first place in walked order whose measure is m, the measure direction there, the length walked to it."""
+    sign = lrs.direction(route)
+    along = mp.mpf(0)
+    for part in route:
+        for e in lrs.edges(part):
+            if e.ma is not None and e.mb is not None and min(e.ma, e.mb) <= m <= max(e.ma, e.mb):
+                t = mp.mpf(0) if e.ma == e.mb else (m - e.ma) / (e.mb - e.ma)
+                p, tangent = e.at(t)
+                return p, (tangent[0] * sign, tangent[1] * sign), along + e.length() * t
+            along += e.length()
+    return None
+
+
+def measure_stations(parts, rules):
+    route = lrs.route_of(parts)
+    interval = mp.mpf(rules["interval"])
+    if not interval > 0:
+        return {"problem": BAD_INTERVAL}
+    measured = [m for _, _, ms in route for m in ms if m is not None]
+    if not measured:
+        return {"problem": NO_MEASURES}
+    least, most = min(measured), max(measured)
+    first = int(mp.ceil((least - SLACK) / interval))
+    last = int(mp.floor((most + SLACK) / interval))
+    count = last - first + 1 if last >= first else 0
+    if count > MOST:
+        return {"problem": f"Bu aralıkla {count} istasyon olur, en çok {MOST} yazılır; aralığı büyütün."}
+    step = interval_decimals(rules["interval"])
+    values = []
+    if rules["ends"]:
+        values.append((measured[0], rules["decimals"]))
+    for k in range(first, last + 1):
+        values.append((min(max(mp.mpf(float(k) * rules["interval"]), least), most), step))
+    if rules["ends"]:
+        values.append((measured[-1], rules["decimals"]))
+    at = []
+    for m, d in values:
+        f = measure_frame(route, m)
+        if f is not None:
+            at.append((f[2], m, d, f[0], f[1]))
+    at.sort(key=lambda a: a[0])
+    kept = []
+    for x in at:
+        if kept and abs(x[0] - kept[-1][0]) <= SLACK:
+            if x[2] == step and kept[-1][2] != step:
+                kept[-1] = x
+            continue
+        kept.append(x)
+    return {"stations": [{"s": s_, "km": float(m), "text": pc.km_text(float(m), d), "point": p, "tangent": t} for s_, m, d, p, t in kept]}
+
+
 def objects(stations, look):
     texts, ticks, sections, points = [], [], [], []
     for st in stations:
@@ -143,8 +202,8 @@ def xy(v):
     return [float(v[0]), float(v[1])]
 
 
-def written(e, rules, look):
-    got = stations(e, rules)
+def written(e, rules, look, measure=False):
+    got = measure_stations(e, rules) if measure else stations(e, rules)
     if "problem" in got:
         return {"problem": got["problem"]}
     o = objects(got["stations"], look)
@@ -195,12 +254,33 @@ CASES = [
 ]
 
 
+# Routes with measures (docs/adr/0224 §6), as lrs_cases.py reads them.
+RISING = [{"pts": [[0, 0], [100, 0], [100, 50]], "ms": [0, 100, 150]}]
+FALLING = [{"pts": [[0, 0], [0, 100]], "ms": [1000, 900]}]
+PARTS = [{"pts": [[0, 0], [100, 0]], "ms": [0, 100]}, {"pts": [[0, 50], [100, 50]], "ms": [100, 200]}]
+UNMEASURED = [{"pts": [[0, 0], [10, 0]], "ms": [None, None]}]
+
+MEASURE_CASES = [
+    ("by measure: the multiples and the ends, round a corner", RISING, rules(interval=40.0), look(section=3.0)),
+    ("by measure: falling measures run against the drawing, the left is east", FALLING, rules(interval=25.0, ends=False), look()),
+    ("by measure: two parts, the shared measure once", PARTS, rules(interval=50.0, ends=False), look(text="right")),
+    ("by measure: no measures", UNMEASURED, rules(), look()),
+]
+
+
+def route_json(parts):
+    return {"parts": [{"pts": [{"x": x, "y": y} for x, y in q["pts"]], "ms": q["ms"]} for q in parts]}
+
+
 def cases():
     return {
         "format": "kentos.stationing-cases",
         "version": 1,
         "source": SOURCE,
         "cases": [{"name": n, "shape": e, "rules": r, "look": lk, "expect": written(e, r, lk)} for n, e, r, lk in CASES],
+        "measureCases": [
+            {"name": n, "route": route_json(parts), "rules": r, "look": lk, "expect": written(parts, r, lk, measure=True)} for n, parts, r, lk in MEASURE_CASES
+        ],
     }
 
 

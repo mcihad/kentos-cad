@@ -459,6 +459,7 @@ fn with_second_part(b: &mut Bench) -> Vec<[f64; 2]> {
         y: common::N + y,
     };
     area.parts = Some(vec![AreaPart {
+        ms: None,
         pts: vec![
             at(30.0, -14.0),
             at(36.0, -14.0),

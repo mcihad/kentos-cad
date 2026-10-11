@@ -107,7 +107,7 @@ fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
                     o.insert("kind".into(), json!("line"));
                     o.insert("a".into(), xy(l.a));
                     o.insert("b".into(), xy(l.b));
-                    for (key, z) in [("za", l.za), ("zb", l.zb)] {
+                    for (key, z) in [("za", l.za), ("zb", l.zb), ("ma", l.ma), ("mb", l.mb)] {
                         if let Some(z) = z {
                             o.insert(key.into(), json!(z));
                         }
@@ -120,6 +120,10 @@ fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
                     if let Some(z) = &p.zs {
                         o.insert("zs".into(), zs(z));
                     }
+                    // A route's measures (docs/adr/0224), as its elevations.
+                    if let Some(m) = &p.ms {
+                        o.insert("ms".into(), zs(m));
+                    }
                     // A multi-part polyline's other parts (docs/adr/0174).
                     if let Some(parts) = p.parts.as_ref().filter(|p| !p.is_empty()) {
                         let parts = parts.iter().map(|part| {
@@ -127,6 +131,9 @@ fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
                             m.insert("pts".into(), pts(&part.pts));
                             if let Some(z) = &part.zs {
                                 m.insert("zs".into(), zs(z));
+                            }
+                            if let Some(ms) = &part.ms {
+                                m.insert("ms".into(), zs(ms));
                             }
                             Value::Object(m)
                         });
@@ -321,6 +328,26 @@ fn the_reports_say_what_was_left_out_and_why() {
     assert_eq!(said.map(|i| i.count), Some(1), "{:?}", r.report.notes);
     // The record of two parts is one object (docs/adr/0174).
     assert_eq!(fact(&r, "Kotlu nesne").as_deref(), Some("3"));
+    // A line's M values are its vertices' measures (docs/adr/0224): nothing dropped, the objects counted.
+    assert_eq!(fact(&r, "Ölçülü nesne").as_deref(), Some("3"));
+    assert!(
+        r.report
+            .notes
+            .iter()
+            .all(|i| i.what != "M (ölçü) değerleri"),
+        "{:?}",
+        r.report.notes
+    );
+    let (r, _) = read_fixture("rotalarm");
+    assert_eq!(fact(&r, "Ölçülü nesne").as_deref(), Some("3"));
+    // A point's M values are dropped, and said.
+    let (r, _) = read_fixture("karisik");
+    let said = r
+        .report
+        .notes
+        .iter()
+        .find(|i| i.what == "M (ölçü) değerleri");
+    assert_eq!(said.map(|i| i.count), Some(3), "{:?}", r.report.notes);
     // A ring whose closing position holds another height than the first says so; the first's height stays.
     let (r, _) = read_fixture("bare-polygon");
     let said = r

@@ -31,8 +31,8 @@
 //! |---|---|---|---|
 //! | every object | layer, flags, attributes | line weight? | colour?, label?, symbol?, key and value per attribute |
 //! | point | | p, z? | |
-//! | line | | a, b, za?, zb? | |
-//! | polyline, polygon | n; m if bulges; e if elevations; h if holes, then per hole: hole flags, k, j if bulges, d if elevations; q if parts, then per part: part flags, n, m if bulges, e if elevations, h if holes and its holes as above | pts (2n), bulges (m), zs (e), per hole: pts (2k), bulges (j), zs (d); per part: pts, bulges, zs, its holes' | |
+//! | line | | a, b, za?, zb?, ma?, mb? | |
+//! | polyline, polygon | n; m if bulges; e if elevations; v if measures; h if holes, then per hole: hole flags, k, j if bulges, d if elevations; q if parts, then per part: part flags, n, m if bulges, e if elevations, v if measures, h if holes and its holes as above | pts (2n), bulges (m), zs (e), ms (v), per hole: pts (2k), bulges (j), zs (d); per part: pts, bulges, zs, ms, its holes' | |
 //! | circle | | c, r | |
 //! | arc | | c, r, a0, a1 | |
 //! | ellipse | | c, major, ratio, t0, t1 | |
@@ -51,8 +51,8 @@
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
 //! kind's optional fields from bit 8 up, in the order the table names them
-//! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs; polygon:
-//! parts; text: align, width factor, mask (no value; docs/adr/0145), link
+//! (point: z; line: za, zb, ma, mb (docs/adr/0224); polyline and polygon:
+//! bulges, holes, zs, parts, ms (docs/adr/0224); text: align, width factor, mask (no value; docs/adr/0145), link
 //! (docs/adr/0175), box width, line spacing, runs (docs/adr/0182; a run's
 //! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 32 colour),
 //! text style, font, bold (no value), italic (no value), oblique
@@ -70,7 +70,7 @@
 //! (docs/adr/0192); raster: asset, file, opacity (docs/adr/0204), url
 //! (docs/adr/0207); pointcloud: opacity (docs/adr/0207)). A
 //! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
-//! holes. Dimension styles and hatch pattern types are numbered in the
+//! holes, 8 measures. Dimension styles and hatch pattern types are numbered in the
 //! contract's order.
 //!
 //! Block definitions (docs/adr/0144) are not objects of the drawing: they
@@ -90,6 +90,11 @@
 //! reaches the encoder, which refuses it with its place, instead of shifting
 //! every number after it. A path's `zs` numbers follow its bulges and come
 //! before its holes', though its flag (bit 10) is the last of the three.
+//!
+//! Vertex measures (docs/adr/0224) are laid out as elevations are: a line's
+//! ends two optional floats after its elevations, a path's or a part's `ms`
+//! a list after its `zs` (NaN a vertex without one). A polygon has none; the
+//! columns carry one anyway so that the encoder refuses it with its place.
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -281,6 +286,7 @@ const HOLE_ELEVATIONS: u32 = 2;
 const PART_BULGES: u32 = 1;
 const PART_ELEVATIONS: u32 = 2;
 const PART_HOLES: u32 = 4;
+const PART_MEASURES: u32 = 8;
 
 const DIMENSION_STYLES: [DimensionStyle; 10] = DimensionStyle::ALL;
 const HATCH_PATTERNS: [HatchPatternType; 5] = [
@@ -529,10 +535,12 @@ impl Packer {
                 b,
                 za,
                 zb,
+                ma,
+                mb,
             }) => {
                 self.point(a);
                 self.point(b);
-                for (bit, z) in [(OPT[0], za), (OPT[1], zb)] {
+                for (bit, z) in [(OPT[0], za), (OPT[1], zb), (OPT[2], ma), (OPT[3], mb)] {
                     if let Some(z) = z {
                         flags |= bit;
                         self.float(*z);
@@ -546,6 +554,7 @@ impl Packer {
                     bulges,
                     holes,
                     zs,
+                    ms,
                     parts,
                 } = path;
                 self.points(pts);
@@ -556,6 +565,10 @@ impl Packer {
                 if let Some(z) = zs {
                     flags |= OPT[2];
                     self.elevations(z);
+                }
+                if let Some(m) = ms {
+                    flags |= OPT[4];
+                    self.elevations(m);
                 }
                 if let Some(holes) = holes {
                     flags |= OPT[1];
@@ -569,6 +582,7 @@ impl Packer {
                         bulges,
                         holes,
                         zs,
+                        ms,
                     } in parts
                     {
                         let mut part = 0;
@@ -581,6 +595,9 @@ impl Packer {
                         if holes.is_some() {
                             part |= PART_HOLES;
                         }
+                        if ms.is_some() {
+                            part |= PART_MEASURES;
+                        }
                         self.int(part);
                         self.points(pts);
                         if let Some(b) = bulges {
@@ -588,6 +605,9 @@ impl Packer {
                         }
                         if let Some(z) = zs {
                             self.elevations(z);
+                        }
+                        if let Some(m) = ms {
+                            self.elevations(m);
                         }
                         if let Some(holes) = holes {
                             self.holes(holes);
@@ -1636,10 +1656,12 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
 fn allowed(kind: u8) -> u32 {
     match kind {
         0 => OPT[0] | OPT[1],
-        1 => OPT[0] | OPT[1],
-        // A polyline's parts are schema 17's (docs/adr/0174).
-        2 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
-        3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        // A line's measures are schema 39's (docs/adr/0224).
+        1 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        // A polyline's parts are schema 17's (docs/adr/0174), its measures schema 39's (docs/adr/0224;
+        // a polygon's are carried for the encoder to refuse).
+        2 => OPT[..5].iter().fold(0, |m, b| m | b),
+        3 => OPT[..5].iter().fold(0, |m, b| m | b),
         // A text's alignment, width factor and mask, schema 18's link (docs/adr/0175 §4), schema 20's box,
         // spacing and runs, schema 21's face (docs/adr/0183), schema 25's curve and its bulges
         // (docs/adr/0196); a leader's three and schema 30's arrowhead size (docs/adr/0205 §7).
@@ -1702,11 +1724,14 @@ fn geometry(
             b: c.point()?,
             za: if has(0) { Some(c.float()?) } else { None },
             zb: if has(1) { Some(c.float()?) } else { None },
+            ma: if has(2) { Some(c.float()?) } else { None },
+            mb: if has(3) { Some(c.float()?) } else { None },
         }),
         2 | 3 => {
             let pts = c.points()?;
             let bulges = if has(0) { Some(c.numbers()?) } else { None };
             let zs = if has(2) { Some(c.elevations()?) } else { None };
+            let ms = if has(4) { Some(c.elevations()?) } else { None };
             let holes = if has(1) { Some(c.holes()?) } else { None };
             let parts = if has(3) {
                 let q = c.usize()?;
@@ -1716,7 +1741,7 @@ fn geometry(
                 let mut parts = Vec::with_capacity(q);
                 for _ in 0..q {
                     let part = c.int()?;
-                    if part & !(PART_BULGES | PART_ELEVATIONS | PART_HOLES) != 0 {
+                    if part & !(PART_BULGES | PART_ELEVATIONS | PART_HOLES | PART_MEASURES) != 0 {
                         return Err(broken(&format!("parçanın bayrakları {part:#x}")));
                     }
                     let pts = c.points()?;
@@ -1726,6 +1751,11 @@ fn geometry(
                         None
                     };
                     let zs = if part & PART_ELEVATIONS != 0 {
+                        Some(c.elevations()?)
+                    } else {
+                        None
+                    };
+                    let ms = if part & PART_MEASURES != 0 {
                         Some(c.elevations()?)
                     } else {
                         None
@@ -1740,6 +1770,7 @@ fn geometry(
                         bulges,
                         holes,
                         zs,
+                        ms,
                     });
                 }
                 Some(parts)
@@ -1752,6 +1783,7 @@ fn geometry(
                 bulges,
                 holes,
                 zs,
+                ms,
                 parts,
             };
             if kind == 3 {
@@ -2795,6 +2827,8 @@ mod tests {
     fn unpacking_gives_back_the_objects_and_refuses_what_does_not_hold_together() {
         let entities = vec![
             Entity::Line(LineEntity {
+                ma: None,
+                mb: None,
                 base: base("a"),
                 a: Vec2 { x: 1.0, y: 2.0 },
                 b: Vec2 { x: 3.0, y: 4.0 },
@@ -2889,6 +2923,8 @@ mod tests {
     #[test]
     fn elevations_are_laid_out_as_the_table_says() {
         let line = Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base: base("0"),
             a: Vec2 { x: 1.0, y: 2.0 },
             b: Vec2 { x: 3.0, y: 4.0 },
@@ -2901,6 +2937,7 @@ mod tests {
             Vec2 { x: 2.0, y: 0.0 },
         ];
         let polygon = Entity::Polygon(PathEntity {
+            ms: None,
             base: base("0"),
             pts: pts.clone(),
             bulges: Some(vec![0.5]),
@@ -3005,6 +3042,8 @@ mod tests {
     fn a_changed_bit_or_field_is_a_difference() {
         let line = |x: f64| {
             Entity::Line(LineEntity {
+                ma: None,
+                mb: None,
                 base: base("a"),
                 a: Vec2 { x, y: 0.0 },
                 b: Vec2 { x: 1.0, y: 1.0 },

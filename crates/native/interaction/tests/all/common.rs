@@ -268,6 +268,8 @@ impl Bench {
     /// A line from `a` to `b` (east and north differences from (E, N)) on `layer`.
     pub fn add_line(&mut self, layer: &str, a: [f64; 2], b: [f64; 2]) -> kentos_domain::Slot {
         let line = Entity::Line(kentos_contracts::LineEntity {
+            ma: None,
+            mb: None,
             base: base(layer),
             a: wire(a),
             b: wire(b),
@@ -280,6 +282,7 @@ impl Bench {
     /// An open polyline (`closed` false) or a closed area through `pts` on `layer`.
     pub fn add_path(&mut self, layer: &str, pts: &[[f64; 2]], closed: bool) -> kentos_domain::Slot {
         let path = kentos_contracts::PathEntity {
+            ms: None,
             base: base(layer),
             pts: pts.iter().map(|p| wire(*p)).collect(),
             bulges: None,
@@ -303,6 +306,7 @@ impl Bench {
         bulges: &[f64],
     ) -> kentos_domain::Slot {
         let path = kentos_contracts::PathEntity {
+            ms: None,
             base: base(layer),
             pts: pts.iter().map(|p| wire(*p)).collect(),
             bulges: Some(bulges.to_vec()),

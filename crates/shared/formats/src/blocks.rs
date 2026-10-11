@@ -685,6 +685,7 @@ fn entity(s: &Shape) -> Option<Entity> {
     };
     let path =
         |base, pts: &[CoreVec2], bulges: &Option<Vec<f64>>, holes: &Option<Vec<Ring>>| PathEntity {
+            ms: None,
             base,
             pts: points_back(pts),
             bulges: bulges.clone(),
@@ -707,6 +708,8 @@ fn entity(s: &Shape) -> Option<Entity> {
             }),
         }),
         Shape::Line { a, b } => Entity::Line(LineEntity {
+            ma: None,
+            mb: None,
             base,
             a: back(*a),
             b: back(*b),
@@ -722,6 +725,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             parts: parts.as_ref().map(|ps| {
                 ps.iter()
                     .map(|part| AreaPart {
+                        ms: None,
                         pts: points_back(&part.pts),
                         bulges: part.bulges.clone(),
                         holes: None,
@@ -740,6 +744,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             parts: parts.as_ref().map(|ps| {
                 ps.iter()
                     .map(|part| AreaPart {
+                        ms: None,
                         pts: points_back(&part.pts),
                         bulges: part.bulges.clone(),
                         holes: part

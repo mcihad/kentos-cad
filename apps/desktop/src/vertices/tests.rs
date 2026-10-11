@@ -85,6 +85,12 @@ fn view(e: &kentos_contracts::Entity) -> Value {
             })
         })
         .collect();
+    // A measured route's measures, path by path (docs/adr/0224 §6).
+    let ms = kentos_native_application::elevation::measure_paths(e);
+    if kentos_native_application::elevation::elevated(&ms) {
+        let ms: Vec<_> = ms.iter().map(|p| p.zs.clone()).collect();
+        return json!({ "kind": e.kind(), "paths": paths, "ms": ms });
+    }
     json!({ "kind": e.kind(), "paths": paths })
 }
 

@@ -119,6 +119,7 @@ pub fn line_geometry(
 ) -> kentos_contracts::EntityGeometry {
     let arcs = l.bulges.iter().any(|b| *b != 0.0);
     kentos_contracts::EntityGeometry::Polyline {
+        ms: None,
         pts: l
             .pts
             .iter()

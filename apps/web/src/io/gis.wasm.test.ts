@@ -64,11 +64,15 @@ function canonical(r: ImportResult, encoding?: string): unknown {
       // Vertex elevations (docs/adr/0142), as the fixtures' canonical keys name them (gis/README.md).
       if (e.za != null) o.za = e.za;
       if (e.zb != null) o.zb = e.zb;
+      // A route's measures (docs/adr/0224).
+      if (e.ma != null) o.ma = e.ma;
+      if (e.mb != null) o.mb = e.mb;
     } else if (e.kind === 'polyline') {
       o.pts = e.pts.map(xy);
       if (e.zs) o.zs = e.zs;
+      if (e.ms) o.ms = e.ms;
       // A multi-part polyline's other parts (docs/adr/0174).
-      if (e.parts?.length) o.parts = e.parts.map((part) => ({ pts: part.pts.map(xy), ...(part.zs && { zs: part.zs }) }));
+      if (e.parts?.length) o.parts = e.parts.map((part) => ({ pts: part.pts.map(xy), ...(part.zs && { zs: part.zs }), ...(part.ms && { ms: part.ms }) }));
     } else if (e.kind === 'polygon') {
       area(o, e);
       if (e.parts?.length) o.parts = e.parts.map((part) => area({}, part));

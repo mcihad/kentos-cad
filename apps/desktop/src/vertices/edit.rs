@@ -19,31 +19,40 @@ use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_interaction::neighbours::{lines as neighbour_lines, neighbours_in};
 use kentos_interaction::spatial::Spatial;
 use kentos_interaction::{Format, Level};
-use kentos_native_application::elevation::paths as elevated_paths;
+use kentos_native_application::elevation::{self, paths as elevated_paths};
 use kentos_native_application::geometry::{entity_of, shape};
 use kentos_native_application::{ExecutionContext, edit};
 
 use crate::points::edit::{in_step, refusal};
 
-/// The cells that are edited, in the order Tab takes them.
+/// The cells that are edited, in the order Tab takes them; a route's
+/// measure (M) only on a measured one (docs/adr/0224 §6).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Column {
     East,
     North,
     Z,
+    M,
     Radius,
 }
 
 impl Column {
-    pub const ALL: [Column; 4] = [Column::East, Column::North, Column::Z, Column::Radius];
+    pub const ALL: [Column; 5] = [
+        Column::East,
+        Column::North,
+        Column::Z,
+        Column::M,
+        Column::Radius,
+    ];
 
-    /// By the cases' key: `east`, `north`, `z`, `radius`.
+    /// By the cases' key: `east`, `north`, `z`, `m`, `radius`.
     #[cfg(test)]
     pub fn from_key(key: &str) -> Option<Self> {
         Some(match key {
             "east" => Self::East,
             "north" => Self::North,
             "z" => Self::Z,
+            "m" => Self::M,
             "radius" => Self::Radius,
             _ => return None,
         })
@@ -56,6 +65,7 @@ impl Column {
             Self::East => format.east_label(),
             Self::North => format.north_label(),
             Self::Z => "Z",
+            Self::M => "M",
             Self::Radius => "Yarıçap",
         }
     }
@@ -134,9 +144,47 @@ pub fn refusal_text(r: &Refusal, format: &Format, adding: bool) -> String {
     format!("{PREFIX}{words}")
 }
 
-/// The object's rows.
-pub fn rows_of(e: &Entity) -> Vec<Row> {
-    vertex_table::rows(&elevated_paths(e))
+/// A row of the table: the core's, and on a measured route its vertex's
+/// measure (`measured`: the object has one; docs/adr/0224 §6).
+#[derive(Clone, Debug, PartialEq)]
+pub struct TableRow {
+    pub row: Row,
+    pub m: Option<f64>,
+    pub measured: bool,
+}
+
+impl std::ops::Deref for TableRow {
+    type Target = Row;
+    fn deref(&self) -> &Row {
+        &self.row
+    }
+}
+
+/// Whether the object is a measured route (docs/adr/0224): a line or a
+/// polyline with a vertex measure.
+pub fn is_measured(e: &Entity) -> bool {
+    !matches!(e, Entity::Polygon(_)) && elevation::elevated(&elevation::measure_paths(e))
+}
+
+/// The object's rows, a measured route's with each vertex's measure
+/// (`measure_paths`' order is the rows').
+pub fn rows_of(e: &Entity) -> Vec<TableRow> {
+    let rows = vertex_table::rows(&elevated_paths(e));
+    let measured = is_measured(e);
+    let ms = if measured {
+        elevation::measure_paths(e)
+    } else {
+        Vec::new()
+    };
+    rows.into_iter()
+        .map(|row| TableRow {
+            m: ms
+                .get(row.path)
+                .and_then(|p| p.zs.get(row.index).copied().flatten()),
+            row,
+            measured,
+        })
+        .collect()
 }
 
 /// A number as JavaScript writes it (`String(n)`): the shortest digits that read back.
@@ -150,7 +198,7 @@ fn js_number(v: f64) -> String {
 /// The text a cell's editor opens with: the value whole (the web's
 /// `cellText`), in a local project's unit (`per_metre`, docs/adr/0165 §2)
 /// without the multiplication's last-digit noise.
-pub fn cell_text(row: &Row, col: Column, per_metre: f64) -> String {
+pub fn cell_text(row: &TableRow, col: Column, per_metre: f64) -> String {
     let shown = |v: f64| {
         if per_metre == 1.0 {
             js_number(v)
@@ -166,13 +214,18 @@ pub fn cell_text(row: &Row, col: Column, per_metre: f64) -> String {
         Column::East => shown(row.p.x),
         Column::North => shown(row.p.y),
         Column::Z => row.z.map(shown).unwrap_or_default(),
+        // A measure is the route's own unit's: never converted.
+        Column::M => row.m.map(js_number).unwrap_or_default(),
         Column::Radius => row.radius.map(shown).unwrap_or_default(),
     }
 }
 
 /// Whether the row's cell is edited: a line's edge takes no arc, and no
 /// edge leaves an open path's last vertex.
-pub fn cell_editable(kind: Kind, row: &Row, col: Column) -> bool {
+pub fn cell_editable(kind: Kind, row: &TableRow, col: Column) -> bool {
+    if col == Column::M {
+        return row.measured;
+    }
     col != Column::Radius || (kind != Kind::Line && row.chord.is_some())
 }
 
@@ -195,6 +248,7 @@ pub fn geometry_of(e: &Entity, kind: Kind, paths: &[Elevated]) -> Option<EntityG
     let first = paths.first()?;
     Some(match kind {
         Kind::Line => EntityGeometry::Line {
+            ms: None,
             a: wire(*first.pts.first()?),
             b: wire(*first.pts.get(1)?),
             zs: Some(first.zs.clone()),
@@ -211,6 +265,7 @@ pub fn geometry_of(e: &Entity, kind: Kind, paths: &[Elevated]) -> Option<EntityG
                     .map(|(_, p)| {
                         let own = ring(p);
                         AreaPart {
+                            ms: None,
                             pts: own.pts,
                             bulges: own.bulges,
                             zs: own.zs,
@@ -221,6 +276,7 @@ pub fn geometry_of(e: &Entity, kind: Kind, paths: &[Elevated]) -> Option<EntityG
                 _ => Vec::new(),
             };
             EntityGeometry::Polyline {
+                ms: None,
                 pts: r.pts,
                 bulges: r.bulges,
                 zs: r.zs,
@@ -251,6 +307,7 @@ pub fn geometry_of(e: &Entity, kind: Kind, paths: &[Elevated]) -> Option<EntityG
                         .filter_map(|_| rest.next().map(ring))
                         .collect();
                     Some(AreaPart {
+                        ms: None,
                         pts: own.pts,
                         bulges: own.bulges,
                         zs: own.zs,
@@ -394,11 +451,13 @@ pub fn write_cell(
         };
     };
     let format = Format::of(doc.settings());
-    let empty = js_trim(text).is_empty() && matches!(col, Column::Z | Column::Radius);
+    let empty = js_trim(text).is_empty() && matches!(col, Column::Z | Column::M | Column::Radius);
     let v = if empty {
         None
     } else {
         match parse_number(text) {
+            // A measure is the route's own unit's: never converted.
+            Some(v) if col == Column::M => Some(v),
             Some(v) => Some(metres_of(doc)(v)),
             None => {
                 return Outcome {
@@ -428,6 +487,7 @@ pub fn write_cell(
             }
             with_z(&paths, at.path, at.index, v)
         }
+        Column::M => return write_measure(doc, slot, &e, at, v),
         Column::Radius => {
             // A radius within 1e-9 of the edge's is the edge's: the cell opens
             // with it, its last bit is the platform's.
@@ -449,6 +509,65 @@ pub fn write_cell(
         false,
         topology,
     )
+}
+
+/// A vertex's measure (docs/adr/0224 §6; the web's `writeMeasure`): the
+/// route's measures written with its geometry as they are (empty removes
+/// that vertex's), one step “Köşe düzenle”; an unchanged one writes nothing.
+fn write_measure(doc: &mut Document, slot: Slot, e: &Entity, at: At, m: Option<f64>) -> Outcome {
+    let mut ms: Vec<Vec<Option<f64>>> = elevation::measure_paths(e)
+        .into_iter()
+        .map(|p| p.zs)
+        .collect();
+    let Some(was) = ms.get(at.path).and_then(|p| p.get(at.index)).copied() else {
+        return Outcome {
+            said: vec![format!("{PREFIX}Köşe bulunamadı.")],
+            ..Outcome::default()
+        };
+    };
+    if was == m {
+        return Outcome::default();
+    }
+    ms[at.path][at.index] = m;
+    let (Some(kind), Some(uid)) = (kind_of(e), doc.uid(slot)) else {
+        return Outcome::default();
+    };
+    // The geometry as the table writes it (its elevations as they are), the measures as typed.
+    let Some(mut geometry) = geometry_of(e, kind, &elevated_paths(e)) else {
+        return Outcome::default();
+    };
+    match &mut geometry {
+        EntityGeometry::Line { ms: m, .. } => *m = ms.first().cloned(),
+        EntityGeometry::Polyline { ms: m, parts, .. } => {
+            *m = ms.first().cloned();
+            for (k, q) in parts.iter_mut().flatten().enumerate() {
+                q.ms = ms.get(k + 1).cloned();
+            }
+        }
+        _ => return Outcome::default(),
+    }
+    let change = EntityEdit::Update {
+        uid: uid.to_string(),
+        geometry,
+    };
+    let refused = in_step(doc, STEP, |doc| {
+        let input = EntitiesEdit {
+            operation: EditOperation::Properties,
+            changes: vec![change],
+            expected_revision: None,
+        };
+        refusal(edit::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
+    });
+    match refused {
+        Some(said) => Outcome {
+            said: vec![said],
+            ..Outcome::default()
+        },
+        None => Outcome {
+            step: Some(STEP),
+            ..Outcome::default()
+        },
+    }
 }
 
 /// Satır ekle's row written after vertex `after` (docs/adr/0172 §5; the

@@ -151,6 +151,7 @@ fn contract_parts(x: &Whole) -> Vec<(f64, AreaPart)> {
                 } => Some((
                     net_area(a),
                     AreaPart {
+                        ms: None,
                         pts,
                         bulges,
                         holes,
@@ -162,6 +163,7 @@ fn contract_parts(x: &Whole) -> Vec<(f64, AreaPart)> {
             .collect();
     };
     let own = AreaPart {
+        ms: None,
         pts: p.pts.clone(),
         bulges: p.bulges.clone(),
         holes: p.holes.clone(),
@@ -171,6 +173,7 @@ fn contract_parts(x: &Whole) -> Vec<(f64, AreaPart)> {
         .chain(p.parts.iter().flatten().cloned())
         .map(|part| {
             let size = area_of_entity(&shape(&Entity::Polygon(kentos_contracts::PathEntity {
+                ms: None,
                 base: p.base.clone(),
                 pts: part.pts.clone(),
                 bulges: part.bulges.clone(),

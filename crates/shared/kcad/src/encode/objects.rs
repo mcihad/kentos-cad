@@ -44,6 +44,8 @@ pub(super) enum Val<'d> {
     Attrs(&'d BTreeMap<String, String>),
     /// Elevations and the number of vertices they belong to (one each, §6.6).
     Elevations(&'d [Option<f64>], usize),
+    /// A polyline's or its part's measures, as many as its vertices (docs/adr/0224).
+    Measures(&'d [Option<f64>], usize),
     Rings(&'d [RingGeometry]),
     /// A multi-part area's or polyline's parts past its first (§6.6).
     Parts(&'d [AreaPart]),
@@ -192,6 +194,13 @@ impl<'d> Encoder<'d> {
                 if let Some(z) = e.zb {
                     f.push(("zb", Val::Float(z)));
                 }
+                // A route's measures (docs/adr/0224 §1).
+                if let Some(m) = e.ma {
+                    f.push(("ma", Val::Float(m)));
+                }
+                if let Some(m) = e.mb {
+                    f.push(("mb", Val::Float(m)));
+                }
             }
             Entity::Polyline(e) | Entity::Polygon(e) => {
                 f.push(("pts", Val::Points(&e.pts)));
@@ -200,6 +209,21 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(z) = &e.zs {
                     f.push(("zs", Val::Elevations(z, e.pts.len())));
+                }
+                // A polyline's measures (docs/adr/0224 §1): a route is a line, an area has none.
+                let measured = e.ms.is_some()
+                    || e.parts
+                        .as_ref()
+                        .is_some_and(|parts| parts.iter().any(|q| q.ms.is_some()));
+                if measured && matches!(entity, Entity::Polygon(_)) {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(
+                        Code::BadValue,
+                        "kapalı alanın ölçüsü (M) olamaz; yalnız çizginin ve çoklu çizginin olur",
+                    ));
+                }
+                if let Some(m) = &e.ms {
+                    f.push(("ms", Val::Measures(m, e.pts.len())));
                 }
                 if let Some(h) = &e.holes {
                     if matches!(entity, Entity::Polyline(_)) {
@@ -901,6 +925,25 @@ impl<'d> Encoder<'d> {
                 ),
             ));
         }
+        self.optional_floats(list)
+    }
+
+    /// A path's measures (docs/adr/0224), one a vertex, `null` for one without.
+    fn measures(&mut self, list: &'d [Option<f64>], vertices: usize) -> Result<(), KcadError> {
+        if list.len() != vertices {
+            return Err(self.fail(
+                Code::BadValue,
+                &format!(
+                    "{} ölçü var ama {vertices} köşe var; her köşenin bir ölçüsü olmalı (ölçüsüz köşe için null)",
+                    list.len()
+                ),
+            ));
+        }
+        self.optional_floats(list)
+    }
+
+    /// Numbers and `null`s.
+    fn optional_floats(&mut self, list: &'d [Option<f64>]) -> Result<(), KcadError> {
         self.open(list.len(), false)?;
         for (i, z) in list.iter().enumerate() {
             self.at(Seg::Index(i), |e| match z {
@@ -964,6 +1007,7 @@ impl<'d> Encoder<'d> {
             Val::Points(list) => self.points(list),
             Val::Floats(list) => self.floats(list),
             Val::Elevations(list, vertices) => self.elevations(list, vertices),
+            Val::Measures(list, vertices) => self.measures(list, vertices),
             Val::Attrs(attrs) => {
                 let mut pairs: Vec<(&String, &String)> = attrs.iter().collect();
                 pairs.sort_by(|a, b| key_order(a.0, b.0));
@@ -1011,11 +1055,16 @@ impl<'d> Encoder<'d> {
                 self.open(parts.len(), false)?;
                 for (i, part) in parts.iter().enumerate() {
                     self.at(Seg::Index(i), |e| {
-                        let optional = usize::from(part.zs.is_some())
+                        let optional = usize::from(part.ms.is_some())
+                            + usize::from(part.zs.is_some())
                             + usize::from(part.holes.is_some())
                             + usize::from(part.bulges.is_some());
                         e.open(1 + optional, true)?;
-                        // zs (2), pts (3), holes (5), bulges (6).
+                        // ms (2), zs (2), pts (3), holes (5), bulges (6).
+                        if let Some(ms) = &part.ms {
+                            e.key("ms");
+                            e.at(Seg::Name("ms"), |e| e.measures(ms, part.pts.len()))?;
+                        }
                         if let Some(zs) = &part.zs {
                             e.key("zs");
                             e.at(Seg::Name("zs"), |e| e.elevations(zs, part.pts.len()))?;

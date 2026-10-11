@@ -122,8 +122,8 @@ const PIN_ROTATION = 4;
 const PIN_HIDDEN = 8;
 /**
  * A kind's optional fields from bit 8 up, in the order the Rust module's table
- * names them (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
- * polygon: parts; text: align, width factor, mask (docs/adr/0145), link, box
+ * names them (point: z; line: za, zb, ma, mb (docs/adr/0224); polyline and polygon: bulges, holes, zs,
+ * parts, ms (docs/adr/0224); text: align, width factor, mask (docs/adr/0145), link, box
  * width, line spacing, runs, text style, font, bold, italic, oblique
  * (docs/adr/0183), curve, its bulges (docs/adr/0196); dimension: text, style, angle, c, mask, za, zb, dimension
  * style, arrow, arrow size, ext offset, ext beyond, text gap, centred,
@@ -159,10 +159,11 @@ const runFlags = (r: TextRun): number =>
 /** A hole's flags: its bulges, its elevations (docs/adr/0142). */
 const HOLE_BULGES = 1;
 const HOLE_ELEVATIONS = 2;
-/** A part's flags: its bulges, its elevations, its holes (docs/adr/0143). */
+/** A part's flags: its bulges, its elevations, its holes (docs/adr/0143), a polyline's part's measures (docs/adr/0224). */
 const PART_BULGES = 1;
 const PART_ELEVATIONS = 2;
 const PART_HOLES = 4;
+const PART_MEASURES = 8;
 
 /**
  * Orders text as UTF-8 bytes (code points) do: the contract's attribute map
@@ -329,16 +330,18 @@ class Packer {
     });
   }
 
-  elevations(list: unknown, field: string, vertices: number): void {
-    if (!Array.isArray(list)) throw unwritable('wrong_type', `${this.where}/${field}`, 'kot listesi olmalı');
-    if (list.length !== vertices) throw unwritable('bad_value', `${this.where}/${field}`, `${list.length} kot var ama ${vertices} köşe var; her köşenin bir kotu olmalı (kotsuz köşe için null)`);
+  /** Elevations, or with `measures` a route's measures (docs/adr/0224): as many as the vertices, `null` for one without. */
+  elevations(list: unknown, field: string, vertices: number, measures = false): void {
+    const [noun, its, without] = measures ? ['ölçü', 'ölçüsü', 'ölçüsüz'] : ['kot', 'kotu', 'kotsuz'];
+    if (!Array.isArray(list)) throw unwritable('wrong_type', `${this.where}/${field}`, `${noun} listesi olmalı`);
+    if (list.length !== vertices) throw unwritable('bad_value', `${this.where}/${field}`, `${list.length} ${noun} var ama ${vertices} köşe var; her köşenin bir ${its} olmalı (${without} köşe için null)`);
     this.int(list.length);
     this.floats.room(list.length);
     for (let i = 0; i < list.length; i++) {
       const z: unknown = list[i];
       if (z === null) this.floats.push(Number.NaN);
       else if (typeof z === 'number' && Number.isFinite(z)) this.floats.push(z);
-      else throw unwritable(typeof z === 'number' ? 'non_finite' : 'wrong_type', `${this.where}/${field}/${i}`, typeof z === 'number' ? Packer.badFloat(z)! : 'kot sayı ya da null olmalı');
+      else throw unwritable(typeof z === 'number' ? 'non_finite' : 'wrong_type', `${this.where}/${field}/${i}`, typeof z === 'number' ? Packer.badFloat(z)! : `${noun} sayı ya da null olmalı`);
     }
   }
 
@@ -436,12 +439,18 @@ class Packer {
         this.point(e.b, 'b', kind);
         if (e.za !== undefined) (flags |= OPT[0]), this.float(e.za, 'za');
         if (e.zb !== undefined) (flags |= OPT[1]), this.float(e.zb, 'zb');
+        // A route's measures (docs/adr/0224).
+        if (e.ma !== undefined) (flags |= OPT[2]), this.float(e.ma, 'ma');
+        if (e.mb !== undefined) (flags |= OPT[3]), this.float(e.mb, 'mb');
         break;
       case 'polyline':
       case 'polygon': {
         this.points(e.pts, 'pts', kind);
         if (e.bulges !== undefined) (flags |= OPT[0]), this.numbers(e.bulges, 'bulges');
         if (e.zs !== undefined) (flags |= OPT[2]), this.elevations(e.zs, 'zs', e.pts.length);
+        // A polyline's measures (docs/adr/0224); a polygon's are not the contract's: counted as dropped above, never written.
+        const ms = e.kind === 'polyline' ? e.ms : undefined;
+        if (ms !== undefined) (flags |= OPT[4]), this.elevations(ms, 'ms', e.pts.length, true);
         // A polyline's holes are not the contract's: counted as dropped above, never written.
         const holes = e.kind === 'polygon' ? e.holes : undefined;
         if (holes !== undefined) {
@@ -455,11 +464,12 @@ class Packer {
           flags |= OPT[3];
           this.int(parts.length);
           parts.forEach((p, i) => {
-            for (const key in p) if (key !== 'pts' && key !== 'bulges' && key !== 'holes' && key !== 'zs') this.drop(`${kind}.parts.${key}`);
-            this.int((p.bulges !== undefined ? PART_BULGES : 0) | (p.zs !== undefined ? PART_ELEVATIONS : 0) | (p.holes !== undefined ? PART_HOLES : 0));
+            for (const key in p) if (key !== 'pts' && key !== 'bulges' && key !== 'holes' && key !== 'zs' && key !== 'ms') this.drop(`${kind}.parts.${key}`);
+            this.int((p.bulges !== undefined ? PART_BULGES : 0) | (p.zs !== undefined ? PART_ELEVATIONS : 0) | (p.holes !== undefined ? PART_HOLES : 0) | (p.ms !== undefined ? PART_MEASURES : 0));
             this.points(p.pts, 'parts.pts', kind);
             if (p.bulges !== undefined) this.numbers(p.bulges, `parts/${i}/bulges`);
             if (p.zs !== undefined) this.elevations(p.zs, `parts/${i}/zs`, p.pts.length);
+            if (p.ms !== undefined) this.elevations(p.ms, `parts/${i}/ms`, p.pts.length, true);
             if (p.holes !== undefined) this.holes(p.holes, `parts/${i}/holes`, kind);
           });
         }
@@ -1065,12 +1075,15 @@ export class ColumnsReader {
         e.b = this.pt();
         if (has(0)) e.za = this.num();
         if (has(1)) e.zb = this.num();
+        if (has(2)) e.ma = this.num();
+        if (has(3)) e.mb = this.num();
         break;
       case 'polyline':
       case 'polygon':
         e.pts = this.pts();
         if (has(0)) e.bulges = this.nums();
         if (has(2)) e.zs = this.elevs();
+        if (has(4)) e.ms = this.elevs();
         if (has(1)) e.holes = this.holes();
         if (has(3)) {
           const q = this.readInt();
@@ -1080,6 +1093,7 @@ export class ColumnsReader {
             const part: Record<string, unknown> = { pts: this.pts() };
             if (pf & PART_BULGES) part.bulges = this.nums();
             if (pf & PART_ELEVATIONS) part.zs = this.elevs();
+            if (pf & PART_MEASURES) part.ms = this.elevs();
             if (pf & PART_HOLES) part.holes = this.holes();
             parts.push(part);
           }

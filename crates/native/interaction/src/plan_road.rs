@@ -253,6 +253,7 @@ impl PlanRoad {
         if m.road_axis {
             objects.push((
                 EntityGeometry::Polyline {
+                    ms: None,
                     pts: wire_all(&axis),
                     bulges: None,
                     zs: None,

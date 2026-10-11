@@ -1,0 +1,9 @@
+Rota;Km;Ofset;Tur
+D-100;40;5;kaza
+D-100;125;-3;levha
+D-200;50;;köprü
+D-300;950;2;kavşak
+D-999;10;;yok
+D-100;500;;dışarı
+D-400;10;;ölçüsüz
+D-100;abc;;bozuk

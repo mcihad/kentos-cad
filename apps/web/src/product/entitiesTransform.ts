@@ -15,7 +15,7 @@ import { fixed } from '../core/displayNumber';
 import type { Geometry } from '../wasm/pack';
 import { checkRevision, checkUids, error, failed, findObjects, notFinite, notFiniteValue, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
-import { assignElevations, elevatedPaths } from './elevation';
+import { assignElevations, assignMeasures, elevatedPaths, hasElevation, measuredPaths } from './elevation';
 
 /**
  * `cad.entities.transform` v1 (docs/adr/0037, 0047): objects named by their
@@ -269,7 +269,26 @@ function warped(sources: readonly Entity[], warp: Warp): Stop | { moved: Entity[
     assignElevations(e, answer.zs[i]);
     return e;
   });
+  // A route's measures stay with their vertices, new ones on an edge linear along it (docs/adr/0224 §2).
+  withMeasures(sources, moved, (list, ms) => {
+    const m = warpShapes(list, ms, warp);
+    return 'error' in m ? null : m.zs;
+  });
   return { moved, curves: answer.curves, kept: answer.kept };
+}
+
+/**
+ * `moved`, what `sources` became, given the measures `carry` (the warp run again with the measures in the
+ * elevations' place) makes of the measured ones' (docs/adr/0224 §2).
+ */
+function withMeasures(sources: readonly Entity[], moved: Entity[], carry: (list: Entity[], ms: (number | null)[][][]) => (number | null)[][][] | null): void {
+  const at = sources.flatMap((e, i) => (hasElevation(measuredPaths(e)) ? [i] : []));
+  if (!at.length) return;
+  const ms = carry(
+    at.map((i) => sources[i]),
+    at.map((i) => measuredPaths(sources[i]).map((p) => p.zs)),
+  );
+  if (ms) at.forEach((i, k) => assignMeasures(moved[i], ms[k]));
 }
 
 /** The objects on a rubber sheet (the core's `rubberShapes`), each keeping its kind and fields; the warnings' counts. */
@@ -284,6 +303,10 @@ function onSheet(sources: readonly Entity[], links: Extract<Transform, { kind: '
     const e = withGeometry(sources[i], shape as unknown as Geometry);
     assignElevations(e, answer.zs[i]);
     return e;
+  });
+  withMeasures(sources, moved, (list, ms) => {
+    const m = rubberShapes(list, ms, links);
+    return 'error' in m ? null : m.zs;
   });
   return { moved, kept: answer.kept, bent: answer.bent, bend: answer.bend };
 }

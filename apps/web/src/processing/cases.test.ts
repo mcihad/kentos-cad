@@ -78,6 +78,7 @@ const TABLE_POINTS = JSON.parse(file('table-points.json')) as CaseFile;
 const GENERATE = JSON.parse(file('generate.json')) as CaseFile;
 const SAMPLING = JSON.parse(file('sampling.json')) as CaseFile;
 const GENERALIZE = JSON.parse(file('generalize.json')) as CaseFile;
+const LRS = JSON.parse(file('lrs.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
@@ -484,6 +485,16 @@ describe('sampling cases (fixtures/processing/v1/sampling.json, docs/adr/0220)',
       const more = SAMPLING.toleranceFields ?? [];
       check(c, await play(SAMPLING, c, 'client'), SAMPLING.tolerance, SAMPLING.tolerance, more);
       check(c, await play(SAMPLING, c, 'worker'), SAMPLING.tolerance, SAMPLING.tolerance, more);
+    });
+  }
+});
+
+describe('linear referencing cases (fixtures/processing/v1/lrs.json, docs/adr/0224)', () => {
+  for (const c of LRS.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const more = LRS.toleranceFields ?? [];
+      check(c, await play(LRS, c, 'client'), LRS.tolerance, LRS.tolerance, more);
+      check(c, await play(LRS, c, 'worker'), LRS.tolerance, LRS.tolerance, more);
     });
   }
 });

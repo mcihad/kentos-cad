@@ -218,6 +218,11 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         zs: Option<Vec<Option<f64>>>,
+        /// The ends' measures (M) as written (docs/adr/0224 §2), as `zs`;
+        /// absent: each takes one from the objects the edit names.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        ms: Option<Vec<Option<f64>>>,
     },
     /// An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
     /// one at vertex i bending the edge to vertex i + 1.
@@ -232,6 +237,12 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         zs: Option<Vec<Option<f64>>>,
+        /// The vertices' measures (M) as written (docs/adr/0224 §2), as
+        /// `zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex
+        /// takes one from the objects the edit names.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        ms: Option<Vec<Option<f64>>>,
         /// A multi-part polyline's parts past its first, each its vertices,
         /// arcs and elevations, without holes (docs/adr/0174). The geometry
         /// is the whole polyline: absent, it has one part, so an edit of a

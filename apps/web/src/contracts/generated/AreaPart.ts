@@ -12,4 +12,9 @@ export type AreaPart = { pts: Array<Vec2>, bulges?: Array<number>, holes?: Array
 /**
  * Each vertex's elevation, as the area's own `zs` (docs/adr/0142).
  */
-zs?: Array<number | null>, };
+zs?: Array<number | null>, 
+/**
+ * A polyline's part's measures, as the polyline's own `ms`
+ * (docs/adr/0224 §1); an area's part has none.
+ */
+ms?: Array<number | null>, };
