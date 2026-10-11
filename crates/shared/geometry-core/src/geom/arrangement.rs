@@ -9,6 +9,7 @@
 //!   3. A rule decides, from the winding numbers of the area sources on
 //!      either side, whether a piece bounds the result.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at};
@@ -325,14 +326,30 @@ fn u_of(x: f64, y: f64) -> f64 {
 /// signed crossings of a ray in a fixed generic direction, with the edges
 /// bucketed in bands across it. Same result as `winding` off the edges.
 pub struct WindingIndex<'a> {
-    edges: &'a [Edge],
+    edges: Cow<'a, [Edge]>,
     bands: HashMap<i64, Vec<usize>>,
     u0: f64,
     h: f64,
 }
 
+impl WindingIndex<'static> {
+    /// An index that keeps its edges (docs/adr/0220: many points against one set, kept beside other indexes).
+    pub fn owned(edges: Vec<Edge>) -> WindingIndex<'static> {
+        WindingIndex::build(Cow::Owned(edges))
+    }
+}
+
 impl<'a> WindingIndex<'a> {
     pub fn new(edges: &'a [Edge]) -> WindingIndex<'a> {
+        WindingIndex::build(Cow::Borrowed(edges))
+    }
+
+    /// The edges it counts.
+    pub fn edges(&self) -> &[Edge] {
+        &self.edges
+    }
+
+    fn build(edges: Cow<'a, [Edge]>) -> WindingIndex<'a> {
         let ranges: Vec<(f64, f64)> = edges
             .iter()
             .map(|e| {
@@ -437,7 +454,7 @@ impl<'a> WindingIndex<'a> {
             }
         }
         if degenerate {
-            winding(self.edges, p)
+            winding(&self.edges, p)
         } else {
             w
         }

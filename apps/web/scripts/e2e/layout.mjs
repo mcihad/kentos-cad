@@ -227,6 +227,17 @@ const ITEMS = [
   },
   { id: 'processing-generate-concave', open: (ui) => ui.run('processing.run.generate.concaveHull'), ready: '.dialog--ptool' },
   {
+    id: 'processing-sample-grid',
+    open: (ui) => ui.eval(`import('/src/ui/processing/ToolDialog.ts').then((m) => m.openToolDialog(window.kentos, 'sample.grid', { shape: 'hexagon', keep: 'meeting' }))`),
+    ready: '.dialog--ptool',
+  },
+  {
+    id: 'processing-sample-random',
+    open: (ui) => ui.eval(`import('/src/ui/processing/ToolDialog.ts').then((m) => m.openToolDialog(window.kentos, 'sample.random', { count: '$alan / 10000 * 5', min: 15 }))`),
+    ready: '.dialog--ptool',
+  },
+  { id: 'processing-sample-along', open: (ui) => ui.run('processing.run.sample.alongLines'), ready: '.dialog--ptool' },
+  {
     id: 'processing-transfer-map',
     open: (ui) =>
       ui.eval(

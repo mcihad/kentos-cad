@@ -603,7 +603,7 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     // docs/adr/0235, Uzaklık ve maliyet's four, docs/adr/0236, Uygunluk analizi's six, docs/adr/0237, Mekânsal
     // istatistik's nine, docs/adr/0238, Uzaktan algılama's eight, docs/adr/0242, Çok boyutlu veri's three,
     // docs/adr/0243, among them) and the nine point cloud tools, the desktop's own for now (docs/adr/0207 §7).
-    assert_eq!(app.processing_meta(), "127 araç");
+    assert_eq!(app.processing_meta(), "132 araç");
     // Turkish letters folded: “kose numara” finds Köşe noktalarını numarala only (as the web's test).
     event(
         &mut app,

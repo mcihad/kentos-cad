@@ -381,6 +381,11 @@ türünün işaretidir (bkz. §10).
 | `generate.bounding` | Sınırlayıcı geometri | Dışbükey zarf, sınır kutusu, en küçük alanlı döndürülmüş kutu ya da en küçük daire; Her nesne, Hepsi ya da Alana göre; Zarf alanı, Kutu genişliği ve yüksekliği, Kutu uzunluğu ve semti, Daire yarıçapı (§4). |
 | `generate.concaveHull` | İçbükey zarf | Delaunay üçgenleri kenar oranıyla dıştan aşındırılır (JTS ve GEOS), isteğe bağlı delikler; gruplama Sınırlayıcı geometri'ninki; Zarf alanı (§5). |
 | `generate.pole` | Ulaşılmazlık kutbu | Alanın kenarlarından en uzak iç noktası (polylabel) Hassasiyet içinde, Uzaklık ile; çok parçalıda en uzak parçanınki, dairede merkezi (§6). |
+| `sample.grid` | Ağ oluştur | Nesnelerin kutusunu dikdörtgen, düz üstlü altıgen ya da eşkenar üçgen hücrelerle ya da ağın çizgileriyle kaplar; Koordinatlara otur ile aralığın katlarındaki genel kafes; Kutunun hepsi ya da Nesnelere değenler (Konuma göre seç'in Kesişen'i); Satır, Sütun, çizgilerde Kuzey ve Doğu; en çok 1 000 000 parça (ADR 0220 §2). |
+| `sample.regular` | Düzenli noktalar | Alanların içine doğu ve kuzey aralıklarıyla, katlarda ya da hücre ortalarında; sınırdaki nokta alınır; tohumlu Rastgele kaydırma (§3). |
+| `sample.random` | Rastgele noktalar | Alanların içine ya da çizgilerin üstüne nesne başına ifadeli sayıda; bütün noktalar arası en az uzaklık ve Deneme; tohum her platformda aynı noktaları verir; çok ince alan söylenir; çizgide Uzaklık, Parça, kot (§4). |
+| `sample.alongLines` | Hat boyunca nokta | Çizgilerin ve alan sınırlarının üstüne aralıkla (başlangıç ve bitiş payı) ya da eşit parçalara, uçlar isteğe bağlı; Uzaklık, Semt, Parça, kot (§5). |
+| `sample.subdivide` | Alt bölümlere ayır | Alanları ve çoklu çizgileri en çok köşe sayısına göre parçalara ayırır (PostGIS ST_Subdivide; alan doğru boyunca kesilir, yaylar kesin); Parça, kotlar (§6). |
 
 ## 12. Masaüstü
 

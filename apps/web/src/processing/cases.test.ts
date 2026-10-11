@@ -75,6 +75,7 @@ const TRANSFER = JSON.parse(file('transfer.json')) as CaseFile;
 const LAYER_OPS = JSON.parse(file('layers.json')) as CaseFile;
 const CONVERT = JSON.parse(file('convert.json')) as CaseFile;
 const GENERATE = JSON.parse(file('generate.json')) as CaseFile;
+const SAMPLING = JSON.parse(file('sampling.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
@@ -460,6 +461,16 @@ describe('geometry generation cases (fixtures/processing/v1/generate.json, docs/
       const more = GENERATE.toleranceFields ?? [];
       check(c, await play(GENERATE, c, 'client'), GENERATE.tolerance, GENERATE.tolerance, more);
       check(c, await play(GENERATE, c, 'worker'), GENERATE.tolerance, GENERATE.tolerance, more);
+    });
+  }
+});
+
+describe('sampling cases (fixtures/processing/v1/sampling.json, docs/adr/0220)', () => {
+  for (const c of SAMPLING.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const more = SAMPLING.toleranceFields ?? [];
+      check(c, await play(SAMPLING, c, 'client'), SAMPLING.tolerance, SAMPLING.tolerance, more);
+      check(c, await play(SAMPLING, c, 'worker'), SAMPLING.tolerance, SAMPLING.tolerance, more);
     });
   }
 });

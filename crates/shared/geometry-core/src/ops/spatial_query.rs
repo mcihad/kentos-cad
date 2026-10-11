@@ -258,7 +258,7 @@ pub(crate) fn edge_gap(e1: &Edge, e2: &Edge) -> f64 {
     best
 }
 
-fn edges_meet(e1: &Edge, e2: &Edge) -> bool {
+pub(crate) fn edges_meet(e1: &Edge, e2: &Edge) -> bool {
     !intersect_edges(e1, e2).is_empty() || edge_gap(e1, e2) <= TOLERANCE
 }
 

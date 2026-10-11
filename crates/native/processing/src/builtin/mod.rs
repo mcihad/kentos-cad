@@ -23,6 +23,7 @@ pub mod queries;
 pub mod raster_ops;
 pub mod raster_vector;
 pub mod remote;
+pub mod sampling;
 pub mod select_by_expression;
 pub mod select_by_location;
 pub mod stats;
@@ -76,6 +77,11 @@ pub fn tools() -> Vec<Tool> {
         generate::bounding::bounding_tool(),
         generate::bounding::concave_tool(),
         generate::pole::tool(),
+        sampling::grid::tool(),
+        sampling::points::regular_tool(),
+        sampling::points::random_tool(),
+        sampling::along::tool(),
+        sampling::subdivide::tool(),
         geometry::buffer::tool(),
         geometry::clip::tool(),
         geometry::dissolve::tool(),

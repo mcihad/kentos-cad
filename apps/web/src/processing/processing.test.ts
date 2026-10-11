@@ -148,7 +148,7 @@ describe('registry', () => {
     expect(() => r.register(vertexNumbering)).toThrow();
     expect(() => r.register({ ...edgeLengths, id: 'x.y', category: 'nope' })).toThrow();
     const tree = r.tree();
-    expect(tree.map((n) => n.category.id)).toEqual(['points', 'annotation', 'attributes', 'layers', 'geometry', 'analysis', 'proximity', 'spatialStats', 'network', 'conversion', 'generation', 'selection', 'surface', 'interpolation', 'density', 'rasterOps', 'rasterStats', 'rasterVector', 'scannedMap', 'hydrology', 'distance', 'suitability', 'remoteSensing', 'multidim']);
+    expect(tree.map((n) => n.category.id)).toEqual(['points', 'annotation', 'attributes', 'layers', 'geometry', 'analysis', 'proximity', 'spatialStats', 'network', 'conversion', 'generation', 'sampling', 'selection', 'surface', 'interpolation', 'density', 'rasterOps', 'rasterStats', 'rasterVector', 'scannedMap', 'hydrology', 'distance', 'suitability', 'remoteSensing', 'multidim']);
     expect(r.search('kose numara').map((t) => t.id)).toEqual(['points.numberVertices']);
     expect(r.search('KENAR').map((t) => t.id)).toEqual(['annotation.edgeLengths', 'proximity.neighbors', 'convert.densify', 'generate.pole']);
     expect(r.categoryPath('points')).toBe('Nokta işlemleri');

@@ -54,6 +54,8 @@ mod raster_vector_tests;
 #[cfg(test)]
 mod remote_tests;
 #[cfg(test)]
+mod sampling_tests;
+#[cfg(test)]
 mod stats_tests;
 #[cfg(test)]
 mod suitability_tests;

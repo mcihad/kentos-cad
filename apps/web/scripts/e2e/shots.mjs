@@ -3255,6 +3255,80 @@ SCENES.generate = [
   { id: 'uret-kutup-cizim', open: (ui) => generateDrawn(ui, ['pole-parcels'], ['parsel']), close: queryClose },
 ];
 
+// Örnekleme (docs/adr/0220) on fixtures/processing/v1/sampling.kcad, the scenes the desktop's
+// `processing::sampling_tests::screens` draws: CBS's Analiz with the Geometri panel's ▾ open on its ten tools, Ağ
+// oluştur's window and the hexagons on the neighbourhood, the triangles that meet the roads, the parcels' regular and
+// random points, Rastgele noktalar' window and its points in the neighbourhood, points along the roads, the star and the
+// courtyard cut into pieces.
+const SAMPLING_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/sampling.kcad', import.meta.url), 'utf8');
+const SAMPLING_CASES = JSON.parse(readFileSync(new URL('../../../../fixtures/processing/v1/sampling.json', import.meta.url), 'utf8'));
+const samplingLoad = async (ui, selection = []) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(SAMPLING_DRAWING)}, null))) throw new Error('sampling.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.set(${JSON.stringify(selection)});
+  })()`);
+  await ui.sleep(300);
+};
+const openSampling = async (ui, id, run = true, load = true) => {
+  const c = SAMPLING_CASES.cases.find((x) => x.id === id);
+  if (load) await samplingLoad(ui, c.selection ?? []);
+  else await ui.eval(`window.kentos.selection.set(${JSON.stringify(c.selection ?? [])})`);
+  await ui.eval(openTool(c.run.tool, c.values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (run) {
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+    await ui.sleep(300);
+  }
+};
+/** Runs the cases one after another, the windows closed, the view on the layers named. */
+const samplingDrawn = async (ui, ids, layers) => {
+  await samplingLoad(ui);
+  for (const id of ids) {
+    await openSampling(ui, id, true, false);
+    await ui.escapeAll(2);
+  }
+  await ui.eval(`(() => {
+    const k = window.kentos;
+    k.selection.set([...k.doc.all()].filter((e) => ${JSON.stringify(layers)}.includes(e.layerId)).map((e) => e.id));
+    k.commands.execute('view.zoomSelection');
+    k.selection.clear();
+  })()`);
+  await ui.move(2, 2);
+  await ui.sleep(400);
+};
+SCENES.sampling = [
+  {
+    id: 'orn-serit',
+    open: async (ui) => {
+      await samplingLoad(ui);
+      await ribbonOn(ui, { ribbonTab: 'analysis' });
+      await ui.sleep(300);
+      const open = await ui.eval(`!!document.querySelector('.rpanel[data-panel="Geometri"] .rpanel__more')?.offsetParent`);
+      if (open) await ui.clickSel('.rpanel[data-panel="Geometri"] .rpanel__more');
+      else {
+        await ui.clickSel('.ribbon__strip .rpanel__collapsed[aria-label="Geometri"]');
+        await ui.sleep(300);
+        await ui.clickSel('.ribbon-pop .rpanel__more');
+      }
+      await ui.sleep(400);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ribbonOff(ui)),
+  },
+  { id: 'orn-ag', open: (ui) => openSampling(ui, 'grid-hex'), close: queryClose },
+  { id: 'orn-ag-cizim', open: (ui) => samplingDrawn(ui, ['grid-hex'], ['mahalle']), close: queryClose },
+  { id: 'orn-ucgen-cizim', open: (ui) => samplingDrawn(ui, ['grid-tri-meeting'], ['yol']), close: queryClose },
+  { id: 'orn-noktalar-cizim', open: (ui) => samplingDrawn(ui, ['regular-snap', 'random-parcels'], ['parsel']), close: queryClose },
+  { id: 'orn-rastgele', open: (ui) => openSampling(ui, 'random-min'), close: queryClose },
+  { id: 'orn-rastgele-cizim', open: (ui) => samplingDrawn(ui, ['random-min'], ['mahalle']), close: queryClose },
+  { id: 'orn-hat-cizim', open: (ui) => samplingDrawn(ui, ['along-interval'], ['yol']), close: queryClose },
+  { id: 'orn-alt-cizim', open: (ui) => samplingDrawn(ui, ['subdivide-star', 'subdivide-hole'], ['buyuk']), close: queryClose },
+];
+
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
 // `networks::tests::screens` draws: Ağlar with Yollar and with İçme suyu after Denetle (the form scrolled to its answer),
 // En yakın tesis and Maliyet matrisi after a run, En yakın tesis's ways and Hizmet alanları's areas in the drawing, the

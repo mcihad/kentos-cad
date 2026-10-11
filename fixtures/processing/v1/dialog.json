@@ -4514,6 +4514,600 @@
     ]
    }
   },
+  "sample.grid": {
+   "title": "Ağ oluştur",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Kapsam",
+     "description": "Ağın kaplayacağı nesneler; ağ onların kutusunu kaplar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "shape",
+     "label": "Biçim",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "rect",
+        "label": "Dikdörtgen",
+        "hint": "Doğu ve kuzey aralıklı hücreler"
+       },
+       {
+        "value": "hexagon",
+        "label": "Altıgen",
+        "hint": "Düz üstlü düzgün altıgenler"
+       },
+       {
+        "value": "triangle",
+        "label": "Üçgen",
+        "hint": "Eşkenar üçgenler"
+       },
+       {
+        "value": "lines",
+        "label": "Çizgi",
+        "hint": "Dikdörtgen ağın çizgileri"
+       }
+      ]
+     }
+    },
+    {
+     "name": "dx",
+     "label": "Doğu aralığı",
+     "description": "Hücrenin doğu–batı boyu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "dy",
+     "label": "Kuzey aralığı",
+     "description": "Hücrenin kuzey–güney boyu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "side",
+     "label": "Kenar",
+     "description": "Altıgenin ya da üçgenin kenarı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "snap",
+     "label": "Koordinatlara otur",
+     "description": "Ağ aralığın katlarına oturur; kapalıyken kapsamın sol alt köşesinden başlar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "keep",
+     "label": "Hücreler",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "all",
+        "label": "Kutunun hepsi",
+        "hint": "Kapsamın kutusunu kaplayan bütün hücreler"
+       },
+       {
+        "value": "meeting",
+        "label": "Nesnelere değenler",
+        "hint": "Kapsamın nesnelerine değen ya da onları kesen hücreler"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "sampling",
+     "text": "Örnekleme"
+    },
+    "icon": "fishnet",
+    "about": "Nesnelerin kutusunu dikdörtgen, altıgen ya da üçgen hücrelerle ya da ağın çizgileriyle kaplayıp yeni katmana yazar.",
+    "help": [
+     "Örnekler: bir mahalleyi sayım için altıgen hücrelere bölmek, pafta için karelaj çizgileri çizmek, örnekleme çerçevesi için balık ağı kurmak.",
+     "Koordinatlara otur açıkken ağ koordinat başlangıcına bağlı genel kafese oturur: dikdörtgenler aralığın katlarında başlar, ayrı üretilen ağlar birbirine uyar. Kapalıyken ağ kapsamın sol alt köşesinden başlar. Komşu hücreler köşelerini paylaşır.",
+     "Hücreler Satır ve Sütun alır (satırlar yukarıdan, sütunlar soldan); yatay çizgiler Satır ve Kuzey, düşey çizgiler Sütun ve Doğu. Nesnelere değenler seçiliyse yalnız kapsamın nesnelerine değen ya da onları kesen hücreler yazılır (Konuma göre seç'in Kesişen'i). En çok 1 000 000 parça yazılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "AG",
+     "AGOLUSTUR",
+     "FISHNET"
+    ]
+   }
+  },
+  "sample.regular": {
+   "title": "Düzenli noktalar",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Noktaların konacağı alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "dx",
+     "label": "Doğu aralığı",
+     "description": "Noktalar arası doğu–batı uzaklığı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "dy",
+     "label": "Kuzey aralığı",
+     "description": "Noktalar arası kuzey–güney uzaklığı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "snap",
+     "label": "Koordinatlara otur",
+     "description": "Noktalar aralığın katlarında; kapalıyken hücrelerin ortalarında.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "shift",
+     "label": "Rastgele kaydırma",
+     "description": "Her noktanın her eksende en çok kayacağı uzaklık; 0 kaydırmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "seed",
+     "label": "Tohum",
+     "description": "Aynı tohum aynı kaydırmaları verir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "sampling",
+     "text": "Örnekleme"
+    },
+    "icon": "regularPoints",
+    "about": "Alanların içine doğu ve kuzey aralıklarıyla düzenli noktalar koyar, isterse noktaları tohumla rastgele kaydırır.",
+    "help": [
+     "Örnekler: orman envanterinin örnek alanlarını, toprak örneklemesinin noktalarını, bir paftanın karelaj noktalarını koymak.",
+     "Koordinatlara otur açıkken noktalar aralığın katlarındadır (yuvarlak koordinatlar); kapalıyken bütün alanların kutusunun köşesinden yarım aralık içeride, hücrelerin ortalarındadır. Alanın sınırındaki nokta da alınır, deliklerdeki alınmaz; ortak sınırdaki nokta iki alana da yazılır.",
+     "Rastgele kaydırma her noktayı her eksende en çok o kadar kaydırır; aynı tohum aynı noktaları verir. Nokta alanın özniteliklerini alır. En çok 1 000 000 nokta yazılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DUZENLINOKTA",
+     "KARELAJNOKTA"
+    ]
+   }
+  },
+  "sample.random": {
+   "title": "Rastgele noktalar",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Noktaların içine konacağı alanlar ya da üstüne konacağı çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "count",
+     "label": "Nokta sayısı",
+     "description": "Nesne başına nokta sayısı (tam kısmı).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "value",
+      "placeholder": "10"
+     }
+    },
+    {
+     "name": "min",
+     "label": "En az uzaklık",
+     "description": "Yazılan iki nokta arası en az uzaklık; 0 sınırsız.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "tries",
+     "label": "Deneme",
+     "description": "En az uzaklık sağlanamazsa bir nokta için en çok aday.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "seed",
+     "label": "Tohum",
+     "description": "Aynı tohum aynı noktaları verir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "sampling",
+     "text": "Örnekleme"
+    },
+    "icon": "randomPoints",
+    "about": "Alanların içine ya da çizgilerin üstüne nesne başına istenen sayıda rastgele nokta koyar; aynı tohum aynı noktaları verir.",
+    "help": [
+     "Örnekler: tabakalı olmayan rastgele örnekleme noktaları, denetim için rastgele parsel noktaları, bir yol üstünde rastgele gözlem yerleri.",
+     "Nokta sayısı nesne başınadır ve ifade olabilir: $alan / 10000 * 5 hektarda beş nokta. En az uzaklık yazılan bütün noktalar arasındadır; sağlanamazsa nokta Deneme kadar yeniden aranır, bulunamazsa yazılmaz ve söylenir. Aynı tohum her çalıştırmada ve her platformda aynı noktaları verir.",
+     "Alandaki nokta alanın kutusunda rastgele aranır, kutusuna göre çok ince alan söylenir. Çizgideki nokta yolun uzunluğu boyunca rastgeledir; Uzaklık (yolun başından), çok parçalıda Parça ve köşelerin kotlarından kotunu alır. Nokta nesnenin özniteliklerini alır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "RASTGELENOKTA",
+     "RANDOMPOINTS"
+    ]
+   }
+  },
+  "sample.alongLines": {
+   "title": "Hat boyunca nokta",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Çizgiler",
+     "description": "Üstüne nokta konacak çizgiler ve sınırlarına nokta konacak alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "mode",
+     "label": "Yerleşim",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "interval",
+        "label": "Aralıkla",
+        "hint": "Belli uzaklıkta bir"
+       },
+       {
+        "value": "parts",
+        "label": "Eşit parçalara",
+        "hint": "Yolu eşit parçalara böler"
+       }
+      ]
+     }
+    },
+    {
+     "name": "step",
+     "label": "Aralık",
+     "description": "İki nokta arası yol boyunca uzaklık.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "start",
+     "label": "Başlangıç payı",
+     "description": "İlk noktanın yolun başından uzaklığı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "end",
+     "label": "Bitiş payı",
+     "description": "Son noktanın yolun sonuna en az uzaklığı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "parts",
+     "label": "Parça sayısı",
+     "description": "Yolun bölüneceği eşit parça sayısı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "ends",
+     "label": "Uçları da",
+     "description": "Yolun başı ve sonu da nokta olur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "sampling",
+     "text": "Örnekleme"
+    },
+    "icon": "pointsAlongLine",
+    "about": "Çizgilerin ve alan sınırlarının üstüne aralıkla ya da eşit parçalara noktalar koyar; noktalar uzaklık ve semt alır.",
+    "help": [
+     "Örnekler: bir enerji hattına 50 metrede bir direk yeri, bir yolun 20 metrelik enkesit yerleri, bir parsel sınırına eşit aralıklı noktalar koymak.",
+     "Aralıkla iken noktalar yolun başından Başlangıç payı ötede başlar, Aralık kadar ilerler, sondan Bitiş payı kadar önce durur; Uçları da açıksa yolun başı ve sonu da eklenir. Eşit parçalara iken yol Parça sayısı kadar eşit parçaya bölünür. Kapalı yolun (alan sınırı, daire) sonu başıdır.",
+     "Nokta nesnenin özniteliklerini, yolun başından Uzaklık'ı ve oradaki gidiş doğrultusunu Semt olarak (köşede sonraki kenarınki) alır; birden çok yolu olan nesnede Parça. Kot köşelerin kotlarından doğrusal taşınır. Yaylar kesin; elips ve eğri 0,1 mm'lik kirişlerle."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "HATNOKTA",
+     "ARALIKNOKTA"
+    ]
+   }
+  },
+  "sample.subdivide": {
+   "title": "Alt bölümlere ayır",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Ayrılacak alanlar ve çoklu çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "max",
+     "label": "En çok köşe",
+     "description": "Bir parçanın en çok köşe sayısı (halkaların ve deliklerin köşeleri birlikte).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "sampling",
+     "text": "Örnekleme"
+    },
+    "icon": "subdivideParts",
+    "about": "Çok köşeli alanları ve çoklu çizgileri en çok verilen köşe sayısı olan parçalara ayırıp yeni katmana yazar.",
+    "help": [
+     "Örnekler: binlerce köşeli bir il ya da havza sınırını hızlı sorgulanan parçalara ayırmak, uzun eş yükselti eğrilerini bölmek.",
+     "Parça köşe sayısını aşıyorsa kutusunun uzun kenarına dik ikiye kesilir; kesim halkanın kutunun ortasına en yakın köşesinden geçer (delikler köşelerin çoğunu tutuyorsa en büyük deliğinkinden). Parçalar yeniden ele alınır, en çok 50 kat. Yaylar kesin kesilir.",
+     "Her parça nesnenin özniteliklerini ve Parça numarasını (kutusunun sol alt köşesine göre: önce batı, sonra güney) alır; köşelerin kotları taşınır. Köşe sayısını aşmayan nesne tek parça yazılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ALTBOLUM",
+     "SUBDIVIDE"
+    ]
+   }
+  },
   "geometry.buffer": {
    "title": "Tampon",
    "rows": [

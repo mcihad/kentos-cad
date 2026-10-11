@@ -675,6 +675,21 @@ export const ICONS = {
     '<path d="M3 3.5h13.5l-1 4-6 2.5 6 2.5 1 4H3z" stroke-width="1.2"/><circle cx="5.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="12.5" cy="5.8" r="1.2" fill="currentColor" stroke="none"/><circle cx="6.5" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="6" cy="13.8" r="1.2" fill="currentColor" stroke="none"/><circle cx="12.5" cy="14.2" r="1.2" fill="currentColor" stroke="none"/>',
   poleOfInaccessibility:
     '<path d="M2.5 2.5H9v8.5h8.5v6.5h-15z" stroke-width="1.2"/><circle cx="6.3" cy="13.6" r="2.8" stroke-width="1" stroke-dasharray="1.4 1"/><circle cx="6.3" cy="13.6" r="1.2" fill="currentColor" stroke="none"/>',
+  // Örnekleme (docs/adr/0220): a frame's quarter gridded beside scattered points; three hexagons of a honeycomb; a
+  // parcel with a lattice of points; a parcel with scattered points; points at equal steps on a curving line; an
+  // outline cut by a full and a half dashed line.
+  sampling:
+    '<rect x="2.5" y="2.5" width="15" height="15" rx="1.5" stroke-width="1" stroke-opacity=".55"/><path d="M2.5 6.2h7.5M2.5 10h7.5M6.2 2.5V10M10 2.5V10" stroke-width="1.1"/><circle cx="13.6" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="12.4" cy="14.2" r="1.2" fill="currentColor" stroke="none"/><circle cx="6" cy="13.4" r="1.2" fill="currentColor" stroke="none"/>',
+  fishnet:
+    '<path d="M10 6.5 8 10H4L2 6.5 4 3h4zm6 3.5-2 3.5h-4L8 10l2-3.5h4zm-6 3.5L8 17H4l-2-3.5L4 10h4z" stroke-width="1.2"/>',
+  regularPoints:
+    '<path d="M3 16.5 2.5 3.5 16.5 2.5l1 14z" stroke-width="1.2"/><g fill="currentColor" stroke="none"><circle cx="6.3" cy="6.7" r="1.05"/><circle cx="10" cy="6.7" r="1.05"/><circle cx="13.7" cy="6.7" r="1.05"/><circle cx="6.3" cy="10.2" r="1.05"/><circle cx="10" cy="10.2" r="1.05"/><circle cx="13.7" cy="10.2" r="1.05"/><circle cx="6.3" cy="13.7" r="1.05"/><circle cx="10" cy="13.7" r="1.05"/><circle cx="13.7" cy="13.7" r="1.05"/></g>',
+  randomPoints:
+    '<path d="M3 16.5 2.5 3.5 16.5 2.5l1 14z" stroke-width="1.2"/><g fill="currentColor" stroke="none"><circle cx="6" cy="7.2" r="1.15"/><circle cx="11.6" cy="5.6" r="1.15"/><circle cx="14" cy="10.6" r="1.15"/><circle cx="8.6" cy="11.2" r="1.15"/><circle cx="5.6" cy="14.2" r="1.15"/><circle cx="12.4" cy="14.3" r="1.15"/></g>',
+  pointsAlongLine:
+    '<path d="M2 16c3-.2 4.4-2.6 5.2-5.4C8.2 7 10 4.6 13.2 4.2c1.8-.2 3.3.3 4.8 1.2" stroke-width="1.2"/><g fill="currentColor" stroke="none"><circle cx="2.6" cy="15.9" r="1.4"/><circle cx="6.6" cy="12.4" r="1.4"/><circle cx="8.6" cy="7.3" r="1.4"/><circle cx="13.2" cy="4.2" r="1.4"/><circle cx="17.6" cy="5.2" r="1.4"/></g>',
+  subdivideParts:
+    '<path d="M2.5 9 6 3l8.5 1 3 6.5-2.5 6.5H6.5L2.5 13z" fill="currentColor" fill-opacity=".18" stroke-width="1.2"/><path d="M10 3.5V17M10 10.2h7.3" stroke-width="1.2" stroke-dasharray="1.7 1.2"/>',
   dataTransfer:
     '<rect x="1.8" y="3" width="8" height="9" rx=".9" stroke-width="1.3"/><path d="M1.8 6h8M1.8 9h8M4.8 6v6" stroke-width="1.1"/><path d="M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4" stroke-width="1.2"/><path d="m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z" stroke-width="1.2"/><path d="m12.2 14.1 3.2 1.7 3.2-1.7" stroke-width="1.2"/>',
   fieldMapFill:

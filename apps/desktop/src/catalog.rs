@@ -374,6 +374,11 @@ pub const PORTED: &[&str] = &[
     "processing.run.generate.bounding",
     "processing.run.generate.concaveHull",
     "processing.run.generate.pole",
+    "processing.run.sample.grid",
+    "processing.run.sample.regular",
+    "processing.run.sample.random",
+    "processing.run.sample.alongLines",
+    "processing.run.sample.subdivide",
     // Geometri işlemleri (docs/adr/0201).
     "processing.run.geometry.buffer",
     "processing.run.geometry.clip",

@@ -184,6 +184,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   üçgenlerinin çevrel merkezlerinden, komşular köşelerini bit bit paylaşır), Delaunay üçgenleri (köşelerin adları ve kotları), Sınırlayıcı
   geometri (dışbükey zarf, sınır kutusu, en küçük alanlı döndürülmüş kutu, en küçük daire; her nesne, hepsi ya da alana göre; ölçüleri),
   İçbükey zarf (JTS'in ve GEOS'un kenar oranıyla aşındırması, delikler), Ulaşılmazlık kutbu (polylabel); CBS'de Analiz › Geometri ▾ (ADR 0219);
+  örnekleme ve ağ üretimi: İşlemler'in Örnekleme kategorisinde Ağ oluştur (dikdörtgen, altıgen, üçgen ya da ağın çizgileri; aralığın
+  katlarındaki genel kafes, komşu hücreler köşelerini bit bit paylaşır; Nesnelere değenler Konuma göre seç'in Kesişen'iyle; Satır ve Sütun),
+  Düzenli noktalar (katlarda ya da hücre ortalarında, tohumlu kaydırma), Rastgele noktalar (alanda ve çizgide, ifadeli sayı, en az uzaklık;
+  SplitMix64 ve xoshiro256** ile her platformda aynı noktalar), Hat boyunca nokta (aralıkla, paylarla ya da eşit parçalara; Uzaklık, Semt,
+  kot) ve Alt bölümlere ayır (PostGIS'in ST_Subdivide'ı yaylı geometriye; alan doğru boyunca kesilir); CBS'de Analiz › Geometri ▾ (ADR 0220);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -613,6 +618,9 @@ cargo test --release -p kentos-processing --test cases convert_timing -- --ignor
 python3 scripts/fixtures/generate_cases.py --check   # geometri üretiminin durumlarını (Voronoi hücreleri kesirlerle her öbür noktanın dik ortayından, Delaunay üçgenleri tam sayılarla boş çember denetiminden, zarflar, kutular 50 basamakta, daireler kesirlerle Welzl'le, içbükey zarf ADR'nin kuralıyla, kutup polylabel'ın tanımından; hepsi GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generate.json ve generate.kcad (ADR 0219)
 cargo test -p kentos-desktop processing::generate_tests::screens -- --ignored --nocapture --test-threads=1   # geometri üretiminin şeridi, pencereleri ve sonuçları, .run/shots/islem-uret-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs generate); ADR 0219)
 cargo test --release -p kentos-processing --test cases generate_timing -- --ignored --nocapture   # 100 000 noktada Voronoi, Delaunay ve içbükey zarf, 100 000 parselde döndürülmüş kutu ve kutup bütçeleriyle (ADR 0219 §8); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; GENERATE_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/generate.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
+python3 scripts/fixtures/sampling_cases.py --check   # örneklemenin durumlarını (ağlar ADR'nin kafes formülleriyle, Nesnelere değenler GEOS'un uzaklığıyla, alan içi kesirlerle, tohumlu sayılar Python'un tam sayılarıyla, yol noktaları yayların tanımından, parçalar GEOS'un kesişimiyle; belirsiz yakınlıklar denetlenir) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/sampling.json ve sampling.kcad (ADR 0220)
+cargo test -p kentos-desktop processing::sampling_tests::screens -- --ignored --nocapture --test-threads=1   # örneklemenin şeridi, pencereleri ve sonuçları, .run/shots/islem-orn-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs sampling); ADR 0220)
+cargo test --release -p kentos-processing --test cases sampling_timing -- --ignored --nocapture   # 100 000 parselde altıgen ağ (değenler), düzenli, rastgele ve hat boyunca noktalar, 100 000 köşelik on yıldızın alt bölümleri bütçeleriyle (ADR 0220 Doğrulama); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; SAMPLING_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/sampling.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-geometry-core --test all proximity::timing -- --ignored --nocapture   # beş aracın aramaları 10 000 parselde bütçeleriyle (ADR 0215 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; PROXIMITY_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/proximity.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-expression --test perf measures_the_additions -- --ignored --nocapture   # ifade dili eklerinin süreleri bütçeleriyle (ADR 0214 §5); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; EXTRAS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/expressionExtras.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
@@ -1562,7 +1570,13 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   polylabel'ı; `points`: eğrilerin 0,1 mm'lik noktaları ve eksen uçları; web'e toplu `calls`); beş araç web `processing/builtin/generate/`,
   masaüstü `builtin/generate/`, kategori `generation`, birim `%`; web'de çekirdeğe yalnız geometri gider (`entityGeometry`); bağımsız başvuru
   `generate_cases.py` (20 durum, kesirler ve GEOS); pencereler `processing::generate_tests`, `shots.mjs generate`; süreler
-  `generate_timing` ve `scripts/perf/generate.test.ts`. Sıradaki `GIS-24`.
+  `generate_timing` ve `scripts/perf/generate.test.ts`. `GIS-24` örnekleme ve ağ üretimi
+  ([ADR 0220](docs/adr/0220-sampling-and-grids.md); kapsamı ben belirledim) tek parçada bitti (11 Ekim): çekirdek `ops::sampling` (`grid`,
+  `cover`, `inside`, `regular`, `random`, `scatter`, `walk`, `along`, `cut`, `subdivide`, `calls`; web'e ağlar ve noktalar düz sayı
+  dizileriyle); `WindingIndex::owned`; beş araç web `processing/builtin/sampling/`, masaüstü `builtin/sampling/`, kategori `sampling`;
+  Alt bölümlere ayır'ın alanı genel overlay yerine doğru boyunca kesilir (`cut`: overlay'le aynı alanlar ve köşeler, 10 000 köşede 297 ms
+  yerine 2 ms); bağımsız başvuru `sampling_cases.py` (29 durum, GEOS ve kesirler); pencereler `processing::sampling_tests`,
+  `shots.mjs sampling`; süreler `sampling_timing` ve `scripts/perf/sampling.test.ts`. Sıradaki `GIS-25`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

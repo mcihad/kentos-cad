@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 26] = [
+pub const CATEGORIES: [Category; 27] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -104,6 +104,13 @@ pub const CATEGORIES: [Category; 26] = [
         "Geometri üretimi",
         "generation",
         "Voronoi alanları, Delaunay üçgenleri, sınırlayıcı geometri, içbükey zarf, ulaşılmazlık kutbu",
+    ),
+    // docs/adr/0220: grids, regular and random points, points along lines, subdivided objects.
+    category(
+        "sampling",
+        "Örnekleme",
+        "sampling",
+        "Ağ oluştur, düzenli ve rastgele noktalar, hat boyunca nokta, alt bölümlere ayırma",
     ),
     category(
         "selection",

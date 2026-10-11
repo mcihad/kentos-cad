@@ -957,6 +957,57 @@ fn the_generation_cases_do_what_they_say() {
     );
 }
 
+/// Örnekleme's cases (docs/adr/0220): written by the independent reference
+/// (scripts/fixtures/sampling_cases.py: the ADR's lattices and seeded
+/// numbers, points in areas decided on fractions, GEOS's distance for
+/// Nesnelere değenler and its intersection for the pieces); the same run
+/// here and on the drawing's reading copy; elevations within the tolerance.
+#[test]
+fn the_sampling_cases_do_what_they_say() {
+    let file = case_file("sampling.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let more: Vec<String> = file["toleranceFields"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v.as_str().map(str::to_owned))
+        .collect();
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_full(
+            c,
+            play(c, &registry, false, &file["files"]),
+            tol,
+            tol,
+            &more,
+        );
+        found.extend(check_full(
+            c,
+            play(c, &registry, true, &file["files"]),
+            tol,
+            tol,
+            &more,
+        ));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 29, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Veri aktar's cases (docs/adr/0216): written by the independent reference
 /// (scripts/fixtures/transfer_cases.py); the same run here and on the
 /// drawing's reading copy as the background runs it.
@@ -2109,4 +2160,189 @@ fn a_layer_filter_leaves_its_objects_out_of_the_calls_to_other_layers() {
     assert_eq!(n(&all), [2.0, 2.0, 1.0, 1.0]);
     // The pines: 10 in the first parcel, 12 in the second, 14 in the fourth's hole.
     assert_eq!(n(&pines), [1.0, 1.0, 0.0, 0.0]);
+}
+
+/// Ten star-shaped areas of 10 000 vertices each (100 000 in all), for Alt
+/// bölümlere ayır's timing (docs/adr/0220 §7); the web's `sampling.test.ts`
+/// builds the same.
+pub fn stars_scene() -> Document {
+    let (e0, n0) = (487_000.0, 4_420_000.0);
+    let mut entities = Vec::with_capacity(10);
+    for s in 0..10usize {
+        let (cx, cy) = (e0 + 1000.0 * s as f64, n0);
+        let pts: Vec<String> = (0..10_000usize)
+            .map(|i| {
+                let t = std::f64::consts::PI * i as f64 / 5000.0;
+                let r = if i % 2 == 0 {
+                    400.0
+                } else {
+                    300.0 + (i % 7) as f64 * 10.0
+                };
+                format!(r#"{{"x":{},"y":{}}}"#, cx + r * t.cos(), cy + r * t.sin())
+            })
+            .collect();
+        entities.push(format!(
+            r#"{{"kind":"polygon","id":{},"layerId":"y","attrs":{{"Ad":"Yıldız {}"}},"pts":[{}]}}"#,
+            s + 1,
+            s + 1,
+            pts.join(",")
+        ));
+    }
+    let json = format!(
+        r#"{{"format":"kentos.document","version":1,"name":"Yıldızlar","settings":{{"srid":5256,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,"workspace":"gis","drawingFont":"barlow"}},
+            "origin":{{"x":{e0},"y":{n0}}},"layers":[{{"id":"y","name":"Yıldız","type":"layer","visible":true,"locked":false,"expanded":true,
+            "style":{{"color":"fg","lineType":"continuous","lineWeight":0.25}},"children":[]}}],"activeLayer":"y","entities":[{}],"styles":{{"items":[],"categories":[]}}}}"#,
+        entities.join(",")
+    );
+    Document::from_snapshot(DocumentSnapshotV1::from_json(&json).expect("the drawing reads"))
+        .expect("the drawing opens")
+}
+
+/// Örnekleme's whole runs (docs/adr/0220 §7) on the parcels of `layer_scene`
+/// and the stars above: the runner's check, the tool and its one undo step,
+/// after a warm-up, each run undone before the next; p50 and p95 against the
+/// ADR's budgets. Run on purpose:
+/// `cargo test --release -p kentos-processing --test cases sampling_timing -- --ignored --nocapture`.
+#[test]
+#[ignore = "timings, run by hand in release"]
+fn sampling_timing() {
+    use std::time::Instant;
+    let registry = Registry::builtin();
+    let all = json!({ "scope": "all" });
+    let values = |pairs: Vec<(&str, Value)>| -> Values {
+        pairs.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()
+    };
+    let parcels = || layer_scene();
+    let stars = || stars_scene();
+    // A run: the tool, its title, its drawing, its values, its budget (ms).
+    type Run = (&'static str, &'static str, fn() -> Document, Values, f64);
+    let runs: Vec<Run> = vec![
+        (
+            "sample.grid",
+            "Ağ oluştur, 100 000 parselin kutusunda 12 m'lik altıgenler, Nesnelere değenler",
+            parcels as fn() -> Document,
+            values(vec![
+                ("input", all.clone()),
+                ("shape", json!("hexagon")),
+                ("side", json!(12)),
+                ("snap", json!(true)),
+                ("keep", json!("meeting")),
+                ("layer", json!({ "newName": "Ağ" })),
+            ]),
+            800.0,
+        ),
+        (
+            "sample.regular",
+            "Düzenli noktalar, 100 000 parselde 12 m aralık",
+            parcels,
+            values(vec![
+                ("input", all.clone()),
+                ("dx", json!(12)),
+                ("dy", json!(12)),
+                ("snap", json!(true)),
+                ("shift", json!(0)),
+                ("layer", json!({ "newName": "Düzenli noktalar" })),
+            ]),
+            700.0,
+        ),
+        (
+            "sample.random",
+            "Rastgele noktalar, 100 000 parselde birer, en az 2 m arayla",
+            parcels,
+            values(vec![
+                ("input", all.clone()),
+                ("count", json!("1")),
+                ("min", json!(2)),
+                ("tries", json!(10)),
+                ("seed", json!(1)),
+                ("layer", json!({ "newName": "Rastgele noktalar" })),
+            ]),
+            600.0,
+        ),
+        (
+            "sample.alongLines",
+            "Hat boyunca nokta, 100 000 parselin sınırında 25 m'de bir",
+            parcels,
+            values(vec![
+                ("input", all.clone()),
+                ("mode", json!("interval")),
+                ("step", json!(25)),
+                ("start", json!(0)),
+                ("end", json!(0)),
+                ("ends", json!(true)),
+                ("layer", json!({ "newName": "Hat noktaları" })),
+            ]),
+            900.0,
+        ),
+        (
+            "sample.subdivide",
+            "Alt bölümlere ayır, 10 alanda 100 000 köşe, en çok 256",
+            stars as fn() -> Document,
+            values(vec![
+                ("input", all.clone()),
+                ("max", json!(256)),
+                ("layer", json!({ "newName": "Alt bölümler" })),
+            ]),
+            1200.0,
+        ),
+    ];
+    let mut over = Vec::new();
+    for (id, title, scene, values, budget) in runs {
+        let tool = registry.tool(id).expect("the tool");
+        let mut host = TestHost {
+            doc: scene(),
+            selection: Vec::new(),
+            view: None,
+        };
+        let mut runner = Runner::new();
+        let mut ms = Vec::new();
+        let mut summary = String::new();
+        for run in 0..8 {
+            let mut log = Vec::new();
+            let t = Instant::now();
+            let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+            let took = t.elapsed().as_secs_f64() * 1e3;
+            let Outcome::Ok { record, .. } = outcome else {
+                panic!("{id}: {log:?}");
+            };
+            summary = record.summary;
+            assert!(host.doc.undo().is_some(), "{id}: one step");
+            std::thread::sleep(std::time::Duration::from_millis(400));
+            if run >= 2 {
+                ms.push(took);
+            }
+        }
+        ms.sort_by(f64::total_cmp);
+        let (p50, p95) = (
+            ms[ms.len() / 2],
+            ms[(ms.len() * 95 / 100).min(ms.len() - 1)],
+        );
+        println!("{title}: p50 {p50:.1} ms, p95 {p95:.1} ms, bütçe {budget} ms\n  {summary}");
+        let mut log = Vec::new();
+        let t = Instant::now();
+        let Prepared::Ready(job) = runner.prepare(&host, &tool, &values, true, &mut log) else {
+            panic!("{id} prepared: {log:?}");
+        };
+        let prepared = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        let result = Runner::compute(
+            &job,
+            &host.doc,
+            &mut Apart {
+                log: &mut log,
+                files: None,
+            },
+        );
+        let computed = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        runner.finish(&mut host, job, result, false, &mut log);
+        println!(
+            "  hazırlık {prepared:.1} ms, araç {computed:.1} ms, uygulama {:.1} ms",
+            t.elapsed().as_secs_f64() * 1e3
+        );
+        if p50 > budget {
+            over.push(format!("{title}: p50 {p50:.1} ms > {budget} ms"));
+        }
+    }
+    assert!(over.is_empty(), "{over:#?}");
 }
