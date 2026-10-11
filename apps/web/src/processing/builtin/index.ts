@@ -32,6 +32,7 @@ import { STATS_TOOLS } from './stats/tools';
 import { MULTIDIM_TOOLS } from './multidim/tools';
 import { REMOTE_TOOLS } from './remote/tools';
 import { SAMPLE_TOOLS } from './sampling';
+import { GENERALIZE_TOOLS } from './generalize';
 import { SURFACE_TOOLS } from './surface/tools';
 import { vertexNumbering } from './vertexNumbering';
 
@@ -54,6 +55,7 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   ...CONVERT_TOOLS,
   ...GENERATE_TOOLS,
   ...SAMPLE_TOOLS,
+  ...GENERALIZE_TOOLS,
   geometryBuffer,
   geometryClip,
   geometryDissolve,

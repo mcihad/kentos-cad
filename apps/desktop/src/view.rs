@@ -417,7 +417,8 @@ impl App {
             if !panel.overflow.is_empty() {
                 let ids = panel.overflow.clone();
                 let checked = self.checks(&ids);
-                group = group.more(move || menu_of(&ids, &checked));
+                let heads = self.overflow_heads(&ids);
+                group = group.more(move || headed_menu_of(&ids, &checked, &heads));
             }
             return Some(group);
         }
@@ -472,7 +473,8 @@ impl App {
         if !panel.overflow.is_empty() {
             let ids = panel.overflow.clone();
             let checked = self.checks(&ids);
-            group = group.more(move || menu_of(&ids, &checked));
+            let heads = self.overflow_heads(&ids);
+            group = group.more(move || headed_menu_of(&ids, &checked, &heads));
         }
         if let Some(launcher) = &panel.launcher
             && let Some(message) = launch(launcher)
@@ -501,6 +503,39 @@ impl App {
                     .tip(about)
                     .flash(self.ribbon_flash_model.as_deref() == Some(m.id.as_str()))
                     .key_tips(self.key_tip(&TipKey::Model(m.id.clone())), None)
+            })
+            .collect()
+    }
+
+    /// A ▾ list's headers (docs/adr/0221 §9, the web's `overflowRows`): when its
+    /// commands are the tools of two İşlemler categories or more, each
+    /// category's name before its first tool there.
+    pub(crate) fn overflow_heads(&self, ids: &[&'static str]) -> Vec<Option<&'static str>> {
+        let tools = self.processing.registry.tools();
+        let category = |id: &str| {
+            let tool = id.strip_prefix("processing.run.")?;
+            tools
+                .iter()
+                .find(|t| t.id == tool)
+                .map(|t| t.category.as_str())
+        };
+        let kinds: Vec<Option<&str>> = ids.iter().map(|id| category(id)).collect();
+        let distinct: std::collections::BTreeSet<&str> = kinds.iter().flatten().copied().collect();
+        if distinct.len() < 2 {
+            return vec![None; ids.len()];
+        }
+        let mut last: Option<&str> = None;
+        kinds
+            .iter()
+            .map(|&c| {
+                let head = c.filter(|c| Some(*c) != last).and_then(|c| {
+                    kentos_processing::categories::CATEGORIES
+                        .iter()
+                        .find(|k| k.id == c)
+                        .map(|k| k.label)
+                });
+                last = c;
+                head
             })
             .collect()
     }
@@ -1744,26 +1779,40 @@ fn is_choice(id: &str) -> bool {
 /// check instead of its icon, a choice its dot beside its icon, a tool and a
 /// plain command their icon.
 fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
-    ids.iter()
-        .zip(checked.iter().copied().chain(std::iter::repeat(None)))
-        .filter_map(|(id, checked)| Some((catalog().get(id)?, checked)))
-        .fold(Menu::new(), |menu, (command, checked)| {
-            let menu = match checked {
-                Some(on) if is_choice(command.id) => menu
-                    .radio(command.title, on, enabled(command))
-                    .icon(command.icon),
-                Some(on) if !command.id.starts_with("tool.") => {
-                    menu.check(command.title, on, enabled(command))
-                }
-                _ => menu
-                    .item(command.title, enabled(command))
-                    .icon(command.icon),
-            };
-            match command.shortcuts.first() {
-                Some(keys) => menu.shortcut(*keys),
-                None => menu,
+    headed_menu_of(ids, checked, &[])
+}
+
+/// [`menu_of`] with a header (a category's name) before the rows `heads` names (docs/adr/0221 §9).
+fn headed_menu_of(
+    ids: &[&'static str],
+    checked: &[Option<bool>],
+    heads: &[Option<&'static str>],
+) -> Menu<Message> {
+    let mut menu = Menu::new();
+    let ticks = checked.iter().copied().chain(std::iter::repeat(None));
+    for (k, (id, checked)) in ids.iter().zip(ticks).enumerate() {
+        if let Some(Some(title)) = heads.get(k) {
+            menu = menu.separator().header(*title);
+        }
+        let Some(command) = catalog().get(id) else {
+            continue;
+        };
+        menu = match checked {
+            Some(on) if is_choice(command.id) => menu
+                .radio(command.title, on, enabled(command))
+                .icon(command.icon),
+            Some(on) if !command.id.starts_with("tool.") => {
+                menu.check(command.title, on, enabled(command))
             }
-        })
+            _ => menu
+                .item(command.title, enabled(command))
+                .icon(command.icon),
+        };
+        if let Some(keys) = command.shortcuts.first() {
+            menu = menu.shortcut(*keys);
+        }
+    }
+    menu
 }
 
 /// A list ticked one row after another (the web's `checklistItem`,

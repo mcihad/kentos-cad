@@ -182,3 +182,13 @@ adı aynı kaldı; takma adları ayrıdır.
   `shots.mjs geometry`).
 - Süre (`geoprocess::timing`, release): 24 köşeli 400 parselin 2 m tamponu tek tek 0,36 s, birleştirerek 0,46 s; Gruplayarak birleştir
   0,02 s; 400 × 400 Kesişim 0,12 s.
+
+## Ek (11 Ekim 2026): kesişim çekirdeğinin sağlamlığı
+
+Bir tamponun aynı uzaklıkla içe geri alınması (kapanış) kesişim çekirdeğinde yüz yitiriyordu: ADR 0221'in Alanları kümele'si dönük
+binaların bloklarında bunu ortaya çıkardı. Kapsüllerin teğet kenarları sınırda 10⁻⁵ m'lik yaylar bırakır; içe tamponun çemberleri bu
+yayların uçlarında neredeyse tek noktada buluşur. Çekirdek üç kuralla düzeldi (ADR 0221 §10): TOL içindeki çemberler tek çembere
+oturur, bir kesişim noktası TOL içindeki üçüncü kenarı da keser, sonucun köşelerinde giren ve çıkan parça sayısı eşit olmazsa TOL
+ölçeğindeki parçaların kullanımı en kısa yoldan onarılır. Kapanışın bağımsız başvurusu `scripts/fixtures/closing_cases.py`'dir;
+`fixtures/geoprocess/v1/closings.json` dönük binalardan 45 bloğun kesin kapanışını tutar ve çekirdeğin `tests/all/geoprocess.rs`'i
+onları oynatır.

@@ -690,6 +690,26 @@ export const ICONS = {
     '<path d="M2 16c3-.2 4.4-2.6 5.2-5.4C8.2 7 10 4.6 13.2 4.2c1.8-.2 3.3.3 4.8 1.2" stroke-width="1.2"/><g fill="currentColor" stroke="none"><circle cx="2.6" cy="15.9" r="1.4"/><circle cx="6.6" cy="12.4" r="1.4"/><circle cx="8.6" cy="7.3" r="1.4"/><circle cx="13.2" cy="4.2" r="1.4"/><circle cx="17.6" cy="5.2" r="1.4"/></g>',
   subdivideParts:
     '<path d="M2.5 9 6 3l8.5 1 3 6.5-2.5 6.5H6.5L2.5 13z" fill="currentColor" fill-opacity=".18" stroke-width="1.2"/><path d="M10 3.5V17M10 10.2h7.3" stroke-width="1.2" stroke-dasharray="1.7 1.2"/>',
+  // Genelleştirme (docs/adr/0221): a detailed outline faded beside the small simple shape it becomes; a zigzag faded
+  // under its smooth curve; a skewed quadrilateral faded under its square with a right-angle mark; a stepped building
+  // faded under its rectangle; two buildings and the bridge between them; a large area and a small part struck out;
+  // a small piece between two parcels going into one; two neighbours' wavy shared side faded under one straight side.
+  generalization:
+    '<path d="M2 12 3.5 5 6 7l2-4 2.5 3.5L9 11l1.5 4H3z" stroke-width="1" stroke-opacity=".5"/><path d="M12.5 15.5V9h5v6.5z" stroke-width="1.3"/><path d="M10.4 12.3h1.4m-.8-.8.8.8-.8.8" stroke-width="1"/>',
+  smoothLine:
+    '<path d="M2 15 6 6l4 8 4-9 4 7" stroke-width="1" stroke-opacity=".45"/><path d="M2 15c2-6 3-8 4-7.5S8.5 13 10 13s2.6-7 4-7.2S16.6 9 18 12" stroke-width="1.4"/>',
+  orthogonalize:
+    '<path d="M3.5 15.5 2.8 4.2 16 3.2l1 12.6z" stroke-width="1" stroke-opacity=".45"/><path d="M4 16V4h12v12z" stroke-width="1.3"/><path d="M4 12.5h3.5V16" stroke-width="1.1"/>',
+  buildingSimplify:
+    '<path d="M3 16.5V8h4V4.5h5v3h5.5v9z" stroke-width="1" stroke-opacity=".45"/><path d="M3.5 16V6.2h13.5V16z" stroke-width="1.3"/>',
+  aggregateAreas:
+    '<rect x="2.5" y="5" width="6" height="10" stroke-width="1.3"/><rect x="11.5" y="5" width="6" height="10" stroke-width="1.3"/><path d="M8.5 7.5h3v5h-3" fill="currentColor" fill-opacity=".35" stroke-width="1" stroke-dasharray="1.3 1"/>',
+  dropParts:
+    '<path d="M2.5 4.5 10.5 3l1.5 6.5-3 7H2.5z" fill="currentColor" fill-opacity=".18" stroke-width="1.3"/><rect x="13" y="12" width="4.5" height="4.5" stroke-width="1" stroke-dasharray="1.2 1"/><path d="m12.5 11.5 5.5 5.5m0-5.5-5.5 5.5" stroke-width="1.2"/>',
+  eliminateSmall:
+    '<path d="M2.5 3.5h8v13h-8zM13 3.5h4.5v13H13z" stroke-width="1.3"/><path d="M10.5 9H13v4h-2.5" fill="currentColor" fill-opacity=".35" stroke-width="1"/><path d="M12 11H6.5m1.6-1.6L6.5 11l1.6 1.6" stroke-width="1.1"/>',
+  coverageSimplify:
+    '<path d="M2.5 3.5h15v13h-15z" stroke-width="1.3"/><path d="M10 3.5 8.6 6.5 11 9.5 9 13l1 3.5" stroke-width="1" stroke-opacity=".45"/><path d="M10 3.5v13" stroke-width="1.3"/><circle cx="10" cy="3.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="10" cy="16.5" r="1.1" fill="currentColor" stroke="none"/>',
   dataTransfer:
     '<rect x="1.8" y="3" width="8" height="9" rx=".9" stroke-width="1.3"/><path d="M1.8 6h8M1.8 9h8M4.8 6v6" stroke-width="1.1"/><path d="M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4" stroke-width="1.2"/><path d="m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z" stroke-width="1.2"/><path d="m12.2 14.1 3.2 1.7 3.2-1.7" stroke-width="1.2"/>',
   fieldMapFill:

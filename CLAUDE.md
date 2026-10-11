@@ -189,6 +189,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Düzenli noktalar (katlarda ya da hücre ortalarında, tohumlu kaydırma), Rastgele noktalar (alanda ve çizgide, ifadeli sayı, en az uzaklık;
   SplitMix64 ve xoshiro256** ile her platformda aynı noktalar), Hat boyunca nokta (aralıkla, paylarla ya da eşit parçalara; Uzaklık, Semt,
   kot) ve Alt bölümlere ayır (PostGIS'in ST_Subdivide'ı yaylı geometriye; alan doğru boyunca kesilir); CBS'de Analiz › Geometri ▾ (ADR 0220);
+  kartografik genelleştirme: İşlemler'in Genelleştirme kategorisinde Yumuşat (Chaikin; En büyük açı, kotlar oranla, Ortak kenarları koru),
+  Dik açılandır (iD ve QGIS'in kuralı), Bina sadeleştir (Ruas ve CartAGen: dik, paralel, ters paralel), Alanları kümele (kümenin kapanışının
+  köprüleri, Girintileri doldur, Grupla, Nesne sayısı), Küçük parçaları ayıkla, Küçükleri komşuya kat (en uzun ortak sınır ya da en büyük
+  komşu) ve Ortak kenarları koruyarak sadeleştir (kapsama grafı, GEOS'un CoverageSimplifier'ı); Geometri ▾ kategorilerle başlıklı; kesişim
+  çekirdeği TOL ölçeğindeki karmaşada yüz yitirmez: TOL içindeki çemberler bir çember, yakın kesişim üçüncü kenarı da keser, köşelerin
+  dengesi onarılır (ADR 0221);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -621,6 +627,10 @@ cargo test --release -p kentos-processing --test cases generate_timing -- --igno
 python3 scripts/fixtures/sampling_cases.py --check   # örneklemenin durumlarını (ağlar ADR'nin kafes formülleriyle, Nesnelere değenler GEOS'un uzaklığıyla, alan içi kesirlerle, tohumlu sayılar Python'un tam sayılarıyla, yol noktaları yayların tanımından, parçalar GEOS'un kesişimiyle; belirsiz yakınlıklar denetlenir) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/sampling.json ve sampling.kcad (ADR 0220)
 cargo test -p kentos-desktop processing::sampling_tests::screens -- --ignored --nocapture --test-threads=1   # örneklemenin şeridi, pencereleri ve sonuçları, .run/shots/islem-orn-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs sampling); ADR 0220)
 cargo test --release -p kentos-processing --test cases sampling_timing -- --ignored --nocapture   # 100 000 parselde altıgen ağ (değenler), düzenli, rastgele ve hat boyunca noktalar, 100 000 köşelik on yıldızın alt bölümleri bütçeleriyle (ADR 0220 Doğrulama); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; SAMPLING_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/sampling.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
+python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
+python3 scripts/fixtures/closing_cases.py --check   # dönük binaların 45 bloğunun kapanışını (dışa tampon GEOS'un, içe aşındırma kesin; kesişim çekirdeğinin bir kez yüz yitirdiği bloklar dahil) KentOS kodu olmadan denetle; --stress FILE çekirdeğin rastgele blokların kapanışlarını (KENTOS_CLOSINGS_OUT=FILE cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored) karşılaştırır; durumlar fixtures/geoprocess/v1/closings.json (ADR 0221 §10)
+cargo test -p kentos-desktop processing::generalize_tests::screens -- --ignored --nocapture --test-threads=1   # genelleştirmenin şeridi, pencereleri ve sonuçları, .run/shots/islem-gen-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs generalize); ADR 0221)
+cargo test --release -p kentos-processing --test cases generalize_timing -- --ignored --nocapture   # 10 000 parselde ortak kenarlarla yumuşatma, 10 000 binada dik açılandırma, sadeleştirme ve kümeleme, 100 000 parselde parça ayıklama, katma ve kapsama sadeleştirmesi bütçeleriyle (ADR 0221 Doğrulama; KENTOS_TIMING_ONLY); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; GENERALIZE_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/generalize.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-geometry-core --test all proximity::timing -- --ignored --nocapture   # beş aracın aramaları 10 000 parselde bütçeleriyle (ADR 0215 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; PROXIMITY_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/proximity.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-expression --test perf measures_the_additions -- --ignored --nocapture   # ifade dili eklerinin süreleri bütçeleriyle (ADR 0214 §5); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; EXTRAS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/expressionExtras.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
@@ -1576,7 +1586,15 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   dizileriyle); `WindingIndex::owned`; beş araç web `processing/builtin/sampling/`, masaüstü `builtin/sampling/`, kategori `sampling`;
   Alt bölümlere ayır'ın alanı genel overlay yerine doğru boyunca kesilir (`cut`: overlay'le aynı alanlar ve köşeler, 10 000 köşede 297 ms
   yerine 2 ms); bağımsız başvuru `sampling_cases.py` (29 durum, GEOS ve kesirler); pencereler `processing::sampling_tests`,
-  `shots.mjs sampling`; süreler `sampling_timing` ve `scripts/perf/sampling.test.ts`. Sıradaki `GIS-25`.
+  `shots.mjs sampling`; süreler `sampling_timing` ve `scripts/perf/sampling.test.ts`. `GIS-25` kartografik genelleştirme
+  ([ADR 0221](docs/adr/0221-cartographic-generalization.md); kapsamı ben belirledim) tek parçada bitti (11 Ekim): çekirdek `ops::generalize`
+  (`smooth`, `orthogonal`, `building`, `coverage`: kapsama grafı köşe numaralarıyla, `simplify`: Visvalingam–Whyatt sayım ızgarasıyla,
+  `parts`, `aggregate`: kümeler ve kapanış ayrı, `eliminate`, `calls`; web'e toplu işlemler, değişmeyen nesnenin şekli dönmez); yedi araç web
+  `processing/builtin/generalize/`, masaüstü `builtin/generalize/` (kümeler iş parçacıklarında), kategori `generalization`; şeridin ▾ listesi
+  İşlemler kategorileriyle başlıklı (`headed_menu_of`, `overflowRows`); kesişim çekirdeğinde üç sağlamlık kuralı (`geom::arrangement`'in
+  `Circles`'ı, yakın kesişimlerin kesmesi, `balance`; ADR 0201'in eki); bağımsız başvurular `generalize_cases.py` (22 durum) ve
+  `closing_cases.py` (45 blok; 2 700 rastgele blokla zorlandı); pencereler `processing::generalize_tests`, `shots.mjs generalize`; süreler
+  `generalize_timing` ve `scripts/perf/generalize.test.ts`. Sıradaki `GIS-26`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

@@ -211,7 +211,29 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
 
 /** The ▾ beside a panel's title: its seldom used commands. */
 export function overflowMenu(ctx: AppContext, ids: readonly string[], anchor: HTMLElement, host: ControlHost, onClose: () => void): PopupMenu {
-  return PopupMenu.open(afterEach(ids.map((id) => commandItem(ctx, id)), () => host.afterRun()), anchor.getBoundingClientRect(), { minWidth: 220, owner: anchor, onClose });
+  return PopupMenu.open(afterEach(overflowRows(ctx, ids), () => host.afterRun()), anchor.getBoundingClientRect(), { minWidth: 220, owner: anchor, onClose });
+}
+
+const RUN = 'processing.run.';
+
+/**
+ * A ▾'s rows: its commands; when they are the tools of two İşlemler categories or more, each category's under its
+ * name (docs/adr/0221 §9: Analiz › Geometri ▾'s Geometri üretimi, Örnekleme and Genelleştirme).
+ */
+export function overflowRows(ctx: AppContext, ids: readonly string[]): MenuItem[] {
+  const registry = ctx.processing.registry;
+  const category = (id: string) => (id.startsWith(RUN) ? registry.get(id.slice(RUN.length))?.category : undefined);
+  const kinds = new Set(ids.map(category).filter((c) => c !== undefined));
+  if (kinds.size < 2) return ids.map((id) => commandItem(ctx, id));
+  const rows: MenuItem[] = [];
+  let last: string | undefined;
+  for (const id of ids) {
+    const c = category(id);
+    if (c !== undefined && c !== last) rows.push({ kind: 'header', label: registry.category(c)?.label ?? c });
+    last = c;
+    rows.push(commandItem(ctx, id));
+  }
+  return rows;
 }
 
 /** A drop-down button for a submenu of the menu model (Tema, İçe aktar …). */

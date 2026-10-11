@@ -4,6 +4,7 @@ pub mod calculate_field;
 pub mod convert;
 pub mod distance;
 pub mod edge_lengths;
+pub mod generalize;
 pub mod generate;
 pub mod geometry;
 pub mod hydrology;
@@ -82,6 +83,13 @@ pub fn tools() -> Vec<Tool> {
         sampling::points::random_tool(),
         sampling::along::tool(),
         sampling::subdivide::tool(),
+        generalize::smooth::tool(),
+        generalize::square::tool(),
+        generalize::building::tool(),
+        generalize::aggregate::tool(),
+        generalize::parts::tool(),
+        generalize::eliminate::tool(),
+        generalize::coverage::tool(),
         geometry::buffer::tool(),
         geometry::clip::tool(),
         geometry::dissolve::tool(),

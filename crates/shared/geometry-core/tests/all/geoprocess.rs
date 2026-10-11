@@ -411,3 +411,135 @@ fn timing() {
     let o = overlay_run(&a, &b, Mode::Intersection);
     println!("Kesişim, 400 × 400: {:?} ({} parça)", t.elapsed(), o.len());
 }
+
+/// A block's rings out and back in by `d` (a closing, as Alanları kümele makes it): its area and its parts (the
+/// reference's rule: none below 10⁻⁶ m²).
+fn closing_of(rings: &[Vec<Vec2>], d: f64) -> (f64, usize) {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::region::net_area;
+    use kentos_geometry_core::ops::geoprocess::Class;
+    use kentos_geometry_core::ops::geoprocess::buffer::{Side, buffer};
+    let areas: Vec<_> = rings
+        .iter()
+        .flat_map(|pts| {
+            areas_of_entity(&Shape::Polygon {
+                pts: pts.clone(),
+                bulges: None,
+                holes: None,
+                parts: None,
+            })
+        })
+        .collect();
+    let out = buffer(&Class::Areas(areas), d, Side::Both);
+    let closing = buffer(&Class::Areas(out), -d, Side::Both);
+    let parts: Vec<f64> = closing.iter().map(net_area).filter(|a| *a > 1e-6).collect();
+    (parts.iter().sum(), parts.len())
+}
+
+/// The closings of near blocks (docs/adr/0221 §10): four turned buildings out and back in by the same distance,
+/// against the exact closing of `scripts/fixtures/closing_cases.py`, among them the blocks whose faces the overlay
+/// once lost where circles met within 10⁻⁶ m.
+#[test]
+fn closings_of_near_blocks_are_exact() {
+    let path = format!(
+        "{}/../../../fixtures/geoprocess/v1/closings.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let file: Value = serde_json::from_str(&std::fs::read_to_string(path).expect("fixture file"))
+        .expect("fixture JSON");
+    assert_eq!(file["format"], "kentos.closing-cases");
+    let tol = file["tolerance"]["area"].as_f64().expect("a tolerance");
+    let cases = file["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 45, "{} durum", cases.len());
+    for c in cases {
+        let name = c["name"].as_str().expect("a name");
+        let rings: Vec<Vec<Vec2>> = c["rings"]
+            .as_array()
+            .expect("rings")
+            .iter()
+            .map(|r| {
+                r.as_array()
+                    .expect("a ring")
+                    .iter()
+                    .map(|p| Vec2::new(p[0].as_f64().expect("x"), p[1].as_f64().expect("y")))
+                    .collect()
+            })
+            .collect();
+        let (area, parts) = closing_of(&rings, c["distance"].as_f64().expect("a distance"));
+        assert_eq!(Some(parts as u64), c["parts"].as_u64(), "{name}: parça");
+        let want = c["area"].as_f64().expect("an area");
+        assert!(
+            (area - want).abs() <= tol,
+            "{name}: alan {area}, beklenen {want}"
+        );
+    }
+}
+
+/// Random blocks' closings for `closing_cases.py --stress FILE` (`--ignored`; KENTOS_CLOSINGS_OUT=FILE, and
+/// KENTOS_BLOCKS, KENTOS_SEED, KENTOS_DISTANCE): four stepped buildings a block, gaps of 2 to 4.5 m, each turned up to
+/// 3° either way and its corners moved up to 0.2 m.
+#[test]
+#[ignore = "zorlama: KENTOS_CLOSINGS_OUT=… cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored"]
+fn closings_of_random_blocks() {
+    use kentos_geometry_core::jsmath::{cos, sin};
+    let var = |k: &str, d: f64| {
+        std::env::var(k)
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(d)
+    };
+    let (n, distance) = (
+        var("KENTOS_BLOCKS", 300.0) as usize,
+        var("KENTOS_DISTANCE", 2.5),
+    );
+    let mut seed = var("KENTOS_SEED", 221.0) as u64 | 1;
+    let mut rnd = || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let shape = [
+        (0.0, 0.0),
+        (12.0, 0.0),
+        (12.0, 8.0),
+        (6.0, 8.0),
+        (6.0, 8.8),
+        (0.0, 8.8),
+    ];
+    let mut out = Vec::new();
+    for b in 0..n {
+        let (bx, by) = (
+            487_000.0 + (b % 20) as f64 * 70.0 + rnd(),
+            4_420_000.0 + (b / 20) as f64 * 60.0 + rnd(),
+        );
+        let (gx, gy) = (2.0 + 2.5 * rnd(), 2.0 + 2.5 * rnd());
+        let mut rings = Vec::new();
+        for (ox, oy) in [
+            (0.0, 0.0),
+            (12.0 + gx, 0.0),
+            (0.0, 8.8 + gy),
+            (12.0 + gx, 8.8 + gy),
+        ] {
+            let turn = (rnd() - 0.5) * 6.0 * std::f64::consts::PI / 180.0;
+            let (s, c) = (sin(turn), cos(turn));
+            let ring: Vec<Vec2> = shape
+                .iter()
+                .map(|&(x, y)| {
+                    let (x, y) = (x - 6.0 + (rnd() - 0.5) * 0.4, y - 4.4 + (rnd() - 0.5) * 0.4);
+                    Vec2::new(bx + ox + 6.0 + x * c - y * s, by + oy + 4.4 + x * s + y * c)
+                })
+                .collect();
+            rings.push(ring);
+        }
+        let (area, count) = closing_of(&rings, distance);
+        out.push(json!({
+            "rings": rings.iter().map(|r| r.iter().map(|p| [p.x, p.y]).collect::<Vec<_>>()).collect::<Vec<_>>(),
+            "distance": distance,
+            "area": area,
+            "count": count,
+        }));
+    }
+    let path = std::env::var("KENTOS_CLOSINGS_OUT").expect("KENTOS_CLOSINGS_OUT");
+    std::fs::write(path, serde_json::to_string(&out).expect("JSON")).expect("written");
+}

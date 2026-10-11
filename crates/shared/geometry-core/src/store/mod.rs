@@ -124,7 +124,7 @@ impl Item {
 /// time. The splitmix64 finalizer mixes every bit into the low ones the
 /// table's buckets are: a whole number's `f64` has its low bits zero.
 #[derive(Default)]
-struct IdHasher(u64);
+pub(crate) struct IdHasher(u64);
 
 impl Hasher for IdHasher {
     fn finish(&self) -> u64 {

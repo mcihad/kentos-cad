@@ -386,6 +386,13 @@ türünün işaretidir (bkz. §10).
 | `sample.random` | Rastgele noktalar | Alanların içine ya da çizgilerin üstüne nesne başına ifadeli sayıda; bütün noktalar arası en az uzaklık ve Deneme; tohum her platformda aynı noktaları verir; çok ince alan söylenir; çizgide Uzaklık, Parça, kot (§4). |
 | `sample.alongLines` | Hat boyunca nokta | Çizgilerin ve alan sınırlarının üstüne aralıkla (başlangıç ve bitiş payı) ya da eşit parçalara, uçlar isteğe bağlı; Uzaklık, Semt, Parça, kot (§5). |
 | `sample.subdivide` | Alt bölümlere ayır | Alanları ve çoklu çizgileri en çok köşe sayısına göre parçalara ayırır (PostGIS ST_Subdivide; alan doğru boyunca kesilir, yaylar kesin); Parça, kotlar (§6). |
+| `generalize.smooth` | Yumuşat | Alanların ve çoklu çizgilerin köşelerini Chaikin'in kesmesiyle yumuşatır (Yineleme, Kesim oranı, En büyük açı); yaylar ve uçlar sabit, kotlar oranla; Ortak kenarları koru'da komşuların ortak kenarları bir kez (ADR 0221 §2). |
+| `generalize.orthogonalize` | Dik açılandır | Dik açıya ve düzlüğe Açı eşiği kadar yakın köşeleri iD'nin ve QGIS'in kuralıyla tam dik ve düz yapar; en kareye yakın sonuç, en büyük kayma raporda (§3). |
+| `generalize.building` | Bina sadeleştir | En kısa kenar'dan kısa kenarları komşularının doğrultusuna göre (dik, paralel, ters paralel; Ruas ve CartAGen) atar; iki kat büyüyen ya da geçersiz sonuçta bina olduğu gibi kalır; tablo (§4). |
+| `generalize.aggregate` | Alanları kümele | Kümeleme uzaklığından yakın alanları kümenin kapanışının köprüleriyle birleştirir; Girintileri doldur, En küçük alan, En küçük boşluk, Grupla; Nesne sayısı (§5). |
+| `generalize.dropParts` | Küçük parçaları ayıkla | Çok parçalı alanların küçük parçalarını ve küçük delikleri (alanla ya da yüzdeyle) atar; bütün parçaları küçükse en büyüğü kalır; kotlar kalır (§6). |
+| `generalize.eliminate` | Küçükleri komşuya kat | Küçük alanları en uzun ortak sınırlı ya da en büyük komşusuna katar, geçiş geçiş; komşusu olmayanlar söylenir; katılma tablosu (§7). |
+| `generalize.coverageSimplify` | Ortak kenarları koruyarak sadeleştir | Komşu alanların kenarlarını kapsama grafında bir kez Visvalingam–Whyatt'la sadeleştirir (GEOS'un CoverageSimplifier'ı); düğümler ve yay uçları sabit; Sınırı koru (§8). |
 
 ## 12. Masaüstü
 

@@ -5108,6 +5108,691 @@
     ]
    }
   },
+  "generalize.smooth": {
+   "title": "Yumuşat",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Yumuşatılacak çoklu çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "iterations",
+     "label": "Yineleme",
+     "description": "Köşe kesmenin kaç kez yineleneceği.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "offset",
+     "label": "Kesim oranı",
+     "description": "Kenarın her ucundan kesilen pay; 0,5'te kenarların ortaları kalır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "maxAngle",
+     "label": "En büyük açı",
+     "description": "Bundan çok dönen köşeler keskin kalır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "°"
+     }
+    },
+    {
+     "name": "shared",
+     "label": "Ortak kenarları koru",
+     "description": "Komşu alanların ortak kenarları bir kez yumuşar.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generalization",
+     "text": "Genelleştirme"
+    },
+    "icon": "smoothLine",
+    "about": "Çizgilerin ve alanların köşelerini keserek yumuşatır (Chaikin); komşu alanların ortak kenarları birlikte yumuşayabilir.",
+    "help": [
+     "Örnekler: sayısallaştırılmış dere ve yolları yumuşatmak, küçük ölçekli haritada kıyı ve orman sınırlarını yuvarlamak.",
+     "Her yinelemede her düz kenar iki ucundan Kesim oranı kadar içeride iki nokta verir; köşe kesilir. Açık çizginin uçları, yayların uçları ve dönüşü En büyük açı'dan büyük köşeler olduğu gibi kalır; yaylar bütün kalır. Kotlar kenar boyunca aynı oranla taşınır.",
+     "Ortak kenarları koru açıkken komşu alanların ortak kenarları bir kez yumuşar, iki komşu da aynı sonucu alır; üç ya da daha çok alanın buluştuğu köşeler kıpırdamaz. Komşular ortak köşelerini tam aynı koordinatla paylaşmalıdır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "YUMUSAT",
+     "SMOOTHLINES"
+    ]
+   }
+  },
+  "generalize.orthogonalize": {
+   "title": "Dik açılandır",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Köşeleri dik açılandırılacak alanlar ve çoklu çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "threshold",
+     "label": "Açı eşiği",
+     "description": "Dik açıya ya da düzlüğe bu kadar yakın köşeler düzeltilir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "°"
+     }
+    },
+    {
+     "name": "iterations",
+     "label": "En çok yineleme",
+     "description": "Köşelerin en çok kaç adımda kaydırılacağı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generalization",
+     "text": "Genelleştirme"
+    },
+    "icon": "orthogonalize",
+    "about": "Dik açıya ve düzlüğe yakın köşeleri tam dik ve düz yapar (binalar, parseller); öbür köşeler olduğu gibi kalır.",
+    "help": [
+     "Örnekler: sayısallaştırılmış bina köşelerini dik yapmak, el çizimi yapı adalarını düzeltmek.",
+     "Açısı dik açıya ya da düzlüğe Açı eşiği kadar yakın köşeler açıortayları boyunca adım adım kaydırılır (iD'nin ve QGIS'in kuralı); en kareye yakın sonuç yazılır. Daha uzak açılı köşeler (örneğin 45°) kalır. Açık çizginin uçları ve yayların uçları kıpırdamaz; kotlar köşeleriyle gider."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DIKACI",
+     "ORTHOGONALIZE"
+    ]
+   }
+  },
+  "generalize.building": {
+   "title": "Bina sadeleştir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Binalar",
+     "description": "Sadeleştirilecek bina alanları.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "minEdge",
+     "label": "En kısa kenar",
+     "description": "Bundan kısa kenarlar atılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "parallel",
+     "label": "Paralel sınırı",
+     "description": "Komşu kenarların paralel sayıldığı açı farkı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "°"
+     }
+    },
+    {
+     "name": "orthogonal",
+     "label": "Dik sınırı",
+     "description": "Komşu kenarların dik sayıldığı açı farkı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "°"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generalization",
+     "text": "Genelleştirme"
+    },
+    "icon": "buildingSimplify",
+    "about": "Binaların en kısa kenardan kısa kenarlarını komşularına göre atar: basamaklar, çıkıntılar, girintiler ve pahlar gider, dik açılar kalır.",
+    "help": [
+     "Örnekler: büyük ölçekli bina ayak izlerini 1/5000 haritaya indirmek, küçük girinti ve çıkıntıları atmak.",
+     "En kısa kenardan başlanır (Ruas'ın kuralı): komşu kenarları dikse uzatılıp buluşur; aynı yöne giderse (çıkıntı ya da girinti) kısa yanın ucundan kesilir; ters yöne giderse (basamak) iki kenar ortadan geçen tek kenar olur. Sonra kısa kenarlar yeniden aranır. Yaylı kenarlar ve yanlarındakiler kalır.",
+     "Sadeleşen bina iki katından büyük ya da geçersiz çıkarsa olduğu gibi yazılır ve söylenir. Kotlar taşınmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "BINASADE",
+     "SIMPLIFYBUILDING"
+    ]
+   }
+  },
+  "generalize.aggregate": {
+   "title": "Alanları kümele",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Kümelenecek alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "distance",
+     "label": "Kümeleme uzaklığı",
+     "description": "Bu uzaklıktan yakın alanlar birleşir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "minArea",
+     "label": "En küçük alan",
+     "description": "Bundan küçük sonuçlar yazılmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²"
+     }
+    },
+    {
+     "name": "minHole",
+     "label": "En küçük boşluk",
+     "description": "Bundan küçük delikler doldurulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²"
+     }
+    },
+    {
+     "name": "fillNotches",
+     "label": "Girintileri doldur",
+     "description": "Tek alanın dar girintileri de doldurulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "group",
+     "label": "Grupla",
+     "description": "Bu alanın değeri aynı olanlar birlikte kümelenir.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generalization",
+     "text": "Genelleştirme"
+    },
+    "icon": "aggregateAreas",
+    "about": "Birbirine kümeleme uzaklığından yakın alanları aralarına köprü kurarak birleştirir (yapı adaları, orman ve göl kümeleri).",
+    "help": [
+     "Örnekler: küçük ölçekte binaları yapı adalarına toplamak, dağınık orman lekelerini birleştirmek.",
+     "Aralarındaki uzaklık kümeleme uzaklığını aşmayan alanlar bir kümedir. Kümenin birleşimi uzaklığın yarısı kadar dışa, sonra içe tamponlanır (kapanış); iki ya da daha çok nesneye değen dolgular köprü olur. Girintileri doldur açıkken tek nesnenin dar girintileri de dolar.",
+     "Sonuç Nesne sayısı'nı ve Grupla'nın değerini alır; öbür öznitelikler alınmaz. En küçük boşluktan küçük delikler doldurulur, en küçük alandan küçük sonuçlar yazılmaz. Gruplar birbirleriyle birleşmez; kotlar taşınmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KUMELE",
+     "AGGREGATE"
+    ]
+   }
+  },
+  "generalize.dropParts": {
+   "title": "Küçük parçaları ayıkla",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Küçük parçaları ve delikleri atılacak alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "minArea",
+     "label": "En küçük alan",
+     "description": "Bundan küçük parça ve delikler atılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²"
+     }
+    },
+    {
+     "name": "percent",
+     "label": "Yüzde",
+     "description": "Dış halkaların alanı toplamının bu yüzdesinden küçükler de atılır; 0: kullanılmaz.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "%"
+     }
+    },
+    {
+     "name": "parts",
+     "label": "Parçalar",
+     "description": "Küçük parçalar atılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "holes",
+     "label": "Delikler",
+     "description": "Küçük delikler doldurulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generalization",
+     "text": "Genelleştirme"
+    },
+    "icon": "dropParts",
+    "about": "Çok parçalı alanların küçük parçalarını ve küçük delikleri atar; bütün parçaları küçükse en büyüğü kalır.",
+    "help": [
+     "Örnekler: sınır verisindeki kırıntı adaları ve iğne deliklerini temizlemek, sayısallaştırma artıklarını atmak.",
+     "Net alanı En küçük alan'dan küçük ya da (Yüzde verilmişse) nesnenin dış halkalarının alanı toplamının yüzdesinden küçük parça ve delikler gider. Parçalar ve Delikler ayrı ayrı açılıp kapanır. Kalan halkalar köşeleri ve kotlarıyla değişmez."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "PARCAAYIKLA",
+     "ELIMINATEPART"
+    ]
+   }
+  },
+  "generalize.eliminate": {
+   "title": "Küçükleri komşuya kat",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Küçükleri komşularına katılacak alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "minArea",
+     "label": "En küçük alan",
+     "description": "Bundan küçük alanlar komşusuna katılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m²"
+     }
+    },
+    {
+     "name": "into",
+     "label": "Kime",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "longest",
+        "label": "En uzun ortak sınır",
+        "hint": "Ortak sınırı en uzun komşuya"
+       },
+       {
+        "value": "largest",
+        "label": "En büyük komşu",
+        "hint": "Alanı en büyük komşuya"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generalization",
+     "text": "Genelleştirme"
+    },
+    "icon": "eliminateSmall",
+    "about": "Küçük alanları en uzun ortak sınırlı ya da en büyük komşusuna katar (kırıntı parseller, sayısallaştırma artıkları).",
+    "help": [
+     "Örnekler: arazi örtüsü verisindeki küçük kırıntıları komşularına katmak, en küçük haritalama birimini sağlamak.",
+     "Net alanı En küçük alan'dan küçük alanlar küçüktür. Küçükler küçükten büyüğe, ortak sınırı (1 mm içinde) olan büyük komşulardan seçilene katılır; yalnız küçüklere değen küçük, onlar katıldıktan sonra katılır. Komşusu olmayan küçük olduğu gibi yazılır ve söylenir.",
+     "Büyükler öznitelikleriyle yazılır; tablo her katılmayı söyler. Kotlar taşınmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KUCUKKAT",
+     "ELIMINATE"
+    ]
+   }
+  },
+  "generalize.coverageSimplify": {
+   "title": "Ortak kenarları koruyarak sadeleştir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Ortak kenarları birlikte sadeleştirilecek komşu alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "tolerance",
+     "label": "Tolerans",
+     "description": "Üçgeninin alanı bunun karesinden küçük köşeler atılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "keepBoundary",
+     "label": "Sınırı koru",
+     "description": "Yalnız ortak kenarlar sadeleşir; dış sınır değişmez.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generalization",
+     "text": "Genelleştirme"
+    },
+    "icon": "coverageSimplify",
+    "about": "Komşu alanların ortak kenarlarını bir kez sadeleştirir; aralarında boşluk ya da örtüşme açılmaz.",
+    "help": [
+     "Örnekler: il, ilçe ve mahalle sınırlarını küçük ölçeğe indirmek, parsel katmanının köşelerini azaltmak.",
+     "Üç ya da daha çok alanın buluştuğu köşeler kalır; aralarındaki kenarlar Visvalingam–Whyatt'la sadeleşir (GEOS'un ve QGIS'in kuralı): üçgeninin alanı toleransın karesinden küçük köşe atılır, üçgeninde başka bir köşe varsa kalır. Sınırı koru açıkken dış sınır değişmez.",
+     "Komşular ortak köşelerini tam aynı koordinatla paylaşmalıdır; paylaşmayanların sınırı ayrı ayrı sadeleşir (önce Topolojik temizlik). Kotlar köşeleriyle kalır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KAPLAMASADE",
+     "COVERAGESIMPLIFY"
+    ]
+   }
+  },
   "geometry.buffer": {
    "title": "Tampon",
    "rows": [

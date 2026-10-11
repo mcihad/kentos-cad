@@ -957,6 +957,58 @@ fn the_generation_cases_do_what_they_say() {
     );
 }
 
+/// Genelleştirme's cases (docs/adr/0221): written by the independent reference
+/// (scripts/fixtures/generalize_cases.py: the ADR's rules in the same order,
+/// corners' triangles on fractions, the closings' areas worked by hand beside
+/// GEOS's, GEOS's unions for the joinings); the same run here and on the
+/// drawing's reading copy; elevations and the closings' areas within the
+/// tolerance.
+#[test]
+fn the_generalization_cases_do_what_they_say() {
+    let file = case_file("generalize.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let more: Vec<String> = file["toleranceFields"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v.as_str().map(str::to_owned))
+        .collect();
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_full(
+            c,
+            play(c, &registry, false, &file["files"]),
+            tol,
+            tol,
+            &more,
+        );
+        found.extend(check_full(
+            c,
+            play(c, &registry, true, &file["files"]),
+            tol,
+            tol,
+            &more,
+        ));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 22, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Örnekleme's cases (docs/adr/0220): written by the independent reference
 /// (scripts/fixtures/sampling_cases.py: the ADR's lattices and seeded
 /// numbers, points in areas decided on fractions, GEOS's distance for
@@ -2308,6 +2360,330 @@ fn sampling_timing() {
             summary = record.summary;
             assert!(host.doc.undo().is_some(), "{id}: one step");
             std::thread::sleep(std::time::Duration::from_millis(400));
+            if run >= 2 {
+                ms.push(took);
+            }
+        }
+        ms.sort_by(f64::total_cmp);
+        let (p50, p95) = (
+            ms[ms.len() / 2],
+            ms[(ms.len() * 95 / 100).min(ms.len() - 1)],
+        );
+        println!("{title}: p50 {p50:.1} ms, p95 {p95:.1} ms, bütçe {budget} ms\n  {summary}");
+        let mut log = Vec::new();
+        let t = Instant::now();
+        let Prepared::Ready(job) = runner.prepare(&host, &tool, &values, true, &mut log) else {
+            panic!("{id} prepared: {log:?}");
+        };
+        let prepared = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        let result = Runner::compute(
+            &job,
+            &host.doc,
+            &mut Apart {
+                log: &mut log,
+                files: None,
+            },
+        );
+        let computed = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        runner.finish(&mut host, job, result, false, &mut log);
+        println!(
+            "  hazırlık {prepared:.1} ms, araç {computed:.1} ms, uygulama {:.1} ms",
+            t.elapsed().as_secs_f64() * 1e3
+        );
+        if p50 > budget {
+            over.push(format!("{title}: p50 {p50:.1} ms > {budget} ms"));
+        }
+    }
+    assert!(over.is_empty(), "{over:#?}");
+}
+
+/// A polygon of the timings' scenes: its id, attributes JSON and ring.
+type Polygon = (usize, String, Vec<(f64, f64)>);
+
+/// A drawing of `polygons` on one layer, for the timings.
+fn polygons_scene(name: &str, polygons: Vec<Polygon>) -> Document {
+    let (e0, n0) = (487_000.0, 4_420_000.0);
+    let entities: Vec<String> = polygons
+        .into_iter()
+        .map(|(id, attrs, ring)| {
+            let pts: Vec<String> = ring
+                .iter()
+                .map(|(x, y)| format!(r#"{{"x":{},"y":{}}}"#, e0 + x, n0 + y))
+                .collect();
+            format!(
+                r#"{{"kind":"polygon","id":{id},"layerId":"g","attrs":{attrs},"pts":[{}]}}"#,
+                pts.join(",")
+            )
+        })
+        .collect();
+    let json = format!(
+        r#"{{"format":"kentos.document","version":1,"name":"{name}","settings":{{"srid":5256,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,"workspace":"gis","drawingFont":"barlow"}},
+            "origin":{{"x":{e0},"y":{n0}}},"layers":[{{"id":"g","name":"Genelleştirme","type":"layer","visible":true,"locked":false,"expanded":true,
+            "style":{{"color":"fg","lineType":"continuous","lineWeight":0.25}},"children":[]}}],"activeLayer":"g","entities":[{}],"styles":{{"items":[],"categories":[]}}}}"#,
+        entities.join(",")
+    );
+    Document::from_snapshot(DocumentSnapshotV1::from_json(&json).expect("the drawing reads"))
+        .expect("the drawing opens")
+}
+
+/// A wobble of a grid edge's inner vertex `k` (±0.08 m), the same for both parcels that share the edge.
+fn wobble(a: usize, b: usize, k: usize) -> f64 {
+    (((a * 31 + b * 17 + k * 7) % 9) as f64 - 4.0) * 0.02
+}
+
+/// A coverage of `cols` × `rows` parcels of 20 m, each side with three inner
+/// vertices that wobble (16 vertices a parcel), neighbours sharing them
+/// exactly (docs/adr/0221 §10); the web's `generalize.test.ts` builds the same.
+pub fn coverage_scene(cols: usize, rows: usize) -> Document {
+    let mut polygons = Vec::with_capacity(cols * rows);
+    for r in 0..rows {
+        for c in 0..cols {
+            let (x0, y0) = (c as f64 * 20.0, r as f64 * 20.0);
+            let (x1, y1) = (x0 + 20.0, y0 + 20.0);
+            let mut ring = vec![(x0, y0)];
+            // Bottom: the horizontal edge (c, r); right: the vertical edge (c + 1, r); top and left reversed.
+            for k in 1..4 {
+                ring.push((x0 + 5.0 * k as f64, y0 + wobble(c, 2 * r, k)));
+            }
+            ring.push((x1, y0));
+            for k in 1..4 {
+                ring.push((x1 + wobble(c + 1, 2 * r + 1, k), y0 + 5.0 * k as f64));
+            }
+            ring.push((x1, y1));
+            for k in (1..4).rev() {
+                ring.push((x0 + 5.0 * k as f64, y1 + wobble(c, 2 * (r + 1), k)));
+            }
+            ring.push((x0, y1));
+            for k in (1..4).rev() {
+                ring.push((x0 + wobble(c, 2 * r + 1, k), y0 + 5.0 * k as f64));
+            }
+            let id = r * cols + c + 1;
+            polygons.push((id, format!(r#"{{"Parsel":"{id}"}}"#), ring));
+        }
+    }
+    polygons_scene("Kaplama", polygons)
+}
+
+/// `blocks` blocks of four buildings 3 m apart, 40 m from the next block:
+/// each a 12 × 8 m building with a 0.8 m step on its top side, its corners
+/// off by up to 0.15 m and the whole turned up to 1.2° (docs/adr/0221 §10);
+/// the web's `generalize.test.ts` builds the same.
+pub fn buildings_scene(blocks: usize) -> Document {
+    let shape = [
+        (0.0, 0.0),
+        (12.0, 0.0),
+        (12.0, 8.0),
+        (6.0, 8.0),
+        (6.0, 8.8),
+        (0.0, 8.8),
+    ];
+    let per_row = 50;
+    let mut polygons = Vec::with_capacity(blocks * 4);
+    let mut id = 0;
+    for b in 0..blocks {
+        let (bx, by) = ((b % per_row) as f64 * 70.0, (b / per_row) as f64 * 60.0);
+        for (ox, oy) in [(0.0, 0.0), (15.0, 0.0), (0.0, 11.8), (15.0, 11.8)] {
+            id += 1;
+            let turn = ((id % 7) as f64 - 3.0) * 0.4 * std::f64::consts::PI / 180.0;
+            let (sin, cos) = turn.sin_cos();
+            let ring: Vec<(f64, f64)> = shape
+                .iter()
+                .enumerate()
+                .map(|(i, &(x, y))| {
+                    let (nx, ny) = (
+                        ((id * 7 + i * 3) % 7) as f64 * 0.05 - 0.15,
+                        ((id * 5 + i * 11) % 7) as f64 * 0.05 - 0.15,
+                    );
+                    let (x, y) = (x - 6.0 + nx, y - 4.4 + ny);
+                    (
+                        bx + ox + 6.0 + x * cos - y * sin,
+                        by + oy + 4.4 + x * sin + y * cos,
+                    )
+                })
+                .collect();
+            polygons.push((
+                id,
+                format!(r#"{{"Bina":"{id}","Blok":"{}"}}"#, b + 1),
+                ring,
+            ));
+        }
+    }
+    polygons_scene("Binalar", polygons)
+}
+
+/// Rows of parcels 20 m deep, nineteen 20 m wide then a 2 m sliver (40 m²,
+/// 5 % of them), neighbours sharing their sides (docs/adr/0221 §10); the
+/// web's `generalize.test.ts` builds the same.
+pub fn slivers_scene(cols: usize, rows: usize) -> Document {
+    let mut polygons = Vec::with_capacity(cols * rows);
+    for r in 0..rows {
+        let mut x = 0.0;
+        let y0 = r as f64 * 20.0;
+        for c in 0..cols {
+            let w = if c % 20 == 19 { 2.0 } else { 20.0 };
+            let id = r * cols + c + 1;
+            polygons.push((
+                id,
+                format!(r#"{{"Parsel":"{id}"}}"#),
+                vec![(x, y0), (x + w, y0), (x + w, y0 + 20.0), (x, y0 + 20.0)],
+            ));
+            x += w;
+        }
+    }
+    polygons_scene("Şeritler", polygons)
+}
+
+/// Genelleştirme's whole runs (docs/adr/0221 §10): the runner's check, the
+/// tool and its one undo step, after a warm-up, each run undone before the
+/// next; p50 and p95 against the ADR's budgets. Run on purpose:
+/// `cargo test --release -p kentos-processing --test cases generalize_timing -- --ignored --nocapture`.
+#[test]
+#[ignore = "timings, run on purpose in release"]
+fn generalize_timing() {
+    use std::time::Instant;
+    let registry = Registry::builtin();
+    let all = json!({ "scope": "all" });
+    let values = |pairs: Vec<(&str, Value)>| -> Values {
+        pairs.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()
+    };
+    fn coverage() -> Document {
+        coverage_scene(320, 313)
+    }
+    fn small_coverage() -> Document {
+        coverage_scene(100, 100)
+    }
+    fn buildings() -> Document {
+        buildings_scene(2500)
+    }
+    fn slivers() -> Document {
+        slivers_scene(400, 250)
+    }
+    // A run: the tool, its title, its drawing, its values, its budget (ms).
+    type Run = (&'static str, &'static str, fn() -> Document, Values, f64);
+    let runs: Vec<Run> = vec![
+        (
+            "generalize.smooth",
+            "Yumuşat, 10 000 parselde ortak kenarlarla, üç yineleme",
+            small_coverage,
+            values(vec![
+                ("input", all.clone()),
+                ("iterations", json!(3)),
+                ("offset", json!(0.25)),
+                ("maxAngle", json!(180)),
+                ("shared", json!(true)),
+                ("layer", json!({ "newName": "Yumuşatılan" })),
+            ]),
+            500.0,
+        ),
+        (
+            "generalize.orthogonalize",
+            "Dik açılandır, 10 000 eğik bina",
+            buildings,
+            values(vec![
+                ("input", all.clone()),
+                ("threshold", json!(15)),
+                ("iterations", json!(1000)),
+                ("layer", json!({ "newName": "Dik açılandırılan" })),
+            ]),
+            700.0,
+        ),
+        (
+            "generalize.building",
+            "Bina sadeleştir, 10 000 basamaklı bina, 3 m",
+            buildings,
+            values(vec![
+                ("input", all.clone()),
+                ("minEdge", json!(3)),
+                ("parallel", json!(20)),
+                ("orthogonal", json!(20)),
+                ("layer", json!({ "newName": "Sadeleştirilen binalar" })),
+            ]),
+            300.0,
+        ),
+        (
+            "generalize.aggregate",
+            "Alanları kümele, 10 000 bina dörtlü bloklarda, 5 m",
+            buildings,
+            values(vec![
+                ("input", all.clone()),
+                ("distance", json!(5)),
+                ("minArea", json!(0)),
+                ("minHole", json!(0)),
+                ("fillNotches", json!(false)),
+                ("layer", json!({ "newName": "Kümelenen alanlar" })),
+            ]),
+            5000.0,
+        ),
+        (
+            "generalize.dropParts",
+            "Küçük parçaları ayıkla, 100 000 parsel",
+            coverage,
+            values(vec![
+                ("input", all.clone()),
+                ("minArea", json!(10)),
+                ("percent", json!(0)),
+                ("parts", json!(true)),
+                ("holes", json!(true)),
+                ("layer", json!({ "newName": "Ayıklanan" })),
+            ]),
+            500.0,
+        ),
+        (
+            "generalize.eliminate",
+            "Küçükleri komşuya kat, 100 000 parselin 5 000 şeridi",
+            slivers,
+            values(vec![
+                ("input", all.clone()),
+                ("minArea", json!(100)),
+                ("into", json!("longest")),
+                ("layer", json!({ "newName": "Katılan" })),
+            ]),
+            800.0,
+        ),
+        (
+            "generalize.coverageSimplify",
+            "Ortak kenarları koruyarak sadeleştir, 100 000 parsel, 1,6 milyon köşe, 1 m",
+            coverage,
+            values(vec![
+                ("input", all.clone()),
+                ("tolerance", json!(1)),
+                ("keepBoundary", json!(false)),
+                ("layer", json!({ "newName": "Sadeleştirilen kaplama" })),
+            ]),
+            2000.0,
+        ),
+    ];
+    let only = std::env::var("KENTOS_TIMING_ONLY").ok();
+    let mut over = Vec::new();
+    for (id, title, scene, values, budget) in runs {
+        if only
+            .as_deref()
+            .is_some_and(|o| !o.split(',').any(|x| id.ends_with(x)))
+        {
+            continue;
+        }
+        let tool = registry.tool(id).expect("the tool");
+        let mut host = TestHost {
+            doc: scene(),
+            selection: Vec::new(),
+            view: None,
+        };
+        let mut runner = Runner::new();
+        let mut ms = Vec::new();
+        let mut summary = String::new();
+        for run in 0..6 {
+            let mut log = Vec::new();
+            let t = Instant::now();
+            let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+            let took = t.elapsed().as_secs_f64() * 1e3;
+            let Outcome::Ok { record, .. } = outcome else {
+                panic!("{id}: {log:?}");
+            };
+            summary = record.summary;
+            assert!(host.doc.undo().is_some(), "{id}: one step");
+            std::thread::sleep(std::time::Duration::from_millis(300));
             if run >= 2 {
                 ms.push(took);
             }

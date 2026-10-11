@@ -191,6 +191,39 @@ pub fn geometry_of(s: &Shape) -> Option<Geometry> {
     Some(g)
 }
 
+/// Areas as a query reads them (an overlay's results: Alanları kümele's and
+/// Küçükleri komşuya kat's, docs/adr/0221 §5, §7); none for no areas.
+pub fn geometry_of_areas(areas: Vec<Area>) -> Option<Geometry> {
+    let mut g = Geometry {
+        areas,
+        area_edges: Vec::new(),
+        edges: Vec::new(),
+        points: Vec::new(),
+        starts: Vec::new(),
+        center: None,
+        bounds: empty_bounds(),
+    };
+    for a in &g.areas {
+        if let Some(p) = a.outer.pts.first() {
+            g.starts.push(*p);
+        }
+        g.area_edges.extend(ring_edges(&a.outer));
+        for h in &a.holes {
+            g.area_edges.extend(ring_edges(h));
+        }
+    }
+    g.edges = g.area_edges.clone();
+    let mut b = empty_bounds();
+    for e in &g.edges {
+        extend_by_edge(&mut b, e);
+    }
+    if is_empty_bounds(&b) {
+        return None;
+    }
+    g.bounds = b;
+    Some(g)
+}
+
 pub(crate) fn boxes_meet(a: &Bounds, b: &Bounds, pad: f64) -> bool {
     a.min_x - pad <= b.max_x
         && b.min_x - pad <= a.max_x

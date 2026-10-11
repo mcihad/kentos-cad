@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 27] = [
+pub const CATEGORIES: [Category; 28] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -111,6 +111,13 @@ pub const CATEGORIES: [Category; 27] = [
         "Örnekleme",
         "sampling",
         "Ağ oluştur, düzenli ve rastgele noktalar, hat boyunca nokta, alt bölümlere ayırma",
+    ),
+    // docs/adr/0221: smoothing, squaring, building simplification, aggregation, part removal, elimination, coverage simplification.
+    category(
+        "generalization",
+        "Genelleştirme",
+        "generalization",
+        "Yumuşat, dik açılandır, bina sadeleştir, alanları kümele, küçük parçaları ayıkla, küçükleri komşuya kat, ortak kenarları koruyarak sadeleştir",
     ),
     category(
         "selection",

@@ -3329,6 +3329,80 @@ SCENES.sampling = [
   { id: 'orn-alt-cizim', open: (ui) => samplingDrawn(ui, ['subdivide-star', 'subdivide-hole'], ['buyuk']), close: queryClose },
 ];
 
+// Genelleştirme (docs/adr/0221) on fixtures/processing/v1/generalize.kcad, the scenes the desktop's
+// `processing::generalize_tests::screens` draws: CBS's Analiz with the Geometri panel's ▾ open on its seventeen tools
+// under their categories' names, Yumuşat's window and the smoothed lines, the coverage simplified, the squared and the
+// simplified buildings, Alanları kümele's window and its building blocks, the parts dropped and the small parcels joined.
+const GENERALIZE_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/generalize.kcad', import.meta.url), 'utf8');
+const GENERALIZE_CASES = JSON.parse(readFileSync(new URL('../../../../fixtures/processing/v1/generalize.json', import.meta.url), 'utf8'));
+const generalizeLoad = async (ui, selection = []) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(GENERALIZE_DRAWING)}, null))) throw new Error('generalize.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.set(${JSON.stringify(selection)});
+  })()`);
+  await ui.sleep(300);
+};
+const openGeneralize = async (ui, id, run = true, load = true) => {
+  const c = GENERALIZE_CASES.cases.find((x) => x.id === id);
+  if (load) await generalizeLoad(ui, c.selection ?? []);
+  else await ui.eval(`window.kentos.selection.set(${JSON.stringify(c.selection ?? [])})`);
+  await ui.eval(openTool(c.run.tool, c.values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (run) {
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+    await ui.sleep(300);
+  }
+};
+/** Runs the cases one after another, the windows closed, the view on the layers named. */
+const generalizeDrawn = async (ui, ids, layers) => {
+  await generalizeLoad(ui);
+  for (const id of ids) {
+    await openGeneralize(ui, id, true, false);
+    await ui.escapeAll(2);
+  }
+  await ui.eval(`(() => {
+    const k = window.kentos;
+    k.selection.set([...k.doc.all()].filter((e) => ${JSON.stringify(layers)}.includes(e.layerId)).map((e) => e.id));
+    k.commands.execute('view.zoomSelection');
+    k.selection.clear();
+  })()`);
+  await ui.move(2, 2);
+  await ui.sleep(400);
+};
+SCENES.generalize = [
+  {
+    id: 'gen-serit',
+    open: async (ui) => {
+      await generalizeLoad(ui);
+      await ribbonOn(ui, { ribbonTab: 'analysis' });
+      await ui.sleep(300);
+      const open = await ui.eval(`!!document.querySelector('.rpanel[data-panel="Geometri"] .rpanel__more')?.offsetParent`);
+      if (open) await ui.clickSel('.rpanel[data-panel="Geometri"] .rpanel__more');
+      else {
+        await ui.clickSel('.ribbon__strip .rpanel__collapsed[aria-label="Geometri"]');
+        await ui.sleep(300);
+        await ui.clickSel('.ribbon-pop .rpanel__more');
+      }
+      await ui.sleep(400);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ribbonOff(ui)),
+  },
+  { id: 'gen-yumusat', open: (ui) => openGeneralize(ui, 'smooth-shared'), close: queryClose },
+  { id: 'gen-yumusat-cizim', open: (ui) => generalizeDrawn(ui, ['smooth-lines'], ['yol']), close: queryClose },
+  { id: 'gen-kaplama-cizim', open: (ui) => generalizeDrawn(ui, ['coverage-blocked'], ['parsel']), close: queryClose },
+  { id: 'gen-dik-cizim', open: (ui) => generalizeDrawn(ui, ['square-default'], ['yamuk']), close: queryClose },
+  { id: 'gen-bina-cizim', open: (ui) => generalizeDrawn(ui, ['building-default'], ['bina']), close: queryClose },
+  { id: 'gen-kume', open: (ui) => openGeneralize(ui, 'aggregate-group'), close: queryClose },
+  { id: 'gen-kume-cizim', open: (ui) => generalizeDrawn(ui, ['aggregate-default'], ['yapi']), close: queryClose },
+  { id: 'gen-parca-cizim', open: (ui) => generalizeDrawn(ui, ['parts-area'], ['ada']), close: queryClose },
+  { id: 'gen-kat-cizim', open: (ui) => openGeneralize(ui, 'eliminate-longest'), close: queryClose },
+];
+
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
 // `networks::tests::screens` draws: Ağlar with Yollar and with İçme suyu after Denetle (the form scrolled to its answer),
 // En yakın tesis and Maliyet matrisi after a run, En yakın tesis's ways and Hizmet alanları's areas in the drawing, the

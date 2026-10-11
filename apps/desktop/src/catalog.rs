@@ -379,6 +379,13 @@ pub const PORTED: &[&str] = &[
     "processing.run.sample.random",
     "processing.run.sample.alongLines",
     "processing.run.sample.subdivide",
+    "processing.run.generalize.smooth",
+    "processing.run.generalize.orthogonalize",
+    "processing.run.generalize.building",
+    "processing.run.generalize.aggregate",
+    "processing.run.generalize.dropParts",
+    "processing.run.generalize.eliminate",
+    "processing.run.generalize.coverageSimplify",
     // Geometri işlemleri (docs/adr/0201).
     "processing.run.geometry.buffer",
     "processing.run.geometry.clip",

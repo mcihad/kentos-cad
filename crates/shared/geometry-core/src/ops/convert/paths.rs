@@ -312,7 +312,7 @@ fn bulged(b: Vec<f64>) -> Option<Vec<f64>> {
 }
 
 /// `s` with its paths replaced, in `paths`' order.
-fn rebuild(s: &Shape, new: Vec<(Vec<Vec2>, Vec<f64>)>) -> Shape {
+pub(crate) fn rebuild(s: &Shape, new: Vec<(Vec<Vec2>, Vec<f64>)>) -> Shape {
     let mut it = new.into_iter();
     let mut take = move || {
         let (pts, b) = it.next().unwrap_or_default();

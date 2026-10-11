@@ -237,6 +237,14 @@ const ITEMS = [
     ready: '.dialog--ptool',
   },
   { id: 'processing-sample-along', open: (ui) => ui.run('processing.run.sample.alongLines'), ready: '.dialog--ptool' },
+  { id: 'processing-generalize-smooth', open: (ui) => ui.run('processing.run.generalize.smooth'), ready: '.dialog--ptool' },
+  { id: 'processing-generalize-building', open: (ui) => ui.run('processing.run.generalize.building'), ready: '.dialog--ptool' },
+  {
+    id: 'processing-generalize-aggregate',
+    open: (ui) => ui.eval(`import('/src/ui/processing/ToolDialog.ts').then((m) => m.openToolDialog(window.kentos, 'generalize.aggregate', { fillNotches: true }))`),
+    ready: '.dialog--ptool',
+  },
+  { id: 'processing-generalize-coverage', open: (ui) => ui.run('processing.run.generalize.coverageSimplify'), ready: '.dialog--ptool' },
   {
     id: 'processing-transfer-map',
     open: (ui) =>
