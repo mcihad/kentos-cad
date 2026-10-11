@@ -91,11 +91,12 @@ pub const CATEGORIES: [Category; 25] = [
         "networks",
         "En yakın tesis, maliyet matrisi ve hizmet alanları",
     ),
+    // docs/adr/0218: points from objects, lines from points and tables, a path's piece, rings and areas, densified edges.
     category(
         "conversion",
         "Dönüştürme",
-        "explode",
-        "Nesne türleri arasında dönüşüm",
+        "conversion",
+        "Nesneden nokta, noktalardan ve tablolardan çizgi, çizginin parçası, alan ve çizgi çevirme, köşe ekleme",
     ),
     category(
         "selection",

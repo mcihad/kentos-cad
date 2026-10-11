@@ -18,7 +18,7 @@ use crate::features::{
     summarize_file, summarize_layers,
 };
 use crate::geometry::RunGeometry;
-use crate::parameters::{Issue, file_table, is_visible, validate_with};
+use crate::parameters::{Issue, file_table, is_visible, stored_value, validate_with};
 use crate::text::{fold_turkish, js_trim};
 use crate::types::{
     ChangeSet, Defaults, FeatureSet, Feedback, LayerSet, NewLayerStyle, ParamKind, Resolved,
@@ -243,6 +243,22 @@ fn layer_ids(v: &Value) -> Option<Vec<String>> {
 /// A new layer's id from its name (`islem-merkez`): the folded name's
 /// letters and digits, “-” for every other run; “-2”, then “-2-3” …
 /// appended while `taken` says it is taken (as the web does).
+/// The values a history record keeps: a file's name and path, not its rows
+/// (as the last values keep them, `stored_value`; Yeniden aç reads the file
+/// again), so that a run of a big table does not copy it into the history.
+fn kept_values(tool: &Tool, values: &Values) -> Values {
+    values
+        .iter()
+        .map(|(k, v)| {
+            let kept = match tool.parameters.iter().find(|p| &p.name == k) {
+                Some(def) => stored_value(def, v),
+                None => v.clone(),
+            };
+            (k.clone(), kept)
+        })
+        .collect()
+}
+
 pub fn new_layer_id(name: &str, taken: impl Fn(&str) -> bool) -> String {
     let mut slug = String::new();
     let mut gap = false;
@@ -489,7 +505,7 @@ impl Runner {
             seq: 0,
             tool_id: tool.id.clone(),
             label: tool.label.clone(),
-            values: values.clone(),
+            values: kept_values(tool, values),
             started: started.0,
             ms: started.1.elapsed().as_millis() as u64,
             status,
@@ -757,7 +773,7 @@ impl Runner {
             variables: job.variables.clone(),
             world: true,
         };
-        let mut resolved = Resolved::new(job.values.clone());
+        let mut resolved = Resolved::borrowed(&job.values);
         let mut objects: Vec<&Entity> = Vec::new();
         let mut seen = HashSet::new();
         for p in &job.tool.parameters {
@@ -791,8 +807,13 @@ impl Runner {
                     }
                 }
                 ParamKind::Field { .. } => {
-                    if let Some(s) = job.values.get(&p.name).and_then(Value::as_str) {
-                        resolved.values.insert(p.name.clone(), json!(js_trim(s)));
+                    if let Some(s) = job.values.get(&p.name).and_then(Value::as_str)
+                        && js_trim(s) != s
+                    {
+                        resolved
+                            .values
+                            .to_mut()
+                            .insert(p.name.clone(), json!(js_trim(s)));
                     }
                 }
                 _ => {}
@@ -921,13 +942,13 @@ impl Runner {
         let Job {
             tool,
             target,
-            values,
+            values: owned,
             silent,
             started,
             new_layers,
             ..
         } = job;
-        let (tool, values) = (&tool, &values);
+        let (tool, values) = (&tool, &owned);
         let target = Some(target);
         // The change set is spent here: its new objects move into the
         // drawing, not copied (a run may add hundreds of thousands).
@@ -1029,6 +1050,7 @@ impl Runner {
             touched.clone(),
             target,
         );
+        release(owned);
         Outcome::Ok {
             result,
             added,
@@ -1036,6 +1058,20 @@ impl Runner {
             edited,
             record,
         }
+    }
+}
+
+/// A job's values let go of off this thread when they hold a chosen file's
+/// many rows: freeing a table of 100 000 rows takes longer than a run's own
+/// work (docs/adr/0218 §13), and the host's thread is the drawing's.
+fn release(values: Values) {
+    let big = values.values().any(|v| {
+        v.get("rows")
+            .and_then(Value::as_array)
+            .is_some_and(|rows| rows.len() > 10_000)
+    });
+    if big {
+        std::thread::spawn(move || drop(values));
     }
 }
 

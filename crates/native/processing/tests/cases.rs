@@ -148,8 +148,9 @@ fn close(a: &Value, b: &Value, tol: f64) -> bool {
     }
 }
 
-/// Numbers other than coordinates are exact: only geometry fields get the tolerance.
-fn same_object(have: &Value, want: &Value, tol: f64) -> bool {
+/// Numbers other than coordinates are exact: only geometry fields (and a
+/// file's `toleranceFields`, `more`) get the tolerance.
+fn same_object(have: &Value, want: &Value, tol: f64, more: &[String]) -> bool {
     const GEOMETRY: [&str; 9] = ["p", "a", "b", "c", "pts", "holes", "r", "major", "ratio"];
     let (Some(h), Some(w)) = (have.as_object(), want.as_object()) else {
         return false;
@@ -158,7 +159,7 @@ fn same_object(have: &Value, want: &Value, tol: f64) -> bool {
     keys(h) == keys(w)
         && w.iter().all(|(k, v)| {
             let got = &h[k];
-            if GEOMETRY.contains(&k.as_str()) {
+            if GEOMETRY.contains(&k.as_str()) || more.contains(k) {
                 close(got, v, tol)
             } else {
                 same(got, v)
@@ -546,7 +547,11 @@ fn check(c: &Value, s: Seen, tol: f64) -> Vec<String> {
     check_measured(c, s, tol, tol)
 }
 
-fn check_measured(c: &Value, mut s: Seen, tol: f64, measure_tol: f64) -> Vec<String> {
+fn check_measured(c: &Value, s: Seen, tol: f64, measure_tol: f64) -> Vec<String> {
+    check_full(c, s, tol, measure_tol, &[])
+}
+
+fn check_full(c: &Value, mut s: Seen, tol: f64, measure_tol: f64, more: &[String]) -> Vec<String> {
     let id = c["id"].as_str().unwrap_or("?");
     let got = observed(&s);
     let want = &c["expect"];
@@ -636,7 +641,7 @@ fn check_measured(c: &Value, mut s: Seen, tol: f64, measure_tol: f64) -> Vec<Str
                 let what = format!("addedShapes[{i}]: {}", why.as_deref().unwrap_or(""));
                 expect(why.is_none(), &what, h, w);
             } else {
-                expect(same_object(h, w, tol), &format!("added[{i}]"), h, w);
+                expect(same_object(h, w, tol, more), &format!("added[{i}]"), h, w);
             }
         }
     }
@@ -844,6 +849,56 @@ fn the_layer_tool_cases_do_what_they_say() {
     }
     println!("{}", report.join("\n"));
     assert!(report.len() >= 15, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
+/// Geometri dönüştürme's cases (docs/adr/0218): written by the independent
+/// reference (scripts/fixtures/convert_cases.py); the same run here and on
+/// the drawing's reading copy as the background runs it; computed bulges,
+/// elevations, angles and parts within the tolerance (`toleranceFields`).
+#[test]
+fn the_conversion_cases_do_what_they_say() {
+    let file = case_file("convert.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let more: Vec<String> = file["toleranceFields"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v.as_str().map(str::to_owned))
+        .collect();
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_full(
+            c,
+            play(c, &registry, false, &file["files"]),
+            tol,
+            tol,
+            &more,
+        );
+        found.extend(check_full(
+            c,
+            play(c, &registry, true, &file["files"]),
+            tol,
+            tol,
+            &more,
+        ));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 23, "{} cases", report.len());
     assert!(
         problems.is_empty(),
         "\n{}\n\n{}",
@@ -1162,7 +1217,7 @@ fn layer_timing() {
             let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
             let took = t.elapsed().as_secs_f64() * 1e3;
             let Outcome::Ok { record, .. } = outcome else {
-                panic!("{id}: {log:?}");
+                panic!("{id}: {outcome:?} {log:?}");
             };
             summary = record.summary;
             assert!(host.doc.undo().is_some(), "{id}: one step");
@@ -1200,6 +1255,201 @@ fn layer_timing() {
             t.elapsed().as_secs_f64() * 1e3
         );
         assert!(host.doc.undo().is_some(), "{id}: one step");
+        if p50 > budget {
+            over.push(format!("{title}: p50 {p50:.1} ms > {budget} ms"));
+        }
+    }
+    assert!(over.is_empty(), "{over:#?}");
+}
+
+/// Geometri dönüştürme's points scene (docs/adr/0218 §13): 100 000 points
+/// on a grid in one layer, Hat of 1000 values, Sıra counting down within
+/// each hat (so ordering moves every point), each with an elevation.
+pub fn route_points_scene() -> Document {
+    let (e0, n0) = (487_000.0, 4_420_000.0);
+    let mut entities = Vec::with_capacity(100_000);
+    for i in 0..100_000usize {
+        let (x, y) = (e0 + (i % 400) as f64 * 5.0, n0 + (i / 400) as f64 * 5.0);
+        entities.push(format!(
+            r#"{{"kind":"point","id":{},"layerId":"nokta","attrs":{{"Hat":"H{}","Sıra":"{}"}},"p":{{"x":{x},"y":{y}}},"z":{}}}"#,
+            i + 1,
+            i % 1000,
+            100 - i / 1000,
+            (i % 97) as f64 / 4.0
+        ));
+    }
+    let json = format!(
+        r#"{{"format":"kentos.document","version":1,"name":"Noktalar","settings":{{"srid":5256,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,"workspace":"gis","drawingFont":"barlow"}},
+            "origin":{{"x":{e0},"y":{n0}}},"layers":[{{"id":"nokta","name":"Nokta","type":"layer","visible":true,"locked":false,"expanded":true,
+            "style":{{"color":"fg","lineType":"continuous","lineWeight":0.25}},"children":[]}}],"activeLayer":"nokta","entities":[{}],"styles":{{"items":[],"categories":[]}}}}"#,
+        entities.join(",")
+    );
+    Document::from_snapshot(DocumentSnapshotV1::from_json(&json).expect("the drawing reads"))
+        .expect("the drawing opens")
+}
+
+/// A table of 100 000 rows of east, north, bearing and length (a decimal
+/// comma in every tenth), as a chosen file's value holds it.
+pub fn bearing_table() -> Value {
+    let mut rows = vec![json!(["Ad", "Doğu", "Kuzey", "Semt", "Uzunluk"])];
+    for i in 0..100_000usize {
+        let semt = if i % 10 == 0 {
+            format!("{},5", i % 400)
+        } else {
+            format!("{}", (i * 7) % 400)
+        };
+        rows.push(json!([
+            format!("S{i}"),
+            format!("{}", 487_000 + (i % 400) * 5),
+            format!("{}", 4_420_000 + (i / 400) * 5),
+            semt,
+            format!("{}", 5 + i % 20)
+        ]));
+    }
+    json!({ "name": "semt.csv", "rows": rows })
+}
+
+/// Geometri dönüştürme's whole runs (docs/adr/0218 §13): the runner's check,
+/// the tool and its one undo step, after a warm-up, each run undone before
+/// the next and on its own (a pause lets the run before free what it let go
+/// of off its thread); p50 and p95 against the ADR's budgets. Run on purpose:
+/// `cargo test --release -p kentos-processing --test cases convert_timing -- --ignored --nocapture`.
+#[test]
+#[ignore = "timings, run by hand in release"]
+fn convert_timing() {
+    use std::time::Instant;
+    let registry = Registry::builtin();
+    let all = json!({ "scope": "all" });
+    let values = |pairs: Vec<(&str, Value)>| -> Values {
+        pairs.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()
+    };
+    let parcels = || layer_scene();
+    let points = || route_points_scene();
+    // A run: the tool, its title, its drawing, its values, its budget (ms).
+    type Run = (&'static str, &'static str, fn() -> Document, Values, f64);
+    let runs: Vec<Run> = vec![
+        (
+            "convert.toPoints",
+            "Nesneden nokta, 100 000 parsel, iç nokta",
+            parcels as fn() -> Document,
+            values(vec![
+                ("input", all.clone()),
+                ("location", json!("inside")),
+                ("parts", json!(false)),
+                ("layer", json!({ "newName": "Merkezler" })),
+            ]),
+            300.0,
+        ),
+        (
+            "convert.vertices",
+            "Köşeleri noktaya çevir, 100 000 parsel, bütün köşeler (400 000 nokta)",
+            parcels,
+            values(vec![
+                ("input", all.clone()),
+                ("which", json!("all")),
+                ("layer", json!({ "newName": "Köşeler" })),
+            ]),
+            800.0,
+        ),
+        (
+            "convert.densify",
+            "Köşe ekle, 100 000 parsel, 5 m aralık",
+            parcels,
+            values(vec![
+                ("input", all.clone()),
+                ("method", json!("interval")),
+                ("interval", json!(5)),
+                ("count", json!(1)),
+                ("layer", json!({ "newName": "Sıklaştırılan" })),
+            ]),
+            800.0,
+        ),
+        (
+            "convert.pointsToPath",
+            "Noktalardan çizgi, 100 000 nokta, 1000 hat, sıralı",
+            points,
+            values(vec![
+                ("input", all.clone()),
+                ("order", json!("Sıra")),
+                ("group", json!("Hat")),
+                ("close", json!(false)),
+                ("layer", json!({ "newName": "Yollar" })),
+            ]),
+            300.0,
+        ),
+        (
+            "convert.bearingLine",
+            "Semt ve uzunluktan çizgi, 100 000 satır",
+            parcels,
+            values(vec![
+                ("sourceKind", json!("file")),
+                ("file", bearing_table()),
+                ("east", json!("Doğu")),
+                ("north", json!("Kuzey")),
+                ("bearing", json!("Semt")),
+                ("length", json!("Uzunluk")),
+                ("unit", json!("grad")),
+                ("layer", json!({ "newName": "Semt çizgileri" })),
+            ]),
+            300.0,
+        ),
+    ];
+    let mut over = Vec::new();
+    for (id, title, scene, values, budget) in runs {
+        let tool = registry.tool(id).expect("the tool");
+        let mut host = TestHost {
+            doc: scene(),
+            selection: Vec::new(),
+            view: None,
+        };
+        let mut runner = Runner::new();
+        let mut ms = Vec::new();
+        let mut summary = String::new();
+        for run in 0..8 {
+            let mut log = Vec::new();
+            let t = Instant::now();
+            let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+            let took = t.elapsed().as_secs_f64() * 1e3;
+            let Outcome::Ok { record, .. } = outcome else {
+                panic!("{id}: {log:?}");
+            };
+            summary = record.summary;
+            assert!(host.doc.undo().is_some(), "{id}: one step");
+            // A run lets a big table's values go off its thread; the next starts when they are gone.
+            std::thread::sleep(std::time::Duration::from_millis(400));
+            if run >= 2 {
+                ms.push(took);
+            }
+        }
+        ms.sort_by(f64::total_cmp);
+        let (p50, p95) = (
+            ms[ms.len() / 2],
+            ms[(ms.len() * 95 / 100).min(ms.len() - 1)],
+        );
+        println!("{title}: p50 {p50:.1} ms, p95 {p95:.1} ms, bütçe {budget} ms\n  {summary}");
+        // Its parts, once: the check and the inputs, the tool, the one undo step.
+        let mut log = Vec::new();
+        let t = Instant::now();
+        let Prepared::Ready(job) = runner.prepare(&host, &tool, &values, true, &mut log) else {
+            panic!("{id} prepared: {log:?}");
+        };
+        let prepared = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        let result = Runner::compute(
+            &job,
+            &host.doc,
+            &mut Apart {
+                log: &mut log,
+                files: None,
+            },
+        );
+        let computed = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        runner.finish(&mut host, job, result, false, &mut log);
+        println!(
+            "  hazırlık {prepared:.1} ms, araç {computed:.1} ms, uygulama {:.1} ms",
+            t.elapsed().as_secs_f64() * 1e3
+        );
         if p50 > budget {
             over.push(format!("{title}: p50 {p50:.1} ms > {budget} ms"));
         }

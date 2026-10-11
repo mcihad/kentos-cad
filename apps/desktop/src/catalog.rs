@@ -357,6 +357,17 @@ pub const PORTED: &[&str] = &[
     "processing.run.layers.extract",
     "processing.run.layers.deleteDuplicates",
     "processing.run.layers.orderBy",
+    // Geometri dönüştürme (docs/adr/0218).
+    "processing.run.convert.toPoints",
+    "processing.run.convert.vertices",
+    "processing.run.convert.pointsToPath",
+    "processing.run.convert.bearingLine",
+    "processing.run.convert.xyLine",
+    "processing.run.convert.tableEllipse",
+    "processing.run.convert.substring",
+    "processing.run.convert.polygonsToLines",
+    "processing.run.convert.linesToPolygons",
+    "processing.run.convert.densify",
     // Geometri işlemleri (docs/adr/0201).
     "processing.run.geometry.buffer",
     "processing.run.geometry.clip",

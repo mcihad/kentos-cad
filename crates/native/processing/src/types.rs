@@ -541,7 +541,9 @@ pub struct TargetLayer {
 /// resolved, expressions compiled, the rest as entered.
 #[derive(Default)]
 pub struct Resolved<'d> {
-    pub values: Values,
+    /// The values as entered: a run borrows its job's (a chosen file's rows
+    /// are not copied), owned where a value was changed.
+    pub values: std::borrow::Cow<'d, Values>,
     pub features: BTreeMap<String, FeatureSet<'d>>,
     /// The `layers` parameters' layers, in the tree's order.
     pub layer_sets: BTreeMap<String, Vec<LayerSet<'d>>>,
@@ -554,7 +556,15 @@ pub struct Resolved<'d> {
 impl<'d> Resolved<'d> {
     pub fn new(values: Values) -> Self {
         Self {
-            values,
+            values: std::borrow::Cow::Owned(values),
+            ..Self::default()
+        }
+    }
+
+    /// The values borrowed (a run's: its job outlives it).
+    pub fn borrowed(values: &'d Values) -> Self {
+        Self {
+            values: std::borrow::Cow::Borrowed(values),
             ..Self::default()
         }
     }

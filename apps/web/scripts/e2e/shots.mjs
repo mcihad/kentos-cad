@@ -3103,6 +3103,87 @@ SCENES.layertools = [
   { id: 'katman-sirala', open: (ui) => openLayerTool(ui, 'order-area', {}, false), close: queryClose },
 ];
 
+// Geometri dönüştürme (docs/adr/0218) on fixtures/processing/v1/convert.kcad, the scenes the desktop's
+// `processing::convert_tests::screens` draws: CBS's Veri with its Toplu çevir ▾ open, Nesneden nokta's window and the
+// parcels' centroids and interior points, Semt ve uzunluktan çizgi's report, the table tools' lines and ellipses,
+// Çizginin parçası's distances as expressions, Köşe ekle's results selected (their grips their vertices).
+const CONVERT_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/convert.kcad', import.meta.url), 'utf8');
+const CONVERT_CASES = JSON.parse(readFileSync(new URL('../../../../fixtures/processing/v1/convert.json', import.meta.url), 'utf8'));
+/** A table file's rows as the window takes them (its separator the first line's: a semicolon, else a comma). */
+const convertRows = (name) => {
+  const lines = readFileSync(new URL(`../../../../fixtures/processing/v1/${name}`, import.meta.url), 'utf8').split('\n').filter(Boolean);
+  const sep = lines[0].includes(';') ? ';' : ',';
+  return lines.map((line) => line.split(sep));
+};
+const convertLoad = async (ui, selection = []) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(CONVERT_DRAWING)}, null))) throw new Error('convert.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.set(${JSON.stringify(selection)});
+  })()`);
+  await ui.sleep(300);
+};
+const openConvert = async (ui, id, run = true, load = true) => {
+  const c = CONVERT_CASES.cases.find((x) => x.id === id);
+  if (load) await convertLoad(ui, c.selection ?? []);
+  else await ui.eval(`window.kentos.selection.set(${JSON.stringify(c.selection ?? [])})`);
+  const values = { ...c.values };
+  if (typeof values.file === 'string') values.file = { name: values.file, rows: convertRows(values.file) };
+  await ui.eval(openTool(c.run.tool, values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (run) {
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+    await ui.sleep(300);
+  }
+};
+/** Runs the cases one after another, the windows closed, the view on it all. */
+const convertDrawn = async (ui, ids) => {
+  await convertLoad(ui);
+  for (const id of ids) {
+    await openConvert(ui, id, true, false);
+    await ui.escapeAll(2);
+  }
+  await ui.eval(`window.kentos.view.zoomExtents()`);
+  await ui.move(2, 2);
+  await ui.sleep(400);
+};
+SCENES.geoconvert = [
+  {
+    id: 'donustur-serit',
+    open: async (ui) => {
+      await ribbonOn(ui, { ribbonTab: 'data' });
+      await ui.sleep(300);
+      const open = await ui.eval(`!!document.querySelector('.rpanel[data-panel="Toplu çevir"] .rpanel__more')?.offsetParent`);
+      if (open) await ui.clickSel('.rpanel[data-panel="Toplu çevir"] .rpanel__more');
+      else {
+        await ui.clickSel('.ribbon__strip .rpanel__collapsed[aria-label="Toplu çevir"]');
+        await ui.sleep(300);
+        await ui.clickSel('.ribbon-pop .rpanel__more');
+      }
+      await ui.sleep(400);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ribbonOff(ui)),
+  },
+  { id: 'donustur-nokta', open: (ui) => openConvert(ui, 'points-inside'), close: queryClose },
+  { id: 'donustur-nokta-cizim', open: (ui) => convertDrawn(ui, ['points-centroid', 'points-inside']), close: queryClose },
+  { id: 'donustur-semt', open: async (ui) => (await openConvert(ui, 'bearing-file'), await formEnd(ui), await ui.sleep(200)), close: queryClose },
+  { id: 'donustur-tablo-cizim', open: (ui) => convertDrawn(ui, ['bearing-file', 'xy-file', 'ellipse-file']), close: queryClose },
+  { id: 'donustur-parca', open: (ui) => openConvert(ui, 'substring-expr', false), close: queryClose },
+  {
+    id: 'donustur-sik-cizim',
+    open: async (ui) => {
+      await convertDrawn(ui, ['densify-interval']);
+      await ui.eval(`(() => { const k = window.kentos; k.selection.set([...k.doc.all()].filter((e) => e.layerId === 'islem-siklastirilan').map((e) => e.id)); })()`);
+      await ui.sleep(400);
+    },
+    close: queryClose,
+  },
+];
+
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
 // `networks::tests::screens` draws: Ağlar with Yollar and with İçme suyu after Denetle (the form scrolled to its answer),
 // En yakın tesis and Maliyet matrisi after a run, En yakın tesis's ways and Hizmet alanları's areas in the drawing, the

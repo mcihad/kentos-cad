@@ -63,6 +63,8 @@ interface CaseFile {
   files?: Record<string, string>;
   /** How far an added object's area or length may be from the reference's (`addedShapes`). */
   measureTolerance?: number;
+  /** An added object's other fields compared within the tolerance (computed bulges, elevations, angles, parts; `convert.json`). */
+  toleranceFields?: string[];
   cases: Case[];
 }
 
@@ -71,6 +73,7 @@ const QUERIES = JSON.parse(file('queries.json')) as CaseFile;
 const PROXIMITY = JSON.parse(file('proximity.json')) as CaseFile;
 const TRANSFER = JSON.parse(file('transfer.json')) as CaseFile;
 const LAYER_OPS = JSON.parse(file('layers.json')) as CaseFile;
+const CONVERT = JSON.parse(file('convert.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
@@ -174,12 +177,12 @@ function close(a: unknown, b: unknown, tol: number): boolean {
   return a === b;
 }
 
-/** Numbers other than coordinates are exact: only objects' geometry fields get the tolerance. */
+/** Numbers other than coordinates are exact: only objects' geometry fields (and a file's `toleranceFields`) get the tolerance. */
 const GEOMETRY_FIELDS = new Set(['p', 'a', 'b', 'c', 'pts', 'holes', 'r', 'major', 'ratio']);
-function sameObject(have: Json, want: Json, tol: number): boolean {
+function sameObject(have: Json, want: Json, tol: number, more: readonly string[] = []): boolean {
   const keys = (o: Json) => JSON.stringify(Object.keys(o).sort());
   if (keys(have) !== keys(want)) return false;
-  return Object.keys(want).every((k) => (GEOMETRY_FIELDS.has(k) ? close(have[k], want[k], tol) : JSON.stringify(have[k]) === JSON.stringify(want[k])));
+  return Object.keys(want).every((k) => (GEOMETRY_FIELDS.has(k) || more.includes(k) ? close(have[k], want[k], tol) : JSON.stringify(have[k]) === JSON.stringify(want[k])));
 }
 
 /** The fields a geometry tool's new object may have: its kind, layer and attributes, and its geometry's. */
@@ -300,7 +303,7 @@ function observed(s: Seen): Json {
   };
 }
 
-function check(c: Case, s: Seen, tol: number, measureTol = tol): void {
+function check(c: Case, s: Seen, tol: number, measureTol = tol, more: readonly string[] = []): void {
   const got = observed(s);
   const want = c.expect;
   const where = `${c.id}: ${JSON.stringify(got, null, 1)}`;
@@ -319,7 +322,7 @@ function check(c: Case, s: Seen, tol: number, measureTol = tol): void {
   } else {
     const wantAdded = (want.added ?? []) as Json[];
     expect(added.length, where).toBe(wantAdded.length);
-    wantAdded.forEach((w, i) => expect(sameObject(added[i], w, tol), `${c.id}: added[${i}] ${JSON.stringify(added[i])}`).toBe(true));
+    wantAdded.forEach((w, i) => expect(sameObject(added[i], w, tol, more), `${c.id}: added[${i}] ${JSON.stringify(added[i])}`).toBe(true));
   }
   // A changed geometry is compared when the case writes one for an update (Veri aktar's Geometriyi güncelle); the
   // elevations a run writes are compared below.
@@ -436,6 +439,16 @@ describe('layer tool cases (fixtures/processing/v1/layers.json, docs/adr/0217)',
     it(`${c.id}: ${c.title}`, async () => {
       check(c, await play(LAYER_OPS, c, 'client'), LAYER_OPS.tolerance);
       check(c, await play(LAYER_OPS, c, 'worker'), LAYER_OPS.tolerance);
+    });
+  }
+});
+
+describe('geometry conversion cases (fixtures/processing/v1/convert.json, docs/adr/0218)', () => {
+  for (const c of CONVERT.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const more = CONVERT.toleranceFields ?? [];
+      check(c, await play(CONVERT, c, 'client'), CONVERT.tolerance, CONVERT.tolerance, more);
+      check(c, await play(CONVERT, c, 'worker'), CONVERT.tolerance, CONVERT.tolerance, more);
     });
   }
 });

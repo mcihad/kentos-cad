@@ -278,6 +278,13 @@ const PROXIMITY_COMMANDS = ['nearest', 'matrix', 'hub', 'neighbors', 'shortestLi
  * the centres, the spread, the nearest neighbour and the two clusterings under its ▾, so that Analiz fits 1100 px and
  * keeps under 3200 px when wide.
  */
+/**
+ * Geometri dönüştürme's ten (docs/adr/0218 §12) in Veri's Toplu çevir panel beside Öznitelik (Düzenle is full at 1100 px,
+ * and its Dönüştür is the move, turn and scale tools'): Nesneden nokta and Köşeleri noktaya çevir on it, the rest under
+ * its ▾.
+ */
+const CONVERT_COMMANDS = ['toPoints', 'vertices'].map((t) => `processing.run.convert.${t}`);
+const CONVERT_UNDER = ['pointsToPath', 'bearingLine', 'xyLine', 'tableEllipse', 'substring', 'polygonsToLines', 'linesToPolygons', 'densify'].map((t) => `processing.run.convert.${t}`);
 const SPATIAL_STATS_COMMANDS = ['moransI', 'hotSpot'].map((t) => `processing.run.stats.${t}`);
 const SPATIAL_STATS_UNDER = ['meanCenter', 'medianCenter', 'standardDistance', 'directionalDistribution', 'nearestNeighbor', 'dbscan', 'kMeans'].map(
   (t) => `processing.run.stats.${t}`,
@@ -464,6 +471,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'crs', sections: ['Koordinatlar'] },
       // Veri aktar (docs/adr/0216 §6): a table's rows into a layer beside the attribute tools.
       { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression'), processingCommandId('attributes.transfer')] },
+      { pick: 'Toplu çevir', icon: 'conversion', commands: CONVERT_COMMANDS, under: CONVERT_UNDER },
       // The drawing's block definitions are its library, as its layers and attributes are; its pictures beside them (docs/adr/0192 §5).
       { menu: 'draw', sections: ['Blok', 'Resim'] },
       // Raster katmanları (docs/adr/0204 §8): QGIS's Add Raster Layer and Georeferencer; Mesh ekle (docs/adr/0243 §11), its Add Mesh Layer.
@@ -488,8 +496,9 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Analiz',
     sources: [
       // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10), the raster analysis's in the Raster
-      // tab (docs/adr/0231 §10), the Katman tools in the Veri tab's Katman panel (docs/adr/0217 §8).
-      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity', 'spatialStats', 'layers'] },
+      // tab (docs/adr/0231 §10), the Katman tools in the Veri tab's Katman panel (docs/adr/0217 §8), Dönüştürme's in its
+      // Toplu çevir panel (docs/adr/0218 §12).
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity', 'spatialStats', 'layers', 'conversion'] },
       // Yakınlık's five (docs/adr/0215 §5) and Mekânsal istatistik's (docs/adr/0238 §11) join Özet istatistik in the Analiz
       // panel: panels of their own made the tab wider than 1100 pixels.
       { pick: 'Analiz', icon: 'measure', commands: [...PROXIMITY_COMMANDS, ...SPATIAL_STATS_COMMANDS], under: SPATIAL_STATS_UNDER },

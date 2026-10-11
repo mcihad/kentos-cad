@@ -216,6 +216,9 @@ const ITEMS = [
   // göre böl's fields.
   { id: 'processing-layers-merge', open: (ui) => ui.run('processing.run.layers.merge'), ready: '.dialog--ptool .pfield__layers' },
   { id: 'processing-layers-split', open: (ui) => ui.run('processing.run.layers.splitByAttribute'), ready: '.dialog--ptool' },
+  // Geometri dönüştürme (docs/adr/0218 §12): the table tools' source and columns, Köşe ekle's method.
+  { id: 'processing-convert-bearing', open: (ui) => ui.run('processing.run.convert.bearingLine'), ready: '.dialog--ptool' },
+  { id: 'processing-convert-densify', open: (ui) => ui.run('processing.run.convert.densify'), ready: '.dialog--ptool' },
   {
     id: 'processing-transfer-map',
     open: (ui) =>

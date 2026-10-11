@@ -1,0 +1,696 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: geometri dönüştürme",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#30A46C",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "nokta",
+   "name": "Nokta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#0090FF",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "olcu",
+   "name": "Ölçüler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AB4ABA",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kilitli",
+   "name": "Arşiv",
+   "type": "layer",
+   "visible": true,
+   "locked": true,
+   "expanded": true,
+   "style": {
+    "color": "#8E8C99",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "1",
+    "Ada": "101"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487020,
+     "y": 4420020
+    },
+    {
+     "x": 487000,
+     "y": 4420020
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "2",
+    "Ada": "101"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487050,
+     "y": 4420000
+    },
+    {
+     "x": 487050,
+     "y": 4420004
+    },
+    {
+     "x": 487024,
+     "y": 4420004
+    },
+    {
+     "x": 487024,
+     "y": 4420030
+    },
+    {
+     "x": 487020,
+     "y": 4420030
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "3",
+    "Ada": "102"
+   },
+   "pts": [
+    {
+     "x": 487060,
+     "y": 4420000
+    },
+    {
+     "x": 487090,
+     "y": 4420000
+    },
+    {
+     "x": 487090,
+     "y": 4420030
+    },
+    {
+     "x": 487060,
+     "y": 4420030
+    }
+   ],
+   "zs": [
+    10,
+    11,
+    12,
+    13
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 487070,
+       "y": 4420010
+      },
+      {
+       "x": 487080,
+       "y": 4420010
+      },
+      {
+       "x": 487080,
+       "y": 4420020
+      },
+      {
+       "x": 487070,
+       "y": 4420020
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "4",
+    "Ada": "102"
+   },
+   "pts": [
+    {
+     "x": 487100,
+     "y": 4420000
+    },
+    {
+     "x": 487120,
+     "y": 4420000
+    },
+    {
+     "x": 487120,
+     "y": 4420020
+    },
+    {
+     "x": 487100,
+     "y": 4420020
+    }
+   ],
+   "bulges": [
+    0,
+    0,
+    0.5,
+    0
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "5",
+    "Ada": "103"
+   },
+   "pts": [
+    {
+     "x": 487130,
+     "y": 4420000
+    },
+    {
+     "x": 487140,
+     "y": 4420000
+    },
+    {
+     "x": 487140,
+     "y": 4420010
+    },
+    {
+     "x": 487130,
+     "y": 4420010
+    }
+   ],
+   "parts": [
+    {
+     "pts": [
+      {
+       "x": 487150,
+       "y": 4420000
+      },
+      {
+       "x": 487170,
+       "y": 4420000
+      },
+      {
+       "x": 487170,
+       "y": 4420012
+      },
+      {
+       "x": 487150,
+       "y": 4420012
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "parsel",
+   "attrs": {
+    "Parsel": "6",
+    "Ada": "103"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420040
+    },
+    {
+     "x": 487010,
+     "y": 4420040
+    },
+    {
+     "x": 487030,
+     "y": 4420040
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 11,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Atatürk Cd."
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420060
+    },
+    {
+     "x": 487030,
+     "y": 4420060
+    },
+    {
+     "x": 487030,
+     "y": 4420080
+    }
+   ],
+   "zs": [
+    100,
+    101.5,
+    103
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 12,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Okul Sk."
+   },
+   "pts": [
+    {
+     "x": 487040,
+     "y": 4420060
+    },
+    {
+     "x": 487060,
+     "y": 4420060
+    },
+    {
+     "x": 487080,
+     "y": 4420080
+    }
+   ],
+   "bulges": [
+    0,
+    0.41421356237309503,
+    0
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 13,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Hat"
+   },
+   "a": {
+    "x": 487090,
+    "y": 4420060
+   },
+   "b": {
+    "x": 487110,
+    "y": 4420070
+   },
+   "za": 5,
+   "zb": 7
+  },
+  {
+   "kind": "arc",
+   "id": 14,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Kavis"
+   },
+   "c": {
+    "x": 487130,
+    "y": 4420060
+   },
+   "r": 10,
+   "a0": 0,
+   "a1": 1.5707963267948966
+  },
+  {
+   "kind": "polyline",
+   "id": 15,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Çift"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420090
+    },
+    {
+     "x": 487020,
+     "y": 4420090
+    }
+   ],
+   "parts": [
+    {
+     "pts": [
+      {
+       "x": 487000,
+       "y": 4420095
+      },
+      {
+       "x": 487020,
+       "y": 4420095
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 16,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Kapalı"
+   },
+   "pts": [
+    {
+     "x": 487040,
+     "y": 4420090
+    },
+    {
+     "x": 487060,
+     "y": 4420090
+    },
+    {
+     "x": 487060,
+     "y": 4420100
+    },
+    {
+     "x": 487040,
+     "y": 4420100
+    },
+    {
+     "x": 487040,
+     "y": 4420090
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 17,
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Kısa"
+   },
+   "pts": [
+    {
+     "x": 487070,
+     "y": 4420090
+    },
+    {
+     "x": 487080,
+     "y": 4420090
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 21,
+   "layerId": "nokta",
+   "attrs": {
+    "Hat": "A",
+    "Sıra": "3"
+   },
+   "p": {
+    "x": 487000,
+    "y": 4420120
+   },
+   "z": 10
+  },
+  {
+   "kind": "point",
+   "id": 22,
+   "layerId": "nokta",
+   "attrs": {
+    "Hat": "A",
+    "Sıra": "1"
+   },
+   "p": {
+    "x": 487010,
+    "y": 4420121
+   },
+   "z": 11
+  },
+  {
+   "kind": "point",
+   "id": 23,
+   "layerId": "nokta",
+   "attrs": {
+    "Hat": "B",
+    "Sıra": "2"
+   },
+   "p": {
+    "x": 487020,
+    "y": 4420119
+   }
+  },
+  {
+   "kind": "point",
+   "id": 24,
+   "layerId": "nokta",
+   "attrs": {
+    "Hat": "A",
+    "Sıra": "2"
+   },
+   "p": {
+    "x": 487005,
+    "y": 4420125
+   },
+   "z": 12
+  },
+  {
+   "kind": "point",
+   "id": 25,
+   "layerId": "nokta",
+   "attrs": {
+    "Hat": "B",
+    "Sıra": "1"
+   },
+   "p": {
+    "x": 487030,
+    "y": 4420130
+   }
+  },
+  {
+   "kind": "point",
+   "id": 26,
+   "layerId": "nokta",
+   "attrs": {
+    "Hat": "B",
+    "Sıra": "1"
+   },
+   "p": {
+    "x": 487030,
+    "y": 4420130
+   }
+  },
+  {
+   "kind": "point",
+   "id": 27,
+   "layerId": "nokta",
+   "attrs": {
+    "Hat": "C",
+    "Sıra": "1"
+   },
+   "p": {
+    "x": 487040,
+    "y": 4420120
+   }
+  },
+  {
+   "kind": "point",
+   "id": 28,
+   "layerId": "nokta",
+   "attrs": {
+    "Hat": "D",
+    "Sıra": "1"
+   },
+   "p": {
+    "x": 487060,
+    "y": 4420120
+   },
+   "parts": [
+    {
+     "p": {
+      "x": 487062,
+      "y": 4420121
+     }
+    },
+    {
+     "p": {
+      "x": 487064,
+      "y": 4420119
+     }
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 31,
+   "layerId": "olcu",
+   "attrs": {
+    "Ad": "Ö1",
+    "Doğu": "487200",
+    "Kuzey": "4420100",
+    "Semt": "45",
+    "Uzunluk": "20"
+   },
+   "p": {
+    "x": 487200,
+    "y": 4420100
+   }
+  },
+  {
+   "kind": "point",
+   "id": 32,
+   "layerId": "olcu",
+   "attrs": {
+    "Ad": "Ö2",
+    "Doğu": "487200",
+    "Kuzey": "4420100",
+    "Semt": "270,5",
+    "Uzunluk": "12,25"
+   },
+   "p": {
+    "x": 487200,
+    "y": 4420100
+   }
+  },
+  {
+   "kind": "point",
+   "id": 33,
+   "layerId": "olcu",
+   "attrs": {
+    "Ad": "Ö3",
+    "Doğu": "487200",
+    "Kuzey": "4420100",
+    "Semt": "kuzey",
+    "Uzunluk": "5"
+   },
+   "p": {
+    "x": 487200,
+    "y": 4420100
+   }
+  },
+  {
+   "kind": "polygon",
+   "id": 41,
+   "layerId": "kilitli",
+   "attrs": {
+    "Parsel": "41"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420150
+    },
+    {
+     "x": 487010,
+     "y": 4420150
+    },
+    {
+     "x": 487010,
+     "y": 4420160
+    },
+    {
+     "x": 487000,
+     "y": 4420160
+    }
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

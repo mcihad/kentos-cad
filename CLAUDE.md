@@ -175,6 +175,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   eşlemesiyle, Kaynak katman alanı, tipli hedefin kuralları), Seçilenleri çıkar, Yinelenenleri sil (alanlar ya da bütün öznitelikler,
   isteğe bağlı kesin geometri; ilki kalır), İfadeye göre sırala (`ops::order`: türler, doğal sıra, boşlar, Sıra alanı); İşlemler'e Katmanlar
   parametresi, aracın açtığı katmanlar ve gruplar, `like`; CBS'de Veri › Katman (ADR 0217);
+  geometri dönüştürme: İşlemler'in Dönüştürme kategorisinde Nesneden nokta (ağırlık merkezi ya da iç nokta: GEOS'un tarama doğrusu
+  yaylarıyla; her parça için), Köşeleri noktaya çevir (bütün köşeler, uçlar, orta; Köşe, Parça, Halka, Uzaklık), Noktalardan çizgi (ifade
+  sırası, grup, kapalı), Semt ve uzunluktan çizgi, XY'den çizgi ve Tablodan elips (dosyadan ya da katmandan; satırlar çekirdekte, atlananlar
+  raporda), Çizginin parçası (ifadeli uzaklıklar, yaylar kesin), Alanları çizgiye çevir, Çizgileri alana çevir (Atla, Kapat), Köşe ekle
+  (aralıkla ya da sayıyla, yaylar yay); kotlar taşınır; CBS'de Veri › Toplu çevir (ADR 0218);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -598,6 +603,9 @@ cargo test --release -p kentos-processing --test cases transfer_timing -- --igno
 python3 scripts/fixtures/layer_ops_cases.py --check   # katman işlemlerinin durumlarını (bölme, birleştirme, çıkarma, yinelenenler, sıralama; yeni gruplar ve katmanlar, tipli hedef alanları, kilitli katman, kotun sıfırının işareti) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/processing/v1/layers.json ve layers.kcad (ADR 0217)
 cargo test -p kentos-desktop processing::layer_tools_tests::screens -- --ignored --nocapture --test-threads=1   # katman işlemlerinin şeridi, pencereleri, raporları ve bölmenin yeni grubu, .run/shots/islem-katman-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs layertools); ADR 0217)
 cargo test --release -p kentos-processing --test cases layer_timing -- --ignored --nocapture   # 100 000 parselde bölme, yinelenenler, sıralama ve iki 50 000'lik katmanın birleştirilmesi bütçeleriyle (ADR 0217 §9); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; LAYERS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/layers.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
+python3 scripts/fixtures/convert_cases.py --check   # geometri dönüştürmenin durumlarını (merkezler Green teoremiyle ve iç noktalar GEOS'un kendisinden ya da yaylı tarama doğrusuyla, köşeler, noktalardan çizgi, tablolardan çizgi ve elips, parçalar, halkalar, alanlar, köşe ekle; kotlar) mpmath ile 50 basamakta, KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/convert.json, convert.kcad ve convert-*.csv (ADR 0218)
+cargo test -p kentos-desktop processing::convert_tests::screens -- --ignored --nocapture --test-threads=1   # dönüştürme araçlarının şeridi, pencereleri ve sonuçları, .run/shots/islem-donustur-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs geoconvert); ADR 0218)
+cargo test --release -p kentos-processing --test cases convert_timing -- --ignored --nocapture   # 100 000 parselde iç nokta, bütün köşeler ve köşe ekle, 100 000 noktadan sıralı çizgiler, 100 000 satırdan semt çizgileri bütçeleriyle (ADR 0218 §13); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; CONVERT_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/convert.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-geometry-core --test all proximity::timing -- --ignored --nocapture   # beş aracın aramaları 10 000 parselde bütçeleriyle (ADR 0215 §6); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; PROXIMITY_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/proximity.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-expression --test perf measures_the_additions -- --ignored --nocapture   # ifade dili eklerinin süreleri bütçeleriyle (ADR 0214 §5); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; EXTRAS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/expressionExtras.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
@@ -1534,7 +1542,13 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   (`RunResult.layers`, `ToolLayer`; çalıştırıcı tek adımda açar) ve `like`, masaüstünde `Patch.layer`; beş araç web
   `processing/builtin/layers/`, masaüstü `builtin/layers/`; Yinelenenleri sil değer sınıfları, ön süzgeç ve masaüstünde özetlenen şekille;
   bağımsız başvuru `layer_ops_cases.py` (16 durum); pencereler `processing::layer_tools_tests`, `shots.mjs layertools`; süreler
-  `layer_timing` ve `scripts/perf/layers.test.ts`. Sıradaki `GIS-22`.
+  `layer_timing` ve `scripts/perf/layers.test.ts`. `GIS-22` geometri dönüştürme
+  ([ADR 0218](docs/adr/0218-geometry-conversion.md); kapsamı ben belirledim) tek parçada bitti (11 Ekim): çekirdek `ops::convert`
+  (`points`: merkez, GEOS'un iç noktası yaylarıyla, köşeler; `paths`: parça, halkalar, alan, köşe ekle; `table`: satırlar ve şekiller;
+  web'e toplu `calls`); on araç web `processing/builtin/convert/`, masaüstü `builtin/convert/`, kategori `conversion`; ortak durumlarda
+  hesaplanan alanlar için `toleranceFields`; çalıştırıcı geçmiş kaydında dosya satırlarını tutmuyor, hesap değerleri ödünç alıyor, büyük
+  değerler ayrı iş parçacığında bırakılıyor; bağımsız başvuru `convert_cases.py` (23 durum, iç noktalar GEOS'la çapraz); pencereler
+  `processing::convert_tests`, `shots.mjs geoconvert`; süreler `convert_timing` ve `scripts/perf/convert.test.ts`. Sıradaki `GIS-23`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

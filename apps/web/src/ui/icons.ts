@@ -634,6 +634,32 @@ export const ICONS = {
     '<rect x="2.5" y="2.5" width="9" height="9" rx="1" stroke-dasharray="1.6 1.4" stroke-width="1.1"/><path d="m4.6 4.6 3.8 3.8M8.4 4.6 4.6 8.4" stroke-width="1.3"/><rect x="8.5" y="8.5" width="9" height="9" rx="1" fill="currentColor" fill-opacity=".3"/>',
   orderByExpression:
     '<path d="M3.5 3v12.5M1.5 13.5l2 2 2-2" stroke-width="1.3"/><path d="M8 4.5h4M8 9.5h6.5M8 14.5h9.5" stroke-width="1.6"/>',
+  // Geometri dönüştürme (docs/adr/0218): an area and its middle point; a path's vertices as points; points joined;
+  // a line from north along a bearing; a line between two marked places; an ellipse along its axis; a path's piece cut
+  // out; an area's ring as a line; a line closed into an area; an edge with vertices added between its own. The
+  // category: a square turned into a circle.
+  conversion:
+    '<rect x="2.5" y="2.5" width="7" height="7" rx=".8" stroke-width="1.2"/><circle cx="13.5" cy="13.5" r="4" stroke-width="1.2"/><path d="M9 6.5h3.2a1.3 1.3 0 0 1 1.3 1.3V9M12 7.8l1.5 1.5L15 7.8" stroke-width="1.1"/>',
+  featureToPoint:
+    '<path d="M3 6 9.5 2.8 17 5.6l-.9 9.2-8.4 2.4L3 13.4z" stroke-width="1.1"/><circle cx="10" cy="10" r="2.3" fill="currentColor" stroke="none"/>',
+  verticesToPoints:
+    '<path d="M3 15.5 7.5 5.5l5 8L17 3.5" stroke-width="1" stroke-opacity=".55"/><circle cx="3" cy="15.5" r="1.7" fill="currentColor" stroke="none"/><circle cx="7.5" cy="5.5" r="1.7" fill="currentColor" stroke="none"/><circle cx="12.5" cy="13.5" r="1.7" fill="currentColor" stroke="none"/><circle cx="17" cy="3.5" r="1.7" fill="currentColor" stroke="none"/>',
+  pointsToPath:
+    '<circle cx="3.5" cy="15" r="1.6" fill="currentColor" stroke="none"/><circle cx="8.5" cy="7.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="14" cy="13" r="1.6" fill="currentColor" stroke="none"/><path d="m3.5 15 5-7.5 5.5 5.5 3.5-8.5" stroke-width="1.2"/><path d="m15.2 5.6 2.3-1.1.8 2.4" stroke-width="1.1"/>',
+  bearingLine:
+    '<path d="M5 17.5V2.5M3.4 4.4 5 2.5l1.6 1.9" stroke-width="1.1"/><path d="M5 17.5 16.5 7" stroke-width="1.5"/><path d="M5 10.5a7 7 0 0 1 5.2 2.3" stroke-width="1" stroke-dasharray="1.4 1.1"/><circle cx="5" cy="17.5" r="1.4" fill="currentColor" stroke="none"/>',
+  xyLine:
+    '<path d="M4.5 15.5 15.5 4.5" stroke-width="1.5"/><path d="M4.5 12.5v6M1.5 15.5h6M15.5 1.5v6M12.5 4.5h6" stroke-width="1"/>',
+  tableEllipse:
+    '<ellipse cx="10" cy="10" rx="7.8" ry="4" transform="rotate(-35 10 10)" stroke-width="1.2"/><path d="M3.6 14.5 16.4 5.5" stroke-width="1" stroke-dasharray="1.5 1.2"/><circle cx="10" cy="10" r="1.3" fill="currentColor" stroke="none"/>',
+  lineSubstring:
+    '<path d="M2 15.5 6.5 10H12l5.5-6.5" stroke-width="1" stroke-opacity=".45"/><path d="M4.4 12.6 6.5 10H12l1.9-2.3" stroke-width="2.4"/><path d="m3 11.2 2.8 2.8M12.6 6.6l2.6 2.2" stroke-width="1.1"/>',
+  polygonToLine:
+    '<path d="M3 8.5 8.3 3l8.2 3.2-1 9-8.8 2.3z" fill="currentColor" fill-opacity=".2" stroke="none"/><path d="M4.2 11.2 6.7 17.5l8.8-2.3 1-9L8.3 3 3 8.5" stroke-width="1.4"/><circle cx="3" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.2" cy="11.2" r="1.5" fill="currentColor" stroke="none"/>',
+  lineToPolygon:
+    '<path d="M4 15.5 3 7.5l6-4.5 8 3-.8 8.5z" fill="currentColor" fill-opacity=".25" stroke="none"/><path d="M4 15.5 3 7.5l6-4.5 8 3-.8 8.5" stroke-width="1.3"/><path d="M16.2 14.5 4 15.5" stroke-width="1.1" stroke-dasharray="1.6 1.3"/>',
+  densify:
+    '<path d="M3 15.5 9.5 4.5l7.5 11" stroke-width="1.1"/><rect x="1.6" y="14.1" width="2.8" height="2.8" rx=".4" fill="currentColor" stroke="none"/><rect x="8.1" y="3.1" width="2.8" height="2.8" rx=".4" fill="currentColor" stroke="none"/><rect x="15.6" y="14.1" width="2.8" height="2.8" rx=".4" fill="currentColor" stroke="none"/><circle cx="5.2" cy="11.8" r="1" fill="currentColor" stroke="none"/><circle cx="7.4" cy="8.1" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="8.2" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="11.8" r="1" fill="currentColor" stroke="none"/>',
   dataTransfer:
     '<rect x="1.8" y="3" width="8" height="9" rx=".9" stroke-width="1.3"/><path d="M1.8 6h8M1.8 9h8M4.8 6v6" stroke-width="1.1"/><path d="M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4" stroke-width="1.2"/><path d="m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z" stroke-width="1.2"/><path d="m12.2 14.1 3.2 1.7 3.2-1.7" stroke-width="1.2"/>',
   fieldMapFill:

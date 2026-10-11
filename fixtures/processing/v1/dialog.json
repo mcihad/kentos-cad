@@ -2915,6 +2915,1125 @@
     ]
    }
   },
+  "convert.toPoints": {
+   "title": "Nesneden nokta",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Noktası alınacak nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "location",
+     "label": "Konum",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "centroid",
+        "label": "Ağırlık merkezi",
+        "hint": "Nesnenin dışında kalabilir"
+       },
+       {
+        "value": "inside",
+        "label": "İç nokta",
+        "hint": "Her zaman nesnenin üstünde"
+       }
+      ]
+     }
+    },
+    {
+     "name": "parts",
+     "label": "Her parça için",
+     "description": "Çok parçalı nesnenin her parçası bir nokta olur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "featureToPoint",
+    "about": "Her nesnenin ağırlık merkezini ya da üstündeki bir iç noktayı, öznitelikleriyle yeni katmana nokta olarak yazar.",
+    "help": [
+     "Örnekler: parsellerin merkezlerine numara noktaları koymak, yapıları nokta katmanına çevirmek, yolların orta noktalarını almak.",
+     "Ağırlık merkezi alanda alanın merkezidir (delikler çıkar, yaylı kenarlar kesin), çizgide uzunlukla ağırlıklı merkezdir; L biçimli bir alanda ya da kıvrık bir çizgide nesnenin dışında kalabilir. İç nokta her zaman nesnenin üstündedir: alanda yatay bir doğrunun alanın içinde kalan en geniş aralığının ortası (GEOS’un kuralı), çizgide yolun yarısı.",
+     "Her parça için açıkken çok parçalı nesnenin her parçası bir nokta olur, Parça alanı 1, 2 … yazılır. Noktaların kotu yoktur."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "NESNEDENNOKTA",
+     "MERKEZNOKTA"
+    ]
+   }
+  },
+  "convert.vertices": {
+   "title": "Köşeleri noktaya çevir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Köşeleri alınacak çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "which",
+     "label": "Köşeler",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "all",
+        "label": "Bütün köşeler"
+       },
+       {
+        "value": "start",
+        "label": "Başlangıç"
+       },
+       {
+        "value": "end",
+        "label": "Bitiş"
+       },
+       {
+        "value": "ends",
+        "label": "İki uç"
+       },
+       {
+        "value": "middle",
+        "label": "Orta",
+        "hint": "Yolun yarısındaki nokta"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "verticesToPoints",
+    "about": "Çizgilerin ve alanların köşelerini (ya da yalnız uçlarını, ortalarını) öznitelikleriyle yeni katmana nokta olarak yazar.",
+    "help": [
+     "Örnekler: parsel köşelerini noktaya çevirip numaralamak, bir güzergâhın başlangıç ve bitiş noktalarını almak, hatların ortalarına etiket noktası koymak.",
+     "Her nokta nesnenin özniteliklerine ek Köşe (nesnedeki sırası), Parça, Halka (0 dış halka ya da çizgi, 1 … delikler) ve Uzaklık (halkanın ya da yolun başından yol boyunca, m) alır; köşenin kotu noktanın kotudur.",
+     "Kapalı halkanın ilk köşesi bir kez yazılır; başlangıcı ve bitişi ilk köşesidir. Orta, yolun (alanda dış halkanın) yarısındaki noktadır; köşe olmadığından Köşe yazılmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KOSELERINOKTA",
+     "KOSENOKTA"
+    ]
+   }
+  },
+  "convert.pointsToPath": {
+   "title": "Noktalardan çizgi",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Noktalar",
+     "description": "Birleştirilecek noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "order",
+     "label": "Sıra",
+     "description": "Noktaların sırası; boşsa girdinin sırası.",
+     "optional": true,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "value",
+      "placeholder": "No"
+     }
+    },
+    {
+     "name": "group",
+     "label": "Grup",
+     "description": "Her değeri ayrı bir çizgi; boşsa tek çizgi.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "close",
+     "label": "Kapat",
+     "description": "Son nokta ilkine bağlanır; kapalı alan yazılır.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "pointsToPath",
+    "about": "Noktaları bir ifadenin sırasıyla birleştirip çizgi (isterse kapalı alan) yapar; bir alanın her değeri ayrı bir çizgi olur.",
+    "help": [
+     "Örnekler: GNSS ile alınmış saha noktalarından zaman sırasıyla güzergâh çizmek, numaralı sınır noktalarından parsel sınırı kurmak, her hat kodunun noktalarını ayrı çizgi yapmak.",
+     "Sıra boşsa noktalar girdinin sırasıyla birleşir; değeri olmayan noktalar sona kalır, eşitler girdinin sırasıyla. Grup boşsa bütün noktalar tek çizgidir. Çok noktalı nesnenin noktaları kendi sırasıyla aynı yerdedir.",
+     "Bir öncekiyle aynı yerdeki nokta atlanır; iki noktadan (Kapat’ta üçten) az noktalı grup çizgi vermez; ikisi de söylenir. Çizgi grup alanını, Nokta sayısı’nı ve Sıra verilmişse ilk ve son noktanın sıra değerini (Başlangıç, Bitiş) alır; köşelerin kotları noktalarınkidir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "NOKTADANCIZGI"
+    ]
+   }
+  },
+  "convert.bearingLine": {
+   "title": "Semt ve uzunluktan çizgi",
+   "rows": [
+    {
+     "name": "sourceKind",
+     "label": "Kaynak",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "file",
+        "label": "Dosya",
+        "hint": "CSV, TXT ya da Excel dosyası"
+       },
+       {
+        "value": "layer",
+        "label": "Katman",
+        "hint": "Nesnelerin öznitelikleri satırdır"
+       }
+      ]
+     }
+    },
+    {
+     "name": "file",
+     "label": "Dosya",
+     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası; her satır bir çizgi.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "file",
+      "accept": [
+       ".csv",
+       ".txt",
+       ".xlsx"
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Kaynak nesneler",
+     "description": "Öznitelikleri satır olan nesneler; her nesne bir çizgi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "east",
+     "label": "Doğu sütunu",
+     "description": "Başlangıç noktasının doğusu (CBS projesinde Y).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "north",
+     "label": "Kuzey sütunu",
+     "description": "Başlangıç noktasının kuzeyi (CBS projesinde X).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "bearing",
+     "label": "Semt sütunu",
+     "description": "Kuzeyden saat yönünde doğrultu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "length",
+     "label": "Uzunluk sütunu",
+     "description": "Çizginin uzunluğu (m).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "unit",
+     "label": "Açı birimi",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "grad",
+        "label": "Grad",
+        "hint": "Tam dönüş 400"
+       },
+       {
+        "value": "deg",
+        "label": "Derece",
+        "hint": "Tam dönüş 360"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "bearingLine",
+    "about": "Bir tablonun her satırındaki başlangıç noktası, semt ve uzunluktan çizgi yazar.",
+    "help": [
+     "Örnekler: bir aplikasyon karnesindeki doğrultu ve mesafelerden çizgiler, bir röper noktasından ölçülen semt ve uzunluklar, eski bir tapu krokisindeki sınırların semt ve uzunlukları.",
+     "Semt kuzeyden saat yönünde, seçilen açı biriminde (grad ya da derece). Sayılar ondalık nokta ya da virgülle okunur. Boş ya da sayı olmayan hücreli, uzunluğu sıfır ya da eksi satır atlanır ve tabloda nedeniyle söylenir.",
+     "Kaynak bir dosya (ilk satırı sütun adları) ya da nesneler olabilir; nesnelerde öznitelikler satırdır. Çizgi satırın dolu hücrelerini öznitelik olarak alır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SEMTUZUNLUK"
+    ]
+   }
+  },
+  "convert.xyLine": {
+   "title": "XY'den çizgi",
+   "rows": [
+    {
+     "name": "sourceKind",
+     "label": "Kaynak",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "file",
+        "label": "Dosya",
+        "hint": "CSV, TXT ya da Excel dosyası"
+       },
+       {
+        "value": "layer",
+        "label": "Katman",
+        "hint": "Nesnelerin öznitelikleri satırdır"
+       }
+      ]
+     }
+    },
+    {
+     "name": "file",
+     "label": "Dosya",
+     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası; her satır bir çizgi.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "file",
+      "accept": [
+       ".csv",
+       ".txt",
+       ".xlsx"
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Kaynak nesneler",
+     "description": "Öznitelikleri satır olan nesneler; her nesne bir çizgi.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "startEast",
+     "label": "Başlangıç doğu",
+     "description": "Başlangıcın doğusu (CBS projesinde Y).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "startNorth",
+     "label": "Başlangıç kuzey",
+     "description": "Başlangıcın kuzeyi (CBS projesinde X).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "endEast",
+     "label": "Bitiş doğu",
+     "description": "Bitişin doğusu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "endNorth",
+     "label": "Bitiş kuzey",
+     "description": "Bitişin kuzeyi.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "xyLine",
+    "about": "Bir tablonun her satırındaki başlangıç ve bitiş koordinatlarından çizgi yazar.",
+    "help": [
+     "Örnekler: bir hesap tablosundaki kenarları, bir aplikasyon listesindeki bağlantıları, iki nokta listesinin eşleşmelerini çizgi olarak çizmek.",
+     "Sayılar ondalık nokta ya da virgülle okunur. Boş ya da sayı olmayan hücreli satır ve başlangıcı ile bitişi aynı yerde olan satır atlanır ve tabloda nedeniyle söylenir. Çizgi satırın dolu hücrelerini öznitelik olarak alır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "XYCIZGI"
+    ]
+   }
+  },
+  "convert.tableEllipse": {
+   "title": "Tablodan elips",
+   "rows": [
+    {
+     "name": "sourceKind",
+     "label": "Kaynak",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "file",
+        "label": "Dosya",
+        "hint": "CSV, TXT ya da Excel dosyası"
+       },
+       {
+        "value": "layer",
+        "label": "Katman",
+        "hint": "Nesnelerin öznitelikleri satırdır"
+       }
+      ]
+     }
+    },
+    {
+     "name": "file",
+     "label": "Dosya",
+     "description": "İlk satırı sütun adları olan CSV, TXT ya da Excel (.xlsx) dosyası; her satır bir elips.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "file",
+      "accept": [
+       ".csv",
+       ".txt",
+       ".xlsx"
+      ]
+     }
+    },
+    {
+     "name": "source",
+     "label": "Kaynak nesneler",
+     "description": "Öznitelikleri satır olan nesneler; her nesne bir elips.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       }
+      ]
+     }
+    },
+    {
+     "name": "east",
+     "label": "Doğu sütunu",
+     "description": "Merkezin doğusu (CBS projesinde Y).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "north",
+     "label": "Kuzey sütunu",
+     "description": "Merkezin kuzeyi (CBS projesinde X).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "major",
+     "label": "Büyük yarı eksen",
+     "description": "Büyük yarı eksen (m).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "minor",
+     "label": "Küçük yarı eksen",
+     "description": "Küçük yarı eksen (m).",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "bearing",
+     "label": "Semt sütunu",
+     "description": "Büyük eksenin doğrultusu; boşsa kuzey.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "unit",
+     "label": "Açı birimi",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "grad",
+        "label": "Grad",
+        "hint": "Tam dönüş 400"
+       },
+       {
+        "value": "deg",
+        "label": "Derece",
+        "hint": "Tam dönüş 360"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "tableEllipse",
+    "about": "Bir tablonun her satırındaki merkez, iki yarı eksen ve semtten elips yazar.",
+    "help": [
+     "Örnekler: ağ dengelemesinin hata elipslerini (a, b ve büyük eksenin semti) çizmek, ölçü belirsizliklerini ya da etki alanlarını göstermek.",
+     "Büyük eksen semt doğrultusundadır (kuzeyden saat yönünde, seçilen açı biriminde; hücre boşsa kuzey). Küçük yarı eksen büyükten büyükse ikisi yer değiştirir, doğrultu dik açı döner. Yarı ekseni sıfır ya da eksi satır atlanır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "TABLODANELIPS"
+    ]
+   }
+  },
+  "convert.substring": {
+   "title": "Çizginin parçası",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Parçası alınacak çizgiler ve yaylar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "start",
+     "label": "Başlangıç",
+     "description": "Yolun başından uzaklık (m).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "value",
+      "placeholder": "0"
+     }
+    },
+    {
+     "name": "end",
+     "label": "Bitiş",
+     "description": "Yolun başından uzaklık (m).",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "expression",
+      "returns": "value",
+      "placeholder": "$uzunluk"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "lineSubstring",
+    "about": "Her çizginin başından verilen iki uzaklık arasındaki parçasını yeni katmana yazar.",
+    "help": [
+     "Örnekler: bir yolun iki km arası kesimini, bir hattın ilk 100 metresini, her çizginin uçlarından 5 metre kısaltılmışını almak.",
+     "Uzaklıklar yolun başından yol boyunca metredir (yaylar kesin); ifade olduklarından her nesnede başka olabilir: $uzunluk / 2 yolun yarısı. Uzaklıklar 0 ile uzunluk arasına alınır.",
+     "Doğru parçaları doğru, yaylar yay kalır; düz bir kenarda kalan parça doğrudur. Başlangıcı bitişinden küçük olmayan, uzaklığı sayı olmayan ve çok parçalı nesne yazılmaz, söylenir. Köşelerin kotları kenarları boyunca taşınır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "CIZGIPARCASI"
+    ]
+   }
+  },
+  "convert.polygonsToLines": {
+   "title": "Alanları çizgiye çevir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Sınırları çizgiye çevrilecek alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "polygonToLine",
+    "about": "Alanların halkalarını (dış halka, delikler, parçalar) öznitelikleriyle yeni katmana çizgi olarak yazar.",
+    "help": [
+     "Örnekler: parsel sınırlarını çizgi katmanına almak, adaların ve yapıların dış çizgilerini ayrı çizmek.",
+     "Her halka son köşesi ilki olan bir çoklu çizgidir; yaylar ve kotlar kalır. Çizgi alanın özniteliklerine ek Parça (1 …) ve Halka (0 dış halka, 1 … delikler) alır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SINIRCIZGI"
+    ]
+   }
+  },
+  "convert.linesToPolygons": {
+   "title": "Çizgileri alana çevir",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Çizgiler",
+     "description": "Alana çevrilecek çoklu çizgiler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "open",
+     "label": "Açık çizgiler",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "skip",
+        "label": "Atla",
+        "hint": "Yalnız kapalı çizgiler alan olur"
+       },
+       {
+        "value": "close",
+        "label": "Kapat",
+        "hint": "Son köşe ilkine düz kenarla bağlanır"
+       }
+      ]
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "lineToPolygon",
+    "about": "Kapalı çoklu çizgileri (isterse açıkları kapatarak) öznitelikleriyle yeni katmana alan olarak yazar.",
+    "help": [
+     "Örnekler: sayısallaştırılmış kapalı sınırları alana çevirmek, dosyadan çizgi olarak gelen parselleri alan yapmak.",
+     "Uçları en çok 1 µm aralıklı çizgi kapalıdır (çizimin Alana çevir’i); yinelenen son köşe düşer, yaylar ve kotlar kalır. Kapat seçiliyse açık çizginin son köşesi ilkine düz kenarla bağlanır.",
+     "Alanı olmayan ve çok parçalı çizgi alan vermez, Atla seçiliyse açık çizgi de yazılmaz; hepsi söylenir. Birbirini kesen çizgilerden alan kurmak Toplu alan’ın işidir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "CIZGIALAN"
+    ]
+   }
+  },
+  "convert.densify": {
+   "title": "Köşe ekle",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Köşe eklenecek çizgiler ve alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "method",
+     "label": "Yöntem",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "interval",
+        "label": "Aralıkla",
+        "hint": "Parçalar aralıktan uzun olmaz"
+       },
+       {
+        "value": "count",
+        "label": "Sayıyla",
+        "hint": "Her kenara aynı sayıda köşe"
+       }
+      ]
+     }
+    },
+    {
+     "name": "interval",
+     "label": "Aralık",
+     "description": "Kenar parçalarının en uzun boyu.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "count",
+     "label": "Köşe sayısı",
+     "description": "Her kenara eklenecek köşe.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "conversion",
+     "text": "Dönüştürme"
+    },
+    "icon": "densify",
+    "about": "Çizgilerin ve alanların her kenarını eşit parçalara bölerek köşe ekler; sonucu yeni katmana yazar.",
+    "help": [
+     "Örnekler: yeniden izdüşümden önce uzun kenarları sıklaştırmak, bir hattı 1 metrede bir köşeli yapmak, her kenarın ortasına köşe koymak.",
+     "Aralıkla her kenar, parçaları aralıktan uzun olmayan en az sayıda eşit parçaya bölünür; Sayıyla her kenara o kadar köşe eklenir. Yaylı kenar aynı yayın parçalarına bölünür: yay kalır, yeni köşeler yayın üstündedir.",
+     "Delikler ve parçalar da sıklaşır; doğru çoklu çizgi olur. Yeni köşelerin kotları kenarları boyunca taşınır. Bir çalıştırma en çok 10000000 köşe ekler."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SIKLASTIR",
+     "KOSEEKLETOPLU"
+    ]
+   }
+  },
   "geometry.buffer": {
    "title": "Tampon",
    "rows": [

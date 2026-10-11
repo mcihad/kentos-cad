@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 553,
-      "implemented": 530,
+      "total": 563,
+      "implemented": 540,
       "partial": 0,
       "pending": 23
     },
@@ -31,8 +31,8 @@
       "pending": 2
     },
     "processing": {
-      "total": 103,
-      "implemented": 103,
+      "total": 113,
+      "implemented": 113,
       "partial": 0,
       "pending": 0
     },
@@ -102,12 +102,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 259,
-    "commandsOnDesktop": 483,
+    "commandsWithoutTests": 267,
+    "commandsOnDesktop": 493,
     "desktop": {
       "commands": {
-        "total": 553,
-        "implemented": 483,
+        "total": 563,
+        "implemented": 493,
         "partial": 0,
         "pending": 10,
         "none": 58,
@@ -122,8 +122,8 @@
         "n/a": 0
       },
       "processing": {
-        "total": 103,
-        "implemented": 103,
+        "total": 113,
+        "implemented": 113,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -5606,6 +5606,283 @@
       "tests": [
         "apps/web/scripts/e2e/layout.mjs"
       ]
+    },
+    {
+      "id": "processing.run.convert.bearingLine",
+      "title": "Semt ve uzunluktan çizgi…",
+      "category": "İşlemler",
+      "icon": "bearingLine",
+      "description": "Bir tablonun her satırındaki başlangıç noktası, semt ve uzunluktan çizgi yazar.",
+      "aliases": [
+        "SEMTUZUNLUK"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "processing.run.convert.densify",
+      "title": "Köşe ekle…",
+      "category": "İşlemler",
+      "icon": "densify",
+      "description": "Çizgilerin ve alanların her kenarını eşit parçalara bölerek köşe ekler; sonucu yeni katmana yazar.",
+      "aliases": [
+        "SIKLASTIR",
+        "KOSEEKLETOPLU"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "processing.run.convert.linesToPolygons",
+      "title": "Çizgileri alana çevir…",
+      "category": "İşlemler",
+      "icon": "lineToPolygon",
+      "description": "Kapalı çoklu çizgileri (isterse açıkları kapatarak) öznitelikleriyle yeni katmana alan olarak yazar.",
+      "aliases": [
+        "CIZGIALAN"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.convert.pointsToPath",
+      "title": "Noktalardan çizgi…",
+      "category": "İşlemler",
+      "icon": "pointsToPath",
+      "description": "Noktaları bir ifadenin sırasıyla birleştirip çizgi (isterse kapalı alan) yapar; bir alanın her değeri ayrı bir çizgi olur.",
+      "aliases": [
+        "NOKTADANCIZGI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.convert.polygonsToLines",
+      "title": "Alanları çizgiye çevir…",
+      "category": "İşlemler",
+      "icon": "polygonToLine",
+      "description": "Alanların halkalarını (dış halka, delikler, parçalar) öznitelikleriyle yeni katmana çizgi olarak yazar.",
+      "aliases": [
+        "SINIRCIZGI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.convert.substring",
+      "title": "Çizginin parçası…",
+      "category": "İşlemler",
+      "icon": "lineSubstring",
+      "description": "Her çizginin başından verilen iki uzaklık arasındaki parçasını yeni katmana yazar.",
+      "aliases": [
+        "CIZGIPARCASI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.convert.tableEllipse",
+      "title": "Tablodan elips…",
+      "category": "İşlemler",
+      "icon": "tableEllipse",
+      "description": "Bir tablonun her satırındaki merkez, iki yarı eksen ve semtten elips yazar.",
+      "aliases": [
+        "TABLODANELIPS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.convert.toPoints",
+      "title": "Nesneden nokta…",
+      "category": "İşlemler",
+      "icon": "featureToPoint",
+      "description": "Her nesnenin ağırlık merkezini ya da üstündeki bir iç noktayı, öznitelikleriyle yeni katmana nokta olarak yazar.",
+      "aliases": [
+        "NESNEDENNOKTA",
+        "MERKEZNOKTA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.convert.vertices",
+      "title": "Köşeleri noktaya çevir…",
+      "category": "İşlemler",
+      "icon": "verticesToPoints",
+      "description": "Çizgilerin ve alanların köşelerini (ya da yalnız uçlarını, ortalarını) öznitelikleriyle yeni katmana nokta olarak yazar.",
+      "aliases": [
+        "KOSELERINOKTA",
+        "KOSENOKTA"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "processing.run.convert.xyLine",
+      "title": "XY'den çizgi…",
+      "category": "İşlemler",
+      "icon": "xyLine",
+      "description": "Bir tablonun her satırındaki başlangıç ve bitiş koordinatlarından çizgi yazar.",
+      "aliases": [
+        "XYCIZGI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "İşlemler › Modeller"
+      ],
+      "ribbon": [
+        "CBS › Veri › Toplu çevir"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     },
     {
       "id": "processing.run.density.kernel",
@@ -21302,6 +21579,653 @@
       "tests": [
         "apps/web/scripts/e2e/layout.mjs"
       ]
+    },
+    {
+      "id": "convert.bearingLine",
+      "label": "Semt ve uzunluktan çizgi",
+      "category": "Dönüştürme",
+      "description": "Bir tablonun her satırındaki başlangıç noktası, semt ve uzunluktan çizgi yazar.",
+      "aliases": [
+        "SEMTUZUNLUK"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "sourceKind",
+          "type": "enum",
+          "label": "Kaynak",
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "label": "Dosya",
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": "features",
+          "label": "Kaynak nesneler",
+          "optional": false
+        },
+        {
+          "name": "east",
+          "type": "field",
+          "label": "Doğu sütunu",
+          "optional": false
+        },
+        {
+          "name": "north",
+          "type": "field",
+          "label": "Kuzey sütunu",
+          "optional": false
+        },
+        {
+          "name": "bearing",
+          "type": "field",
+          "label": "Semt sütunu",
+          "optional": false
+        },
+        {
+          "name": "length",
+          "type": "field",
+          "label": "Uzunluk sütunu",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "enum",
+          "label": "Açı birimi",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.convert.bearingLine",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "convert.densify",
+      "label": "Köşe ekle",
+      "category": "Dönüştürme",
+      "description": "Çizgilerin ve alanların her kenarını eşit parçalara bölerek köşe ekler; sonucu yeni katmana yazar.",
+      "aliases": [
+        "SIKLASTIR",
+        "KOSEEKLETOPLU"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "label": "Yöntem",
+          "optional": false
+        },
+        {
+          "name": "interval",
+          "type": "number",
+          "label": "Aralık",
+          "optional": false,
+          "unit": "m"
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "label": "Köşe sayısı",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "objects",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.convert.densify",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/processing/processing.test.ts",
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "convert.linesToPolygons",
+      "label": "Çizgileri alana çevir",
+      "category": "Dönüştürme",
+      "description": "Kapalı çoklu çizgileri (isterse açıkları kapatarak) öznitelikleriyle yeni katmana alan olarak yazar.",
+      "aliases": [
+        "CIZGIALAN"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Çizgiler",
+          "optional": false
+        },
+        {
+          "name": "open",
+          "type": "enum",
+          "label": "Açık çizgiler",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "areas",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.convert.linesToPolygons",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "convert.pointsToPath",
+      "label": "Noktalardan çizgi",
+      "category": "Dönüştürme",
+      "description": "Noktaları bir ifadenin sırasıyla birleştirip çizgi (isterse kapalı alan) yapar; bir alanın her değeri ayrı bir çizgi olur.",
+      "aliases": [
+        "NOKTADANCIZGI"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Noktalar",
+          "optional": false
+        },
+        {
+          "name": "order",
+          "type": "expression",
+          "label": "Sıra",
+          "optional": true
+        },
+        {
+          "name": "group",
+          "type": "field",
+          "label": "Grup",
+          "optional": true
+        },
+        {
+          "name": "close",
+          "type": "boolean",
+          "label": "Kapat",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "paths",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.convert.pointsToPath",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "convert.polygonsToLines",
+      "label": "Alanları çizgiye çevir",
+      "category": "Dönüştürme",
+      "description": "Alanların halkalarını (dış halka, delikler, parçalar) öznitelikleriyle yeni katmana çizgi olarak yazar.",
+      "aliases": [
+        "SINIRCIZGI"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Alanlar",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lines",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.convert.polygonsToLines",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "convert.substring",
+      "label": "Çizginin parçası",
+      "category": "Dönüştürme",
+      "description": "Her çizginin başından verilen iki uzaklık arasındaki parçasını yeni katmana yazar.",
+      "aliases": [
+        "CIZGIPARCASI"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "expression",
+          "label": "Başlangıç",
+          "optional": false
+        },
+        {
+          "name": "end",
+          "type": "expression",
+          "label": "Bitiş",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pieces",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.convert.substring",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "convert.tableEllipse",
+      "label": "Tablodan elips",
+      "category": "Dönüştürme",
+      "description": "Bir tablonun her satırındaki merkez, iki yarı eksen ve semtten elips yazar.",
+      "aliases": [
+        "TABLODANELIPS"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "sourceKind",
+          "type": "enum",
+          "label": "Kaynak",
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "label": "Dosya",
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": "features",
+          "label": "Kaynak nesneler",
+          "optional": false
+        },
+        {
+          "name": "east",
+          "type": "field",
+          "label": "Doğu sütunu",
+          "optional": false
+        },
+        {
+          "name": "north",
+          "type": "field",
+          "label": "Kuzey sütunu",
+          "optional": false
+        },
+        {
+          "name": "major",
+          "type": "field",
+          "label": "Büyük yarı eksen",
+          "optional": false
+        },
+        {
+          "name": "minor",
+          "type": "field",
+          "label": "Küçük yarı eksen",
+          "optional": false
+        },
+        {
+          "name": "bearing",
+          "type": "field",
+          "label": "Semt sütunu",
+          "optional": true
+        },
+        {
+          "name": "unit",
+          "type": "enum",
+          "label": "Açı birimi",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.convert.tableEllipse",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "convert.toPoints",
+      "label": "Nesneden nokta",
+      "category": "Dönüştürme",
+      "description": "Her nesnenin ağırlık merkezini ya da üstündeki bir iç noktayı, öznitelikleriyle yeni katmana nokta olarak yazar.",
+      "aliases": [
+        "NESNEDENNOKTA",
+        "MERKEZNOKTA"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "location",
+          "type": "enum",
+          "label": "Konum",
+          "optional": false
+        },
+        {
+          "name": "parts",
+          "type": "boolean",
+          "label": "Her parça için",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "points",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.convert.toPoints",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "convert.vertices",
+      "label": "Köşeleri noktaya çevir",
+      "category": "Dönüştürme",
+      "description": "Çizgilerin ve alanların köşelerini (ya da yalnız uçlarını, ortalarını) öznitelikleriyle yeni katmana nokta olarak yazar.",
+      "aliases": [
+        "KOSELERINOKTA",
+        "KOSENOKTA"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "input",
+          "type": "features",
+          "label": "Nesneler",
+          "optional": false
+        },
+        {
+          "name": "which",
+          "type": "enum",
+          "label": "Köşeler",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "points",
+          "type": "features"
+        },
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ],
+      "command": "processing.run.convert.vertices",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "convert.xyLine",
+      "label": "XY'den çizgi",
+      "category": "Dönüştürme",
+      "description": "Bir tablonun her satırındaki başlangıç ve bitiş koordinatlarından çizgi yazar.",
+      "aliases": [
+        "XYCIZGI"
+      ],
+      "targets": [
+        "client",
+        "worker"
+      ],
+      "parameters": [
+        {
+          "name": "sourceKind",
+          "type": "enum",
+          "label": "Kaynak",
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "label": "Dosya",
+          "optional": false
+        },
+        {
+          "name": "source",
+          "type": "features",
+          "label": "Kaynak nesneler",
+          "optional": false
+        },
+        {
+          "name": "startEast",
+          "type": "field",
+          "label": "Başlangıç doğu",
+          "optional": false
+        },
+        {
+          "name": "startNorth",
+          "type": "field",
+          "label": "Başlangıç kuzey",
+          "optional": false
+        },
+        {
+          "name": "endEast",
+          "type": "field",
+          "label": "Bitiş doğu",
+          "optional": false
+        },
+        {
+          "name": "endNorth",
+          "type": "field",
+          "label": "Bitiş kuzey",
+          "optional": false
+        },
+        {
+          "name": "layer",
+          "type": "layer",
+          "label": "Çıktı katmanı",
+          "optional": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "number"
+        },
+        {
+          "name": "table",
+          "type": "table"
+        }
+      ],
+      "command": "processing.run.convert.xyLine",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     },
     {
       "id": "density.kernel",
@@ -43305,6 +44229,16 @@
               "processing.run.layers.extract",
               "processing.run.layers.deleteDuplicates",
               "processing.run.layers.orderBy",
+              "processing.run.convert.toPoints",
+              "processing.run.convert.vertices",
+              "processing.run.convert.pointsToPath",
+              "processing.run.convert.bearingLine",
+              "processing.run.convert.xyLine",
+              "processing.run.convert.tableEllipse",
+              "processing.run.convert.substring",
+              "processing.run.convert.polygonsToLines",
+              "processing.run.convert.linesToPolygons",
+              "processing.run.convert.densify",
               "processing.run.geometry.buffer",
               "processing.run.geometry.clip",
               "processing.run.geometry.dissolve",
@@ -44674,6 +45608,31 @@
               }
             ],
             "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Toplu çevir",
+            "icon": "conversion",
+            "items": [
+              {
+                "command": "processing.run.convert.toPoints",
+                "size": "large"
+              },
+              {
+                "command": "processing.run.convert.vertices",
+                "size": "large"
+              }
+            ],
+            "overflow": [
+              "processing.run.convert.pointsToPath",
+              "processing.run.convert.bearingLine",
+              "processing.run.convert.xyLine",
+              "processing.run.convert.tableEllipse",
+              "processing.run.convert.substring",
+              "processing.run.convert.polygonsToLines",
+              "processing.run.convert.linesToPolygons",
+              "processing.run.convert.densify"
+            ],
             "keep": false
           },
           {
@@ -50290,6 +51249,31 @@
               "keep": false
             },
             {
+              "label": "Toplu çevir",
+              "icon": "conversion",
+              "items": [
+                {
+                  "command": "processing.run.convert.toPoints",
+                  "size": "large"
+                },
+                {
+                  "command": "processing.run.convert.vertices",
+                  "size": "large"
+                }
+              ],
+              "overflow": [
+                "processing.run.convert.pointsToPath",
+                "processing.run.convert.bearingLine",
+                "processing.run.convert.xyLine",
+                "processing.run.convert.tableEllipse",
+                "processing.run.convert.substring",
+                "processing.run.convert.polygonsToLines",
+                "processing.run.convert.linesToPolygons",
+                "processing.run.convert.densify"
+              ],
+              "keep": false
+            },
+            {
               "label": "Blok",
               "icon": "blockInsert",
               "items": [
@@ -52672,6 +53656,17 @@
     "extractSelected": "<rect x=\"2.4\" y=\"2.4\" width=\"8.4\" height=\"7.2\" rx=\".8\" stroke-dasharray=\"1.6 1.4\" stroke-width=\"1.1\"/><rect x=\"4.4\" y=\"4.3\" width=\"4.4\" height=\"3.4\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".3\" stroke-width=\"1.1\"/><path d=\"M9.4 8.4 12.6 11.6M12.8 9.2v2.6h-2.6\" stroke-width=\"1.2\"/><path d=\"m12.5 13.4 5.6 2.9-5.6 2.9-5.6-2.9z\"/>",
     "deleteDuplicates": "<rect x=\"2.5\" y=\"2.5\" width=\"9\" height=\"9\" rx=\"1\" stroke-dasharray=\"1.6 1.4\" stroke-width=\"1.1\"/><path d=\"m4.6 4.6 3.8 3.8M8.4 4.6 4.6 8.4\" stroke-width=\"1.3\"/><rect x=\"8.5\" y=\"8.5\" width=\"9\" height=\"9\" rx=\"1\" fill=\"currentColor\" fill-opacity=\".3\"/>",
     "orderByExpression": "<path d=\"M3.5 3v12.5M1.5 13.5l2 2 2-2\" stroke-width=\"1.3\"/><path d=\"M8 4.5h4M8 9.5h6.5M8 14.5h9.5\" stroke-width=\"1.6\"/>",
+    "conversion": "<rect x=\"2.5\" y=\"2.5\" width=\"7\" height=\"7\" rx=\".8\" stroke-width=\"1.2\"/><circle cx=\"13.5\" cy=\"13.5\" r=\"4\" stroke-width=\"1.2\"/><path d=\"M9 6.5h3.2a1.3 1.3 0 0 1 1.3 1.3V9M12 7.8l1.5 1.5L15 7.8\" stroke-width=\"1.1\"/>",
+    "featureToPoint": "<path d=\"M3 6 9.5 2.8 17 5.6l-.9 9.2-8.4 2.4L3 13.4z\" stroke-width=\"1.1\"/><circle cx=\"10\" cy=\"10\" r=\"2.3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "verticesToPoints": "<path d=\"M3 15.5 7.5 5.5l5 8L17 3.5\" stroke-width=\"1\" stroke-opacity=\".55\"/><circle cx=\"3\" cy=\"15.5\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"7.5\" cy=\"5.5\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12.5\" cy=\"13.5\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"17\" cy=\"3.5\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/>",
+    "pointsToPath": "<circle cx=\"3.5\" cy=\"15\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"8.5\" cy=\"7.5\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"14\" cy=\"13\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m3.5 15 5-7.5 5.5 5.5 3.5-8.5\" stroke-width=\"1.2\"/><path d=\"m15.2 5.6 2.3-1.1.8 2.4\" stroke-width=\"1.1\"/>",
+    "bearingLine": "<path d=\"M5 17.5V2.5M3.4 4.4 5 2.5l1.6 1.9\" stroke-width=\"1.1\"/><path d=\"M5 17.5 16.5 7\" stroke-width=\"1.5\"/><path d=\"M5 10.5a7 7 0 0 1 5.2 2.3\" stroke-width=\"1\" stroke-dasharray=\"1.4 1.1\"/><circle cx=\"5\" cy=\"17.5\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/>",
+    "xyLine": "<path d=\"M4.5 15.5 15.5 4.5\" stroke-width=\"1.5\"/><path d=\"M4.5 12.5v6M1.5 15.5h6M15.5 1.5v6M12.5 4.5h6\" stroke-width=\"1\"/>",
+    "tableEllipse": "<ellipse cx=\"10\" cy=\"10\" rx=\"7.8\" ry=\"4\" transform=\"rotate(-35 10 10)\" stroke-width=\"1.2\"/><path d=\"M3.6 14.5 16.4 5.5\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.2\"/><circle cx=\"10\" cy=\"10\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "lineSubstring": "<path d=\"M2 15.5 6.5 10H12l5.5-6.5\" stroke-width=\"1\" stroke-opacity=\".45\"/><path d=\"M4.4 12.6 6.5 10H12l1.9-2.3\" stroke-width=\"2.4\"/><path d=\"m3 11.2 2.8 2.8M12.6 6.6l2.6 2.2\" stroke-width=\"1.1\"/>",
+    "polygonToLine": "<path d=\"M3 8.5 8.3 3l8.2 3.2-1 9-8.8 2.3z\" fill=\"currentColor\" fill-opacity=\".2\" stroke=\"none\"/><path d=\"M4.2 11.2 6.7 17.5l8.8-2.3 1-9L8.3 3 3 8.5\" stroke-width=\"1.4\"/><circle cx=\"3\" cy=\"8.5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4.2\" cy=\"11.2\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
+    "lineToPolygon": "<path d=\"M4 15.5 3 7.5l6-4.5 8 3-.8 8.5z\" fill=\"currentColor\" fill-opacity=\".25\" stroke=\"none\"/><path d=\"M4 15.5 3 7.5l6-4.5 8 3-.8 8.5\" stroke-width=\"1.3\"/><path d=\"M16.2 14.5 4 15.5\" stroke-width=\"1.1\" stroke-dasharray=\"1.6 1.3\"/>",
+    "densify": "<path d=\"M3 15.5 9.5 4.5l7.5 11\" stroke-width=\"1.1\"/><rect x=\"1.6\" y=\"14.1\" width=\"2.8\" height=\"2.8\" rx=\".4\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.1\" y=\"3.1\" width=\"2.8\" height=\"2.8\" rx=\".4\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.6\" y=\"14.1\" width=\"2.8\" height=\"2.8\" rx=\".4\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"5.2\" cy=\"11.8\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"7.4\" cy=\"8.1\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12\" cy=\"8.2\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"14.5\" cy=\"11.8\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
     "dataTransfer": "<rect x=\"1.8\" y=\"3\" width=\"8\" height=\"9\" rx=\".9\" stroke-width=\"1.3\"/><path d=\"M1.8 6h8M1.8 9h8M4.8 6v6\" stroke-width=\"1.1\"/><path d=\"M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4\" stroke-width=\"1.2\"/><path d=\"m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z\" stroke-width=\"1.2\"/><path d=\"m12.2 14.1 3.2 1.7 3.2-1.7\" stroke-width=\"1.2\"/>",
     "fieldMapFill": "<path d=\"M2.5 5h4.5M2.5 10h4.5M2.5 15h4.5\" stroke-width=\"1.4\"/><path d=\"M8.6 5h3M8.6 10h3M8.6 15h3\" stroke-width=\"1.1\"/><path d=\"m10.6 3.8 1.2 1.2-1.2 1.2M10.6 8.8l1.2 1.2-1.2 1.2M10.6 13.8l1.2 1.2-1.2 1.2\" stroke-width=\"1.1\"/><path d=\"M13.5 5h4M13.5 10h4M13.5 15h4\" stroke-width=\"1.4\"/>",
     "geoBuffer": "<path d=\"M4.2 14.6 9 7.6l6.8 3.4\" stroke-width=\"7\" stroke-opacity=\".28\"/><path d=\"M4.2 14.6 9 7.6l6.8 3.4\" stroke-width=\"1.5\"/><circle cx=\"4.2\" cy=\"14.6\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.8\" cy=\"11\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/>",

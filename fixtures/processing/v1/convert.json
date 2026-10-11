@@ -1,0 +1,3521 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-08,
+ "toleranceFields": [
+  "bulges",
+  "zs",
+  "z",
+  "za",
+  "zb",
+  "a0",
+  "a1",
+  "parts"
+ ],
+ "documents": {},
+ "files": {
+  "convert-semt.csv": "convert-semt.csv",
+  "convert-xy.csv": "convert-xy.csv",
+  "convert-elips.csv": "convert-elips.csv"
+ },
+ "cases": [
+  {
+   "id": "points-centroid",
+   "title": "Parsellerin ağırlık merkezleri: kare, dışında kalan L, delikli, yaylı, iki parçalı, alanı olmayan",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "location": "centroid",
+    "parts": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 6 nokta yazıldı.",
+    "undo": "Nesneden nokta",
+    "layers": [
+     {
+      "id": "islem-merkezler",
+      "name": "Merkezler",
+      "style": {
+       "color": "#E54666",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5466626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "1",
+       "Ada": "101"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101"
+      },
+      "p": {
+       "x": 487028.96428571426,
+       "y": 4420008.964285715
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102"
+      },
+      "p": {
+       "x": 487075.0,
+       "y": 4420015.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102"
+      },
+      "p": {
+       "x": 487110.0,
+       "y": 4420011.790613931
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103"
+      },
+      "p": {
+       "x": 487152.64705882355,
+       "y": 4420005.705882353
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "6",
+       "Ada": "103"
+      },
+      "p": {
+       "x": 487015.0,
+       "y": 4420040.0
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin kotları sonuca taşınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 6
+    }
+   }
+  },
+  {
+   "id": "points-inside",
+   "title": "Parsellerin iç noktaları: düz kenarlılar GEOS'un, yaylının tarama doğrusu yayın tepesiyle, alanı olmayanın sınırının yarısı",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "location": "inside",
+    "parts": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 6 nokta yazıldı.",
+    "undo": "Nesneden nokta",
+    "layers": [
+     {
+      "id": "islem-merkezler",
+      "name": "Merkezler",
+      "style": {
+       "color": "#E54666",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5466626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "1",
+       "Ada": "101"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101"
+      },
+      "p": {
+       "x": 487022.0,
+       "y": 4420017.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102"
+      },
+      "p": {
+       "x": 487065.0,
+       "y": 4420015.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102"
+      },
+      "p": {
+       "x": 487110.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103"
+      },
+      "p": {
+       "x": 487160.0,
+       "y": 4420006.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "6",
+       "Ada": "103"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420040.0
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin kotları sonuca taşınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 6
+    }
+   }
+  },
+  {
+   "id": "points-inside-lines",
+   "title": "Yolların iç noktaları: yolların yarısı (çok parçalının ilk parçasınınki), yayın ortası",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "location": "inside",
+    "parts": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 nesneden 7 nokta yazıldı.",
+    "undo": "Nesneden nokta",
+    "layers": [
+     {
+      "id": "islem-merkezler",
+      "name": "Merkezler",
+      "style": {
+       "color": "#E54666",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5466626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Atatürk Cd."
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420060.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Okul Sk."
+      },
+      "p": {
+       "x": 487065.63079062285,
+       "y": 4420060.809007401
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Hat"
+      },
+      "p": {
+       "x": 487100.0,
+       "y": 4420065.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Kavis"
+      },
+      "p": {
+       "x": 487137.07106781186,
+       "y": 4420067.071067812
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Çift"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420090.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Kapalı"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420100.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Kısa"
+      },
+      "p": {
+       "x": 487075.0,
+       "y": 4420090.0
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 nesnenin kotları sonuca taşınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 7
+    }
+   }
+  },
+  {
+   "id": "points-centroid-lines",
+   "title": "Yolların ağırlık merkezleri: uzunlukla ağırlıklı, yaylar kapalı biçimde",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "location": "centroid",
+    "parts": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 nesneden 7 nokta yazıldı.",
+    "undo": "Nesneden nokta",
+    "layers": [
+     {
+      "id": "islem-merkezler",
+      "name": "Merkezler",
+      "style": {
+       "color": "#E54666",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5466626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Atatürk Cd."
+      },
+      "p": {
+       "x": 487021.0,
+       "y": 4420064.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Okul Sk."
+      },
+      "p": {
+       "x": 487063.8898452965,
+       "y": 4420064.440618814
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Hat"
+      },
+      "p": {
+       "x": 487100.0,
+       "y": 4420065.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Kavis"
+      },
+      "p": {
+       "x": 487136.36619772366,
+       "y": 4420066.366197724
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Çift"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420092.5
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Kapalı"
+      },
+      "p": {
+       "x": 487050.0,
+       "y": 4420095.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Ad": "Kısa"
+      },
+      "p": {
+       "x": 487075.0,
+       "y": 4420090.0
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 nesnenin kotları sonuca taşınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 7
+    }
+   }
+  },
+  {
+   "id": "points-parts",
+   "title": "Her parça için: iki parçalı parsel ve üç noktalı nesne parça parça",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "location": "centroid",
+    "parts": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesneden 5 nokta yazıldı.",
+    "undo": "Nesneden nokta",
+    "layers": [
+     {
+      "id": "islem-merkezler",
+      "name": "Merkezler",
+      "style": {
+       "color": "#E54666",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5466626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103",
+       "Parça": "1"
+      },
+      "p": {
+       "x": 487135.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103",
+       "Parça": "2"
+      },
+      "p": {
+       "x": 487160.0,
+       "y": 4420006.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Hat": "D",
+       "Sıra": "1",
+       "Parça": "1"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420120.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Hat": "D",
+       "Sıra": "1",
+       "Parça": "2"
+      },
+      "p": {
+       "x": 487062.0,
+       "y": 4420121.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Hat": "D",
+       "Sıra": "1",
+       "Parça": "3"
+      },
+      "p": {
+       "x": 487064.0,
+       "y": 4420119.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 5
+    }
+   },
+   "selection": [
+    5,
+    28
+   ]
+  },
+  {
+   "id": "points-locked",
+   "title": "Kilitli katmanın nesnesi okunur: merkezi yeni katmana yazılır",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kilitli"
+    },
+    "location": "inside",
+    "parts": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesneden 1 nokta yazıldı.",
+    "undo": "Nesneden nokta",
+    "layers": [
+     {
+      "id": "islem-merkezler",
+      "name": "Merkezler",
+      "style": {
+       "color": "#E54666",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5466626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-merkezler",
+      "attrs": {
+       "Parsel": "41"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420155.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "vertices-all",
+   "title": "Bütün köşeler: delikli ve kotlu alan, yaylı alan, kotlu çizgi, yay, iki parçalı çizgi",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.vertices"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "which": "all"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 nesneden 20 nokta yazıldı.",
+    "undo": "Köşeleri noktaya çevir",
+    "layers": [
+     {
+      "id": "islem-koseler",
+      "name": "Köşeler",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420000.0
+      },
+      "z": 10.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "30.000"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420000.0
+      },
+      "z": 11.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "3",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "60.000"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420030.0
+      },
+      "z": 12.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "4",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "90.000"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420030.0
+      },
+      "z": 13.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "5",
+       "Parça": "1",
+       "Halka": "1",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487070.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "6",
+       "Parça": "1",
+       "Halka": "1",
+       "Uzaklık": "10.000"
+      },
+      "p": {
+       "x": 487080.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "7",
+       "Parça": "1",
+       "Halka": "1",
+       "Uzaklık": "20.000"
+      },
+      "p": {
+       "x": 487080.0,
+       "y": 4420020.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "8",
+       "Parça": "1",
+       "Halka": "1",
+       "Uzaklık": "30.000"
+      },
+      "p": {
+       "x": 487070.0,
+       "y": 4420020.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487100.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "20.000"
+      },
+      "p": {
+       "x": 487120.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102",
+       "Köşe": "3",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "40.000"
+      },
+      "p": {
+       "x": 487120.0,
+       "y": 4420020.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102",
+       "Köşe": "4",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "63.182"
+      },
+      "p": {
+       "x": 487100.0,
+       "y": 4420020.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Hat",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420060.0
+      },
+      "z": 5.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Hat",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "22.361"
+      },
+      "p": {
+       "x": 487110.0,
+       "y": 4420070.0
+      },
+      "z": 7.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Kavis",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487140.0,
+       "y": 4420060.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Kavis",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "15.708"
+      },
+      "p": {
+       "x": 487130.0,
+       "y": 4420070.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Çift",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420090.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Çift",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "20.000"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420090.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Çift",
+       "Köşe": "3",
+       "Parça": "2",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420095.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Çift",
+       "Köşe": "4",
+       "Parça": "2",
+       "Halka": "0",
+       "Uzaklık": "20.000"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420095.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 20
+    }
+   },
+   "selection": [
+    3,
+    4,
+    13,
+    14,
+    15
+   ]
+  },
+  {
+   "id": "vertices-ends",
+   "title": "Yolların iki ucu: kapalı çizginin başı ve sonu aynı yerde iki nokta, kotlar",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.vertices"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "which": "ends"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 nesneden 14 nokta yazıldı.",
+    "undo": "Köşeleri noktaya çevir",
+    "layers": [
+     {
+      "id": "islem-koseler",
+      "name": "Köşeler",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Atatürk Cd.",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420060.0
+      },
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Atatürk Cd.",
+       "Köşe": "3",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "50.000"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420080.0
+      },
+      "z": 103.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Okul Sk.",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420060.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Okul Sk.",
+       "Köşe": "3",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "51.416"
+      },
+      "p": {
+       "x": 487080.0,
+       "y": 4420080.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Hat",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420060.0
+      },
+      "z": 5.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Hat",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "22.361"
+      },
+      "p": {
+       "x": 487110.0,
+       "y": 4420070.0
+      },
+      "z": 7.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Kavis",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487140.0,
+       "y": 4420060.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Kavis",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "15.708"
+      },
+      "p": {
+       "x": 487130.0,
+       "y": 4420070.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Çift",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420090.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Çift",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "20.000"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420090.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Kapalı",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420090.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Kapalı",
+       "Köşe": "5",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "60.000"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420090.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Kısa",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487070.0,
+       "y": 4420090.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Kısa",
+       "Köşe": "2",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "10.000"
+      },
+      "p": {
+       "x": 487080.0,
+       "y": 4420090.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 14
+    }
+   }
+  },
+  {
+   "id": "vertices-middle",
+   "title": "Orta: delikli alanın dış halkasının yarısı, yaylı çizginin ve kotlu çizginin ortası",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.vertices"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "which": "middle"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 nesneden 3 nokta yazıldı.",
+    "undo": "Köşeleri noktaya çevir",
+    "layers": [
+     {
+      "id": "islem-koseler",
+      "name": "Köşeler",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "60.000"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420030.0
+      },
+      "z": 12.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Okul Sk.",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "25.708"
+      },
+      "p": {
+       "x": 487065.63079062285,
+       "y": 4420060.809007401
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Ad": "Atatürk Cd.",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "25.000"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420060.0
+      },
+      "z": 101.25
+     }
+    ],
+    "outputs": {
+     "count": 3
+    }
+   },
+   "selection": [
+    3,
+    12,
+    11
+   ]
+  },
+  {
+   "id": "vertices-start",
+   "title": "Başlangıç ve bitiş: parsellerin ilk köşesi",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.vertices"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "which": "end"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 6 nokta yazıldı.",
+    "undo": "Köşeleri noktaya çevir",
+    "layers": [
+     {
+      "id": "islem-koseler",
+      "name": "Köşeler",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "1",
+       "Ada": "101",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420000.0
+      },
+      "z": 10.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487100.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487130.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "6",
+       "Ada": "103",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420040.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 6
+    }
+   }
+  },
+  {
+   "id": "path-grouped",
+   "title": "Noktaları hatlarına göre sıralı çizgiye çevir: aynı yerdeki nokta atlanır, tek noktalı hat çizgi vermez, çok noktalı nesne",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.pointsToPath"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nokta"
+    },
+    "order": "Sıra",
+    "group": "Hat",
+    "close": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "10 noktadan 3 çizgi yazıldı.",
+    "undo": "Noktalardan çizgi",
+    "layers": [
+     {
+      "id": "islem-yollar",
+      "name": "Yollar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-yollar",
+      "attrs": {
+       "Hat": "A",
+       "Nokta sayısı": "3",
+       "Başlangıç": "1",
+       "Bitiş": "3"
+      },
+      "pts": [
+       {
+        "x": 487010,
+        "y": 4420121
+       },
+       {
+        "x": 487005,
+        "y": 4420125
+       },
+       {
+        "x": 487000,
+        "y": 4420120
+       }
+      ],
+      "zs": [
+       11,
+       12,
+       10
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-yollar",
+      "attrs": {
+       "Hat": "B",
+       "Nokta sayısı": "2",
+       "Başlangıç": "1",
+       "Bitiş": "2"
+      },
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4420130
+       },
+       {
+        "x": 487020,
+        "y": 4420119
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-yollar",
+      "attrs": {
+       "Hat": "D",
+       "Nokta sayısı": "3",
+       "Başlangıç": "1",
+       "Bitiş": "1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420120
+       },
+       {
+        "x": 487062,
+        "y": 4420121
+       },
+       {
+        "x": 487064,
+        "y": 4420119
+       }
+      ]
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nokta bir öncekiyle aynı yerde olduğu için atlandı."
+     },
+     {
+      "level": "warn",
+      "text": "1 grupta çizgi için yeterli nokta yok (en az 2)."
+     }
+    ],
+    "outputs": {
+     "count": 3
+    }
+   }
+  },
+  {
+   "id": "path-closed",
+   "title": "Bütün noktalar tek kapalı alan: girdinin sırasıyla",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.pointsToPath"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nokta"
+    },
+    "order": "",
+    "group": "",
+    "close": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "10 noktadan 1 çizgi yazıldı.",
+    "undo": "Noktalardan çizgi",
+    "layers": [
+     {
+      "id": "islem-yollar",
+      "name": "Yollar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-yollar",
+      "attrs": {
+       "Nokta sayısı": "9"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420120
+       },
+       {
+        "x": 487010,
+        "y": 4420121
+       },
+       {
+        "x": 487020,
+        "y": 4420119
+       },
+       {
+        "x": 487005,
+        "y": 4420125
+       },
+       {
+        "x": 487030,
+        "y": 4420130
+       },
+       {
+        "x": 487040,
+        "y": 4420120
+       },
+       {
+        "x": 487060,
+        "y": 4420120
+       },
+       {
+        "x": 487062,
+        "y": 4420121
+       },
+       {
+        "x": 487064,
+        "y": 4420119
+       }
+      ],
+      "zs": [
+       10,
+       11,
+       null,
+       12,
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nokta bir öncekiyle aynı yerde olduğu için atlandı."
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "bearing-file",
+   "title": "Semt ve uzunluktan çizgi: dosyadan, grad; virgüllü ondalık, okunamayan, sıfır uzunluk ve boş semt atlanır",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.bearingLine"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "convert-semt.csv",
+    "east": "Doğu",
+    "north": "Kuzey",
+    "bearing": "Semt",
+    "length": "Uzunluk",
+    "unit": "grad"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 satırdan 3 çizgi yazıldı.",
+    "undo": "Semt ve uzunluktan çizgi",
+    "layers": [
+     {
+      "id": "islem-semt-cizgileri",
+      "name": "Semt çizgileri",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "line",
+      "layerId": "islem-semt-cizgileri",
+      "attrs": {
+       "Ad": "S1",
+       "Doğu": "487000",
+       "Kuzey": "4420200",
+       "Semt": "0",
+       "Uzunluk": "100"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4420200.0
+      },
+      "b": {
+       "x": 487000.0,
+       "y": 4420300.0
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-semt-cizgileri",
+      "attrs": {
+       "Ad": "S2",
+       "Doğu": "487000",
+       "Kuzey": "4420200",
+       "Semt": "100",
+       "Uzunluk": "50"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4420200.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420200.0
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-semt-cizgileri",
+      "attrs": {
+       "Ad": "S3",
+       "Doğu": "487010,5",
+       "Kuzey": "4420210",
+       "Semt": "250,5",
+       "Uzunluk": "30"
+      },
+      "a": {
+       "x": 487010.5,
+       "y": 4420210.0
+      },
+      "b": {
+       "x": 486989.12084443227,
+       "y": 4420188.954057227
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "3 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "5",
+        "“Doğu” sayı değil: abc"
+       ],
+       [
+        "6",
+        "“Uzunluk” sıfırdan büyük değil"
+       ],
+       [
+        "7",
+        "“Semt” boş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "bearing-layer",
+   "title": "Semt ve uzunluktan çizgi: katmanın nesnelerinden, derece; okunamayan semt",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.bearingLine"
+   },
+   "values": {
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "olcu"
+    },
+    "east": "Doğu",
+    "north": "Kuzey",
+    "bearing": "Semt",
+    "length": "Uzunluk",
+    "unit": "deg"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 satırdan 2 çizgi yazıldı.",
+    "undo": "Semt ve uzunluktan çizgi",
+    "layers": [
+     {
+      "id": "islem-semt-cizgileri",
+      "name": "Semt çizgileri",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "line",
+      "layerId": "islem-semt-cizgileri",
+      "attrs": {
+       "Ad": "Ö1",
+       "Doğu": "487200",
+       "Kuzey": "4420100",
+       "Semt": "45",
+       "Uzunluk": "20"
+      },
+      "a": {
+       "x": 487200.0,
+       "y": 4420100.0
+      },
+      "b": {
+       "x": 487214.1421356237,
+       "y": 4420114.142135624
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-semt-cizgileri",
+      "attrs": {
+       "Ad": "Ö2",
+       "Doğu": "487200",
+       "Kuzey": "4420100",
+       "Semt": "270,5",
+       "Uzunluk": "12,25"
+      },
+      "a": {
+       "x": 487200.0,
+       "y": 4420100.0
+      },
+      "b": {
+       "x": 487187.7504664425,
+       "y": 4420100.10690006
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "#33",
+        "“Semt” sayı değil: kuzey"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "xy-file",
+   "title": "XY'den çizgi: başlangıcı ve bitişi aynı satır atlanır",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.xyLine"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "convert-xy.csv",
+    "startEast": "Y1",
+    "startNorth": "X1",
+    "endEast": "Y2",
+    "endNorth": "X2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 satırdan 2 çizgi yazıldı.",
+    "undo": "XY'den çizgi",
+    "layers": [
+     {
+      "id": "islem-cizgiler",
+      "name": "Çizgiler",
+      "style": {
+       "color": "#12A594",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#12A59426"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "line",
+      "layerId": "islem-cizgiler",
+      "attrs": {
+       "Ad": "A",
+       "Y1": "487000",
+       "X1": "4420300",
+       "Y2": "487050",
+       "X2": "4420300"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4420300.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420300.0
+      }
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-cizgiler",
+      "attrs": {
+       "Ad": "C",
+       "Y1": "487010.25",
+       "X1": "4420310.5",
+       "Y2": "487020.75",
+       "X2": "4420330.125"
+      },
+      "a": {
+       "x": 487010.25,
+       "y": 4420310.5
+      },
+      "b": {
+       "x": 487020.75,
+       "y": 4420330.125
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "3",
+        "Başlangıç ve bitiş aynı yerde"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "ellipse-file",
+   "title": "Tablodan elips: hata elipsi, yer değiştiren eksenler, boş semt, eksi yarı eksen",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.tableEllipse"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "convert-elips.csv",
+    "east": "Y",
+    "north": "X",
+    "major": "a",
+    "minor": "b",
+    "bearing": "Semt",
+    "unit": "grad"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 satırdan 3 elips yazıldı.",
+    "undo": "Tablodan elips",
+    "layers": [
+     {
+      "id": "islem-elipsler",
+      "name": "Elipsler",
+      "style": {
+       "color": "#F76B15",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#F76B1526"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "ellipse",
+      "layerId": "islem-elipsler",
+      "attrs": {
+       "No": "P1",
+       "Y": "487000",
+       "X": "4420400",
+       "a": "0,05",
+       "b": "0,02",
+       "Semt": "35,2"
+      },
+      "c": {
+       "x": 487000.0,
+       "y": 4420400.0
+      },
+      "major": {
+       "x": 0.026258731498064784,
+       "y": 0.04254972408973459
+      },
+      "ratio": 0.4,
+      "t0": 0,
+      "t1": 0
+     },
+     {
+      "kind": "ellipse",
+      "layerId": "islem-elipsler",
+      "attrs": {
+       "No": "P2",
+       "Y": "487100",
+       "X": "4420400",
+       "a": "3",
+       "b": "5",
+       "Semt": "0"
+      },
+      "c": {
+       "x": 487100.0,
+       "y": 4420400.0
+      },
+      "major": {
+       "x": 5.0,
+       "y": -2.5267393438392082e-51
+      },
+      "ratio": 0.6,
+      "t0": 0,
+      "t1": 0
+     },
+     {
+      "kind": "ellipse",
+      "layerId": "islem-elipsler",
+      "attrs": {
+       "No": "P3",
+       "Y": "487200",
+       "X": "4420400",
+       "a": "4",
+       "b": "4"
+      },
+      "c": {
+       "x": 487200.0,
+       "y": 4420400.0
+      },
+      "major": {
+       "x": 0.0,
+       "y": 4.0
+      },
+      "ratio": 1.0,
+      "t0": 0,
+      "t1": 0
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "5",
+        "“a” sıfırdan büyük değil"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "substring-fixed",
+   "title": "Çizginin parçası 5 ile 25 m arası: kotlar boyunca, yay parçası, çizgi, yay, iki parçalı ve kısa çizgi",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.substring"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "start": "5",
+    "end": "25"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 nesneden 6 parça yazıldı.",
+    "undo": "Çizginin parçası",
+    "layers": [
+     {
+      "id": "islem-parcalar",
+      "name": "Parçalar",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#3E63DD26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "line",
+      "a": {
+       "x": 487005.0,
+       "y": 4420060.0
+      },
+      "b": {
+       "x": 487025.0,
+       "y": 4420060.0
+      },
+      "za": 100.25,
+      "zb": 101.25,
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Atatürk Cd."
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487045.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487064.9480791851,
+        "y": 4420060.6217515655
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.06258150756627501,
+       0.0
+      ],
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Okul Sk."
+      }
+     },
+     {
+      "kind": "line",
+      "a": {
+       "x": 487094.472135955,
+       "y": 4420062.236067978
+      },
+      "b": {
+       "x": 487110.0,
+       "y": 4420070.0
+      },
+      "za": 5.447213595499958,
+      "zb": 7.0,
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Hat"
+      }
+     },
+     {
+      "kind": "arc",
+      "c": {
+       "x": 487130,
+       "y": 4420060
+      },
+      "r": 10,
+      "a0": 0.5,
+      "a1": 1.5707963267948966,
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Kavis"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487045.0,
+        "y": 4420090.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420090.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420095.0
+       }
+      ],
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Kapalı"
+      }
+     },
+     {
+      "kind": "line",
+      "a": {
+       "x": 487075.0,
+       "y": 4420090.0
+      },
+      "b": {
+       "x": 487080.0,
+       "y": 4420090.0
+      },
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Kısa"
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 çok parçalı çizgi alınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 6
+    }
+   }
+  },
+  {
+   "id": "substring-expr",
+   "title": "Çizginin parçası ifadelerle: uzunluğun dörtte birinden sonuna 2 m kalana",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.substring"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "start": "$uzunluk / 4",
+    "end": "$uzunluk - 2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 nesneden 3 parça yazıldı.",
+    "undo": "Çizginin parçası",
+    "layers": [
+     {
+      "id": "islem-parcalar",
+      "name": "Parçalar",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#3E63DD26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487012.5,
+        "y": 4420060.0
+       },
+       {
+        "x": 487030.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487030.0,
+        "y": 4420078.0
+       }
+      ],
+      "zs": [
+       100.625,
+       101.5,
+       102.85
+      ],
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Atatürk Cd."
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487052.85398163396,
+        "y": 4420060.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487079.90008330555,
+        "y": 4420078.003331667
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3852184537730318,
+       0.0
+      ],
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Okul Sk."
+      }
+     },
+     {
+      "kind": "arc",
+      "c": {
+       "x": 487130,
+       "y": 4420060
+      },
+      "r": 10,
+      "a0": 0.39269908169872414,
+      "a1": 1.3707963267948966,
+      "layerId": "islem-parcalar",
+      "attrs": {
+       "Ad": "Kavis"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 3
+    }
+   },
+   "selection": [
+    11,
+    12,
+    14
+   ]
+  },
+  {
+   "id": "rings",
+   "title": "Alanları çizgiye çevir: delik, iki parça, yay ve kotlar",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.polygonsToLines"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 alandan 8 çizgi yazıldı.",
+    "undo": "Alanları çizgiye çevir",
+    "layers": [
+     {
+      "id": "islem-sinirlar",
+      "name": "Sınırlar",
+      "style": {
+       "color": "#AD7F58",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AD7F5826"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420000
+       }
+      ],
+      "layerId": "islem-sinirlar",
+      "attrs": {
+       "Parsel": "1",
+       "Ada": "101",
+       "Parça": "1",
+       "Halka": "0"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420004
+       },
+       {
+        "x": 487024,
+        "y": 4420004
+       },
+       {
+        "x": 487024,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       }
+      ],
+      "layerId": "islem-sinirlar",
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101",
+       "Parça": "1",
+       "Halka": "0"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420000
+       },
+       {
+        "x": 487090,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       }
+      ],
+      "zs": [
+       10,
+       11,
+       12,
+       13,
+       10
+      ],
+      "layerId": "islem-sinirlar",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Parça": "1",
+       "Halka": "0"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420010
+       },
+       {
+        "x": 487080,
+        "y": 4420020
+       },
+       {
+        "x": 487070,
+        "y": 4420020
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       }
+      ],
+      "layerId": "islem-sinirlar",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Parça": "1",
+       "Halka": "1"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487100,
+        "y": 4420000
+       },
+       {
+        "x": 487120,
+        "y": 4420000
+       },
+       {
+        "x": 487120,
+        "y": 4420020
+       },
+       {
+        "x": 487100,
+        "y": 4420020
+       },
+       {
+        "x": 487100,
+        "y": 4420000
+       }
+      ],
+      "bulges": [
+       0,
+       0,
+       0.5,
+       0,
+       0
+      ],
+      "layerId": "islem-sinirlar",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102",
+       "Parça": "1",
+       "Halka": "0"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487130,
+        "y": 4420000
+       },
+       {
+        "x": 487140,
+        "y": 4420000
+       },
+       {
+        "x": 487140,
+        "y": 4420010
+       },
+       {
+        "x": 487130,
+        "y": 4420010
+       },
+       {
+        "x": 487130,
+        "y": 4420000
+       }
+      ],
+      "layerId": "islem-sinirlar",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103",
+       "Parça": "1",
+       "Halka": "0"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487150,
+        "y": 4420000
+       },
+       {
+        "x": 487170,
+        "y": 4420000
+       },
+       {
+        "x": 487170,
+        "y": 4420012
+       },
+       {
+        "x": 487150,
+        "y": 4420012
+       },
+       {
+        "x": 487150,
+        "y": 4420000
+       }
+      ],
+      "layerId": "islem-sinirlar",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103",
+       "Parça": "2",
+       "Halka": "0"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487010,
+        "y": 4420040
+       },
+       {
+        "x": 487030,
+        "y": 4420040
+       },
+       {
+        "x": 487000,
+        "y": 4420040
+       }
+      ],
+      "layerId": "islem-sinirlar",
+      "attrs": {
+       "Parsel": "6",
+       "Ada": "103",
+       "Parça": "1",
+       "Halka": "0"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 8
+    }
+   }
+  },
+  {
+   "id": "areas-skip",
+   "title": "Çizgileri alana çevir: kapalı çizgi alan olur, açıklar atlanır",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.linesToPolygons"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "open": "skip"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 çizgiden 1 alan yazıldı.",
+    "undo": "Çizgileri alana çevir",
+    "layers": [
+     {
+      "id": "islem-alanlar",
+      "name": "Alanlar",
+      "style": {
+       "color": "#8E4EC6",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#8E4EC626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420090
+       },
+       {
+        "x": 487060,
+        "y": 4420090
+       },
+       {
+        "x": 487060,
+        "y": 4420100
+       },
+       {
+        "x": 487040,
+        "y": 4420100
+       }
+      ],
+      "layerId": "islem-alanlar",
+      "attrs": {
+       "Ad": "Kapalı"
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "3 açık çizgi atlandı."
+     },
+     {
+      "level": "warn",
+      "text": "1 çok parçalı çizgi alınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "areas-close",
+   "title": "Açık çizgileri kapat: düz kenarla kapanır, yay ve kot kalır; iki köşeli ve çok parçalı alan vermez",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.linesToPolygons"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "open": "close"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 çizgiden 3 alan yazıldı.",
+    "undo": "Çizgileri alana çevir",
+    "layers": [
+     {
+      "id": "islem-alanlar",
+      "name": "Alanlar",
+      "style": {
+       "color": "#8E4EC6",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#8E4EC626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420060
+       },
+       {
+        "x": 487030,
+        "y": 4420060
+       },
+       {
+        "x": 487030,
+        "y": 4420080
+       }
+      ],
+      "zs": [
+       100,
+       101.5,
+       103
+      ],
+      "layerId": "islem-alanlar",
+      "attrs": {
+       "Ad": "Atatürk Cd."
+      }
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420060
+       },
+       {
+        "x": 487060,
+        "y": 4420060
+       },
+       {
+        "x": 487080,
+        "y": 4420080
+       }
+      ],
+      "bulges": [
+       0,
+       0.41421356237309503,
+       0
+      ],
+      "layerId": "islem-alanlar",
+      "attrs": {
+       "Ad": "Okul Sk."
+      }
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420090
+       },
+       {
+        "x": 487060,
+        "y": 4420090
+       },
+       {
+        "x": 487060,
+        "y": 4420100
+       },
+       {
+        "x": 487040,
+        "y": 4420100
+       }
+      ],
+      "layerId": "islem-alanlar",
+      "attrs": {
+       "Ad": "Kapalı"
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 çizginin alanı yok; yazılmadı."
+     },
+     {
+      "level": "warn",
+      "text": "1 çok parçalı çizgi alınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 3
+    }
+   }
+  },
+  {
+   "id": "densify-interval",
+   "title": "5 m aralıkla köşe ekle: kare, yaylı alan, kotlu çizgi, yaylı çizgi, kotlu doğru",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.densify"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "method": "interval",
+    "interval": 5,
+    "count": 1
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 nesneye 46 köşe eklendi.",
+    "undo": "Köşe ekle",
+    "layers": [
+     {
+      "id": "islem-siklastirilan",
+      "name": "Sıklaştırılan",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487005.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487015.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487015.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487005.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420005.0
+       }
+      ],
+      "layerId": "islem-siklastirilan",
+      "attrs": {
+       "Parsel": "1",
+       "Ada": "101"
+      }
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487105.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487110.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487115.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487116.60141530295,
+        "y": 4420023.114674559
+       },
+       {
+        "x": 487112.3049715591,
+        "y": 4420024.785646345
+       },
+       {
+        "x": 487107.6950284409,
+        "y": 4420024.785646345
+       },
+       {
+        "x": 487103.39858469705,
+        "y": 4420023.114674559
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420005.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.09299622559815664,
+       0.09299622559815664,
+       0.09299622559815664,
+       0.09299622559815664,
+       0.09299622559815664,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "layerId": "islem-siklastirilan",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487005.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487015.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487025.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487030.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487030.0,
+        "y": 4420065.0
+       },
+       {
+        "x": 487030.0,
+        "y": 4420070.0
+       },
+       {
+        "x": 487030.0,
+        "y": 4420075.0
+       },
+       {
+        "x": 487030.0,
+        "y": 4420080.0
+       }
+      ],
+      "zs": [
+       100.0,
+       100.25,
+       100.5,
+       100.75,
+       101.0,
+       101.25,
+       101.5,
+       101.875,
+       102.25,
+       102.625,
+       103.0
+      ],
+      "layerId": "islem-siklastirilan",
+      "attrs": {
+       "Ad": "Atatürk Cd."
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487045.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487055.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487064.4504186791,
+        "y": 4420060.501441756
+       },
+       {
+        "x": 487068.67767478235,
+        "y": 4420061.980622642
+       },
+       {
+        "x": 487072.4697960372,
+        "y": 4420064.363370351
+       },
+       {
+        "x": 487075.6366296494,
+        "y": 4420067.530203963
+       },
+       {
+        "x": 487078.019377358,
+        "y": 4420071.322325218
+       },
+       {
+        "x": 487079.4985582436,
+        "y": 4420075.549581321
+       },
+       {
+        "x": 487080.0,
+        "y": 4420080.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.05615879541074949,
+       0.05615879541074949,
+       0.05615879541074949,
+       0.05615879541074949,
+       0.05615879541074949,
+       0.05615879541074949,
+       0.05615879541074949,
+       0.0
+      ],
+      "layerId": "islem-siklastirilan",
+      "attrs": {
+       "Ad": "Okul Sk."
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 487090.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487094.0,
+        "y": 4420062.0
+       },
+       {
+        "x": 487098.0,
+        "y": 4420064.0
+       },
+       {
+        "x": 487102.0,
+        "y": 4420066.0
+       },
+       {
+        "x": 487106.0,
+        "y": 4420068.0
+       },
+       {
+        "x": 487110.0,
+        "y": 4420070.0
+       }
+      ],
+      "zs": [
+       5.0,
+       5.4,
+       5.8,
+       6.2,
+       6.6,
+       7.0
+      ],
+      "layerId": "islem-siklastirilan",
+      "attrs": {
+       "Ad": "Hat"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 46
+    }
+   },
+   "selection": [
+    1,
+    4,
+    11,
+    12,
+    13
+   ]
+  },
+  {
+   "id": "densify-count",
+   "title": "Kenar başına bir köşe: delikli ve kotlu alan, iki parçalı alan",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.densify"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "method": "count",
+    "interval": 1,
+    "count": 1
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesneye 16 köşe eklendi.",
+    "undo": "Köşe ekle",
+    "layers": [
+     {
+      "id": "islem-siklastirilan",
+      "name": "Sıklaştırılan",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487075.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487090.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487090.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487090.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487075.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420015.0
+       }
+      ],
+      "zs": [
+       10.0,
+       10.5,
+       11.0,
+       11.5,
+       12.0,
+       12.5,
+       13.0,
+       11.5
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487070.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487075.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420015.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487075.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487070.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487070.0,
+          "y": 4420015.0
+         }
+        ]
+       }
+      ],
+      "layerId": "islem-siklastirilan",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102"
+      }
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487135.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487140.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487140.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487140.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487135.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420005.0
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487160.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420006.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487160.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420006.0
+         }
+        ]
+       }
+      ],
+      "layerId": "islem-siklastirilan",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 16
+    }
+   },
+   "selection": [
+    3,
+    5
+   ]
+  }
+ ]
+}

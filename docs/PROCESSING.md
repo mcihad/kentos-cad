@@ -366,6 +366,16 @@ türünün işaretidir (bkz. §10).
 | `layers.extract` | Seçilenleri çıkar | Seçili (ya da kapsamdaki) nesneler bir katmana kopyalanır ya da taşınır; yeni katman ilk nesnenin katmanının görünüşü ve alanlarıyla (§4). |
 | `layers.deleteDuplicates` | Yinelenenleri sil | Alanların (ya da değerli bütün özniteliklerin) değerleri ve isteğe bağlı kesin geometrisi aynı olanlardan ilki kalır, öbürleri silinir; tablo Değer, Silinen (§5). |
 | `layers.orderBy` | İfadeye göre sırala | Nesnelerin kopyaları bir ifadenin değerine göre sıralı yeni katmana: türler evet/hayır, sayı, metin; metinler doğal sırayla; Artan ya da Azalan; boşlar başta ya da sonda; eşitler girdinin sırasıyla; isteğe bağlı Sıra alanı (çekirdeğin `ops::order`'ı, §6). |
+| `convert.toPoints` | Nesneden nokta | Her nesnenin ağırlık merkezi (alanın; yolun uzunlukla ağırlıklı, yaylar kapalı biçimde) ya da iç noktası (GEOS'un tarama doğrusu kuralı yaylarıyla; yolun yarısı) nokta olarak, öznitelikleriyle; Her parça için (Parça); kotlu girdiler söylenir (ADR 0218 §2). |
+| `convert.vertices` | Köşeleri noktaya çevir | Bütün köşeler, Başlangıç, Bitiş, İki uç ya da Orta; noktalar Köşe, Parça, Halka, Uzaklık ve köşenin kotuyla (§3). |
+| `convert.pointsToPath` | Noktalardan çizgi | Noktalar bir ifadenin sırasıyla (`ops::order`), grup alanının her değeri bir çizgi, Kapat'ta alan; aynı yerdeki nokta atlanır; Nokta sayısı, Başlangıç, Bitiş (§4). |
+| `convert.bearingLine` | Semt ve uzunluktan çizgi | Dosyanın ya da nesnelerin her satırından (doğu, kuzey, semt, uzunluk; grad ya da derece) çizgi; satırlar çekirdekte okunur, atlananlar Satır ve Neden tablosunda (§5). |
+| `convert.xyLine` | XY'den çizgi | Her satırın başlangıç ve bitiş koordinatlarından çizgi (§6). |
+| `convert.tableEllipse` | Tablodan elips | Her satırın merkezi, iki yarı ekseni ve büyük eksenin semtinden tam elips (hata elipsleri) (§7). |
+| `convert.substring` | Çizginin parçası | Her çizginin başından iki uzaklık (ifade) arasındaki kesin parçası, kotlar boyunca (§8). |
+| `convert.polygonsToLines` | Alanları çizgiye çevir | Alanların halkaları kapalı çoklu çizgi olarak, Parça ve Halka ile (§9). |
+| `convert.linesToPolygons` | Çizgileri alana çevir | Kapalı çoklu çizgiler alan olur; açıklar atlanır ya da düz kenarla kapanır (§10). |
+| `convert.densify` | Köşe ekle | Her kenar aralıkla ya da sayıyla eşit parçalara bölünür, yaylar yay kalır; en çok 10000000 köşe (§11). |
 
 ## 12. Masaüstü
 

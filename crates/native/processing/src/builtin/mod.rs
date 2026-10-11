@@ -1,6 +1,7 @@
 //! The tools and models that ship with KentOS (the web's `builtin/`).
 
 pub mod calculate_field;
+pub mod convert;
 pub mod distance;
 pub mod edge_lengths;
 pub mod geometry;
@@ -58,6 +59,17 @@ pub fn tools() -> Vec<Tool> {
         layers::extract::tool(),
         layers::dedupe::tool(),
         layers::order_by::tool(),
+        // Geometri dönüştürme (docs/adr/0218): both platforms.
+        convert::points::to_points(),
+        convert::points::vertices(),
+        convert::points::points_to_path(),
+        convert::tables::bearing_line(),
+        convert::tables::xy_line(),
+        convert::tables::table_ellipse(),
+        convert::paths::substring_tool(),
+        convert::paths::polygons_to_lines(),
+        convert::paths::lines_to_polygons(),
+        convert::paths::densify_tool(),
         geometry::buffer::tool(),
         geometry::clip::tool(),
         geometry::dissolve::tool(),
