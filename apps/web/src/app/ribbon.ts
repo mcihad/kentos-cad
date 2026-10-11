@@ -182,7 +182,7 @@ const HOME_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = {
 };
 const VIEW_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = { Görünüş: { command: 'tools.options', args: 'appearance', title: 'Uygulama ayarları: görünüm' } };
 const AIDS_LAUNCHER: Readonly<Record<string, RibbonLauncher>> = { 'Çizim yardımcıları': { command: 'tools.options', args: 'snap', title: 'Uygulama ayarları: kenetleme' } };
-const IMPORTS = ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', 'file.import.kml', 'file.import.ncn', 'file.import.gnss'];
+const IMPORTS = ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', 'file.import.kml', 'file.import.ncn', 'file.import.gnss', 'file.import.photos'];
 const EXPORTS = ['file.export.dxf', 'file.export.pdf', 'file.export.geojson', 'file.export.kml', 'file.export.gpx', 'file.export.ncn'];
 const SHEET_LAYOUTS = ['sheet.new', 'sheet.fromTemplate'];
 const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 'selection')!;
@@ -345,6 +345,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       // Harita altlığı (docs/adr/0208 §14): a ready basemap or a map service under the drawing, AutoCAD Map's Connect.
       { menu: 'map', sections: ['Altlık'] },
       { pick: 'İçe aktar', icon: 'import', commands: IMPORTS },
+      // Nesne ekleri (docs/adr/0225 §2, §4, §5): an object's photos and documents, Bilgi and the layer's card and actions.
+      { pick: 'Ekler', icon: 'attachment', commands: ['attachment.add', 'attachment.addLink', 'tool.identify', 'layer.info'] },
       // Çizimler arası alışveriş (docs/adr/0193): AutoCAD's DesignCenter and WBLOCK.
       { pick: 'Alışveriş', icon: 'takeFrom', commands: ['file.takeFrom', 'file.saveSelection'] },
       { pick: 'Metin', icon: 'textFile', commands: ['tool.placeTextFile'] },
@@ -477,6 +479,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       },
       // Öznitelik tablosu, a layer's fields and the data sources (docs/adr/0199 §3, §4, §7).
       { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
+      // Nesne ekleri (docs/adr/0225 §2–§5): ArcGIS Pro's attachments, GeoTagged Photos To Points and pop-ups.
+      { pick: 'Ekler', icon: 'attachment', commands: ['attachment.add', 'attachment.addLink', 'file.import.photos', 'layer.info'] },
       // Veride ara (docs/adr/0178): a value in the layers' data, and a place by its coordinates.
       { pick: 'Ara', icon: 'dataSearch', commands: ['data.search', 'data.unmark'] },
       // Katman süzgeci (docs/adr/0211 §4): the CAD ribbon has none (command search and the layer tree do).

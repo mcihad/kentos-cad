@@ -97,6 +97,14 @@ fn object(v: &Value) -> PurgeObject {
         symbol: v["symbol"].as_str().map(str::to_owned),
         block: v["block"].as_str().map(str::to_owned),
         asset: v["asset"].as_str().map(str::to_owned),
+        attachments: v["attachments"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .filter_map(|x| x.as_str().map(str::to_owned))
+                    .collect()
+            })
+            .unwrap_or_default(),
     }
 }
 

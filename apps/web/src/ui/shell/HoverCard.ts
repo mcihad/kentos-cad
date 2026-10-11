@@ -10,6 +10,7 @@ import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
 import { besidePointer, type Size } from '../widgets/placeBeside';
+import { attachmentViews } from '../../app/attachments';
 
 const DELAY_MS = 500;
 
@@ -102,6 +103,11 @@ export class HoverCard extends Component {
           : null,
       ),
       ...(rows.length ? [h('dl', { class: 'hover-card__rows' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', { class: 'num' }, v)]))] : []),
+      // Its first photo the browser can show (docs/adr/0225 §2).
+      ...attachmentViews(this.ctx, e)
+        .filter((v) => v.kind === 'photo' && v.src)
+        .slice(0, 1)
+        .map((v) => h('img', { class: 'hover-card__photo', src: v.src, alt: v.attachment.name })),
     ];
   }
 }
@@ -146,5 +152,7 @@ export function cardRows(e: Entity, format: Formatter): [string, string][] {
     const z = e.z;
     if (z !== undefined && (e.parts ?? []).every((q) => q.z === z)) rows.push(['Kot', format.length(z)]);
   }
+  // Its photos and documents, last (docs/adr/0225 §2).
+  if (e.attachments?.length) rows.push(['Ekler', `${e.attachments.length} ek`]);
   return rows;
 }

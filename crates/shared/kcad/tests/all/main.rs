@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod annotation;
+mod attachments;
 mod blocks;
 mod columns;
 mod dimensions;

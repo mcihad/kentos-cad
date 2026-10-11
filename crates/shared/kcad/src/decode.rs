@@ -9,6 +9,7 @@
 mod blocks;
 mod crs;
 mod filter;
+mod info;
 mod labels;
 mod networks;
 mod objects;
@@ -294,6 +295,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     scenario_tree(r, &layers)?;
     filter_tree(r, &layers)?;
     label_tree(r, &layers)?;
+    info_tree(r, &layers)?;
     Ok(DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -329,6 +331,18 @@ fn scenario_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadErr
 /// a filter on a layer that holds objects.
 fn filter_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
     let Some(problem) = kentos_contracts::filters_problem(layers) else {
+        return Ok(());
+    };
+    r.push(Seg::Name("layers"));
+    let e = r.fail(Code::BadValue, &problem);
+    r.pop();
+    Err(e)
+}
+
+/// Schema 40's tree rule (docs/adr/0225 §4, §5), as `infos_problem` says
+/// it: actions and a card on a layer that holds objects.
+fn info_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
+    let Some(problem) = kentos_contracts::infos_problem(layers) else {
         return Ok(());
     };
     r.push(Seg::Name("layers"));
@@ -807,10 +821,13 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut snap, mut fields, mut service, mut feed) = (None, None, None, None);
     let (mut time, mut scenario, mut replaces) = (None, None, None);
     let mut filter = None;
+    let (mut actions, mut card) = (None, None);
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
+            "card" if has.attachments => card = Some(info::info_card(r)?),
+            "actions" if has.attachments => actions = Some(info::layer_actions(r)?),
             "filter" if has.filters => filter = Some(filter::layer_filter(r)?),
             "time" if has.temporal => time = Some(temporal::layer_time(r)?),
             "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
@@ -923,6 +940,24 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 ));
             }
             (filter, _) => filter,
+        },
+        actions: match (actions, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun eylemi olmaz; eylemler yalnız katmanındır",
+                ));
+            }
+            (actions, _) => actions.unwrap_or_default(),
+        },
+        card: match (card, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun bilgi kartı olmaz; kart yalnız katmanındır",
+                ));
+            }
+            (card, _) => card,
         },
     })
 }

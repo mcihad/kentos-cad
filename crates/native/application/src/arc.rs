@@ -103,6 +103,7 @@ fn arc(input: ArcCreate, id: u32) -> Entity {
             symbol: input.symbol,
             line_weight: input.line_weight,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         c: input.c,
         r: input.r,

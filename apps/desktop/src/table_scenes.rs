@@ -99,6 +99,7 @@ fn place(
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
     );
     let _ = doc.model.add_many(vec![entity], "Tablo");

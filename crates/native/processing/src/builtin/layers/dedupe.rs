@@ -124,6 +124,7 @@ fn shape_of(e: &Entity) -> Entity {
         symbol: None,
         line_weight: None,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     };
     shape
 }

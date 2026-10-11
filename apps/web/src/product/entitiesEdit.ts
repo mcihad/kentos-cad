@@ -243,8 +243,9 @@ function reshaped(e: Entity, g: EntityGeometry): NewEntity {
 /**
  * What a replacement or a new piece takes from its object: the layer, the
  * colour and its own line weight (a trimmed 0.70 mm line stays 0.70 mm,
- * docs/adr/0139), the attributes and the label with `keepData`; not the
- * symbol (the tools' `inherit`).
+ * docs/adr/0139), the attributes, the label and the attachments
+ * (docs/adr/0225 §1) with `keepData`; not the symbol (the tools' `inherit`)
+ * nor the labels' pins (they are the object's place's).
  */
 function inherited(e: Entity, g: EntityGeometry, keepData: boolean): NewEntity {
   return {
@@ -254,6 +255,7 @@ function inherited(e: Entity, g: EntityGeometry, keepData: boolean): NewEntity {
     lineWeight: e.lineWeight,
     attrs: keepData ? { ...e.attrs } : {},
     label: keepData ? e.label : undefined,
+    ...(keepData && e.attachments?.length && { attachments: structuredClone(e.attachments) }),
   } as unknown as NewEntity;
 }
 

@@ -252,6 +252,8 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         time: None,
         scenario: None,
         replaces: None,
+        actions: Vec::new(),
+        card: None,
         filter: None,
     }];
     doc.entities = vec![Entity::Line(LineEntity {
@@ -266,6 +268,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         a: kentos_contracts::Vec2 { x, y: N - 50.0 },
         b: kentos_contracts::Vec2 { x, y: N + 50.0 },

@@ -3,7 +3,7 @@
 //! (docs/adr/0138); GeoJSON in and out and Shapefile in, from its files or a
 //! zip archive; GNSS (GPX, NMEA) in, moved from WGS 84 into the project's
 //! system (docs/adr/0169 §6); KML and KMZ in and out and GPX out
-//! (docs/adr/0222); through the shared
+//! (docs/adr/0222); geotagged photos in (docs/adr/0225 §3); through the shared
 //! readers and writers (`crates/shared/formats`, the ones the web runs in its
 //! formats worker; CLAUDE.md §9.7, docs/adr/0009). Files are read and
 //! written off the UI thread. The source coordinate system is always asked,
@@ -36,6 +36,7 @@ mod gnss_import;
 mod gnss_tests;
 #[cfg(test)]
 mod kml_tests;
+pub(crate) mod photo_import;
 #[cfg(test)]
 mod tests;
 mod wgs84_export;
@@ -99,6 +100,8 @@ pub enum Window {
     FieldSend(Box<field_send::State>),
     /// KML/KMZ or GPX out (docs/adr/0222 §4, §5).
     Wgs84Export(wgs84_export::State),
+    /// Konumlu fotoğraflar (docs/adr/0225 §3); boxed: the photos' bytes and the plan.
+    PhotoImport(Box<photo_import::State>),
 }
 
 #[derive(Debug, Clone)]
@@ -117,6 +120,7 @@ pub enum Event {
     GnssImport(gnss_import::Event),
     FieldSend(field_send::Event),
     Wgs84Export(wgs84_export::Event),
+    PhotoImport(photo_import::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -124,7 +128,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 14] = [
+pub const COMMANDS: [&str; 15] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -139,6 +143,7 @@ pub const COMMANDS: [&str; 14] = [
     "file.import.kml",
     "file.export.kml",
     "file.export.gpx",
+    "file.import.photos",
 ];
 
 fn message(event: Event) -> Message {
@@ -170,6 +175,7 @@ impl App {
             "file.import.shp" => self.pick(Kind::Shapefile),
             "file.import.gnss" => self.pick(Kind::Gnss),
             "file.import.kml" => self.pick(Kind::Kml),
+            "file.import.photos" => self.pick_photos(),
             "field.send" => self.field_send_selection(),
             "file.export.kml" => {
                 let state = wgs84_export::State::new(self, wgs84_export::Format::Kml);
@@ -344,6 +350,7 @@ impl App {
             Event::GnssImport(e) => self.gnss_import_event(e),
             Event::FieldSend(e) => self.field_send_event(e),
             Event::Wgs84Export(e) => self.wgs84_export_event(e),
+            Event::PhotoImport(e) => self.photo_import_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -379,6 +386,7 @@ impl App {
             Some(Window::GnssImport(s)) => self.gnss_import_view(s),
             Some(Window::FieldSend(s)) => self.field_send_view(s),
             Some(Window::Wgs84Export(s)) => self.wgs84_export_view(s),
+            Some(Window::PhotoImport(s)) => self.photo_import_view(s),
             None => iced::widget::text("").into(),
         }
     }

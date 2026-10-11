@@ -254,6 +254,18 @@ pub const INVALID_FILTER: &str = "invalid_filter";
 /// A filter's condition that does not compile, or reads `$sıra` or `$ölçek`.
 pub const INVALID_EXPRESSION: &str = "invalid_expression";
 
+// ── cad.layers.info and cad.entities.set's attachments (docs/adr/0225) ──
+
+/// A layer's actions against their rules (`actions_problem`).
+pub const INVALID_ACTIONS: &str = "invalid_actions";
+/// A layer's information card against its rules (`InfoCard::problem`).
+pub const INVALID_CARD: &str = "invalid_card";
+/// A template whose braces do not close, are empty, or whose expression does
+/// not compile, reads `$sıra` or `$ölçek`, or looks at other layers.
+pub const INVALID_TEMPLATE: &str = "invalid_template";
+/// An object's attachments against their rules (`attachments_problem`).
+pub const INVALID_ATTACHMENTS: &str = "invalid_attachments";
+
 // ── cad.layers.labels and cad.labels.pin (docs/adr/0212 §5) ─────────────
 
 /// A label style or a layer's labelling against its rules (`style_problem`, `layer_labels_problem`).

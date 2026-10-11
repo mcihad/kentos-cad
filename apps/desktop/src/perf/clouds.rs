@@ -272,6 +272,7 @@ fn drawing(cloud: PointCloudFields) -> DocumentSnapshotV2 {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         cloud,
     }));

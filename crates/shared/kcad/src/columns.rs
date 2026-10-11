@@ -201,6 +201,15 @@ const PIN_CLASS: u32 = 1;
 const PIN_AT: u32 = 2;
 const PIN_ROTATION: u32 = 4;
 const PIN_HIDDEN: u32 = 8;
+/// An object's attachments (docs/adr/0225 §1): after the pins, how many, then each one's bits (its
+/// sources `ATT_ASSET`, `ATT_FILE`, `ATT_URL` and `ATT_NOTE`), its name, then each source it has in
+/// that order and its note. All are carried as they are: the encoder refuses what the contract's
+/// rules refuse (no source, or two).
+const ATTACHMENTS: u32 = 32;
+const ATT_ASSET: u32 = 1;
+const ATT_FILE: u32 = 2;
+const ATT_URL: u32 = 4;
+const ATT_NOTE: u32 = 8;
 /// A kind's optional fields, in the order the module's table names them.
 const OPT: [u32; 19] = [
     1 << 8,
@@ -453,6 +462,7 @@ impl Packer {
             symbol,
             line_weight,
             label_pins,
+            attachments,
         } = entity.base();
         let flags_at = self.out.ints.len() + 1;
         self.out.ints.extend([layer, 0, count(attrs.len())]);
@@ -490,6 +500,29 @@ impl Packer {
                 }
                 if let Some(r) = p.rotation {
                     self.float(r);
+                }
+            }
+        }
+        if !attachments.is_empty() {
+            flags |= ATTACHMENTS;
+            self.int(count(attachments.len()));
+            for a in attachments {
+                let fields = [
+                    (ATT_ASSET, &a.asset),
+                    (ATT_FILE, &a.file),
+                    (ATT_URL, &a.url),
+                    (ATT_NOTE, &a.note),
+                ];
+                let bits = fields
+                    .iter()
+                    .filter(|(_, v)| v.is_some())
+                    .fold(0, |m, (b, _)| m | b);
+                self.int(bits);
+                self.text(&a.name);
+                for (_, v) in fields {
+                    if let Some(v) = v {
+                        self.text(v);
+                    }
                 }
             }
         }
@@ -1626,6 +1659,36 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
             });
         }
     }
+    let mut attachments = Vec::new();
+    if flags & ATTACHMENTS != 0 {
+        let n = c.int()?;
+        for _ in 0..n {
+            let bits = c.int()?;
+            if bits & !(ATT_ASSET | ATT_FILE | ATT_URL | ATT_NOTE) != 0 {
+                return Err(broken(&format!(
+                    "{}. nesnenin ekinin bayrakları {bits:#x}",
+                    i + 1
+                )));
+            }
+            let name = c.text(|| place("attachments/name"))?;
+            let mut field = |bit: u32, key: &str| {
+                (bits & bit != 0)
+                    .then(|| c.text(|| place(&format!("attachments/{key}"))))
+                    .transpose()
+            };
+            let asset = field(ATT_ASSET, "asset")?;
+            let file = field(ATT_FILE, "file")?;
+            let url = field(ATT_URL, "url")?;
+            let note = field(ATT_NOTE, "note")?;
+            attachments.push(kentos_contracts::Attachment {
+                name,
+                asset,
+                file,
+                url,
+                note,
+            });
+        }
+    }
     let mut attrs = BTreeMap::new();
     for _ in 0..attr_count {
         let key = c.text(|| place("attrs"))?;
@@ -1641,8 +1704,9 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
         symbol,
         line_weight,
         label_pins,
+        attachments,
     };
-    let known = COLOR | LABEL | SYMBOL | WEIGHT | PINS | allowed(k);
+    let known = COLOR | LABEL | SYMBOL | WEIGHT | PINS | ATTACHMENTS | allowed(k);
     if flags & !known != 0 {
         return Err(broken(&format!(
             "{}. nesnenin bayrakları {flags:#x}",
@@ -2783,6 +2847,7 @@ mod tests {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         }
     }
 

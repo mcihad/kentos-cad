@@ -841,6 +841,34 @@
       ]
     },
     {
+      "name": "Ekler verisiyle gider: update ekleri ve etiket iğnelerini korur; replace ve add keepData ile ekleri taşır, keepData'sız almaz; etiket iğneleri parçalara geçmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {"Ad": "Direk hattı"}, "label": "H1", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "attachments": [{"name": "Direk", "file": "foto/direk-12.jpg"}, {"name": "Kurum sayfası", "url": "https://kurum.example/hat/1"}], "labelPins": [{"hidden": true}]}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "extend", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487030, "y": 4420000}}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1], "entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {"Ad": "Direk hattı"}, "label": "H1", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487030, "y": 4420000}, "attachments": [{"name": "Direk", "file": "foto/direk-12.jpg"}, {"name": "Kurum sayfası", "url": "https://kurum.example/hat/1"}], "labelPins": [{"hidden": true}]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Uzat", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {"Ad": "Direk hattı"}, "label": "H1", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "attachments": [{"name": "Direk", "file": "foto/direk-12.jpg"}, {"name": "Kurum sayfası", "url": "https://kurum.example/hat/1"}], "labelPins": [{"hidden": true}]}}}},
+        {"op": "execute", "input": {"operation": "split", "changes": [{"kind": "replace", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487010, "y": 4420000}}, "keepData": true}, {"kind": "add", "from": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487010, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "keepData": true}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": ["$uidOf:2"], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2], "entities": {"1": {"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487010, "y": 4420000}, "id": 1, "layerId": "yapi", "attrs": {"Ad": "Direk hattı"}, "label": "H1", "attachments": [{"name": "Direk", "file": "foto/direk-12.jpg"}, {"name": "Kurum sayfası", "url": "https://kurum.example/hat/1"}]}, "2": {"kind": "line", "a": {"x": 487010, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "id": 2, "layerId": "yapi", "attrs": {"Ad": "Direk hattı"}, "label": "H1", "attachments": [{"name": "Direk", "file": "foto/direk-12.jpg"}, {"name": "Kurum sayfası", "url": "https://kurum.example/hat/1"}]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçala", "expect": {"ids": [1], "entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {"Ad": "Direk hattı"}, "label": "H1", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "attachments": [{"name": "Direk", "file": "foto/direk-12.jpg"}, {"name": "Kurum sayfası", "url": "https://kurum.example/hat/1"}], "labelPins": [{"hidden": true}]}}}},
+        {"op": "execute", "input": {"operation": "trim", "changes": [{"kind": "replace", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487010, "y": 4420000}}}, {"kind": "add", "from": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487010, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": ["$uidOf:3"], "removed": [], "revision": "$current"}, "warnings": []}, "note": "Geri alınan parçanın yuvası yeniden verilmez: yeni parça 3'te.", "expect": {"ids": [1, 3], "entities": {"1": {"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487010, "y": 4420000}, "id": 1, "layerId": "yapi", "attrs": {}}, "3": {"kind": "line", "a": {"x": 487010, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
       "name": "Yönü çevir ve Sadeleştir: nesnenin yeni geometrisi, öbür alanları kalır; her biri tek adım, adı işlemin",
       "steps": [
         {"op": "execute", "input": {"operation": "reverse", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487010, "y": 4420020}, {"x": 487010, "y": 4420010}, {"x": 487000, "y": 4420010}]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "attrs": {"Ad": "Yol"}, "label": "Y1", "kind": "polyline", "pts": [{"x": 487010, "y": 4420020}, {"x": 487010, "y": 4420010}, {"x": 487000, "y": 4420010}]}}, "revision": "changed"}},

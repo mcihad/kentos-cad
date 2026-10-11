@@ -237,6 +237,7 @@ impl App {
                     operation: PropertiesOperation::Attributes,
                     expected_revision: None,
                     unlink: false,
+                    attachments: None,
                 };
                 if let Some(e) = refusal(set::execute(&mut ExecutionContext::new(model), input)) {
                     return Some(e.message);

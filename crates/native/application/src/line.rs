@@ -101,6 +101,7 @@ fn line(input: LineCreate, id: u32) -> Entity {
             symbol: input.symbol,
             line_weight: input.line_weight,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         a: input.a,
         b: input.b,

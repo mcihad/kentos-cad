@@ -1230,3 +1230,32 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
+
+/* An attachment row's picture in Öznitelikler (docs/adr/0225 §2). */
+.props__thumb {
+  width: 40px;
+  height: 30px;
+  flex: none;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--c-line);
+  cursor: zoom-in;
+  background: var(--c-field);
+}
+
+.props__thumbbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+/* The cell takes the rest of the row, its drop-down's arrow at the end, a note under it or not. */
+.props__thumbbox > :last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.props__thumb-icon {
+  flex: none;
+}

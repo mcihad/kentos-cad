@@ -323,6 +323,28 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
         };
         check("time", same, format!("{:?}", got.time), format!("{want:?}"));
     }
+    // Bilgi's card (docs/adr/0225 §5): only the fields written, each exactly.
+    if let Some(want) = &expect.info_card {
+        let same = match (&got.info_card, want) {
+            (None, None) => true,
+            (Some(h), Some(w)) => {
+                w.id.is_none_or(|id| h.id == id)
+                    && w.title.as_ref().is_none_or(|t| h.title == *t)
+                    && w.rows.as_ref().is_none_or(|r| h.rows == *r)
+                    && w.text.as_ref().is_none_or(|t| h.text == *t)
+                    && w.actions.as_ref().is_none_or(|a| h.actions == *a)
+                    && w.targets.as_ref().is_none_or(|t| h.targets == *t)
+                    && w.attachments.is_none_or(|n| h.attachments == n)
+            }
+            _ => false,
+        };
+        check(
+            "infoCard",
+            same,
+            format!("{:?}", got.info_card),
+            format!("{want:?}"),
+        );
+    }
     // The active layer and the current colour and weight (docs/adr/0176 §3), exact.
     if let Some(want) = &expect.active_layer {
         check(

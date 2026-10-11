@@ -44,10 +44,12 @@ mod dimension;
 pub mod edit;
 pub mod elevation;
 pub mod geometry;
+pub mod info_templates;
 pub mod label_texts;
 pub mod labels_pin;
 pub mod layer_filter;
 pub mod layers_filter;
+pub mod layers_info;
 pub mod layers_labels;
 pub mod layers_renderer;
 pub mod layers_service;
@@ -129,6 +131,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LAYERS_FILTER,
         kentos_contracts::CAD_LAYERS_FILTER_VERSION,
+    ),
+    // Bilgi kartı ve eylemler ([`layers_info`], docs/adr/0225 §4, §5).
+    (
+        kentos_contracts::CAD_LAYERS_INFO,
+        kentos_contracts::CAD_LAYERS_INFO_VERSION,
     ),
     // Etiketler and the label tools ([`layers_labels`], [`labels_pin`], docs/adr/0212 §5).
     (

@@ -217,6 +217,7 @@ fn run_events(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedbac
                     symbol: None,
                     line_weight: None,
                     label_pins: Vec::new(),
+                    attachments: Vec::new(),
                 },
                 p: Point { x: p.x, y: p.y },
                 z: None,

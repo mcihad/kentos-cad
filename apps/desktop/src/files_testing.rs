@@ -62,6 +62,7 @@ pub fn drawing(extra: usize) -> Document {
                 symbol: None,
                 line_weight: None,
                 label_pins: Vec::new(),
+                attachments: Vec::new(),
             },
             p: Vec2 {
                 x: 486_500.0 + i as f64,

@@ -335,6 +335,7 @@ pub(crate) fn base(
         symbol: None,
         line_weight,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     }
 }
 

@@ -78,6 +78,7 @@ fn base(layer: &str) -> EntityBase {
         symbol: None,
         line_weight: None,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     }
 }
 

@@ -29,6 +29,8 @@ interface Formats {
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
   readFieldBook(bytes: Uint8Array, options: string): Uint8Array;
   readGnss(bytes: Uint8Array): Uint8Array;
+  readExif(bytes: Uint8Array): Uint8Array;
+  exifNeedsMore(bytes: Uint8Array): boolean;
   readTableFile(bytes: Uint8Array, processing?: boolean): Uint8Array;
   writeField(points: string, options: string): Uint8Array;
 }
@@ -55,6 +57,19 @@ describe.skipIf(!loader)('formats WASM module', () => {
     const w = await load();
     expect(w.formatsVersion()).toBe(FORMATS_VERSION);
     expect(Number(/pub const FORMATS_VERSION: u32 = (\d+);/.exec(formatsRs)?.[1])).toBe(FORMATS_VERSION);
+  });
+
+  it("reads every photo's EXIF as the reference says, floats to the bit (docs/adr/0225 §3)", async () => {
+    const w = await load();
+    const read = (name: string) => fs.readFileSync(new URL(`../../../../fixtures/exif/v1/${name}`, import.meta.url));
+    const cases = JSON.parse(new TextDecoder().decode(read('cases.json'))) as { cases: Record<string, unknown>[] };
+    expect(cases.cases.length).toBeGreaterThanOrEqual(14);
+    for (const { file, ...want } of cases.cases) {
+      const bytes = read(file as string);
+      expect(w.exifNeedsMore(bytes), String(file)).toBe(false);
+      expect(JSON.parse(new TextDecoder().decode(w.readExif(bytes))), String(file)).toEqual(want);
+    }
+    expect(w.exifNeedsMore(read('konum.jpg').slice(0, 40))).toBe(true);
   });
 
   it('reads a Netcad NCN list with the coordinates exactly as written', async () => {

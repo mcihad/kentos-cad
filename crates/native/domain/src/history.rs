@@ -62,6 +62,14 @@ pub struct Temporal {
     pub replaces: Option<String>,
 }
 
+/// A layer's actions and card (docs/adr/0225 §4, §5), as their undo step
+/// keeps them (the web's `LayerInfo`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LayerInfo {
+    pub actions: Vec<kentos_contracts::LayerAction>,
+    pub card: Option<kentos_contracts::InfoCard>,
+}
+
 /// A service layer as its undo step keeps it: its name too.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Served {
@@ -107,6 +115,12 @@ pub(crate) enum Op {
         layer: String,
         before: Option<Box<kentos_contracts::LayerFilter>>,
         after: Option<Box<kentos_contracts::LayerFilter>>,
+    },
+    /// A layer's actions and card (docs/adr/0225 §4, §5), before and after.
+    LayerInfo {
+        layer: String,
+        before: Box<LayerInfo>,
+        after: Box<LayerInfo>,
     },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
@@ -203,6 +217,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerFilter {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerInfo {
+                layer,
+                before,
+                after,
+            } => Op::LayerInfo {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -499,6 +522,7 @@ impl Document {
                 | Op::LayerService { .. }
                 | Op::LayerTemporal { .. }
                 | Op::LayerFilter { .. }
+                | Op::LayerInfo { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerActive { .. }
@@ -624,6 +648,10 @@ impl Document {
             }
             Op::LayerFilter { layer, after, .. } => {
                 self.layers.replace_filter(layer, after.as_deref());
+                return;
+            }
+            Op::LayerInfo { layer, after, .. } => {
+                self.layers.replace_info(layer, after);
                 return;
             }
             // A node still holding objects stays: taking it away would leave

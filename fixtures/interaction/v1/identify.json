@@ -1,0 +1,143 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "identify",
+  "title": "Bilgi: parselin kartı katmanının kartıyla (başlık şablonu, üç alan, alanı ve çevresi metinde, iki eylem, dört ek); yapının kartı kartsız katmanda türüyle ve özniteliksiz; fotoğraf noktasının kartı kendi katmanınınkiyle; boşluğa tıklamak kartı kapatır; Esc önce kartı kapatır, sonra araçtan çıkar; geri alma adımı yoktur",
+  "source": "docs/adr/0225 §5",
+  "covers": [
+    "GIS-29"
+  ],
+  "document": "attachments.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "clickTolerance": 0.2,
+  "steps": [
+    {
+      "run": "tool.identify",
+      "expect": {
+        "tool": "identify",
+        "prompt": "Bilgi: bilgisi gösterilecek nesneye tıklayın",
+        "infoCard": null
+      }
+    },
+    {
+      "click": [
+        -6,
+        2
+      ],
+      "note": "101/5: Parsel katmanının kartı; alan 20 × 16 m; eylemin adresinde ağırlık merkezinin WGS 84 yeri (PROJ: EPSG:5255 → 4326)",
+      "expect": {
+        "infoCard": {
+          "id": 1,
+          "title": "Parsel 101/5",
+          "rows": [
+            "Mahalle: Kızılay",
+            "Nitelik: Kargir ev ve bahçesi",
+            "Malik: Özel"
+          ],
+          "text": "Hesaplanan alan: 320 m²\nÇevre: 72 m",
+          "actions": [
+            "Haritada aç",
+            "Tapu belgesi"
+          ],
+          "targets": [
+            "https://www.openstreetmap.org/?mlat=39.91415118&mlon=32.84779075#map=19/39.91415118/32.84779075",
+            "belgeler/tapu-101-5.pdf"
+          ],
+          "attachments": 4
+        },
+        "tool": "identify",
+        "canUndo": false,
+        "dirty": false
+      }
+    },
+    {
+      "shot": "bilgi-karti",
+      "note": "Bilgi: 101/5'in kartı, cephe fotoğrafı, belgesi, adresi ve eylemleri"
+    },
+    {
+      "click": [
+        -14,
+        8
+      ],
+      "note": "Yapı: kartı olmayan katman; kart nesnenin türüyle, özniteliği ve eki yok",
+      "expect": {
+        "infoCard": {
+          "id": 5,
+          "title": "Kapalı alan",
+          "rows": [],
+          "text": null,
+          "actions": [],
+          "attachments": 0
+        }
+      }
+    },
+    {
+      "click": [
+        8,
+        17.5
+      ],
+      "note": "Fotoğraf noktası: Fotoğraflar katmanının kartı, fotoğrafı ek",
+      "expect": {
+        "infoCard": {
+          "id": 11,
+          "title": "IMG_0413",
+          "rows": [
+            "Tarih: 2024-05-17T10:35:41+03:00",
+            "Yön: 200.50",
+            "Kamera: Canon EOS R5"
+          ],
+          "text": null,
+          "actions": [],
+          "attachments": 1
+        }
+      }
+    },
+    {
+      "click": [
+        -28,
+        -18
+      ],
+      "note": "boşluk: kart kapanır, araç sürer",
+      "expect": {
+        "infoCard": null,
+        "tool": "identify"
+      }
+    },
+    {
+      "click": [
+        -6,
+        2
+      ],
+      "expect": {
+        "infoCard": {
+          "id": 1,
+          "title": "Parsel 101/5"
+        }
+      }
+    },
+    {
+      "key": "Esc",
+      "note": "Esc önce kartı kapatır",
+      "expect": {
+        "infoCard": null,
+        "tool": "identify"
+      }
+    },
+    {
+      "key": "Esc",
+      "note": "sonra araçtan çıkar",
+      "expect": {
+        "infoCard": null,
+        "tool": "select",
+        "canUndo": false,
+        "dirty": false
+      }
+    }
+  ]
+}

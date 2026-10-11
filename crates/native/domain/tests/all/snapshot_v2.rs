@@ -48,6 +48,7 @@ fn point(x: f64) -> Entity {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         p: Vec2 { x, y: 4_420_190.0 },
         z: None,

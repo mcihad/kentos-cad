@@ -421,6 +421,8 @@ fn make_layers(
             time: None,
             scenario: None,
             replaces: None,
+            actions: Vec::new(),
+            card: None,
             filter: None,
         };
         doc.add_layer(new, parent.as_deref(), false)
@@ -788,6 +790,7 @@ mod tests {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         }
     }
 

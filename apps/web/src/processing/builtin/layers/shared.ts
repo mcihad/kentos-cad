@@ -49,6 +49,7 @@ export function shapeKey(e: Entity): string {
     symbol: _symbol,
     lineWeight: _weight,
     labelPins: _pins,
+    attachments: _attachments,
     ...shape
   } = e as Entity & { uid?: string; labelPins?: unknown };
   return stable(shape);

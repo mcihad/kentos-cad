@@ -29,7 +29,7 @@ use std::collections::BTreeMap;
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EntitiesPropertiesSet, EntitiesSetProperties,
-    EntitiesSetPropertiesPlan, Entity, LayerNodeType, PropertiesOperation,
+    EntitiesSetPropertiesPlan, Entity, LayerNodeType, PropertiesOperation, attachments_problem,
 };
 use kentos_domain::{Document, Slot};
 
@@ -117,6 +117,8 @@ pub fn label(input: &EntitiesSetProperties) -> &'static str {
         PropertiesOperation::Unlink => "Bağı kopar",
         // An object template given to objects (docs/adr/0176 §6).
         PropertiesOperation::Template => "Şablonu uygula",
+        // Öznitelikler's Ekler (docs/adr/0225 §2).
+        PropertiesOperation::Attachments => "Ekler",
     }
 }
 
@@ -176,6 +178,9 @@ fn changed(
     if let Some(label) = &input.label {
         base.label.clone_from(label);
     }
+    if let Some(list) = &input.attachments {
+        base.attachments.clone_from(list);
+    }
     for (key, value) in attrs.into_iter().flatten() {
         match value {
             Some(value) => {
@@ -199,6 +204,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         && input.symbol.is_none()
         && attrs.is_none()
         && input.label.is_none()
+        && input.attachments.is_none()
         && !input.unlink
     {
         return Err(Stop::Failed(error(
@@ -217,8 +223,31 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         )));
     }
     checks::line_weight(input.line_weight.flatten(), "lineWeight")?;
+    if let Some(problem) = input.attachments.as_deref().and_then(attachments_problem) {
+        return Err(Stop::Failed(error(
+            codes::INVALID_ATTACHMENTS,
+            format!(
+                "Ekler: {problem}. Her eke bir ad ve tek bir kaynak (gömülü fotoğraf, dosya yolu ya da http/https adresi) verin."
+            ),
+            Some("attachments".into()),
+        )));
+    }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let found = checks::named(doc, &input.uids)?;
+    // An embedded photo is an image of the project's library (docs/adr/0225 §1).
+    for (k, a) in input.attachments.iter().flatten().enumerate() {
+        if let Some(asset) = &a.asset
+            && !crate::edit::has_picture(doc, asset)
+        {
+            return Err(Stop::Failed(error(
+                codes::UNKNOWN_ASSET,
+                format!(
+                    "“{asset}” kimlikli fotoğraf projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin."
+                ),
+                Some(format!("attachments[{k}].asset")),
+            )));
+        }
+    }
     let layers = doc.layers();
     let at_layer = || Some("layerId".to_owned());
     let target = match input.layer_id.as_deref() {

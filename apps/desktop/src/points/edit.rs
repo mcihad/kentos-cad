@@ -275,6 +275,7 @@ pub fn write_cell(
                 },
                 expected_revision: None,
                 unlink: false,
+                attachments: None,
             };
             refusal(set::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
         });

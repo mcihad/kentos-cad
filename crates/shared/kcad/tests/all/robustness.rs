@@ -249,6 +249,7 @@ fn base(rng: &mut Rng, layer: &str) -> EntityBase {
         symbol: rng.chance(10).then(|| rng.text()),
         line_weight: None,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     }
 }
 
@@ -340,6 +341,8 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         time: None,
         scenario: None,
         replaces: None,
+        actions: Vec::new(),
+        card: None,
         filter: None,
     }
 }
@@ -377,6 +380,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             time: None,
             scenario: None,
             replaces: None,
+            actions: Vec::new(),
+            card: None,
             filter: None,
         });
     }

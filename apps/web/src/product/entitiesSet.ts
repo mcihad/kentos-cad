@@ -4,10 +4,12 @@ import type { EntitiesSetProperties } from '../contracts/generated/EntitiesSetPr
 import type { EntitiesSetPropertiesPlan } from '../contracts/generated/EntitiesSetPropertiesPlan';
 import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { PropertiesOperation } from '../contracts/generated/PropertiesOperation';
+import { attachmentOf, attachmentsProblem } from '../model/attachmentRules';
 import type { CadDocument } from '../model/document';
 import type { Entity } from '../model/entities';
 import { fieldValues, checkLineWeight, checkRevision, checkUids, error, failed, findObjects, isBlank, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
+import { hasPicture } from './entitiesEdit';
 
 /**
  * `cad.entities.set` v1: the layer, colour, line weight (docs/adr/0139),
@@ -40,6 +42,8 @@ const LABEL: Record<Exclude<PropertiesOperation, 'symbol'>, string> = {
   unlink: 'Bağı kopar',
   // An object template given to objects (docs/adr/0176 §6).
   template: 'Şablonu uygula',
+  // Öznitelikler's Ekler (docs/adr/0225 §2).
+  attachments: 'Ekler',
 };
 
 /** The step a call is named: its operation's, or for a symbol whether it is given or taken away. */
@@ -78,6 +82,9 @@ function patchOf(e: Entity, input: EntitiesSetProperties, attrs: readonly (reado
     const want = input[key];
     if (want !== undefined && (e[key] ?? null) !== want) patch[key] = want ?? undefined;
   }
+  // Its photos and documents (docs/adr/0225 §1), the whole list; an empty one is none.
+  if (input.attachments != null && JSON.stringify(e.attachments ?? []) !== JSON.stringify(input.attachments.map(attachmentOf)))
+    patch.attachments = input.attachments.length ? input.attachments.map(attachmentOf) : undefined;
   if (attrs.some(([key, value]) => attrOf(e, key) !== value)) {
     // A Map keeps the names in their order and takes any name (`__proto__` too) as a plain key.
     const next = new Map(Object.entries(e.attrs));
@@ -95,16 +102,29 @@ function check(doc: CadDocument, input: EntitiesSetProperties): Stop | Checked {
   const stop = checkUids(input.uids, 'Özellikleri değişecek nesne verilmedi.');
   if (stop) return stop;
   const attrs = Object.keys(input.attrs ?? {});
-  if (input.layerId == null && input.color === undefined && input.lineWeight === undefined && input.symbol === undefined && !attrs.length && input.label === undefined && !input.unlink)
+  if (input.layerId == null && input.color === undefined && input.lineWeight === undefined && input.symbol === undefined && !attrs.length && input.label === undefined && input.attachments == null && !input.unlink)
     return failed({ code: 'nothing_to_set', message: 'Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin.' });
   if (attrs.some(isBlank))
     return failed(error('invalid_attribute', 'Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.', 'attrs'));
   const weight = checkLineWeight(input.lineWeight, 'lineWeight');
   if (weight) return weight;
+  const attachmentFault = input.attachments != null ? attachmentsProblem(input.attachments) : null;
+  if (attachmentFault)
+    return failed(error('invalid_attachments', `Ekler: ${attachmentFault}. Her eke bir ad ve tek bir kaynak (gömülü fotoğraf, dosya yolu ya da http/https adresi) verin.`, 'attachments'));
   const revision = checkRevision(doc, input.expectedRevision);
   if (revision) return revision;
   const found = findObjects(doc, input.uids);
   if ('status' in found) return found;
+  // An embedded photo is an image of the project's library (docs/adr/0225 §1).
+  for (const [k, a] of (input.attachments ?? []).entries())
+    if (a.asset != null && !hasPicture(doc, a.asset))
+      return failed(
+        error(
+          'unknown_asset',
+          `“${a.asset}” kimlikli fotoğraf projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin.`,
+          `attachments[${k}].asset`,
+        ),
+      );
   const layers = doc.layers;
   const target = input.layerId == null ? null : layers.get(input.layerId);
   if (input.layerId != null) {

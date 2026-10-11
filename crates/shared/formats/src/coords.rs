@@ -481,6 +481,7 @@ fn point_entity(row: Row) -> Entity {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         p: Vec2 { x: row.y, y: row.x },
         z: row.z.map(|(v, _)| v),

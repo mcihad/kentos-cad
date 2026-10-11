@@ -204,13 +204,17 @@ pub(crate) fn card(
         }
         _ => {}
     }
+    // Its photos and documents, last (docs/adr/0225 §2).
+    if !base.attachments.is_empty() {
+        rows.push(("Ekler", format!("{} ek", base.attachments.len()), false));
+    }
     Card { title, layer, rows }
 }
 
 /// The card as the web draws it: the title with the layer right of it or
 /// under it, then the rows, labels muted on the left, values right-aligned,
 /// on a popover (see the module comment for its widths).
-pub(crate) fn view<'a>(card: Card) -> Element<'a, Message> {
+pub(crate) fn view<'a>(card: Card, photo: Option<Element<'a, Message>>) -> Element<'a, Message> {
     let size = typography::caption();
     let title = label::strong(card.title)
         .size(size)
@@ -251,6 +255,11 @@ pub(crate) fn view<'a>(card: Card) -> Element<'a, Message> {
         );
         info = info.body(rows);
     }
+    // Its first photo under the rows (docs/adr/0225 §2).
+    let info: Element<'a, Message> = match photo {
+        Some(photo) => iced::widget::column![info, photo].spacing(6).into(),
+        None => info.into(),
+    };
     container(info)
         .max_width(typography::from_default(MAX_WIDTH))
         .padding(Padding {
@@ -303,7 +312,20 @@ impl App {
         let format = Format::of(doc.settings());
         let card = card(e, &doc.model, &format, |value| self.drawing_color(value));
         let pointer = Point::new(x.round() as f32, y.round() as f32);
-        Some(beside(view(card), pointer, GAP))
+        // The first photo the store has decoded (attachments.rs).
+        let photo = self
+            .attachment_views(slot)
+            .into_iter()
+            .find_map(|v| v.key)
+            .map(|key| {
+                crate::photo_view::photo(
+                    self.photo_picture(Some(&key)),
+                    typography::from_default(MIN_WIDTH) - 2.0 * PAD_X,
+                    80.0,
+                    crate::photo_view::Fit::Cover,
+                )
+            });
+        Some(beside(view(card, photo), pointer, GAP))
     }
 }
 
@@ -406,6 +428,7 @@ mod tests {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         };
         let at = |x: f64, y: f64| Wire {
             x: 487_000.0 + x,
@@ -473,6 +496,7 @@ mod tests {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         };
         let at = |x: f64, y: f64| Wire {
             x: 487_000.0 + x,

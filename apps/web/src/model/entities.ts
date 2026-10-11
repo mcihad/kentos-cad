@@ -1,3 +1,4 @@
+import type { Attachment } from '../contracts/generated/Attachment';
 import type { LabelPin } from '../contracts/generated/LabelPin';
 import type { RasterDataset } from '../contracts/generated/RasterDataset';
 import { op } from '../wasm/core';
@@ -49,6 +50,8 @@ interface EntityBase {
   lineWeight?: number;
   /** Its labels moved, turned, pinned or hidden by hand (docs/adr/0212 §3.7), one a class at most. */
   labelPins?: LabelPin[];
+  /** Its photos and documents, in order (docs/adr/0225 §1); undefined or empty: none. Never a block definition's object's. */
+  attachments?: Attachment[];
 }
 
 /** The heaviest line weight an object may have, mm (`MAX_LINE_WEIGHT` in the contracts). */
@@ -798,7 +801,7 @@ export const entityArea = op<(e: Entity) => number | null>('entityArea');
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
 /** Pure geometry of an entity (what modify operations produce). */
-export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' | 'attrs' | 'color' | 'label' | 'symbol' | 'lineWeight'>;
+export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' | 'attrs' | 'color' | 'label' | 'symbol' | 'lineWeight' | 'attachments'>;
 
 /**
  * Whether an object is drawn with lines, so its own line weight shows and a
@@ -819,8 +822,8 @@ export function drawsLines(e: { kind: Entity['kind'] }): boolean {
   );
 }
 
-/** Geometry-only view of an entity (drops ids, layer, colour, attributes, label, symbol and line weight). */
+/** Geometry-only view of an entity (drops ids, layer, colour, attributes, label, symbol, line weight and attachments). */
 export function entityGeometry(e: Entity): EntityGeometry {
-  const { id: _i, uid: _u, layerId: _l, attrs: _a, color: _c, label: _t, symbol: _s, lineWeight: _w, ...g } = e;
+  const { id: _i, uid: _u, layerId: _l, attrs: _a, color: _c, label: _t, symbol: _s, lineWeight: _w, attachments: _x, ...g } = e;
   return g as EntityGeometry;
 }

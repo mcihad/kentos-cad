@@ -171,6 +171,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
                     symbol: None,
                     line_weight: None,
                     label_pins: Vec::new(),
+                    attachments: Vec::new(),
                 },
                 p: l.p,
                 text: format!(

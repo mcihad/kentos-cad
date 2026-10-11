@@ -57,6 +57,14 @@ pub struct EntityBase {
         ts(as = "Option<Vec<crate::labels::LabelPin>>", optional)
     )]
     pub label_pins: Vec<crate::labels::LabelPin>,
+    /// The photos and documents it carries, in their order (docs/adr/0225
+    /// §1); none on a block's objects.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::attachment::Attachment>>", optional)
+    )]
+    pub attachments: Vec<crate::attachment::Attachment>,
 }
 
 /// The heaviest line weight an object may have, mm: DXF's heaviest is 2.11,

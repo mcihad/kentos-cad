@@ -378,6 +378,7 @@ pub fn cloud_object(
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         cloud: PointCloudFields {
             sources: vec![source],

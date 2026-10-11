@@ -217,6 +217,7 @@ impl TimeVersion {
                 operation: PropertiesOperation::Attributes,
                 expected_revision: None,
                 unlink: false,
+                attachments: None,
             };
             let result = set::execute(&mut ExecutionContext::new(cx.doc), input);
             if points::written(result, cx).is_none() {

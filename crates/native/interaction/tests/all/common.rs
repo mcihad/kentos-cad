@@ -254,6 +254,7 @@ pub fn base(layer: &str) -> kentos_contracts::EntityBase {
         symbol: None,
         line_weight: None,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     }
 }
 

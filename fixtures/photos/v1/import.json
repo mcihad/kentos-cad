@@ -1,0 +1,499 @@
+{
+  "format": "kentos.photo-import",
+  "version": 1,
+  "source": "scripts/fixtures/photo_import_cases.py (docs/adr/0225 §3; PROJ)",
+  "tolerance": {
+    "metres": 1e-06
+  },
+  "cases": [
+    {
+      "name": "TUREF / TM30",
+      "srid": 5254,
+      "photos": [
+        {
+          "name": "IMG_0012.JPG",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "latitude": 39.925533333333334,
+            "longitude": 32.86628611111111,
+            "taken": "2024-05-17T10:32:05+03:00",
+            "camera": "Canon EOS R5"
+          },
+          "asset": "resim-1a2b3c4d5e6f7081"
+        },
+        {
+          "name": "gpssiz.jpg",
+          "exif": {
+            "problem": "Fotoğrafta GPS konumu yok.",
+            "taken": "2022-07-01T12:00:00",
+            "camera": "NIKON CORPORATION NIKON D850"
+          },
+          "asset": "resim-0000000000000002"
+        },
+        {
+          "name": "saha.foto.3.jpeg",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "latitude": 39.925533333333334,
+            "longitude": 32.86628611111111,
+            "taken": "2024-12-31T23:59:15Z",
+            "camera": "Apple iPhone 15 Pro"
+          },
+          "file": "foto/saha.foto.3.jpeg"
+        },
+        {
+          "name": "bozuk.jpg",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "problem": "Fotoğrafın GPS konumu okunamadı.",
+            "taken": "2024-05-17T07:32:05Z",
+            "camera": "Canon EOS 90D"
+          },
+          "file": "foto/bozuk.jpg"
+        },
+        {
+          "name": "manyetik.jpg",
+          "exif": {
+            "altitude": -12.0,
+            "direction": 10.0,
+            "magnetic": true,
+            "latitude": 40.7539083,
+            "longitude": 29.38539,
+            "taken": "2023-11-02T08:15:59",
+            "camera": "Motorola moto g84"
+          },
+          "file": "/veri/manyetik.jpg"
+        },
+        {
+          "name": "dakika.jpg",
+          "exif": {
+            "latitude": 41.20576116666667,
+            "longitude": 28.979423833333332,
+            "camera": "GoPro HERO12"
+          },
+          "asset": "resim-0000000000000006"
+        }
+      ],
+      "expect": {
+        "placed": [
+          {
+            "index": 1,
+            "name": "IMG_0012",
+            "p": [
+              745047.1129624974,
+              4425196.287433899
+            ],
+            "attrs": {
+              "Ad": "IMG_0012",
+              "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261",
+              "Kamera": "Canon EOS R5",
+              "Tarih": "2024-05-17T10:32:05+03:00",
+              "Yön": "135.25",
+              "Yükseklik": "938.50"
+            },
+            "attachment": {
+              "name": "IMG_0012.JPG",
+              "asset": "resim-1a2b3c4d5e6f7081"
+            }
+          },
+          {
+            "index": 3,
+            "name": "saha.foto.3",
+            "p": [
+              745047.1129624974,
+              4425196.287433899
+            ],
+            "attrs": {
+              "Ad": "saha.foto.3",
+              "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261",
+              "Kamera": "Apple iPhone 15 Pro",
+              "Tarih": "2024-12-31T23:59:15Z",
+              "Yön": "135.25",
+              "Yükseklik": "938.50"
+            },
+            "attachment": {
+              "name": "saha.foto.3.jpeg",
+              "file": "foto/saha.foto.3.jpeg"
+            }
+          },
+          {
+            "index": 5,
+            "name": "manyetik",
+            "p": [
+              448097.67290360364,
+              4513426.1628419785
+            ],
+            "attrs": {
+              "Ad": "manyetik",
+              "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261",
+              "Kamera": "Motorola moto g84",
+              "Tarih": "2023-11-02T08:15:59",
+              "Yön": "10.00 M",
+              "Yükseklik": "-12.00"
+            },
+            "attachment": {
+              "name": "manyetik.jpg",
+              "file": "/veri/manyetik.jpg"
+            }
+          },
+          {
+            "index": 6,
+            "name": "dakika",
+            "p": [
+              414400.61555030174,
+              4563926.530627508
+            ],
+            "attrs": {
+              "Ad": "dakika",
+              "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261",
+              "Kamera": "GoPro HERO12"
+            },
+            "attachment": {
+              "name": "dakika.jpg",
+              "asset": "resim-0000000000000006"
+            }
+          }
+        ],
+        "skipped": [
+          {
+            "line": 2,
+            "message": "gpssiz.jpg: Fotoğrafta GPS konumu yok. Eklenmedi."
+          },
+          {
+            "line": 4,
+            "message": "bozuk.jpg: Fotoğrafın GPS konumu okunamadı. Eklenmedi."
+          }
+        ]
+      }
+    },
+    {
+      "name": "ED50 / TM30: resmî olmayan yol",
+      "srid": 2320,
+      "photos": [
+        {
+          "name": "IMG_0012.JPG",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "latitude": 39.925533333333334,
+            "longitude": 32.86628611111111,
+            "taken": "2024-05-17T10:32:05+03:00",
+            "camera": "Canon EOS R5"
+          },
+          "asset": "resim-1a2b3c4d5e6f7081"
+        },
+        {
+          "name": "gpssiz.jpg",
+          "exif": {
+            "problem": "Fotoğrafta GPS konumu yok.",
+            "taken": "2022-07-01T12:00:00",
+            "camera": "NIKON CORPORATION NIKON D850"
+          },
+          "asset": "resim-0000000000000002"
+        },
+        {
+          "name": "saha.foto.3.jpeg",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "latitude": 39.925533333333334,
+            "longitude": 32.86628611111111,
+            "taken": "2024-12-31T23:59:15Z",
+            "camera": "Apple iPhone 15 Pro"
+          },
+          "file": "foto/saha.foto.3.jpeg"
+        },
+        {
+          "name": "bozuk.jpg",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "problem": "Fotoğrafın GPS konumu okunamadı.",
+            "taken": "2024-05-17T07:32:05Z",
+            "camera": "Canon EOS 90D"
+          },
+          "file": "foto/bozuk.jpg"
+        },
+        {
+          "name": "manyetik.jpg",
+          "exif": {
+            "altitude": -12.0,
+            "direction": 10.0,
+            "magnetic": true,
+            "latitude": 40.7539083,
+            "longitude": 29.38539,
+            "taken": "2023-11-02T08:15:59",
+            "camera": "Motorola moto g84"
+          },
+          "file": "/veri/manyetik.jpg"
+        },
+        {
+          "name": "dakika.jpg",
+          "exif": {
+            "latitude": 41.20576116666667,
+            "longitude": 28.979423833333332,
+            "camera": "GoPro HERO12"
+          },
+          "asset": "resim-0000000000000006"
+        }
+      ],
+      "expect": {
+        "placed": [
+          {
+            "index": 1,
+            "name": "IMG_0012",
+            "p": [
+              745083.4586399554,
+              4425381.688333887
+            ],
+            "attrs": {
+              "Ad": "IMG_0012",
+              "Dönüşüm": "WGS 84 → ED50 / TM30: ±2 m, EPSG:1784; resmî dönüşüm değil",
+              "Kamera": "Canon EOS R5",
+              "Tarih": "2024-05-17T10:32:05+03:00",
+              "Yön": "135.25",
+              "Yükseklik": "938.50"
+            },
+            "attachment": {
+              "name": "IMG_0012.JPG",
+              "asset": "resim-1a2b3c4d5e6f7081"
+            }
+          },
+          {
+            "index": 3,
+            "name": "saha.foto.3",
+            "p": [
+              745083.4586399554,
+              4425381.688333887
+            ],
+            "attrs": {
+              "Ad": "saha.foto.3",
+              "Dönüşüm": "WGS 84 → ED50 / TM30: ±2 m, EPSG:1784; resmî dönüşüm değil",
+              "Kamera": "Apple iPhone 15 Pro",
+              "Tarih": "2024-12-31T23:59:15Z",
+              "Yön": "135.25",
+              "Yükseklik": "938.50"
+            },
+            "attachment": {
+              "name": "saha.foto.3.jpeg",
+              "file": "foto/saha.foto.3.jpeg"
+            }
+          },
+          {
+            "index": 5,
+            "name": "manyetik",
+            "p": [
+              448132.5320194902,
+              4513612.398582389
+            ],
+            "attrs": {
+              "Ad": "manyetik",
+              "Dönüşüm": "WGS 84 → ED50 / TM30: ±2 m, EPSG:1784; resmî dönüşüm değil",
+              "Kamera": "Motorola moto g84",
+              "Tarih": "2023-11-02T08:15:59",
+              "Yön": "10.00 M",
+              "Yükseklik": "-12.00"
+            },
+            "attachment": {
+              "name": "manyetik.jpg",
+              "file": "/veri/manyetik.jpg"
+            }
+          },
+          {
+            "index": 6,
+            "name": "dakika",
+            "p": [
+              414435.38280882617,
+              4564113.08786449
+            ],
+            "attrs": {
+              "Ad": "dakika",
+              "Dönüşüm": "WGS 84 → ED50 / TM30: ±2 m, EPSG:1784; resmî dönüşüm değil",
+              "Kamera": "GoPro HERO12"
+            },
+            "attachment": {
+              "name": "dakika.jpg",
+              "asset": "resim-0000000000000006"
+            }
+          }
+        ],
+        "skipped": [
+          {
+            "line": 2,
+            "message": "gpssiz.jpg: Fotoğrafta GPS konumu yok. Eklenmedi."
+          },
+          {
+            "line": 4,
+            "message": "bozuk.jpg: Fotoğrafın GPS konumu okunamadı. Eklenmedi."
+          }
+        ]
+      }
+    },
+    {
+      "name": "WGS 84 / UTM 35N",
+      "srid": 32635,
+      "photos": [
+        {
+          "name": "IMG_0012.JPG",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "latitude": 39.925533333333334,
+            "longitude": 32.86628611111111,
+            "taken": "2024-05-17T10:32:05+03:00",
+            "camera": "Canon EOS R5"
+          },
+          "asset": "resim-1a2b3c4d5e6f7081"
+        },
+        {
+          "name": "gpssiz.jpg",
+          "exif": {
+            "problem": "Fotoğrafta GPS konumu yok.",
+            "taken": "2022-07-01T12:00:00",
+            "camera": "NIKON CORPORATION NIKON D850"
+          },
+          "asset": "resim-0000000000000002"
+        },
+        {
+          "name": "saha.foto.3.jpeg",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "latitude": 39.925533333333334,
+            "longitude": 32.86628611111111,
+            "taken": "2024-12-31T23:59:15Z",
+            "camera": "Apple iPhone 15 Pro"
+          },
+          "file": "foto/saha.foto.3.jpeg"
+        },
+        {
+          "name": "bozuk.jpg",
+          "exif": {
+            "altitude": 938.5,
+            "direction": 135.25,
+            "problem": "Fotoğrafın GPS konumu okunamadı.",
+            "taken": "2024-05-17T07:32:05Z",
+            "camera": "Canon EOS 90D"
+          },
+          "file": "foto/bozuk.jpg"
+        },
+        {
+          "name": "manyetik.jpg",
+          "exif": {
+            "altitude": -12.0,
+            "direction": 10.0,
+            "magnetic": true,
+            "latitude": 40.7539083,
+            "longitude": 29.38539,
+            "taken": "2023-11-02T08:15:59",
+            "camera": "Motorola moto g84"
+          },
+          "file": "/veri/manyetik.jpg"
+        },
+        {
+          "name": "dakika.jpg",
+          "exif": {
+            "latitude": 41.20576116666667,
+            "longitude": 28.979423833333332,
+            "camera": "GoPro HERO12"
+          },
+          "asset": "resim-0000000000000006"
+        }
+      ],
+      "expect": {
+        "placed": [
+          {
+            "index": 1,
+            "name": "IMG_0012",
+            "p": [
+              1001443.1560940882,
+              4435998.851808066
+            ],
+            "attrs": {
+              "Ad": "IMG_0012",
+              "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon",
+              "Kamera": "Canon EOS R5",
+              "Tarih": "2024-05-17T10:32:05+03:00",
+              "Yön": "135.25",
+              "Yükseklik": "938.50"
+            },
+            "attachment": {
+              "name": "IMG_0012.JPG",
+              "asset": "resim-1a2b3c4d5e6f7081"
+            }
+          },
+          {
+            "index": 3,
+            "name": "saha.foto.3",
+            "p": [
+              1001443.1560940882,
+              4435998.851808066
+            ],
+            "attrs": {
+              "Ad": "saha.foto.3",
+              "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon",
+              "Kamera": "Apple iPhone 15 Pro",
+              "Tarih": "2024-12-31T23:59:15Z",
+              "Yön": "135.25",
+              "Yükseklik": "938.50"
+            },
+            "attachment": {
+              "name": "saha.foto.3.jpeg",
+              "file": "foto/saha.foto.3.jpeg"
+            }
+          },
+          {
+            "index": 5,
+            "name": "manyetik",
+            "p": [
+              701367.9637680531,
+              4514176.422304069
+            ],
+            "attrs": {
+              "Ad": "manyetik",
+              "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon",
+              "Kamera": "Motorola moto g84",
+              "Tarih": "2023-11-02T08:15:59",
+              "Yön": "10.00 M",
+              "Yükseklik": "-12.00"
+            },
+            "attachment": {
+              "name": "manyetik.jpg",
+              "file": "/veri/manyetik.jpg"
+            }
+          },
+          {
+            "index": 6,
+            "name": "dakika",
+            "p": [
+              665958.2175819066,
+              4563487.809503838
+            ],
+            "attrs": {
+              "Ad": "dakika",
+              "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon",
+              "Kamera": "GoPro HERO12"
+            },
+            "attachment": {
+              "name": "dakika.jpg",
+              "asset": "resim-0000000000000006"
+            }
+          }
+        ],
+        "skipped": [
+          {
+            "line": 2,
+            "message": "gpssiz.jpg: Fotoğrafta GPS konumu yok. Eklenmedi."
+          },
+          {
+            "line": 4,
+            "message": "bozuk.jpg: Fotoğrafın GPS konumu okunamadı. Eklenmedi."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -186,6 +186,7 @@ fn move_to(objects: &[Slot], layer: &str, name: &str, cx: &mut Context<'_>) {
         operation: PropertiesOperation::Layer,
         expected_revision: None,
         unlink: false,
+        attachments: None,
     };
     let group = cx.doc.begin_group("Katmanı eşle");
     let result = set::execute(&mut ExecutionContext::new(cx.doc), input);

@@ -141,6 +141,7 @@ fn polyline(input: PolylineCreate, id: u32) -> Entity {
             symbol: input.symbol,
             line_weight: input.line_weight,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         pts: input.pts,
         bulges: input.bulges.map(|mut bulges| {

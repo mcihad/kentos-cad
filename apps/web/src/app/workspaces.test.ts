@@ -114,8 +114,8 @@ describe('project types (docs/adr/0165)', () => {
     // Öznitelik tablosu, Alanlar and Kaynaklar beside the layers (docs/adr/0199).
     // Raster katmanları beside the pictures (docs/adr/0204 §8), point clouds after them (docs/adr/0207 §9: on the
     // web its buttons wait with a note). Katman süzgeci after Ara (docs/adr/0211 §4). Toplu çevir after Öznitelik
-    // (docs/adr/0218 §12).
-    expect(panels('data')).toEqual(['Katman', 'Tablo', 'Ara', 'Süzgeç', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Toplu çevir', 'Blok', 'Resim', 'Raster', 'Nokta bulutu']);
+    // (docs/adr/0218 §12). Nesne ekleri beside the table (docs/adr/0225 §2).
+    expect(panels('data')).toEqual(['Katman', 'Tablo', 'Ekler', 'Ara', 'Süzgeç', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Toplu çevir', 'Blok', 'Resim', 'Raster', 'Nokta bulutu']);
     expect(panels('edit')).not.toContain('Blok');
     expect(panels('edit')).not.toContain('Resim');
   });

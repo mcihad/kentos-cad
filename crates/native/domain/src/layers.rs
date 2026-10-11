@@ -55,6 +55,10 @@ pub struct NewLayer {
     /// A layer's filter (docs/adr/0211 §2), kept by the node it makes
     /// (Başka çizimden al's layers); a group keeps none.
     pub filter: Option<kentos_contracts::LayerFilter>,
+    /// A layer's actions and information card (docs/adr/0225 §4, §5), kept
+    /// by the node it makes (Başka çizimden al's layers); a group keeps none.
+    pub actions: Vec<kentos_contracts::LayerAction>,
+    pub card: Option<kentos_contracts::InfoCard>,
 }
 
 impl NewLayer {
@@ -74,6 +78,8 @@ impl NewLayer {
             time: None,
             scenario: None,
             replaces: None,
+            actions: Vec::new(),
+            card: None,
             filter: None,
         }
     }
@@ -427,6 +433,22 @@ impl LayerTree {
         }
     }
 
+    /// A layer's actions and card as they are now (docs/adr/0225 §4, §5); None for an unknown id.
+    pub fn info_of(&self, id: &str) -> Option<crate::history::LayerInfo> {
+        self.get(id).map(|n| crate::history::LayerInfo {
+            actions: n.actions.clone(),
+            card: n.card.clone(),
+        })
+    }
+
+    /// A layer's actions and card, as an undo or a redo puts them.
+    pub(crate) fn replace_info(&mut self, id: &str, info: &crate::history::LayerInfo) {
+        if let Some(node) = self.node_mut(id) {
+            node.actions.clone_from(&info.actions);
+            node.card.clone_from(&info.card);
+        }
+    }
+
     pub(crate) fn replace_service(&mut self, id: &str, served: &crate::history::Served) {
         if let Some(node) = self.node_mut(id) {
             node.name.clone_from(&served.name);
@@ -465,6 +487,12 @@ impl LayerTree {
             scenario: new.scenario.filter(|_| new.kind == LayerNodeType::Group),
             replaces: new.replaces.filter(|_| new.kind == LayerNodeType::Layer),
             filter: new.filter.filter(|_| new.kind == LayerNodeType::Layer),
+            actions: if new.kind == LayerNodeType::Layer {
+                new.actions
+            } else {
+                Vec::new()
+            },
+            card: new.card.filter(|_| new.kind == LayerNodeType::Layer),
             style: new.style,
             children: Vec::new(),
         }

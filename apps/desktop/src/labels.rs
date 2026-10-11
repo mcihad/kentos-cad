@@ -2819,6 +2819,7 @@ fn perf() {
                 symbol: None,
                 line_weight: None,
                 label_pins: Vec::new(),
+                attachments: Vec::new(),
             },
             p: kentos_contracts::Vec2 {
                 x: 486_400.0 + (i % side) as f64,

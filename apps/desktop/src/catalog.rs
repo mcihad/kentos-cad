@@ -717,6 +717,12 @@ pub const PORTED: &[&str] = &[
     "tool.labelHide",
     "view.pinnedLabels",
     "view.unplacedLabels",
+    // Nesne ekleri (docs/adr/0225).
+    "tool.identify",
+    "layer.info",
+    "attachment.add",
+    "attachment.addLink",
+    "file.import.photos",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

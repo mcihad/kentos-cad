@@ -422,6 +422,55 @@ impl Document {
         Ok(true)
     }
 
+    /// Gives a layer its actions and card (docs/adr/0225 §4, §5), or takes
+    /// them away (no actions, no card), as one undo step named `label`.
+    /// Refused with nothing changed (the web's `setLayerInfo`): actions or a
+    /// card on a group or on a layer drawn from a service, or broken by the
+    /// contract's rules. Whether their templates compile is the command's.
+    /// An unknown id changes nothing; returns whether it changed.
+    pub fn set_layer_info(
+        &mut self,
+        id: &str,
+        next: crate::history::LayerInfo,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        let name = &node.name;
+        if !next.actions.is_empty() || next.card.is_some() {
+            if node.kind == LayerNodeType::Group {
+                return Err(Refusal(format!(
+                    "“{name}” bir grup; eylemler ve bilgi kartı yalnız katmanın olur."
+                )));
+            }
+            if node.service.is_some() {
+                return Err(Refusal(format!(
+                    "“{name}” servisten çizilir; nesnesi olmayan katmanın eylemi ve kartı olmaz."
+                )));
+            }
+            if let Some(problem) = kentos_contracts::actions_problem(&next.actions)
+                .or_else(|| next.card.as_ref().and_then(|c| c.problem()))
+            {
+                return Err(Refusal(format!("Katmanın eylemleri ve kartı: {problem}.")));
+            }
+        }
+        let before = crate::history::LayerInfo {
+            actions: node.actions.clone(),
+            card: node.card.clone(),
+        };
+        if before == next {
+            return Ok(false);
+        }
+        let op = Op::LayerInfo {
+            layer: id.to_owned(),
+            before: Box::new(before),
+            after: Box::new(next),
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
     /// A layer's time setting (docs/adr/0210 §2) as one undo step `label`,
     /// its scenario fields as they are: [`Document::set_layer_temporal`].
     pub fn set_layer_time(

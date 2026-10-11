@@ -105,6 +105,9 @@ function create(doc: CadDocument, input: ScenariosEdit, sources: readonly LayerN
         ...(src.snap && { snap: structuredClone(src.snap) }),
         ...(src.fields?.length && { fields: structuredClone(src.fields) }),
         ...(src.time && { time: structuredClone(src.time) }),
+        // The base layer's actions and card stand for it too (docs/adr/0225 §4).
+        ...(src.actions?.length && { actions: structuredClone(src.actions) }),
+        ...(src.card && { card: structuredClone(src.card) }),
         replaces: src.id,
       },
       group,

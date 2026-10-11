@@ -492,6 +492,7 @@ export const ICONS = {
   // Kinds of its own: the magnet dashed.
   magnetKinds: '<g stroke-dasharray="2.2 1.6"><path d="M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z"/></g><path d="M4.5 6.8h3.3M12.2 6.8h3.3"/>',
   chevronRight: '<path d="m8 5 5 5-5 5"/>',
+  chevronLeft: '<path d="m12 5-5 5 5 5"/>',
   chevronDown: '<path d="m5 8 5 5 5-5"/>',
   chevronUp: '<path d="m5 12 5-5 5 5"/>',
   close: '<path d="m5 5 10 10M15 5 5 15"/>',
@@ -1133,6 +1134,18 @@ export const ICONS = {
     '<circle cx="10" cy="10" r="6" stroke-dasharray="1.6 1.9"/><circle cx="10" cy="10" r="1.2" fill="currentColor" stroke="none"/><g fill="currentColor" stroke="none"><circle cx="10" cy="4" r="1.4"/><circle cx="15.7" cy="11.9" r="1.4"/><circle cx="4.3" cy="11.9" r="1.4"/></g>',
   rendererInverted:
     '<path d="M2.5 2.5h15v15h-15zM7 6.5l6.5 1.2-1.2 6-5.8-1.4z" fill="currentColor" fill-opacity=".3" fill-rule="evenodd" stroke="none"/><path d="M2.5 2.5h15v15h-15z"/><path d="M7 6.5l6.5 1.2-1.2 6-5.8-1.4z"/>',
+  // Nesne ekleri (docs/adr/0225): a paperclip (Dosya ekle), a chain's two links (Adres ekle), a camera with a
+  // position's pin (Konumlu fotoğraflar), an i in a circle with the pointer's tip (Bilgi), a card's lines over a
+  // balloon's tail (Bilgi kartı ve eylemler), a picture (a photo), a page (a document) and a box with an arrow
+  // leaving it (open outside).
+  attachment: '<path d="M13.6 6.4 7.7 12.3a1.7 1.7 0 0 0 2.4 2.4l6.1-6.1a3.2 3.2 0 0 0-4.5-4.5l-6.4 6.4a4.7 4.7 0 0 0 6.6 6.6l4.5-4.5"/>',
+  attachmentLink: '<path d="M8.6 11.4a2.9 2.9 0 0 0 4.1 0l3-3a2.9 2.9 0 0 0-4.1-4.1l-1.1 1.1"/><path d="M11.4 8.6a2.9 2.9 0 0 0-4.1 0l-3 3a2.9 2.9 0 0 0 4.1 4.1l1.1-1.1"/>',
+  photoImport: `<rect x="2.5" y="5.5" width="10.5" height="8.5" rx="1.4"/><path d="m5.3 5.5 1-1.8h2.9l1 1.8"/><circle cx="7.75" cy="9.8" r="2.1"/><path d="M15.4 17.6c-1.9-2.1-2.9-3.6-2.9-4.8a2.9 2.9 0 0 1 5.8 0c0 1.2-1 2.7-2.9 4.8z" stroke-width="1.1"/>${dot(15.4, 12.8, 0.9)}`,
+  identify: `<circle cx="9" cy="9" r="6.5"/><path d="M9 8.2v4.1"/>${dot(9, 5.7, 0.85)}<path d="m13.6 13.6 3.9 3.9-1.6.4-.4 1.6-3.9-3.9z" fill="currentColor" stroke-width="1"/>`,
+  layerInfo: '<path d="M3 3.5h14a1 1 0 0 1 1 1v8.5a1 1 0 0 1-1 1h-7l-3.5 3v-3H3a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M5.5 7h9M5.5 10.2h6"/>',
+  photo: `<rect x="2.5" y="4" width="15" height="12" rx="1.4"/><path d="m3.2 14.3 4.1-4 2.9 2.7 2.4-2.3 4.1 3.6" stroke-width="1.2"/>${dot(13.3, 7.6, 1.2)}`,
+  document: '<path d="M5 2.5h6.5L15.5 6.5v11H5z"/><path d="M11.5 2.5v4h4M7.5 10h5.5M7.5 13h5.5"/>',
+  externalOpen: '<path d="M10.5 3.5h6v6M16.5 3.5 9 11"/><path d="M14.5 12v4.5h-11v-11H8"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

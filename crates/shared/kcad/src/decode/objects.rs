@@ -36,16 +36,17 @@ use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
-    SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS,
-    SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
-    SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
-    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM,
-    SCHEMA_WITH_NETWORKS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
-    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS,
+    SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS,
+    SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS,
+    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
+    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
+    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_VARIABLES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -176,6 +177,8 @@ pub(super) struct Features {
     multidim: bool,
     /// Schema 39: the vertex measures (`ma`, `mb`, a polyline's and its parts' `ms`; docs/adr/0224).
     measures: bool,
+    /// Schema 40: an object's `attachments`, a layer's `actions` and `card` (docs/adr/0225).
+    pub(super) attachments: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -222,6 +225,7 @@ impl Features {
             filters: schema >= SCHEMA_WITH_FILTERS,
             multidim: schema >= SCHEMA_WITH_MULTIDIM,
             measures: schema >= SCHEMA_WITH_MEASURES,
+            attachments: schema >= SCHEMA_WITH_ATTACHMENTS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -245,6 +249,8 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
         || (has.uids && key == "uid")
         // A label pinned by hand: the drawing's objects only (a definition's have no persistent id).
         || (has.labels && has.uids && key == "labelPins")
+        // Photos and documents: the drawing's objects only (a definition's are not picked one by one).
+        || (has.attachments && has.uids && key == "attachments")
         || (has.weights && key == "lineWeight")
         || match kind {
             Kind::Point => matches!(key, "p" | "z") || (has.line_parts && key == "parts"),
@@ -412,6 +418,7 @@ struct Fields {
     layer_id: Option<String>,
     line_weight: Option<f64>,
     label_pins: Option<Vec<kentos_contracts::LabelPin>>,
+    attachments: Option<Vec<kentos_contracts::Attachment>>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -657,6 +664,7 @@ pub(super) fn object(
             "color" => f.color = Some(text(r)?),
             "label" => f.label = Some(text(r)?),
             "labelPins" => f.label_pins = Some(super::labels::label_pins(r)?),
+            "attachments" => f.attachments = Some(super::info::attachments(r)?),
             "symbol" => f.symbol = Some(text(r)?),
             "layerId" => f.layer_id = Some(text(r)?),
             "lineWeight" => {
@@ -1183,6 +1191,7 @@ fn build(
         symbol: f.symbol.take(),
         line_weight: f.line_weight.take(),
         label_pins: f.label_pins.take().unwrap_or_default(),
+        attachments: f.attachments.take().unwrap_or_default(),
     };
     Ok(match kind {
         Kind::Point => Entity::Point(PointEntity {

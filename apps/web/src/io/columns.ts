@@ -1,3 +1,4 @@
+import type { Attachment } from '../contracts/generated/Attachment';
 import type { LabelPin } from '../contracts/generated/LabelPin';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
@@ -120,6 +121,16 @@ const PIN_CLASS = 1;
 const PIN_AT = 2;
 const PIN_ROTATION = 4;
 const PIN_HIDDEN = 8;
+/**
+ * An object's attachments (docs/adr/0225 §1): after the pins, how many, then each one's bits (its sources `ATT_ASSET`,
+ * `ATT_FILE`, `ATT_URL` and `ATT_NOTE`), its name, then each source it has in that order and its note. All are carried
+ * as they are: the encoder refuses what the contract's rules refuse.
+ */
+const ATTACHMENTS = 32;
+const ATT_ASSET = 1;
+const ATT_FILE = 2;
+const ATT_URL = 4;
+const ATT_NOTE = 8;
 /**
  * A kind's optional fields from bit 8 up, in the order the Rust module's table
  * names them (point: z; line: za, zb, ma, mb (docs/adr/0224); polyline and polygon: bulges, holes, zs,
@@ -404,6 +415,18 @@ class Packer {
         if (p.class !== undefined) this.text(p.class, 'labelPins/class');
         if (p.at) this.float(p.at.x, 'labelPins/at'), this.float(p.at.y, 'labelPins/at');
         if (p.rotation !== undefined) this.float(p.rotation, 'labelPins/rotation');
+      }
+    }
+    if (e.attachments?.length) {
+      flags |= ATTACHMENTS;
+      this.int(e.attachments.length);
+      for (const a of e.attachments) {
+        this.int((a.asset != null ? ATT_ASSET : 0) | (a.file != null ? ATT_FILE : 0) | (a.url != null ? ATT_URL : 0) | (a.note != null ? ATT_NOTE : 0));
+        this.text(a.name, 'attachments/name');
+        if (a.asset != null) this.text(a.asset, 'attachments/asset');
+        if (a.file != null) this.text(a.file, 'attachments/file');
+        if (a.url != null) this.text(a.url, 'attachments/url');
+        if (a.note != null) this.text(a.note, 'attachments/note');
       }
     }
     for (const key of keys) {
@@ -1046,6 +1069,20 @@ export class ColumnsReader {
         pins.push(pin);
       }
       e.labelPins = pins;
+    }
+    if (flags & ATTACHMENTS) {
+      const list: Attachment[] = [];
+      for (let k = this.readInt(); k > 0; k--) {
+        const bits = this.readInt();
+        if (bits & ~(ATT_ASSET | ATT_FILE | ATT_URL | ATT_NOTE)) throw broken(`${i + 1}. nesnenin ekinin bayrakları ${bits}`);
+        const a: Attachment = { name: this.readText() };
+        if (bits & ATT_ASSET) a.asset = this.readText();
+        if (bits & ATT_FILE) a.file = this.readText();
+        if (bits & ATT_URL) a.url = this.readText();
+        if (bits & ATT_NOTE) a.note = this.readText();
+        list.push(a);
+      }
+      e.attachments = list;
     }
     const attrs: Record<string, string> = {};
     for (let k = 0; k < n; k++) {

@@ -760,7 +760,112 @@ fn compiled_in(source: &str, arg: SchemaArg) -> Result<CompiledJson, String> {
     })
 }
 
+/// A template's piece as the page reads it (docs/adr/0225 §6): `kind` is
+/// `text`, `expr`, `lat` or `lon`; a text's or an expression's `text`, an
+/// expression's `at` (1-based UTF-16).
+struct TemplatePieceJson {
+    kind: String,
+    text: Option<String>,
+    at: Option<usize>,
+}
+json_struct!(out TemplatePieceJson { kind, text, at });
+
+struct TemplateErrorJson {
+    at: usize,
+    message: String,
+}
+json_struct!(out TemplateErrorJson { at, message });
+
+/// A template split (`pieces`, `encoded`), or why it does not (`error`).
+struct TemplateJson {
+    pieces: Vec<TemplatePieceJson>,
+    encoded: bool,
+    error: Option<TemplateErrorJson>,
+}
+json_struct!(out TemplateJson { pieces, encoded, error });
+
+fn template_json(text: &str) -> TemplateJson {
+    use crate::template::{self, Piece};
+    match template::parse(text) {
+        Ok(t) => TemplateJson {
+            pieces: t
+                .pieces
+                .into_iter()
+                .map(|p| {
+                    let (kind, text, at) = match p {
+                        Piece::Text(t) => ("text", Some(t), None),
+                        Piece::Expr { source, at } => ("expr", Some(source), Some(at)),
+                        Piece::Latitude => ("lat", None, None),
+                        Piece::Longitude => ("lon", None, None),
+                    };
+                    TemplatePieceJson {
+                        kind: kind.to_owned(),
+                        text,
+                        at,
+                    }
+                })
+                .collect(),
+            encoded: t.encoded,
+            error: None,
+        },
+        Err(e) => TemplateJson {
+            pieces: Vec::new(),
+            encoded: false,
+            error: Some(TemplateErrorJson {
+                at: e.at,
+                message: e.message,
+            }),
+        },
+    }
+}
+
+/// A template filled with its expressions' values (null: empty) and the
+/// object's place (`[latitude, longitude]`, or empty: none).
+fn template_fill(text: &str, values: &[Option<String>], place: &[f64]) -> Result<String, String> {
+    let t = crate::template::parse(text).map_err(|e| e.text())?;
+    let place = match place {
+        [lat, lon] => Some((*lat, *lon)),
+        _ => None,
+    };
+    Ok(t.fill(values, place))
+}
+
 pub static OPS: &[Op] = &[
+    // Templates (docs/adr/0225 §6): split, filled, and what a filled target is.
+    op!("templateParse", |text: String| template_json(&text)),
+    op!("templateFill", |text: String,
+                         values: Vec<Option<String>>,
+                         place: Vec<f64>| {
+        template_fill(&text, &values, &place)
+    }),
+    // Many objects' texts at once: `rows[i]` the values of object i, `places[i]` its place.
+    op!(
+        "templateFillMany",
+        |text: String, rows: Vec<Vec<Option<String>>>, places: Vec<Option<Vec<f64>>>| {
+            crate::template::parse(&text)
+                .map_err(|e| e.text())
+                .map(|t| {
+                    rows.iter()
+                        .enumerate()
+                        .map(|(i, row)| {
+                            let place = match places.get(i).and_then(Option::as_deref) {
+                                Some([lat, lon]) => Some((*lat, *lon)),
+                                _ => None,
+                            };
+                            t.fill(row, place)
+                        })
+                        .collect::<Vec<_>>()
+                })
+        }
+    ),
+    op!("templateTarget", |target: String| {
+        match crate::template::target_kind(&target) {
+            crate::template::TargetKind::Address => "address",
+            crate::template::TargetKind::File => "file",
+            crate::template::TargetKind::Refused => "refused",
+        }
+        .to_owned()
+    }),
     op!("exprCompileIn", |source: String, context: SchemaArg| {
         compiled_in(&source, context)
     }),

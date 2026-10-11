@@ -270,6 +270,7 @@ impl TextAlong {
                 symbol: None,
                 line_weight: None,
                 label_pins: Vec::new(),
+                attachments: Vec::new(),
             },
             p: points::wire(p),
             text: words.to_owned(),

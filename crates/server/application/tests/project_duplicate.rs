@@ -150,6 +150,86 @@ async fn label_pins_come_back_and_travel_with_a_copy() {
     assert_eq!(pins(&page.features), want);
 }
 
+/// An object's attachments (docs/adr/0225 §1) come back as written: a point's (its geometry the
+/// source, the attachments a column of their own, migration 0016) and an area's; the project's
+/// `.kcad` image and a copy keep them. A layer's actions and card travel in its tree.
+#[tokio::test]
+async fn attachments_come_back_and_travel_with_a_copy() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 8)
+        .await
+        .unwrap();
+    let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
+    let project = new_project(&db, &pm, "Ekler").await;
+    let owner = open(&db, &pm, project).await;
+    let objects: [serde_json::Value; 2] = [
+        json!({ "kind": "point", "id": 1, "layerId": "cizim", "attrs": {}, "p": { "x": 487000.0, "y": 4420000.0 },
+                "attachments": [{ "name": "Direk", "file": "foto/direk-12.jpg", "note": "Kuzeyden" }] }),
+        json!({ "kind": "polygon", "id": 2, "layerId": "cizim", "attrs": { "Ada": "101" },
+                "pts": [{ "x": 487000.0, "y": 4420000.0 }, { "x": 487040.0, "y": 4420000.0 }, { "x": 487040.0, "y": 4420030.0 }],
+                "attachments": [{ "name": "Tapu", "file": "belgeler/101-5.pdf" }, { "name": "Kurum", "url": "https://kurum.example/101" }] }),
+    ];
+    let ids: Vec<Uuid> = objects.iter().map(|_| Uuid::now_v7()).collect();
+    let entities: Vec<Entity> = objects
+        .iter()
+        .map(|e| serde_json::from_value(e.clone()).unwrap())
+        .collect();
+    let content = ProjectChanges {
+        blocks: Vec::new(),
+        features: entities
+            .iter()
+            .zip(&ids)
+            .map(|(e, id)| FeatureChange::Create {
+                id: id.to_string(),
+                entity: e.clone(),
+            })
+            .collect(),
+        project: None,
+    };
+    changes::commit(&db.app, &owner, envelope(&pm, project, content, &[]))
+        .await
+        .unwrap();
+    let attached =
+        |list: &[kentos_contracts::FeatureRecord]| -> Vec<Vec<kentos_contracts::Attachment>> {
+            list.iter()
+                .map(|f| f.entity.base().attachments.clone())
+                .collect()
+        };
+    let want: Vec<_> = entities
+        .iter()
+        .map(|e| e.base().attachments.clone())
+        .collect();
+    let page = projects::features(&db.app, &owner, None, 10).await.unwrap();
+    assert_eq!(attached(&page.features), want);
+    let column: Option<serde_json::Value> = sqlx::query_scalar(
+        "select attachments from kentos.feature where project_id = $1 and kind = 'point'",
+    )
+    .bind(project)
+    .fetch_one(&db.owner)
+    .await
+    .unwrap();
+    assert_eq!(column, Some(objects[0]["attachments"].clone()));
+    let image = kentos_kcad::decode(
+        &kentos_application::snapshot::snapshot(&db.app, &owner)
+            .await
+            .unwrap()
+            .bytes,
+    )
+    .unwrap();
+    let imaged: Vec<_> = image
+        .entities
+        .iter()
+        .map(|e| e.base().attachments.clone())
+        .collect();
+    assert_eq!(imaged, want);
+    let copy = copied(run(&db, &owner, PROJECT_DUPLICATE, json!({})).await);
+    let mine = open(&db, &pm, Uuid::parse_str(&copy.project.id).unwrap()).await;
+    let page = projects::features(&db.app, &mine, None, 10).await.unwrap();
+    assert_eq!(attached(&page.features), want);
+}
+
 #[tokio::test]
 async fn a_copy_takes_the_content_and_ids_but_not_history_or_sharing() {
     let Some(db) = TestDb::create().await else {

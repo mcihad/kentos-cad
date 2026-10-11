@@ -216,6 +216,7 @@ fn base(layer: &str, color: Option<String>, line_weight: Option<f64>) -> EntityB
         symbol: None,
         line_weight,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     }
 }
 

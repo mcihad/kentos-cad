@@ -48,7 +48,7 @@ pub fn compile_filter(filter: &LayerFilter) -> Result<CompiledFilter, String> {
 }
 
 /// The kind of object as the language names it (`$tür`; the web's `ENTITY_KIND_LABEL`).
-pub(crate) fn kind_label(e: &Entity) -> &'static str {
+pub fn kind_label(e: &Entity) -> &'static str {
     match e {
         Entity::Point(_) => "Nokta",
         Entity::Line(_) => "Çizgi",

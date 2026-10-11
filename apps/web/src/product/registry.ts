@@ -11,6 +11,7 @@ import { entitiesSet } from './entitiesSet';
 import { entitiesTransform } from './entitiesTransform';
 import { labelsPin } from './labelsPin';
 import { layersFilter } from './layersFilter';
+import { layersInfo } from './layersInfo';
 import { layersLabels } from './layersLabels';
 import { layersRenderer } from './layersRenderer';
 import { layersService } from './layersService';
@@ -54,6 +55,8 @@ export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = 
   scenariosEdit,
   // Katman süzgeci (docs/adr/0211 §5).
   layersFilter,
+  // Bilgi kartı ve eylemler (docs/adr/0225 §4, §5).
+  layersInfo,
   // Etiketler and the label tools (docs/adr/0212 §5).
   layersLabels,
   layersRenderer,

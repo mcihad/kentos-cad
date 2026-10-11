@@ -80,9 +80,27 @@ impl Exact {
         })
     }
 
+    /// A fraction's exact value; none for a zero denominator (a photo's
+    /// EXIF rationals, docs/adr/0225 §3).
+    pub fn ratio(num: i128, den: i128) -> Option<Self> {
+        match den.cmp(&0) {
+            Ordering::Equal => None,
+            Ordering::Greater => Some(Self { num, den }),
+            Ordering::Less => Some(Self {
+                num: num.checked_neg()?,
+                den: den.checked_neg()?,
+            }),
+        }
+    }
+
     /// Below zero.
     pub fn negative(self) -> bool {
         self.num < 0
+    }
+
+    /// The whole number at or below it.
+    pub fn floor(self) -> i128 {
+        self.num.div_euclid(self.den)
     }
 
     /// Not zero.

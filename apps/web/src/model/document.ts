@@ -11,10 +11,11 @@ import { entityBounds, type DrawingEntity, type Entity, type NewEntity } from '.
 import type { CrsDef } from '../geo/crs';
 import { ProjectSettings, type ProjectSettingsData } from './projectSettings';
 import { emptyBounds, isEmptyBounds, type Bounds, type Vec2 } from './geometry';
-import type { LayerInit, LayerNode, LayerStyle, Temporal } from './layers';
+import type { LayerInfo, LayerInit, LayerNode, LayerStyle, Temporal } from './layers';
 import { fieldsProblem, type LayerField } from './layerFields';
-import { filterOf, LayerStore, temporalOf } from './layers';
+import { filterOf, infoOf, LayerStore, temporalOf } from './layers';
 import { layerFilterProblem } from './layerFilterRules';
+import { actionsProblem, cardProblem } from './layerInfoRules';
 import { followHatches, tiesOf } from './hatchTies';
 import { followLinks } from './linkedTexts';
 import { sameJson } from './sameJson';
@@ -35,6 +36,8 @@ type Op =
   /** A node's time setting, scenario and base layer (docs/adr/0210 §2): undoable like its look. */
   | { type: 'layerTemporal'; layerId: string; before: Temporal; after: Temporal }
   | { type: 'layerFilter'; layerId: string; before: LayerFilter | null; after: LayerFilter | null }
+  /** A layer's actions and card (docs/adr/0225 §4, §5): undoable like its look. */
+  | { type: 'layerInfo'; layerId: string; before: LayerInfo; after: LayerInfo }
   /**
    * A layer or a group taken out of the tree with everything under it
    * (`removeLayer`), and its inverse: `node` is a copy as it was (children,
@@ -76,8 +79,9 @@ interface LayerPlace {
 const isLayerTreeOp = (o: Op): o is Extract<Op, { type: 'layerRemove' | 'layerAdd' }> => o.type === 'layerRemove' || o.type === 'layerAdd';
 
 /** Whether an op is about layers (their tree, style or the active one) rather than an object. */
-const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerService' | 'layerTemporal' | 'layerFilter' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
+const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerService' | 'layerTemporal' | 'layerFilter' | 'layerInfo' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
   o.type === 'layerStyle' ||
+  o.type === 'layerInfo' ||
   o.type === 'layerFields' ||
   o.type === 'layerService' ||
   o.type === 'layerTemporal' ||
@@ -623,6 +627,27 @@ export class CadDocument {
     const after = next ? filterOf(next) : null;
     if (sameJson(before, after)) return false;
     this.record({ type: 'layerFilter', layerId, before, after }, label);
+    return true;
+  }
+
+  /**
+   * A layer's actions and card (docs/adr/0225 §4, §5) as one undo step `label`; empty actions and an absent card take
+   * them away. Refused (`Refusal`) on a group or a layer drawn from a service, or broken by the contract's rules. Whether
+   * their templates compile is the command's. An unknown id changes nothing; returns whether it changed.
+   */
+  setLayerInfo(layerId: string, next: LayerInfo, label: string): boolean {
+    const node = this.layers.get(layerId);
+    if (!node) return false;
+    if (next.actions?.length || next.card) {
+      if (node.type === 'group') throw new Refusal(`“${node.name}” bir grup; eylemler ve bilgi kartı yalnız katmanın olur.`);
+      if (node.service) throw new Refusal(`“${node.name}” servisten çizilir; nesnesi olmayan katmanın eylemi ve kartı olmaz.`);
+      const problem = actionsProblem(next.actions ?? []) ?? (next.card ? cardProblem(next.card) : null);
+      if (problem) throw new Refusal(`Katmanın eylemleri ve kartı: ${problem}.`);
+    }
+    const before = infoOf(node, node.type);
+    const after = infoOf(next, node.type);
+    if (sameJson(before, after)) return false;
+    this.record({ type: 'layerInfo', layerId, before, after }, label);
     return true;
   }
 
@@ -1205,6 +1230,7 @@ export class CadDocument {
           else if (op.type === 'layerService') this.layers.replaceService(op.layerId, op.after.name, op.after.service, op.after.feed);
           else if (op.type === 'layerTemporal') this.layers.replaceTemporal(op.layerId, op.after);
           else if (op.type === 'layerFilter') this.layers.replaceFilter(op.layerId, op.after);
+          else if (op.type === 'layerInfo') this.layers.replaceInfo(op.layerId, op.after);
           else if (op.type === 'layerActive') {
             if (this.layers.active.value === op.before) this.layers.setActive(op.after);
           }
@@ -1365,6 +1391,7 @@ function invert(op: Op): Op {
   if (op.type === 'layerService') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerTemporal') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerFilter') return { ...op, before: op.after, after: op.before };
+  if (op.type === 'layerInfo') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerActive') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerRemove') return { ...op, type: 'layerAdd' };
   if (op.type === 'layerAdd') return { ...op, type: 'layerRemove' };

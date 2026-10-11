@@ -46,6 +46,7 @@ fn base(id: u32) -> EntityBase {
         symbol: None,
         line_weight: None,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     }
 }
 

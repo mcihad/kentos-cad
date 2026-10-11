@@ -260,6 +260,8 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         time: None,
         scenario: None,
         replaces: None,
+        actions: Vec::new(),
+        card: None,
         filter: None,
     }
 }

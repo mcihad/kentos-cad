@@ -1063,6 +1063,7 @@ class PropertiesOperation(_StrEnum):
     - ``label``: The label alone. “Etiket değiştir”.
     - ``unlink``: Öznitelikler's Bağı kopar (docs/adr/0175 §4): linked texts follow
     - ``template``: Şablonu uygula (docs/adr/0176 §6): an object template's layer, look,
+    - ``attachments``: Öznitelikler's Ekler (docs/adr/0225 §2): the objects' photos and
     """
     LAYER = "layer"
     COLOR = "color"
@@ -1072,9 +1073,10 @@ class PropertiesOperation(_StrEnum):
     LABEL = "label"
     UNLINK = "unlink"
     TEMPLATE = "template"
+    ATTACHMENTS = "attachments"
 
 
-PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink", "template"]
+PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink", "template", "attachments"]
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 
@@ -1479,6 +1481,7 @@ class Entity(_Union):
 
     if TYPE_CHECKING:
         # Every variant has these.
+        attachments: list[Attachment] | Unset
         attrs: dict[str, str]
         color: str | None | Unset
         id: int
@@ -1860,6 +1863,8 @@ class ArcEntity(Entity):
     """Arc from `a0` to `a1` (radians), always counter-clockwise.
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -1877,6 +1882,7 @@ class ArcEntity(Entity):
     r: float
     a0: float
     a1: float
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -1892,6 +1898,8 @@ class ArcEntity(Entity):
         out["r"] = float(self.r)
         out["a0"] = float(self.a0)
         out["a1"] = float(self.a1)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -1914,6 +1922,7 @@ class ArcEntity(Entity):
             r=float(data["r"]),
             a0=float(data["a0"]),
             a1=float(data["a1"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -1985,6 +1994,48 @@ class AreaPart(_Model):
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Attachment(_Model):
+    """One of an object's attachments: its name, its source (exactly one of
+    `asset`, `file` and `url`) and an optional note.
+    Attributes:
+        name: The name shown (the file's name by default).
+        asset: Embedded: the project library's PNG or JPEG asset its bytes are.
+        file: Linked: a file's path, relative to the drawing's folder when it is
+            relative.
+        note: A note shown with it (lines allowed).
+        url: A web address (`http` or `https`).
+    """
+    name: str
+    asset: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    url: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.url is not UNSET:
+            out["url"] = self.url
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Attachment:
+        return cls(
+            name=data["name"],
+            asset=data.get("asset", UNSET),
+            file=data.get("file", UNSET),
+            note=data.get("note", UNSET),
+            url=data.get("url", UNSET),
         )
 
 
@@ -2749,6 +2800,8 @@ class CircleEntity(Entity):
     PostgreSQL (`feature.id`).
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -2764,6 +2817,7 @@ class CircleEntity(Entity):
     attrs: dict[str, str]
     c: Vec2
     r: float
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -2777,6 +2831,8 @@ class CircleEntity(Entity):
         out["attrs"] = dict(self.attrs)
         out["c"] = _vec2_out(self.c)
         out["r"] = float(self.r)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -2797,6 +2853,7 @@ class CircleEntity(Entity):
             attrs=dict(data["attrs"]),
             c=Vec2.from_json(data["c"]),
             r=float(data["r"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -2913,6 +2970,8 @@ class ConstructionEntity(_Model):
     """Construction line or ray: base point and unit direction.
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -2927,6 +2986,7 @@ class ConstructionEntity(_Model):
     attrs: dict[str, str]
     p: Vec2
     dir: Vec2
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -2940,6 +3000,8 @@ class ConstructionEntity(_Model):
         out["attrs"] = dict(self.attrs)
         out["p"] = _vec2_out(self.p)
         out["dir"] = _vec2_out(self.dir)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -2960,6 +3022,7 @@ class ConstructionEntity(_Model):
             attrs=dict(data["attrs"]),
             p=Vec2.from_json(data["p"]),
             dir=Vec2.from_json(data["dir"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -3126,6 +3189,8 @@ class DimensionEntity(Entity):
         arrow: Its arrowheads; absent: oblique ticks.
         arrow_size: The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,
             `DEFAULT_ARROW` for the others.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         c: Angular: the vertex. Arc length: the arc's centre. Jogged: the centre
             the line starts from (docs/adr/0147).
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -3170,6 +3235,7 @@ class DimensionEntity(Entity):
     angle: float | None | Unset = UNSET
     arrow: DimensionArrow | DimensionArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
     c: Vec2 | None | Unset = UNSET
     color: str | None | Unset = UNSET
     decimals: int | None | Unset = UNSET
@@ -3214,6 +3280,8 @@ class DimensionEntity(Entity):
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.c is not UNSET:
             out["c"] = None if self.c is None else _vec2_out(self.c)
         if self.color is not UNSET:
@@ -3285,6 +3353,7 @@ class DimensionEntity(Entity):
             angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(DimensionArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             c=UNSET if "c" not in data else None if data["c"] is None else Vec2.from_json(data["c"]),
             color=data.get("color", UNSET),
             decimals=data.get("decimals", UNSET),
@@ -3423,6 +3492,8 @@ class EllipseEntity(Entity):
     """DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -3441,6 +3512,7 @@ class EllipseEntity(Entity):
     ratio: float
     t0: float
     t1: float
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -3457,6 +3529,8 @@ class EllipseEntity(Entity):
         out["ratio"] = float(self.ratio)
         out["t0"] = float(self.t0)
         out["t1"] = float(self.t1)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -3480,6 +3554,7 @@ class EllipseEntity(Entity):
             ratio=float(data["ratio"]),
             t0=float(data["t0"]),
             t1=float(data["t1"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -4075,9 +4150,12 @@ class EntitiesSetProperties(_Model):
     Refusals (`CommandError.code`), checked in this order: `no_entities`,
     `invalid_uid` (each id in order), `nothing_to_set` (no property given),
     `invalid_attribute` (an attribute name empty or only white space),
-    `invalid_line_weight` (a weight not a number from 0 to 100 mm), then
+    `invalid_line_weight` (a weight not a number from 0 to 100 mm),
+    `invalid_attachments` (`attachments_problem`, docs/adr/0225 §1), then
     `invalid_revision`, `revision_conflict` (status `conflict`),
-    `entity_not_found` (each id in order), `layer_not_found` and
+    `entity_not_found` (each id in order), `unknown_asset` (an embedded
+    photo whose asset is not an image of the project's library, in the
+    attachments' order), `layer_not_found` and
     `not_a_layer` (the `layerId` given), `layer_locked` (each object's layer
     in the input's order, then the `layerId` given), then `invalid_attribute`
     and `attribute_required` (the attributes given, by the fields of each
@@ -4095,6 +4173,8 @@ class EntitiesSetProperties(_Model):
         uids: The objects' persistent ids (lowercase UUID text with hyphens), at
             least one; a repeated one counts once.
         operation: What the change is; it names the undo step.
+        attachments: Their photos and documents (`EntityBase.attachments`, docs/adr/0225
+            §1), the whole list; empty: none. Absent: unchanged.
         attrs: Attributes by name, text in v1: a text sets the attribute (added when
             an object lacks it), null removes it. Absent or empty: none change.
         color: Their own colour (`EntityBase.color`, as `#E5484D`); null: their
@@ -4119,6 +4199,7 @@ class EntitiesSetProperties(_Model):
     """
     uids: list[str]
     operation: PropertiesOperation | PropertiesOperationName
+    attachments: list[Attachment] | None | Unset = UNSET
     attrs: dict[str, str | None] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -4132,6 +4213,8 @@ class EntitiesSetProperties(_Model):
         out: dict[str, Any] = {}
         out["uids"] = list(self.uids)
         out["operation"] = _enum_out(self.operation)
+        if self.attachments is not UNSET:
+            out["attachments"] = None if self.attachments is None else [e0.to_json() for e0 in self.attachments]
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.color is not UNSET:
@@ -4155,6 +4238,7 @@ class EntitiesSetProperties(_Model):
         return cls(
             uids=list(data["uids"]),
             operation=_enum_in(PropertiesOperation, data["operation"]),
+            attachments=UNSET if "attachments" not in data else None if data["attachments"] is None else [Attachment.from_json(e0) for e0 in data["attachments"]],
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
@@ -4589,6 +4673,8 @@ class HatchEntity(Entity):
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         assoc: The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -4605,6 +4691,7 @@ class HatchEntity(Entity):
     ring: list[Vec2]
     pattern: HatchPattern
     assoc: HatchAssoc | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -4621,6 +4708,8 @@ class HatchEntity(Entity):
         out["pattern"] = self.pattern.to_json()
         if self.assoc is not UNSET:
             out["assoc"] = None if self.assoc is None else self.assoc.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.holes is not UNSET:
@@ -4644,6 +4733,7 @@ class HatchEntity(Entity):
             ring=[Vec2.from_json(e0) for e0 in data["ring"]],
             pattern=HatchPattern.from_json(data["pattern"]),
             assoc=UNSET if "assoc" not in data else None if data["assoc"] is None else HatchAssoc.from_json(data["assoc"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
             label=data.get("label", UNSET),
@@ -4771,6 +4861,8 @@ class ImageEntity(Entity):
         rotation: Radians, counter-clockwise from east, about `p`.
         asset: The project library's PNG or JPEG asset its bytes are (embedded);
             exactly one of `asset` and `file` is given.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         clip: The part shown, in the picture's own fractions (0,0 its lower left,
             1,1 its upper right): at least three corners inside the unit square;
             absent: the whole picture.
@@ -4795,6 +4887,7 @@ class ImageEntity(Entity):
     height: float
     rotation: float
     asset: str | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
     clip: list[Vec2] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
@@ -4816,6 +4909,8 @@ class ImageEntity(Entity):
         out["rotation"] = float(self.rotation)
         if self.asset is not UNSET:
             out["asset"] = self.asset
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.clip is not UNSET:
             out["clip"] = None if self.clip is None else [_vec2_out(e0) for e0 in self.clip]
         if self.color is not UNSET:
@@ -4847,6 +4942,7 @@ class ImageEntity(Entity):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             asset=data.get("asset", UNSET),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             clip=UNSET if "clip" not in data else None if data["clip"] is None else [Vec2.from_json(e0) for e0 in data["clip"]],
             color=data.get("color", UNSET),
             file=data.get("file", UNSET),
@@ -4921,6 +5017,47 @@ class ImageFields(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class InfoCard(_Model):
+    """What the Bilgi tool shows of a layer's objects (docs/adr/0225 §5).
+    Attributes:
+        actions: Whether the layer's actions show (absent: they do).
+        attachments: Whether the object's attachments show (absent: they do).
+        fields: The attributes shown, in order; empty: all the object has.
+        text: Lines under the attributes, a template.
+        title: The card's title, a template; absent: the object's kind and label.
+    """
+    actions: bool | Unset = UNSET
+    attachments: bool | Unset = UNSET
+    fields: list[str] | Unset = UNSET
+    text: str | None | Unset = UNSET
+    title: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.actions is not UNSET:
+            out["actions"] = self.actions
+        if self.attachments is not UNSET:
+            out["attachments"] = self.attachments
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.text is not UNSET:
+            out["text"] = self.text
+        if self.title is not UNSET:
+            out["title"] = self.title
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InfoCard:
+        return cls(
+            actions=data.get("actions", UNSET),
+            attachments=data.get("attachments", UNSET),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            text=data.get("text", UNSET),
+            title=data.get("title", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class InsertEntity(Entity):
     """A block placed in the drawing (docs/adr/0144): its definition drawn
     moved from the definition's base point to `p`, mirrored in the
@@ -4933,6 +5070,8 @@ class InsertEntity(Entity):
         p: Where the definition's base point goes.
         scale: Positive and finite; 1 is the definition's size.
         rotation: Radians, counter-clockwise from east.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -4951,6 +5090,7 @@ class InsertEntity(Entity):
     p: Vec2
     scale: float
     rotation: float
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -4967,6 +5107,8 @@ class InsertEntity(Entity):
         out["p"] = _vec2_out(self.p)
         out["scale"] = float(self.scale)
         out["rotation"] = float(self.rotation)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -4991,6 +5133,7 @@ class InsertEntity(Entity):
             p=Vec2.from_json(data["p"]),
             scale=float(data["scale"]),
             rotation=float(data["rotation"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -5667,6 +5810,31 @@ class LabelsPinned(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerAction(_Model):
+    """An action of a layer's objects (docs/adr/0225 §4): its name and the
+    address or file it opens, a template.
+    Attributes:
+        name: The name in the menus and on the card.
+        target: An `http`, `https` or `mailto` address or a file's path, a template.
+    """
+    name: str
+    target: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["target"] = self.target
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerAction:
+        return cls(
+            name=data["name"],
+            target=data["target"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerField(_Model):
     """A field of a layer (docs/adr/0199 §1): its name is the attribute's key.
     Attributes:
@@ -5789,6 +5957,11 @@ class LayerLabels(_Model):
 class LayerNode(_Model):
     """A node of the layer tree: a group or a layer.
     Attributes:
+        actions: The addresses and files its objects open (docs/adr/0225 §4). Only a
+            layer holding objects has them, never a group or a layer drawn from a
+            service.
+        card: What the Bilgi tool shows of its objects (docs/adr/0225 §5); absent:
+            the default card. Only on a layer holding objects.
         feed: Where the layer's objects were taken from, to take them again
             (docs/adr/0208 §10). Only a layer has it, never a group.
         fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
@@ -5814,6 +5987,8 @@ class LayerNode(_Model):
     expanded: bool
     style: LayerStyle
     children: list[LayerNode]
+    actions: list[LayerAction] | Unset = UNSET
+    card: InfoCard | None | Unset = UNSET
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
     filter: LayerFilter | None | Unset = UNSET
@@ -5833,6 +6008,10 @@ class LayerNode(_Model):
         out["expanded"] = self.expanded
         out["style"] = self.style.to_json()
         out["children"] = [e0.to_json() for e0 in self.children]
+        if self.actions is not UNSET:
+            out["actions"] = [e0.to_json() for e0 in self.actions]
+        if self.card is not UNSET:
+            out["card"] = None if self.card is None else self.card.to_json()
         if self.feed is not UNSET:
             out["feed"] = None if self.feed is None else self.feed.to_json()
         if self.fields is not UNSET:
@@ -5862,6 +6041,8 @@ class LayerNode(_Model):
             expanded=data["expanded"],
             style=LayerStyle.from_json(data["style"]),
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
+            actions=[LayerAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
+            card=UNSET if "card" not in data else None if data["card"] is None else InfoCard.from_json(data["card"]),
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
@@ -6160,6 +6341,109 @@ class LayersFiltered(_Model):
             changed=data["changed"],
             passed=data["passed"],
             total=data["total"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersInfo(_Model):
+    """Input of `cad.layers.info` v1: a layer's actions and information card
+    written as one undo step “Bilgi kartı”; absent actions none, an absent
+    or null card the default card (a card with nothing in it is no card). A
+    layer that already has them as given is left as it is (`changed` false,
+    no step). They are how the layer's objects are shown and opened: a
+    locked layer takes them too.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_actions`
+    (`actions_problem`), `invalid_card` (`InfoCard::problem`),
+    `invalid_template` (an action's target, the card's title or text whose
+    `{…}` does not close, is empty, or whose expression does not compile or
+    looks at other layers; the message says which and where); then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer
+    drawn from a service: it holds no objects).
+    Attributes:
+        layer: The layer's id.
+        actions: Its actions, in order; absent or empty: none.
+        card: Its information card; absent or null: the default card.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    layer: str
+    actions: list[LayerAction] | Unset = UNSET
+    card: InfoCard | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.actions is not UNSET:
+            out["actions"] = [e0.to_json() for e0 in self.actions]
+        if self.card is not UNSET:
+            out["card"] = None if self.card is None else self.card.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersInfo:
+        return cls(
+            layer=data["layer"],
+            actions=[LayerAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
+            card=UNSET if "card" not in data else None if data["card"] is None else InfoCard.from_json(data["card"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersInfoPlan(_Model):
+    """What `cad.layers.info` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersInfoPlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersInformed(_Model):
+    """Output of `cad.layers.info` v1.
+    Attributes:
+        changed: Whether they differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersInformed:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
             revision=data["revision"],
         )
 
@@ -6610,6 +6894,8 @@ class LeaderEntity(Entity):
         arrow: The arrowhead; absent: a filled arrow.
         arrow_size: The arrowhead's length, times the note's height (docs/adr/0205 §7);
             absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -6632,6 +6918,7 @@ class LeaderEntity(Entity):
     rotation: float
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -6652,6 +6939,8 @@ class LeaderEntity(Entity):
             out["arrow"] = None if self.arrow is None else _enum_out(self.arrow)
         if self.arrow_size is not UNSET:
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -6679,6 +6968,7 @@ class LeaderEntity(Entity):
             rotation=float(data["rotation"]),
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -6804,6 +7094,8 @@ class LineEntity(Entity):
     PostgreSQL (`feature.id`).
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -6824,6 +7116,7 @@ class LineEntity(Entity):
     attrs: dict[str, str]
     a: Vec2
     b: Vec2
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -6841,6 +7134,8 @@ class LineEntity(Entity):
         out["attrs"] = dict(self.attrs)
         out["a"] = _vec2_out(self.a)
         out["b"] = _vec2_out(self.b)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -6869,6 +7164,7 @@ class LineEntity(Entity):
             attrs=dict(data["attrs"]),
             a=Vec2.from_json(data["a"]),
             b=Vec2.from_json(data["b"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -7180,6 +7476,8 @@ class PathEntity(_Model):
     """Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -7201,6 +7499,7 @@ class PathEntity(_Model):
     layer_id: str
     attrs: dict[str, str]
     pts: list[Vec2]
+    attachments: list[Attachment] | Unset = UNSET
     bulges: list[float] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
@@ -7218,6 +7517,8 @@ class PathEntity(_Model):
         out["layerId"] = self.layer_id
         out["attrs"] = dict(self.attrs)
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
         if self.color is not UNSET:
@@ -7247,6 +7548,7 @@ class PathEntity(_Model):
             layer_id=data["layerId"],
             attrs=dict(data["attrs"]),
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
@@ -7319,6 +7621,8 @@ class PointCloudEntity(_Model):
         bounds: The members' bounds together.
         count: The members' points together.
         srid: The files' system; 0: they named none and the user took the project's.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -7337,6 +7641,7 @@ class PointCloudEntity(_Model):
     count: int
     srid: int
     style: PointCloudStyle
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -7354,6 +7659,8 @@ class PointCloudEntity(_Model):
         out["count"] = self.count
         out["srid"] = self.srid
         out["style"] = self.style.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -7379,6 +7686,7 @@ class PointCloudEntity(_Model):
             count=data["count"],
             srid=data["srid"],
             style=PointCloudStyle.from_json(data["style"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -7594,6 +7902,8 @@ class PointEntity(Entity):
     PostgreSQL (`feature.id`).
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -7610,6 +7920,7 @@ class PointEntity(Entity):
     layer_id: str
     attrs: dict[str, str]
     p: Vec2
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -7624,6 +7935,8 @@ class PointEntity(Entity):
         out["layerId"] = self.layer_id
         out["attrs"] = dict(self.attrs)
         out["p"] = _vec2_out(self.p)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -7647,6 +7960,7 @@ class PointEntity(Entity):
             layer_id=data["layerId"],
             attrs=dict(data["attrs"]),
             p=Vec2.from_json(data["p"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -9077,6 +9391,8 @@ class RasterEntity(Entity):
         srid: The file's coordinate system; 0: the file named none and the user took the project's.
         asset: The project library's asset its file is (embedded); exactly one of
             `asset` and `file` is given.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         dataset: A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
@@ -9102,6 +9418,7 @@ class RasterEntity(Entity):
     srid: int
     style: RasterStyle
     asset: str | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     dataset: RasterDataset | None | Unset = UNSET
     file: str | None | Unset = UNSET
@@ -9126,6 +9443,8 @@ class RasterEntity(Entity):
         out["style"] = self.style.to_json()
         if self.asset is not UNSET:
             out["asset"] = self.asset
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.dataset is not UNSET:
@@ -9160,6 +9479,7 @@ class RasterEntity(Entity):
             srid=data["srid"],
             style=RasterStyle.from_json(data["style"]),
             asset=data.get("asset", UNSET),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else RasterDataset.from_json(data["dataset"]),
             file=data.get("file", UNSET),
@@ -9753,6 +10073,8 @@ class SplineEntity(Entity):
     PostgreSQL (`feature.id`).
     Attributes:
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -9768,6 +10090,7 @@ class SplineEntity(Entity):
     attrs: dict[str, str]
     pts: list[Vec2]
     closed: bool
+    attachments: list[Attachment] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -9781,6 +10104,8 @@ class SplineEntity(Entity):
         out["attrs"] = dict(self.attrs)
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         out["closed"] = self.closed
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -9801,6 +10126,7 @@ class SplineEntity(Entity):
             attrs=dict(data["attrs"]),
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             closed=data["closed"],
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -9927,6 +10253,8 @@ class TableEntity(Entity):
         cells: The cells' words, row by row, a row as many as there are columns;
             one line each, empty for an empty cell.
         aligns: Each column's alignment, as many as there are columns; absent: all left.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
         frame: Its frame's width, metres: the outline drawn as a band that wide
@@ -9957,6 +10285,7 @@ class TableEntity(Entity):
     columns: list[float]
     cells: list[list[str]]
     aligns: list[TableAlign | TableAlignName] | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
     bold: bool | Unset = UNSET
     color: str | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
@@ -9986,6 +10315,8 @@ class TableEntity(Entity):
         out["cells"] = [list(e0) for e0 in self.cells]
         if self.aligns is not UNSET:
             out["aligns"] = None if self.aligns is None else [_enum_out(e0) for e0 in self.aligns]
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.bold is not UNSET:
             out["bold"] = self.bold
         if self.color is not UNSET:
@@ -10031,6 +10362,7 @@ class TableEntity(Entity):
             columns=[float(e0) for e0 in data["columns"]],
             cells=[list(e0) for e0 in data["cells"]],
             aligns=UNSET if "aligns" not in data else None if data["aligns"] is None else [_enum_in(TableAlign, e0) for e0 in data["aligns"]],
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bold=data.get("bold", UNSET),
             color=data.get("color", UNSET),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
@@ -10060,6 +10392,8 @@ class TextEntity(Entity):
         height: Metres.
         rotation: Degrees, counter-clockwise from east.
         align: Where `p` is on the text; absent: the left of the baseline (docs/adr/0145).
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
         box_width: Metres, finite and over 0: the lines wrap word by word to this width.
             Absent: they end only at line breaks.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -10101,6 +10435,7 @@ class TextEntity(Entity):
     height: float
     rotation: float
     align: TextAlign | TextAlignName | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
     bold: bool | Unset = UNSET
     box_width: float | None | Unset = UNSET
     color: str | None | Unset = UNSET
@@ -10131,6 +10466,8 @@ class TextEntity(Entity):
         out["rotation"] = float(self.rotation)
         if self.align is not UNSET:
             out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.bold is not UNSET:
             out["bold"] = self.bold
         if self.box_width is not UNSET:
@@ -10180,6 +10517,7 @@ class TextEntity(Entity):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bold=data.get("bold", UNSET),
             box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
             color=data.get("color", UNSET),
@@ -10870,11 +11208,12 @@ class UpdateEntityEdit(EntityEdit):
 @dataclass(kw_only=True, slots=True)
 class ReplaceEntityEdit(EntityEdit):
     """The object becomes another in its place: the new geometry in its slot,
-    with its persistent id, layer and colour; its attributes and label only
-    with `keepData`; not its symbol (the part a trim leaves, the first part
-    of a break, a chain joined into its first object).
+    with its persistent id, layer and colour; its attributes, label and
+    attachments only with `keepData`; not its symbol (the part a trim
+    leaves, the first part of a break, a chain joined into its first
+    object).
     Attributes:
-        keep_data: True: the attributes and the label carry over.
+        keep_data: True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
     """
     TAG_VALUE: ClassVar[str] = "replace"
     uid: str
@@ -10901,14 +11240,14 @@ class ReplaceEntityEdit(EntityEdit):
 @dataclass(kw_only=True, slots=True)
 class AddEntityEdit(EntityEdit):
     """A new object made from `from`: its layer, colour and line weight; its
-    attributes and label only with `keepData` (an offset copy, a piece of
-    a break or an explode, a fillet's arc). A field given here is the new
+    attributes, label and attachments only with `keepData` (an offset
+    copy, a piece of a break or an explode, a fillet's arc). A field given here is the new
     object's own instead: a block's object exploded keeps its layer,
     colour, line weight, attributes and label (docs/adr/0144).
     Attributes:
         attrs: Its attributes, whatever `keepData` says.
         color: Its own colour (`EntityBase.color`).
-        keep_data: True: the attributes and the label carry over.
+        keep_data: True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
         label: Its label, whatever `keepData` says.
         layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
         line_weight: Its own line weight, paper mm, 0 to 100 (`EntityBase.line_weight`).
@@ -12291,6 +12630,7 @@ __all__ = [
     "ArrangeModeName",
     "ArrangeTransform",
     "ArrayLayout",
+    "Attachment",
     "AttributeDefinition",
     "AttributesTableSource",
     "AuthKind",
@@ -12415,6 +12755,7 @@ __all__ = [
     "ImageEntity",
     "ImageEntityGeometry",
     "ImageFields",
+    "InfoCard",
     "InsertEntity",
     "InsertEntityGeometry",
     "InvitationChange",
@@ -12453,6 +12794,7 @@ __all__ = [
     "LabelsPin",
     "LabelsPinPlan",
     "LabelsPinned",
+    "LayerAction",
     "LayerField",
     "LayerFieldKind",
     "LayerFieldKindName",
@@ -12471,6 +12813,9 @@ __all__ = [
     "LayersFilter",
     "LayersFilterPlan",
     "LayersFiltered",
+    "LayersInfo",
+    "LayersInfoPlan",
+    "LayersInformed",
     "LayersLabelled",
     "LayersLabels",
     "LayersLabelsPlan",

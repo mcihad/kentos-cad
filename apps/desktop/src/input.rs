@@ -165,6 +165,8 @@ impl App {
                 ViewChange::Command(id) => self.command_wanted.push(id),
                 // Köşelere koordinat yaz's schedule hangs from the cursor (docs/adr/0185 §1).
                 ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
+                // Bilgi's card moves to the object clicked, or closes (info_card.rs, docs/adr/0225 §5).
+                ViewChange::InfoCard(card) => self.info_card = card,
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p)

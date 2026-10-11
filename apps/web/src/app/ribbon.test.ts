@@ -96,8 +96,8 @@ describe('ribbon', () => {
     const selecting = seçim.items.find((i) => i.kind === 'split');
     expect(selecting?.kind === 'split' && selecting.entries.map((e) => e.command)).toEqual(['tool.select', 'tool.selectFence', 'tool.selectCircle', 'tool.selectPolygon', 'tool.selectContaining', 'tool.selectSimilar']);
     const ölçme = tabs.find((t) => t.id === 'map')!.panels.find((p) => p.label === 'Ölçme')!;
-    // Four tools and none of them main: small, three to a column.
-    expect(sized(ölçme.items)).toEqual(['tool.measure:small', 'tool.area:small', 'tool.measureAngle:small', 'tool.stationOffset:small']);
+    // Five tools and none of them main: small, three to a column; Bilgi first (docs/adr/0225 §5).
+    expect(sized(ölçme.items)).toEqual(['tool.identify:small', 'tool.measure:small', 'tool.area:small', 'tool.measureAngle:small', 'tool.stationOffset:small']);
     const curve = tabs.find((t) => t.id === 'draw')!.panels.find((p) => p.label === 'Eğri')!;
     // Menzil halkaları beside Daire dilimi (docs/adr/0197 §4).
     expect(sized(curve.items)).toEqual(['tool.circle▾:large', 'tool.arc▾:large', 'tool.ellipse:small', 'tool.spline:small', 'tool.sector:small', 'tool.rangeRings:small']);

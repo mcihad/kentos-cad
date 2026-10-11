@@ -130,8 +130,9 @@ fn height_of(e: &Entity) -> f64 {
 }
 
 /// One expression's values for the objects as `want` asks (`None` where
-/// empty), the text values as text.
-fn values<'s>(
+/// empty), the text values as text. The information card's templates
+/// (docs/adr/0225 §6) are filled with them too (`info_templates`).
+pub(crate) fn values<'s>(
     e: &Expr,
     list: &[&Entity],
     layer_name: &dyn Fn(&str) -> String,

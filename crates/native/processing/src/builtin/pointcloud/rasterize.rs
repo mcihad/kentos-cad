@@ -311,6 +311,7 @@ fn raster_object(f: &Frame, path: &str, srid: u32, (lo, hi): (f64, f64), layer: 
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         raster: RasterFields {
             affine: f.affine(),

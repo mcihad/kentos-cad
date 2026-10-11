@@ -1875,6 +1875,47 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Bilgi kartı ve eylemler (docs/adr/0225 §4, §5), held together by fixtures/commands/v1/cad.layers.info.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_INFO.into(),
+            version: crate::CAD_LAYERS_INFO_VERSION,
+            title: "Bilgi kartı ve eylemler".into(),
+            summary: "Katmanın eylemlerini ve bilgi kartını yazar. Eylem nesnenin açtığı adres ya da dosyadır: adı ve hedefi (http, https ya da mailto adresi ya da dosya yolu); kart Bilgi aracının nesnede gösterdiğidir: başlık, gösterilecek alanlar (boşsa hepsi), metin, ekler ve eylemler (attachments ve actions false ise gizlenir). \
+                      Hedef, başlık ve metin şablondur: {…} arası nesne üstünde değerlendirilen bir ifadedir (İfadeyle seç'in dili: {Ada}, {[Tapu alanı]}, {yuvarla($alan, 2)}); {{ ve }} düz ayraçtır; tek başına {$enlem} ve {$boylam} nesnenin WGS 84'teki yeridir. Adreste değerler yüzde kodlanır. \
+                      actions verilmezse eylem yoktur, card verilmezse ya da null ise varsayılan kart gösterilir. Katman ağacının değişikliğidir: tek geri alma adımı “Bilgi kartı”; aynıysa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersInfo>(),
+            output: schema::<crate::LayersInformed>(),
+            plan: Some(schema::<crate::LayersInfoPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Parselin kartı ve iki eylemi".into(),
+                    input: json!({
+                        "layer": "parsel",
+                        "actions": [
+                            { "name": "Parsel sorgu", "target": "https://parselsorgu.example/{Ada}/{Parsel}" },
+                            { "name": "Haritada aç", "target": "https://www.google.com/maps?q={$enlem},{$boylam}" }
+                        ],
+                        "card": { "title": "Parsel {Ada}/{Parsel}", "fields": ["Malik", "Nitelik"], "text": "Alan: {yuvarla($alan, 2)} m²" }
+                    }),
+                    output: Some(json!({ "layer": "parsel", "changed": true, "revision": "31" })),
+                },
+                CommandExample {
+                    title: "Varsayılan kart, eylemsiz".into(),
+                    input: json!({ "layer": "parsel" }),
+                    output: None,
+                },
+            ],
+        },
         // Etiketler (docs/adr/0212 §5), held together by fixtures/commands/v1/cad.layers.labels.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_LABELS.into(),
@@ -2220,6 +2261,9 @@ mod tests {
                     crate::CAD_LAYERS_FILTER => {
                         serde_json::from_value::<crate::LayersFilter>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_INFO => {
+                        serde_json::from_value::<crate::LayersInfo>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_LABELS => {
                         serde_json::from_value::<crate::LayersLabels>(e.input.clone()).map(|_| ())
                     }
@@ -2303,6 +2347,10 @@ mod tests {
                         }
                         crate::CAD_LAYERS_FILTER => {
                             serde_json::from_value::<crate::LayersFiltered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_INFO => {
+                            serde_json::from_value::<crate::LayersInformed>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_LABELS => {

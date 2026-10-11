@@ -1,0 +1,704 @@
+{
+ "format": "kentos.template-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/template_cases.py from docs/adr/0225 §6 alone; positions are 1-based UTF-16.",
+ "parse": [
+  {
+   "template": "",
+   "pieces": [],
+   "encoded": false
+  },
+  {
+   "template": "Düz metin",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "Düz metin"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "Parsel {Ada}/{Parsel}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "Parsel "
+    },
+    {
+     "kind": "expr",
+     "text": "Ada",
+     "at": 9
+    },
+    {
+     "kind": "text",
+     "text": "/"
+    },
+    {
+     "kind": "expr",
+     "text": "Parsel",
+     "at": 15
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{Ada}",
+   "pieces": [
+    {
+     "kind": "expr",
+     "text": "Ada",
+     "at": 2
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{{düz}}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "{düz}"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{{{Ada}}}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "{"
+    },
+    {
+     "kind": "expr",
+     "text": "Ada",
+     "at": 4
+    },
+    {
+     "kind": "text",
+     "text": "}"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "a {{ b }} c",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "a { b } c"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{ $enlem },{$boylam}",
+   "pieces": [
+    {
+     "kind": "lat"
+    },
+    {
+     "kind": "text",
+     "text": ","
+    },
+    {
+     "kind": "lon"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "https://www.google.com/maps?q={$enlem},{$boylam}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "https://www.google.com/maps?q="
+    },
+    {
+     "kind": "lat"
+    },
+    {
+     "kind": "text",
+     "text": ","
+    },
+    {
+     "kind": "lon"
+    }
+   ],
+   "encoded": true
+  },
+  {
+   "template": "  HTTPS://a.org/{Ad}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "  HTTPS://a.org/"
+    },
+    {
+     "kind": "expr",
+     "text": "Ad",
+     "at": 18
+    }
+   ],
+   "encoded": true
+  },
+  {
+   "template": "mailto:{Eposta}?subject=Parsel%20{Ada}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "mailto:"
+    },
+    {
+     "kind": "expr",
+     "text": "Eposta",
+     "at": 9
+    },
+    {
+     "kind": "text",
+     "text": "?subject=Parsel%20"
+    },
+    {
+     "kind": "expr",
+     "text": "Ada",
+     "at": 35
+    }
+   ],
+   "encoded": true
+  },
+  {
+   "template": "ftp://a.org/{Ad}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "ftp://a.org/"
+    },
+    {
+     "kind": "expr",
+     "text": "Ad",
+     "at": 14
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "belgeler/{Ada}-{Parsel}.pdf",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "belgeler/"
+    },
+    {
+     "kind": "expr",
+     "text": "Ada",
+     "at": 11
+    },
+    {
+     "kind": "text",
+     "text": "-"
+    },
+    {
+     "kind": "expr",
+     "text": "Parsel",
+     "at": 17
+    },
+    {
+     "kind": "text",
+     "text": ".pdf"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{'}' || [a}b]}",
+   "pieces": [
+    {
+     "kind": "expr",
+     "text": "'}' || [a}b]",
+     "at": 2
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{\"x}\"\"y\" || 'a''}b'}",
+   "pieces": [
+    {
+     "kind": "expr",
+     "text": "\"x}\"\"y\" || 'a''}b'",
+     "at": 2
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{[Tapu alanı]} m²",
+   "pieces": [
+    {
+     "kind": "expr",
+     "text": "[Tapu alanı]",
+     "at": 2
+    },
+    {
+     "kind": "text",
+     "text": " m²"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "Alan: {yuvarla($alan, 2)} m²\nTapu: {[Tapu alanı]} m²",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "Alan: "
+    },
+    {
+     "kind": "expr",
+     "text": "yuvarla($alan, 2)",
+     "at": 8
+    },
+    {
+     "kind": "text",
+     "text": " m²\nTapu: "
+    },
+    {
+     "kind": "expr",
+     "text": "[Tapu alanı]",
+     "at": 37
+    },
+    {
+     "kind": "text",
+     "text": " m²"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "😀{Ad}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "😀"
+    },
+    {
+     "kind": "expr",
+     "text": "Ad",
+     "at": 4
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "ç{Ad}😀{Soyad}",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "ç"
+    },
+    {
+     "kind": "expr",
+     "text": "Ad",
+     "at": 3
+    },
+    {
+     "kind": "text",
+     "text": "😀"
+    },
+    {
+     "kind": "expr",
+     "text": "Soyad",
+     "at": 9
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{$enlemx}",
+   "pieces": [
+    {
+     "kind": "expr",
+     "text": "$enlemx",
+     "at": 2
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{ $boylam}",
+   "pieces": [
+    {
+     "kind": "lon"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{$alan}",
+   "pieces": [
+    {
+     "kind": "expr",
+     "text": "$alan",
+     "at": 2
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{@proje_adı}",
+   "pieces": [
+    {
+     "kind": "expr",
+     "text": "@proje_adı",
+     "at": 2
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "a {Ada",
+   "error": {
+    "at": 3,
+    "message": "“{” kapanmamış: ifadeyi “}” ile kapatın (düz ayraç için {{ yazın)."
+   }
+  },
+  {
+   "template": "a } b",
+   "error": {
+    "at": 3,
+    "message": "“}” tek başına; düz ayraç için }} yazın."
+   }
+  },
+  {
+   "template": "{Ada}}",
+   "error": {
+    "at": 6,
+    "message": "“}” tek başına; düz ayraç için }} yazın."
+   }
+  },
+  {
+   "template": "x{ }",
+   "error": {
+    "at": 2,
+    "message": "“{}” boş: araya bir ifade yazın."
+   }
+  },
+  {
+   "template": "x{ 　}",
+   "error": {
+    "at": 2,
+    "message": "“{}” boş: araya bir ifade yazın."
+   }
+  },
+  {
+   "template": "{}",
+   "error": {
+    "at": 1,
+    "message": "“{}” boş: araya bir ifade yazın."
+   }
+  },
+  {
+   "template": "{a {b}",
+   "error": {
+    "at": 1,
+    "message": "“{” kapanmamış: ifadeyi “}” ile kapatın (düz ayraç için {{ yazın)."
+   }
+  },
+  {
+   "template": "{'a}",
+   "error": {
+    "at": 1,
+    "message": "“{” kapanmamış: ifadeyi “}” ile kapatın (düz ayraç için {{ yazın)."
+   }
+  },
+  {
+   "template": "{[a}",
+   "error": {
+    "at": 1,
+    "message": "“{” kapanmamış: ifadeyi “}” ile kapatın (düz ayraç için {{ yazın)."
+   }
+  },
+  {
+   "template": "{\"a}",
+   "error": {
+    "at": 1,
+    "message": "“{” kapanmamış: ifadeyi “}” ile kapatın (düz ayraç için {{ yazın)."
+   }
+  },
+  {
+   "template": "😀}",
+   "error": {
+    "at": 3,
+    "message": "“}” tek başına; düz ayraç için }} yazın."
+   }
+  },
+  {
+   "template": "}}{{",
+   "pieces": [
+    {
+     "kind": "text",
+     "text": "}{"
+    }
+   ],
+   "encoded": false
+  },
+  {
+   "template": "{Ada}{Parsel}",
+   "pieces": [
+    {
+     "kind": "expr",
+     "text": "Ada",
+     "at": 2
+    },
+    {
+     "kind": "expr",
+     "text": "Parsel",
+     "at": 7
+    }
+   ],
+   "encoded": false
+  }
+ ],
+ "fill": [
+  {
+   "template": "Parsel {Ada}/{Parsel}",
+   "values": [
+    "101",
+    "5"
+   ],
+   "text": "Parsel 101/5"
+  },
+  {
+   "template": "Parsel {Ada}/{Parsel}",
+   "values": [
+    null,
+    "5"
+   ],
+   "text": "Parsel /5"
+  },
+  {
+   "template": "Parsel {Ada}/{Parsel}",
+   "values": [
+    "101"
+   ],
+   "text": "Parsel 101/"
+  },
+  {
+   "template": "https://parselsorgu.example/{Ada}/{Parsel}",
+   "values": [
+    "101",
+    "5/A"
+   ],
+   "text": "https://parselsorgu.example/101/5%2FA"
+  },
+  {
+   "template": "https://a.org/?q={Ad}",
+   "values": [
+    "Ayşe & Ali ~-._"
+   ],
+   "text": "https://a.org/?q=Ay%C5%9Fe%20%26%20Ali%20~-._"
+  },
+  {
+   "template": "https://a.org/{Ad}",
+   "values": [
+    "😀"
+   ],
+   "text": "https://a.org/%F0%9F%98%80"
+  },
+  {
+   "template": "mailto:{Eposta}",
+   "values": [
+    "a@b.org"
+   ],
+   "text": "mailto:a%40b.org"
+  },
+  {
+   "template": "belgeler/{Ada} {Parsel}.pdf",
+   "values": [
+    "1 2",
+    "ş"
+   ],
+   "text": "belgeler/1 2 ş.pdf"
+  },
+  {
+   "template": "{Adres}",
+   "values": [
+    "https://kurum.example/a b"
+   ],
+   "text": "https://kurum.example/a b"
+  },
+  {
+   "template": "https://www.google.com/maps?q={$enlem},{$boylam}",
+   "values": [],
+   "place": [
+    41.0123456789,
+    28.987654321
+   ],
+   "text": "https://www.google.com/maps?q=41.01234568,28.98765432"
+  },
+  {
+   "template": "https://www.google.com/maps?q={$enlem},{$boylam}",
+   "values": [],
+   "place": [
+    -33.8688197,
+    -1e-09
+   ],
+   "text": "https://www.google.com/maps?q=-33.86881970,0.00000000"
+  },
+  {
+   "template": "https://www.google.com/maps?q={$enlem},{$boylam}",
+   "values": [],
+   "text": "https://www.google.com/maps?q=,"
+  },
+  {
+   "template": "Yer: {$enlem} {$boylam}",
+   "values": [],
+   "place": [
+    39.925533,
+    32.866287
+   ],
+   "text": "Yer: 39.92553300 32.86628700"
+  },
+  {
+   "template": "Yer: {$enlem}",
+   "values": [],
+   "place": [
+    5e-09,
+    0.0
+   ],
+   "text": "Yer: 0.00000001"
+  },
+  {
+   "template": "Yer: {$enlem}",
+   "values": [],
+   "place": [
+    -4e-09,
+    0.0
+   ],
+   "text": "Yer: 0.00000000"
+  },
+  {
+   "template": "{{{Ada}}}",
+   "values": [
+    "7"
+   ],
+   "text": "{7}"
+  },
+  {
+   "template": "Düz",
+   "values": [],
+   "text": "Düz"
+  }
+ ],
+ "target": [
+  {
+   "target": "https://a.org",
+   "kind": "address"
+  },
+  {
+   "target": "http://a.org/x?y=1",
+   "kind": "address"
+  },
+  {
+   "target": "  https://a.org  ",
+   "kind": "address"
+  },
+  {
+   "target": "HTTPS://A.ORG",
+   "kind": "address"
+  },
+  {
+   "target": "mailto:a@b.org",
+   "kind": "address"
+  },
+  {
+   "target": "MailTo:a@b.org",
+   "kind": "address"
+  },
+  {
+   "target": "https://",
+   "kind": "refused"
+  },
+  {
+   "target": "mailto:",
+   "kind": "refused"
+  },
+  {
+   "target": "https://a.org/a b",
+   "kind": "refused"
+  },
+  {
+   "target": "https://a.org/a b",
+   "kind": "refused"
+  },
+  {
+   "target": "javascript:alert(1)",
+   "kind": "refused"
+  },
+  {
+   "target": "JavaScript:alert(1)",
+   "kind": "refused"
+  },
+  {
+   "target": "data:text/html,<b>x</b>",
+   "kind": "refused"
+  },
+  {
+   "target": "file:///etc/passwd",
+   "kind": "refused"
+  },
+  {
+   "target": "ftp://a.org",
+   "kind": "refused"
+  },
+  {
+   "target": "C:\\belgeler\\a.pdf",
+   "kind": "file"
+  },
+  {
+   "target": "c:/belgeler/a.pdf",
+   "kind": "file"
+  },
+  {
+   "target": "C:belgeler",
+   "kind": "refused"
+  },
+  {
+   "target": "belgeler/101-5.pdf",
+   "kind": "file"
+  },
+  {
+   "target": "/home/kullanici/a.pdf",
+   "kind": "file"
+  },
+  {
+   "target": "../a.pdf",
+   "kind": "file"
+  },
+  {
+   "target": "a:b",
+   "kind": "refused"
+  },
+  {
+   "target": "1a:b",
+   "kind": "file"
+  },
+  {
+   "target": "ç:b",
+   "kind": "file"
+  },
+  {
+   "target": "",
+   "kind": "refused"
+  },
+  {
+   "target": "   ",
+   "kind": "refused"
+  },
+  {
+   "target": "　",
+   "kind": "refused"
+  }
+ ]
+}

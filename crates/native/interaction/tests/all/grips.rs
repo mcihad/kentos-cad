@@ -186,6 +186,7 @@ fn a_grip_that_would_break_the_shape_is_left_where_it_was() {
                 symbol: None,
                 line_weight: None,
                 label_pins: Vec::new(),
+                attachments: Vec::new(),
             },
             c: Wire { x: E, y: N + 20.0 },
             r: 4.0,

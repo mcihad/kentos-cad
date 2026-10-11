@@ -1069,6 +1069,45 @@ cases.append({
     ],
 })
 
+# Attachments go with the data (docs/adr/0225 §1): an update keeps them, a replacement or a new piece takes them
+# with keepData only, as it takes the attributes and the label; the labels' pins never (they are the object's place's).
+ATTACHED = {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {"Ad": "Direk hattı"}, "label": "H1", "a": P(487000, 4420000), "b": P(487020, 4420000),
+            "attachments": [{"name": "Direk", "file": "foto/direk-12.jpg"}, {"name": "Kurum sayfası", "url": "https://kurum.example/hat/1"}],
+            "labelPins": [{"hidden": True}]}
+A_SETUP = {**SETUP, "entities": [ATTACHED]}
+
+
+def a_inherited(geometry, keep, slot):
+    out = json.loads(json.dumps(geometry))
+    out["id"] = slot
+    out["layerId"] = ATTACHED["layerId"]
+    out["attrs"] = ATTACHED["attrs"] if keep else {}
+    if keep:
+        out["label"] = ATTACHED["label"]
+        out["attachments"] = ATTACHED["attachments"]
+    return out
+
+
+cases.append({
+    "name": "Ekler verisiyle gider: update ekleri ve etiket iğnelerini korur; replace ve add keepData ile ekleri taşır, keepData'sız almaz; etiket iğneleri parçalara geçmez",
+    "setup": A_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "extend", "changes": [{"kind": "update", "uid": uid(1), "geometry": line(487000, 4420000, 487030, 4420000)}]}, "result": done(changed=[uid(1)]),
+         "expect": {"ids": [1], "entities": {"1": {**json.loads(json.dumps(ATTACHED)), "b": P(487030, 4420000)}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Uzat", "expect": {"entities": {"1": ATTACHED}}},
+        {"op": "execute", "input": {"operation": "split", "changes": [{"kind": "replace", "uid": uid(1), "geometry": PIECE_A, "keepData": True},
+                                                                      {"kind": "add", "from": uid(1), "geometry": PIECE_B, "keepData": True}]},
+         "result": done(changed=[uid(1)], created=[uid(2)]),
+         "expect": {"ids": [1, 2], "entities": {"1": a_inherited(PIECE_A, True, 1), "2": a_inherited(PIECE_B, True, 2)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçala", "expect": {"ids": [1], "entities": {"1": ATTACHED}}},
+        {"op": "execute", "input": {"operation": "trim", "changes": [{"kind": "replace", "uid": uid(1), "geometry": PIECE_A}, {"kind": "add", "from": uid(1), "geometry": PIECE_B}]},
+         "result": done(changed=[uid(1)], created=[uid(3)]),
+         "note": "Geri alınan parçanın yuvası yeniden verilmez: yeni parça 3'te.",
+         "expect": {"ids": [1, 3], "entities": {"1": a_inherited(PIECE_A, False, 1), "3": a_inherited(PIECE_B, False, 3)}, "revision": "changed"}},
+    ],
+})
+
+
 cases.append({
     "name": "Yönü çevir ve Sadeleştir: nesnenin yeni geometrisi, öbür alanları kalır; her biri tek adım, adı işlemin",
     "steps": [

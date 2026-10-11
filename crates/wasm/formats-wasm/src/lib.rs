@@ -87,6 +87,21 @@ pub fn read_gnss(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
     to_json(&kentos_formats::gnss::read(bytes))
 }
 
+/// Reads a photo's EXIF (docs/adr/0225 §3): a JPEG's APP1 or a TIFF's
+/// header; the result `PhotoExif` (JSON bytes), its place in WGS 84 as the
+/// file wrote it.
+#[wasm_bindgen(js_name = readExif)]
+pub fn read_exif(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
+    to_json(&kentos_formats::exif::read(bytes))
+}
+
+/// Whether more of a photo's file is needed to find its EXIF (its first
+/// bytes end before the JPEG's first scan and no EXIF came before).
+#[wasm_bindgen(js_name = exifNeedsMore)]
+pub fn exif_needs_more(bytes: &[u8]) -> bool {
+    kentos_formats::exif::needs_more(bytes)
+}
+
 /// Reads a table's file (docs/adr/0184 §4, 0223 §1): an Excel workbook or
 /// an OpenDocument spreadsheet sheet by sheet, else a text file's records by
 /// its separator; within Tablo ekle's limits, or İşlemler's when

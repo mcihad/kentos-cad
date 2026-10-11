@@ -337,6 +337,7 @@ pub(crate) fn replaced(
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         block: BlockId([0; 16]),
         p: base,

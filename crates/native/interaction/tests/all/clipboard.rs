@@ -360,6 +360,7 @@ fn a_paste_goes_through_the_commands_in_one_step() {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         p: kentos_contracts::Vec2 { x: E, y: N },
         text: "   ".to_owned(),

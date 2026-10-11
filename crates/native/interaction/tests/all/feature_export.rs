@@ -22,6 +22,7 @@ fn object(o: &Value, id: u32) -> Entity {
         symbol: None,
         line_weight: None,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     };
     let v = |x: f64, y: f64| Vec2 { x, y };
     match o["kind"].as_str() {

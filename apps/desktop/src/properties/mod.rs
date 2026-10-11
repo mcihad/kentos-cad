@@ -283,6 +283,12 @@ impl App {
                 panel.sections.insert(0, section);
             }
         }
+        // One object: its photos and documents and its layer's actions, after its attributes (docs/adr/0225 §2, §4).
+        if let [slot] = selected[..] {
+            panel
+                .sections
+                .extend(rows::attachments::sections(self, slot));
+        }
         panel
     }
 
@@ -340,12 +346,51 @@ impl App {
             if !open {
                 continue;
             }
-            for row in section.rows {
+            for mut row in section.rows {
                 let label = row.label.clone();
-                sheet = sheet.row(label, self.cell(row));
+                // An attachment's picture before its cell (docs/adr/0225 §2).
+                let thumb = row.thumb.take();
+                let cell = self.cell(row);
+                let cell = match thumb {
+                    Some(t) => iced::widget::row![self.thumb(t), container(cell).width(Fill)]
+                        .spacing(6)
+                        .align_y(iced::Center)
+                        .into(),
+                    None => cell,
+                };
+                sheet = sheet.row(label, cell);
             }
         }
         Column::new().push(head).push(sheet).width(Fill).into()
+    }
+
+    /// An attachment's picture: its photo once decoded, else its kind's icon;
+    /// pressed, it opens it; under the pointer, where it is.
+    fn thumb<'a>(&'a self, t: rows::Thumb) -> Element<'a, Message> {
+        const W: f32 = 36.0;
+        const H: f32 = 27.0;
+        let face: Element<'a, Message> = match self.photo_picture(t.key.as_deref()) {
+            Some(picture) => {
+                crate::photo_view::photo(Some(picture), W, H, crate::photo_view::Fit::Cover)
+            }
+            None => {
+                container(kentos_ui::icon::icon(crate::icons::from_web(Some(t.icon))).size(16.0))
+                    .width(W)
+                    .height(H)
+                    .center_x(W)
+                    .center_y(H)
+                    .style(kentos_ui::style::container::field)
+                    .into()
+            }
+        };
+        kentos_ui::widget::tip(
+            iced::widget::button(face)
+                .on_press(t.open)
+                .padding(0)
+                .style(kentos_ui::style::button::ghost),
+            kentos_ui::widget::Tip::new(t.title),
+            iced::widget::tooltip::Position::Top,
+        )
     }
 
     /// A row's value: text, an editable cell or a drop-down.
@@ -629,6 +674,7 @@ fn set_input(
         operation,
         expected_revision: None,
         unlink: false,
+        attachments: None,
     }
 }
 
@@ -967,6 +1013,13 @@ fn menu(items: &[(Choice, Option<Color>)]) -> Menu<Message> {
             }
             Choice::Separator => menu.separator(),
             Choice::Command { label, icon, id } => menu.item(*label, Message::Run(id)).icon(*icon),
+            Choice::Action {
+                label,
+                icon,
+                message,
+            } => menu
+                .item(*label, message.clone())
+                .icon(crate::icons::from_web(Some(icon))),
         })
 }
 

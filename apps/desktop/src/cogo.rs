@@ -324,6 +324,7 @@ impl App {
                         operation: PropertiesOperation::Attributes,
                         expected_revision: None,
                         unlink: false,
+                        attachments: None,
                     };
                     if let Some(error) =
                         refusal(set::execute(&mut ExecutionContext::new(doc), input))

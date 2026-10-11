@@ -20,6 +20,7 @@ import { cornerRows, holeRows } from './pathRows';
 import { dimensionRows } from './dimensionRows';
 import { hatchRows } from './hatchRows';
 import { imageRows } from './imageRows';
+import { actionRows, attachmentRows } from './attachmentRows';
 import { rasterService } from '../../render/rasterService';
 import { rasterRows } from './rasterRows';
 import { leaderRows } from './leaderRows';
@@ -559,6 +560,11 @@ export class PropertiesPanel extends Panel {
         })),
       });
     }
+    // Its photos and documents and its layer's actions (docs/adr/0225 §2, §4), after its attributes.
+    const attached = attachmentRows(this.ctx, e, locked);
+    if (attached.length) sections.push({ id: 'attachments', title: e.attachments?.length ? `Ekler (${e.attachments.length})` : 'Ekler', rows: attached });
+    const actions = actionRows(this.ctx, e);
+    if (actions.length) sections.push({ id: 'actions', title: 'Eylemler', rows: actions });
     return sections;
   }
 

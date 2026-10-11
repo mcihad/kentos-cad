@@ -428,6 +428,21 @@ pub struct Observation {
     /// The colour and line weight new objects take now.
     pub current_color: Option<String>,
     pub current_weight: Option<f64>,
+    /// Bilgi's card while it shows (docs/adr/0225 §5).
+    pub info_card: Option<InfoCardSeen>,
+}
+
+/// Bilgi's card as a step sees it: the object's id, the title, the rows (“ad: değer”), the text, the
+/// actions' names and the attachments' count.
+#[derive(Clone, Debug, PartialEq)]
+pub struct InfoCardSeen {
+    pub id: u32,
+    pub title: String,
+    pub rows: Vec<String>,
+    pub text: Option<String>,
+    pub actions: Vec<String>,
+    pub targets: Vec<String>,
+    pub attachments: usize,
 }
 
 /// Object tracking's lock as a step sees it: the point and each line's origin and angle.
@@ -1247,6 +1262,28 @@ impl<'a> Player<'a> {
             }),
             current_color: app.draft.color_text(),
             current_weight: app.draft.line_weight,
+            info_card: app.info_card.and_then(|(slot, _)| {
+                let e = doc?.model.get(slot)?;
+                let card = app.slot_card(slot)?;
+                Some(InfoCardSeen {
+                    id: e.base().id,
+                    title: card.title,
+                    // As the card reads: an empty value is “—”.
+                    rows: card
+                        .rows
+                        .into_iter()
+                        .map(|(k, v)| format!("{k}: {}", if v.is_empty() { "—" } else { &v }))
+                        .collect(),
+                    text: card.text,
+                    actions: app.slot_actions(slot).into_iter().map(|a| a.name).collect(),
+                    targets: app
+                        .slot_actions(slot)
+                        .into_iter()
+                        .map(|a| a.error.or(a.target).unwrap_or_default())
+                        .collect(),
+                    attachments: e.base().attachments.len(),
+                })
+            }),
         }
     }
 }

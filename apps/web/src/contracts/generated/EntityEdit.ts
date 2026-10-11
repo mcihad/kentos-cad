@@ -7,11 +7,11 @@ import type { EntityGeometry } from "./EntityGeometry";
  */
 export type EntityEdit = { "kind": "update", uid: string, geometry: EntityGeometry, } | { "kind": "replace", uid: string, geometry: EntityGeometry, 
 /**
- * True: the attributes and the label carry over.
+ * True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
  */
 keepData?: boolean, } | { "kind": "add", from: string, geometry: EntityGeometry, 
 /**
- * True: the attributes and the label carry over.
+ * True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
  */
 keepData?: boolean, 
 /**

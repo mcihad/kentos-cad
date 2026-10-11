@@ -58,6 +58,7 @@ fn parcel(i: usize, shift: f64) -> Entity {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         pts,
         bulges: None,
@@ -126,6 +127,8 @@ fn opened(n: usize) -> Opened {
         time: None,
         scenario: None,
         replaces: None,
+        actions: Vec::new(),
+        card: None,
         filter: None,
     }];
     let project = Uuid::now_v7();

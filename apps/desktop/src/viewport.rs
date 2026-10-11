@@ -821,8 +821,8 @@ impl Viewport {
             ViewChange::Fit { bounds, padding } => self.camera.fit(&bounds, padding),
             // The app opens the text field (text_field.rs), its window again
             // with the picked point (calc/), Blok oluştur's (blocks.rs), Blok
-            // ekle's values (attribute_values.rs) or a text file's dialog
-            // (text_file.rs); the camera stays.
+            // ekle's values (attribute_values.rs), a text file's dialog
+            // (text_file.rs) or Bilgi's card (info_card.rs); the camera stays.
             ViewChange::Text(_)
             | ViewChange::Paragraph(_)
             | ViewChange::Picked(_)
@@ -835,6 +835,7 @@ impl Viewport {
             | ViewChange::CloudQuery { .. }
             | ViewChange::Network(_)
             | ViewChange::Command(_)
+            | ViewChange::InfoCard(_)
             | ViewChange::PlaceTable(..) => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));

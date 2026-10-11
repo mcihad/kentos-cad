@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
 from .types import (  # noqa: F401
     ArrayLayout,
+    Attachment,
     CreateOperation,
     CreateOperationName,
     EditOperation,
@@ -550,6 +551,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         *,
         uids: Sequence[str],
         operation: PropertiesOperation | PropertiesOperationName,
+        attachments: Sequence[Attachment] | None | Unset = UNSET,
         attrs: Mapping[str, str | None] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -578,6 +580,8 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             uids: The objects' persistent ids (lowercase UUID text with hyphens), at
                 least one; a repeated one counts once.
             operation: What the change is; it names the undo step.
+            attachments: Their photos and documents (`EntityBase.attachments`, docs/adr/0225
+                §1), the whole list; empty: none. Absent: unchanged.
             attrs: Attributes by name, text in v1: a text sets the attribute (added when
                 an object lacks it), null removes it. Absent or empty: none change.
             color: Their own colour (`EntityBase.color`, as `#E5484D`); null: their
@@ -610,6 +614,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         return self.execute_input(doc, EntitiesSetProperties(
             uids=list(uids),
             operation=operation,
+            attachments=_opt(attachments, lambda x: list(x)),
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,
@@ -627,6 +632,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         *,
         uids: Sequence[str],
         operation: PropertiesOperation | PropertiesOperationName,
+        attachments: Sequence[Attachment] | None | Unset = UNSET,
         attrs: Mapping[str, str | None] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -642,6 +648,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         return self.plan_input(doc, EntitiesSetProperties(
             uids=list(uids),
             operation=operation,
+            attachments=_opt(attachments, lambda x: list(x)),
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,
@@ -659,6 +666,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         *,
         uids: Sequence[str],
         operation: PropertiesOperation | PropertiesOperationName,
+        attachments: Sequence[Attachment] | None | Unset = UNSET,
         attrs: Mapping[str, str | None] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -674,6 +682,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         return self.validate_input(doc, EntitiesSetProperties(
             uids=list(uids),
             operation=operation,
+            attachments=_opt(attachments, lambda x: list(x)),
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,

@@ -1,0 +1,101 @@
+{
+ "format": "kentos.exif-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/exif_cases.py from docs/adr/0225 §3 alone; floats are the exact values rounded once.",
+ "cases": [
+  {
+   "file": "konum.jpg",
+   "altitude": 938.5,
+   "direction": 135.25,
+   "latitude": 39.925533333333334,
+   "longitude": 32.86628611111111,
+   "taken": "2024-05-17T10:32:05+03:00",
+   "camera": "Canon EOS R5"
+  },
+  {
+   "file": "guney-bati.jpg",
+   "altitude": -12.0,
+   "direction": 10.0,
+   "magnetic": true,
+   "latitude": -33.865363888888886,
+   "longitude": -151.20936111111112,
+   "taken": "2023-11-02T08:15:59",
+   "camera": "Motorola moto g84"
+  },
+  {
+   "file": "gps-saati.jpg",
+   "altitude": 938.5,
+   "direction": 135.25,
+   "latitude": 39.925533333333334,
+   "longitude": 32.86628611111111,
+   "taken": "2024-12-31T23:59:15Z",
+   "camera": "Apple iPhone 15 Pro"
+  },
+  {
+   "file": "gpssiz.jpg",
+   "problem": "Fotoğrafta GPS konumu yok.",
+   "taken": "2022-07-01T12:00:00",
+   "camera": "NIKON CORPORATION NIKON D850"
+  },
+  {
+   "file": "exifsiz.jpg",
+   "problem": "Fotoğrafta EXIF bilgisi yok."
+  },
+  {
+   "file": "sifir-payda.jpg",
+   "altitude": 938.5,
+   "direction": 135.25,
+   "problem": "Fotoğrafın GPS konumu okunamadı.",
+   "taken": "2024-05-17T07:32:05Z",
+   "camera": "Canon EOS 90D"
+  },
+  {
+   "file": "sinir-disi.jpg",
+   "altitude": 938.5,
+   "direction": 135.25,
+   "problem": "Fotoğrafın GPS konumu enlem ya da boylam sınırlarının dışında.",
+   "taken": "2024-05-17T07:32:05Z",
+   "camera": "Canon EOS 90D"
+  },
+  {
+   "file": "yarim-gps.jpg",
+   "problem": "Fotoğrafın GPS konumu okunamadı."
+  },
+  {
+   "file": "ondalik-dakika.jpg",
+   "latitude": 41.20576116666667,
+   "longitude": 28.979423833333332,
+   "camera": "GoPro HERO12"
+  },
+  {
+   "file": "bilinmeyen-yon.jpg",
+   "altitude": 938.5,
+   "direction": 135.25,
+   "problem": "Fotoğrafın GPS konumu okunamadı.",
+   "taken": "2024-05-17T07:32:05Z",
+   "camera": "Canon EOS 90D"
+  },
+  {
+   "file": "bos-tarih.jpg",
+   "altitude": 938.5,
+   "direction": 135.25,
+   "latitude": 39.925533333333334,
+   "longitude": 32.86628611111111,
+   "camera": "Apple iPhone 13"
+  },
+  {
+   "file": "bozuk-ifd.jpg",
+   "problem": "Fotoğrafın EXIF bilgisi bozuk."
+  },
+  {
+   "file": "yalniz-tiff.tif",
+   "latitude": 39.925533333333334,
+   "longitude": 32.86628611111111,
+   "camera": "Canon EOS 90D"
+  },
+  {
+   "file": "metin.txt",
+   "problem": "Dosya JPEG değil."
+  }
+ ]
+}

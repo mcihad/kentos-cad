@@ -80,6 +80,10 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
     if let Some(problem) = kentos_contracts::labels_problem(tree) {
         return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
     }
+    // The layers' actions and cards (docs/adr/0225 §4, §5): on a layer with objects, by their rules.
+    if let Some(problem) = kentos_contracts::infos_problem(tree) {
+        return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
+    }
     match find_layer(tree, active) {
         Some((n, _)) if n.kind == LayerNodeType::Layer => Ok(()),
         _ => Err(AppError::invalid(format!(
@@ -507,9 +511,10 @@ pub(crate) type FeatureRow = (
     Option<String>,
     Option<f64>,
     Option<Value>,
+    Option<Value>,
 );
 
-pub(crate) const FEATURE_COLUMNS: &str = "id, version, layer_id, kind, source_kind, public.st_asewkb(geom), cad_definition, properties, label, color, symbol, line_weight, label_pins";
+pub(crate) const FEATURE_COLUMNS: &str = "id, version, layer_id, kind, source_kind, public.st_asewkb(geom), cad_definition, properties, label, color, symbol, line_weight, label_pins, attachments";
 
 pub(crate) fn record(
     (
@@ -526,6 +531,7 @@ pub(crate) fn record(
         symbol,
         line_weight,
         label_pins,
+        attachments,
     ): FeatureRow,
 ) -> AppResult<FeatureRecord> {
     let source_kind = if source_kind == "geom" { "geom" } else { "cad" };
@@ -541,6 +547,7 @@ pub(crate) fn record(
         symbol,
         line_weight,
         label_pins,
+        attachments,
     };
     let entity = from_stored(&stored)
         .map_err(|e| AppError::invalid(format!("Nesne {id} okunamadı: {e}")))?;
@@ -672,6 +679,8 @@ mod tests {
             time: None,
             scenario: None,
             replaces: None,
+            actions: Vec::new(),
+            card: None,
             filter: None,
         }
     }

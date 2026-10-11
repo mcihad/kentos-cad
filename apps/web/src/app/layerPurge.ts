@@ -10,14 +10,18 @@ import type { AppContext } from './context';
  * the library, which keeps no undo (docs/adr/0092). A project without project.edit may not change its tree.
  */
 
-const objectOf = (e: { layerId: string; symbol?: string; kind?: string; block?: string; asset?: string }): PurgeObject => ({
-  layer: e.layerId,
-  ...(e.symbol && { symbol: e.symbol }),
-  ...(e.kind === 'insert' && e.block && { block: e.block }),
-  // A picture's image (docs/adr/0192 §2).
-  // A picture's image (docs/adr/0192 §2) and a raster's file (docs/adr/0204 §2).
-  ...((e.kind === 'image' || e.kind === 'raster') && e.asset && { asset: e.asset }),
-});
+const objectOf = (e: { layerId: string; symbol?: string; kind?: string; block?: string; asset?: string; attachments?: readonly { asset?: string }[] }): PurgeObject => {
+  const photos = (e.attachments ?? []).flatMap((a) => (a.asset != null ? [a.asset] : []));
+  return {
+    layer: e.layerId,
+    ...(e.symbol && { symbol: e.symbol }),
+    ...(e.kind === 'insert' && e.block && { block: e.block }),
+    // A picture's image (docs/adr/0192 §2) and a raster's file (docs/adr/0204 §2).
+    ...((e.kind === 'image' || e.kind === 'raster') && e.asset && { asset: e.asset }),
+    // Its embedded photos (docs/adr/0225 §1).
+    ...(photos.length && { attachments: photos }),
+  };
+};
 
 /** What the rule reads of the open drawing and the library. */
 export function purgeSource(ctx: AppContext): PurgeSource {

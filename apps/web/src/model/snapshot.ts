@@ -43,6 +43,11 @@ import { annotationHeightsProblem, ANNOTATION_KINDS, type AnnotationHeights } fr
 import { assocProblem, patternProblem } from './hatchRules';
 import type { LayerInit, LayerNode, LayerSnap } from './layers';
 import { filtersProblem } from './layerFilterRules';
+import { attachmentsProblem } from './attachmentRules';
+import { actionsProblem, cardProblem, infosProblem } from './layerInfoRules';
+import type { Attachment } from '../contracts/generated/Attachment';
+import type { InfoCard } from '../contracts/generated/InfoCard';
+import type { LayerAction } from '../contracts/generated/LayerAction';
 import { scenariosProblem } from './temporalRules';
 import type { LayerFilter } from '../contracts/generated/LayerFilter';
 import type { LayerTime } from '../contracts/generated/LayerTime';
@@ -425,6 +430,9 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
   // Schema 35's tree rule (docs/adr/0211 §2): filters on layers that hold objects, each by its rule.
   const filterFault = filtersProblem(layers as unknown as LayerNode[]);
   if (filterFault) fail('Katmanlar', filterFault);
+  // Schema 40's tree rule (docs/adr/0225 §4, §5): actions and cards on layers that hold objects, each by its rule.
+  const infoFault = infosProblem(layers as unknown as LayerNode[]);
+  if (infoFault) fail('Katmanlar', infoFault);
   // The project's connections (docs/adr/0208 §2), and the links of its layers' services: a connection named is one of
   // them, no layer has both; an object on a service layer is refused as it is read (`entity`).
   const connections = settings.connections === undefined ? undefined : readConnections(settings.connections, 'Proje ayarları › bağlantılar', fail);
@@ -605,7 +613,63 @@ function layer(v: unknown, where: string): LayerInit {
     ...(v.scenario !== undefined && { scenario: scenarioAt(v.scenario, `${w} › senaryo`) }),
     ...(v.replaces !== undefined && { replaces: str(v.replaces, `${w} › yerine geçtiği katman`) }),
     ...(v.filter !== undefined && { filter: layerFilterAt(v.filter, `${w} › süzgeç`) }),
+    // A layer's actions and card (docs/adr/0225 §4, §5): their fields here, the tree's rule whole in `head` (`infosProblem`).
+    ...(v.actions !== undefined && { actions: layerActionsAt(v.actions, type, `${w} › eylemler`) }),
+    ...(v.card !== undefined && { card: infoCardAt(v.card, type, `${w} › bilgi kartı`) }),
   };
+}
+
+/** A layer's actions (docs/adr/0225 §4) as the KCAD readers read them: a list that is not empty, each a name and a target. */
+function layerActionsAt(v: unknown, type: 'group' | 'layer', where: string): LayerAction[] {
+  if (type === 'group') return fail(where, 'grubun eylemi olmaz; eylemler yalnız katmanındır');
+  if (!Array.isArray(v) || !v.length) return fail(where, 'boş olmayan liste olmalı');
+  const out = v.map((a, i): LayerAction => {
+    const aw = `${where} › ${i + 1}`;
+    if (!isObj(a)) return fail(aw, 'nesne olmalı');
+    if (Object.keys(a).some((k) => k !== 'name' && k !== 'target')) return fail(aw, 'yalnız name ve target olabilir');
+    return { name: str(a.name, `${aw} › ad`), target: str(a.target, `${aw} › hedef`) };
+  });
+  const problem = actionsProblem(out);
+  return problem ? fail(where, problem) : out;
+}
+
+/** A layer's information card (docs/adr/0225 §5) as the KCAD readers read it: its texts and fields, its switches only off. */
+function infoCardAt(v: unknown, type: 'group' | 'layer', where: string): InfoCard {
+  if (type === 'group') return fail(where, 'grubun bilgi kartı olmaz; kart yalnız katmanındır');
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  const unknown = Object.keys(v).find((k) => !['title', 'fields', 'text', 'attachments', 'actions'].includes(k));
+  if (unknown) return fail(`${where} › ${unknown}`, 'bilinmeyen alan');
+  for (const k of ['attachments', 'actions'] as const) if (v[k] !== undefined && v[k] !== false) return fail(`${where} › ${k}`, 'yalnız false olabilir');
+  if (v.fields !== undefined && (!Array.isArray(v.fields) || !v.fields.length)) return fail(`${where} › alanlar`, 'boş olmayan liste olmalı');
+  const card: InfoCard = {
+    ...(v.title !== undefined && { title: str(v.title, `${where} › başlık`) }),
+    ...(Array.isArray(v.fields) && { fields: v.fields.map((f, i) => str(f, `${where} › alanlar › ${i + 1}`)) }),
+    ...(v.text !== undefined && { text: str(v.text, `${where} › metin`) }),
+    ...(v.attachments === false && { attachments: false }),
+    ...(v.actions === false && { actions: false }),
+  };
+  const problem = cardProblem(card);
+  return problem ? fail(where, problem) : card;
+}
+
+/** An object's attachments (docs/adr/0225 §1) as the KCAD readers read them: a list that is not empty, each by the contract's rules. */
+function attachmentsAt(v: unknown, where: string): Attachment[] {
+  if (!Array.isArray(v) || !v.length) return fail(where, 'boş olmayan liste olmalı');
+  const out = v.map((a, i): Attachment => {
+    const aw = `${where} › ${i + 1}`;
+    if (!isObj(a)) return fail(aw, 'nesne olmalı');
+    const unknown = Object.keys(a).find((k) => !['name', 'asset', 'file', 'url', 'note'].includes(k));
+    if (unknown) return fail(`${aw} › ${unknown}`, 'bilinmeyen alan');
+    return {
+      name: str(a.name, `${aw} › ad`),
+      ...(a.asset !== undefined && { asset: str(a.asset, `${aw} › varlık`) }),
+      ...(a.file !== undefined && { file: str(a.file, `${aw} › dosya`) }),
+      ...(a.url !== undefined && { url: str(a.url, `${aw} › adres`) }),
+      ...(a.note !== undefined && { note: str(a.note, `${aw} › not`) }),
+    };
+  });
+  const problem = attachmentsProblem(out);
+  return problem ? fail(where, problem) : out;
 }
 
 /** A layer's time setting (docs/adr/0210 §2) as the KCAD readers read it: the start's field, the end's and the key's when given, birikimli only true. */
@@ -791,6 +855,11 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
   if (v.lineWeight !== undefined) {
     const weight = numAt(v.lineWeight, w, 'kalınlık');
     if (weight < 0 || weight > MAX_LINE_WEIGHT) fail(at(w, 'kalınlık'), `0 ile ${MAX_LINE_WEIGHT} mm arasında olmalı`);
+  }
+  // Its attachments (docs/adr/0225 §1), by the contract's rules; a block definition's object has none.
+  if (v.attachments !== undefined) {
+    if (!layers) fail(at(w, 'ekler'), 'blok tanımının nesnesinde ek olmaz');
+    v.attachments = attachmentsAt(v.attachments, at(w, 'ekler'));
   }
   // Geometry by kind: every coordinate a finite float64, lists long enough to draw.
   switch (kind) {

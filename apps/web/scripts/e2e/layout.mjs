@@ -30,6 +30,7 @@ mkdirSync(DIR, { recursive: true });
 const gis = new URL('../../../../fixtures/formats/v1/gis/', import.meta.url);
 const kml = new URL('../../../../fixtures/formats/v1/kml/', import.meta.url);
 const formats = new URL('../../../../fixtures/formats/v1/', import.meta.url);
+const exif = new URL('../../../../fixtures/exif/v1/', import.meta.url);
 const raw = (url) => readFileSync(url).toString('base64');
 
 /**
@@ -185,6 +186,12 @@ const ITEMS = [
   { id: 'export-geojson', open: (ui) => ui.run('file.export.geojson') },
   // KML/KMZ, GPX and GeoJSON in WGS 84 (docs/adr/0222): the import before and after “Projenin sistemine çevir”, the exports.
   { id: 'import-kml', open: async (ui) => (await ui.pick([['parsel.kml', raw(new URL('parsel.kml', kml))]]), await ui.run('file.import.kml')), ready: '.dialog--io tbody tr' },
+  // Konumlu fotoğraflar (docs/adr/0225 §3): the EXIF fixtures, two placed and two left out with why.
+  {
+    id: 'import-photos',
+    open: async (ui) => (await ui.pick(['konum.jpg', 'gps-saati.jpg', 'gpssiz.jpg', 'yarim-gps.jpg'].map((n) => [n, raw(new URL(n, exif))])), await ui.run('file.import.photos')),
+    ready: '.dialog--photo-import tbody tr',
+  },
   {
     id: 'import-kml-moved',
     open: async (ui) => (
@@ -300,6 +307,16 @@ const ITEMS = [
   // Katman süzgeci (docs/adr/0211 §4): the window over the parcels, with a condition that does not compile (its error
   // in place), and the layer tree with a filtered layer (its funnel and “geçen / bütün”; the step undone on closing).
   { id: 'layer-filter', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('layer.filter')), ready: '.dialog--layer-filter' },
+  // Nesne ekleri (docs/adr/0225): Bilgi kartı ve eylemler over the parcels (its preview a parcel's card), Adres ekle on a parcel.
+  { id: 'layer-info', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('layer.info')), ready: '.dialog--layer-info' },
+  {
+    id: 'attachment-link',
+    open: async (ui) => (
+      await ui.eval(`(() => { const k = window.kentos; const e = [...k.doc.all()].find((x) => x.layerId === 'parsel'); k.selection.set([e.id]); })()`),
+      await ui.run('attachment.addLink')
+    ),
+    ready: '.dialog--attachment',
+  },
   // Etiketler (docs/adr/0212 §4): the parcels' labelling as a single label and in rules, each of the five tabs, a
   // class's long condition and an expression that does not compile.
   { id: 'labels', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('parsel')`), await ui.run('layer.labels')), ready: '.dialog--labels' },

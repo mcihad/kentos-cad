@@ -519,7 +519,12 @@
     "tool.labelPin",
     "tool.labelHide",
     "view.pinnedLabels",
-    "view.unplacedLabels"
+    "view.unplacedLabels",
+    "tool.identify",
+    "layer.info",
+    "attachment.add",
+    "attachment.addLink",
+    "file.import.photos"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

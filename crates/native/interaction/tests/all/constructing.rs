@@ -684,6 +684,7 @@ fn with_point(b: &mut Bench, at: [f64; 2], z: Option<f64>) {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         p: Wire {
             x: E + at[0],

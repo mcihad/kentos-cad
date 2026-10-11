@@ -278,6 +278,7 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
                 operation: PropertiesOperation::Symbol,
                 expected_revision: None,
                 unlink: false,
+                attachments: None,
             };
             if let refused @ (CommandResult::Failed { .. }
             | CommandResult::Conflict { .. }

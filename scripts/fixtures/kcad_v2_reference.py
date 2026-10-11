@@ -622,6 +622,34 @@ def label_pins(ps):
                   for p in ps])
 
 
+def attachments(xs):
+    """An object's photos and documents (schema 40, docs/adr/0225 §1): an empty list not written; each its name and one
+    source (an embedded asset, a linked file or a web address), its note when given."""
+    assert xs, "boş ek listesi yazılmaz"
+    assert len(xs) <= 64, "en çok 64 ek"
+    for a in xs:
+        assert sum(k in a for k in ("asset", "file", "url")) == 1, f"ekin tek kaynağı olmalı: {a}"
+        assert a["name"].strip(), "ekin adı boş"
+    return array([cmap(fields(a, {"name": (text, True), "asset": (text, False), "file": (text, False), "url": (text, False), "note": (text, False)}, "attachment"))
+                  for a in xs])
+
+
+def layer_actions(xs):
+    """A layer's actions (schema 40, docs/adr/0225 §4): an empty list not written; each its name and target."""
+    assert xs, "boş eylem listesi yazılmaz"
+    assert len({a["name"].lower() for a in xs}) == len(xs), "aynı adlı iki eylem"
+    return array([cmap(fields(a, {"name": (text, True), "target": (text, True)}, "action")) for a in xs])
+
+
+def info_card(c):
+    """A layer's information card (schema 40, docs/adr/0225 §5): its title, fields and text when given, its switches only
+    when off."""
+    assert c.get("fields", [None]), "boş alan listesi yazılmaz"
+    assert c.get("attachments", False) is False and c.get("actions", False) is False, "kartın düğmeleri yalnız kapalıyken yazılır"
+    return cmap(fields(c, {"title": (text, False), "fields": (lambda fs: array([text(f) for f in fs]), False), "text": (text, False),
+                           "attachments": (boolean, False), "actions": (boolean, False)}, "card"))
+
+
 def not_null(v):
     assert v is not None
     return opaque(v)
@@ -907,6 +935,7 @@ def layer(n):
     assert not ({"service", "feed"} & set(n)) or n["type"] == "layer", f"layer {n.get('id')}: servis ve kaynak yalnız katmanın"
     assert not {"service", "feed"} <= set(n), f"layer {n.get('id')}: servis ve kaynak birlikte olmaz"
     assert "filter" not in n or (n["type"] == "layer" and "service" not in n), f"layer {n.get('id')}: süzgeç yalnız nesnesi olan katmanın"
+    assert not ({"actions", "card"} & set(n)) or (n["type"] == "layer" and "service" not in n), f"layer {n.get('id')}: eylemler ve kart yalnız nesnesi olan katmanın"
     return cmap(
         fields(
             n,
@@ -925,6 +954,9 @@ def layer(n):
                 "replaces": (text, False),
                 # Schema 35 (docs/adr/0211 §2): a layer's filter.
                 "filter": (layer_filter, False),
+                # Schema 40 (docs/adr/0225 §4, §5): a layer's actions and information card.
+                "actions": (layer_actions, False),
+                "card": (info_card, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1295,9 +1327,12 @@ def entity(e, uid, index):
         "lineWeight": (f64, False),
         # Schema 36 (docs/adr/0212 §2): its labels pinned by hand; the drawing's objects only.
         "labelPins": (label_pins, False),
+        # Schema 40 (docs/adr/0225 §1): its photos and documents; the drawing's objects only.
+        "attachments": (attachments, False),
         **KINDS[kind],
     }
     assert "labelPins" not in e or uid is not None, "blok tanımının nesnesinde etiket iğnesi olmaz"
+    assert "attachments" not in e or uid is not None, "blok tanımının nesnesinde ek olmaz"
     if kind == "table":
         assert uid is not None, "blok tanımında tablo olamaz"
         table_shape(e)
@@ -1451,6 +1486,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def measured(es):
         return any(any(k in e for k in ("ma", "mb", "ms")) or any("ms" in pt for pt in e.get("parts", []) if e["kind"] == "polyline") for e in es)
 
+    def informed(nodes):
+        return any("actions" in n or "card" in n or informed(n["children"]) for n in nodes)
+
+    if any("attachments" in e for e in entities) or informed(layers):
+        return 40
     if measured(entities) or any(measured(b["entities"]) for b in blocks or []):
         return 39
     if any(e["kind"] == "raster" and ("dataset" in e or "edges" in e["style"]) for e in entities):
@@ -1723,7 +1763,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-40.kcad"] = container(root(cmap(parts), version=uint(40)))
+    files["schema-version-41.kcad"] = container(root(cmap(parts), version=uint(41)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1771,6 +1811,19 @@ def broken(minimal_content, minimal_file):
     files["measure-wrong-length.kcad"] = in_schema(39, path("polyline", 3, ms=elevations([0.0, 1.0])))
     files["line-measure-null.kcad"] = in_schema(39, line(mb=b"\xf6"))
     files["part-measure-wrong-length.kcad"] = in_schema(39, path("polyline", 3, parts=array([cmap({"pts": square_line(5), "ms": elevations([1.0])})])))
+    # Attachments are schema 40's (docs/adr/0225 §1): in schema 39 an unknown field; an empty list is not written; each
+    # has its name and exactly one source, an address is http or https; the contract's rules broken one at a time.
+    attached = lambda xs, n=40: in_schema(n, cmap({"point": cmap({**common, "p": point(one["p"]), "attachments": array(xs)})}))
+    tapu = cmap({"name": text("Tapu"), "file": text("belgeler/101-5.pdf")})
+    files["attachments-in-schema-39.kcad"] = attached([tapu], 39)
+    files["attachments-empty.kcad"] = attached([])
+    files["attachment-two-sources.kcad"] = attached([cmap({"name": text("Tapu"), "file": text("a.pdf"), "url": text("https://a.org/a.pdf")})])
+    files["attachment-no-source.kcad"] = attached([cmap({"name": text("Tapu")})])
+    files["attachment-without-name.kcad"] = attached([cmap({"file": text("a.pdf")})])
+    files["attachment-name-blank.kcad"] = attached([cmap({"name": text(" "), "file": text("a.pdf")})])
+    files["attachment-ftp.kcad"] = attached([cmap({"name": text("Tapu"), "url": text("ftp://a.org/a.pdf")})])
+    files["attachment-note-control.kcad"] = attached([cmap({"name": text("Tapu"), "file": text("a.pdf"), "note": text("a\tb")})])
+    files["attachment-unknown-field.kcad"] = attached([cmap({"name": text("Tapu"), "file": text("a.pdf"), "size": uint(10)})])
     # An area's parts are schema 5's (docs/adr/0143): in schema 4 an unknown field, on a polyline too; a part's `zs`
     # has one entry per vertex, as the area's own.
     square = lambda dx: array([point({"x": one["p"]["x"] + dx + x, "y": one["p"]["y"] + y}) for x, y in ((0, 0), (1, 0), (1, 1), (0, 1))])
@@ -1827,6 +1880,10 @@ def broken(minimal_content, minimal_file):
     block_pinned = cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5),
                                          "labelPins": array([cmap({"hidden": boolean(True)})])})})
     files["label-pins-in-block.kcad"] = with_blocks([block(1, "Rögar", [block_pinned])], version=36)
+    # Nor has it attachments (docs/adr/0225 §1): they are the drawing's objects'.
+    block_attached = cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5),
+                                           "attachments": array([cmap({"name": text("Foto"), "file": text("a.jpg")})])})})
+    files["attachments-in-block.kcad"] = with_blocks([block(1, "Rögar", [block_attached])], version=40)
     files["blocks-in-schema-5.kcad"] = with_blocks([block(1, "Rögar")], entities=[], version=5)
     files["insert-in-schema-5.kcad"] = in_schema(5, insert_of(1))
     files["unknown-block.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(2)])
@@ -2394,6 +2451,23 @@ def broken(minimal_content, minimal_file):
         return cmap({k: v for k, v in base.items() if v is not None})
 
     files["filter-in-schema-34.kcad"] = on_layer({"filter": filtered_()}, schema=34)
+    # A layer's actions and card are schema 40's (docs/adr/0225 §4, §5): in schema 39 unknown fields; on a layer that
+    # holds objects only; an empty list is not written, a card's switch only off; the contract's rules one at a time.
+    act = lambda name="Parsel sorgu", target="https://parselsorgu.example/{Ada}/{Parsel}": cmap({"name": text(name), "target": text(target)})
+    files["actions-in-schema-39.kcad"] = on_layer({"actions": array([act()])}, schema=39)
+    files["actions-on-group.kcad"] = on_layer({"actions": array([act()])}, node_type="group", schema=40)
+    files["actions-on-service-layer.kcad"] = on_layer({"actions": array([act()]), "service": cmap(osm)}, schema=40)
+    files["actions-empty.kcad"] = on_layer({"actions": array([])}, schema=40)
+    files["action-name-twice.kcad"] = on_layer({"actions": array([act(), act(name="PARSEL SORGU")])}, schema=40)
+    files["action-target-blank.kcad"] = on_layer({"actions": array([act(target=" ")])}, schema=40)
+    files["action-without-target.kcad"] = on_layer({"actions": array([cmap({"name": text("A")})])}, schema=40)
+    files["card-in-schema-39.kcad"] = on_layer({"card": cmap({"title": text("Parsel {Ada}")})}, schema=39)
+    files["card-on-group.kcad"] = on_layer({"card": cmap({"title": text("Parsel {Ada}")})}, node_type="group", schema=40)
+    files["card-switch-on.kcad"] = on_layer({"card": cmap({"attachments": boolean(True)})}, schema=40)
+    files["card-fields-empty.kcad"] = on_layer({"card": cmap({"fields": array([])})}, schema=40)
+    files["card-fields-twice.kcad"] = on_layer({"card": cmap({"fields": array([text("Malik"), text("Malik")])})}, schema=40)
+    files["card-title-line-break.kcad"] = on_layer({"card": cmap({"title": text("Parsel\n{Ada}")})}, schema=40)
+    files["card-unknown-field.kcad"] = on_layer({"card": cmap({"color": text("#E5484D")})}, schema=40)
     files["filter-on-group.kcad"] = on_layer({"filter": filtered_()}, node_type="group", schema=35)
     files["filter-on-service-layer.kcad"] = on_layer({"filter": filtered_(), "service": cmap(osm)}, schema=35)
     files["filter-empty.kcad"] = on_layer({"filter": cmap({})}, schema=35)
@@ -2693,6 +2767,7 @@ def build():
     out["variables.kcad"] = container(document(load("variables.json")))
     out["multidim.kcad"] = container(document(load("multidim.json")))
     out["measures.kcad"] = container(document(load("measures.json")))
+    out["attachments.kcad"] = container(document(load("attachments.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

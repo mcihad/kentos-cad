@@ -37,6 +37,8 @@
 // other layers, docs/adr/0214); fieldbook (Karne editörü: a GSI
 // book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both);
 // gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system);
+// attachments (docs/adr/0225: Öznitelikler's Ekler and Eylemler, the hover card's photo, Bilgi's card, the photo viewer,
+// Adres ekle, Bilgi kartı ve eylemler, Konumlu fotoğraflar, the drawing's menu with Eylemler);
 // kml (docs/adr/0222: KML/KMZ içe aktar before and after “Projenin sistemine çevir”, imported; KML/KMZ and GPX dışa
 // aktar; GeoJSON dışa aktar in WGS 84; GNSS içe aktar with its track as a line);
 // fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates); ground (docs/adr/0171 §4:
@@ -7743,6 +7745,139 @@ function multidimScenes() {
     { id: 'md-seri', open: ranIn([['multidim.series', SERIES]], true), close },
     { id: 'md-hesap-cizim', open: ranIn([['multidim.meshCalculator', LARGEST]], false, ['yagis']), close },
   ];
+}
+
+// Nesne ekleri (docs/adr/0225) on the shared trace's drawing (fixtures/interaction/v1/attachments.kcad,
+// scripts/fixtures/attachments_scene.py): a block's parcels with photos, a document and an address, the Parsel layer's
+// card and actions, the field photos' points. Öznitelikler's Ekler and Eylemler, the hover card's photo, Bilgi's card on
+// a parcel and on a photo's point, the photo viewer, Adres ekle, Bilgi kartı ve eylemler, Konumlu fotoğraflar over the
+// EXIF fixtures, the drawing's menu with Eylemler open. The desktop's are `tools_screens`' ekler-*
+// (apps/desktop/src/attachment_scenes.rs).
+const ATTACHMENTS = readFileSync(new URL('../../../../fixtures/interaction/v1/attachments.kcad', import.meta.url), 'utf8');
+const EXIF_PHOTOS = ['konum.jpg', 'gps-saati.jpg', 'gpssiz.jpg', 'yarim-gps.jpg'].map((name) => ({
+  name,
+  bytes: [...readFileSync(new URL(`../../../../fixtures/exif/v1/${name}`, import.meta.url))],
+}));
+SCENES.attachments = attachmentScenes();
+
+function attachmentScenes() {
+  const o = { x: 487000, y: 4420000 };
+  const hover = async (ui, x, y) => hoverAt(ui, o.x + x, o.y + y);
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(o.x + x, o.y + y)))), await ui.sleep(400));
+  /** The drawing open (a CBS project), the view round the block; the photos' pictures loaded. */
+  const opened = async (ui, tab = 'data', fields = {}) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(ATTACHMENTS)}, null))) throw new Error('attachments.kcad did not load');
+      k.selection.clear();
+    })()`);
+    await ribbonOn(ui, { ribbonTab: tab, ...fields });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${o.x - 34}, minY: ${o.y - 20}, maxX: ${o.x + 26}, maxY: ${o.y + 22} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+    await ui.sleep(900);
+  };
+  const fold = async (ui, title) => {
+    const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes(${JSON.stringify(title)}))`;
+    if (await ui.eval(`(() => { const b = ${head}; return !!b && b.getAttribute('aria-expanded') === 'true'; })()`)) await ui.clickText('.panel--props .props__section', title);
+  };
+  const unfold = async (ui, title) => {
+    const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes(${JSON.stringify(title)}))`;
+    if (await ui.eval(`(() => { const b = ${head}; return !!b && b.getAttribute('aria-expanded') !== 'true'; })()`)) await ui.clickText('.panel--props .props__section', title);
+  };
+  const imagesIn = (sel) => ui_waitImages(sel);
+  const properties = async (ui) => {
+    await opened(ui, 'data', { layersFraction: 0.15 });
+    await ui.eval(`window.kentos.selection.set([1])`);
+    await ui.sleep(400);
+    await fold(ui, 'Genel');
+    await fold(ui, 'Geometri');
+    await ui.waitFor(imagesIn('.panel--props'));
+    await hover(ui, -28, -18);
+  };
+  const rollover = async (ui) => {
+    await opened(ui);
+    await hover(ui, -6, 2);
+    await ui.waitFor(`!!document.querySelector('.hover-card:not([hidden])')`);
+    await ui.waitFor(imagesIn('.hover-card'));
+    await ui.sleep(300);
+  };
+  const card = async (ui, x, y) => {
+    await opened(ui, 'map');
+    await startTool(ui, 'identify');
+    await click(ui, x, y);
+    await ui.waitFor(`!!document.querySelector('.info-card:not([hidden])')`);
+    await ui.waitFor(imagesIn('.info-card'));
+    await hover(ui, -28, -18);
+  };
+  const viewer = async (ui) => {
+    await opened(ui);
+    await ui.eval(`(async () => { const k = window.kentos; k.selection.set([1]); const m = await import('/src/app/attachments.ts'); m.openViewer(k, k.doc.get(1), 0); })()`);
+    await ui.waitFor(`!!document.querySelector('.dialog--photo-viewer')`);
+    await ui.waitFor(imagesIn('.dialog--photo-viewer'));
+    await ui.sleep(300);
+  };
+  const link = async (ui) => {
+    await opened(ui);
+    await ui.eval(`(async () => { const k = window.kentos; k.selection.set([4]); const m = await import('/src/app/attachments.ts'); m.addLink(k, k.doc.get(4)); })()`);
+    await ui.waitFor(`!!document.querySelector('.dialog--attachment')`);
+    await ui.eval(typeInto('.dialog--attachment input[aria-label="Adres"]', 0, 'https://imar.example.org/ada/101/parsel/8'));
+    await ui.eval(typeInto('.dialog--attachment input[aria-label="Ad"]', 0, 'İmar durumu'));
+    await ui.eval(typeInto('.dialog--attachment textarea[aria-label="Not"]', 0, 'Belediyenin imar durumu sayfası'));
+    await ui.move(2, 2);
+    await ui.sleep(300);
+  };
+  const layerCard = async (ui) => {
+    await opened(ui);
+    await ui.eval(`(() => { const k = window.kentos; k.selection.set([1]); k.commands.execute('layer.info', 'parsel'); })()`);
+    await ui.waitFor(`!!document.querySelector('.dialog--layer-info')`);
+    await ui.sleep(600);
+  };
+  const photoImport = async (ui) => {
+    await opened(ui);
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const files = ${JSON.stringify(EXIF_PHOTOS)}.map((f) => ({ name: f.name, bytes: new Uint8Array(f.bytes) }));
+      k.files.pickManyForImport = async () => files;
+      const m = await import('/src/ui/io/PhotoImportDialog.ts');
+      await m.openPhotoImport(k);
+    })()`);
+    await ui.waitFor(`!!document.querySelector('.dialog--photo-import .io-summary') && !document.querySelector('.dialog--photo-import .io-summary')?.textContent?.includes('okunuyor')`);
+    await ui.sleep(400);
+  };
+  const actionsMenu = async (ui) => {
+    await opened(ui);
+    await hover(ui, -6, 2);
+    await ui.contextClick(...(await ui.eval(PAGE_AT(o.x - 6, o.y + 2))));
+    await ui.waitFor(`!!document.querySelector('.menu')`);
+    const at = await ui.eval(`(() => { const el = [...document.querySelectorAll('.menu .menu__item')].find((e) => e.textContent.includes('Eylemler')); if (!el) return null; const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    if (!at) throw new Error('Eylemler is not in the menu');
+    await ui.move(...at);
+    await ui.sleep(600);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await unfold(ui, 'Genel');
+    await unfold(ui, 'Geometri');
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'ekler-oznitelikler', open: properties, close },
+    { id: 'ekler-uzerine', open: rollover, close },
+    { id: 'ekler-kart', open: (ui) => card(ui, -6, 2), close },
+    { id: 'ekler-kart-foto', open: (ui) => card(ui, 8, 17.5), close },
+    { id: 'ekler-goruntuleyici', open: viewer, close },
+    { id: 'ekler-adres', open: link, close },
+    { id: 'ekler-bilgi-karti', open: layerCard, close },
+    { id: 'ekler-konumlu', open: photoImport, close },
+    { id: 'ekler-eylemler', open: actionsMenu, close },
+  ];
+}
+
+/** Whether every picture under `sel` has loaded (an attachment's photo is a data address). */
+function ui_waitImages(sel) {
+  return `[...document.querySelectorAll(${JSON.stringify(sel + ' img')})].every((i) => i.complete && i.naturalWidth > 0)`;
 }
 
 // Harita servisleri (docs/adr/0208) over a CBS project in TUREF / TM33 at Ankara's Kızılay: parcels and a building over

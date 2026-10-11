@@ -298,6 +298,7 @@ impl App {
             unlink: false,
             operation: PropertiesOperation::Template,
             expected_revision: None,
+            attachments: None,
         };
         let Some(doc) = self.document.as_mut() else {
             return;

@@ -259,6 +259,7 @@ fn input(uids: Vec<String>, label: Option<String>, layer: Option<String>) -> Ent
         label: label.map(Some),
         expected_revision: None,
         unlink: false,
+        attachments: None,
     }
 }
 

@@ -804,6 +804,8 @@ impl App {
                         .extend(self.navigation_view())
                         // The rollover card beside the pointer (hover_card.rs).
                         .extend(self.hover_card_view())
+                        // Bilgi's card beside the object clicked (info_card.rs, docs/adr/0225 §5).
+                        .extend(self.info_card_view())
                         // Sıradakini seç's chip beside the click (selection_chip.rs, docs/adr/0187 §1).
                         .extend(self.selection_chip())
                         .extend(typing)
@@ -1694,6 +1696,9 @@ impl App {
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
+            Asking::Attachment => self.attachment_form_view(),
+            Asking::PhotoViewer => self.photo_viewer_view(),
+            Asking::LayerInfo => self.layer_info_view(),
             Asking::Labelling => self.labelling_view(),
             Asking::Connections => self.connections_view(),
             Asking::ServiceAdd => self.service_window_view(),

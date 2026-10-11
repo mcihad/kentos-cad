@@ -51,6 +51,7 @@ pub mod read;
 mod resolve;
 pub mod rows;
 pub mod scalar;
+pub mod template;
 pub mod value;
 pub mod walk;
 pub mod world;

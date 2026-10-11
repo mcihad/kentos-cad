@@ -16,6 +16,7 @@
 mod blocks;
 mod crs;
 mod filter;
+mod info;
 mod labels;
 mod names;
 mod networks;
@@ -38,16 +39,17 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS,
-    SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND,
-    SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS,
-    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM,
-    SCHEMA_WITH_NETWORKS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
-    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS,
+    SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS,
+    SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS,
+    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
+    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
+    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_VARIABLES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, line_type, point_symbol, workspace,
@@ -251,6 +253,11 @@ impl<'d> Encoder<'d> {
         }
         // Schema 36's tree rule (docs/adr/0212 §2), as a reader checks it.
         if let Some(problem) = kentos_contracts::labels_problem(&doc.layers) {
+            self.path.push(Seg::Name("layers"));
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        // Schema 40's tree rule (docs/adr/0225 §4, §5), as a reader checks it.
+        if let Some(problem) = kentos_contracts::infos_problem(&doc.layers) {
             self.path.push(Seg::Name("layers"));
             return Err(self.fail(Code::BadValue, &problem));
         }
@@ -685,11 +692,13 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.time.is_some())
                 + usize::from(n.scenario.is_some())
                 + usize::from(n.replaces.is_some())
-                + usize::from(n.filter.is_some()),
+                + usize::from(n.filter.is_some())
+                + usize::from(!n.actions.is_empty())
+                + usize::from(n.card.is_some()),
             true,
         )?;
-        // id (2), feed name snap time type (4), style (5), fields filter locked (6),
-        // service visible (7), children expanded replaces scenario (8).
+        // id (2), card feed name snap time type (4), style (5), fields filter locked (6),
+        // actions service visible (7), children expanded replaces scenario (8).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
                 Code::BadValue,
@@ -698,6 +707,10 @@ impl<'d> Encoder<'d> {
         }
         self.key("id");
         self.at(Seg::Name("id"), |e| e.text(&n.id))?;
+        if let Some(card) = &n.card {
+            self.key("card");
+            self.at(Seg::Name("card"), |e| e.info_card(n.kind, card))?;
+        }
         if let Some(feed) = &n.feed {
             self.key("feed");
             self.at(Seg::Name("feed"), |e| e.feed(n.kind, feed))?;
@@ -729,6 +742,12 @@ impl<'d> Encoder<'d> {
         }
         self.key("locked");
         self.w.bool(n.locked);
+        if !n.actions.is_empty() {
+            self.key("actions");
+            self.at(Seg::Name("actions"), |e| {
+                e.layer_actions(n.kind, &n.actions)
+            })?;
+        }
         if let Some(service) = &n.service {
             self.key("service");
             self.at(Seg::Name("service"), |e| e.service(n.kind, service))?;
@@ -1048,6 +1067,20 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                     .is_some_and(labels::has_engine_fields)
                 || labelled(&n.children)
         })
+    }
+    fn informed(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| !n.actions.is_empty() || n.card.is_some() || informed(&n.children))
+    }
+    // Schema 40 (docs/adr/0225): an object's attachment, a layer's action or card.
+    if doc
+        .entities
+        .iter()
+        .any(|e| !e.base().attachments.is_empty())
+        || informed(&doc.layers)
+    {
+        return SCHEMA_WITH_ATTACHMENTS;
     }
     // Schema 39 (docs/adr/0224): a vertex measure of an object of the drawing or of a block definition.
     if doc.entities.iter().any(has_measure)

@@ -107,6 +107,7 @@ pub fn piece_entities(insert: &Entity, x: &Expanded) -> Vec<Entity> {
                 symbol: None,
                 line_weight: x.weights.get(i).copied().flatten().or(own.line_weight),
                 label_pins: Vec::new(),
+                attachments: Vec::new(),
             };
             Some(entity_of(&geometry, base))
         })

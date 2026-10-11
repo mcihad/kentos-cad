@@ -340,8 +340,16 @@ pub const SCHEMA_WITH_MULTIDIM: u32 = 38;
 /// them. An area has none.
 pub const SCHEMA_WITH_MEASURES: u32 = 39;
 
+/// Document schema 40 (docs/specs/kcad-v2.md §6.5, §6.6): schema 39 and
+/// the objects' `attachments`, a layer's `actions` and `card` (docs/adr/0225).
+/// A writer writes it only when an object has an attachment or a layer an
+/// action or a card: any other drawing stays 39 or older, byte for byte; a
+/// reader of those refuses them rather than lose them. A block definition's
+/// objects have no attachments.
+pub const SCHEMA_WITH_ATTACHMENTS: u32 = 40;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 38] = [
+pub const SCHEMAS: [u32; 39] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -380,6 +388,7 @@ pub const SCHEMAS: [u32; 38] = [
     SCHEMA_WITH_VARIABLES,
     SCHEMA_WITH_MULTIDIM,
     SCHEMA_WITH_MEASURES,
+    SCHEMA_WITH_ATTACHMENTS,
 ];
 
 /// The file a drawing is saved as.

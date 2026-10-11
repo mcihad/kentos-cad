@@ -5,6 +5,7 @@
 mod coords;
 mod dxf;
 mod dxf_units;
+mod exif;
 mod field_csv;
 mod field_gsi;
 mod field_gts7;

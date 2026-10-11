@@ -526,8 +526,10 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
 
 /// What a replacement or a new piece takes from its object: the layer, the
 /// colour and its own line weight (a trimmed 0.70 mm line stays 0.70 mm,
-/// docs/adr/0139), the attributes and the label with `keep_data`; not the
-/// symbol (the web's `EdgePickTool.inherit`). `id` is its slot (0 for a new one).
+/// docs/adr/0139), the attributes, the label and the attachments
+/// (docs/adr/0225 §1) with `keep_data`; not the symbol (the web's
+/// `EdgePickTool.inherit`) nor the labels' pins (they are the object's
+/// place's). `id` is its slot (0 for a new one).
 fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
     EntityBase {
         id,
@@ -542,6 +544,11 @@ fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
         symbol: None,
         line_weight: base.line_weight,
         label_pins: Vec::new(),
+        attachments: if keep_data {
+            base.attachments.clone()
+        } else {
+            Vec::new()
+        },
     }
 }
 

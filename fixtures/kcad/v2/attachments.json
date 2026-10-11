@@ -1,0 +1,159 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Nesne ekleri",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0
+ },
+ "origin": {
+  "x": 487000.0,
+  "y": 4420000.0
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parseller",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "actions": [
+    {
+     "name": "Parsel sorgu",
+     "target": "https://parselsorgu.example/{Ada}/{Parsel}"
+    },
+    {
+     "name": "Haritada aç",
+     "target": "https://www.google.com/maps?q={$enlem},{$boylam}"
+    },
+    {
+     "name": "Tapu klasörü",
+     "target": "belgeler/{Ada}-{Parsel}.pdf"
+    }
+   ],
+   "card": {
+    "title": "Parsel {Ada}/{Parsel}",
+    "fields": [
+     "Malik",
+     "Nitelik"
+    ],
+    "text": "Alan: {yuvarla($alan, 2)} m²\nTapu: {[Tapu alanı]} m²"
+   }
+  },
+  {
+   "id": "direk",
+   "name": "Direkler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "card": {
+    "attachments": false
+   }
+  }
+ ],
+ "activeLayer": "parsel",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "5",
+    "Malik": "Ayşe Yılmaz",
+    "Nitelik": "Arsa",
+    "Tapu alanı": "1250.40"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487040.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487040.0,
+     "y": 4420031.0
+    },
+    {
+     "x": 487000.0,
+     "y": 4420031.0
+    }
+   ],
+   "attachments": [
+    {
+     "name": "Tapu",
+     "file": "belgeler/101-5.pdf",
+     "note": "2019 tapusu\nAsıl nüsha kurumda"
+    },
+    {
+     "name": "Ön cephe",
+     "asset": "resim-00c1f77f23c38466"
+    },
+    {
+     "name": "Kurum sayfası",
+     "url": "https://kurum.example/parsel/101-5"
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 2,
+   "layerId": "direk",
+   "attrs": {
+    "No": "D-12"
+   },
+   "p": {
+    "x": 487050.0,
+    "y": 4420010.0
+   },
+   "attachments": [
+    {
+     "name": "Direk",
+     "file": "foto/direk-12.jpg"
+    }
+   ]
+  }
+ ],
+ "uids": [
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102"
+ ],
+ "styles": {
+  "items": [
+   {
+    "kind": "asset",
+    "id": "resim-00c1f77f23c38466",
+    "name": "on-cephe",
+    "path": [
+     "Ekler"
+    ],
+    "format": "png",
+    "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAJ0lEQVR42mO4Y2P0YYuG24IojbwTDL9+/ZKTk4OQDEABoDBQEqgEAGfSEfkTTndFAAAAAElFTkSuQmCC",
+    "width": 4,
+    "height": 3
+   }
+  ],
+  "categories": []
+ }
+}

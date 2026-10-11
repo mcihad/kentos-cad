@@ -337,3 +337,78 @@ pub struct LayersRendererPlan {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
+
+/// Writes a layer's actions and information card (docs/adr/0225 §4, §5).
+pub const CAD_LAYERS_INFO: &str = "cad.layers.info";
+pub const CAD_LAYERS_INFO_VERSION: u32 = 1;
+
+/// Input of `cad.layers.info` v1: a layer's actions and information card
+/// written as one undo step “Bilgi kartı”; absent actions none, an absent
+/// or null card the default card (a card with nothing in it is no card). A
+/// layer that already has them as given is left as it is (`changed` false,
+/// no step). They are how the layer's objects are shown and opened: a
+/// locked layer takes them too.
+///
+/// Refusals (`CommandError.code`), checked in this order: `invalid_actions`
+/// (`actions_problem`), `invalid_card` (`InfoCard::problem`),
+/// `invalid_template` (an action's target, the card's title or text whose
+/// `{…}` does not close, is empty, or whose expression does not compile or
+/// looks at other layers; the message says which and where); then
+/// `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer
+/// drawn from a service: it holds no objects).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersInfo {
+    /// The layer's id.
+    pub layer: String,
+    /// Its actions, in order; absent or empty: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::layer_info::LayerAction>>", optional)
+    )]
+    pub actions: Vec<crate::layer_info::LayerAction>,
+    /// Its information card; absent or null: the default card.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub card: Option<crate::layer_info::InfoCard>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.layers.info` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersInformed {
+    pub layer: String,
+    /// Whether they differed (an undo step was written).
+    pub changed: bool,
+    /// The document's revision after the write, as decimal text.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.layers.info` would write (plan mode); nothing is written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersInfoPlan {
+    /// The layer as execute would leave it.
+    pub node: LayerNode,
+    pub changed: bool,
+    /// The document revision the plan was made against.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}

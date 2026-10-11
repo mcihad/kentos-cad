@@ -116,7 +116,10 @@ use crate::layer::LineType;
 ///    polyline's and its parts' `ms` (the typed columns' line and path measure flags); Shapefile's
 ///    PolyLineM and PolyLineZ read with their measures; DXF, GeoJSON, KML and GPX leave them out
 ///    and say so.
-pub const FORMATS_VERSION: u32 = 51;
+/// 52: object attachments, layer actions and information cards (docs/adr/0225): `.kcad` document
+///    schema 40, an object's `attachments` (the typed columns' `ATTACHMENTS` flag), a layer's
+///    `actions` and `card`; `readExif` reads a photo's position, time and direction.
+pub const FORMATS_VERSION: u32 = 52;
 
 // ── Every import ────────────────────────────────────────────────────────
 

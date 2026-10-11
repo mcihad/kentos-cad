@@ -56,6 +56,7 @@ fn points(n: usize) -> DocumentSnapshotV2 {
                     symbol: None,
                     line_weight: None,
                     label_pins: Vec::new(),
+                    attachments: Vec::new(),
                 },
                 p: Vec2 {
                     x: 500_000.0 + i as f64,

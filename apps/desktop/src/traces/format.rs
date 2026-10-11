@@ -251,6 +251,26 @@ pub struct Expect {
     /// object's first label), place from the object's anchor (`clickTolerance`), turn (1e-9) and
     /// whether it hides the label; `[]` none.
     pub(super) label_pins: Option<std::collections::BTreeMap<String, Vec<PinExpect>>>,
+    /// Bilgi's card (docs/adr/0225 §5): only the fields written, each exactly; `null` when it is closed, and
+    /// absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) info_card: Option<Option<InfoCardExpect>>,
+}
+
+/// Bilgi's card as a step expects it: the object, its title, its rows (“ad: değer”), its text (`null`
+/// none), its actions' names and how many attachments it has.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InfoCardExpect {
+    pub(super) id: Option<u32>,
+    pub(super) title: Option<String>,
+    pub(super) rows: Option<Vec<String>>,
+    #[serde(default, deserialize_with = "present")]
+    pub(super) text: Option<Option<String>>,
+    pub(super) actions: Option<Vec<String>>,
+    /// Its actions' targets filled for the object (a broken template: why).
+    pub(super) targets: Option<Vec<String>>,
+    pub(super) attachments: Option<usize>,
 }
 
 /// A label pin as a step expects it (docs/adr/0212 §2): absent fields are absent in the pin.

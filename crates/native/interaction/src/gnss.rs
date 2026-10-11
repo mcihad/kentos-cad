@@ -307,6 +307,7 @@ pub fn line_entities(lines: &[PlacedLine]) -> Vec<Entity> {
                     symbol: None,
                     line_weight: None,
                     label_pins: Vec::new(),
+                    attachments: Vec::new(),
                 },
                 pts,
                 bulges: None,
@@ -335,6 +336,7 @@ pub fn entities(placed: &[Placed]) -> Vec<Entity> {
                     symbol: None,
                     line_weight: None,
                     label_pins: Vec::new(),
+                    attachments: Vec::new(),
                 },
                 p: Wire {
                     x: pt.p.x,

@@ -554,6 +554,7 @@ impl App {
             unlink: false,
             operation: PropertiesOperation::Attributes,
             expected_revision: None,
+            attachments: None,
         };
         let Some(doc) = self.document.as_mut() else {
             return Task::none();

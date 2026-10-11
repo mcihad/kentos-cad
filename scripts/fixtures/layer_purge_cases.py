@@ -8,8 +8,9 @@ definitions, and the project library's symbols and assets. Something stays when 
 - a definition, when an insert of the drawing places it, or an insert in a definition that stays;
 - a symbol, when an object of the drawing or of a definition that stays draws with it, a layer that stays names it in
   its style (`ref`), or a template of any library names it (`symbol`, its members' too);
-- an asset, when a symbol that stays (of any library) draws with it, a layer that stays does in its style (`asset`), or
-  a picture of the drawing shows it (its `asset`, docs/adr/0192 §2).
+- an asset, when a symbol that stays (of any library) draws with it, a layer that stays does in its style (`asset`), a
+  picture of the drawing shows it (its `asset`, docs/adr/0192 §2), or an object holds it as an embedded photo (its
+  `attachments`, docs/adr/0225 §1).
 
 Found is the largest set of those that nothing staying uses: start with all of them and give back, round after round,
 what something staying uses. Locked empty layers are listed too, to be unlocked first; they stay. Removing the checked
@@ -110,6 +111,8 @@ def used_by_staying(doc, going):
                 used.add(("blocks", o["block"]))
             if o.get("asset"):
                 used.add(("assets", o["asset"]))
+            for a in o.get("attachments", []):
+                used.add(("assets", a))
 
     objects(doc["objects"])
     for b in doc["blocks"]:
@@ -261,6 +264,8 @@ def drawing():
         {"layer": "isaret"},
         # A picture shows its image (docs/adr/0192 §2).
         {"layer": "cizim", "asset": "p-foto"},
+        # An object holds its embedded photos (docs/adr/0225 §1).
+        {"layer": "parsel", "attachments": ["p-ek-foto", "p-ek-cephe"]},
     ]
     blocks = [
         {"id": AGAC, "name": "Ağaç", "objects": [{"layer": "bitki", "symbol": "p-yaprak"}]},
@@ -286,6 +291,8 @@ def drawing():
         {"id": "p-logo", "kind": "asset", "source": "project", "name": "logo.svg"},
         {"id": "p-yalniz", "kind": "asset", "source": "project", "name": "yalnız.svg"},
         {"id": "p-foto", "kind": "asset", "source": "project", "name": "saha.jpg"},
+        {"id": "p-ek-foto", "kind": "asset", "source": "project", "name": "tapu.jpg"},
+        {"id": "p-ek-cephe", "kind": "asset", "source": "project", "name": "cephe.jpg"},
         {"id": "u-logo", "kind": "symbol", "source": "user", "name": "Logo", "symbol": marker("p-logo")},
         {"id": "u-sablon", "kind": "template", "source": "user", "name": "Yol şablonu",
          "template": {"tool": "polyline", "layer": {"path": ["Yol"]}, "symbol": "p-ok",

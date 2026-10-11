@@ -54,6 +54,9 @@ pub enum PropertiesOperation {
     /// Şablonu uygula (docs/adr/0176 §6): an object template's layer, look,
     /// attributes and label given to objects of its kind. “Şablonu uygula”.
     Template,
+    /// Öznitelikler's Ekler (docs/adr/0225 §2): the objects' photos and
+    /// documents. “Ekler”.
+    Attachments,
 }
 
 /// Input of `cad.entities.set` v1: properties set for objects named by their
@@ -78,9 +81,12 @@ pub enum PropertiesOperation {
 /// Refusals (`CommandError.code`), checked in this order: `no_entities`,
 /// `invalid_uid` (each id in order), `nothing_to_set` (no property given),
 /// `invalid_attribute` (an attribute name empty or only white space),
-/// `invalid_line_weight` (a weight not a number from 0 to 100 mm), then
+/// `invalid_line_weight` (a weight not a number from 0 to 100 mm),
+/// `invalid_attachments` (`attachments_problem`, docs/adr/0225 §1), then
 /// `invalid_revision`, `revision_conflict` (status `conflict`),
-/// `entity_not_found` (each id in order), `layer_not_found` and
+/// `entity_not_found` (each id in order), `unknown_asset` (an embedded
+/// photo whose asset is not an image of the project's library, in the
+/// attachments' order), `layer_not_found` and
 /// `not_a_layer` (the `layerId` given), `layer_locked` (each object's layer
 /// in the input's order, then the `layerId` given), then `invalid_attribute`
 /// and `attribute_required` (the attributes given, by the fields of each
@@ -143,6 +149,11 @@ pub struct EntitiesSetProperties {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub label: Option<Option<String>>,
+    /// Their photos and documents (`EntityBase.attachments`, docs/adr/0225
+    /// §1), the whole list; empty: none. Absent: unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attachments: Option<Vec<crate::attachment::Attachment>>,
     /// Bağı kopar (docs/adr/0175 §4): `true` breaks the link of the texts
     /// among them that write an object's label (`TextEntity.label_of` and
     /// `label_scale` removed); they stay where and as they are and follow

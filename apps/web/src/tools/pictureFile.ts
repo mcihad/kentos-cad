@@ -55,7 +55,8 @@ const stem = (name: string) => name.replace(/\.(png|jpe?g)$/i, '');
 
 export type PictureItem = { ok: true; id: string; item: LibraryAsset } | { ok: false; error: string };
 
-export async function pictureItem(name: string, bytes: Uint8Array): Promise<PictureItem> {
+/** `path`: the library folder it goes under (Resimler; an object's photo's Ekler, docs/adr/0225 §1). */
+export async function pictureItem(name: string, bytes: Uint8Array, path: readonly string[] = ['Resimler']): Promise<PictureItem> {
   if (bytes.length > MOST_BYTES) return { ok: false, error: `“${name}” ${Math.floor(bytes.length / (1024 * 1024))} MB; resim en çok ${MOST_BYTES / (1024 * 1024)} MB olabilir.` };
   const png = bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
   const jpeg = bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8;
@@ -64,6 +65,6 @@ export async function pictureItem(name: string, bytes: Uint8Array): Promise<Pict
   const size = png ? pngSize(bytes) : jpegSize(bytes);
   if (!size) return { ok: false, error: `“${name}” okunamadı: ${format.toUpperCase()} dosyası bozuk görünüyor.` };
   const id = `resim-${(await sha256Hex(bytes)).slice(0, 16)}`;
-  const item: LibraryAsset = { kind: 'asset', id, name: stem(name), path: ['Resimler'], format, data: `data:image/${format};base64,${toBase64(bytes)}`, width: size[0], height: size[1] };
+  const item: LibraryAsset = { kind: 'asset', id, name: stem(name), path: [...path], format, data: `data:image/${format};base64,${toBase64(bytes)}`, width: size[0], height: size[1] };
   return { ok: true, id, item };
 }

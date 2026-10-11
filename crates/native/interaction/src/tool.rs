@@ -132,6 +132,9 @@ pub enum ViewChange {
     /// A command the host runs for the tool, as a click on its button would
     /// (Ağ analizi's tools open Ağlar with G, docs/adr/0209 §10).
     Command(&'static str),
+    /// Bilgi's card (docs/adr/0225 §5): the object it shows and the drawing's
+    /// point it was clicked at, or none (closed).
+    InfoCard(Option<(kentos_domain::Slot, Vec2)>),
 }
 
 /// Where a text field opens and how its text will look: its start, height in

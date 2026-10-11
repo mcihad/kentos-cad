@@ -7,5 +7,6 @@ mod create;
 mod delete;
 mod edit;
 mod fixtures;
+mod info_templates;
 mod polygon;
 mod transform;

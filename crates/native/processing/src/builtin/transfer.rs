@@ -512,6 +512,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         };
         let made = match objects {
             Some(objects) => Some(shaped(objects[r], base)),

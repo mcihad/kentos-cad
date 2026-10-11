@@ -33,6 +33,8 @@ pub(super) enum Val<'d> {
     Text(&'d str),
     /// An object's labels pinned by hand (docs/adr/0212 §2).
     Pins(&'d [kentos_contracts::LabelPin]),
+    /// An object's photos and documents (docs/adr/0225 §1).
+    Attachments(&'d [kentos_contracts::Attachment]),
     Name(&'static str),
     Float(f64),
     Bool(bool),
@@ -163,6 +165,14 @@ impl<'d> Encoder<'d> {
                 ));
             }
             f.push(("labelPins", Val::Pins(&base.label_pins)));
+        }
+        // Photos and documents (docs/adr/0225 §1): the drawing's objects only.
+        if !base.attachments.is_empty() {
+            if uid.is_none() {
+                self.path.push(Seg::Name(kind));
+                return Err(self.fail(Code::BadValue, "blok tanımının nesnesinde ek olmaz"));
+            }
+            f.push(("attachments", Val::Attachments(&base.attachments)));
         }
         if let Some(w) = base.line_weight {
             if !(0.0..=MAX_LINE_WEIGHT).contains(&w) {
@@ -988,6 +998,7 @@ impl<'d> Encoder<'d> {
         match v {
             Val::Text(t) => self.text(t),
             Val::Pins(pins) => self.label_pins(pins),
+            Val::Attachments(list) => self.attachments(list),
             Val::Name(t) => {
                 self.w.text(t);
                 Ok(())

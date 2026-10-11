@@ -446,6 +446,7 @@ mod tests {
                 symbol: None,
                 line_weight: None,
                 label_pins: Vec::new(),
+                attachments: Vec::new(),
             },
             p: Vec2 { x: 1.5, y: 2.5 },
             z,

@@ -301,6 +301,9 @@ fn create(
                 fields: src.fields.clone(),
                 time: src.time.clone(),
                 replaces: Some(src.id.clone()),
+                // The base layer's actions and card stand for it too (docs/adr/0225 §4).
+                actions: src.actions.clone(),
+                card: src.card.clone(),
                 ..NewLayer::layer(src.name.clone())
             },
             Some(&group),

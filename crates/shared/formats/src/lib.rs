@@ -26,6 +26,7 @@
 pub mod blocks;
 pub mod coords;
 pub mod dxf;
+pub mod exif;
 pub(crate) mod export_geom;
 pub mod field;
 pub mod fields;

@@ -76,6 +76,8 @@ pub enum Event {
     Filter(String),
     FilterFromSelection(String),
     FilterClear(String),
+    /// Bilgi kartı ve eylemler… on this layer (layer_info.rs, docs/adr/0225 §5).
+    Info(String),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
@@ -200,6 +202,7 @@ impl App {
                 self.clear_layer_filter(Some(id));
                 return Task::none();
             }
+            Event::Info(id) => return self.open_layer_info(Some(id)),
             _ => {}
         }
         if let Event::ZoomTo(id) = &event {
@@ -233,7 +236,8 @@ impl App {
             | Event::Labels(_)
             | Event::Filter(_)
             | Event::FilterFromSelection(_)
-            | Event::FilterClear(_) => {}
+            | Event::FilterClear(_)
+            | Event::Info(_) => {}
             Event::Isolate(id) => model.isolate_layer(&id),
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
@@ -565,6 +569,16 @@ impl App {
                         .then(|| event(Event::FilterClear(id.clone()))),
                 )
                 .icon(crate::icons::from_web(Some("layerFilterClear")))
+                // Bilgi kartı ve eylemler (docs/adr/0225 §4, §5): what Bilgi shows of its objects, and what they open.
+                .item(
+                    if node.card.is_some() || !node.actions.is_empty() {
+                        format!("Bilgi kartı ve eylemler… ({} eylem)", node.actions.len())
+                    } else {
+                        "Bilgi kartı ve eylemler…".to_owned()
+                    },
+                    event(Event::Info(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("layerInfo")))
                 .separator();
         }
         // A scenario group (docs/adr/0210 §10): shown, compared, applied.

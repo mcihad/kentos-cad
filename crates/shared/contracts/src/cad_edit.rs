@@ -542,28 +542,29 @@ pub enum EntityEdit {
         geometry: EntityGeometry,
     },
     /// The object becomes another in its place: the new geometry in its slot,
-    /// with its persistent id, layer and colour; its attributes and label only
-    /// with `keepData`; not its symbol (the part a trim leaves, the first part
-    /// of a break, a chain joined into its first object).
+    /// with its persistent id, layer and colour; its attributes, label and
+    /// attachments only with `keepData`; not its symbol (the part a trim
+    /// leaves, the first part of a break, a chain joined into its first
+    /// object).
     Replace {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         uid: String,
         geometry: EntityGeometry,
-        /// True: the attributes and the label carry over.
+        /// True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
         #[serde(rename = "keepData", default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         keep_data: Option<bool>,
     },
     /// A new object made from `from`: its layer, colour and line weight; its
-    /// attributes and label only with `keepData` (an offset copy, a piece of
-    /// a break or an explode, a fillet's arc). A field given here is the new
+    /// attributes, label and attachments only with `keepData` (an offset
+    /// copy, a piece of a break or an explode, a fillet's arc). A field given here is the new
     /// object's own instead: a block's object exploded keeps its layer,
     /// colour, line weight, attributes and label (docs/adr/0144).
     Add {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         from: String,
         geometry: EntityGeometry,
-        /// True: the attributes and the label carry over.
+        /// True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
         #[serde(rename = "keepData", default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         keep_data: Option<bool>,

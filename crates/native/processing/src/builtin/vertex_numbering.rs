@@ -231,6 +231,7 @@ fn base(layer: &str, label: Option<String>, attrs: &BTreeMap<String, String>) ->
         symbol: None,
         line_weight: None,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     }
 }
 

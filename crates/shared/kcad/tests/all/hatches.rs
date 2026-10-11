@@ -49,6 +49,7 @@ fn hatch(pattern: HatchPattern, assoc: Option<HatchAssoc>) -> Entity {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         ring: vec![v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0)],
         holes: None,

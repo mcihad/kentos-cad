@@ -21,13 +21,15 @@ use serde_json::Value;
 
 /// An object as the rule reads it: its layer, the library symbol it draws
 /// with, the definition it places (its id as text), the library image a
-/// picture shows (docs/adr/0192 §2).
+/// picture shows (docs/adr/0192 §2), the library images it holds as embedded
+/// photos (docs/adr/0225 §1).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PurgeObject {
     pub layer: String,
     pub symbol: Option<String>,
     pub block: Option<String>,
     pub asset: Option<String>,
+    pub attachments: Vec<String>,
 }
 
 /// A block definition and its objects.
@@ -285,6 +287,9 @@ fn used_by_staying(src: &PurgeSource<'_>, going: &HashSet<Key>) -> HashSet<Key> 
                 used.insert(key(PurgeKind::Blocks, b));
             }
             if let Some(a) = &o.asset {
+                used.insert(key(PurgeKind::Assets, a));
+            }
+            for a in &o.attachments {
                 used.insert(key(PurgeKind::Assets, a));
             }
         }

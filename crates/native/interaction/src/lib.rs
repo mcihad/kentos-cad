@@ -136,6 +136,8 @@ mod fence;
 pub mod find_replace;
 mod format;
 pub mod gnss;
+pub mod identify;
+pub mod photos;
 pub mod grip_menu;
 pub mod ground;
 pub mod hatch;

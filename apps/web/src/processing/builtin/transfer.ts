@@ -25,7 +25,7 @@ const shown = (v: string | undefined): string => (v === undefined || v === '' ? 
 
 /** An object's geometry without what is not geometry (its labels' pins too). */
 function geometryOf(e: Entity): Record<string, unknown> {
-  const { id: _i, uid: _u, layerId: _l, attrs: _a, color: _c, label: _t, symbol: _s, lineWeight: _w, labelPins: _p, kind: _k, ...g } = e as Entity & { labelPins?: unknown };
+  const { id: _i, uid: _u, layerId: _l, attrs: _a, color: _c, label: _t, symbol: _s, lineWeight: _w, labelPins: _p, attachments: _x, kind: _k, ...g } = e as Entity & { labelPins?: unknown };
   return g;
 }
 

@@ -221,6 +221,12 @@ pub enum Dialog {
     /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
     /// `App::points.batch`.
     PointBatch,
+    /// Adres ekle and Eki düzenle (attachments.rs, docs/adr/0225 §2); the window is `App::attachment_form`.
+    Attachment,
+    /// The photo viewer (attachments.rs, docs/adr/0225 §2); the window is `App::photo_viewer`.
+    PhotoViewer,
+    /// Bilgi kartı ve eylemler (layer_info.rs, docs/adr/0225 §5); the window is `App::layer_info`.
+    LayerInfo,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -391,6 +397,12 @@ pub enum Message {
     LayerMerge(crate::layer_merge::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
+    /// An object's attachments: their windows, the viewer and the photos decoded (attachments.rs).
+    Attachment(crate::attachments::Event),
+    /// Bilgi's card over the drawing (info_card.rs, docs/adr/0225 §5).
+    InfoCard(crate::info_card::Event),
+    /// Bilgi kartı ve eylemler (layer_info.rs).
+    LayerInfo(crate::layer_info::Event),
     /// Etiketler's window (labelling/, docs/adr/0212 §4).
     Labelling(crate::labelling::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
@@ -769,6 +781,16 @@ pub struct App {
     pub(crate) layer_merge: Option<crate::layer_merge::Window>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
+    /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
+    pub(crate) info_card: Option<(kentos_domain::Slot, kentos_interaction::Vec2)>,
+    /// The attachments' photos decoded for the shell, each once (photo_view.rs).
+    pub(crate) photos: crate::photo_view::Photos,
+    /// The photo viewer (attachments.rs).
+    pub(crate) photo_viewer: Option<crate::attachments::Viewer>,
+    /// Adres ekle and Eki düzenle (attachments.rs).
+    pub(crate) attachment_form: Option<crate::attachments::Form>,
+    /// Bilgi kartı ve eylemler (layer_info.rs).
+    pub(crate) layer_info: Option<crate::layer_info::Window>,
     /// Etiketler's window (labelling/, docs/adr/0212 §4).
     pub(crate) labelling: Option<crate::labelling::Window>,
     /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
@@ -1044,6 +1066,11 @@ impl App {
             isolated_layers: Vec::new(),
             layer_merge: None,
             layer_filter: None,
+            info_card: None,
+            photos: crate::photo_view::Photos::default(),
+            photo_viewer: None,
+            attachment_form: None,
+            layer_info: None,
             labelling: None,
             layer_states_window: None,
             annotation_styles: None,
@@ -1280,6 +1307,8 @@ impl App {
             self.find_replace_tasks(),
             self.text_file_tasks(),
             self.image_file_tasks(),
+            // The attachments' photos the shell shows, decoded off the thread (attachments.rs).
+            self.photo_tasks(),
             self.raster_values_tasks(),
             self.service_info_tasks(),
             self.cloud_query_tasks(),
@@ -1295,6 +1324,8 @@ impl App {
         ]);
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());
+        // Bilgi's card goes with its tool and its object (info_card.rs).
+        self.follow_info_card();
         self.cloud_after(Instant::now());
         // A window that opens over the drawing has the keyboard: a text box under
         // it (the command line that opened it) lets go first, before the window's
@@ -1519,6 +1550,9 @@ impl App {
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
+            Message::Attachment(event) => return self.attachment_event(event),
+            Message::InfoCard(event) => return self.info_card_event(event),
+            Message::LayerInfo(event) => return self.layer_info_event(event),
             Message::Labelling(event) => return self.labelling_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
@@ -1906,6 +1940,10 @@ impl App {
         self.memory.forget_heights();
         self.isolated_layers.clear();
         self.selected_layer = None;
+        // A linked photo's key is its path from the drawing's folder (attachments.rs); Bilgi's card was
+        // on an object of the drawing left.
+        self.photos.clear();
+        self.info_card = None;
         self.networks_reset();
         self.spatial.reload(&doc.model);
         self.viewport.opened(&doc, self.spatial.extent());
@@ -2209,6 +2247,9 @@ impl App {
             "layer.filter" => return self.open_layer_filter(None),
             "layer.filterFromSelection" => self.filter_from_selection(None),
             "layer.filterClear" => self.clear_layer_filter(None),
+            // Nesne ekleri (attachments.rs, layer_info.rs; docs/adr/0225 §2, §5).
+            "layer.info" => return self.open_layer_info(None),
+            "attachment.add" | "attachment.addLink" => return self.attachment_command(id),
             // Etiketler (labelling/, docs/adr/0212 §4): the active layer's; Katmanlar's menu names its layer.
             "layer.labels" => self.open_labelling(None),
             // Veri karşılaştır (docs/adr/0179).
@@ -2385,6 +2426,8 @@ impl App {
             }
             "draft.lock.clear" => self.session.lock_reference().is_some() && self.locks.any(),
             "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
+            // An attachment goes on one object (attachments.rs, docs/adr/0225 §2), as the web's.
+            "attachment.add" | "attachment.addLink" => doc.is_some() && self.selection.len() == 1,
             "edit.previousSelection" => !self.previous_selection_ids().is_empty(),
             "edit.cycleSelection" => self.selection.cycle().is_some(),
             // Only while a place is marked (search/, docs/adr/0178 §6).

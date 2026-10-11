@@ -1,4 +1,6 @@
 import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
+import type { InfoCard } from '../contracts/generated/InfoCard';
+import type { LayerAction } from '../contracts/generated/LayerAction';
 import type { LayerField } from '../contracts/generated/LayerField';
 import type { LabelStyle } from '../contracts/generated/LabelStyle';
 import type { LayerFilter } from '../contracts/generated/LayerFilter';
@@ -9,6 +11,7 @@ import type { ServiceLayer } from '../contracts/generated/ServiceLayer';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import type { LayerRenderer } from './style';
+import { actionsOf, cardOf } from './layerInfoRules';
 
 export type LineType = 'continuous' | 'dashed' | 'dashdot' | 'dotted';
 /** Every line type, in the contract's order (`LineType::ALL`). */
@@ -73,6 +76,22 @@ export interface LayerNode {
   replaces?: string;
   /** A layer's filter (docs/adr/0211 §2): only the objects that pass it are shown, picked and given to its tools. Never a group's. */
   filter?: LayerFilter;
+  /** A layer's actions (docs/adr/0225 §4): the addresses and files its objects open, in order. Never a group's. */
+  actions?: LayerAction[];
+  /** What the Bilgi tool shows of a layer's objects (docs/adr/0225 §5); absent, the default card. Never a group's. */
+  card?: InfoCard;
+}
+
+/** A layer's actions and card (docs/adr/0225 §4, §5), as the document's undoable `setLayerInfo` gives them. */
+export interface LayerInfo {
+  actions?: LayerAction[];
+  card?: InfoCard;
+}
+
+/** A node's actions and card as copies: only what it has, never a group's. */
+export function infoOf(n: { actions?: LayerAction[]; card?: InfoCard }, type: 'group' | 'layer'): LayerInfo {
+  if (type !== 'layer') return {};
+  return { ...(n.actions?.length && { actions: actionsOf(n.actions) }), ...(n.card && { card: cardOf(n.card) }) };
 }
 
 /** A filter as a layer keeps it: a copy, the list only when it names an object. */
@@ -202,6 +221,8 @@ export class LayerStore {
       ...temporalOf(n, n.type ?? (n.children ? 'group' : 'layer')),
       // A layer's filter (docs/adr/0211 §2); a group keeps none.
       ...(n.filter && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { filter: filterOf(n.filter) }),
+      // A layer's actions and card (docs/adr/0225 §4, §5); a group keeps neither.
+      ...infoOf(n, n.type ?? (n.children ? 'group' : 'layer')),
     };
     node.children = (n.children ?? []).map((c) => this.make(c));
     return node;
@@ -433,6 +454,16 @@ export class LayerStore {
     if (!n) return;
     if (next && n.type === 'layer') n.filter = filterOf(next);
     else delete n.filter;
+    this.changedState(id);
+  }
+
+  /** A layer's actions and card (docs/adr/0225 §4, §5), as the document's undoable `setLayerInfo` puts them. */
+  replaceInfo(id: string, next: LayerInfo): void {
+    const n = this.get(id);
+    if (!n) return;
+    delete n.actions;
+    delete n.card;
+    Object.assign(n, infoOf(next, n.type));
     this.changedState(id);
   }
 

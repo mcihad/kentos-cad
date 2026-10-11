@@ -412,6 +412,20 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<crate::layer_filter::LayerFilter>,
+    /// The addresses and files its objects open (docs/adr/0225 §4). Only a
+    /// layer holding objects has them, never a group or a layer drawn from a
+    /// service.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::layer_info::LayerAction>>", optional)
+    )]
+    pub actions: Vec<crate::layer_info::LayerAction>,
+    /// What the Bilgi tool shows of its objects (docs/adr/0225 §5); absent:
+    /// the default card. Only on a layer holding objects.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub card: Option<crate::layer_info::InfoCard>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

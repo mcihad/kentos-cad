@@ -298,6 +298,13 @@
      {
       "layer": "cizim",
       "asset": "p-foto"
+     },
+     {
+      "layer": "parsel",
+      "attachments": [
+       "p-ek-foto",
+       "p-ek-cephe"
+      ]
      }
     ],
     "blocks": [
@@ -493,6 +500,18 @@
       "kind": "asset",
       "source": "project",
       "name": "saha.jpg"
+     },
+     {
+      "id": "p-ek-foto",
+      "kind": "asset",
+      "source": "project",
+      "name": "tapu.jpg"
+     },
+     {
+      "id": "p-ek-cephe",
+      "kind": "asset",
+      "source": "project",
+      "name": "cephe.jpg"
      },
      {
       "id": "u-logo",

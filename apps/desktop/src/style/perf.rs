@@ -42,6 +42,8 @@ fn layer(id: &str, style: LayerStyle) -> LayerNode {
         time: None,
         scenario: None,
         replaces: None,
+        actions: Vec::new(),
+        card: None,
         filter: None,
     }
 }
@@ -75,6 +77,7 @@ fn drawing(n: usize) -> Document {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         }
     };
     for i in 0..n {
@@ -396,6 +399,7 @@ fn temporal_drawing(n: usize, in_order: bool) -> Document {
                     symbol: None,
                     line_weight: None,
                     label_pins: Vec::new(),
+                    attachments: Vec::new(),
                 },
                 pts,
                 bulges: None,

@@ -283,6 +283,7 @@ impl Collect {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         };
         self.entities.push(match shape {
             Shape::Point { p, z } => Entity::Point(PointEntity {

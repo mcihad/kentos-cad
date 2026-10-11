@@ -18,6 +18,8 @@ export interface PurgeObject {
   readonly block?: string;
   /** The library image a picture shows (docs/adr/0192 §2). */
   readonly asset?: string;
+  /** The library images it holds as embedded photos (docs/adr/0225 §1). */
+  readonly attachments?: readonly string[];
 }
 
 /** A block definition and its objects. */
@@ -118,6 +120,7 @@ function usedByStaying(src: PurgeSource, going: Set<string>): Set<string> {
       if (o.symbol) used.add(key('symbols', o.symbol));
       if (o.block) used.add(key('blocks', o.block));
       if (o.asset) used.add(key('assets', o.asset));
+      for (const a of o.attachments ?? []) used.add(key('assets', a));
     }
   };
   objects(src.objects);

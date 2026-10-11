@@ -18,6 +18,11 @@ export interface PropRow {
   /** The note warns (a value its layer's field refuses, docs/adr/0199 §5): in the warning colour. */
   warn?: boolean;
   editor?: PropEditor;
+  /**
+   * A small picture before the value (an attachment's, docs/adr/0225 §2): a photo's image, else the icon; clicking it
+   * opens the attachment.
+   */
+  thumb?: { src: string | null; icon: string; title: string; open: () => void };
 }
 
 export interface PropSection {
@@ -59,8 +64,19 @@ export class PropertyGrid {
   }
 
   private cell(r: PropRow, key: string): HTMLElement {
-    const cell = this.field(r, key);
+    const cell = this.thumbed(r, this.field(r, key));
     return r.note ? h('span', { class: 'props__with-note' }, cell, h('span', { class: `props__note${r.warn ? ' props__note--warn' : ''}`, title: r.note }, r.note)) : cell;
+  }
+
+  /** The cell with its row's picture before it, when it has one. */
+  private thumbed(r: PropRow, cell: HTMLElement): HTMLElement {
+    const t = r.thumb;
+    if (!t) return cell;
+    const pic = t.src
+      ? h('img', { class: 'props__thumb', src: t.src, alt: r.value, title: t.title, draggable: 'false' })
+      : h('button', { class: 'ibtn props__thumb-icon', type: 'button', title: t.title, 'aria-label': t.title }, icon(t.icon, 16));
+    pic.addEventListener('click', () => t.open());
+    return h('span', { class: 'props__thumbbox' }, pic, cell);
   }
 
   private field(r: PropRow, key: string): HTMLElement {

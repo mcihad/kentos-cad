@@ -34,7 +34,7 @@ pub const PROJECTION_TOLERANCE: f64 = 0.001;
 /// Coordinates and sizes beyond this are refused as garbage (TM coordinates reach 4.5·10⁶ m).
 const MAX_ABS: f64 = 1e9;
 const MAX_POINTS: usize = 1_000_000;
-const BASE_KEYS: [&str; 9] = [
+const BASE_KEYS: [&str; 10] = [
     "kind",
     "id",
     "layerId",
@@ -44,6 +44,7 @@ const BASE_KEYS: [&str; 9] = [
     "symbol",
     "lineWeight",
     "labelPins",
+    "attachments",
 ];
 
 /// A feature row's content (without ids, versions and audit columns).
@@ -62,6 +63,8 @@ pub struct Stored {
     pub line_weight: Option<f64>,
     /// Its labels pinned by hand, as the contract writes them (docs/adr/0212 §2); none: no pins.
     pub label_pins: Option<Value>,
+    /// Its photos and documents, as the contract writes them (docs/adr/0225 §1); none: no attachments.
+    pub attachments: Option<Value>,
 }
 
 fn p(v: kentos_contracts::Vec2) -> P {
@@ -155,6 +158,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             return Err("blok tanımının nesnesinde etiket iğnesi olmaz".into());
         }
         if let Some(problem) = kentos_contracts::pins_problem(&base.label_pins) {
+            return Err(problem);
+        }
+    }
+    // Photos and documents (docs/adr/0225 §1): the drawing's objects only, by the contract's rules.
+    if !base.attachments.is_empty() {
+        if in_block {
+            return Err("blok tanımının nesnesinde ek olmaz".into());
+        }
+        if let Some(problem) = kentos_contracts::attachments_problem(&base.attachments) {
             return Err(problem);
         }
     }
@@ -588,6 +600,10 @@ pub fn to_stored(entity: &Entity, srid: u32, blocks: &Placing) -> Result<Stored,
         .get("labelPins")
         .filter(|p| p.as_array().is_some_and(|a| !a.is_empty()))
         .cloned();
+    let attachments = map
+        .get("attachments")
+        .filter(|p| p.as_array().is_some_and(|a| !a.is_empty()))
+        .cloned();
     let properties = map
         .get("attrs")
         .cloned()
@@ -613,6 +629,7 @@ pub fn to_stored(entity: &Entity, srid: u32, blocks: &Placing) -> Result<Stored,
         symbol,
         line_weight,
         label_pins,
+        attachments,
     })
 }
 
@@ -714,6 +731,9 @@ pub fn from_stored(s: &Stored) -> Result<Entity, String> {
     }
     if let Some(p) = &s.label_pins {
         map.insert("labelPins".into(), p.clone());
+    }
+    if let Some(a) = &s.attachments {
+        map.insert("attachments".into(), a.clone());
     }
     serde_json::from_value(Value::Object(map)).map_err(|e| format!("nesne okunamadı: {e}"))
 }
@@ -896,6 +916,70 @@ mod tests {
             err.contains("blok tanımının nesnesinde etiket iğnesi olmaz"),
             "{err}"
         );
+    }
+
+    #[test]
+    fn an_objects_attachments_are_a_column_of_their_own() {
+        // docs/adr/0225 §1: a point keeps its geometry as source and has no definition to hold them.
+        let list = serde_json::json!([
+            { "name": "Tapu", "file": "belgeler/101-5.pdf", "note": "2019" },
+            { "name": "Ön cephe", "asset": "resim-00c1f77f23c38466" },
+            { "name": "Kurum sayfası", "url": "https://kurum.example/parsel/101-5" }
+        ]);
+        let point = entity(
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {},
+            "p": { "x": 487000, "y": 4420000 }, "attachments": list }),
+        );
+        let s = to_stored(&point, 5256, &none()).unwrap();
+        assert_eq!(s.source_kind, "geom");
+        assert_eq!(s.attachments, Some(list));
+        assert_eq!(
+            from_stored(&s).unwrap().base().attachments,
+            point.base().attachments
+        );
+        // An area's definition does not hold them twice.
+        let area = entity(
+            serde_json::json!({ "kind": "circle", "id": 1, "layerId": "p", "attrs": {},
+            "c": { "x": 0, "y": 0 }, "r": 2, "attachments": [{ "name": "Foto", "file": "a.jpg" }] }),
+        );
+        let s = to_stored(&area, 5256, &none()).unwrap();
+        assert!(
+            s.cad_definition
+                .as_ref()
+                .unwrap()
+                .get("attachments")
+                .is_none()
+        );
+        assert_eq!(
+            from_stored(&s).unwrap().base().attachments,
+            area.base().attachments
+        );
+        // Without any, none; against the contract's rules, refused.
+        let plain = entity(
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {}, "p": { "x": 0, "y": 0 } }),
+        );
+        assert_eq!(to_stored(&plain, 5256, &none()).unwrap().attachments, None);
+        let ftp = entity(
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {},
+            "p": { "x": 0, "y": 0 }, "attachments": [{ "name": "Tapu", "url": "ftp://a.org/a.pdf" }] }),
+        );
+        assert_eq!(
+            to_stored(&ftp, 5256, &none()).unwrap_err(),
+            "“Tapu” ekinin adresi http:// ya da https:// ile başlamalı ve boşluk içermemeli"
+        );
+    }
+
+    #[test]
+    fn a_blocks_object_has_no_attachments() {
+        // docs/adr/0225 §1: attachments are the drawing's objects', as the file's reader says.
+        let block: BlockDefinition = serde_json::from_value(serde_json::json!({
+            "id": "018f3a2b-0000-7000-8000-000000000001", "name": "Direk", "base": { "x": 0, "y": 0 },
+            "entities": [{ "kind": "point", "id": 1, "layerId": "", "attrs": {}, "p": { "x": 1, "y": 3 },
+                           "attachments": [{ "name": "Foto", "file": "a.jpg" }] }]
+        }))
+        .unwrap();
+        let err = to_stored_block(&block).unwrap_err();
+        assert!(err.contains("blok tanımının nesnesinde ek olmaz"), "{err}");
     }
 
     #[test]

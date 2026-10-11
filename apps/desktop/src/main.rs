@@ -11,6 +11,11 @@ mod app_menu;
 mod appearance;
 #[cfg(test)]
 mod appearance_tokens_tests;
+#[cfg(test)]
+mod attachment_scenes;
+mod attachments;
+#[cfg(test)]
+mod attachments_tests;
 mod attribute_table;
 mod attribute_values;
 mod block_attributes;
@@ -58,6 +63,7 @@ mod icon_tour;
 mod icons;
 #[cfg(test)]
 mod image_scenes;
+mod info_card;
 mod input;
 mod keys;
 mod keytips;
@@ -67,6 +73,7 @@ mod labelling;
 mod labels;
 mod layer_fields;
 mod layer_filters;
+mod layer_info;
 mod layer_list;
 mod layer_merge;
 mod layer_purge;
@@ -97,6 +104,7 @@ mod navigation;
 mod navigation_cards;
 #[cfg(test)]
 mod netcad_names_tests;
+mod object_info;
 mod opening;
 #[cfg(test)]
 mod overlap_tests;
@@ -105,6 +113,7 @@ mod paragraph_editor;
 mod parts_scenes;
 #[cfg(test)]
 mod perf;
+mod photo_view;
 mod pictures;
 mod point_calc;
 #[cfg(test)]

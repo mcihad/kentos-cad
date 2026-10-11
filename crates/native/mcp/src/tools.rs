@@ -345,6 +345,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.labels.pin"
             // Null takes a layer's renderer away (docs/adr/0213 §5).
             | "cad.layers.renderer"
+            // Without actions or a card it takes a layer's away (docs/adr/0225 §4, §5).
+            | "cad.layers.info"
     );
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \

@@ -85,6 +85,12 @@ fn object_of(e: &Entity) -> PurgeObject {
             Entity::Raster(r) => r.raster.asset.clone(),
             _ => None,
         },
+        // Its embedded photos (docs/adr/0225 §1).
+        attachments: base
+            .attachments
+            .iter()
+            .filter_map(|a| a.asset.clone())
+            .collect(),
     }
 }
 

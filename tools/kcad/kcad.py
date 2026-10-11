@@ -147,6 +147,19 @@ BUILTIN_VARIABLES = ("proje_adi", "koordinat_sistemi", "epsg", "olcek", "tarih",
 SCHEMA_WITH_MULTIDIM = 38
 # Schema 39: schema 38 and vertex measures (M), a line's `ma`, `mb`, a polyline's and its parts' `ms` (docs/adr/0224 §1).
 SCHEMA_WITH_MEASURES = 39
+# Schema 40: schema 39 and an object's `attachments`, a layer's `actions` and `card` (docs/adr/0225).
+SCHEMA_WITH_ATTACHMENTS = 40
+# Attachments' and actions' bounds (kentos_contracts::attachment, ::layer_info).
+MAX_ATTACHMENTS = 64
+MAX_ATTACHMENT_NAME = 256
+MAX_ATTACHMENT_NOTE = 1000
+MAX_ATTACHMENT_LINK = 4096
+MAX_ACTIONS = 32
+MAX_ACTION_NAME = 100
+MAX_ACTION_TARGET = 4096
+MAX_CARD_TITLE = 1000
+MAX_CARD_TEXT = 10000
+MAX_CARD_FIELDS = 200
 # A dataset's bounds (kentos_contracts::raster).
 MAX_DATASET_NAME = 256
 MAX_DATASET_DIMS = 8
@@ -279,7 +292,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -954,6 +967,96 @@ def labels_problem(layers):
     return None
 
 
+def _control(text, allowed=""):
+    """A control character (Unicode Cc) other than those allowed."""
+    return any(unicodedata.category(c) == "Cc" and c not in allowed for c in text)
+
+
+def attachments_problem(xs):
+    """An object's attachments (docs/adr/0225 §1): at most 64; each a name (not blank, at most 256 characters, no control
+    character), exactly one source (an asset id, a file's path or an http or https address without white space; at most
+    4 096 characters, no control character) and a note (at most 1 000 characters, line breaks only)."""
+    if len(xs) > MAX_ATTACHMENTS:
+        return f"nesnenin {len(xs)} eki var; en çok {MAX_ATTACHMENTS}"
+    for a in xs:
+        name = a["name"]
+        if not name.strip():
+            return "ekin adı boş"
+        if len(name) > MAX_ATTACHMENT_NAME or _control(name):
+            return f"“{name.strip()}” ekinin adı uzun ya da denetim karakteri içeriyor"
+        sources = [k for k in ("asset", "file", "url") if k in a]
+        if len(sources) != 1:
+            return f"“{name}” ekinin kaynağı tek olmalı"
+        if "asset" in a and (not a["asset"].strip() or len(a["asset"]) > MAX_ATTACHMENT_NAME or _control(a["asset"])):
+            return f"“{name}” ekinin varlık kimliği geçersiz"
+        for k in ("file", "url"):
+            if k in a and (not a[k].strip() or len(a[k]) > MAX_ATTACHMENT_LINK or _control(a[k])):
+                return f"“{name}” ekinin yolu ya da adresi geçersiz"
+        if "url" in a:
+            u, lower = a["url"], a["url"].lower()
+            web = (lower.startswith("http://") and len(u.encode()) > 7) or (lower.startswith("https://") and len(u.encode()) > 8)
+            if not web or any(c.isspace() for c in u):
+                return f"“{name}” ekinin adresi http:// ya da https:// ile başlamalı ve boşluk içermemeli"
+        if "note" in a and (len(a["note"]) > MAX_ATTACHMENT_NOTE or _control(a["note"], "\n")):
+            return f"“{name}” ekinin notu uzun ya da denetim karakteri içeriyor"
+    return None
+
+
+def actions_problem(xs):
+    """A layer's actions (docs/adr/0225 §4): at most 32; each a trimmed name (at most 100 characters, no control
+    character, once whatever its case) and a target (not blank, at most 4 096 characters, no control character)."""
+    if len(xs) > MAX_ACTIONS:
+        return f"katmanın {len(xs)} eylemi var; en çok {MAX_ACTIONS}"
+    seen = set()
+    for a in xs:
+        name = a["name"]
+        if not name.strip() or name.strip() != name:
+            return "eylemin adı boş ya da başında veya sonunda boşluk var"
+        if len(name) > MAX_ACTION_NAME or _control(name):
+            return f"“{name}” eyleminin adı uzun ya da denetim karakteri içeriyor"
+        if name.lower() in seen:
+            return f"“{name}” adlı iki eylem var"
+        seen.add(name.lower())
+        t = a["target"]
+        if not t.strip():
+            return f"“{name}” eyleminin hedefi boş"
+        if len(t) > MAX_ACTION_TARGET or _control(t):
+            return f"“{name}” eyleminin hedefi uzun ya da denetim karakteri içeriyor"
+    return None
+
+
+def card_problem(c):
+    """A layer's information card (docs/adr/0225 §5): a title not blank, at most 1 000 characters, one line; a text not
+    blank, at most 10 000 characters, line breaks only; at most 200 fields, none blank, each once."""
+    if "title" in c and (not c["title"].strip() or len(c["title"]) > MAX_CARD_TITLE or _control(c["title"])):
+        return "kartın başlığı boş, uzun ya da satır sonu içeriyor"
+    if "text" in c and (not c["text"].strip() or len(c["text"]) > MAX_CARD_TEXT or _control(c["text"], "\n")):
+        return "kartın metni boş, uzun ya da denetim karakteri içeriyor"
+    fs = c.get("fields", [])
+    if len(fs) > MAX_CARD_FIELDS:
+        return f"kart {len(fs)} alan gösteriyor; en çok {MAX_CARD_FIELDS}"
+    if any(not f.strip() for f in fs):
+        return "kartın alanlarında boş ad var"
+    if len(set(fs)) != len(fs):
+        return "kart bir alanı iki kez gösteriyor"
+    return None
+
+
+def infos_problem(layers):
+    """The tree's actions and cards (kentos_contracts::layer_info::infos_problem, docs/adr/0225 §4, §5): only on a layer
+    that holds objects (not a group, not a layer drawn from a service), each by its rule."""
+    for n in layers:
+        if ("actions" in n or "card" in n) and (n["type"] != "layer" or "service" in n):
+            return f"“{n['name']}”: eylemler ve bilgi kartı yalnız nesneleri olan katmanda olur"
+        p = actions_problem(n.get("actions", [])) or (card_problem(n["card"]) if "card" in n else None)
+        if p:
+            return f"“{n['name']}”: {p}"
+        p = infos_problem(n["children"])
+        if p:
+            return p
+    return None
+
+
 def filters_problem(layers):
     """The tree's filters (kentos_contracts::layer_filter::filters_problem, docs/adr/0211 §2): a filter only on a layer
     that holds objects (not a group, not a layer drawn from a service), and every filter by its rule."""
@@ -1555,6 +1658,7 @@ class _Schema:
         self.point_clouds = version >= SCHEMA_WITH_POINT_CLOUDS
         self.multidim = version >= SCHEMA_WITH_MULTIDIM
         self.measures = version >= SCHEMA_WITH_MEASURES
+        self.attachments = version >= SCHEMA_WITH_ATTACHMENTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -1615,6 +1719,11 @@ class _Schema:
             self.fail("bad_value", tree)
         # Schema 36's tree rule (docs/adr/0212 §2).
         tree = labels_problem(d["layers"])
+        if tree:
+            self.path.append("layers")
+            self.fail("bad_value", tree)
+        # Schema 40's tree rule (docs/adr/0225 §4, §5).
+        tree = infos_problem(d["layers"])
         if tree:
             self.path.append("layers")
             self.fail("bad_value", tree)
@@ -2024,6 +2133,7 @@ class _Schema:
                 **({"service": (self.service_, False), "feed": (self.feed_, False)} if self.services else {}),
                 **({"time": (self.layer_time_, False), "scenario": (self.scenario_, False), "replaces": (self.text, False)} if self.temporal else {}),
                 **({"filter": (self.layer_filter_, False)} if self.filters else {}),
+                **({"actions": (self.layer_actions_, False), "card": (self.info_card_, False)} if self.attachments else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -2050,7 +2160,45 @@ class _Schema:
             self.fail("bad_value", "grup bir katmanın yerine geçmez; yalnız katman geçer")
         if "filter" in n and n["type"] == "group":
             self.fail("bad_value", "grubun süzgeci olmaz; süzgeç yalnız katmanındır")
+        if "actions" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun eylemi olmaz; eylemler yalnız katmanındır")
+        if "card" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun bilgi kartı olmaz; kart yalnız katmanındır")
         return n
+
+    # Schema 40's actions, card and attachments (docs/adr/0225): read field by field, then checked by the contract's rules;
+    # an empty list and a card's switch written on are not written.
+
+    def layer_actions_(self, v):
+        xs = self.array(self.fields({"name": (self.text, True), "target": (self.text, True)}))(v)
+        if not xs:
+            self.fail("bad_value", "katmanın eylem listesi boş; boş liste yazılmaz")
+        p = actions_problem(xs)
+        if p:
+            self.fail("bad_value", p)
+        return xs
+
+    def info_card_(self, v):
+        c = self.fields(
+            {"text": (self.text, False), "title": (self.text, False), "fields": (self.array(self.text), False), "actions": (self.bool, False), "attachments": (self.bool, False)}
+        )(v)
+        if "fields" in c and not c["fields"]:
+            self.fail("bad_value", "kartın alan listesi boş; boş liste yazılmaz")
+        if c.get("actions") is True or c.get("attachments") is True:
+            self.fail("bad_value", "kartın düğmesi açıkken yazılmaz; yalnız kapalısı (false) yazılır")
+        p = card_problem(c)
+        if p:
+            self.fail("bad_value", p)
+        return c
+
+    def attachments_(self, v):
+        xs = self.array(self.fields({"url": (self.text, False), "file": (self.text, False), "name": (self.text, True), "note": (self.text, False), "asset": (self.text, False)}))(v)
+        if not xs:
+            self.fail("bad_value", "nesnenin ek listesi boş; boş liste yazılmaz")
+        p = attachments_problem(xs)
+        if p:
+            self.fail("bad_value", p)
+        return xs
 
     # Schema 35's layer filter (docs/adr/0211 §2): read field by field, then checked by the contract's rule.
 
@@ -3367,6 +3515,8 @@ class _Schema:
             **({"lineWeight": (self.line_weight, False)} if self.weights else {}),
             # Labels pinned by hand (schema 36, docs/adr/0212 §2): the drawing's objects only.
             **({"labelPins": (self.label_pins_, False)} if self.labels and self.inside is None else {}),
+            # Photos and documents (schema 40, docs/adr/0225 §1): the drawing's objects only.
+            **({"attachments": (self.attachments_, False)} if self.attachments and self.inside is None else {}),
         }
 
     def line_weight(self, v):

@@ -5,6 +5,7 @@ import { SNAP_LABEL, type SnapKind } from '../../viewport/picking';
 import { canCalcPoint } from '../../tools/pointCalc';
 import { takesPoints } from '../../tools/locks';
 import { calcMenuItems } from './calcMenu';
+import { objectActions, runAction } from '../../app/objectActions';
 import { gripItems } from './gripMenu';
 import { choiceItems, parsePrompt, runPromptOption } from '../promptOptions';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
@@ -128,5 +129,25 @@ function idleItems(ctx: AppContext): MenuItem[] {
     'view.coords',
   ]).filter((it, i, arr) => !(it.kind === 'separator' && (i === 0 || arr[i - 1].kind === 'separator')));
   if (last && items[0]) items[0].label = `Yinele: ${last}`;
+  // Eylemler ▸ (docs/adr/0225 §4): the actions of the object under the pointer, else of the one selected, when its layer has some.
+  const actions = actionItems(ctx);
+  if (actions.length) items.push({ kind: 'separator' }, { label: 'Eylemler', icon: 'externalOpen', items: () => actions });
   return items;
+}
+
+/** The actions of the object under the pointer (else of the one object selected), each filled for it. */
+function actionItems(ctx: AppContext): MenuItem[] {
+  const { doc, selection } = ctx;
+  const under = selection.hover.value;
+  const ids = selection.ids.value;
+  const id = under ?? (ids.size === 1 ? [...ids][0] : null);
+  const e = id === null ? undefined : doc.get(id);
+  if (!e || !doc.layers.get(e.layerId)?.actions?.length) return [];
+  return objectActions(ctx, e).map((a) => ({
+    label: a.name,
+    icon: a.kind === 'file' ? 'document' : 'externalOpen',
+    detail: a.error ?? a.target ?? undefined,
+    disabled: a.error !== null,
+    run: () => runAction(ctx, a),
+  }));
 }

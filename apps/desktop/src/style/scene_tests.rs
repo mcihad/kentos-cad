@@ -51,6 +51,8 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         time: None,
         scenario: None,
         replaces: None,
+        actions: Vec::new(),
+        card: None,
         filter: None,
     }
 }
@@ -67,6 +69,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         symbol: None,
         line_weight: None,
         label_pins: Vec::new(),
+        attachments: Vec::new(),
     };
     for i in 0..n {
         let (x, y) = (

@@ -214,6 +214,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   konumla (nokta, çizgi, alan; rotaların R-ağacı), Olayları çakıştır (Kesişim, Birleşim) ve M değerlerini çıkar; çekirdek `ops::lrs`;
   Öznitelikler'de, Koordinat listesinde ve kartta M; Km yaz'ın Ölçü (M)'si ölçülü rotada km'yi M'den yazar; CBS'de Analiz › Ağ analizi ▾
   (ADR 0224);
+  nesne ekleri: nesnenin fotoğrafları ve belgeleri (`attachments`: gömülü fotoğraf, bağlı dosya ya da adres, not; `.kcad` şema 40,
+  `FORMATS_VERSION` 52; `cad.entities.set`'in `attachments`'ı), Öznitelikler'de Ekler ve Eylemler, fotoğraf görüntüleyici, üzerine gelme
+  kartında ilk fotoğraf; Konumlu fotoğraflar (kendi EXIF okuyucumuz, WGS 84'ten Koordinat dönüştür'ün yoluyla, nokta ve eki); katmanın
+  eylemleri ve bilgi kartı (şablon `{ifade}`, `{$enlem}`, `{$boylam}`, adreste yüzde kodlama; `cad.layers.info`), Bilgi aracı ve Bilgi
+  kartı ve eylemler penceresi, çizimin sağ tıkında Eylemler ▸; masaüstünde fotoğraflar kabuğun wgpu boru hattında (ADR 0225);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -658,6 +663,11 @@ python3 scripts/fixtures/lrs_cases.py --check   # doğrusal referanslamayı (kon
 python3 scripts/fixtures/lrs_processing_cases.py --check; python3 scripts/fixtures/lrs_scene.py --check   # Doğrusal referans araçlarının İşlemler durumlarını (fixtures/processing/v1/lrs.json, lrs.kcad, lrs-*.csv) ve resimlerin yolunu (fixtures/interaction/v1/lrs.kcad ve lrs/: D-100 ve D-200, parçaları, km taşları, kazalar, kaplama, hız, korkuluk ve levha tabloları) denetle (ADR 0224)
 cargo test -p kentos-desktop processing::lrs_tests::screens -- --ignored --nocapture --test-threads=1   # Doğrusal referans'ın şeridi, pencereleri, yeni rotalar ve M'leri, olaylar, tablolar, Öznitelikler'in M'si, Koordinat listesinin M sütunu ve kart, .run/shots/islem-dr-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs lrs); Km yaz ölçüyle KENTOS_SHOTS_ONLY=km-yaz-olcu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture ve shots.mjs stationing --only stationing-measure; ADR 0224)
 cargo test --release -p kentos-geometry-core --test all lrs::timing -- --ignored --nocapture   # 1 000 rotada 100 000 nokta ve 10 000 çizgi olayı, 100 000 noktanın konumlanması, 10 000 parçadan rota, 100 000 olayın çakıştırılması ve kalibrasyon bütçeleriyle (ADR 0224 §4); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; LRS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/lrs.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
+python3 scripts/fixtures/template_cases.py --check   # bilgi kartı ve eylem şablonlarının bölünmesini, doldurulmasını, adreste yüzde kodlamayı ve hedefin türünü ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/expression/v2/template.json (ADR 0225 §6)
+python3 scripts/fixtures/exif_cases.py --check; python3 scripts/fixtures/photo_import_cases.py --check   # EXIF okuyucusunu (KentOS kodu olmadan yazılmış JPEG ve TIFF başlıkları, kesirler, bozuk ve eksik konumlar; fixtures/exif/v1) ve konumlu fotoğrafların noktalarını PROJ'la denetle (fixtures/photos/v1/import.json; ADR 0225 §3)
+python3 scripts/fixtures/layer_info_command_cases.py --check; python3 scripts/fixtures/attachments_scene.py --check   # cad.layers.info durumlarını sözleşmenin kurallarından ve eklerin sahnesini (fixtures/interaction/v1/attachments.kcad, gömülü PNG fotoğraflar, belgeler/tapu-101-5.pdf) denetle (ADR 0225)
+KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_SHOTS_ONLY=ekler-oznitelikler,ekler-uzerine,ekler-kart,ekler-kart-foto,ekler-goruntuleyici,ekler-adres,ekler-bilgi-karti,ekler-konumlu,ekler-eylemler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nesne eklerinin masaüstü resimleri (fotoğraflar wgpu ister), .run/shots/arac-ekler-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs attachments); ADR 0225)
+cargo test --release -p kentos-formats --test all exif::timing -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all info_templates -- --ignored --nocapture; cargo test --release -p kentos-desktop a_card_opens_in_a_frame -- --ignored --nocapture   # 1 000 fotoğrafın EXIF'i, 10 000 nesnenin kart metni ve bir kartın açılması bütçeleriyle (ADR 0225 §7); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; ATTACH_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/attachments.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp apps/web/src/io/pkg/.stamp
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
 python3 scripts/fixtures/closing_cases.py --check   # dönük binaların 45 bloğunun kapanışını (dışa tampon GEOS'un, içe aşındırma kesin; kesişim çekirdeğinin bir kez yüz yitirdiği bloklar dahil) KentOS kodu olmadan denetle; --stress FILE çekirdeğin rastgele blokların kapanışlarını (KENTOS_CLOSINGS_OUT=FILE cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored) karşılaştırır; durumlar fixtures/geoprocess/v1/closings.json (ADR 0221 §10)
 cargo test -p kentos-desktop processing::generalize_tests::screens -- --ignored --nocapture --test-threads=1   # genelleştirmenin şeridi, pencereleri ve sonuçları, .run/shots/islem-gen-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs generalize); ADR 0221)
@@ -1652,7 +1662,16 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   köşe tablosu ve kartta M; Km yaz'ın Ölçü (M)'si (`measure_stations`, `stationingMeasure`; ortak iz `stationing-measure.json`; hattın
   rotası web'de `model/ops/lrs.ts`'in `routeOf`'u, masaüstünde `kentos_native_application::geometry::route`); masaüstünün komut
   satırında yazılan tuş kendi seçeneğini seçer (KentOS UI `keyed`); resimlerin yolu `lrs_scene.py`; süreler `lrs::timing` ve
-  `scripts/perf/lrs.test.ts`. Sıradaki `GIS-29`.
+  `scripts/perf/lrs.test.ts`. `GIS-29` nesne ekleri ([ADR 0225](docs/adr/0225-object-attachments.md); kapsamı ben belirledim) tek
+  parçada bitti (12 Ekim): sözleşmenin `attachment`'ı ve `layer_info`'su, `cad.layers.info`, `cad.entities.set`'in `attachments`'ı,
+  `.kcad` şema 40 (`FORMATS_VERSION` 52), sunucuda göç 0016; çekirdek `kentos_expression::template` (`template_cases.py`),
+  `kentos_formats::exif` (`exif_cases.py`), `kentos_interaction::photos` (`photo_import_cases.py`, PROJ) ve `::identify`,
+  `kentos_native_application::info_templates` ve `layers_info` (`layer_info_command_cases.py`); masaüstünde `attachments.rs`,
+  `photo_view.rs` (kendi wgpu boru hattı: yeni bağımlılık yok), `object_info.rs`, `info_card.rs`, `layer_info.rs`,
+  `exchange/photo_import.rs`, `properties/rows/attachments.rs`; web'de `app/attachments.ts`, `app/objectActions.ts`, `ui/attachments/`,
+  `ui/shell/InfoCard.ts`, `ui/layers/LayerInfoDialog.ts`, `ui/io/PhotoImportDialog.ts`; ortak iz `identify.json` (yeni beklenti
+  `infoCard`, sahne `attachments_scene.py`); masaüstü testleri `attachments_tests`; süreler `exif::timing`, `info_templates`,
+  `a_card_opens_in_a_frame`, `scripts/perf/attachments.test.ts`. Sıradaki `GIS-30`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

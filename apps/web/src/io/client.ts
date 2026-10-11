@@ -11,6 +11,7 @@ import type { FieldWriteOptions } from '../contracts/generated/FieldWriteOptions
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
 import type { GnssRead } from '../contracts/generated/GnssRead';
+import type { PhotoExif } from '../contracts/generated/PhotoExif';
 import type { GpxWriteInput } from '../contracts/generated/GpxWriteInput';
 import type { KmlWriteInput } from '../contracts/generated/KmlWriteInput';
 import type { DatumChoice, System } from '../model/geom/crsTransform';
@@ -123,6 +124,15 @@ export class FormatsClient {
   async readGnss(bytes: Uint8Array): Promise<GnssRead> {
     const copy = bytes.slice().buffer;
     return json<GnssRead>(await this.request({ op: 'readGnss', bytes: copy }, [copy]));
+  }
+
+  /**
+   * Reads a photo's EXIF (docs/adr/0225 §3): its place in WGS 84 as written, its height, the direction it looked, when it
+   * was taken and the camera; why it has no place in `problem`. The caller keeps `bytes`.
+   */
+  async readExif(bytes: Uint8Array): Promise<PhotoExif> {
+    const copy = bytes.slice().buffer;
+    return json<PhotoExif>(await this.request({ op: 'readExif', bytes: copy }, [copy]));
   }
 
   /**

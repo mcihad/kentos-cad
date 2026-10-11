@@ -478,6 +478,17 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                     Some(v) => serde_json::from_value(v.clone())
                         .or_else(|e| fail(format!("{at}: süzgeç okunamadı: {e}")))?,
                 },
+                // Actions and a card (docs/adr/0225 §4, §5), as `LayerInit` carries them.
+                actions: match layer.get("actions") {
+                    None => Vec::new(),
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: eylemler okunamadı: {e}")))?,
+                },
+                card: match layer.get("card") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: kart okunamadı: {e}")))?,
+                },
             };
             let parent = step.get("parent").and_then(Value::as_str);
             let activate = step

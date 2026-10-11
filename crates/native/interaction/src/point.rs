@@ -325,6 +325,7 @@ impl Point {
                     operation: PropertiesOperation::Attributes,
                     expected_revision: None,
                     unlink: false,
+                    attachments: None,
                 };
                 refusal(set::execute(&mut ExecutionContext::new(doc), input))?;
             }

@@ -538,6 +538,12 @@ export class LayersPanel extends Panel {
         { label: n.filter ? 'Süzgeç… (süzgeçli)' : 'Süzgeç…', icon: 'layerFilter', run: () => void this.ctx.commands.execute('layer.filter', n.id) },
         { label: 'Seçimden süzgeç', icon: 'layerFilterSelection', disabled: !this.selectedOn(n.id), run: () => void this.ctx.commands.execute('layer.filterFromSelection', n.id) },
         { label: 'Süzgeci kaldır', icon: 'layerFilterClear', disabled: !n.filter, run: () => void this.ctx.commands.execute('layer.filterClear', n.id) },
+        // Bilgi kartı ve eylemler (docs/adr/0225 §4, §5): what the Bilgi tool shows of its objects, and what they open.
+        {
+          label: n.card || n.actions?.length ? `Bilgi kartı ve eylemler… (${n.actions?.length ?? 0} eylem)` : 'Bilgi kartı ve eylemler…',
+          icon: 'layerInfo',
+          run: () => void this.ctx.commands.execute('layer.info', n.id),
+        },
         { kind: 'separator' },
       );
     }

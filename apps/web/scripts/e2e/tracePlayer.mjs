@@ -913,6 +913,21 @@ const observe = (mark) =>
       time: k.time.open.value ? { label: k.time.label(), position: k.time.position.value, last: k.time.last.value } : null,
       // Every object's label pins, by its id, where it has any (docs/adr/0212 §2).
       labelPins: Object.fromEntries([...k.doc.all()].filter((e) => e.labelPins?.length).map((e) => [e.id, e.labelPins])),
+      // Bilgi's card while it shows, as it reads; how many attachments its object has (docs/adr/0225 §5).
+      infoCard: (() => {
+        const shown = k.tools.infoCard.value;
+        const el = document.querySelector('.info-card');
+        if (!shown || !el || el.hidden) return null;
+        return {
+          id: shown.id,
+          title: el.querySelector('.info-card__title')?.textContent ?? '',
+          rows: [...el.querySelectorAll('.info-card__rows dt')].map((dt) => dt.textContent + ': ' + (dt.nextElementSibling?.textContent ?? '')),
+          text: el.querySelector('.info-card__text')?.textContent ?? null,
+          actions: [...el.querySelectorAll('.info-card__actions button span')].map((b) => b.textContent),
+          targets: [...el.querySelectorAll('.info-card__actions button')].map((b) => b.title),
+          attachments: k.doc.get(shown.id)?.attachments?.length ?? 0,
+        };
+      })(),
     };
   })()`);
 
@@ -1075,6 +1090,13 @@ function compare(expect, got, t) {
           });
         if (!ok) bad.push(`labelPins[${id}]: ${JSON.stringify(got)}, beklenen ${JSON.stringify(pins)} (±${t.clickTolerance} m)`);
       }
+    } else if (key === 'infoCard') {
+      // Only the fields the step writes, each exactly; null when it is closed (docs/adr/0225 §5).
+      const ok =
+        have === null || want === null
+          ? have === want
+          : Object.entries(want).every(([f, w]) => (Array.isArray(w) ? same(have[f] ?? [], w) : have[f] === w));
+      if (!ok) bad.push(`infoCard: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);
     } else if (key === 'layerCounts') {
       // Only the rows the step names, each exactly (docs/adr/0211 §4).
       for (const [path, count] of Object.entries(want))

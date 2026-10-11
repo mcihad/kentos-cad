@@ -113,6 +113,9 @@ pub enum Event {
     Grip(GripAction),
 }
 
+/// The characters of an action's target its entry shows under its name.
+const DETAIL: usize = 48;
+
 impl App {
     /// The values the running tool's option `key` chooses between, as a menu
     /// of radios with their pictures (Yazı's Hiza, docs/adr/0145 §6; the
@@ -274,7 +277,7 @@ impl App {
                 .item(format!("Yinele: {title}"), Message::Run("tool.repeat"))
                 .shortcut("Enter");
         }
-        [
+        let menu = [
             "-",
             "view.zoomExtents",
             "view.zoomSelection",
@@ -295,7 +298,65 @@ impl App {
         .fold(menu, |menu, id| match id {
             "-" => menu.separator(),
             id => self.command_item(menu, id),
-        })
+        });
+        // Eylemler ▸ (docs/adr/0225 §4): the actions of the object under the
+        // pointer, else of the one selected, when its layer has some.
+        match self.menu_actions() {
+            Some(actions) => menu
+                .separator()
+                .submenu("Eylemler", actions)
+                .icon(crate::icons::from_web(Some("externalOpen"))),
+            None => menu,
+        }
+    }
+
+    /// The actions of the object under the pointer (else of the one object
+    /// selected), each filled for it, its target under its name; none when its
+    /// layer has none.
+    pub(crate) fn menu_actions(&self) -> Option<Menu<Message>> {
+        let doc = self.document.as_ref()?;
+        let slot = self
+            .selection
+            .hover()
+            .or_else(|| match self.selection.ids() {
+                [one] => Some(*one),
+                _ => None,
+            })?;
+        let e = doc.model.get(slot)?;
+        if doc
+            .model
+            .layers()
+            .get(&e.base().layer_id)?
+            .actions
+            .is_empty()
+        {
+            return None;
+        }
+        let menu = self.object_actions(e, None).into_iter().enumerate().fold(
+            Menu::new(),
+            |menu, (i, a)| {
+                let glyph = if a.kind == kentos_expression::template::TargetKind::File {
+                    "document"
+                } else {
+                    "externalOpen"
+                };
+                // The target's beginning on one line: an address is long.
+                let detail = a.error.clone().or(a.target.clone()).unwrap_or_default();
+                let detail = match detail.char_indices().nth(DETAIL) {
+                    Some((cut, _)) => format!("{}…", &detail[..cut]),
+                    None => detail,
+                };
+                menu.item(
+                    a.name.clone(),
+                    a.error
+                        .is_none()
+                        .then(|| Message::InfoCard(crate::info_card::Event::Action(slot, i))),
+                )
+                .icon(crate::icons::from_web(Some(glyph)))
+                .detail(detail)
+            },
+        );
+        Some(menu)
     }
 
     /// A command running, the button held (the web's `commandItems`).

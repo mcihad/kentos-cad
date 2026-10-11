@@ -55,6 +55,7 @@ fn picture(fields: impl FnOnce(&mut ImageFields)) -> Entity {
             symbol: None,
             line_weight: None,
             label_pins: Vec::new(),
+            attachments: Vec::new(),
         },
         image,
     })

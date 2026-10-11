@@ -38,6 +38,7 @@ mod measure;
 mod modify;
 mod navigate;
 mod overlap;
+mod photos;
 mod pick_objects;
 mod polygon;
 mod polygonize;

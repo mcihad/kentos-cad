@@ -707,10 +707,111 @@ cases.append({
     ],
 })
 
+# ── Ekler (docs/adr/0225 §1, §2) ───────────────────────────────────────
+# An embedded photo is a PNG or JPEG of the project's library; the rules' words are the contract's
+# (kentos_contracts::attachment), written here from the ADR.
+PHOTO = {"kind": "asset", "id": "resim-00c1f77f23c38466", "name": "on-cephe", "path": ["Ekler"], "format": "png",
+         "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAJ0lEQVR42mO4Y2P0YYuG24IojbwTDL9+/ZKTk4OQDEABoDBQEqgEAGfSEfkTTndFAAAAAElFTkSuQmCC",
+         "width": 4, "height": 3}
+A_SETUP = {**SETUP, "styles": {"items": [PHOTO], "categories": []}}
+TAPU = {"name": "Tapu", "file": "belgeler/101-7.pdf", "note": "2019 tapusu\nAsıl nüsha kurumda"}
+CEPHE = {"name": "Ön cephe", "asset": PHOTO["id"]}
+SAYFA = {"name": "Kurum sayfası", "url": "https://kurum.example/parsel/101-7"}
+
+
+def attached(i, attachments):
+    e = E(i)
+    if attachments:
+        e["attachments"] = attachments
+    return e
+
+
+def attachment_words(a):
+    """`Attachment::problem`'s words for the refusals below."""
+    name = a["name"]
+    if not name.strip():
+        return "ekin adı boş"
+    sources = [k for k in ("asset", "file", "url") if k in a]
+    if len(sources) != 1:
+        return f"“{name}” ekinin kaynağı tek olmalı: gömülü varlık (asset), bağlı dosya (file) ya da adres (url)"
+    if "url" in a and not (a["url"].lower().startswith(("http://", "https://")) and " " not in a["url"]):
+        return f"“{name}” ekinin adresi http:// ya da https:// ile başlamalı ve boşluk içermemeli"
+    if "note" in a and "\t" in a["note"]:
+        return f"“{name}” ekinin notunda denetim karakteri var (yalnız satır sonu olur)"
+    return None
+
+
+def bad_attachments(words):
+    return failed("invalid_attachments", f"Ekler: {words}. Her eke bir ad ve tek bir kaynak (gömülü fotoğraf, dosya yolu ya da http/https adresi) verin.", "attachments")
+
+
+cases.append({
+    "name": "Ekler: nesnelere fotoğraf, belge ve adres yazılır, sırasıyla; adım “Ekler”, geri alınır ve yinelenir; aynı ekler bir şey yazmaz; boş liste ekleri kaldırır",
+    "note": "ADR 0225 §1, §2. Gömülü fotoğraf projenin kitaplığının PNG'sidir; ekler bütün liste olarak yazılır.",
+    "setup": A_SETUP,
+    "steps": [
+        {"op": "plan", "input": {"uids": uids(2), "attachments": [TAPU, CEPHE, SAYFA], "operation": "attachments"},
+         "result": {"status": "completed", "output": {"changed": [planned(attached(2, [TAPU, CEPHE, SAYFA]))], "revision": "$current"}, "warnings": []},
+         "expect": {"ids": IDS, "canUndo": False, "revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(2, 3), "attachments": [TAPU, CEPHE, SAYFA], "operation": "attachments"}, "result": done([2, 3]),
+         "expect": {"ids": IDS, "entities": {"2": attached(2, [TAPU, CEPHE, SAYFA]), "3": attached(3, [TAPU, CEPHE, SAYFA]), "1": E(1)}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekler", "expect": {"entities": {"2": E(2), "3": E(3)}, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Ekler", "expect": {"entities": {"2": attached(2, [TAPU, CEPHE, SAYFA])}}},
+        {"op": "execute", "input": {"uids": uids(2), "attachments": [TAPU, CEPHE, SAYFA], "operation": "attachments"}, "result": done([]),
+         "note": "Ekleri zaten bu: hiçbir şey yazılmaz.", "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(2), "attachments": [SAYFA, TAPU], "operation": "attachments"}, "result": done([2]),
+         "note": "Sıra ve liste değişir: fotoğraf kalkar.", "expect": {"entities": {"2": attached(2, [SAYFA, TAPU])}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2, 3), "attachments": [], "operation": "attachments"}, "result": done([2, 3]),
+         "note": "Boş liste: ekler kalkar.", "expect": {"entities": {"2": E(2), "3": E(3)}, "revision": "changed"}},
+    ],
+})
+
+for why, bad in (
+    ("iki kaynak", [{"name": "Tapu", "file": "a.pdf", "url": "https://a.org/a.pdf"}]),
+    ("kaynaksız ek", [TAPU, {"name": "Boş"}]),
+    ("boş ad", [{"name": "  ", "file": "a.pdf"}]),
+    ("ftp adresi", [{"name": "Tapu", "url": "ftp://a.org/a.pdf"}]),
+    ("boşluklu adres", [{"name": "Tapu", "url": "https://a.org/a b.pdf"}]),
+    ("sekmeli not", [{"name": "Tapu", "file": "a.pdf", "note": "a\tb"}]),
+):
+    words = next(w for w in map(attachment_words, bad) if w)
+    cases.append({
+        "name": f"Ekler: {why} reddedilir (invalid_attachments), beklenen sürümden önce; hiçbir şey yazılmaz",
+        "setup": A_SETUP,
+        "steps": [{"op": "execute", "input": {"uids": uids(2), "attachments": bad, "expectedRevision": "on iki", "operation": "attachments"},
+                   "result": bad_attachments(words), "expect": {"revision": "same", "entities": {"2": E(2)}}}],
+    })
+
+cases.append({
+    "name": "Ekler: 65 ek reddedilir (en çok 64)",
+    "setup": A_SETUP,
+    "steps": [{"op": "execute", "input": {"uids": uids(2), "attachments": [{"name": f"Foto {k}", "file": f"foto/{k}.jpg"} for k in range(65)], "operation": "attachments"},
+               "result": bad_attachments("nesnenin 65 eki var; en çok 64"), "expect": {"revision": "same"}}],
+})
+
+cases.append({
+    "name": "Ekler: kitaplıkta olmayan gömülü fotoğraf unknown_asset; çizimde olmayan nesneden sonra, kilitten önce",
+    "setup": A_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [uid(2), MISSING], "attachments": [TAPU, {"name": "Kayıp", "asset": "resim-0000000000000000"}], "operation": "attachments"},
+         "result": failed("entity_not_found", MISSING_MESSAGE, "uids[1]"), "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(5), "attachments": [TAPU, {"name": "Kayıp", "asset": "resim-0000000000000000"}], "operation": "attachments"},
+         "result": failed("unknown_asset", "“resim-0000000000000000” kimlikli fotoğraf projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin.", "attachments[1].asset"),
+         "expect": {"revision": "same"}},
+    ],
+})
+
+cases.append({
+    "name": "Ekler: kilitli katmandaki nesneye ek yazılmaz",
+    "setup": A_SETUP,
+    "steps": [{"op": "execute", "input": {"uids": uids(2, 5), "attachments": [SAYFA], "operation": "attachments"}, "result": locked_object("Kilitli katman", 1),
+               "expect": {"revision": "same", "entities": {"2": E(2), "5": E(5)}}}],
+})
+
 write(
     "cad.entities.set",
     "Nesnelerin özelliklerini değiştir: doğrulama, plan, yazma, geri alma",
-    "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir, Bağı kopar (unlink: bağlı yazının labelOf ve labelScale'i kalkar, ADR 0175 §4; unlink false bir şey vermez). Katmanın alanları (ADR 0199 §2): verilen öznitelikler nesnenin katmanının (taşınıyorsa gittiği katmanın) alanlarıyla denetlenir ve tek biçimleriyle yazılır; kurala uymayan invalid_attribute, zorunlu alana boş ya da silme attribute_required (yol attrs.<ad>), nesneler girdinin sırasıyla, adlar kendi sıralarıyla; kilit denetiminden sonra. Kurulumdaki en büyük kimlik 8; Bağı kopar'ın ve katman alanlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir, Bağı kopar (unlink: bağlı yazının labelOf ve labelScale'i kalkar, ADR 0175 §4; unlink false bir şey vermez), Ekler (attachments: nesnenin ekleri bütün liste olarak, boş liste kaldırır; ADR 0225 §1; kurala uymayan invalid_attachments öznitelik ve kalınlık denetiminden sonra, kitaplıkta olmayan gömülü fotoğraf unknown_asset nesnelerin bulunmasından sonra). Katmanın alanları (ADR 0199 §2): verilen öznitelikler nesnenin katmanının (taşınıyorsa gittiği katmanın) alanlarıyla denetlenir ve tek biçimleriyle yazılır; kurala uymayan invalid_attribute, zorunlu alana boş ya da silme attribute_required (yol attrs.<ad>), nesneler girdinin sırasıyla, adlar kendi sıralarıyla; kilit denetiminden sonra. Kurulumdaki en büyük kimlik 8; Bağı kopar'ın ve katman alanlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

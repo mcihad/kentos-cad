@@ -279,6 +279,7 @@ impl App {
                 operation: PropertiesOperation::Layer,
                 expected_revision: None,
                 unlink: false,
+                attachments: None,
             };
             match set::execute(&mut ExecutionContext::new(model), input) {
                 CommandResult::Completed { warnings: w, .. } => {

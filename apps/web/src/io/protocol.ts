@@ -35,6 +35,8 @@ export type FormatsRequest =
   | { id: number; op: 'readFieldBook'; bytes: ArrayBuffer; options: FieldCsvOptions | null }
   /** A GNSS file (docs/adr/0169 §1, §6): GPX 1.1 when it begins with “<”, else an NMEA 0183 log; WGS 84 positions as written. */
   | { id: number; op: 'readGnss'; bytes: ArrayBuffer }
+  /** A photo's EXIF (docs/adr/0225 §3): its place in WGS 84 as written, height, direction, moment and camera. */
+  | { id: number; op: 'readExif'; bytes: ArrayBuffer }
   /** A table's file (docs/adr/0184 §4, 0223 §1): an Excel workbook or ODS sheet by sheet, else a text file by its separator; İşlemler's limits when `processing`. */
   | { id: number; op: 'readTableFile'; bytes: ArrayBuffer; processing: boolean }
   /** A table written as XLSX, ODS or CSV (docs/adr/0223 §2). */

@@ -44,6 +44,11 @@ export class ToolManager {
    * drawing's, another drawing forgets them.
    */
   readonly isolatedLayers: string[] = [];
+  /**
+   * The Bilgi tool's card (docs/adr/0225 §5): the object it shows and the drawing's point it was clicked at; null while
+   * none is open. The shell's InfoCard draws it.
+   */
+  readonly infoCard = new Signal<{ readonly id: number; readonly at: { readonly x: number; readonly y: number } } | null>(null);
   /** Puts back the tool's own options the running template set (tools/templateSeeds.ts). */
   private templateBack: (() => void) | null = null;
   /** Tools suspended under a transparent one (point calculator), innermost last. */
@@ -63,6 +68,7 @@ export class ToolManager {
       this.releaseTemplate();
       this.templateNames.clear();
       this.isolatedLayers.length = 0;
+      this.infoCard.set(null);
     });
   }
 

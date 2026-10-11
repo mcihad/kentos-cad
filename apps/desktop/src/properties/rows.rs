@@ -17,6 +17,7 @@ use kentos_ui::icon::Icon;
 
 use super::{Event, Field, Spot};
 
+pub(crate) mod attachments;
 pub(crate) mod cloud;
 mod dimension;
 pub(crate) mod raster;
@@ -79,6 +80,20 @@ pub(crate) struct Row {
     /// The note warns (a value its layer's field refuses, docs/adr/0199 §5):
     /// in the warning colour.
     pub warn: bool,
+    /// A picture before the cell: an attachment's photo or its kind's icon,
+    /// which opens it (docs/adr/0225 §2).
+    pub thumb: Option<Thumb>,
+}
+
+/// An attachment's picture in its row.
+#[derive(Clone)]
+pub(crate) struct Thumb {
+    /// The photo's key in the store (`attachments::photo_key`); none: the icon.
+    pub key: Option<String>,
+    pub icon: &'static str,
+    /// Where it is, under the pointer.
+    pub title: String,
+    pub open: Message,
 }
 
 /// How a row is edited.
@@ -122,6 +137,12 @@ pub(crate) enum Choice {
         icon: Icon,
         id: &'static str,
     },
+    /// An item that sends its message, with a web icon's name; none: not enabled.
+    Action {
+        label: &'static str,
+        icon: &'static str,
+        message: Option<Message>,
+    },
 }
 
 impl Choice {
@@ -146,6 +167,7 @@ impl Row {
             editor: None,
             note: false,
             warn: false,
+            thumb: None,
         }
     }
 
@@ -1202,6 +1224,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     editor: edit(Editor::Text(Field::Attribute(slot, tag.clone()))),
                     note: false,
                     warn: false,
+                    thumb: None,
                 })
                 .collect(),
         });
@@ -1238,6 +1261,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     editor: edit(Editor::Text(Field::Attribute(slot, key.clone()))),
                     note: false,
                     warn: false,
+                    thumb: None,
                 })
                 .collect(),
         });
@@ -1323,6 +1347,7 @@ fn field_rows(
             editor,
             note: false,
             warn: false,
+            thumb: None,
         });
         if let Err(refused) = checked {
             rows.push(Row {
