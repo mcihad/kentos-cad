@@ -376,6 +376,11 @@ türünün işaretidir (bkz. §10).
 | `convert.polygonsToLines` | Alanları çizgiye çevir | Alanların halkaları kapalı çoklu çizgi olarak, Parça ve Halka ile (§9). |
 | `convert.linesToPolygons` | Çizgileri alana çevir | Kapalı çoklu çizgiler alan olur; açıklar atlanır ya da düz kenarla kapanır (§10). |
 | `convert.densify` | Köşe ekle | Her kenar aralıkla ya da sayıyla eşit parçalara bölünür, yaylar yay kalır; en çok 10000000 köşe (§11). |
+| `generate.voronoi` | Voronoi alanları | Her noktanın hücresi: kesin Delaunay üçgenlerinin çevrel merkezleri, sınırdakinde ışınlar, Genişletme yüzdesiyle büyüyen çerçeveye kesilmiş; komşular köşelerini bit bit paylaşır; çok noktalı nesnenin noktaları Parça, aynı yerdeki nokta söylenir (ADR 0219 §2). |
+| `generate.delaunay` | Delaunay üçgenleri | Kesin Delaunay üçgenleri alan olarak, Nokta 1–3 köşelerin adları (Ad alanı, etiket ya da sıra), köşe kotları noktaların kotu (§3). |
+| `generate.bounding` | Sınırlayıcı geometri | Dışbükey zarf, sınır kutusu, en küçük alanlı döndürülmüş kutu ya da en küçük daire; Her nesne, Hepsi ya da Alana göre; Zarf alanı, Kutu genişliği ve yüksekliği, Kutu uzunluğu ve semti, Daire yarıçapı (§4). |
+| `generate.concaveHull` | İçbükey zarf | Delaunay üçgenleri kenar oranıyla dıştan aşındırılır (JTS ve GEOS), isteğe bağlı delikler; gruplama Sınırlayıcı geometri'ninki; Zarf alanı (§5). |
+| `generate.pole` | Ulaşılmazlık kutbu | Alanın kenarlarından en uzak iç noktası (polylabel) Hassasiyet içinde, Uzaklık ile; çok parçalıda en uzak parçanınki, dairede merkezi (§6). |
 
 ## 12. Masaüstü
 

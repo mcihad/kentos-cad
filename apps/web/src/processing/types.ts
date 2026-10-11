@@ -37,7 +37,7 @@ export type FeaturesValue = ({ scope: 'selection' | 'visible' | 'all' } | { scop
 export type LayerValue = { layerId: string } | { newName: string };
 
 /** Units shown next to number fields (and used to read typed values). */
-export type ParamUnit = 'm' | 'm²' | 'mm' | '°' | 'adet' | '';
+export type ParamUnit = 'm' | 'm²' | 'mm' | '°' | '%' | 'adet' | '';
 
 /** Values the defaults may depend on (project settings at the time the dialog opens). */
 export interface DefaultsContext {

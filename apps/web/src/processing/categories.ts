@@ -28,6 +28,8 @@ export const PROCESSING_CATEGORIES: readonly ProcessingCategory[] = [
   { id: 'network', label: 'Ağ analizi', icon: 'networks', description: 'En yakın tesis, maliyet matrisi ve hizmet alanları' },
   // docs/adr/0218: points from objects, lines from points and tables, a path's piece, rings and areas, densified edges.
   { id: 'conversion', label: 'Dönüştürme', icon: 'conversion', description: 'Nesneden nokta, noktalardan ve tablolardan çizgi, çizginin parçası, alan ve çizgi çevirme, köşe ekleme' },
+  // docs/adr/0219: cells and triangles of points, bounding geometries, concave hulls, poles of inaccessibility.
+  { id: 'generation', label: 'Geometri üretimi', icon: 'generation', description: 'Voronoi alanları, Delaunay üçgenleri, sınırlayıcı geometri, içbükey zarf, ulaşılmazlık kutbu' },
   { id: 'selection', label: 'Seçim', icon: 'select', description: 'Özniteliğe ve konuma göre seçim' },
   // docs/adr/0231: the DEM's surface (the desktop's `pointcloud` category is its own, docs/adr/0207 §7).
   { id: 'surface', label: 'Yüzey analizi', icon: 'hillshade', description: 'Eğim, bakı, kabartma, eğrilik, güneşlenme ve eş yükselti eğrileri' },

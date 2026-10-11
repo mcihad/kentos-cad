@@ -907,6 +907,56 @@ fn the_conversion_cases_do_what_they_say() {
     );
 }
 
+/// Geometri üretimi's cases (docs/adr/0219): written by the independent
+/// reference (scripts/fixtures/generate_cases.py: exact cells and triangles,
+/// GEOS beside them); the same run here and on the drawing's reading copy as
+/// the background runs it; radii and elevations within the tolerance.
+#[test]
+fn the_generation_cases_do_what_they_say() {
+    let file = case_file("generate.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let more: Vec<String> = file["toleranceFields"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|v| v.as_str().map(str::to_owned))
+        .collect();
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_full(
+            c,
+            play(c, &registry, false, &file["files"]),
+            tol,
+            tol,
+            &more,
+        );
+        found.extend(check_full(
+            c,
+            play(c, &registry, true, &file["files"]),
+            tol,
+            tol,
+            &more,
+        ));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 20, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Veri aktar's cases (docs/adr/0216): written by the independent reference
 /// (scripts/fixtures/transfer_cases.py); the same run here and on the
 /// drawing's reading copy as the background runs it.
@@ -1416,6 +1466,178 @@ fn convert_timing() {
             summary = record.summary;
             assert!(host.doc.undo().is_some(), "{id}: one step");
             // A run lets a big table's values go off its thread; the next starts when they are gone.
+            std::thread::sleep(std::time::Duration::from_millis(400));
+            if run >= 2 {
+                ms.push(took);
+            }
+        }
+        ms.sort_by(f64::total_cmp);
+        let (p50, p95) = (
+            ms[ms.len() / 2],
+            ms[(ms.len() * 95 / 100).min(ms.len() - 1)],
+        );
+        println!("{title}: p50 {p50:.1} ms, p95 {p95:.1} ms, bütçe {budget} ms\n  {summary}");
+        // Its parts, once: the check and the inputs, the tool, the one undo step.
+        let mut log = Vec::new();
+        let t = Instant::now();
+        let Prepared::Ready(job) = runner.prepare(&host, &tool, &values, true, &mut log) else {
+            panic!("{id} prepared: {log:?}");
+        };
+        let prepared = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        let result = Runner::compute(
+            &job,
+            &host.doc,
+            &mut Apart {
+                log: &mut log,
+                files: None,
+            },
+        );
+        let computed = t.elapsed().as_secs_f64() * 1e3;
+        let t = Instant::now();
+        runner.finish(&mut host, job, result, false, &mut log);
+        println!(
+            "  hazırlık {prepared:.1} ms, araç {computed:.1} ms, uygulama {:.1} ms",
+            t.elapsed().as_secs_f64() * 1e3
+        );
+        if p50 > budget {
+            over.push(format!("{title}: p50 {p50:.1} ms > {budget} ms"));
+        }
+    }
+    assert!(over.is_empty(), "{over:#?}");
+}
+
+/// 100 000 survey points scattered over 2 km by 2 km to the centimetre (a
+/// 32-bit congruential sequence, the web's `scatter` value for value).
+pub fn scatter_scene() -> Document {
+    let (e0, n0) = (487_000.0, 4_420_000.0);
+    let mut x = 20_261_011u32;
+    let mut next = || {
+        x = x.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+        f64::from(x % 200_000) / 100.0
+    };
+    let mut entities = Vec::with_capacity(100_000);
+    for i in 0..100_000usize {
+        let (dx, dy) = (next(), next());
+        entities.push(format!(
+            r#"{{"kind":"point","id":{},"layerId":"nokta","attrs":{{"No":"P{}"}},"p":{{"x":{},"y":{}}}}}"#,
+            i + 1,
+            i + 1,
+            e0 + dx,
+            n0 + dy
+        ));
+    }
+    let json = format!(
+        r#"{{"format":"kentos.document","version":1,"name":"Noktalar","settings":{{"srid":5256,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,"workspace":"gis","drawingFont":"barlow"}},
+            "origin":{{"x":{e0},"y":{n0}}},"layers":[{{"id":"nokta","name":"Nokta","type":"layer","visible":true,"locked":false,"expanded":true,
+            "style":{{"color":"fg","lineType":"continuous","lineWeight":0.25}},"children":[]}}],"activeLayer":"nokta","entities":[{}],"styles":{{"items":[],"categories":[]}}}}"#,
+        entities.join(",")
+    );
+    Document::from_snapshot(DocumentSnapshotV1::from_json(&json).expect("the drawing reads"))
+        .expect("the drawing opens")
+}
+
+/// Geometri üretimi's whole runs (docs/adr/0219 §8): 100 000 scattered
+/// points' Voronoi cells, Delaunay triangles and concave hull, 100 000
+/// parcels' rotated boxes and poles; the runner's check, the tool and its one
+/// undo step, after a warm-up, each run undone before the next (a pause lets
+/// the run before free what it let go of off its thread); p50 and p95
+/// against the ADR's budgets. Run on purpose:
+/// `cargo test --release -p kentos-processing --test cases generate_timing -- --ignored --nocapture`.
+#[test]
+#[ignore = "timings, run by hand in release"]
+fn generate_timing() {
+    use std::time::Instant;
+    let registry = Registry::builtin();
+    let all = json!({ "scope": "all" });
+    let values = |pairs: Vec<(&str, Value)>| -> Values {
+        pairs.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()
+    };
+    let parcels = || layer_scene();
+    let points = || scatter_scene();
+    // A run: the tool, its title, its drawing, its values, its budget (ms).
+    type Run = (&'static str, &'static str, fn() -> Document, Values, f64);
+    let runs: Vec<Run> = vec![
+        (
+            "generate.voronoi",
+            "Voronoi alanları, 100 000 nokta",
+            points as fn() -> Document,
+            values(vec![
+                ("input", all.clone()),
+                ("margin", json!(10)),
+                ("layer", json!({ "newName": "Voronoi" })),
+            ]),
+            500.0,
+        ),
+        (
+            "generate.delaunay",
+            "Delaunay üçgenleri, 100 000 nokta (200 000 üçgen)",
+            points,
+            values(vec![
+                ("input", all.clone()),
+                ("name", json!("No")),
+                ("layer", json!({ "newName": "Üçgenler" })),
+            ]),
+            800.0,
+        ),
+        (
+            "generate.concaveHull",
+            "İçbükey zarf, 100 000 nokta, oran 0,3",
+            points,
+            values(vec![
+                ("input", all.clone()),
+                ("ratio", json!(0.3)),
+                ("holes", json!(false)),
+                ("group", json!("all")),
+                ("layer", json!({ "newName": "İçbükey zarf" })),
+            ]),
+            500.0,
+        ),
+        (
+            "generate.bounding",
+            "Sınırlayıcı geometri, 100 000 parsel, döndürülmüş kutu",
+            parcels,
+            values(vec![
+                ("input", all.clone()),
+                ("kind", json!("rotated")),
+                ("group", json!("each")),
+                ("layer", json!({ "newName": "Sınırlayıcı" })),
+            ]),
+            400.0,
+        ),
+        (
+            "generate.pole",
+            "Ulaşılmazlık kutbu, 100 000 parsel, 0,1 m",
+            parcels,
+            values(vec![
+                ("input", all.clone()),
+                ("precision", json!(0.1)),
+                ("layer", json!({ "newName": "Kutuplar" })),
+            ]),
+            1000.0,
+        ),
+    ];
+    let mut over = Vec::new();
+    for (id, title, scene, values, budget) in runs {
+        let tool = registry.tool(id).expect("the tool");
+        let mut host = TestHost {
+            doc: scene(),
+            selection: Vec::new(),
+            view: None,
+        };
+        let mut runner = Runner::new();
+        let mut ms = Vec::new();
+        let mut summary = String::new();
+        for run in 0..8 {
+            let mut log = Vec::new();
+            let t = Instant::now();
+            let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+            let took = t.elapsed().as_secs_f64() * 1e3;
+            let Outcome::Ok { record, .. } = outcome else {
+                panic!("{id}: {log:?}");
+            };
+            summary = record.summary;
+            assert!(host.doc.undo().is_some(), "{id}: one step");
             std::thread::sleep(std::time::Duration::from_millis(400));
             if run >= 2 {
                 ms.push(took);

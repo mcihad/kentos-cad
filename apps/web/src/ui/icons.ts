@@ -660,6 +660,21 @@ export const ICONS = {
     '<path d="M4 15.5 3 7.5l6-4.5 8 3-.8 8.5z" fill="currentColor" fill-opacity=".25" stroke="none"/><path d="M4 15.5 3 7.5l6-4.5 8 3-.8 8.5" stroke-width="1.3"/><path d="M16.2 14.5 4 15.5" stroke-width="1.1" stroke-dasharray="1.6 1.3"/>',
   densify:
     '<path d="M3 15.5 9.5 4.5l7.5 11" stroke-width="1.1"/><rect x="1.6" y="14.1" width="2.8" height="2.8" rx=".4" fill="currentColor" stroke="none"/><rect x="8.1" y="3.1" width="2.8" height="2.8" rx=".4" fill="currentColor" stroke="none"/><rect x="15.6" y="14.1" width="2.8" height="2.8" rx=".4" fill="currentColor" stroke="none"/><circle cx="5.2" cy="11.8" r="1" fill="currentColor" stroke="none"/><circle cx="7.4" cy="8.1" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="8.2" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="11.8" r="1" fill="currentColor" stroke="none"/>',
+  // Geometri üretimi (docs/adr/0219): points with a shape made round them; cells round seeds in a frame; triangles
+  // joining points; a rotated box round points; a hull notched inward round points; an L with its widest circle and
+  // that circle's centre.
+  generation:
+    '<path d="M3 15.5 4.5 6.5 11 3.5l5 5-2 7.5z" stroke-width="1.2"/><circle cx="7.2" cy="9.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="11" cy="12.3" r="1.3" fill="currentColor" stroke="none"/><path d="M16.5 1.2v4.6M14.2 3.5h4.6" stroke-width="1.2"/>',
+  voronoi:
+    '<rect x="1.5" y="1.5" width="17" height="17" rx="1.5" stroke-width="1" stroke-opacity=".5"/><path d="M1.5 6.8 8 9l5 3M7.6 1.5 8 9m5 3 5.5-3.8M13 12l.6 6.5" stroke-width="1.2"/><circle cx="4.5" cy="4.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="5.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="16.2" cy="15.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="6.5" cy="14.5" r="1.3" fill="currentColor" stroke="none"/>',
+  delaunay:
+    '<path d="M3 15.5 8 3.5l8.5 2.5L15 16.5zM3 15.5l6.5-5L8 3.5m1.5 7 7-4.5m-7 4.5 5.5 6" stroke-width="1.1"/><circle cx="3" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="3.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="16.5" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="16.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="9.5" cy="10.5" r="1.3" fill="currentColor" stroke="none"/>',
+  boundingGeometry:
+    '<path d="M2.5 10.5 10.5 4.5l5.4 7.2-8 6z" stroke-width="1.2"/><circle cx="8" cy="11" r="1.3" fill="currentColor" stroke="none"/><circle cx="11.5" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="10" cy="14" r="1.3" fill="currentColor" stroke="none"/>',
+  concaveHull:
+    '<path d="M3 3.5h13.5l-1 4-6 2.5 6 2.5 1 4H3z" stroke-width="1.2"/><circle cx="5.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="12.5" cy="5.8" r="1.2" fill="currentColor" stroke="none"/><circle cx="6.5" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="6" cy="13.8" r="1.2" fill="currentColor" stroke="none"/><circle cx="12.5" cy="14.2" r="1.2" fill="currentColor" stroke="none"/>',
+  poleOfInaccessibility:
+    '<path d="M2.5 2.5H9v8.5h8.5v6.5h-15z" stroke-width="1.2"/><circle cx="6.3" cy="13.6" r="2.8" stroke-width="1" stroke-dasharray="1.4 1"/><circle cx="6.3" cy="13.6" r="1.2" fill="currentColor" stroke="none"/>',
   dataTransfer:
     '<rect x="1.8" y="3" width="8" height="9" rx=".9" stroke-width="1.3"/><path d="M1.8 6h8M1.8 9h8M4.8 6v6" stroke-width="1.1"/><path d="M8.6 14.6h3.6M10.9 13.2l1.4 1.4-1.4 1.4" stroke-width="1.2"/><path d="m15.4 9.4 3.2 1.7-3.2 1.7-3.2-1.7z" stroke-width="1.2"/><path d="m12.2 14.1 3.2 1.7 3.2-1.7" stroke-width="1.2"/>',
   fieldMapFill:

@@ -22,6 +22,7 @@ pub mod explode;
 pub mod feature_table;
 pub mod fillet;
 pub mod fit;
+pub mod generate;
 pub mod geoprocess;
 pub mod georef;
 pub mod grips;

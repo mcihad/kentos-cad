@@ -4034,6 +4034,486 @@
     ]
    }
   },
+  "generate.voronoi": {
+   "title": "Voronoi alanları",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Noktalar",
+     "description": "Alanları üretilecek noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "margin",
+     "label": "Genişletme",
+     "description": "Çerçeve, noktaların sınır kutusunun her yandan uzun kenarının bu yüzdesi kadar büyütülmüşüdür.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "%"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generation",
+     "text": "Geometri üretimi"
+    },
+    "icon": "voronoi",
+    "about": "Her noktanın, kendisine öbür noktalardan daha yakın yerlerini (Thiessen alanı) öznitelikleriyle yeni katmana yazar.",
+    "help": [
+     "Örnekler: yağış istasyonlarının etki alanları, okulların ya da sağlık ocaklarının hizmet bölgeleri, ölçü noktalarının sorumluluk alanları.",
+     "Alanlar noktaların sınır kutusunun her yandan uzun kenarının Genişletme yüzdesi kadar büyütülmüşüne kırpılır; bir sınırın içinde kalsın isteniyorsa ardından Kırp kullanılır. Komşu alanlar ortak köşelerini aynen paylaşır.",
+     "Her alan noktasının özniteliklerini alır; çok noktalı nesnenin her noktası bir alandır, Parça 1, 2 … yazılır. Başka bir noktayla aynı yerdeki nokta alan vermez, söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "VORONOI",
+     "THIESSEN"
+    ]
+   }
+  },
+  "generate.delaunay": {
+   "title": "Delaunay üçgenleri",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Noktalar",
+     "description": "Üçgenlenecek noktalar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "name",
+     "label": "Ad alanı",
+     "description": "Köşelerin adları bu alandan; boşsa etiket, o da yoksa sıra.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generation",
+     "text": "Geometri üretimi"
+    },
+    "icon": "delaunay",
+    "about": "Noktaların Delaunay üçgenlerini, köşelerinin adları ve kotlarıyla yeni katmana alan olarak yazar.",
+    "help": [
+     "Örnekler: ölçü noktalarından üçgen ağı (TIN) kurmak, komşu noktaları bulmak, yüzeyin yüzlerini görmek.",
+     "Üçgenler kesin Delaunay üçgenleridir: hiçbir üçgenin çevrel çemberinde başka nokta yoktur. Aynı çemberdeki dört noktada köşegen girdinin sırasıyla seçilir.",
+     "Her üçgen Nokta 1, Nokta 2 ve Nokta 3 alanlarında köşelerinin adlarını taşır: Ad alanındaki değer, boşsa etiket, o da yoksa girdideki sırası; çok noktalı nesnenin noktaları ad/1, ad/2 … Noktaların kotları köşelerin kotu olur. Başka bir noktayla aynı yerdeki nokta bir kez girer, söylenir."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "DELAUNAY",
+     "UCGENLE"
+    ]
+   }
+  },
+  "generate.bounding": {
+   "title": "Sınırlayıcı geometri",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Sarılacak nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "kind",
+     "label": "Tür",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "dropdown",
+      "options": [
+       {
+        "value": "hull",
+        "label": "Dışbükey zarf",
+        "hint": "Noktaları saran en küçük dışbükey alan"
+       },
+       {
+        "value": "box",
+        "label": "Sınır kutusu",
+        "hint": "Eksenlere paralel dikdörtgen"
+       },
+       {
+        "value": "rotated",
+        "label": "Döndürülmüş kutu",
+        "hint": "En küçük alanlı dikdörtgen"
+       },
+       {
+        "value": "circle",
+        "label": "Daire",
+        "hint": "En küçük çevreleyen daire"
+       }
+      ]
+     }
+    },
+    {
+     "name": "group",
+     "label": "Gruplama",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "each",
+        "label": "Her nesne",
+        "hint": "Her nesnenin kendisi"
+       },
+       {
+        "value": "all",
+        "label": "Hepsi",
+        "hint": "Bütün nesneler birlikte"
+       },
+       {
+        "value": "field",
+        "label": "Alana göre",
+        "hint": "Alanın değeri aynı olanlar birlikte"
+       }
+      ]
+     }
+    },
+    {
+     "name": "field",
+     "label": "Alan",
+     "description": "Değeri aynı olan nesneler bir grup olur; boş değer de bir gruptur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generation",
+     "text": "Geometri üretimi"
+    },
+    "icon": "boundingGeometry",
+    "about": "Nesneleri saran dışbükey zarfı, sınır kutusunu, en küçük döndürülmüş kutuyu ya da en küçük daireyi ölçüleriyle yeni katmana yazar.",
+    "help": [
+     "Örnekler: yapıların döndürülmüş kutusuyla yönünü ve boyunu bulmak, bir nokta kümesinin kapladığı alanı çizmek, adaların sınır kutularını almak, bir kuyunun koruma dairesini çizmek.",
+     "Dışbükey zarf noktaları içine alan en küçük dışbükey alandır. Sınır kutusu eksenlere paraleldir. Döndürülmüş kutu en küçük alanlı dikdörtgendir; bir kenarı zarfın bir kenarındadır. Daire en küçük çevreleyen dairedir.",
+     "Gruplama Her nesne iken her nesnenin, Hepsi iken bütün nesnelerin, Alana göre iken alanın değeri aynı olanların sınırlayıcısı yazılır. Ölçüler: Zarf alanı; Kutu genişliği ve Kutu yüksekliği; Kutu uzunluğu, Kutu genişliği ve uzun kenarın Kutu semti; Daire yarıçapı. Yaylar, elipsler ve eğriler 0,1 mm içinde noktalarla alınır. Alanı olmayan sonuç (bir nokta, bir doğru) yazılmaz."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "SINIRLAYICI",
+     "ZARF",
+     "MBG"
+    ]
+   }
+  },
+  "generate.concaveHull": {
+   "title": "İçbükey zarf",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Nesneler",
+     "description": "Noktaları sarılacak nesneler.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "ratio",
+     "label": "Oran",
+     "description": "0 en oyuk, 1 dışbükey zarf.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number"
+     }
+    },
+    {
+     "name": "holes",
+     "label": "Delikler",
+     "description": "Zarfın içinde delikler açılabilir.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "boolean"
+     }
+    },
+    {
+     "name": "group",
+     "label": "Gruplama",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "enum",
+      "control": "segmented",
+      "options": [
+       {
+        "value": "each",
+        "label": "Her nesne",
+        "hint": "Her nesnenin kendisi"
+       },
+       {
+        "value": "all",
+        "label": "Hepsi",
+        "hint": "Bütün nesneler birlikte"
+       },
+       {
+        "value": "field",
+        "label": "Alana göre",
+        "hint": "Alanın değeri aynı olanlar birlikte"
+       }
+      ]
+     }
+    },
+    {
+     "name": "field",
+     "label": "Alan",
+     "description": "Değeri aynı olan nesneler bir grup olur; boş değer de bir gruptur.",
+     "optional": true,
+     "stacked": false,
+     "control": {
+      "type": "field",
+      "control": "dropdown",
+      "placeholder": "Alan seçin"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generation",
+     "text": "Geometri üretimi"
+    },
+    "icon": "concaveHull",
+    "about": "Nesnelerin noktalarını saran, içe doğru oyulmuş zarfı (isteğe bağlı delikleriyle) alanıyla yeni katmana yazar.",
+    "help": [
+     "Örnekler: bir yerleşimin evlerinin kapladığı alanı, bir nokta bulutunun ya da kümenin gerçek biçimini çizmek.",
+     "Noktaların Delaunay üçgenleri dıştan içe aşındırılır: sınırdaki kenarı en uzun olan üçgen önce gider, kenarı Oran’ın verdiği uzunluktan kısa olunca durulur (GEOS’un ve JTS’in kuralı). Oran 0 en oyuk zarfı, 1 dışbükey zarfı verir. Alan tek parça kalır.",
+     "Delikler açıkken içteki uzun kenarlı üçgenler sınıra değmeden delik açar. Gruplama ve öznitelikler Sınırlayıcı geometri’ninki gibidir; Zarf alanı yazılır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "ICBUKEYZARF",
+     "CONCAVEHULL"
+    ]
+   }
+  },
+  "generate.pole": {
+   "title": "Ulaşılmazlık kutbu",
+   "rows": [
+    {
+     "name": "input",
+     "label": "Alanlar",
+     "description": "Kutbu bulunacak alanlar.",
+     "optional": false,
+     "stacked": true,
+     "control": {
+      "type": "features",
+      "scopes": [
+       {
+        "value": "layer",
+        "label": "Katman"
+       },
+       {
+        "value": "selection",
+        "label": "Seçili"
+       },
+       {
+        "value": "visible",
+        "label": "Görünen"
+       },
+       {
+        "value": "all",
+        "label": "Tümü"
+       }
+      ]
+     }
+    },
+    {
+     "name": "precision",
+     "label": "Hassasiyet",
+     "description": "Kutbun gerçek en uzak noktaya olabilecek uzaklığı.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "number",
+      "unit": "m"
+     }
+    },
+    {
+     "name": "layer",
+     "label": "Çıktı katmanı",
+     "description": "Bu adda katman yoksa oluşturulur.",
+     "optional": false,
+     "stacked": false,
+     "control": {
+      "type": "layer"
+     }
+    }
+   ],
+   "side": {
+    "crumb": {
+     "icon": "generation",
+     "text": "Geometri üretimi"
+    },
+    "icon": "poleOfInaccessibility",
+    "about": "Her alanın kenarlarından en uzak iç noktasını, kenara uzaklığıyla yeni katmana nokta olarak yazar.",
+    "help": [
+     "Örnekler: parsel numaralarını ve etiketleri alanın en geniş yerine koymak, ince uzun ya da L biçimli alanların içinde kalan bir nokta bulmak.",
+     "Nokta alanın içindedir; delikler de kenar sayılır. Çok parçalı alanda kutbu en uzak olan parçanınki alınır, dairede merkezi. Hassasiyet kutbun en uzak noktaya ne kadar yakın olacağıdır; küçüldükçe süre uzar.",
+     "Nokta alanın özniteliklerini ve kenara uzaklığını (Uzaklık) taşır."
+    ],
+    "steps": null,
+    "edit": null,
+    "preview": false,
+    "aliases": [
+     "KUTUP",
+     "POLYLABEL"
+    ]
+   }
+  },
   "geometry.buffer": {
    "title": "Tampon",
    "rows": [

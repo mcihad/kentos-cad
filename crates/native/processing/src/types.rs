@@ -189,7 +189,7 @@ pub enum ParamKind {
         min: Option<f64>,
         max: Option<f64>,
         integer: bool,
-        /// Shown next to the field: "m", "m²", "mm", "°", "adet" or "".
+        /// Shown next to the field: "m", "m²", "mm", "°", "%", "adet" or "".
         unit: String,
         /// Shown in an optional field left empty: what empty means
         /// (“Proje”, docs/adr/0205 §2).

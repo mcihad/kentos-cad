@@ -368,6 +368,12 @@ pub const PORTED: &[&str] = &[
     "processing.run.convert.polygonsToLines",
     "processing.run.convert.linesToPolygons",
     "processing.run.convert.densify",
+    // Geometri üretimi (docs/adr/0219).
+    "processing.run.generate.voronoi",
+    "processing.run.generate.delaunay",
+    "processing.run.generate.bounding",
+    "processing.run.generate.concaveHull",
+    "processing.run.generate.pole",
     // Geometri işlemleri (docs/adr/0201).
     "processing.run.geometry.buffer",
     "processing.run.geometry.clip",

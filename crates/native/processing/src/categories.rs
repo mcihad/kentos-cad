@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 25] = [
+pub const CATEGORIES: [Category; 26] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -97,6 +97,13 @@ pub const CATEGORIES: [Category; 25] = [
         "Dönüştürme",
         "conversion",
         "Nesneden nokta, noktalardan ve tablolardan çizgi, çizginin parçası, alan ve çizgi çevirme, köşe ekleme",
+    ),
+    // docs/adr/0219: cells and triangles of points, bounding geometries, concave hulls, poles of inaccessibility.
+    category(
+        "generation",
+        "Geometri üretimi",
+        "generation",
+        "Voronoi alanları, Delaunay üçgenleri, sınırlayıcı geometri, içbükey zarf, ulaşılmazlık kutbu",
     ),
     category(
         "selection",

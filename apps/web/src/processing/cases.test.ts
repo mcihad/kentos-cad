@@ -74,6 +74,7 @@ const PROXIMITY = JSON.parse(file('proximity.json')) as CaseFile;
 const TRANSFER = JSON.parse(file('transfer.json')) as CaseFile;
 const LAYER_OPS = JSON.parse(file('layers.json')) as CaseFile;
 const CONVERT = JSON.parse(file('convert.json')) as CaseFile;
+const GENERATE = JSON.parse(file('generate.json')) as CaseFile;
 const GEOMETRY = JSON.parse(file('geometry.json')) as CaseFile;
 const SPATIAL_STATS = JSON.parse(file('spatial-stats.json')) as CaseFile;
 const NETWORK = JSON.parse(file('network.json')) as CaseFile;
@@ -449,6 +450,16 @@ describe('geometry conversion cases (fixtures/processing/v1/convert.json, docs/a
       const more = CONVERT.toleranceFields ?? [];
       check(c, await play(CONVERT, c, 'client'), CONVERT.tolerance, CONVERT.tolerance, more);
       check(c, await play(CONVERT, c, 'worker'), CONVERT.tolerance, CONVERT.tolerance, more);
+    });
+  }
+});
+
+describe('geometry generation cases (fixtures/processing/v1/generate.json, docs/adr/0219)', () => {
+  for (const c of GENERATE.cases) {
+    it(`${c.id}: ${c.title}`, async () => {
+      const more = GENERATE.toleranceFields ?? [];
+      check(c, await play(GENERATE, c, 'client'), GENERATE.tolerance, GENERATE.tolerance, more);
+      check(c, await play(GENERATE, c, 'worker'), GENERATE.tolerance, GENERATE.tolerance, more);
     });
   }
 });

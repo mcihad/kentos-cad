@@ -285,6 +285,8 @@ const PROXIMITY_COMMANDS = ['nearest', 'matrix', 'hub', 'neighbors', 'shortestLi
  */
 const CONVERT_COMMANDS = ['toPoints', 'vertices'].map((t) => `processing.run.convert.${t}`);
 const CONVERT_UNDER = ['pointsToPath', 'bearingLine', 'xyLine', 'tableEllipse', 'substring', 'polygonsToLines', 'linesToPolygons', 'densify'].map((t) => `processing.run.convert.${t}`);
+/** Geometri üretimi's tools (docs/adr/0219 §7) under the Analiz tab's Geometri panel's ▾: the tab is full at 1100 pixels. */
+const GENERATE_UNDER = ['voronoi', 'delaunay', 'bounding', 'concaveHull', 'pole'].map((t) => `processing.run.generate.${t}`);
 const SPATIAL_STATS_COMMANDS = ['moransI', 'hotSpot'].map((t) => `processing.run.stats.${t}`);
 const SPATIAL_STATS_UNDER = ['meanCenter', 'medianCenter', 'standardDistance', 'directionalDistribution', 'nearestNeighbor', 'dbscan', 'kMeans'].map(
   (t) => `processing.run.stats.${t}`,
@@ -497,8 +499,9 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     sources: [
       // Ağ analizi's İşlemler tools sit in the Ağ analizi panel (docs/adr/0209 §10), the raster analysis's in the Raster
       // tab (docs/adr/0231 §10), the Katman tools in the Veri tab's Katman panel (docs/adr/0217 §8), Dönüştürme's in its
-      // Toplu çevir panel (docs/adr/0218 §12).
-      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity', 'spatialStats', 'layers', 'conversion'] },
+      // Toplu çevir panel (docs/adr/0218 §12), Geometri üretimi's under the Geometri panel's ▾ (docs/adr/0219 §7).
+      { menu: 'processing', except: RASTER_ANALYSIS, omit: ['network', 'proximity', 'spatialStats', 'layers', 'conversion', 'generation'] },
+      { pick: 'Geometri', icon: 'polygon', commands: [], under: GENERATE_UNDER },
       // Yakınlık's five (docs/adr/0215 §5) and Mekânsal istatistik's (docs/adr/0238 §11) join Özet istatistik in the Analiz
       // panel: panels of their own made the tab wider than 1100 pixels.
       { pick: 'Analiz', icon: 'measure', commands: [...PROXIMITY_COMMANDS, ...SPATIAL_STATS_COMMANDS], under: SPATIAL_STATS_UNDER },

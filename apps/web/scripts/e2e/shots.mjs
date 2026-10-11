@@ -3184,6 +3184,77 @@ SCENES.geoconvert = [
   },
 ];
 
+// Geometri üretimi (docs/adr/0219) on fixtures/processing/v1/generate.kcad, the scenes the desktop's
+// `processing::generate_tests::screens` draws: CBS's Analiz with the Geometri panel's ▾ open, Voronoi alanları's window
+// and its cells with the Delaunay triangles, Sınırlayıcı geometri's window and the rotated boxes and circles, the
+// concave hulls of the C and the O, the parcels' poles.
+const GENERATE_DRAWING = readFileSync(new URL('../../../../fixtures/processing/v1/generate.kcad', import.meta.url), 'utf8');
+const GENERATE_CASES = JSON.parse(readFileSync(new URL('../../../../fixtures/processing/v1/generate.json', import.meta.url), 'utf8'));
+const generateLoad = async (ui, selection = []) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(GENERATE_DRAWING)}, null))) throw new Error('generate.kcad did not load');
+    k.view.zoomExtents();
+    k.selection.set(${JSON.stringify(selection)});
+  })()`);
+  await ui.sleep(300);
+};
+const openGenerate = async (ui, id, run = true, load = true) => {
+  const c = GENERATE_CASES.cases.find((x) => x.id === id);
+  if (load) await generateLoad(ui, c.selection ?? []);
+  else await ui.eval(`window.kentos.selection.set(${JSON.stringify(c.selection ?? [])})`);
+  await ui.eval(openTool(c.run.tool, c.values));
+  await ui.waitFor(`!!document.querySelector('.dialog--ptool')`, 8000);
+  await ui.sleep(300);
+  if (run) {
+    await ui.clickSel('.ptool__run');
+    await ui.waitFor(`document.querySelector('.ptool__status')?.dataset.kind === 'ok'`, 8000);
+    await ui.sleep(300);
+  }
+};
+/** Runs the cases one after another, the windows closed, the view on the layers named. */
+const generateDrawn = async (ui, ids, layers) => {
+  await generateLoad(ui);
+  for (const id of ids) {
+    await openGenerate(ui, id, true, false);
+    await ui.escapeAll(2);
+  }
+  await ui.eval(`(() => {
+    const k = window.kentos;
+    k.selection.set([...k.doc.all()].filter((e) => ${JSON.stringify(layers)}.includes(e.layerId)).map((e) => e.id));
+    k.commands.execute('view.zoomSelection');
+    k.selection.clear();
+  })()`);
+  await ui.move(2, 2);
+  await ui.sleep(400);
+};
+SCENES.generate = [
+  {
+    id: 'uret-serit',
+    open: async (ui) => {
+      await generateLoad(ui);
+      await ribbonOn(ui, { ribbonTab: 'analysis' });
+      await ui.sleep(300);
+      const open = await ui.eval(`!!document.querySelector('.rpanel[data-panel="Geometri"] .rpanel__more')?.offsetParent`);
+      if (open) await ui.clickSel('.rpanel[data-panel="Geometri"] .rpanel__more');
+      else {
+        await ui.clickSel('.ribbon__strip .rpanel__collapsed[aria-label="Geometri"]');
+        await ui.sleep(300);
+        await ui.clickSel('.ribbon-pop .rpanel__more');
+      }
+      await ui.sleep(400);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ribbonOff(ui)),
+  },
+  { id: 'uret-voronoi', open: (ui) => openGenerate(ui, 'voronoi-sites'), close: queryClose },
+  { id: 'uret-voronoi-cizim', open: (ui) => generateDrawn(ui, ['voronoi-sites', 'delaunay-named'], ['islem-voronoi']), close: queryClose },
+  { id: 'uret-sinir', open: (ui) => openGenerate(ui, 'bounding-rotated-ada'), close: queryClose },
+  { id: 'uret-sinir-cizim', open: (ui) => generateDrawn(ui, ['bounding-rotated-ada', 'bounding-circle'], ['parsel', 'diger']), close: queryClose },
+  { id: 'uret-icbukey-cizim', open: (ui) => generateDrawn(ui, ['concave-c', 'concave-holes'], ['kume', 'halka']), close: queryClose },
+  { id: 'uret-kutup-cizim', open: (ui) => generateDrawn(ui, ['pole-parcels'], ['parsel']), close: queryClose },
+];
+
 // Ağ analizi (docs/adr/0209) on fixtures/interaction/v1/networks.kcad, the scenes the desktop's
 // `networks::tests::screens` draws: Ağlar with Yollar and with İçme suyu after Denetle (the form scrolled to its answer),
 // En yakın tesis and Maliyet matrisi after a run, En yakın tesis's ways and Hizmet alanları's areas in the drawing, the

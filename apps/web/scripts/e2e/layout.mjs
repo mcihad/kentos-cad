@@ -219,6 +219,13 @@ const ITEMS = [
   // Geometri dönüştürme (docs/adr/0218 §12): the table tools' source and columns, Köşe ekle's method.
   { id: 'processing-convert-bearing', open: (ui) => ui.run('processing.run.convert.bearingLine'), ready: '.dialog--ptool' },
   { id: 'processing-convert-densify', open: (ui) => ui.run('processing.run.convert.densify'), ready: '.dialog--ptool' },
+  { id: 'processing-generate-voronoi', open: (ui) => ui.run('processing.run.generate.voronoi'), ready: '.dialog--ptool' },
+  {
+    id: 'processing-generate-bounding',
+    open: (ui) => ui.eval(`import('/src/ui/processing/ToolDialog.ts').then((m) => m.openToolDialog(window.kentos, 'generate.bounding', { kind: 'rotated', group: 'field' }))`),
+    ready: '.dialog--ptool',
+  },
+  { id: 'processing-generate-concave', open: (ui) => ui.run('processing.run.generate.concaveHull'), ready: '.dialog--ptool' },
   {
     id: 'processing-transfer-map',
     open: (ui) =>

@@ -4,6 +4,7 @@ pub mod calculate_field;
 pub mod convert;
 pub mod distance;
 pub mod edge_lengths;
+pub mod generate;
 pub mod geometry;
 pub mod hydrology;
 pub mod info_from_enclosing;
@@ -70,6 +71,11 @@ pub fn tools() -> Vec<Tool> {
         convert::paths::polygons_to_lines(),
         convert::paths::lines_to_polygons(),
         convert::paths::densify_tool(),
+        generate::triangulation::voronoi_tool(),
+        generate::triangulation::delaunay_tool(),
+        generate::bounding::bounding_tool(),
+        generate::bounding::concave_tool(),
+        generate::pole::tool(),
         geometry::buffer::tool(),
         geometry::clip::tool(),
         geometry::dissolve::tool(),

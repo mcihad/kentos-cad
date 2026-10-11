@@ -32,6 +32,8 @@ pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
 #[cfg(test)]
 mod convert_tests;
 #[cfg(test)]
+mod generate_tests;
+#[cfg(test)]
 mod distance_tests;
 #[cfg(test)]
 mod geometry_tests;

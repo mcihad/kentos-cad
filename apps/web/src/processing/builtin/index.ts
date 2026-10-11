@@ -18,6 +18,7 @@ import { networkServiceAreas } from './network/serviceAreas';
 import { PROXIMITY_TOOLS } from './proximity/tools';
 import { LAYER_TOOLS } from './layers';
 import { CONVERT_TOOLS } from './convert';
+import { GENERATE_TOOLS } from './generate';
 import { selectByExpression } from './selectByExpression';
 import { selectByLocation } from './selectByLocation';
 import { summaryStatistics } from './summaryStatistics';
@@ -50,6 +51,7 @@ export const BUILTIN_TOOLS: readonly ProcessingTool[] = [
   // Katman işlemleri (docs/adr/0217): split, merge, extract, delete duplicates, order.
   ...LAYER_TOOLS,
   ...CONVERT_TOOLS,
+  ...GENERATE_TOOLS,
   geometryBuffer,
   geometryClip,
   geometryDissolve,
