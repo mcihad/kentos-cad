@@ -788,6 +788,7 @@ impl Packer {
                 mask,
                 za,
                 zb,
+                refs: _,
                 look,
             }) => {
                 self.point(a);
@@ -2118,6 +2119,7 @@ fn geometry(
                 mask: has(4),
                 za,
                 zb,
+                refs: None, // the web's columns: docs/adr/0249 (TODOS.md §0.2)
                 look: DimensionLook {
                     dim_style,
                     arrow,

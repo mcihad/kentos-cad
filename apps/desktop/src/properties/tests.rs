@@ -380,6 +380,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             mask: false,
             za: None,
             zb: None,
+            refs: None,
             look: Default::default(),
         }),
     );
@@ -1949,6 +1950,7 @@ fn dimension(style: kentos_contracts::DimensionStyle, a: [f64; 2], b: [f64; 2]) 
         mask: false,
         za: None,
         zb: None,
+        refs: None,
         look: Default::default(),
     }
 }

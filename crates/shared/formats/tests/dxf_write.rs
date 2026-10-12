@@ -360,6 +360,7 @@ fn dimensions() -> Vec<Entity> {
             mask: false,
             za: None,
             zb: None,
+            refs: None,
             look: Default::default(),
         })
     };

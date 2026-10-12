@@ -1372,6 +1372,7 @@ fn build(
                 mask: f.mask.unwrap_or(false),
                 za,
                 zb,
+                refs: None,
                 look: std::mem::take(&mut f.look),
             })
         }

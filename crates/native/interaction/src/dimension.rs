@@ -649,6 +649,7 @@ impl Dimension {
             mask: self.memory.dimension_mask,
             za: g.za,
             zb: g.zb,
+            refs: None,
             look: self.look.clone(),
         };
         if let Some(out) = points::write_objects(vec![geometry], None, cx) {
