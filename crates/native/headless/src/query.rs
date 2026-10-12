@@ -2,7 +2,7 @@
 //! and the server's wire form, each with its persistent id) and an object's
 //! measures from the shared geometry core (TODOS.md AI-05, AI-06).
 
-use kentos_contracts::{Bounds, Entity};
+use kentos_contracts::{Bounds, DrawingUnit, Entity, ProjectSettings};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{entity_area, entity_bounds, entity_length};
 use kentos_native_application::geometry::shape;
@@ -45,20 +45,47 @@ pub struct Page<'a> {
     pub next: Option<String>,
 }
 
-/// An object's measures in the project's units, from its source geometry
-/// (not a drawn approximation; CLAUDE.md §23.3).
+/// The units of the values a drawing gives and takes (docs/adr/0245):
+/// coordinates, lengths and areas are in the project's plane (metres, or
+/// degrees in a geographic system) whatever the drawing unit, which is only
+/// how the windows read and write them (docs/adr/0165 §2).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Units {
+    /// Coordinates and lengths: `m`, or `degree` in a geographic system.
+    pub length: &'static str,
+    /// Areas: `m2`, or `degree2`.
+    pub area: &'static str,
+    /// The project's drawing unit (`mm`, `cm`, `m`): a local project's own, else metres.
+    pub drawing: DrawingUnit,
+}
+
+/// The units of a project with these settings.
+pub fn units(settings: &ProjectSettings) -> Units {
+    let degrees = kentos_project::systems::own(settings).is_some_and(|s| s.geographic());
+    Units {
+        length: if degrees { "degree" } else { "m" },
+        area: if degrees { "degree2" } else { "m2" },
+        drawing: settings.drawing_unit.unwrap_or(DrawingUnit::M),
+    }
+}
+
+/// An object's measures from its source geometry (not a drawn
+/// approximation; CLAUDE.md §23.3), in the units `units` names: metres in
+/// the project's plane, never the drawing unit.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Measure {
     pub uid: String,
     pub kind: String,
-    /// Plane area of a closed shape (m²); none for an open one.
+    /// Plane area of a closed shape (`units.area`, m²); none for an open one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub area: Option<f64>,
-    /// Length of a line or path, perimeter of a closed shape (m); none for a point or text.
+    /// Length of a line or path, perimeter of a closed shape (`units.length`, m); none for a point or text.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub length: Option<f64>,
     pub bounds: Bounds,
+    pub units: Units,
 }
 
 pub fn slot_of(doc: &Document, uid: &str) -> Result<Slot, HeadlessError> {
@@ -158,5 +185,6 @@ pub fn measure(doc: &Document, uid: &str) -> Result<Measure, HeadlessError> {
             max_x: b.max_x,
             max_y: b.max_y,
         },
+        units: units(doc.settings()),
     })
 }

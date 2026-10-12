@@ -24,7 +24,7 @@ mod temporal;
 use std::path::PathBuf;
 
 use kentos_contracts::Bounds;
-use kentos_headless::{HeadlessError, NewDrawing, Op, Session};
+use kentos_headless::{HeadlessError, Op, Session, new_drawing};
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -51,16 +51,6 @@ fn text<T: serde::Serialize + ?Sized>(value: &T) -> PyResult<String> {
     })
 }
 
-/// A contract enum from its wire name (`gis`, `barlow`).
-fn named<T: serde::de::DeserializeOwned>(value: &str, what: &str) -> PyResult<T> {
-    serde_json::from_value(Value::String(value.to_owned())).map_err(|_| {
-        host(HeadlessError::new(
-            "invalid_input",
-            format!("“{value}” bir {what} değil."),
-        ))
-    })
-}
-
 /// A drawing open in this process (`kentos.cad.Document` wraps it).
 #[pyclass(module = "kentos._native", name = "Session")]
 struct PySession {
@@ -69,26 +59,19 @@ struct PySession {
 
 #[pymethods]
 impl PySession {
-    /// A new project: the standard layer tree, the zone's work area, the
-    /// default units (as Yeni proje makes it).
+    /// A new project as the Yeni proje wizard makes it (docs/adr/0245):
+    /// `choices` is JSON text with `name`, `workspace`, `coords`, `srid`,
+    /// `province`, `drawingUnit`, `plotScale`, `drawingFont`; refusals are
+    /// the wizard's words.
     #[staticmethod]
-    fn new_project(
-        py: Python<'_>,
-        name: String,
-        srid: u32,
-        plot_scale: f64,
-        workspace: &str,
-        drawing_font: &str,
-    ) -> PyResult<Self> {
-        let choices = NewDrawing {
-            name,
-            srid,
-            plot_scale,
-            workspace: named(workspace, "proje türü (cad ya da gis)")?,
-            drawing_font: named(drawing_font, "çizim yazı tipi (barlow, arimo …)")?,
-            province: None,
-            drawing_unit: None,
-        };
+    fn new_project(py: Python<'_>, choices: &str) -> PyResult<Self> {
+        let input: Value = serde_json::from_str(choices).map_err(|e| {
+            host(HeadlessError::new(
+                "invalid_input",
+                format!("yeni çizimin seçenekleri JSON değil: {e}"),
+            ))
+        })?;
+        let choices = new_drawing(&input).map_err(host)?;
         py.detach(|| Session::new(&choices))
             .map(|inner| Self { inner })
             .map_err(host)

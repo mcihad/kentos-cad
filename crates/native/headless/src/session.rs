@@ -15,6 +15,16 @@ use crate::query::{self, Filter, Measure, Page};
 /// (`kentos_project::new_project`, the web's `model/newProject.ts`).
 pub use kentos_project::new_project::NewProject as NewDrawing;
 
+/// A new drawing's choices asked by name (docs/adr/0245): `name`, `workspace`,
+/// `coords`, `srid`, `province`, `drawingUnit`, `plotScale`, `drawingFont`;
+/// the wizard's rules make the project (`kentos_project::new_request`) and
+/// its refusals are the wizard's words.
+pub fn new_drawing(input: &Value) -> Result<NewDrawing, HeadlessError> {
+    kentos_project::new_request::NewRequest::read(input)
+        .and_then(|r| r.project())
+        .map_err(|r| HeadlessError::new(r.code, r.message))
+}
+
 /// A drawing, where it was read from, and the script's open group.
 pub struct Session {
     doc: Document,

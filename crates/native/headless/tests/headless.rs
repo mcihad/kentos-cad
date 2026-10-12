@@ -301,3 +301,47 @@ fn a_drawing_another_host_owns_answers_the_same_requests_by_name() {
     let missing = rpc::call(&mut doc, "run", &json!({"op": "execute"})).expect_err("no command");
     assert_eq!(missing.code, "invalid_input");
 }
+
+/// A CAD project in millimetres asked by name (docs/adr/0245): the room is
+/// written in metres and measured in m²; the project says mm is its unit.
+#[test]
+fn a_millimetre_cad_project_is_drawn_and_measured_in_metres() {
+    let choices = kentos_headless::new_drawing(
+        &json!({ "name": "Oda", "workspace": "cad", "drawingUnit": "mm" }),
+    )
+    .expect("the wizard's project");
+    let mut s = Session::new(&choices).expect("a new project");
+    let summary = s.summary();
+    assert_eq!(summary["settings"]["srid"], 0);
+    assert_eq!(summary["settings"]["drawingUnit"], "mm");
+    assert_eq!(
+        summary["units"],
+        json!({ "length": "m", "area": "m2", "drawing": "mm" })
+    );
+    let layer = summary["activeLayer"].as_str().expect("a layer").to_owned();
+    let uid = created(
+        &s.run(
+            "cad.polygon.create",
+            None,
+            Op::Execute,
+            json!({ "layerId": layer, "pts": [
+                {"x": 0.0, "y": 0.0}, {"x": 4.0, "y": 0.0}, {"x": 4.0, "y": 3.0}, {"x": 0.0, "y": 3.0}
+            ] }),
+        )
+        .expect("runs"),
+    );
+    let m = s.measure(&uid).expect("measures");
+    assert_eq!((m.area, m.length), (Some(12.0), Some(14.0)));
+    assert_eq!(
+        serde_json::to_value(&m.units).expect("units"),
+        json!({ "length": "m", "area": "m2", "drawing": "mm" })
+    );
+    // A geographic project's values are degrees.
+    let wgs = kentos_headless::new_drawing(&json!({ "srid": 4326 })).expect("a project");
+    let s = Session::new(&wgs).expect("a new project");
+    assert_eq!(s.summary()["units"]["length"], "degree");
+    // A unit for a project with a system is refused, not dropped.
+    let refused = kentos_headless::new_drawing(&json!({ "srid": 5256, "drawingUnit": "cm" }))
+        .expect_err("refused");
+    assert_eq!(refused.code, "invalid_input");
+}

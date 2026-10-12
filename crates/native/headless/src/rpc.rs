@@ -102,6 +102,7 @@ pub fn summary(doc: &Document) -> Value {
         "dirty": doc.is_dirty(),
         "objects": doc.len(),
         "settings": doc.settings(),
+        "units": crate::query::units(doc.settings()),
         "activeLayer": doc.layers().active(),
         "legacy": false,
         "canUndo": doc.can_undo(),

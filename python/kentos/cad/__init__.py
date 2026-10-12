@@ -15,7 +15,9 @@
 
 A refusal raises (:class:`CommandFailed` …) and writes nothing; a warning
 goes to :mod:`warnings` (:class:`CommandWarning`). Coordinates are x east
-(Y), y north (X), in the project's units (m).
+(Y), y north (X), in metres in the project's plane whatever its drawing unit
+(``Document.new(workspace="cad", drawing_unit="mm")``: a 4000 mm wall is
+written 4.0; :class:`Units` converts; docs/adr/0245).
 """
 
 from . import types
@@ -486,6 +488,7 @@ __all__ = [
     "TopologySettings",
     "Transform",
     "UNSET",
+    "Units",
     "UnknownObject",
     "UnknownSystem",
     "Unreachable",

@@ -34,8 +34,8 @@ mod session;
 
 pub use dispatch::{DESKTOP, Op};
 pub use error::HeadlessError;
-pub use query::{Measure, Page};
-pub use session::{NewDrawing, Session};
+pub use query::{Measure, Page, Units, units};
+pub use session::{NewDrawing, Session, new_drawing};
 
 /// The command catalog as JSON: every product command, its version, title,
 /// summary, hosts, permissions, input and output schemas and examples
