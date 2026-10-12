@@ -12,9 +12,9 @@ use std::path::PathBuf;
 
 use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
-    CAD_ENTITIES_SET, EntitiesCreate, EntitiesSetProperties, LabelsPin, LayersCompose,
-    LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersTime,
-    NetworkDefine, ScenariosEdit,
+    CAD_ENTITIES_SET, EntitiesCreate, EntitiesOffset, EntitiesSetProperties, LabelsPin,
+    LayersCompose, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService,
+    LayersTime, NetworkDefine, OffsetBy, ScenariosEdit,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -28,8 +28,8 @@ use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
     circle, delete, edit, labels_pin, layers_compose, layers_filter, layers_info, layers_labels,
-    layers_renderer, layers_service, layers_time, line, network_define, point, polygon, polyline,
-    scenarios_edit, set, transform,
+    layers_renderer, layers_service, layers_time, line, network_define, offset, point, polygon,
+    polyline, scenarios_edit, set, transform,
 };
 use serde_json::{Value, json};
 
@@ -384,6 +384,25 @@ impl Input for NetworkDefine {
         match path {
             "network.tolerance" => self.network.as_mut().map(|n| &mut n.tolerance),
             _ => None,
+        }
+    }
+}
+
+impl Input for EntitiesOffset {
+    /// `by.distance`, `by.side.x`, `by.point.y` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match (&mut self.by, path) {
+            (OffsetBy::Distance { distance, .. }, "by.distance") => Some(distance),
+            (OffsetBy::Distance { side: p, .. }, _) | (OffsetBy::Through { point: p }, _) => {
+                match path
+                    .strip_prefix("by.side.")
+                    .or(path.strip_prefix("by.point."))?
+                {
+                    "x" => Some(&mut p.x),
+                    "y" => Some(&mut p.y),
+                    _ => None,
+                }
+            }
         }
     }
 }
@@ -925,6 +944,7 @@ fn run_op(
         CAD_ENTITIES_TRANSFORM => run!(transform, EntitiesTransform),
         CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
         CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
+        kentos_domain::contracts::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),

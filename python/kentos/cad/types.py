@@ -1667,6 +1667,27 @@ class NetworkDirection(_Union):
         return _variant(_NETWORK_DIRECTION, "NetworkDirection", "kind", data).from_json(data)
 
 
+class OffsetBy(_Union):
+    """How far the copies go and to which side.
+
+    One of:
+
+    - :class:`DistanceOffsetBy` (``kind: distance``)
+    - :class:`ThroughOffsetBy` (``kind: through``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OffsetBy:
+        return _variant(_OFFSET_BY, "OffsetBy", "kind", data).from_json(data)
+
+
 class TableSource(_Union):
     """Where a table's rows came from (docs/adr/0184 §5).
 
@@ -4341,6 +4362,158 @@ class EntitiesEdited(_Model):
             changed=list(data["changed"]),
             created=list(data["created"]),
             removed=list(data["removed"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesOffset(_Model):
+    """Input of `cad.entities.offset` v1: parallel copies of the objects named
+    by their persistent ids (docs/adr/0014), as one undo step “Ötele”. The
+    Ötele tool gives the object it picked; the command reads no selection,
+    layer or view (TODOS.md CMD-07). A whole object is offset: the tool picks
+    objects, not their edges, so there is no sub-object reference in v1.
+
+    What is offset: a line, a polyline (with its arcs; a multi-part one part
+    by part), a closed area (a multi-part one with its parts joined), a
+    circle, an arc, an ellipse or an elliptical arc, a construction line or a
+    ray. Each copy is a new object from its source: its layer (or
+    `layerId`), its colour and its own line weight, not its attributes,
+    label, symbol or attachments; a vertex takes its source vertex's
+    elevation and measure. The copies are written in the input's order, each
+    source's copy on the side asked for first and, with `bothSides`, the one
+    on the other side next; then, with `deleteSource`, the sources that gave
+    a copy are deleted in the same step.
+
+    A copy that cannot be made (a circle shrunk past its centre, a path
+    whose arc would turn inside out, the side point on the object with
+    `bothSides`) is left out with an `offset_failed` warning at `uids[i]`;
+    when no copy can be made nothing is written and the answer is
+    `offset_failed`. A repeated id counts once.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities`,
+    `invalid_uid` (each id in order), `not_finite` (the distance, then the
+    point's x and y), `invalid_distance` (a distance not above zero),
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `entity_not_found` (each id in order), `layer_locked` (an object on a
+    locked layer, by itself or a group above it, at `uids[i]`: nothing is
+    written), `not_offsettable` (an object of another kind, at `uids[i]`),
+    the target layer's `layer_not_found`, `not_a_layer`, `service_layer` and
+    `layer_locked` at `layerId`, then `offset_failed`; on the desktop also
+    `slots_exhausted`.
+    Attributes:
+        uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
+        by: The distance and the side, or the point the copies pass through.
+        both_sides: İki yana: a second copy of each object at the same distance on the other side.
+        delete_source: Kaynağı sil: the objects offset are deleted in the same step.
+        expected_revision: The document revision the input was prepared against, as decimal text
+            (from a plan, or the document). When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+        layer_id: The layer the copies go on (`LayerNode.id`, a layer, not a group);
+            without it each copy goes on its source's layer.
+    """
+    uids: list[str]
+    by: OffsetBy
+    both_sides: bool = False
+    delete_source: bool = False
+    expected_revision: str | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["by"] = self.by.to_json()
+        out["bothSides"] = self.both_sides
+        out["deleteSource"] = self.delete_source
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesOffset:
+        return cls(
+            uids=list(data["uids"]),
+            by=OffsetBy.from_json(data["by"]),
+            both_sides=data["bothSides"] if "bothSides" in data else False,
+            delete_source=data["deleteSource"] if "deleteSource" in data else False,
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer_id=data.get("layerId", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesOffsetMade(_Model):
+    """Output of `cad.entities.offset` v1: what was made and deleted.
+    Attributes:
+        created: The copies' persistent ids, in the order they were written.
+        removed: The sources deleted (`deleteSource`), in the input's order.
+        distances: Each source's distance in metres, in the input's order (a repeated id
+            once): the one given, or with `through` the point's from the object.
+        revision: The document's revision after the write, as decimal text. Inside an
+            open transaction or group the write joins it, and the revision
+            changes when that ends.
+    """
+    created: list[str]
+    removed: list[str]
+    distances: list[float]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["created"] = list(self.created)
+        out["removed"] = list(self.removed)
+        out["distances"] = [float(e0) for e0 in self.distances]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesOffsetMade:
+        return cls(
+            created=list(data["created"]),
+            removed=list(data["removed"]),
+            distances=[float(e0) for e0 in data["distances"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesOffsetPlan(_Model):
+    """What `cad.entities.offset` would write (plan mode); nothing is written.
+    Preview and write are one computation: execute against the plan's
+    revision writes exactly `entities`.
+    Attributes:
+        sources: The ids of the objects offset, in the input's order (a repeated id once).
+        entities: The copies as execute would write them, in the same order as
+            `created`: `id` 0, as their slots are given when they are written.
+        removed: The sources execute would delete (`deleteSource`).
+        distances: Each source's distance in metres, as in the output.
+        revision: The document revision the plan was made against. Give it as
+            `expectedRevision` to write exactly this plan, or nothing.
+    """
+    sources: list[str]
+    entities: list[Entity]
+    removed: list[str]
+    distances: list[float]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sources"] = list(self.sources)
+        out["entities"] = [e0.to_json() for e0 in self.entities]
+        out["removed"] = list(self.removed)
+        out["distances"] = [float(e0) for e0 in self.distances]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesOffsetPlan:
+        return cls(
+            sources=list(data["sources"]),
+            entities=[Entity.from_json(e0) for e0 in data["entities"]],
+            removed=list(data["removed"]),
+            distances=[float(e0) for e0 in data["distances"]],
             revision=data["revision"],
         )
 
@@ -12694,6 +12867,51 @@ class FieldNetworkDirection(NetworkDirection):
 
 
 @dataclass(kw_only=True, slots=True)
+class DistanceOffsetBy(OffsetBy):
+    """`distance` metres (above zero) from each object, on the side of
+    `side`: the side of a line or a path is judged at its edge nearest
+    the point; a circle, an arc or an ellipse grows when the point is
+    outside it and shrinks when inside.
+    """
+    TAG_VALUE: ClassVar[str] = "distance"
+    distance: float
+    side: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "distance"}
+        out["distance"] = float(self.distance)
+        out["side"] = _vec2_out(self.side)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DistanceOffsetBy:
+        return cls(
+            distance=float(data["distance"]),
+            side=Vec2.from_json(data["side"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ThroughOffsetBy(OffsetBy):
+    """Noktadan geç: each copy passes through `point`, its distance that of
+    the point from its object's nearest edge (the side is the point's).
+    """
+    TAG_VALUE: ClassVar[str] = "through"
+    point: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "through"}
+        out["point"] = _vec2_out(self.point)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ThroughOffsetBy:
+        return cls(
+            point=Vec2.from_json(data["point"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CoordinatesTableSource(TableSource):
     """Koordinat çizelgesi: the points and vertices of these objects."""
     TAG_VALUE: ClassVar[str] = "coordinates"
@@ -13067,6 +13285,9 @@ _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange
 _NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDirection, "digitized": DigitizedNetworkDirection, "field": FieldNetworkDirection}
 
 
+_OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
+
+
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
 
 
@@ -13174,6 +13395,7 @@ __all__ = [
     "DimensionStyleName",
     "DimensionTextPlace",
     "DimensionTextPlaceName",
+    "DistanceOffsetBy",
     "DoorSource",
     "DrawingFont",
     "DrawingFontName",
@@ -13197,6 +13419,9 @@ __all__ = [
     "EntitiesEdit",
     "EntitiesEditPlan",
     "EntitiesEdited",
+    "EntitiesOffset",
+    "EntitiesOffsetMade",
+    "EntitiesOffsetPlan",
     "EntitiesPropertiesSet",
     "EntitiesSetProperties",
     "EntitiesSetPropertiesPlan",
@@ -13346,6 +13571,7 @@ __all__ = [
     "NewObject",
     "ObstacleKind",
     "ObstacleKindName",
+    "OffsetBy",
     "PathArrayLayout",
     "PathEntity",
     "PatternLine",
@@ -13482,6 +13708,7 @@ __all__ = [
     "TextScript",
     "TextScriptName",
     "TextStyleDef",
+    "ThroughOffsetBy",
     "TileGrid",
     "TileMatrix",
     "TmCrsSystem",

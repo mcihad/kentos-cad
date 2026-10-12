@@ -485,6 +485,8 @@ cargo test -p kentos-native-application   # ürün komutlarının durumları mas
 python3 scripts/fixtures/transform_command_cases.py --check   # cad.entities.transform durumlarını dönüşümlerin tanımından denetle (ADR 0037; Kauçuk levha'nınkiler levhanın çekirdekle aynı işlem sırasıyla Python ikizinden, sheet_f64.py, ADR 0158)
 python3 scripts/fixtures/edit_command_cases.py --check   # cad.entities.edit durumlarını sözleşmenin kuralından denetle (ADR 0047)
 python3 scripts/fixtures/array_command_cases.py --check   # cad.entities.array durumlarını dizilerin tanımından denetle (ADR 0047)
+python3 scripts/fixtures/offset_command_cases.py --check   # cad.entities.offset durumlarını (çizgi, çoklu çizgi, alan, yay, daire, Noktadan geç, iki yana, Kaynağı sil, hedef katman, retler) ötelemenin tanımından kesirlerle denetle (ADR 0246)
+KENTOS_SHOTS_ONLY=otele-onizleme,otele-iki-yana,otele-sonuc cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Ötele'nin anlamsal komutla önizlemesi, iki yanası ve sonucu, .run/shots/arac-otele-* (ADR 0246)
 python3 scripts/fixtures/create_command_cases.py --check   # cad.entities.create durumlarını sözleşmenin kuralından denetle (ADR 0057)
 python3 scripts/fixtures/set_command_cases.py --check   # cad.entities.set durumlarını (Öznitelikler: katman, renk, sembol, öznitelik, etiket) sözleşmenin kuralından denetle (ADR 0066)
 cargo test --release -p kentos-interaction --test perf -- --ignored --nocapture   # masaüstü deposu: eşitleme, kenet ve seçme süreleri (ADR 0029)

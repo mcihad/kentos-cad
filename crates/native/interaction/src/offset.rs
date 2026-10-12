@@ -13,55 +13,32 @@
 //!   (docs/adr/0140);
 //! - Enter or Esc drops the picked object; with none, Enter leaves.
 //!
-//! The copy is a new object from the picked one (its layer and colour),
-//! written through `cad.entities.edit`: “1.000 m ötelenmiş kopya eklendi.”
-//! One undo step, copies and deletion together. The copy and the distance
-//! are the shared core's (`offset_entity`, `through_distance`).
+//! The copy is a new object from the picked one (its layer and colour):
+//! “1.000 m ötelenmiş kopya eklendi.” One undo step, copies and deletion
+//! together. The tool asks for it by its meaning through the product
+//! command `cad.entities.offset` (docs/adr/0246): the object's id, the
+//! distance or the point to pass through, the side, İki yana and Kaynağı
+//! sil. The preview is the command's plan and the click its write, one
+//! computation, the shared core's, as Python and MCP get it.
 
-use kentos_contracts::{EditOperation, EntityEdit};
-use kentos_domain::Slot;
-use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::geom::intersect::closest_on_edge;
-use kentos_geometry_core::ops::curve_cuts::Geometry;
-use kentos_geometry_core::ops::edges::entity_edges;
-use kentos_geometry_core::ops::offset::{offset_entity, through_distance};
+use kentos_contracts::{CommandResult, EntitiesOffset, OffsetBy};
+use kentos_domain::{Document, Slot};
+use kentos_geometry_core::ops::offset::through_distance;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, offset};
 
 use crate::Vec2;
 use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
+use crate::points::{self, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, Memory, Pointer, Preview, Tag, Tone, Tool};
 
 /// The offset tool's id: its command is `tool.offset`.
 pub const ID: &str = "offset";
 pub const LABEL: &str = "Ötele";
-
-/// How far past the object the other side's point is put, metres: enough to
-/// be on the far side, close enough to be judged at the same edge.
-const OTHER_SIDE: f64 = 1e-3;
-
-/// A point just across `target` from `side`: where İki yana's second copy is
-/// judged from. `None` when `side` is on the object (there is no far side).
-fn across(target: &Shape, side: Vec2) -> Option<Vec2> {
-    let nearest = entity_edges(target)
-        .iter()
-        .map(|edge| closest_on_edge(edge, side))
-        .min_by(|a, b| a.d.total_cmp(&b.d))?;
-    if nearest.d < 1e-9 {
-        return None;
-    }
-    let (ux, uy) = (
-        (nearest.p.x - side.x) / nearest.d,
-        (nearest.p.y - side.y) / nearest.d,
-    );
-    Some(Vec2::new(
-        nearest.p.x + ux * OTHER_SIDE,
-        nearest.p.y + uy * OTHER_SIDE,
-    ))
-}
 
 /// The offset tool.
 #[derive(Clone, Debug, Default)]
@@ -100,22 +77,31 @@ impl Offset {
         }
     }
 
-    /// The copies `d` from `target` on the side of `side`, and with İki yana
-    /// on the other side too: each the copy or why it is not made.
-    fn copies(&self, target: &Shape, d: f64, side: Vec2) -> Vec<Geometry> {
-        let mut out = vec![offset_entity(target, d, side)];
-        if self.memory().offset_both {
-            match across(target, side) {
-                Some(other) => out.push(offset_entity(target, d, other)),
-                None => out.push(Geometry::Error(
-                    "Nokta nesnenin üzerinde; iki yana ötelemek için bir yanına tıklayın.".into(),
-                )),
+    /// What the tool asks of `cad.entities.offset` for the object at
+    /// `slot` and the side point `side`: the remembered distance or, with
+    /// Noktadan geç, the point to pass through; İki yana and Kaynağı sil.
+    fn request(&self, doc: &Document, slot: Slot, side: Vec2) -> EntitiesOffset {
+        let m = self.memory();
+        let by = if m.offset_through {
+            OffsetBy::Through { point: wire(side) }
+        } else {
+            OffsetBy::Distance {
+                distance: m.offset_distance,
+                side: wire(side),
             }
+        };
+        EntitiesOffset {
+            uids: vec![edge::uid(doc, slot)],
+            by,
+            both_sides: m.offset_both,
+            delete_source: m.offset_erase,
+            layer_id: None,
+            expected_revision: None,
         }
-        out
     }
 
-    /// The copies at `side` dashed, the object solid, the distance beside the cursor.
+    /// The copies at `side` dashed (the command's plan), the object solid,
+    /// the distance beside the cursor.
     fn redraw(&mut self, cx: &Context<'_>) {
         self.drawn = Preview::default();
         let (Some(slot), Some(side)) = (self.target, self.side) else {
@@ -124,12 +110,15 @@ impl Offset {
         let Some(target) = cx.doc.get(slot).map(shape) else {
             return;
         };
-        let d = self.distance_for(&target, side);
+        let mut d = self.distance_for(&target, side);
         let mut out = Outline::default();
-        for copy in self.copies(&target, d, side) {
-            if let Geometry::Ok(copy) = copy {
+        if let CommandResult::Completed { output, .. } =
+            offset::plan_in(cx.doc, &self.request(cx.doc, slot, side))
+        {
+            d = output.distances.first().copied().unwrap_or(d);
+            for copy in &output.entities {
                 out = out.and(Outline::of(
-                    &copy.shape,
+                    &shape(copy),
                     Some([4.0, 3.0]),
                     1.0,
                     Tone::Accent,
@@ -152,35 +141,21 @@ impl Offset {
         };
     }
 
-    /// Writes the copies as one edit, and with Kaynağı sil the deletion of the
-    /// object too. A copy that does not come out is said; with none, nothing is written.
-    fn write(&mut self, slot: Slot, target: &Shape, d: f64, side: Vec2, cx: &mut Context<'_>) {
-        let mut shapes = Vec::new();
-        for copy in self.copies(target, d, side) {
-            match copy {
-                Geometry::Ok(copy) => shapes.push(copy.shape),
-                Geometry::Error(e) => cx.say(Level::Warn, e),
-            }
-        }
-        // A new object from the picked one: its layer and colour (docs/adr/0047).
-        let from = edge::uid(cx.doc, slot);
-        let mut changes: Vec<EntityEdit> = shapes
-            .iter()
-            .filter_map(edge::geometry)
-            .map(|geometry| EntityEdit::add(from.clone(), geometry, None))
-            .collect();
-        let copies = changes.len();
-        if copies == 0 {
+    /// Writes the copies, and with Kaynağı sil the deletion of the object,
+    /// through `cad.entities.offset`: a copy that does not come out is said
+    /// (the command's warning); with none, nothing is written (its refusal).
+    fn write(&mut self, slot: Slot, side: Vec2, cx: &mut Context<'_>) {
+        let input = self.request(cx.doc, slot, side);
+        let result = offset::execute(&mut ExecutionContext::new(cx.doc), input);
+        let Some(made) = points::written(result, cx) else {
             return;
-        }
-        let erase = self.memory().offset_erase;
-        if erase {
-            changes.push(EntityEdit::Remove { uid: from });
-        }
-        if edge::write(EditOperation::Offset, changes, cx).is_none() {
+        };
+        let Some(&d) = made.distances.first() else {
             return;
-        }
+        };
         cx.memory.offset_distance = d;
+        let copies = made.created.len();
+        let erase = !made.removed.is_empty();
         let length = cx.format().length(d);
         let made = if copies == 2 {
             format!("{length} iki yana ötelenmiş 2 kopya eklendi")
@@ -302,11 +277,10 @@ impl Tool for Offset {
             cx.selection.set_hover(None);
             return self.redraw(cx);
         };
-        let Some(target) = cx.doc.get(slot).map(shape) else {
+        if cx.doc.get(slot).is_none() {
             return self.drop_target();
-        };
-        let d = self.distance_for(&target, p.world);
-        self.write(slot, &target, d, p.world, cx);
+        }
+        self.write(slot, p.world, cx);
         self.drop_target();
         self.see(cx);
     }

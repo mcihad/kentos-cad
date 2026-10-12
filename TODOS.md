@@ -81,6 +81,12 @@ Liste:
   `.kcad` şema 42 ve `FORMATS_VERSION` 54 (web'in `io/` okuyucusu, `version.ts` 53), `fixtures/shell/v1/layout.json`'ın `bottomTab`'ında
   `address` ve `log.json`'ın sekmelerinde Adres (web'in `layoutPlan` ve `logPlan` testleri), komut kataloğunda `cad.addresses.define`,
   `fixtures/processing/v1/address.*` (web'in İşlemler'inde araç yok).
+- [ ] `CAD-CMD-02` (ADR 0246, 12 Ekim; plan/cad.md §24.1 madde 4): web'de gerekenler: `cad.entities.offset` işleyicisi `product/`'ta
+  (web'in `edit` işleyicisine `offset` işlemiyle yazan, çekirdeğin `offsetEntity` ve `offsetThroughDistance`'ı WASM'dan; masaüstünün
+  `offset.rs`'i gibi), web'in Ötele aracı (`tools/edgeTools.ts`'in `OffsetTool`'u) önizlemede komutun planını, tıklamada yazmasını
+  kullanır; kayıt (`product/registry.ts`) ve katalogda `hosts`'a Web; oynatılacak iz `edge-tools.json` (değişmedi); ortak durumlar
+  `fixtures/commands/v1/cad.entities.offset.json` web'in koşucusunda; bilinen bozulmalar: `product/fixtures.test.ts` bu dosyanın
+  komutunu web'de bulamaz (“web'de çalışmıyor”); komut kataloğunda `cad.entities.offset` (yalnız `Desktop` işaretli).
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
