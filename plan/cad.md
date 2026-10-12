@@ -150,7 +150,7 @@
 - [x] **CAD-AUD-04:** Üretilen capability manifestinde `operationId`, command/version, nesne türleri, seçenekler, input/output/plan, birim ve hata kodları bulunsun. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
 - [x] **CAD-AUD-05:** Her satırda UI, yazılı komut, Python, AI/MCP, web, desktop, headless, test kanıtı ve eksik nedenini göster. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
 - [x] **CAD-AUD-06:** `create/edit` gibi genel komutların son geometri yazma desteği ile yüksek seviyeli semantik işlem desteğini farklı sütunlarda göster. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
-- [ ] **CAD-AUD-07:** Katman oluşturma/silme/adlandırma, stil tanımlama, proje ayarı, pafta ve dışa aktarma işlemlerini özellikle uçtan uca denetle.
+- [ ] **CAD-AUD-07:** Katman oluşturma/silme/adlandırma, stil tanımlama, proje ayarı, pafta ve dışa aktarma işlemlerini özellikle uçtan uca denetle. — *Kısmen (12 Ekim; CADP-08, ADR 0248: katman, stil ve proje ayarı komutla; pafta ve dışa aktarma açık).*
 - [x] **CAD-AUD-08:** Güncel pafta masaüstü yollarını envanterle karşılaştır; eski `none/pending` etiketlerini kaynak ve davranış kanıtına göre düzelt. — **Bitti (12 Ekim; CADP-02, ADR 0247).**
 - [x] **CAD-AUD-09:** Python ve MCP yeni proje oluşturma akışında `drawingUnit` eksikliğini doğrula. Python bağlayıcısında bu alanın `None` verilmesi ve MCP girdisinde olmaması ilk düzeltme listesine girsin. [E12, E14] — **Bitti (12 Ekim; CADP-03, ADR 0245).**
 - [ ] **CAD-AUD-10:** Arayüzde mevcut ama doğrudan belge/proje ayarı yazan yolları listele; ortak command yoluna taşıma planı oluştur.
@@ -178,8 +178,8 @@ Bugün `cad.entities.edit` girdisindeki `operation`, büyük ölçüde undo adı
 - [ ] **CAD-CMD-11:** `expectedRevision` yanında gerekli nesne/tanım/asset revision'larını doğrula; xref veya blok değişikliği eski planı geçersiz kılsın.
 - [ ] **CAD-CMD-12:** Ağ veya süreç retry'ında mutating çağrının iki kez uygulanmasını önleyen idempotency sözleşmesi kur; yalnız client request ID taşımayı yeterli sayma.
 - [ ] **CAD-CMD-13:** İlişkili geometri güncellemeleri ve mimari türevler aynı transaction içinde yazılsın; commit sırasında yeniden doğrulansın.
-- [ ] **CAD-CMD-14:** Nesneler, bloklar, stiller, proje ayarları ve paftaların birlikte değiştiği iş için ortak changeset tasarla.
-- [ ] **CAD-CMD-15:** Mevcut stil değişikliğinde stil tablosunun undo dışında, nesne güncellemelerinin undo içinde olması gibi ayrık davranışları incele; yeni bütüncül undo politikası için ADR ve göç kararı yaz. [E18]
+- [ ] **CAD-CMD-14:** Nesneler, bloklar, stiller, proje ayarları ve paftaların birlikte değiştiği iş için ortak changeset tasarla. — *Kısmen (12 Ekim; CADP-08, ADR 0248: katman, stil ve ayar komutları ayrı; ortak değişiklik kümesi açık).*
+- [x] **CAD-CMD-15:** Mevcut stil değişikliğinde stil tablosunun undo dışında, nesne güncellemelerinin undo içinde olması gibi ayrık davranışları incele; yeni bütüncül undo politikası için ADR ve göç kararı yaz. [E18] — **Bitti (12 Ekim; CADP-08, ADR 0248: ayrık davranış korundu, bütüncül geri alma için göç yolu ADR'de).**
 - [ ] **CAD-CMD-16:** Uzun hesap snapshot üzerinde çalışsın; UI/document lock'u boyunca kullanıcı girdisi veya network cevabı beklenmesin.
 - [ ] **CAD-CMD-17:** İptal; hesap, staged sonuç ve commit aşamalarında tanımlı olsun. Commit tamamlandıktan sonraki “Durdur”, sonucu belirsiz bırakmasın.
 - [ ] **CAD-CMD-18:** Replay kaydı; command/version, normalized input, kaynak revision, birim/UCS, algoritma sürümü, seed, uyarı ve çıktı ID eşlemesini taşısın.
@@ -890,7 +890,7 @@ Bağımlılık omurgası:
 5. Aynı kalıpla `trim/extend/fillet` ve ilişkili ölçü oluşturmayı tamamla.
 6. Subentity ID ve reference migration/invalidasyon tasarımını yaz; bağımsız testlerle uygula.
 7. Dimension associativity, annotation monitor ve reassociate ilk dilimini çıkar.
-8. Katman/stil/settings CRUD işlemlerini kataloga al; SDK/MCP kapsamını eşitle.
+8. Katman/stil/settings CRUD işlemlerini kataloga al; SDK/MCP kapsamını eşitle. — ✅ **Bitti (12 Ekim; CADP-08, ADR 0248).**
 9. Pafta kitabını `.kcad` kaynak kapsamına alma ve cihaz kitaplarından göç yolunu uygula.
 10. Gerçek AI Surface host ve çizim context/query/plan/execute zincirini bağla.
 11. DWG karar matrisi ve gerçek ofis dosyalarından codec POC yap; seçim kararını ayrı ADR'ye yaz.

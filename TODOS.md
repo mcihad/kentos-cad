@@ -1015,8 +1015,13 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
 - [ ] `CADP-05` Aynı kalıpla Buda, Uzat, Köşe yuvarla ve ilişkili ölçü oluşturma (plan `CAD-CMD-03`–`05`).
 - [ ] `CADP-06` Alt nesne kimliği ve başvuruların göçü ve geçersizleşmesi (plan `CAD-DATA-13`, `14`; `DEC-03`).
 - [ ] `CADP-07` İlişkili ölçü: bağ, izleme ve yeniden bağlama (plan §11.1).
-- [ ] `CADP-08` Katman, stil ve ayar işlemleri katalogda; SDK ve MCP eşit (plan `CAD-CMD-14`, `15`; §5.1 `cad.layers.*`,
-  `cad.styles.*`, `cad.settings.*`).
+- [x] `CADP-08` Katman, stil ve ayar işlemleri katalogda; SDK ve MCP eşit (plan `CAD-CMD-14`, `15`; §5.1 `cad.layers.*`,
+  `cad.styles.*`, `cad.settings.*`). — **12 Ekim, [ADR 0248](docs/adr/0248-layer-style-and-settings-commands.md)** (paralel ajan, dal
+  `cad-layers`, PR #23): `cad.layers.edit` (ekle, görünüş, taşı, sil, kopya, birleştir, alanlar, temizle; her biri geri alma adımı),
+  `cad.layers.set` (ad, göz, kilit, etkin, yalıt, hepsini göster; adımsız, ortak belge durumlarının kuralı), `cad.layers.states`,
+  `cad.styles.edit`, `cad.settings.set`; masaüstünün Katmanlar paneli ve pencereleri bunlarla yazar; 157 ortak durum üç bağımsız
+  betikten; Python ve MCP. Temizle altlığı boş katman saymaz; değişmeyen stil kaydı adım yazmaz. Açık: geri alınabilir ayar ve stil
+  tabloları ile ortak değişiklik kümesi (`CAD-CMD-14`), dondurma ve çizim bayrakları, katman durumlarının alışverişi.
 - [ ] `CADP-09` Pafta kitabı `.kcad`'in kaynağında; cihaz kitaplarından göç (plan §17.1).
 - [ ] `CADP-10` Uygulamanın gerçek AI yüzeyi ve çizimin bağlam, sorgu, plan ve yürütme zinciri (plan §19).
 - [ ] `CADP-11` DWG karar matrisi ve gerçek ofis dosyalarıyla kodek denemesi; seçim ayrı ADR'de (plan §16.1, `DEC-01`).
