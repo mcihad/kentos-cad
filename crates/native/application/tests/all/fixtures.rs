@@ -12,8 +12,8 @@ use std::path::PathBuf;
 
 use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
-    CAD_ENTITIES_SET, EntitiesCreate, EntitiesOffset, EntitiesSetProperties, LabelsPin,
-    LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer,
+    CAD_ENTITIES_SET, DimensionsReassociate, EntitiesCreate, EntitiesOffset, EntitiesSetProperties,
+    LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer,
     LayersService, LayersSet, LayersStates, LayersTime, NetworkDefine, OffsetBy, ScenariosEdit,
     SettingsSet, StylesEdit,
 };
@@ -28,10 +28,10 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, delete, edit, labels_pin, layers_compose, layers_edit, layers_filter, layers_info,
-    layers_labels, layers_renderer, layers_service, layers_set, layers_states, layers_time, line,
-    network_define, offset, point, polygon, polyline, scenarios_edit, set, settings_set,
-    styles_edit, transform,
+    circle, delete, dimensions_reassociate, edit, labels_pin, layers_compose, layers_edit,
+    layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
+    layers_states, layers_time, line, network_define, offset, point, polygon, polyline,
+    scenarios_edit, set, settings_set, styles_edit, transform,
 };
 use serde_json::{Value, json};
 
@@ -363,6 +363,12 @@ impl Input for LayersCompose {
 }
 
 impl Input for LayersLabels {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for DimensionsReassociate {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -987,6 +993,9 @@ fn run_op(
         CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
         CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
         kentos_domain::contracts::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
+        kentos_domain::contracts::CAD_DIMENSIONS_REASSOCIATE => {
+            run!(dimensions_reassociate, DimensionsReassociate)
+        }
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),

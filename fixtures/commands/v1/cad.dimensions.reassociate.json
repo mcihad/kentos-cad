@@ -1,0 +1,2019 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.dimensions.reassociate",
+  "commandVersion": 1,
+  "title": "Ölçüyü yeniden bağla",
+  "note": "Written by scripts/fixtures/dimension_command_cases.py from the contract's rules and docs/adr/0249 §1, §3; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçüler",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 100,
+      "workspace": "cad",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "olcu",
+        "name": "Ölçü",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "koruma",
+        "name": "Koruma",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "kilitli",
+            "name": "Eski ölçü",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "olcu",
+    "entities": [
+      {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4400000
+          },
+          {
+            "x": 500012,
+            "y": 4400000
+          },
+          {
+            "x": 500012,
+            "y": 4400005
+          }
+        ]
+      },
+      {
+        "kind": "circle",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "c": {
+          "x": 500013,
+          "y": 4400004
+        },
+        "r": 3
+      },
+      {
+        "kind": "dimension",
+        "id": 3,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "b": {
+          "x": 500010,
+          "y": 4400000
+        },
+        "offset": 1.5,
+        "height": 0.25
+      },
+      {
+        "kind": "dimension",
+        "id": 4,
+        "layerId": "kilitli",
+        "attrs": {},
+        "a": {
+          "x": 500000,
+          "y": 4400020
+        },
+        "b": {
+          "x": 500010,
+          "y": 4400020
+        },
+        "offset": 1.5,
+        "height": 0.25
+      },
+      {
+        "kind": "line",
+        "id": 5,
+        "layerId": "duvar",
+        "attrs": {},
+        "a": {
+          "x": 500000,
+          "y": 4400008
+        },
+        "b": {
+          "x": 500012,
+          "y": 4400008
+        }
+      },
+      {
+        "kind": "point",
+        "id": 6,
+        "layerId": "duvar",
+        "attrs": {},
+        "p": {
+          "x": 500024,
+          "y": 4400007.5
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "İki uç duvarın iki köşesine: b köşeye gider, değer 12; adımı “Ölçüyü yeniden bağla”, geri alınır ve yinelenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 2,
+              "value": 12,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçüyü yeniden bağla",
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500010,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25
+              }
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Ölçüyü yeniden bağla",
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "canRedo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bir uç dairenin merkezine: öbür uç serbest kalır; değer 5",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:2",
+                  "place": {
+                    "kind": "center"
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 1,
+              "value": 5,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500013,
+                  "y": 4400004
+                },
+                "b": {
+                  "x": 500010,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:2",
+                    "place": {
+                      "kind": "center"
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bir uç çizginin ortasına; değer 10",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:5",
+                  "place": {
+                    "kind": "mid",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 1,
+              "value": 10,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500006,
+                  "y": 4400008
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:5",
+                    "place": {
+                      "kind": "mid",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar ortası ve nokta: a yolun ikinci kenarının ortasına, b noktaya; değer 13",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "mid",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:6",
+                  "place": {
+                    "kind": "node",
+                    "part": 0
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 2,
+              "value": 13,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500012,
+                  "y": 4400002.5
+                },
+                "b": {
+                  "x": 500024,
+                  "y": 4400007.5
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "mid",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:6",
+                    "place": {
+                      "kind": "node",
+                      "part": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağla, sonra bir ucu serbest bırak: nokta yerinde kalır, bağı düşer; ikisi de serbestse alan yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 2,
+              "value": 12,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "b",
+                "to": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 1,
+              "value": 12,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 1,
+              "value": 12,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değişmeyen bağ hiçbir şey yazmaz: changed 0",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 2,
+              "value": 12,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "captureRevision",
+          "as": "after"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 0,
+              "value": 12,
+              "unit": "length",
+              "revision": "$after"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Serbest noktayı serbest bırakmak hiçbir şey yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 0,
+              "value": 10,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: ölçü olacağı gibi, değeri ve sürüm; hiçbir şey yazılmaz; planın sürümüyle yazma planı yazar",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "dimension": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              },
+              "changed": 2,
+              "value": 12,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ],
+            "expectedRevision": "$current"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 2,
+              "value": 12,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": 2,
+              "value": 12,
+              "unit": "length",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": null
+              }
+            ],
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "entities": {
+              "3": {
+                "kind": "dimension",
+                "id": 3,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "b": {
+                  "x": 500012,
+                  "y": 4400000
+                },
+                "offset": 1.5,
+                "height": 0.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:1",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçünün kimliği geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "üç",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“üç” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerin nesnesinin kimliği geçersiz: kimlikler boş bağdan önce",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "DUVAR",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“DUVAR” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "points[0].to.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağ yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Bağlanacak nokta yok. Ölçünün en az bir noktasını (a, b ya da c) verin.",
+              "path": "points"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı nokta iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "a",
+                "to": null
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_refs",
+              "message": "Ölçünün “a” noktası iki kez veriliyor; her noktayı bir kez verin.",
+              "path": "points[1].point"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerin sırası çok büyük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 10000001
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_refs",
+              "message": "Yerin parçası, halkası ya da sırası çok büyük.",
+              "path": "points[0].to.place"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ],
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli ölçü çizimde yok: silinmiş ya da başka bir çizimin olabilir.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerin nesnesi çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": null
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "points[1].to.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:2",
+                  "place": {
+                    "kind": "center"
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_dimension",
+              "message": "Verilen nesne bir ölçü değil; Yeniden bağla yalnız ölçülerin noktalarını bağlar.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli grubun altındaki ölçü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:4",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 0
+                  }
+                }
+              },
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 1
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Eski ölçü” katmanı kilitli; üzerindeki ölçü değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçünün c noktası yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "c",
+                "to": {
+                  "uid": "$uidOf:2",
+                  "place": {
+                    "kind": "center"
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_refs",
+              "message": "Bu ölçünün üçüncü noktası (c) yok; yalnız a ve b bağlanır.",
+              "path": "points[0].point"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü kendisine bağlanamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:3",
+                  "place": {
+                    "kind": "start"
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_refs",
+              "message": "Ölçünün noktası ölçünün kendisine bağlanamaz; ölçülen nesnenin bir yerini verin.",
+              "path": "points[0].to.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe sırası halkanın dışında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "a",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "vertex",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 3
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_such_place",
+              "message": "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.",
+              "path": "points[0].to.place"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizginin merkezi yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:5",
+                  "place": {
+                    "kind": "center"
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_such_place",
+              "message": "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.",
+              "path": "points[0].to.place"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açık yolun son köşesinden sonra kenar yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:3",
+            "points": [
+              {
+                "point": "b",
+                "to": {
+                  "uid": "$uidOf:1",
+                  "place": {
+                    "kind": "mid",
+                    "part": 0,
+                    "ring": 0,
+                    "index": 2
+                  }
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_such_place",
+              "message": "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.",
+              "path": "points[0].to.place"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

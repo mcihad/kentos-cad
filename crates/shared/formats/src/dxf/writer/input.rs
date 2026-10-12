@@ -352,6 +352,7 @@ impl Fields {
                 mask: self.mask.unwrap_or(false),
                 za: self.za,
                 zb: self.zb,
+                refs: None,
                 look: DimensionLook {
                     dim_style: self.dim_style,
                     arrow: match self.arrow.as_deref() {

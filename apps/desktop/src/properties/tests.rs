@@ -380,6 +380,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             mask: false,
             za: None,
             zb: None,
+            refs: None,
             look: Default::default(),
         }),
     );
@@ -1949,6 +1950,7 @@ fn dimension(style: kentos_contracts::DimensionStyle, a: [f64; 2], b: [f64; 2]) 
         mask: false,
         za: None,
         zb: None,
+        refs: None,
         look: Default::default(),
     }
 }
@@ -2071,9 +2073,11 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
         .find(|(t, _)| t == "Ölçü")
         .expect("Ölçü");
     let labels: Vec<String> = section.1.iter().map(|r| r.label.to_string()).collect();
+    // Both bind their measured points (docs/adr/0249 §3): free, as drawn here.
     assert_eq!(
         labels,
         [
+            "İlişki",
             "Zemin",
             "Çizgi rengi",
             "Çizgi kalınlığı",
@@ -2084,6 +2088,7 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
             "Değer rengi"
         ]
     );
+    assert_eq!(value(&app, "Ölçü", "İlişki"), "Serbest");
     select(&mut app, &[oy, 1]);
     assert_eq!(value(&app, "Ölçüler (1)", "Zemin"), "Kapalı");
 }

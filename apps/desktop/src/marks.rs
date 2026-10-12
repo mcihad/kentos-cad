@@ -86,6 +86,8 @@ pub struct Marks {
     pub found: Option<(Vec2, String)>,
     /// The Topoloji tab's finding (docs/adr/0202 §5).
     pub problem: Option<crate::topology::ProblemMark>,
+    /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
+    pub broken: Vec<Vec2>,
     /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
     pub tracking: Option<TrackingMarks>,
     /// The crosshair at the pointer, when the pointer is over the drawing.
@@ -185,6 +187,7 @@ impl Marks {
             && self.marked.is_empty()
             && self.found.is_none()
             && self.problem.is_none()
+            && self.broken.is_empty()
             && self.tracking.is_none()
             && self.crosshair.is_none()
             && self.locks.is_none()
@@ -216,6 +219,13 @@ impl<Message> canvas::Program<Message> for Marks {
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
         }
+        broken(
+            &mut frame,
+            &self.broken,
+            &self.camera,
+            &self.colors,
+            Tokens::of(theme).danger,
+        );
         if let Some(m) = &self.problem {
             problem(
                 &mut frame,
@@ -478,6 +488,50 @@ fn problem(
         frame.stroke(&shape, stroke(3.0, danger));
     }
     found(frame, m.at, &m.label, camera, colors, danger);
+}
+
+/// A broken reference of an associative dimension (docs/adr/0249 §3): a small warning triangle, its tip over the
+/// point, in the danger colour on a halo, “!” inside; only those in the view.
+fn broken(
+    frame: &mut canvas::Frame,
+    points: &[Vec2],
+    camera: &Camera,
+    colors: &MarkColors,
+    danger: iced::Color,
+) {
+    let size = frame.size();
+    for p in points {
+        let [x, y] = camera.world_to_screen(*p);
+        let (x, y) = (x.round() as f32 + 0.5, y.round() as f32 + 0.5);
+        if x < -20.0 || y < -20.0 || x > size.width + 20.0 || y > size.height + 20.0 {
+            continue;
+        }
+        // Above the point, so the dimension's own end stays seen.
+        let (top, base) = (y - 20.0, y - 4.0);
+        let tri = Path::new(|b| {
+            b.move_to(Point::new(x, top));
+            b.line_to(Point::new(x + 9.0, base));
+            b.line_to(Point::new(x - 9.0, base));
+            b.close();
+        });
+        frame.stroke(
+            &tri,
+            Stroke::default().with_color(colors.halo).with_width(3.5),
+        );
+        frame.fill(&tri, danger);
+        frame.fill_text(Text {
+            content: "!".to_owned(),
+            position: Point::new(x, base - 1.0),
+            color: colors.halo,
+            size: Pixels(typography::scaled(10.0)),
+            font: typography::ui_strong(),
+            align_x: iced::advanced::text::Alignment::Center,
+            align_y: iced::alignment::Vertical::Bottom,
+            ..Text::default()
+        });
+        let tick = Path::circle(Point::new(x, y), 2.5);
+        frame.fill(&tick, danger);
+    }
 }
 
 /// The web's `drawCrosshair`: the drawing's ink at 85 %, 1 px on the
@@ -895,6 +949,35 @@ impl crate::app::App {
     }
 }
 
+impl crate::app::App {
+    /// The points of the associative dimensions whose reference broke (docs/adr/0249 §3): from the document's index
+    /// of such dimensions, not a walk over the drawing.
+    pub(crate) fn broken_marks(&self) -> Vec<Vec2> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        let model = &doc.model;
+        let mut out = Vec::new();
+        for slot in model.broken_dimensions() {
+            let Some(kentos_contracts::Entity::Dimension(d)) = model.get(slot) else {
+                continue;
+            };
+            let Some(refs) = &d.refs else { continue };
+            for (k, r) in refs.each() {
+                let p = match k {
+                    "a" => Some(d.a),
+                    "b" => Some(d.b),
+                    _ => d.c,
+                };
+                if let (false, Some(p)) = (r.live(), p) {
+                    out.push(Vec2::new(p.x, p.y));
+                }
+            }
+        }
+        out
+    }
+}
+
 #[cfg(test)]
 mod crosshair_tests {
     use super::*;
@@ -1023,3 +1106,4 @@ mod crosshair_tests {
         }
     }
 }
+

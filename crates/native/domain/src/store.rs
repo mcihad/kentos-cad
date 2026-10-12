@@ -58,10 +58,13 @@ pub(crate) struct Store {
     /// The hatches whose region follows an object, by that object's
     /// persistent id (docs/adr/0186 §6).
     ties: HashMap<Uuid, BTreeSet<Slot>>,
+    /// The dimensions with a broken reference (docs/adr/0249 §3): what the drawing marks.
+    broken: BTreeSet<Slot>,
 }
 
 /// The objects a hatch's region follows: its closed object, islands and
-/// cutouts (docs/adr/0186 §6).
+/// cutouts (docs/adr/0186 §6); the objects an associative dimension's points
+/// follow while their references hold (docs/adr/0249 §3).
 fn ties_of(stored: &Stored) -> Vec<Uuid> {
     match &*stored.entity {
         Entity::Hatch(h) => h.assoc.as_ref().map_or_else(Vec::new, |a| {
@@ -71,8 +74,23 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
                 .map(|id| Uuid::from_bytes(id.0))
                 .collect()
         }),
+        Entity::Dimension(d) => d.refs.as_ref().map_or_else(Vec::new, |r| {
+            let mut of: Vec<Uuid> = r
+                .each()
+                .filter(|(_, s)| s.live())
+                .map(|(_, s)| Uuid::from_bytes(s.uid.0))
+                .collect();
+            of.dedup();
+            of
+        }),
         _ => Vec::new(),
     }
+}
+
+/// Whether a dimension has a broken reference (docs/adr/0249 §3).
+fn has_broken(stored: &Stored) -> bool {
+    matches!(&*stored.entity, Entity::Dimension(d)
+        if d.refs.as_ref().is_some_and(|r| r.each().any(|(_, s)| !s.live())))
 }
 
 /// The object a text writes the label of, when it is a linked text (docs/adr/0175 §4).
@@ -128,6 +146,9 @@ impl Store {
         for of in ties_of(stored) {
             self.ties.entry(of).or_default().insert(stored.slot());
         }
+        if has_broken(stored) {
+            self.broken.insert(stored.slot());
+        }
     }
 
     fn unlink(&mut self, stored: &Stored) {
@@ -147,6 +168,12 @@ impl Store {
                 }
             }
         }
+        self.broken.remove(&stored.slot());
+    }
+
+    /// The dimensions with a broken reference, in slot order (docs/adr/0249 §3).
+    pub fn broken_dimensions(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.broken.iter().copied()
     }
 
     /// Every object in document order.

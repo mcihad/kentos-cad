@@ -45,7 +45,11 @@ use kentos_geometry_core::tools::editing::{
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::{core_look, shape};
 
+use kentos_contracts::{DimensionRefs, EntityId, SubRef};
+use kentos_domain::dimension_ties::contract_place;
+use kentos_geometry_core::ops::subref::place_at;
 use kentos_geometry_core::store::snap::SnapHit;
+use kentos_native_application::blocks::core_entity;
 
 use crate::Vec2;
 use crate::edge::{self, Outline};
@@ -111,6 +115,14 @@ impl Mode {
             Mode::Azimuth => "Semt ölçüsü eklendi",
             Mode::Slope => "Eğim ölçüsü eklendi",
         }
+    }
+
+    /// Whether its points are measured points an associative dimension binds (docs/adr/0249 §3): the point methods.
+    fn binds(self) -> bool {
+        matches!(
+            self,
+            Mode::Aligned | Mode::Linear | Mode::Ordinate | Mode::Azimuth | Mode::Slope
+        )
     }
 
     /// The style as the shared layout reads it; none for aligned.
@@ -256,6 +268,22 @@ fn snapped_elevation(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) -> Option
     elevation::elevation_at(cx.doc.get(kentos_domain::Slot(hit.id as u32))?, hit.point)
 }
 
+/// The place on an object a snap stands on, when it is one (docs/adr/0249 §3): the snap's kind and exact point name
+/// one of the object's places (`ops::subref::place_at`). A nearest point, an intersection or a typed point is none.
+pub(crate) fn snapped_place(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) -> Option<SubRef> {
+    let hit = snap?;
+    if !(0.0..=f64::from(u32::MAX)).contains(&hit.id) || hit.point != p {
+        return None;
+    }
+    let slot = kentos_domain::Slot(hit.id as u32);
+    let place = place_at(&core_entity(cx.doc.get(slot)?), hit.kind, hit.point)?;
+    Some(SubRef {
+        uid: EntityId(*cx.doc.uid(slot)?.as_bytes()),
+        place: contract_place(place),
+        broken: None,
+    })
+}
+
 /// Every object's edge can be picked, on any layer (the web's `pickEdge`).
 fn any(_: &Entity, _: &Document) -> bool {
     true
@@ -275,6 +303,9 @@ pub struct Dimension {
     zs: Vec<Option<f64>>,
     /// The snap under the pointer as it went down: where Eğim's elevation comes from.
     snap: Option<SnapHit>,
+    /// The points taken on a place of an object (an end, a vertex, a centre, a middle, a point) by a snap, with the
+    /// place: an associative dimension's points follow them (docs/adr/0249 §3).
+    places: Vec<(Vec2, SubRef)>,
     /// Doğrusal's Açı (A): the next number is the measuring direction.
     asking_angle: bool,
     /// Açı from an arc: its vertex and ends; from a circle: its centre and
@@ -466,6 +497,11 @@ impl Dimension {
                     }
                 }
                 self.d.pts.push(p);
+                if self.mode().binds()
+                    && let Some(r) = snapped_place(snap, p, cx)
+                {
+                    self.places.push((p, r));
+                }
                 if self.mode() == Mode::Slope {
                     self.zs.push(snapped_elevation(snap, p, cx));
                 }
@@ -629,6 +665,21 @@ impl Dimension {
         })
     }
 
+    /// The references of the dimension's measured points taken on places (docs/adr/0249 §3): `a` and `b` of the
+    /// point methods, Koordinat's `a` (its `b` is the leader's end); none when no point was.
+    fn refs_of(&self, g: &DimensionGeom) -> Option<DimensionRefs> {
+        if !self.mode().binds() {
+            return None;
+        }
+        let at = |p: Vec2| self.places.iter().rev().find(|(q, _)| *q == p).map(|(_, r)| r.clone());
+        let refs = DimensionRefs {
+            a: at(g.a),
+            b: if self.mode() == Mode::Ordinate { None } else { at(g.b) },
+            c: None,
+        };
+        (!refs.is_empty()).then_some(refs)
+    }
+
     /// Writes the dimension (the web's `commit`): a degenerate one is said and
     /// the tool waits; written or refused, the next one starts.
     fn commit(&mut self, g: Option<DimensionGeom>, cx: &mut Context<'_>) {
@@ -649,6 +700,7 @@ impl Dimension {
             mask: self.memory.dimension_mask,
             za: g.za,
             zb: g.zb,
+            refs: self.refs_of(&g),
             look: self.look.clone(),
         };
         if let Some(out) = points::write_objects(vec![geometry], None, cx) {
@@ -675,6 +727,7 @@ impl Dimension {
         self.arc = None;
         self.zs.clear();
         self.snap = None;
+        self.places.clear();
         self.asking_angle = false;
         self.asking_style = false;
         self.angle_arc = None;

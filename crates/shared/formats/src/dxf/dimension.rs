@@ -307,6 +307,7 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         mask,
         za: k.za.filter(|_| slope),
         zb: k.zb.filter(|_| slope),
+        refs: None,
         look: Default::default(),
     };
     let def = definition(&d, &layout(&d)?);
@@ -357,6 +358,7 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
             mask,
             za: None,
             zb: None,
+            refs: None,
             look: Default::default(),
         }
     };

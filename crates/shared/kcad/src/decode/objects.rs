@@ -18,17 +18,18 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CellRange, CircleEntity, CloudFormat,
     CloudRender, CloudSource, ConstructionEntity, DimensionArrow, DimensionEntity, DimensionLook,
-    DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit, EllipseEntity, Entity,
-    EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity, HatchGradient, HatchPattern,
-    HatchPatternType, ImageEntity, ImageFields, InsertEntity, LeaderArrow, LeaderEntity,
-    LineEntity, MAX_AFFIX, MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LEADER_ARROW,
-    MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE, MAX_RASTER_BANDS, MAX_RASTER_SIDE,
-    MAX_WIDTH_FACTOR, MIN_LEADER_ARROW, MIN_LINE_SPACING, Paragraph, PathEntity, PatternLine,
-    PointCloudEntity, PointCloudFields, PointCloudStyle, PointEntity, PointPart, PointShape,
-    PointSizeUnit, RasterEntity, RasterFields, RasterRender, RasterResampling, RasterSample,
-    RasterStretch, RasterStyle, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid,
-    TableSource, TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2, is_hex_colour,
-    label_scale_ok, leader_arrow_holds, line_weight_holds, oblique_holds, width_factor_ok,
+    DimensionRefs, DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit, EllipseEntity,
+    Entity, EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity, HatchGradient,
+    HatchPattern, HatchPatternType, ImageEntity, ImageFields, InsertEntity, LeaderArrow,
+    LeaderEntity, LineEntity, MAX_AFFIX, MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO,
+    MAX_LEADER_ARROW, MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE, MAX_RASTER_BANDS,
+    MAX_RASTER_SIDE, MAX_WIDTH_FACTOR, MIN_LEADER_ARROW, MIN_LINE_SPACING, Paragraph, PathEntity,
+    PatternLine, PointCloudEntity, PointCloudFields, PointCloudStyle, PointEntity, PointPart,
+    PointShape, PointSizeUnit, RasterEntity, RasterFields, RasterRender, RasterResampling,
+    RasterSample, RasterStretch, RasterStyle, RingGeometry, SUBREF_INDEX_LIMIT, SplineEntity,
+    SubPlace, SubRef, TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity,
+    TextFace, TextRun, TextScript, Vec2, is_hex_colour, label_scale_ok, leader_arrow_holds,
+    line_weight_holds, oblique_holds, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -37,16 +38,17 @@ use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS,
-    SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
-    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS,
-    SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP,
-    SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM,
-    SCHEMA_WITH_NETWORKS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
-    SCHEMA_WITH_RASTERS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSION_REFS,
+    SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS,
+    SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS,
+    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
+    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
+    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_VARIABLES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -183,6 +185,8 @@ pub(super) struct Features {
     pub(super) compose: bool,
     /// Schema 42: the settings' `addressLocators` (docs/adr/0229 §2).
     pub(super) addresses: bool,
+    /// Schema 43: a dimension's `refs` (docs/adr/0249 §4).
+    dimension_refs: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -232,6 +236,7 @@ impl Features {
             attachments: schema >= SCHEMA_WITH_ATTACHMENTS,
             compose: schema >= SCHEMA_WITH_COMPOSE,
             addresses: schema >= SCHEMA_WITH_ADDRESSES,
+            dimension_refs: schema >= SCHEMA_WITH_DIMENSION_REFS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -322,6 +327,8 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                                 | "extLineType"
                                 | "textColor"
                         ))
+                    // What its points follow names objects: only the drawing's dimensions (docs/adr/0249 §4).
+                    || (has.dimension_refs && has.uids && key == "refs")
             }
             // A hatch's tie names objects: only the drawing's hatches (docs/adr/0186 §6).
             Kind::Hatch => {
@@ -469,6 +476,8 @@ struct Fields {
     style: Option<DimensionStyle>,
     pattern: Option<HatchPattern>,
     assoc: Option<HatchAssoc>,
+    /// A dimension's references (docs/adr/0249 §4).
+    refs: Option<DimensionRefs>,
     block: Option<BlockId>,
     /// Where the insert's `block` is in the payload (for an unknown block).
     block_at: usize,
@@ -880,6 +889,7 @@ pub(super) fn object(
             }
             "pattern" => f.pattern = Some(pattern(r, has)?),
             "assoc" => f.assoc = Some(hatch_assoc(r)?),
+            "refs" => f.refs = Some(dimension_refs(r)?),
             "block" => {
                 f.block_at = r.position();
                 f.block = Some(BlockId(id16(r)?));
@@ -1372,6 +1382,7 @@ fn build(
                 mask: f.mask.unwrap_or(false),
                 za,
                 zb,
+                refs: f.refs.take(),
                 look: std::mem::take(&mut f.look),
             })
         }
@@ -2199,6 +2210,110 @@ fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
         return Err(r.fail_at(Code::BadValue, at, &words));
     }
     Ok(a)
+}
+
+/// What a dimension's points follow (docs/adr/0249 §4): `a`, `b` and `c`, each a reference; a point
+/// without one is not written, nor are references none of its points has.
+fn dimension_refs(r: &mut Reader<'_>) -> Result<DimensionRefs, KcadError> {
+    let at = r.position();
+    let mut refs = DimensionRefs::default();
+    map(r, |r, key| {
+        let slot = match key {
+            "a" => &mut refs.a,
+            "b" => &mut refs.b,
+            "c" => &mut refs.c,
+            _ => return Err(unknown(r)),
+        };
+        *slot = Some(subref(r)?);
+        Ok(())
+    })?;
+    if let Some(words) = refs.problem() {
+        return Err(r.fail_at(Code::BadValue, at, &words));
+    }
+    Ok(refs)
+}
+
+/// The places a reference may name, by their written kind.
+const PLACE_KINDS: [(&str, u8); 6] = [
+    ("node", 1),
+    ("start", 0),
+    ("end", 0),
+    ("center", 0),
+    ("vertex", 3),
+    ("mid", 3),
+];
+
+/// A reference (docs/adr/0249 §4): the object's persistent id, the place (its `kind` and the
+/// numbers that kind has) and, when it broke, why.
+fn subref(r: &mut Reader<'_>) -> Result<SubRef, KcadError> {
+    let at = r.position();
+    let (mut uid, mut place, mut broken) = (None, None, None);
+    map(r, |r, key| {
+        match key {
+            "uid" => uid = Some(EntityId(id16(r)?)),
+            "place" => place = Some(sub_place(r)?),
+            "broken" => broken = Some(text(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    let s = SubRef {
+        uid: required(r, uid, "uid")?,
+        place: required(r, place, "place")?,
+        broken,
+    };
+    if let Some(words) = s.problem() {
+        return Err(r.fail_at(Code::BadValue, at, &words));
+    }
+    Ok(s)
+}
+
+/// A place on an object: `kind` first (the keys' order), then its numbers, each at most
+/// [`SUBREF_INDEX_LIMIT`]; a number its kind does not have is an unknown field.
+fn sub_place(r: &mut Reader<'_>) -> Result<SubPlace, KcadError> {
+    let (mut kind, mut numbers) = (None::<&str>, [None::<u32>; 3]);
+    map(r, |r, key| {
+        let slot = match key {
+            "kind" => {
+                let names = PLACE_KINDS.map(|(n, _)| (n, n));
+                kind = Some(named(r, &names)?);
+                return Ok(());
+            }
+            "part" => 0,
+            "ring" => 1,
+            "index" => 2,
+            _ => return Err(unknown(r)),
+        };
+        // A node has its part only; a vertex and a middle all three; the others none.
+        let has = kind
+            .and_then(|k| PLACE_KINDS.iter().find(|(n, _)| *n == k))
+            .map_or(0, |(_, n)| *n as usize);
+        if slot >= has {
+            return Err(unknown(r));
+        }
+        numbers[slot] = Some(r.uint(u64::from(SUBREF_INDEX_LIMIT))? as u32);
+        Ok(())
+    })?;
+    let kind = required(r, kind, "kind")?;
+    let mut number = |i: usize, key: &'static str| required(r, numbers[i], key);
+    Ok(match kind {
+        "node" => SubPlace::Node {
+            part: number(0, "part")?,
+        },
+        "start" => SubPlace::Start,
+        "end" => SubPlace::End,
+        "center" => SubPlace::Center,
+        "vertex" => SubPlace::Vertex {
+            part: number(0, "part")?,
+            ring: number(1, "ring")?,
+            index: number(2, "index")?,
+        },
+        _ => SubPlace::Mid {
+            part: number(0, "part")?,
+            ring: number(1, "ring")?,
+            index: number(2, "index")?,
+        },
+    })
 }
 
 /// A multi-line text's run (§6.6, docs/adr/0182): its range and format;

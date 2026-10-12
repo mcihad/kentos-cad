@@ -1,0 +1,2261 @@
+{
+ "format": "kentos.subref-cases",
+ "version": 1,
+ "source": "scripts/fixtures/subref_cases.py (docs/adr/0249)",
+ "points": [
+  {
+   "name": "Çizginin başı",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "place": {
+    "kind": "start"
+   },
+   "point": {
+    "x": 0,
+    "y": 0
+   },
+   "exact": true
+  },
+  {
+   "name": "Çizginin sonu",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "place": {
+    "kind": "end"
+   },
+   "point": {
+    "x": 4,
+    "y": 0
+   },
+   "exact": true
+  },
+  {
+   "name": "Çizginin ortası",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   },
+   "point": {
+    "x": 2.0,
+    "y": 0.0
+   },
+   "exact": true
+  },
+  {
+   "name": "Alanın köşesi",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   },
+   "point": {
+    "x": 4,
+    "y": 3
+   },
+   "exact": true
+  },
+  {
+   "name": "Alanın kapanan kenarının ortası",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 3
+   },
+   "point": {
+    "x": 0.0,
+    "y": 1.5
+   },
+   "exact": true
+  },
+  {
+   "name": "Açık yolun son kenarı yok",
+   "entity": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 5,
+      "y": 2
+     }
+    ]
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 3
+   },
+   "point": null,
+   "exact": true
+  },
+  {
+   "name": "Yaylı kenarın ortası",
+   "entity": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     0.5,
+     0.0
+    ]
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   },
+   "point": {
+    "x": 1.0,
+    "y": -0.5
+   },
+   "exact": true
+  },
+  {
+   "name": "Deliğin köşesi",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 2,
+        "y": 2
+       },
+       {
+        "x": 2,
+        "y": 4
+       },
+       {
+        "x": 4,
+        "y": 4
+       },
+       {
+        "x": 4,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 1,
+    "index": 2
+   },
+   "point": {
+    "x": 4,
+    "y": 4
+   },
+   "exact": true
+  },
+  {
+   "name": "İkinci parçanın köşesi",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 0,
+      "y": 2
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 5,
+        "y": 0
+       },
+       {
+        "x": 7,
+        "y": 0
+       },
+       {
+        "x": 7,
+        "y": 2
+       },
+       {
+        "x": 5,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 1,
+    "ring": 0,
+    "index": 1
+   },
+   "point": {
+    "x": 7,
+    "y": 0
+   },
+   "exact": true
+  },
+  {
+   "name": "Olmayan parça",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 0,
+      "y": 2
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 5,
+        "y": 0
+       },
+       {
+        "x": 7,
+        "y": 0
+       },
+       {
+        "x": 7,
+        "y": 2
+       },
+       {
+        "x": 5,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 2,
+    "ring": 0,
+    "index": 0
+   },
+   "point": null,
+   "exact": true
+  },
+  {
+   "name": "Dairenin merkezi",
+   "entity": {
+    "kind": "circle",
+    "c": {
+     "x": 1,
+     "y": 1
+    },
+    "r": 2
+   },
+   "place": {
+    "kind": "center"
+   },
+   "point": {
+    "x": 1,
+    "y": 1
+   },
+   "exact": true
+  },
+  {
+   "name": "Dairenin başı yok",
+   "entity": {
+    "kind": "circle",
+    "c": {
+     "x": 1,
+     "y": 1
+    },
+    "r": 2
+   },
+   "place": {
+    "kind": "start"
+   },
+   "point": null,
+   "exact": true
+  },
+  {
+   "name": "Yayın başı",
+   "entity": {
+    "kind": "arc",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 2,
+    "a0": 0.0,
+    "a1": 1.5707963267948966
+   },
+   "place": {
+    "kind": "start"
+   },
+   "point": {
+    "x": 2.0,
+    "y": 0.0
+   },
+   "exact": false
+  },
+  {
+   "name": "Yayın sonu",
+   "entity": {
+    "kind": "arc",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 2,
+    "a0": 0.0,
+    "a1": 1.5707963267948966
+   },
+   "place": {
+    "kind": "end"
+   },
+   "point": {
+    "x": 1.2246467991473532e-16,
+    "y": 2.0
+   },
+   "exact": false
+  },
+  {
+   "name": "Elipsin başı",
+   "entity": {
+    "kind": "ellipse",
+    "c": {
+     "x": 1,
+     "y": 2
+    },
+    "major": {
+     "x": 3,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0.25,
+    "t1": 2.5
+   },
+   "place": {
+    "kind": "start"
+   },
+   "point": {
+    "x": 3.9067372651319343,
+    "y": 2.3711059388817843
+   },
+   "exact": false
+  },
+  {
+   "name": "Elipsin sonu",
+   "entity": {
+    "kind": "ellipse",
+    "c": {
+     "x": 1,
+     "y": 2
+    },
+    "major": {
+     "x": 3,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0.25,
+    "t1": 2.5
+   },
+   "place": {
+    "kind": "end"
+   },
+   "point": {
+    "x": -1.4034308466408012,
+    "y": 2.8977082161559347
+   },
+   "exact": false
+  },
+  {
+   "name": "Çok noktalının ikinci noktası",
+   "entity": {
+    "kind": "point",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "parts": [
+     {
+      "p": {
+       "x": 2,
+       "y": 2
+      }
+     },
+     {
+      "p": {
+       "x": 3,
+       "y": 3
+      }
+     }
+    ]
+   },
+   "place": {
+    "kind": "node",
+    "part": 2
+   },
+   "point": {
+    "x": 3,
+    "y": 3
+   },
+   "exact": true
+  }
+ ],
+ "follows": [
+  {
+   "name": "Taşınan çizgi: baş izler",
+   "place": {
+    "kind": "start"
+   },
+   "before": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "after": {
+    "kind": "line",
+    "a": {
+     "x": 1.5,
+     "y": 2
+    },
+    "b": {
+     "x": 5.5,
+     "y": 2
+    }
+   },
+   "expect": {
+    "at": {
+     "kind": "start"
+    },
+    "point": {
+     "x": 1.5,
+     "y": 2
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Taşınan çizgi: orta izler",
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   },
+   "before": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "after": {
+    "kind": "line",
+    "a": {
+     "x": 1.5,
+     "y": 2
+    },
+    "b": {
+     "x": 5.5,
+     "y": 2
+    }
+   },
+   "expect": {
+    "at": {
+     "kind": "mid",
+     "part": 0,
+     "ring": 0,
+     "index": 0
+    },
+    "point": {
+     "x": 3.5,
+     "y": 2.0
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Silinen çizgi",
+   "place": {
+    "kind": "end"
+   },
+   "before": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "after": null,
+   "expect": {
+    "broken": "object_gone"
+   },
+   "exact": true
+  },
+  {
+   "name": "Çizgi yaya döndü",
+   "place": {
+    "kind": "start"
+   },
+   "before": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "after": {
+    "kind": "arc",
+    "c": {
+     "x": 2,
+     "y": 0
+    },
+    "r": 2,
+    "a0": 3.141592653589793,
+    "a1": 0.0
+   },
+   "expect": {
+    "broken": "kind_changed"
+   },
+   "exact": true
+  },
+  {
+   "name": "Köşesi tutamaçla çekilen alan: köşe izler",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 5,
+      "y": 3.5
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "vertex",
+     "part": 0,
+     "ring": 0,
+     "index": 2
+    },
+    "point": {
+     "x": 5,
+     "y": 3.5
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Önüne köşe eklenen köşe yeni sırasına bağlanır",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": -0.5
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "vertex",
+     "part": 0,
+     "ring": 0,
+     "index": 3
+    },
+    "point": {
+     "x": 4,
+     "y": 3
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Arkasına köşe eklenen köşe yerinde",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 1
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 2,
+      "y": 3.5
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "vertex",
+     "part": 0,
+     "ring": 0,
+     "index": 1
+    },
+    "point": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Silinen köşe",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "expect": {
+    "broken": "vertex_gone"
+   },
+   "exact": true
+  },
+  {
+   "name": "Köşe hem taşındı hem köşe eklendi",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": -0.5
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4.5,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "expect": {
+    "broken": "vertex_gone"
+   },
+   "exact": true
+  },
+  {
+   "name": "Kenarına köşe eklenen kenarın ortası kopar",
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 1
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4.5,
+      "y": 1.5
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "expect": {
+    "broken": "vertex_gone"
+   },
+   "exact": true
+  },
+  {
+   "name": "Başka kenara köşe eklenince kenarın ortası yeni sırasında",
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": -0.5
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "mid",
+     "part": 0,
+     "ring": 0,
+     "index": 3
+    },
+    "point": {
+     "x": 2.0,
+     "y": 3.0
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Çoklu çizgi alana çevrildi: köşe bulunur",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 3
+   },
+   "before": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 5,
+      "y": 2
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 5,
+      "y": 2
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "vertex",
+     "part": 0,
+     "ring": 0,
+     "index": 3
+    },
+    "point": {
+     "x": 5,
+     "y": 2
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Çoklu çizgi alana çevrildi: kenar ortası",
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 1
+   },
+   "before": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 5,
+      "y": 2
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 5,
+      "y": 2
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "mid",
+     "part": 0,
+     "ring": 0,
+     "index": 1
+    },
+    "point": {
+     "x": 2.0,
+     "y": 1.0
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Yayın bükümü değişti: kenar ortası izler",
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   },
+   "before": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     0.5,
+     0.0
+    ]
+   },
+   "after": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     -0.25,
+     0.0
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "mid",
+     "part": 0,
+     "ring": 0,
+     "index": 0
+    },
+    "point": {
+     "x": 1.0,
+     "y": 0.25
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Delik eklenen alanın dış köşesi yerinde",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 1,
+        "y": 1
+       },
+       {
+        "x": 1,
+        "y": 2
+       },
+       {
+        "x": 2,
+        "y": 2
+       },
+       {
+        "x": 2,
+        "y": 1
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "vertex",
+     "part": 0,
+     "ring": 0,
+     "index": 2
+    },
+    "point": {
+     "x": 4,
+     "y": 3
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Deliği silinen alanın delik köşesi kopar",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 1,
+    "index": 0
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 2,
+        "y": 2
+       },
+       {
+        "x": 2,
+        "y": 4
+       },
+       {
+        "x": 4,
+        "y": 4
+       },
+       {
+        "x": 4,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "holes": null
+   },
+   "expect": {
+    "broken": "vertex_gone"
+   },
+   "exact": true
+  },
+  {
+   "name": "Parçaları ayrılan alan: ikinci parçanın köşesi bulunamaz",
+   "place": {
+    "kind": "vertex",
+    "part": 1,
+    "ring": 0,
+    "index": 2
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 0,
+      "y": 2
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 5,
+        "y": 0
+       },
+       {
+        "x": 7,
+        "y": 0
+       },
+       {
+        "x": 7,
+        "y": 2
+       },
+       {
+        "x": 5,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 0,
+      "y": 2
+     }
+    ],
+    "parts": null
+   },
+   "expect": {
+    "broken": "vertex_gone"
+   },
+   "exact": true
+  },
+  {
+   "name": "Parçası eklenen alanda ortak köşe iki kez: belirsiz",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 1
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 4,
+        "y": 0
+       },
+       {
+        "x": 6,
+        "y": 0
+       },
+       {
+        "x": 6,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "broken": "ambiguous"
+   },
+   "exact": true
+  },
+  {
+   "name": "Taşınan dairenin merkezi",
+   "place": {
+    "kind": "center"
+   },
+   "before": {
+    "kind": "circle",
+    "c": {
+     "x": 1,
+     "y": 1
+    },
+    "r": 2
+   },
+   "after": {
+    "kind": "circle",
+    "c": {
+     "x": 0,
+     "y": 1.5
+    },
+    "r": 2
+   },
+   "expect": {
+    "at": {
+     "kind": "center"
+    },
+    "point": {
+     "x": 0,
+     "y": 1.5
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Daire yaya kırıldı",
+   "place": {
+    "kind": "center"
+   },
+   "before": {
+    "kind": "circle",
+    "c": {
+     "x": 1,
+     "y": 1
+    },
+    "r": 2
+   },
+   "after": {
+    "kind": "arc",
+    "c": {
+     "x": 1,
+     "y": 1
+    },
+    "r": 2,
+    "a0": 0.0,
+    "a1": 3.0
+   },
+   "expect": {
+    "broken": "kind_changed"
+   },
+   "exact": true
+  },
+  {
+   "name": "Budanan yayın başı yeni başında",
+   "place": {
+    "kind": "start"
+   },
+   "before": {
+    "kind": "arc",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 2,
+    "a0": 0.0,
+    "a1": 1.5707963267948966
+   },
+   "after": {
+    "kind": "arc",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 2,
+    "a0": 0.5235987755982988,
+    "a1": 1.5707963267948966
+   },
+   "expect": {
+    "at": {
+     "kind": "start"
+    },
+    "point": {
+     "x": 1.7320508075688774,
+     "y": 0.9999999999999999
+    }
+   },
+   "exact": false
+  },
+  {
+   "name": "Elipsin sonu",
+   "place": {
+    "kind": "end"
+   },
+   "before": {
+    "kind": "ellipse",
+    "c": {
+     "x": 1,
+     "y": 2
+    },
+    "major": {
+     "x": 3,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0.25,
+    "t1": 2.5
+   },
+   "after": {
+    "kind": "ellipse",
+    "c": {
+     "x": 1,
+     "y": 2
+    },
+    "major": {
+     "x": 3,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0.25,
+    "t1": 3.0
+   },
+   "expect": {
+    "at": {
+     "kind": "end"
+    },
+    "point": {
+     "x": -1.9699774898013365,
+     "y": 2.2116800120898006
+    }
+   },
+   "exact": false
+  },
+  {
+   "name": "Taşınan çok noktalı: düğüm izler",
+   "place": {
+    "kind": "node",
+    "part": 1
+   },
+   "before": {
+    "kind": "point",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "parts": [
+     {
+      "p": {
+       "x": 2,
+       "y": 2
+      }
+     },
+     {
+      "p": {
+       "x": 3,
+       "y": 3
+      }
+     }
+    ]
+   },
+   "after": {
+    "kind": "point",
+    "p": {
+     "x": 2,
+     "y": 1
+    },
+    "parts": [
+     {
+      "p": {
+       "x": 3,
+       "y": 2
+      }
+     },
+     {
+      "p": {
+       "x": 4,
+       "y": 3
+      }
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "node",
+     "part": 1
+    },
+    "point": {
+     "x": 3,
+     "y": 2
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Noktası silinen çok noktalı: düğüm yeni sırasında",
+   "place": {
+    "kind": "node",
+    "part": 2
+   },
+   "before": {
+    "kind": "point",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "parts": [
+     {
+      "p": {
+       "x": 2,
+       "y": 2
+      }
+     },
+     {
+      "p": {
+       "x": 3,
+       "y": 3
+      }
+     }
+    ]
+   },
+   "after": {
+    "kind": "point",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "parts": [
+     {
+      "p": {
+       "x": 3,
+       "y": 3
+      }
+     }
+    ]
+   },
+   "expect": {
+    "at": {
+     "kind": "node",
+     "part": 1
+    },
+    "point": {
+     "x": 3,
+     "y": 3
+    }
+   },
+   "exact": true
+  },
+  {
+   "name": "Olmayan köşe",
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 9
+   },
+   "before": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "after": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "expect": {
+    "broken": "no_such_place"
+   },
+   "exact": true
+  }
+ ],
+ "snaps": [
+  {
+   "name": "Uç nokta: çizginin sonu",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 4,
+    "y": 0
+   },
+   "place": {
+    "kind": "end"
+   }
+  },
+  {
+   "name": "Uç nokta: alanın köşesi",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 4,
+    "y": 3
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   }
+  },
+  {
+   "name": "Uç nokta: deliğin köşesi",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 2,
+        "y": 2
+       },
+       {
+        "x": 2,
+        "y": 4
+       },
+       {
+        "x": 4,
+        "y": 4
+       },
+       {
+        "x": 4,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 4,
+    "y": 2
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 1,
+    "index": 3
+   }
+  },
+  {
+   "name": "Uç nokta: yayın sonu",
+   "entity": {
+    "kind": "arc",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 2,
+    "a0": 0.0,
+    "a1": 1.5707963267948966
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 0.0,
+    "y": 2.0
+   },
+   "place": {
+    "kind": "end"
+   }
+  },
+  {
+   "name": "Orta nokta: kapanan kenar",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "snap": "midpoint",
+   "at": {
+    "x": 0,
+    "y": 1.5
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 3
+   }
+  },
+  {
+   "name": "Orta nokta: çizgi",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "snap": "midpoint",
+   "at": {
+    "x": 2,
+    "y": 0
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   }
+  },
+  {
+   "name": "Orta nokta: yaylı kenar",
+   "entity": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     0.5,
+     0.0
+    ]
+   },
+   "snap": "midpoint",
+   "at": {
+    "x": 1,
+    "y": -0.5
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   }
+  },
+  {
+   "name": "Merkez: daire",
+   "entity": {
+    "kind": "circle",
+    "c": {
+     "x": 1,
+     "y": 1
+    },
+    "r": 2
+   },
+   "snap": "center",
+   "at": {
+    "x": 1,
+    "y": 1
+   },
+   "place": {
+    "kind": "center"
+   }
+  },
+  {
+   "name": "Nokta: çok noktalının ikincisi",
+   "entity": {
+    "kind": "point",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "parts": [
+     {
+      "p": {
+       "x": 2,
+       "y": 2
+      }
+     },
+     {
+      "p": {
+       "x": 3,
+       "y": 3
+      }
+     }
+    ]
+   },
+   "snap": "node",
+   "at": {
+    "x": 3,
+    "y": 3
+   },
+   "place": {
+    "kind": "node",
+    "part": 2
+   }
+  },
+  {
+   "name": "Yakın: yer değil",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "snap": "nearest",
+   "at": {
+    "x": 1,
+    "y": 0
+   },
+   "place": null
+  },
+  {
+   "name": "Uç nokta ama orada köşe yok",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 2,
+    "y": 0
+   },
+   "place": null
+  }
+ ]
+}

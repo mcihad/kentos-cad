@@ -10,11 +10,11 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
-    AreaPart, BlockId, CellRange, CloudSource, DimensionStyle, DocumentSnapshotV2, Entity,
-    EntityId, HatchAssoc, HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PatternLine,
+    AreaPart, BlockId, CellRange, CloudSource, DimensionRefs, DimensionStyle, DocumentSnapshotV2,
+    Entity, EntityId, HatchAssoc, HatchPattern, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PatternLine,
     PointCloudStyle, PointPart, PointShape, PointSizeUnit, RasterResampling, RasterStretch,
-    RasterStyle, RingGeometry, TableAlign, TableSource, TextRun, TextScript, Vec2, label_scale_ok,
-    width_factor_ok,
+    RasterStyle, RingGeometry, SubPlace, SubRef, TableAlign, TableSource, TextRun, TextScript,
+    Vec2, label_scale_ok, width_factor_ok,
 };
 
 use super::Encoder;
@@ -57,6 +57,8 @@ pub(super) enum Val<'d> {
     Pattern(&'d HatchPattern),
     /// The objects a hatch's region follows (docs/adr/0186 §6).
     Assoc(&'d HatchAssoc),
+    /// The places a dimension's points follow (docs/adr/0249 §4).
+    Refs(&'d DimensionRefs),
     /// A multi-line text's letter formats (§6.6, docs/adr/0182).
     Runs(&'d [TextRun]),
     /// A whole number (a dimension's decimals, docs/adr/0183).
@@ -97,6 +99,40 @@ impl<'d> Encoder<'d> {
         for (key, [x, y]) in [("offset", l.offset), ("origin", l.origin)] {
             self.key(key);
             self.at(Seg::Name(key), |e| e.point(&Vec2 { x, y }))?;
+        }
+        self.close();
+        Ok(())
+    }
+
+    /// A reference (docs/adr/0249 §4): uid (3), place (5), broken (6) when it broke; the place
+    /// its kind (4) and then its numbers, part (4), ring (4), index (5), as its kind has them.
+    fn subref(&mut self, r: &'d SubRef) -> Result<(), KcadError> {
+        self.open(2 + usize::from(r.broken.is_some()), true)?;
+        self.key("uid");
+        self.at(Seg::Name("uid"), |e| e.id(&r.uid.0))?;
+        self.key("place");
+        let (kind, numbers, n) = match r.place {
+            SubPlace::Node { part } => ("node", [part, 0, 0], 1),
+            SubPlace::Start => ("start", [0; 3], 0),
+            SubPlace::End => ("end", [0; 3], 0),
+            SubPlace::Center => ("center", [0; 3], 0),
+            SubPlace::Vertex { part, ring, index } => ("vertex", [part, ring, index], 3),
+            SubPlace::Mid { part, ring, index } => ("mid", [part, ring, index], 3),
+        };
+        self.at(Seg::Name("place"), |e| {
+            e.open(1 + n, true)?;
+            e.key("kind");
+            e.w.text(kind);
+            for (key, x) in ["part", "ring", "index"].into_iter().zip(&numbers[..n]) {
+                e.key(key);
+                e.w.uint(u64::from(*x));
+            }
+            e.close();
+            Ok(())
+        })?;
+        if let Some(b) = &r.broken {
+            self.key("broken");
+            self.at(Seg::Name("broken"), |e| e.text(b))?;
         }
         self.close();
         Ok(())
@@ -493,6 +529,18 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(z) = e.zb {
                     f.push(("zb", Val::Float(z)));
+                }
+                // What its points follow (docs/adr/0249 §4): only the drawing's dimensions (a block
+                // definition's objects have no persistent ids to name); no references, no field.
+                if let Some(refs) = &e.refs {
+                    if uid.is_none() {
+                        let words = "blok tanımının ölçüsü nesnelere bağlı olamaz";
+                        return refuse(self, Code::BadValue, "refs", words);
+                    }
+                    if let Some(words) = refs.problem() {
+                        return refuse(self, Code::BadValue, "refs", &words);
+                    }
+                    f.push(("refs", Val::Refs(refs)));
                 }
                 // Its look (docs/adr/0183 §3). A size that is not finite meets the float's own refusal.
                 let look = &e.look;
@@ -1483,6 +1531,16 @@ impl<'d> Encoder<'d> {
                         e.close();
                         Ok(())
                     })?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Refs(refs) => {
+                // a (1), b (1), c (1): each a reference.
+                self.open(refs.each().count(), true)?;
+                for (key, r) in refs.each() {
+                    self.key(key);
+                    self.at(Seg::Name(key), |e| e.subref(r))?;
                 }
                 self.close();
                 Ok(())

@@ -501,6 +501,9 @@ impl Document {
         // After the linked texts: a text a hatch leaves open may have moved with its object.
         let ties = self.follow_hatches(&step.ops);
         step.ops.extend(ties);
+        // After the hatches: a dimension follows the places its points name (docs/adr/0249 §3).
+        let dims = self.follow_dimensions(&step.ops);
+        step.ops.extend(dims);
         self.history.undo.push_back(step);
         if self.history.undo.len() > UNDO_LIMIT
             && let Some(oldest) = self.history.undo.pop_front()

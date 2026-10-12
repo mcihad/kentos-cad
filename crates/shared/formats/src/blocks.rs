@@ -876,6 +876,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             mask: *mask == Some(true),
             za: *za,
             zb: *zb,
+            refs: None,
             look: contract_look(look),
         }),
         Shape::Hatch {

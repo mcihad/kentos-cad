@@ -27,6 +27,7 @@
 
 mod blocks;
 mod changes;
+pub mod dimension_ties;
 mod document;
 mod edit;
 pub mod exchange;

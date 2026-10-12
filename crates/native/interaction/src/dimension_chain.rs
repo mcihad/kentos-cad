@@ -219,6 +219,7 @@ impl DimensionChain {
             mask: false,
             za: None,
             zb: None,
+            refs: None,
             look: look.clone(),
         };
         let operation = match self.kind {

@@ -3,6 +3,7 @@ import type { AreaPart } from "./AreaPart";
 import type { BlockId } from "./BlockId";
 import type { CellRange } from "./CellRange";
 import type { DimensionArrow } from "./DimensionArrow";
+import type { DimensionRefs } from "./DimensionRefs";
 import type { DimensionStyle } from "./DimensionStyle";
 import type { DimensionTextPlace } from "./DimensionTextPlace";
 import type { DrawingFont } from "./DrawingFont";
@@ -129,6 +130,10 @@ mask?: boolean,
  * A slope's two elevations, metres (docs/adr/0147).
  */
 za?: number, zb?: number, 
+/**
+ * The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
+ */
+refs?: DimensionRefs, 
 /**
  * The project's dimension style it follows, by its id; absent: Standart.
  */

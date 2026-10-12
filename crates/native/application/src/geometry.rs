@@ -1125,7 +1125,8 @@ fn held(zs: Option<Vec<Option<f64>>>) -> Option<Vec<Option<f64>>> {
 /// An object copied into a new one (Kopyala, Dizi, a block's definition,
 /// Yapıştır): a linked text's copy writes no object's label, it is a text of
 /// its own (docs/adr/0175 §4); an associative hatch's copy follows no
-/// objects (docs/adr/0186 §6); every other object as it is.
+/// objects (docs/adr/0186 §6), an associative dimension's copy has free points
+/// (docs/adr/0249 §3); every other object as it is.
 pub fn unlinked(mut entity: Entity) -> Entity {
     match &mut entity {
         Entity::Text(text) => {
@@ -1133,6 +1134,8 @@ pub fn unlinked(mut entity: Entity) -> Entity {
             text.label_scale = None;
         }
         Entity::Hatch(hatch) => hatch.assoc = None,
+        // A copy's points are its own (docs/adr/0249 §3).
+        Entity::Dimension(d) => d.refs = None,
         _ => {}
     }
     entity
@@ -1286,6 +1289,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mask,
             za,
             zb,
+            refs,
             look,
         } => Entity::Dimension(DimensionEntity {
             base,
@@ -1300,6 +1304,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mask,
             za,
             zb,
+            refs,
             look,
         }),
         EntityGeometry::Hatch {
@@ -1511,6 +1516,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             mask: mask == Some(true),
             za,
             zb,
+            // A tool's computed dimension follows nothing until the tool says what (docs/adr/0249 §3).
+            refs: None,
             look: contract_look(look),
         },
         Shape::Hatch {

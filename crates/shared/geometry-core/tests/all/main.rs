@@ -49,6 +49,8 @@ mod spatial_query;
 mod spatial_stats;
 mod spatial_stats_timing;
 mod stationing;
+// Places on objects and how they follow edits (docs/adr/0249).
+mod subref;
 mod template_members;
 mod text;
 mod text_along;

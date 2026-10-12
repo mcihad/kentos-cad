@@ -451,6 +451,9 @@ pub struct Newest {
     pub(super) label_of: Option<Option<u32>>,
     #[serde(rename = "labelScale")]
     pub(super) label_scale: Option<f64>,
+    /// An associative dimension's references (docs/adr/0249 §3), in point order: `a` a live one, `b:vertex_gone`
+    /// a broken one with its reason; `[]` none. Exact; absent, not compared.
+    pub(super) refs: Option<Vec<String>>,
     /// A multi-line text's box width (from clicks: within the click
     /// tolerance), `null` none; its line spacing, `null` none, and runs,
     /// exact (docs/adr/0182).

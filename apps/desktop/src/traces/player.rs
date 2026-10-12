@@ -83,6 +83,8 @@ pub struct Seen {
     /// none for a text of its own and other kinds.
     pub label_of: Option<u32>,
     pub label_scale: Option<f64>,
+    /// An associative dimension's references: `a`, `b:vertex_gone` (docs/adr/0249 §3).
+    pub refs: Vec<String>,
     /// A multi-line text's box width, line spacing and runs (docs/adr/0182); none for other kinds.
     pub box_width: Option<f64>,
     pub line_spacing: Option<f64>,
@@ -284,6 +286,17 @@ impl Seen {
                         .map_or(0, |slot| slot.0)
                 }),
                 _ => None,
+            },
+            refs: match e {
+                Entity::Dimension(d) => d.refs.as_ref().map_or_else(Vec::new, |r| {
+                    r.each()
+                        .map(|(k, s)| match &s.broken {
+                            Some(why) => format!("{k}:{why}"),
+                            None => k.to_owned(),
+                        })
+                        .collect()
+                }),
+                _ => Vec::new(),
             },
             label_scale: match e {
                 Entity::Text(t) => t.label_scale,

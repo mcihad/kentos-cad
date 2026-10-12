@@ -130,6 +130,7 @@ pub mod divide;
 pub mod donut;
 pub mod drawing_extras;
 mod edge;
+pub mod dimension_reassociate;
 pub mod edge_shift;
 pub mod elevation;
 pub mod ellipse;

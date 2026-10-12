@@ -8,6 +8,7 @@ mod attachments;
 mod blocks;
 mod columns;
 mod compose;
+mod dimension_refs;
 mod dimensions;
 mod elevations;
 mod filters;

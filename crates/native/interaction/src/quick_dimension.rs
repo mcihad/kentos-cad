@@ -88,6 +88,7 @@ impl QuickDimension {
                 mask,
                 za: None,
                 zb: None,
+                refs: None,
                 look: self.look.clone(),
             })
             .collect();

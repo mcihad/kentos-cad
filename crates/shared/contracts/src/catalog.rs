@@ -1398,6 +1398,49 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Yeniden bağla (docs/adr/0249 §3), held together by
+        // fixtures/commands/v1/cad.dimensions.reassociate.json. The web is paused
+        // (docs/adr/0228): the desktop's host alone runs it for now.
+        CommandDescriptor {
+            id: crate::CAD_DIMENSIONS_REASSOCIATE.into(),
+            version: crate::CAD_DIMENSIONS_REASSOCIATE_VERSION,
+            title: "Ölçüyü yeniden bağla".into(),
+            summary: "İlişkili ölçünün noktalarını nesnelerin yerlerine bağlar ya da serbest bırakır; tek geri alma adımı “Ölçüyü yeniden bağla”. \
+                      Her bağ ölçünün bir noktası (a, b ya da c) ve yeni yeridir: nesnenin kalıcı kimliği ve yeri (node, start, end, center, vertex, mid; parça, halka ve sırasıyla). to null noktayı serbest bırakır: nokta yerinde kalır, hiçbir şeyi izlemez. \
+                      Bağlanan nokta yerinin şimdiki koordinatına taşınır ve bundan sonra nesneyi izler: nesne taşınır, döner ya da köşesi çekilirse ölçü de gider; köşe silinirse bağ kopar, nokta yerinde kalır. Kopmuş bağa yer verilirse yeniden canlanır. \
+                      Sonuç ölçünün yeni değerini (value, unit) söyler. Hiçbir nokta değişmiyorsa hiçbir şey yazılmaz. Kilitli katmandaki ölçü değişmez. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DimensionsReassociate>(),
+            output: schema::<crate::DimensionsReassociated>(),
+            plan: Some(schema::<crate::DimensionsReassociatePlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Ölçünün iki ucunu bir duvarın iki köşesine bağla".into(),
+                    input: json!({
+                        "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+                        "points": [
+                            { "point": "a", "to": { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "place": { "kind": "vertex", "part": 0, "ring": 0, "index": 0 } } },
+                            { "point": "b", "to": { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "place": { "kind": "vertex", "part": 0, "ring": 0, "index": 1 } } }
+                        ]
+                    }),
+                    output: Some(json!({ "changed": 2, "value": 12.5, "unit": "length", "revision": "41" })),
+                },
+                CommandExample {
+                    title: "Bir ucu serbest bırak".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "points": [{ "point": "b", "to": null }] }),
+                    output: None,
+                },
+            ],
+        },
         // The drawing tools' command for objects without one of their own (docs/adr/0057),
         // held together by fixtures/commands/v1/cad.entities.create.json.
         CommandDescriptor {
@@ -2582,6 +2625,10 @@ mod tests {
                     crate::CAD_ENTITIES_OFFSET => {
                         serde_json::from_value::<crate::EntitiesOffset>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DIMENSIONS_REASSOCIATE => {
+                        serde_json::from_value::<crate::DimensionsReassociate>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_ENTITIES_CREATE => {
                         serde_json::from_value::<crate::EntitiesCreate>(e.input.clone()).map(|_| ())
                     }
@@ -2687,6 +2734,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_OFFSET => {
                             serde_json::from_value::<crate::EntitiesOffsetMade>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DIMENSIONS_REASSOCIATE => {
+                            serde_json::from_value::<crate::DimensionsReassociated>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_CREATE => {

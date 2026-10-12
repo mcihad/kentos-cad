@@ -391,6 +391,19 @@ DimensionArrowName = Literal["closed", "open", "dot", "none"]
 """The names of :class:`DimensionArrow`, for a plain string."""
 
 
+class DimensionPoint(_StrEnum):
+    """A dimension's measured point: `a`, `b` or `c` (its third point: an
+    angle's vertex, a radius's centre and the like).
+    """
+    A = "a"
+    B = "b"
+    C = "c"
+
+
+DimensionPointName = Literal["a", "b", "c"]
+"""The names of :class:`DimensionPoint`, for a plain string."""
+
+
 class DimensionStyle(_StrEnum):
     """A dimension's kind (none: aligned). The last five came with KCAD schema 9
     (docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`
@@ -1761,6 +1774,31 @@ class OffsetBy(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> OffsetBy:
         return _variant(_OFFSET_BY, "OffsetBy", "kind", data).from_json(data)
+
+
+class SubPlace(_Union):
+    """A place on an object.
+
+    One of:
+
+    - :class:`NodeSubPlace` (``kind: node``)
+    - :class:`StartSubPlace` (``kind: start``)
+    - :class:`EndSubPlace` (``kind: end``)
+    - :class:`CenterSubPlace` (``kind: center``)
+    - :class:`VertexSubPlace` (``kind: vertex``)
+    - :class:`MidSubPlace` (``kind: mid``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubPlace:
+        return _variant(_SUB_PLACE, "SubPlace", "kind", data).from_json(data)
 
 
 class TableSource(_Union):
@@ -3510,6 +3548,7 @@ class DimensionEntity(Entity):
         mask: The value is drawn over the drawing's background (docs/adr/0147, as a
             text's mask, docs/adr/0145).
         prefix: Written before the value (and its kind's own prefix).
+        refs: The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         suffix: Written after the value.
         symbol: Library symbol overriding the layer's style.
         text_color: The value's colour; absent: the object's.
@@ -3548,6 +3587,7 @@ class DimensionEntity(Entity):
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     prefix: str | None | Unset = UNSET
+    refs: DimensionRefs | None | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
     suffix: str | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -3612,6 +3652,8 @@ class DimensionEntity(Entity):
             out["mask"] = self.mask
         if self.prefix is not UNSET:
             out["prefix"] = self.prefix
+        if self.refs is not UNSET:
+            out["refs"] = None if self.refs is None else self.refs.to_json()
         if self.style is not UNSET:
             out["style"] = None if self.style is None else _enum_out(self.style)
         if self.suffix is not UNSET:
@@ -3666,6 +3708,7 @@ class DimensionEntity(Entity):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
             prefix=data.get("prefix", UNSET),
+            refs=UNSET if "refs" not in data else None if data["refs"] is None else DimensionRefs.from_json(data["refs"]),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
             suffix=data.get("suffix", UNSET),
             symbol=data.get("symbol", UNSET),
@@ -3676,6 +3719,32 @@ class DimensionEntity(Entity):
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionRefs(_Model):
+    """An associative dimension's references: what its points `a`, `b` and `c` follow; a point without one is free."""
+    a: SubRef | None | Unset = UNSET
+    b: SubRef | None | Unset = UNSET
+    c: SubRef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.a is not UNSET:
+            out["a"] = None if self.a is None else self.a.to_json()
+        if self.b is not UNSET:
+            out["b"] = None if self.b is None else self.b.to_json()
+        if self.c is not UNSET:
+            out["c"] = None if self.c is None else self.c.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionRefs:
+        return cls(
+            a=UNSET if "a" not in data else None if data["a"] is None else SubRef.from_json(data["a"]),
+            b=UNSET if "b" not in data else None if data["b"] is None else SubRef.from_json(data["b"]),
+            c=UNSET if "c" not in data else None if data["c"] is None else SubRef.from_json(data["c"]),
         )
 
 
@@ -3778,6 +3847,121 @@ class DimensionStyleDef(_Model):
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsReassociate(_Model):
+    """Input of `cad.dimensions.reassociate` v1: a dimension's points bound to
+    places on objects, or freed, as one undo step “Ölçüyü yeniden bağla”. A
+    bound point moves to its place on the object now and follows it from
+    then on (docs/adr/0249 §3); a broken reference given a place is live
+    again. A binding that leaves a point and its reference as they are
+    changes nothing; when none changes, nothing is written (`changed` 0).
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid` (the
+    dimension's id, then each place's object's, in order), `no_entities` (no
+    binding), `invalid_refs` (a point bound twice, a place's index too big),
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `entity_not_found` (the dimension, then each place's object, at
+    `points[i].to.uid`), `not_a_dimension`, `layer_locked` (the dimension's
+    layer), `invalid_refs` (a point the dimension's kind does not measure:
+    `c` of a dimension without one; a place bound to the dimension itself),
+    `no_such_place` (a place its object does not have, at
+    `points[i].to.place`).
+    Attributes:
+        uid: The dimension's persistent id.
+        points: The points bound or freed, at least one, each once.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+    """
+    uid: str
+    points: list[PointBinding]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["points"] = [e0.to_json() for e0 in self.points]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsReassociate:
+        return cls(
+            uid=data["uid"],
+            points=[PointBinding.from_json(e0) for e0 in data["points"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsReassociatePlan(_Model):
+    """What `cad.dimensions.reassociate` would write (plan mode); nothing is written.
+    Attributes:
+        dimension: The dimension as execute would write it.
+        changed: The points whose binding or coordinates would change.
+        value: Its measured value then, and the value's unit, as in the output.
+        revision: The document revision the plan was made against.
+    """
+    dimension: Entity
+    changed: int
+    value: float
+    unit: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["dimension"] = self.dimension.to_json()
+        out["changed"] = self.changed
+        out["value"] = float(self.value)
+        out["unit"] = self.unit
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsReassociatePlan:
+        return cls(
+            dimension=Entity.from_json(data["dimension"]),
+            changed=data["changed"],
+            value=float(data["value"]),
+            unit=data["unit"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DimensionsReassociated(_Model):
+    """Output of `cad.dimensions.reassociate` v1.
+    Attributes:
+        changed: The points whose binding or coordinates changed (an undo step was
+            written when any did).
+        value: The dimension's measured value now, in its unit (`unit`).
+        unit: "length" (metres), "angle" (radians), "percent" or "coordinate".
+        revision: The document's revision after the write, as decimal text.
+    """
+    changed: int
+    value: float
+    unit: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["value"] = float(self.value)
+        out["unit"] = self.unit
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsReassociated:
+        return cls(
+            changed=data["changed"],
+            value=float(data["value"]),
+            unit=data["unit"],
+            revision=data["revision"],
         )
 
 
@@ -8700,6 +8884,54 @@ class PinnedObject(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PlaceOn(_Model):
+    """A place on an object named by the object's persistent id.
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+    """
+    uid: str
+    place: SubPlace
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["place"] = self.place.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlaceOn:
+        return cls(
+            uid=data["uid"],
+            place=SubPlace.from_json(data["place"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointBinding(_Model):
+    """One point's new binding.
+    Attributes:
+        to: The place the point follows from now on; null frees it (it keeps its
+            coordinates and follows nothing).
+    """
+    point: DimensionPoint | DimensionPointName
+    to: PlaceOn | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["point"] = _enum_out(self.point)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else self.to.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointBinding:
+        return cls(
+            point=_enum_in(DimensionPoint, data["point"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else PlaceOn.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointCloudEntity(_Model):
     """A point cloud (docs/adr/0207 §3).
     Attributes:
@@ -11497,6 +11729,34 @@ class StylesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SubRef(_Model):
+    """A place on an object by the object's persistent id: what a dimension's point follows.
+    Attributes:
+        broken: Why it no longer follows its object ([`SUBREF_BROKEN`]); none while it does. The point keeps its last
+            coordinates.
+    """
+    uid: str
+    place: SubPlace
+    broken: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["place"] = self.place.to_json()
+        if self.broken is not UNSET:
+            out["broken"] = self.broken
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SubRef:
+        return cls(
+            uid=data["uid"],
+            place=SubPlace.from_json(data["place"]),
+            broken=data.get("broken", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveySettings(_Model):
     """The project's survey constants and tolerances (docs/adr/0169 §3): the
     refraction coefficient k of trigonometric heights, and the greatest
@@ -13085,6 +13345,7 @@ class DimensionEntityGeometry(EntityGeometry):
         font: The value's typeface; absent: the project's.
         mask: The value over the drawing's background (docs/adr/0147).
         prefix: Written before the value (and its kind's own prefix).
+        refs: The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         suffix: Written after the value.
         text_color: The value's colour; absent: the object's.
         text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.
@@ -13114,6 +13375,7 @@ class DimensionEntityGeometry(EntityGeometry):
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     mask: bool | Unset = UNSET
     prefix: str | None | Unset = UNSET
+    refs: DimensionRefs | None | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
     suffix: str | None | Unset = UNSET
     text: str | None | Unset = UNSET
@@ -13164,6 +13426,8 @@ class DimensionEntityGeometry(EntityGeometry):
             out["mask"] = self.mask
         if self.prefix is not UNSET:
             out["prefix"] = self.prefix
+        if self.refs is not UNSET:
+            out["refs"] = None if self.refs is None else self.refs.to_json()
         if self.style is not UNSET:
             out["style"] = None if self.style is None else _enum_out(self.style)
         if self.suffix is not UNSET:
@@ -13208,6 +13472,7 @@ class DimensionEntityGeometry(EntityGeometry):
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             mask=data.get("mask", UNSET),
             prefix=data.get("prefix", UNSET),
+            refs=UNSET if "refs" not in data else None if data["refs"] is None else DimensionRefs.from_json(data["refs"]),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
             suffix=data.get("suffix", UNSET),
             text=data.get("text", UNSET),
@@ -13632,6 +13897,116 @@ class ThroughOffsetBy(OffsetBy):
 
 
 @dataclass(kw_only=True, slots=True)
+class NodeSubPlace(SubPlace):
+    """A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174)."""
+    TAG_VALUE: ClassVar[str] = "node"
+    part: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "node"}
+        out["part"] = self.part
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NodeSubPlace:
+        return cls(
+            part=data["part"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StartSubPlace(SubPlace):
+    """A line's, arc's or elliptical arc's start."""
+    TAG_VALUE: ClassVar[str] = "start"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "start"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StartSubPlace:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class EndSubPlace(SubPlace):
+    """Its end."""
+    TAG_VALUE: ClassVar[str] = "end"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "end"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EndSubPlace:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class CenterSubPlace(SubPlace):
+    """A circle's, arc's or ellipse's centre."""
+    TAG_VALUE: ClassVar[str] = "center"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "center"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CenterSubPlace:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class VertexSubPlace(SubPlace):
+    """A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its
+    `h`th hole; the vertex's index in the ring.
+    """
+    TAG_VALUE: ClassVar[str] = "vertex"
+    part: int
+    ring: int
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "vertex"}
+        out["part"] = self.part
+        out["ring"] = self.ring
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VertexSubPlace:
+        return cls(
+            part=data["part"],
+            ring=data["ring"],
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MidSubPlace(SubPlace):
+    """The middle of a line (all zero) or of a path's edge from vertex `index` to the next."""
+    TAG_VALUE: ClassVar[str] = "mid"
+    part: int
+    ring: int
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "mid"}
+        out["part"] = self.part
+        out["ring"] = self.ring
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MidSubPlace:
+        return cls(
+            part=data["part"],
+            ring=data["ring"],
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CoordinatesTableSource(TableSource):
     """Koordinat çizelgesi: the points and vertices of these objects."""
     TAG_VALUE: ClassVar[str] = "coordinates"
@@ -14008,6 +14383,9 @@ _NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDire
 _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
 
 
+_SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace}
+
+
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
 
 
@@ -14072,6 +14450,7 @@ __all__ = [
     "CalloutKind",
     "CalloutKindName",
     "CellRange",
+    "CenterSubPlace",
     "Checkpoint",
     "CheckpointChange",
     "CheckpointCreate",
@@ -14112,11 +14491,17 @@ __all__ = [
     "DimensionArrowName",
     "DimensionEntity",
     "DimensionEntityGeometry",
+    "DimensionPoint",
+    "DimensionPointName",
+    "DimensionRefs",
     "DimensionStyle",
     "DimensionStyleDef",
     "DimensionStyleName",
     "DimensionTextPlace",
     "DimensionTextPlaceName",
+    "DimensionsReassociate",
+    "DimensionsReassociatePlan",
+    "DimensionsReassociated",
     "DistanceOffsetBy",
     "DoorSource",
     "DrawingFont",
@@ -14129,6 +14514,7 @@ __all__ = [
     "EllipseEntityGeometry",
     "Ellipsoid",
     "EmptyInput",
+    "EndSubPlace",
     "EntitiesArray",
     "EntitiesArrayPlan",
     "EntitiesArrayed",
@@ -14287,6 +14673,7 @@ __all__ = [
     "LineTypeName",
     "LocalCrsSystem",
     "LocalDefinition",
+    "MidSubPlace",
     "MirrorTransform",
     "MoveTransform",
     "NetworkConnect",
@@ -14304,6 +14691,7 @@ __all__ = [
     "NetworkKindName",
     "NetworkLayer",
     "NewObject",
+    "NodeSubPlace",
     "ObstacleKind",
     "ObstacleKindName",
     "OffsetBy",
@@ -14311,6 +14699,8 @@ __all__ = [
     "PathEntity",
     "PatternLine",
     "PinnedObject",
+    "PlaceOn",
+    "PointBinding",
     "PointCloudEntity",
     "PointCloudFields",
     "PointCloudStyle",
@@ -14425,11 +14815,14 @@ __all__ = [
     "SplineEntityGeometry",
     "StackMode",
     "StackModeName",
+    "StartSubPlace",
     "StreetSource",
     "StyleEditOperation",
     "StyleEditOperationName",
     "StylesEdit",
     "StylesEdited",
+    "SubPlace",
+    "SubRef",
     "SurveySettings",
     "TableAlign",
     "TableAlignName",
@@ -14468,6 +14861,7 @@ __all__ = [
     "VariableValue",
     "Vec2",
     "Vec2Like",
+    "VertexSubPlace",
     "Workspace",
     "WorkspaceName",
     "XlineEntity",

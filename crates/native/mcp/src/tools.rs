@@ -343,6 +343,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.blocks.edit"
             // deleteSource deletes the objects it offsets (docs/adr/0246).
             | "cad.entities.offset"
+            // It binds or frees a dimension's points (docs/adr/0249 §3).
+            | "cad.dimensions.reassociate"
             // Its remove takes a service layer away (docs/adr/0208 §15).
             | "cad.layers.service"
             // Its remove takes a network's definition away (docs/adr/0209 §11).

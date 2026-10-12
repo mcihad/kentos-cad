@@ -6953,7 +6953,7 @@
    "operation": null,
    "python": "kentos.cad.entities.create",
    "mcp": "cad.entities.create",
-   "note": "Ölçü tanım noktalarını saklar; nesneye bağlı (ilişkili) değildir.",
+   "note": "Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in kenetle bir yere oturan noktası nesneye bağlanır (refs, ADR 0249); öbür türler tanım noktalarını saklar.",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 7
@@ -7117,6 +7117,22 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 7
+  },
+  {
+   "id": "tool.dimensionReassociate",
+   "kind": "command",
+   "title": "Yeniden bağla",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.reassociate"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.reassociate",
+   "mcp": "cad.dimensions.reassociate",
+   "note": "Ölçü, nokta ve nesnenin yeri komuta verilir; nokta yerinden hesaplanır (ADR 0249).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.divide",
