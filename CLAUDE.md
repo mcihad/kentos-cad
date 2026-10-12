@@ -1691,7 +1691,10 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   uygulama 19 ms'ydi, zaman damgalarıyla geçiş geçiş ölçülerek 6 ms'ye indi; tasarımcıda `generator.rs`, `layerForms.ts` (Adım ekle'de
   ikonlar, sahibin isteği), Katman stili'nde `layer_style/compose.rs`, `composeSection`; bağımsız başvurular `geometry_generator_cases.py`,
   `effects_cases.py` (gerçek GPU ve tarayıcıyla), `layer_compose_command_cases.py`; ortak iz `symbol-extras.json`; süreler ADR'nin
-  Doğrulama'sında. Sıradaki `GIS-39` ve `GIS-40`.
+  Doğrulama'sında. Ardından sahibin bildirimleriyle iki düzeltme (12 Ekim): masaüstünde ikonlar kendi piksellerinde SVG belgesi
+  olarak resvg ile çizilir (ADR 0054'ün eki); kendi hedefine çizen alanın resmi tam piksellere oturur, tasarımcının önizlemesinde
+  ince çizgi ve dalga düzgün (ADR 0023'ün eki). Devir notu ve açık iş (yarı saydam çizginin köşesi iki kez boyanır):
+  [docs/devir/2026-10-12-gis-30.md](docs/devir/2026-10-12-gis-30.md). Sıradaki `GIS-39` ve `GIS-40`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM
