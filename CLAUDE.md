@@ -1784,7 +1784,7 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   boşluk). `CADP-02` ([ADR 0247](docs/adr/0247-sheet-commands-on-the-desktop.md)) bitti: pafta komutlarının masaüstündeki yerleri
   `equivalents.json`'da, Ad ver yerinde (liste, ağaç, F2); `kentos-sheet-ui` masaüstü takımında. Sahibin izniyle (12 Ekim) iki paralel ajan: `CADP-03` (dal `cad-units`, ADR 0245; PR #21 birleşti: Python ve MCP'de yeni
   çizimin birimi ve sihirbazın parametreleri, cevaplarda `units`) ve `CADP-04` (dal `cad-offset`,
-  ADR 0246); ağır işler `/tmp/kentos-heavy.sh` kilidiyle sırayla. PR'leri ana ajan birleştirir; birleştirirken eşleme ve manifest
+  ADR 0246; PR #22 birleşti: `cad.entities.offset`, araç komutun planıyla); ağır işler `/tmp/kentos-heavy.sh` kilidiyle sırayla. PR'leri ana ajan birleştirir; birleştirirken eşleme ve manifest
   yeniden yazılır.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek

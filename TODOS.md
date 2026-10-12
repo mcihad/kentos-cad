@@ -1000,8 +1000,11 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   srid, il, çizim birimi, ölçek, yazı tipi; sihirbazın sözleriyle retler); başsız sunucu, Python (`Document.new`, `Units`) ve MCP
   (`drawing.new`) aynı kuralla; özet ve ölçü `units`'i söyler (tel değerleri metrede kalır). Açık: katalog şemalarının birimleri
   (`CAD-DATA-05`'in kalanı) ve projenin biriminin değiştirilmesi (`CAD-DATA-04`).
-- [ ] `CADP-04` Anlamsal Ötele: `cad.entities.offset` arayüzde, masaüstünde, başsız sunucuda, Python'da ve MCP'de (plan `CAD-CMD-01`,
-  `02`, `06`). Paralel ajan, dal `cad-offset`, ADR 0246.
+- [x] `CADP-04` Anlamsal Ötele: `cad.entities.offset` arayüzde, masaüstünde, başsız sunucuda, Python'da ve MCP'de (plan `CAD-CMD-01`,
+  `02`, `06`). — **12 Ekim, [ADR 0246](docs/adr/0246-semantic-offset-command.md)** (paralel ajan, dal `cad-offset`, PR #22): girdi
+  kaynaklar, mesafe ve taraf ya da geçilecek nokta, İki yana, Kaynağı sil, hedef katman; hesap çekirdeğin `offset_entity`'si; araç
+  önizlemeyi komutun planından çizer; 30 ortak durum kesirlerle bağımsız başvurudan; Python ve MCP aracın kopyasını bit bit yazar.
+  Manifestte Ötele `semantic`.
 - [ ] `CADP-05` Aynı kalıpla Buda, Uzat, Köşe yuvarla ve ilişkili ölçü oluşturma (plan `CAD-CMD-03`–`05`).
 - [ ] `CADP-06` Alt nesne kimliği ve başvuruların göçü ve geçersizleşmesi (plan `CAD-DATA-13`, `14`; `DEC-03`).
 - [ ] `CADP-07` İlişkili ölçü: bağ, izleme ve yeniden bağlama (plan §11.1).

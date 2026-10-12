@@ -7846,14 +7846,14 @@
    "id": "tool.offset",
    "kind": "tool",
    "title": "Ötele",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.offset"
    ],
-   "operation": "offset",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.offset",
+   "mcp": "cad.entities.offset",
+   "note": "Kaynaklar, mesafe ya da geçilecek nokta, taraf, iki yana ve kaynağı sil komuta verilir (ADR 0246).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
