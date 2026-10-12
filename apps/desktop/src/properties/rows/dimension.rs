@@ -232,22 +232,11 @@ pub(super) fn rows(
             )
         }),
     )))];
-    // Its lines (docs/adr/0205 §6): the dimension line's (and its
-    // arrowheads'), the extension lines', the value's colour.
-    rows.extend([
-        color_row("Çizgi rengi", Part::Line, dims, slots, locked),
-        weight_row("Çizgi kalınlığı", Part::Line, dims, slots, locked),
-        type_row("Çizgi tipi", Part::Line, dims, slots, locked),
-        color_row("Uzatma rengi", Part::Ext, dims, slots, locked),
-        weight_row("Uzatma kalınlığı", Part::Ext, dims, slots, locked),
-        type_row("Uzatma tipi", Part::Ext, dims, slots, locked),
-        color_row("Değer rengi", Part::Value, dims, slots, locked),
-    ]);
-    // Its references (docs/adr/0249 §3): the point methods' points follow places on objects.
+    // Its references first (docs/adr/0249 §3): the point methods' points follow places on objects.
     if let Some(text) = common_relation(dims) {
         let any = dims.iter().any(|d| d.refs.is_some());
         let row = Row::text("İlişki", &text);
-        rows.push(if any {
+        rows.insert(0, if any {
             row.editor(edit(select(
                 &text,
                 [(
@@ -260,6 +249,17 @@ pub(super) fn rows(
             row
         });
     }
+    // Its lines (docs/adr/0205 §6): the dimension line's (and its
+    // arrowheads'), the extension lines', the value's colour.
+    rows.extend([
+        color_row("Çizgi rengi", Part::Line, dims, slots, locked),
+        weight_row("Çizgi kalınlığı", Part::Line, dims, slots, locked),
+        type_row("Çizgi tipi", Part::Line, dims, slots, locked),
+        color_row("Uzatma rengi", Part::Ext, dims, slots, locked),
+        weight_row("Uzatma kalınlığı", Part::Ext, dims, slots, locked),
+        type_row("Uzatma tipi", Part::Ext, dims, slots, locked),
+        color_row("Değer rengi", Part::Value, dims, slots, locked),
+    ]);
     // An ordinate's axis: its Y (0) or its X (90).
     if dims
         .iter()

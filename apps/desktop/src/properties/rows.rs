@@ -999,7 +999,12 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     .editor(edit(Editor::Text(Field::DimensionText(slot)))),
             ]);
             // Zemin, an ordinate's axis, a slope's elevations, an arc length's radius and angle (docs/adr/0147 §7).
-            geo.extend(dimension::rows(&[d], &ids, locked, &f));
+            let mut own = dimension::rows(&[d], &ids, locked, &f);
+            // İlişki right under its kind: whether the dimension follows its objects (docs/adr/0249 §3).
+            if let Some(i) = own.iter().position(|r| r.label == "İlişki") {
+                geo.insert(1.min(geo.len()), own.remove(i));
+            }
+            geo.extend(own);
         }
         Entity::Hatch(h) => {
             geo.extend(hatch_rows(
