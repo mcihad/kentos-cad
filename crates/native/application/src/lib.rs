@@ -31,6 +31,7 @@
 
 pub mod address_define;
 pub mod addresses;
+pub mod annotation_follow;
 pub mod arc;
 pub mod array;
 pub mod blocks;
@@ -52,11 +53,14 @@ pub mod label_texts;
 pub mod labels_pin;
 pub mod layer_filter;
 pub mod layers_compose;
+pub mod layers_edit;
 pub mod layers_filter;
 pub mod layers_info;
 pub mod layers_labels;
 pub mod layers_renderer;
 pub mod layers_service;
+pub mod layers_set;
+pub mod layers_states;
 pub mod layers_time;
 pub mod line;
 pub mod network_define;
@@ -65,10 +69,26 @@ pub mod polygon;
 pub mod polyline;
 pub mod scenarios_edit;
 pub mod set;
+pub mod settings_set;
+pub mod style_tables;
+pub mod styles_edit;
 pub mod transform;
 
 pub use context::ExecutionContext;
 pub use kentos_contracts::{CommandError, CommandResult, CommandWarning};
+
+/// What a command's answer says: its refusal, or its warnings.
+pub fn said_of<T>(result: CommandResult<T>) -> Vec<String> {
+    match result {
+        CommandResult::Completed { warnings, .. } => {
+            warnings.into_iter().map(|w| w.message).collect()
+        }
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => vec![error.message],
+        CommandResult::Queued { .. } | CommandResult::Cancelled => Vec::new(),
+    }
+}
 
 use kentos_contracts::{
     CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION, CAD_CIRCLE_CREATE, CAD_CIRCLE_CREATE_VERSION,
@@ -164,5 +184,28 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LAYERS_RENDERER,
         kentos_contracts::CAD_LAYERS_RENDERER_VERSION,
+    ),
+    // The layer tree, its own changes and its states, the text and dimension
+    // styles, the project's settings ([`layers_edit`], [`layers_set`],
+    // [`layers_states`], [`styles_edit`], [`settings_set`], docs/adr/0248).
+    (
+        kentos_contracts::CAD_LAYERS_EDIT,
+        kentos_contracts::CAD_LAYERS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_LAYERS_SET,
+        kentos_contracts::CAD_LAYERS_SET_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_LAYERS_STATES,
+        kentos_contracts::CAD_LAYERS_STATES_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_STYLES_EDIT,
+        kentos_contracts::CAD_STYLES_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SETTINGS_SET,
+        kentos_contracts::CAD_SETTINGS_SET_VERSION,
     ),
 ];

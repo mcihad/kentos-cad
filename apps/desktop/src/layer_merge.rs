@@ -5,15 +5,15 @@
 //!   and object counts, each with its box) and the target in a list (the one
 //!   the Katmanlar panel's menu named, else the active layer). A locked layer
 //!   and the target cannot be checked. Birleştir moves the sources' objects to
-//!   the target through `cad.entities.set` and removes the sources, in one
-//!   undo step “Katmanları birleştir”, and closes; a source that is the
+//!   the target and removes the sources through `cad.layers.edit`'s merge
+//!   (docs/adr/0248 §1), in one undo step “Katmanları birleştir”, and closes; a source that is the
 //!   active layer gives that to the target first (a tree change, as the eye:
 //!   outside the step). What keeps it from writing is said above the list.
 //! - Kopyasını oluştur: a new layer last in the same group, named “<ad>
 //!   kopyası” (one of its kind in the tree), with the same style, fields and
-//!   visibility, unlocked, and the copies of its objects through
-//!   `cad.entities.create` (the fields given after them, docs/adr/0199 §1);
-//!   one undo step “Katmanı kopyala”. A locked layer is
+//!   visibility, unlocked, and the copies of its objects, through
+//!   `cad.layers.edit`'s duplicate (docs/adr/0248 §1); one undo step
+//!   “Katmanı kopyala”. A locked layer is
 //!   not copied (nor are its objects).
 //!
 //! Both change the layer tree: a cloud project without `project.edit`
@@ -23,13 +23,9 @@ use std::collections::BTreeSet;
 
 use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
-    CommandResult, EntitiesCreate, EntitiesSetProperties, LayerNodeType, PropertiesOperation,
-};
-use kentos_domain::{NewLayer, Slot};
+use kentos_contracts::{LayerEditOperation, LayerNodeType, LayersEdit};
+use kentos_domain::Slot;
 use kentos_interaction::Level;
-use kentos_interaction::layer_move::new_object;
-use kentos_native_application::{ExecutionContext, create, set};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
@@ -227,11 +223,10 @@ impl App {
             }
             return false;
         }
-        let Some(doc) = self.document.as_mut() else {
+        let Some(doc) = self.document.as_ref() else {
             return false;
         };
-        let model = &mut doc.model;
-        let layers = model.layers();
+        let layers = doc.model.layers();
         let into = layers
             .get(target)
             .map_or_else(|| target.to_owned(), |n| n.name.clone());
@@ -245,69 +240,19 @@ impl App {
             })
             .cloned()
             .collect();
-        if let Some(locked) = from.iter().find(|id| layers.is_locked(id)) {
-            let name = layers
-                .get(locked)
-                .map_or(locked.as_str(), |n| n.name.as_str());
-            let text = format!(
-                "“{name}” katmanı kilitli; birleştirilemez. Kilidini Katmanlar panelinden açın."
-            );
-            self.warn(text);
+        // `cad.layers.edit`'s merge (docs/adr/0248 §1): a locked source refused in its words.
+        let mut input = LayersEdit::new(LayerEditOperation::Merge);
+        input.layer = Some(target.to_owned());
+        input.layers = Some(from);
+        let Some(done) = self.edit_layers(input) else {
             return false;
-        }
-        let uids: Vec<String> = from
-            .iter()
-            .flat_map(|id| objects_on(model, id))
-            .filter_map(|slot| model.uid(slot))
-            .map(|uid| uid.to_string())
-            .collect();
-        if from.iter().any(|id| id == model.layers().active()) {
-            model.set_active_layer(target);
-        }
-        let group = model.begin_group("Katmanları birleştir");
-        let mut warnings = Vec::new();
-        let moved = uids.len();
-        if !uids.is_empty() {
-            let input = EntitiesSetProperties {
-                uids,
-                layer_id: Some(target.to_owned()),
-                color: None,
-                line_weight: None,
-                symbol: None,
-                attrs: None,
-                label: None,
-                operation: PropertiesOperation::Layer,
-                expected_revision: None,
-                unlink: false,
-                attachments: None,
-            };
-            match set::execute(&mut ExecutionContext::new(model), input) {
-                CommandResult::Completed { warnings: w, .. } => {
-                    warnings.extend(w.into_iter().map(|w| w.message));
-                }
-                other => {
-                    model.cancel_group(group);
-                    self.warn(refusal(other, "Nesneler taşınamadı."));
-                    return false;
-                }
-            }
-        }
-        for id in &from {
-            if let Err(refused) = model.remove_layer(id) {
-                model.cancel_group(group);
-                self.warn(refused.to_string());
-                return false;
-            }
-        }
-        model.end_group(group);
-        for text in warnings {
-            self.warn(text);
-        }
+        };
         self.say(
             Level::Success,
             format!(
-                "{} katman “{into}” katmanına birleştirildi: {moved} nesne taşındı.",
-                from.len()
+                "{} katman “{into}” katmanına birleştirildi: {} nesne taşındı.",
+                done.removed.len(),
+                done.objects
             ),
         );
         true
@@ -320,90 +265,38 @@ impl App {
             self.warn(locked);
             return;
         }
-        let Some(doc) = self.document.as_mut() else {
+        let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return;
         };
-        let model = &mut doc.model;
-        let layers = model.layers();
+        let layers = doc.model.layers();
         let id = id.unwrap_or_else(|| layers.active().to_owned());
         let Some(source) = layers
             .get(&id)
             .filter(|n| n.kind == LayerNodeType::Layer)
-            .cloned()
+            .map(|n| n.name.clone())
         else {
             self.warn("Kopyası oluşturulacak bir katman seçin; grubun kopyası oluşturulmaz.");
             return;
         };
-        if layers.is_locked(&id) {
-            let text = format!(
-                "“{}” katmanı kilitli; kopyası oluşturulmaz. Kilidini Katmanlar panelinden açın.",
-                source.name
-            );
-            self.warn(text);
+        // `cad.layers.edit`'s duplicate (docs/adr/0248 §1): a locked layer refused in its words.
+        let mut input = LayersEdit::new(LayerEditOperation::Duplicate);
+        input.layer = Some(id);
+        let Some(done) = self.edit_layers(input) else {
             return;
-        }
-        let name = model
-            .layers()
-            .unique_name(&format!("{} kopyası", source.name));
-        let objects: Vec<kentos_contracts::NewObject> = objects_on(model, &id)
-            .into_iter()
-            .filter_map(|slot| model.get(slot).and_then(new_object))
-            .collect();
-        let group = model.begin_group("Katmanı kopyala");
-        let mut new = NewLayer::layer(name.clone());
-        new.visible = source.visible;
-        new.style = source.style.clone();
-        let layer = match model.add_layer(new, Some(&id), false) {
-            Ok(layer) => layer,
-            Err(refused) => {
-                model.cancel_group(group);
-                self.warn(refused.to_string());
-                return;
-            }
         };
-        let mut made = 0;
-        let mut warnings = Vec::new();
-        if !objects.is_empty() {
-            let input = EntitiesCreate {
-                layer_id: layer.clone(),
-                objects,
-                operation: None,
-                expected_revision: None,
-            };
-            match create::execute(&mut ExecutionContext::new(model), input) {
-                CommandResult::Completed {
-                    output,
-                    warnings: w,
-                } => {
-                    made = output.ids.len();
-                    warnings.extend(w.into_iter().map(|w| w.message));
-                }
-                other => {
-                    model.cancel_group(group);
-                    self.warn(refusal(other, "Nesneler kopyalanamadı."));
-                    return;
-                }
-            }
-        }
-        // Its fields after the copies (docs/adr/0199 §1): their values go as
-        // they are, kept or not.
-        if !source.fields.is_empty()
-            && let Err(refused) = model.set_layer_fields(&layer, source.fields.clone(), &[])
-        {
-            model.cancel_group(group);
-            self.warn(refused.to_string());
-            return;
-        }
-        model.end_group(group);
-        for text in warnings {
-            self.warn(text);
-        }
+        let name = self
+            .document
+            .as_ref()
+            .zip(done.layer.as_deref())
+            .and_then(|(d, l)| d.model.layers().get(l))
+            .map(|n| n.name.clone())
+            .unwrap_or_default();
         self.say(
             Level::Success,
             format!(
-                "“{}” katmanı “{name}” olarak kopyalandı: {made} nesne.",
-                source.name
+                "“{source}” katmanı “{name}” olarak kopyalandı: {} nesne.",
+                done.objects
             ),
         );
     }
@@ -573,16 +466,6 @@ fn objects_on(doc: &kentos_domain::Document, layer: &str) -> Vec<Slot> {
         .filter(|e| e.base().layer_id == layer)
         .map(|e| Slot(e.base().id))
         .collect()
-}
-
-/// A command's refusal in its words, or `fallback`.
-fn refusal<T>(result: CommandResult<T>, fallback: &str) -> String {
-    match result {
-        CommandResult::Failed { error }
-        | CommandResult::Conflict { error }
-        | CommandResult::NeedsInput { error } => error.message,
-        _ => fallback.to_owned(),
-    }
 }
 
 #[cfg(test)]

@@ -8,9 +8,10 @@
 
 use iced::widget::{Id, column, operation, row, text_input};
 use iced::{Center, Element, Task};
-use kentos_contracts::ScaleChange;
+use kentos_contracts::{CommandResult, ScaleChange, SettingsSet};
 use kentos_interaction::Level;
 use kentos_interaction::annotation_scale::follow_annotation_change;
+use kentos_native_application::{ExecutionContext, settings_set};
 use kentos_project::wizard::scale_text;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::{Dialog as Frame, overlay};
@@ -57,30 +58,32 @@ impl App {
         if let Some(why) = followed.refused {
             self.say(Level::Warn, why);
         }
-        if followed.written > 0 {
-            let place = if change.from_scale == change.to_scale {
+        self.said_followed(
+            change.from_scale,
+            change.to_scale,
+            followed.written,
+            followed.locked,
+        );
+    }
+
+    /// How many annotations took the new height, and how many a locked layer kept.
+    fn said_followed(&mut self, from: f64, to: f64, written: usize, locked: usize) {
+        if written > 0 {
+            let place = if from == to {
                 String::new()
             } else {
-                format!(
-                    " ({} → {})",
-                    scale_text(change.from_scale),
-                    scale_text(change.to_scale)
-                )
+                format!(" ({} → {})", scale_text(from), scale_text(to))
             };
             self.say(
                 Level::Success,
-                format!(
-                    "Yazı yükseklikleri uyduruldu{place}: {} nesne yeni boyunda.",
-                    followed.written
-                ),
+                format!("Yazı yükseklikleri uyduruldu{place}: {written} nesne yeni boyunda."),
             );
         }
-        if followed.locked > 0 {
+        if locked > 0 {
             self.say(
                 Level::Warn,
                 format!(
-                    "Kilitli katmanlardaki {} nesnenin yüksekliği değişmedi; kilidi açıp ölçeği yeniden seçebilirsiniz.",
-                    followed.locked
+                    "Kilitli katmanlardaki {locked} nesnenin yüksekliği değişmedi; kilidi açıp ölçeği yeniden seçebilirsiniz."
                 ),
             );
         }
@@ -93,20 +96,27 @@ impl App {
         let Some(doc) = &mut self.document else {
             return;
         };
-        let mut settings = doc.settings().clone();
-        let from = settings.plot_scale;
+        let from = doc.settings().plot_scale;
         if !(scale.is_finite() && scale > 0.0) || from == scale {
             return;
         }
-        let heights = settings.annotation.clone().unwrap_or_default();
-        settings.plot_scale = scale;
-        doc.model.set_settings(settings);
-        self.follow_annotations(ScaleChange {
-            from_scale: from,
-            to_scale: scale,
-            from: heights.clone(),
-            to: heights,
-        });
+        // Through `cad.settings.set` (docs/adr/0248 §5), which makes the annotations follow too.
+        let input = SettingsSet {
+            plot_scale: Some(scale),
+            ..SettingsSet::default()
+        };
+        match settings_set::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { output, .. } => self.said_followed(
+                from,
+                scale,
+                output.followed as usize,
+                output.locked as usize,
+            ),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.warn(error.message),
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {}
+        }
     }
 
     pub(crate) fn plot_scale_event(&mut self, e: Event) -> Task<Message> {

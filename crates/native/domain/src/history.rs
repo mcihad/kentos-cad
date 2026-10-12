@@ -133,6 +133,13 @@ pub(crate) enum Op {
     /// new one (`Document::add_layer`) is a `LayerAdd`.
     LayerRemove(Box<LayerPlace>),
     LayerAdd(Box<LayerPlace>),
+    /// A node moved with everything under it (`Document::move_layer`,
+    /// docs/adr/0248 §1): from its group and place to others.
+    LayerMove {
+        layer: String,
+        from: (Option<String>, usize),
+        to: (Option<String>, usize),
+    },
     /// The active layer an addition set (`add_layer` activating): applied
     /// only while the active layer is still `before`, so undo and redo leave
     /// a layer made active by hand in between as it is (the web's `layerActive`).
@@ -169,7 +176,10 @@ pub(crate) struct LayerPlace {
 impl Op {
     /// Whether the op changes the layer tree rather than an object.
     fn is_tree(&self) -> bool {
-        matches!(self, Op::LayerRemove(_) | Op::LayerAdd(_))
+        matches!(
+            self,
+            Op::LayerRemove(_) | Op::LayerAdd(_) | Op::LayerMove { .. }
+        )
     }
 }
 
@@ -247,6 +257,11 @@ impl Op {
             },
             Op::LayerRemove(place) => Op::LayerAdd(place.clone()),
             Op::LayerAdd(place) => Op::LayerRemove(place.clone()),
+            Op::LayerMove { layer, from, to } => Op::LayerMove {
+                layer: layer.clone(),
+                from: to.clone(),
+                to: from.clone(),
+            },
             Op::LayerActive { before, after } => Op::LayerActive {
                 before: after.clone(),
                 after: before.clone(),
@@ -541,6 +556,7 @@ impl Document {
                 | Op::LayerCompose { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
+                | Op::LayerMove { .. }
                 | Op::LayerActive { .. }
                 | Op::BlockAdd { .. }
                 | Op::BlockRemove { .. }
@@ -686,6 +702,10 @@ impl Document {
             Op::LayerAdd(place) => {
                 self.layers
                     .attach(&place.node, place.parent.as_deref(), place.index);
+                return;
+            }
+            Op::LayerMove { layer, to, .. } => {
+                self.layers.move_node(layer, to.0.as_deref(), to.1);
                 return;
             }
             Op::LayerActive { before, after } => {

@@ -361,11 +361,6 @@ pub fn apply_dimension_style(doc: &mut Document, slots: &[Slot], id: Option<&str
     set_geometries(doc, &changes)
 }
 
-/// What a command's answer says: its refusal, or its warnings.
-pub(crate) fn said_of<T>(result: CommandResult<T>) -> Vec<String> {
-    said(result)
-}
-
 fn said<T>(result: CommandResult<T>) -> Vec<String> {
     match result {
         CommandResult::Completed { warnings, .. } => {

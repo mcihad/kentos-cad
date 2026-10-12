@@ -217,6 +217,14 @@ class Case:
                 # The project's networks (docs/adr/0209 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]
                 same(settings.get("networks", []), want, f"{at}: networks")
+            elif key in ("activeLayer", "name"):
+                # The active layer and the drawing's name (docs/adr/0248 §2, §5).
+                same(json.loads(self.doc._session.summary())[key], self.fill(want, at), f"{at}: {key}")
+            elif key == "settings":
+                # The project's settings, only the keys given; an absent one is None (docs/adr/0248).
+                settings = json.loads(self.doc._session.summary())["settings"]
+                for k, v in want.items():
+                    same(settings.get(k), v, f"{at}: settings.{k}")
             elif key == "addressLocators":
                 # The project's address data (docs/adr/0229 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]

@@ -1003,6 +1003,116 @@
     "assets": []
    },
    "applies": []
+  },
+  {
+   "name": "Altlık: servisten çizilen katman nesne tutmasa da kullanılır, grubu da kalır",
+   "document": {
+    "tree": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlıklar",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "osm",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     },
+     {
+      "id": "bos",
+      "name": "Boş",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "active": "0",
+    "objects": [],
+    "blocks": [],
+    "library": []
+   },
+   "found": {
+    "layers": [
+     {
+      "id": "bos",
+      "path": "Boş",
+      "locked": false
+     }
+    ],
+    "groups": [],
+    "blocks": [],
+    "symbols": [],
+    "assets": []
+   },
+   "applies": [
+    {
+     "name": "Servis katmanı ve grubu işaretlense de gitmez",
+     "checked": {
+      "layers": [
+       "osm",
+       "bos"
+      ],
+      "groups": [
+       "altlik"
+      ]
+     },
+     "removed": {
+      "layers": [
+       "bos"
+      ],
+      "groups": [],
+      "blocks": [],
+      "symbols": [],
+      "assets": []
+     },
+     "kept": 2
+    }
+   ]
   }
  ]
 }

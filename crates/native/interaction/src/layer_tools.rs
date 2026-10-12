@@ -9,12 +9,14 @@
 //! - With objects selected when it starts, it acts on their layers at once
 //!   (Katmanı etkin yap on the first one's) and leaves.
 //! - These are the layer tree's own changes, as the Katmanlar panel's eye,
-//!   lock and active layer: the drawing changes, no undo step. A hidden
+//!   lock and active layer, written through `cad.layers.set` (docs/adr/0248
+//!   §2): the drawing changes, no undo step. A hidden
 //!   layer's objects leave the selection.
 
-use kentos_contracts::LayerNodeType;
+use kentos_contracts::{CommandResult, LayerNodeType, LayerSetOperation, LayersSet};
 use kentos_domain::Slot;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, layers_set};
 
 use crate::Vec2;
 use crate::edge::Outline;
@@ -198,7 +200,7 @@ fn hide(ids: &[String], cx: &mut Context<'_>) {
         return;
     }
     for id in &shown {
-        cx.doc.set_layer_visible(id, false);
+        set_flag(cx.doc, LayerSetOperation::Visible, id, false);
     }
     drop_hidden(cx);
     let active = if shown.iter().any(|id| id == cx.doc.layers().active()) {
@@ -213,7 +215,9 @@ fn hide(ids: &[String], cx: &mut Context<'_>) {
 fn isolate(ids: &[String], cx: &mut Context<'_>) {
     let mut shown_before = Vec::new();
     visible_nodes(cx.doc.layers().nodes(), &mut shown_before);
-    if !cx.doc.isolate_layers(ids) {
+    let mut input = LayersSet::new(LayerSetOperation::Isolate, None);
+    input.layers = Some(ids.to_vec());
+    if !run(cx.doc, input) {
         let text = format!("Yalnız {} zaten görünüyor; değişen olmadı.", list(cx, ids));
         cx.say(Level::Info, text);
         return;
@@ -258,7 +262,7 @@ fn lock(ids: &[String], cx: &mut Context<'_>) {
         return;
     }
     for id in &open {
-        cx.doc.toggle_layer_locked(id);
+        set_flag(cx.doc, LayerSetOperation::Locked, id, true);
     }
     let text = format!("{} kilitlendi.", list(cx, &open));
     cx.say(Level::Success, text);
@@ -279,8 +283,27 @@ fn make_active(id: &str, cx: &mut Context<'_>) {
         );
         return;
     }
-    cx.doc.set_active_layer(id);
+    run(
+        cx.doc,
+        LayersSet::new(LayerSetOperation::Active, Some(id.to_owned())),
+    );
     cx.say(Level::Success, format!("“{layer}” katmanı etkin yapıldı."));
+}
+
+/// `cad.layers.set` on the drawing, as the Katmanlar panel and Python write
+/// the tree (docs/adr/0248 §2); whether it changed.
+fn run(doc: &mut kentos_domain::Document, input: LayersSet) -> bool {
+    matches!(
+        layers_set::execute(&mut ExecutionContext::new(doc), input),
+        CommandResult::Completed { output, .. } if output.changed
+    )
+}
+
+/// A node's eye or lock set through `cad.layers.set`.
+fn set_flag(doc: &mut kentos_domain::Document, op: LayerSetOperation, id: &str, value: bool) {
+    let mut input = LayersSet::new(op, Some(id.to_owned()));
+    input.value = Some(value);
+    run(doc, input);
 }
 
 /// The ids of the shown nodes, in tree order.
@@ -333,7 +356,7 @@ pub fn unisolate(doc: &mut kentos_domain::Document, isolated: &mut Vec<String>) 
         );
     }
     for id in &back {
-        doc.set_layer_visible(id, true);
+        set_flag(doc, LayerSetOperation::Visible, id, true);
     }
     let groups = back
         .iter()

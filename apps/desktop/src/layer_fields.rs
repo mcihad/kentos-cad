@@ -15,9 +15,11 @@
 use iced::widget::{Column, button, container, row, text, text_input};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::{
-    FieldChoice, LayerField, LayerFieldKind, LayerNodeType, check_value, fields_problem,
+    CommandResult, FieldChoice, FieldRename, LayerEditOperation, LayerField, LayerFieldKind,
+    LayerNodeType, LayersEdit, check_value, fields_problem,
 };
 use kentos_interaction::Level;
+use kentos_native_application::{ExecutionContext, layers_edit};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::select::{Choice, Select};
@@ -432,13 +434,25 @@ impl App {
             return Task::none();
         }
         let fields: Vec<LayerField> = w.rows.iter().map(field_of).collect();
-        let renames = renames_of(&w.rows);
-        if let Err(refused) = doc
-            .model
-            .set_layer_fields(&w.layer, fields.clone(), &renames)
-        {
-            w.said = Some((Kind::Error, refused.0));
-            return Task::none();
+        // Through `cad.layers.edit`'s fields (docs/adr/0248 §1); its refusal in the window.
+        let mut input = LayersEdit::new(LayerEditOperation::Fields);
+        input.layer = Some(w.layer.clone());
+        input.fields = Some(fields.clone());
+        input.renames = Some(
+            renames_of(&w.rows)
+                .into_iter()
+                .map(|(from, to)| FieldRename { from, to })
+                .collect(),
+        );
+        match layers_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { .. } => {}
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                w.said = Some((Kind::Error, error.message));
+                return Task::none();
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
         }
         let model = &doc.model;
         let bad = model

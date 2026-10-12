@@ -1,0 +1,3531 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.layers.states",
+  "commandVersion": 1,
+  "title": "Katman durumları",
+  "note": "Written by scripts/fixtures/layer_tree_command_cases.py from the contract's rules and docs/adr/0248; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katman ağacı",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "layerStates": [
+        {
+          "id": "durum-1",
+          "name": "Pafta",
+          "nodes": [
+            {
+              "node": "kadastro",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "node": "parsel",
+              "visible": true,
+              "locked": false,
+              "style": {
+                "color": "#E5484D",
+                "lineType": "continuous",
+                "lineWeight": 0.35
+              }
+            },
+            {
+              "node": "bina",
+              "visible": true,
+              "locked": false,
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              }
+            },
+            {
+              "node": "yol",
+              "visible": true,
+              "locked": false,
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              }
+            },
+            {
+              "node": "gizli",
+              "visible": false,
+              "locked": false,
+              "style": {
+                "color": "fg",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              }
+            },
+            {
+              "node": "silinmis",
+              "visible": true
+            }
+          ]
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "kadastro",
+        "name": "Kadastro",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#0090FF",
+              "lineType": "continuous",
+              "lineWeight": 0.35
+            },
+            "children": []
+          },
+          {
+            "id": "bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "color": "#E5484D",
+        "attrs": {
+          "Ada": "101",
+          "Nitelik": "Arsa"
+        },
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4400000
+          },
+          {
+            "x": 500040,
+            "y": 4400000
+          },
+          {
+            "x": 500040,
+            "y": 4400030
+          },
+          {
+            "x": 500000,
+            "y": 4400030
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+          "Ada": "102"
+        },
+        "pts": [
+          {
+            "x": 500040,
+            "y": 4400000
+          },
+          {
+            "x": 500060,
+            "y": 4400000
+          },
+          {
+            "x": 500060,
+            "y": 4400020
+          },
+          {
+            "x": 500040,
+            "y": 4400020
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "bina",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500005,
+            "y": 4400005
+          },
+          {
+            "x": 500015,
+            "y": 4400005
+          },
+          {
+            "x": 500015,
+            "y": 4400015
+          },
+          {
+            "x": 500005,
+            "y": 4400015
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 4,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 499990,
+          "y": 4400040
+        },
+        "b": {
+          "x": 500120,
+          "y": 4400040
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "yol",
+        "attrs": {
+          "NO": "A-1"
+        },
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+        "p": {
+          "x": 500050,
+          "y": 4400045
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "point",
+        "id": 6,
+        "layerId": "gizli",
+        "attrs": {},
+        "p": {
+          "x": 500010,
+          "y": 4400060
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [
+      {
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+        "name": "Ağaç",
+        "base": {
+          "x": 0,
+          "y": 0
+        },
+        "entities": [
+          {
+            "kind": "circle",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "c": {
+              "x": 0,
+              "y": 0
+            },
+            "r": 1.5
+          }
+        ]
+      },
+      {
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+        "name": "Lamba",
+        "base": {
+          "x": 0,
+          "y": 0
+        },
+        "entities": [
+          {
+            "kind": "circle",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "c": {
+              "x": 0,
+              "y": 0
+            },
+            "r": 0.25
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Kaydet: ağacın görünürlüğü ve stilleri; kimliği ilk boş durum-n; proje ayarıdır, geri alma adımı değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "save",
+            "name": " Çalışma "
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-2",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-2",
+                  "name": "Çalışma",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "style": {
+                        "color": "#0090FF",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaydet: adsız “Durum 1”, kilitlerle, stilsiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "save",
+            "locks": true,
+            "styles": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-2",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-2",
+                  "name": "Durum 1",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": true
+                    },
+                    {
+                      "node": "yol",
+                      "visible": false,
+                      "locked": false
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": true,
+                      "locked": false
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: ağacın şimdiki hâliyle, sakladıklarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#0090FF",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: kilitler bırakılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "state": "durum-1",
+            "locks": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "style": {
+                        "color": "#0090FF",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden adlandır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "rename",
+            "state": "durum-1",
+            "name": "Pafta 1:1000"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta 1:1000",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden adlandır: aynı ad bir şey değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "rename",
+            "state": "durum-1",
+            "name": "Pafta"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": false,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uygula: görünürlük ve kilit ağacın kendi değişikliği, stiller tek adımda “Katman durumu: Pafta”; olmayan düğüm sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "apply",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": true,
+              "visible": 2,
+              "locked": 1,
+              "styles": 1,
+              "missing": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Katman durumu: Pafta",
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uygula: ağaç zaten durumda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "apply",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": true,
+              "visible": 2,
+              "locked": 1,
+              "styles": 1,
+              "missing": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "apply",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": false,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: uygulamanın sayıları; yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "apply",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-1",
+              "changed": true,
+              "visible": 2,
+              "locked": 1,
+              "styles": 1,
+              "missing": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula: yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "operation": "remove",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "durumsuz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "apply"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_state",
+              "message": "Katman durumunu kimliğiyle verin (state).",
+              "path": "state"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden adlandır: adsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "rename",
+            "state": "durum-1"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "Durumun adını yazın.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaydet: boş ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "save",
+            "name": "  "
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "Durumun adını yazın.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaydet: aynı adlı durum",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "save",
+            "name": "Pafta "
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "duplicate_name",
+              "message": "“Pafta” adında bir katman durumu var; başka bir ad yazın ya da o durumu seçip Güncelle'ye basın.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede olmayan durum",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "state": "durum-9"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "state_not_found",
+              "message": "“durum-9” kimlikli katman durumu projede yok.",
+              "path": "state"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "apply",
+            "state": "durum-1",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm çakışması: hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "save",
+            "name": "B"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-2",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "state": "durum-1",
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-2",
+                  "name": "B",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "style": {
+                        "color": "#0090FF",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaydet: “Durum 1” varsa “Durum 2”; kimliği durum-3",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "layerStates": [
+            {
+              "id": "durum-1",
+              "name": "Pafta",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true,
+                  "locked": false
+                },
+                {
+                  "node": "parsel",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "#E5484D",
+                    "lineType": "continuous",
+                    "lineWeight": 0.35
+                  }
+                },
+                {
+                  "node": "bina",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "yol",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "gizli",
+                  "visible": false,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "silinmis",
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "id": "durum-2",
+              "name": "Durum 1",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true
+                },
+                {
+                  "node": "parsel",
+                  "visible": true
+                },
+                {
+                  "node": "bina",
+                  "visible": true
+                },
+                {
+                  "node": "yol",
+                  "visible": false
+                },
+                {
+                  "node": "gizli",
+                  "visible": true
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": []
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "save"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "state": "durum-3",
+              "changed": true,
+              "visible": 0,
+              "locked": 0,
+              "styles": 0,
+              "missing": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-2",
+                  "name": "Durum 1",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true
+                    },
+                    {
+                      "node": "yol",
+                      "visible": false
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-3",
+                  "name": "Durum 2",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "style": {
+                        "color": "#0090FF",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": true,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden adlandır: başka bir durumun adı",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Katman ağacı",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "layerStates": [
+            {
+              "id": "durum-1",
+              "name": "Pafta",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true,
+                  "locked": false
+                },
+                {
+                  "node": "parsel",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "#E5484D",
+                    "lineType": "continuous",
+                    "lineWeight": 0.35
+                  }
+                },
+                {
+                  "node": "bina",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "yol",
+                  "visible": true,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "gizli",
+                  "visible": false,
+                  "locked": false,
+                  "style": {
+                    "color": "fg",
+                    "lineType": "continuous",
+                    "lineWeight": 0.25
+                  }
+                },
+                {
+                  "node": "silinmis",
+                  "visible": true
+                }
+              ]
+            },
+            {
+              "id": "durum-2",
+              "name": "Durum 1",
+              "nodes": [
+                {
+                  "node": "kadastro",
+                  "visible": true
+                },
+                {
+                  "node": "parsel",
+                  "visible": true
+                },
+                {
+                  "node": "bina",
+                  "visible": true
+                },
+                {
+                  "node": "yol",
+                  "visible": false
+                },
+                {
+                  "node": "gizli",
+                  "visible": true
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": []
+              },
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "yol",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parsel",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "parsel",
+            "color": "#E5484D",
+            "attrs": {
+              "Ada": "101",
+              "Nitelik": "Arsa"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500040,
+                "y": 4400030
+              },
+              {
+                "x": 500000,
+                "y": 4400030
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 2,
+            "layerId": "parsel",
+            "attrs": {
+              "Ada": "102"
+            },
+            "pts": [
+              {
+                "x": 500040,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400000
+              },
+              {
+                "x": 500060,
+                "y": 4400020
+              },
+              {
+                "x": 500040,
+                "y": 4400020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 3,
+            "layerId": "bina",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500005,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400005
+              },
+              {
+                "x": 500015,
+                "y": 4400015
+              },
+              {
+                "x": 500005,
+                "y": 4400015
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yol",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400040
+            },
+            "b": {
+              "x": 500120,
+              "y": 4400040
+            }
+          },
+          {
+            "kind": "insert",
+            "id": 5,
+            "layerId": "yol",
+            "attrs": {
+              "NO": "A-1"
+            },
+            "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "p": {
+              "x": 500050,
+              "y": 4400045
+            },
+            "scale": 1,
+            "rotation": 0
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "gizli",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400060
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+            "name": "Ağaç",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 1.5
+              }
+            ]
+          },
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+            "name": "Lamba",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "circle",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "c": {
+                  "x": 0,
+                  "y": 0
+                },
+                "r": 0.25
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "rename",
+            "state": "durum-2",
+            "name": "Pafta"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "duplicate_name",
+              "message": "“Pafta” adında bir katman durumu var; başka bir ad yazın ya da o durumu seçip Güncelle'ye basın.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "kadastro",
+                "name": "Kadastro",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "parsel",
+                    "name": "Parsel",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#0090FF",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": true,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "gizli",
+                "name": "Gizli",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "settings": {
+              "layerStates": [
+                {
+                  "id": "durum-1",
+                  "name": "Pafta",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true,
+                      "locked": false
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "#E5484D",
+                        "lineType": "continuous",
+                        "lineWeight": 0.35
+                      }
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "yol",
+                      "visible": true,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": false,
+                      "locked": false,
+                      "style": {
+                        "color": "fg",
+                        "lineType": "continuous",
+                        "lineWeight": 0.25
+                      }
+                    },
+                    {
+                      "node": "silinmis",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": "durum-2",
+                  "name": "Durum 1",
+                  "nodes": [
+                    {
+                      "node": "kadastro",
+                      "visible": true
+                    },
+                    {
+                      "node": "parsel",
+                      "visible": true
+                    },
+                    {
+                      "node": "bina",
+                      "visible": true
+                    },
+                    {
+                      "node": "yol",
+                      "visible": false
+                    },
+                    {
+                      "node": "gizli",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

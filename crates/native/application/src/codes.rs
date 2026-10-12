@@ -294,3 +294,41 @@ pub const INVALID_LABELS: &str = "invalid_labels";
 pub const INVALID_PIN: &str = "invalid_pin";
 /// A class the object's layer does not label with.
 pub const UNKNOWN_CLASS: &str = "unknown_class";
+/// The layer tree's, the styles' and the settings' commands (docs/adr/0248).
+/// No layer named where one is needed: merge without a source, isolate
+/// without a node (`cad.layers.edit`, `cad.layers.set`).
+pub const NO_LAYERS: &str = "no_layers";
+/// A layer's colour that is not `#rrggbb` nor a theme token (`cad.layers.edit`).
+pub const INVALID_COLOR: &str = "invalid_color";
+/// A node moved into a layer rather than a group (`cad.layers.edit`).
+pub const NOT_A_GROUP: &str = "not_a_group";
+/// A node moved into itself or a group under it (`cad.layers.edit`).
+pub const MOVE_INTO_ITSELF: &str = "move_into_itself";
+/// Visible or locked without its value (`cad.layers.set`).
+pub const NO_VALUE: &str = "no_value";
+/// A layer state's operation without its state (`cad.layers.states`).
+pub const NO_STATE: &str = "no_state";
+/// A layer state the project does not have (`cad.layers.states`).
+pub const STATE_NOT_FOUND: &str = "state_not_found";
+/// A layer state's name another state has (`cad.layers.states`).
+pub const DUPLICATE_NAME: &str = "duplicate_name";
+/// A style created or updated without its definition (`cad.styles.edit`).
+pub const NO_DEFINITION: &str = "no_definition";
+/// A style renamed or removed without its id (`cad.styles.edit`).
+pub const NO_STYLE: &str = "no_style";
+/// A style the project's table does not have (`cad.styles.edit`).
+pub const STYLE_NOT_FOUND: &str = "style_not_found";
+/// A style created with an id the table has (`cad.styles.edit`).
+pub const DUPLICATE_STYLE: &str = "duplicate_style";
+/// A project type that cannot be chosen (`cad.settings.set`).
+pub const INVALID_PROJECT_TYPE: &str = "invalid_project_type";
+/// Shown decimals out of 0–4 (`cad.settings.set`).
+pub const INVALID_DECIMALS: &str = "invalid_decimals";
+/// A coordinate system the registry does not have (`cad.settings.set`).
+pub const UNKNOWN_SRID: &str = "unknown_srid";
+/// A second system for a project without one (`cad.settings.set`).
+pub const SECOND_NEEDS_SYSTEM: &str = "second_needs_system";
+/// The second system the project's own (`cad.settings.set`).
+pub const SECOND_IS_OWN: &str = "second_is_own";
+/// A drawing unit other than metres for a project with a system (`cad.settings.set`).
+pub const UNIT_NEEDS_LOCAL: &str = "unit_needs_local";

@@ -1,6 +1,7 @@
 """Independent reference of Kullanılmayanları temizle's rule (docs/adr/0177 §5), and the cases both platforms play.
 
-What may go: the layers (not the active one, not locked, with its groups' locks), the groups (not locked), the block
+What may go: the layers (not the active one, not locked, with its groups' locks, not drawn from a map service:
+docs/adr/0248 §1), the groups (not locked), the block
 definitions, and the project library's symbols and assets. Something stays when anything that stays uses it:
 
 - a layer, when an object of the drawing is on it, or an object of a definition that stays;
@@ -87,7 +88,8 @@ def removable(doc):
     for n, _ in walk(doc["tree"]):
         if n["id"] in locked:
             continue
-        if n["type"] == "layer" and n["id"] != doc["active"]:
+        # A layer drawn from a map service holds no objects, but draws the service: it is in use (docs/adr/0248 §1).
+        if n["type"] == "layer" and n["id"] != doc["active"] and "service" not in n:
             out.add(("layers", n["id"]))
         if n["type"] == "group":
             out.add(("groups", n["id"]))
@@ -302,6 +304,13 @@ def drawing():
     return {"tree": tree, "active": "parsel", "objects": objects, "blocks": blocks, "library": library}
 
 
+def basemap_drawing():
+    osm = node("osm", "OpenStreetMap")
+    osm["service"] = {"kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "maxZoom": 19}
+    return {"tree": [node("0", "0"), node("altlik", "Altlıklar", "group", children=[osm]), node("bos", "Boş")],
+            "active": "0", "objects": [], "blocks": [], "library": []}
+
+
 def new_drawing():
     return {"tree": [node("0", "0")], "active": "0", "objects": [], "blocks": [], "library": []}
 
@@ -334,6 +343,13 @@ def cases():
     nd = new_drawing()
     out.append({"name": "Yeni çizim: tek ve etkin katman kalır, temizlenecek bir şey yok", "document": nd, "found": found(nd),
                 "applies": []})
+    bd = basemap_drawing()
+    bf = found(bd)
+    removed, kept = apply(bd, {"layers": ["osm", "bos"], "groups": ["altlik"]})
+    out.append({"name": "Altlık: servisten çizilen katman nesne tutmasa da kullanılır, grubu da kalır",
+                "document": bd, "found": bf,
+                "applies": [{"name": "Servis katmanı ve grubu işaretlense de gitmez", "checked": {"layers": ["osm", "bos"], "groups": ["altlik"]},
+                             "removed": removed, "kept": kept}]})
     return {"format": "kentos.layer-purge-cases", "version": 1,
             "note": "Written by scripts/fixtures/layer_purge_cases.py from docs/adr/0177 §5, not from either platform's code. "
                     "`document.objects` are the drawing's objects (their layer, library symbol, placed block), each "

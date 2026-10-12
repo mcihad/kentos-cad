@@ -38,6 +38,7 @@ CATALOG = ROOT / "apps/web/src/contracts/generated/commandCatalog.json"
 EQUIVALENTS = ROOT / "apps/desktop/equivalents.json"
 EDIT_RS = ROOT / "crates/shared/contracts/src/cad_edit.rs"
 CREATE_RS = ROOT / "crates/shared/contracts/src/cad_create.rs"
+LAYER_TREE_RS = ROOT / "crates/shared/contracts/src/cad_layer_tree.rs"
 OUT_JSON = ROOT / "docs/cad/manifest.json"
 OUT_MD = ROOT / "docs/cad/manifest.md"
 
@@ -98,6 +99,10 @@ def build() -> tuple[dict, str, list[str]]:
     operations = {
         "cad.entities.edit": enum_names(EDIT_RS, "EditOperation"),
         "cad.entities.create": enum_names(CREATE_RS, "CreateOperation"),
+        # The layer tree's commands (docs/adr/0248).
+        "cad.layers.edit": enum_names(LAYER_TREE_RS, "LayerEditOperation"),
+        "cad.layers.set": enum_names(LAYER_TREE_RS, "LayerSetOperation"),
+        "cad.layers.states": enum_names(LAYER_TREE_RS, "LayerStatesOperation"),
     }
 
     rb = inv["layout"]["ribbonByMode"]

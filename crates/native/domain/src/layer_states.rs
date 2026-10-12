@@ -106,3 +106,35 @@ pub fn matches(tree: &[LayerNode], state: &LayerState) -> bool {
     let c = changes(tree, state);
     state.nodes.len() > c.missing && c.is_empty()
 }
+
+/// The first “Durum n” no state is named (Yeni durum kaydet's name).
+pub fn next_state_name(states: &[LayerState]) -> String {
+    (1..)
+        .map(|n| format!("Durum {n}"))
+        .find(|name| !states.iter().any(|s| s.name.trim() == name))
+        .unwrap_or_default()
+}
+
+/// The first “durum-n” no state has as its id.
+pub fn next_state_id(states: &[LayerState]) -> String {
+    (1..)
+        .map(|n| format!("durum-{n}"))
+        .find(|id| !states.iter().any(|s| s.id == *id))
+        .unwrap_or_default()
+}
+
+/// Why `name` (trimmed) may not name a state other than `this`, in the
+/// window's words; none when it may (`cad.layers.states`, docs/adr/0248 §3).
+pub fn name_refused(states: &[LayerState], name: &str, this: Option<&str>) -> Option<String> {
+    if name.is_empty() {
+        return Some("Durumun adını yazın.".to_owned());
+    }
+    states
+        .iter()
+        .any(|s| s.name.trim() == name && Some(s.id.as_str()) != this)
+        .then(|| {
+            format!(
+                "“{name}” adında bir katman durumu var; başka bir ad yazın ya da o durumu seçip Güncelle'ye basın."
+            )
+        })
+}

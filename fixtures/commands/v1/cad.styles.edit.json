@@ -1,0 +1,2193 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.styles.edit",
+  "commandVersion": 1,
+  "title": "Yazı ve ölçü stilleri",
+  "note": "Written by scripts/fixtures/style_edit_command_cases.py from the contract's rules and docs/adr/0183, 0248 §4; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Stiller",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "textStyles": [
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+          "name": "Ada no",
+          "font": "arimo",
+          "bold": true,
+          "height": 3.5
+        },
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+          "name": "Yol adı",
+          "font": "overpass",
+          "italic": true,
+          "oblique": 15.0,
+          "widthFactor": 0.8
+        }
+      ],
+      "dimensionStyles": [
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+          "name": "Mimari",
+          "height": 3.5,
+          "arrow": "closed",
+          "arrowSize": 3.5,
+          "extOffset": 1.0,
+          "extBeyond": 1.75,
+          "textGap": 0.875,
+          "decimals": 1,
+          "unit": "cm",
+          "prefix": "~",
+          "suffix": " cm",
+          "font": "arimo"
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "yazi",
+        "name": "Yazı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "olcu",
+        "name": "Ölçü",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "yazi",
+    "entities": [
+      {
+        "kind": "text",
+        "id": 1,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "text": "101",
+        "height": 3.5,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+        "font": "arimo",
+        "bold": true
+      },
+      {
+        "kind": "text",
+        "id": 2,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500020,
+          "y": 4400000
+        },
+        "text": "102",
+        "height": 3.5,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+        "font": "barlow",
+        "bold": true
+      },
+      {
+        "kind": "text",
+        "id": 3,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+          "x": 500040,
+          "y": 4400000
+        },
+        "text": "103",
+        "height": 3.5,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+        "font": "arimo",
+        "bold": true
+      },
+      {
+        "kind": "text",
+        "id": 4,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500060,
+          "y": 4400000
+        },
+        "text": "Atatürk Caddesi",
+        "height": 2.0,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+        "font": "overpass",
+        "italic": true,
+        "oblique": 15.0,
+        "widthFactor": 0.8
+      },
+      {
+        "kind": "dimension",
+        "id": 5,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 500000,
+          "y": 4400050
+        },
+        "b": {
+          "x": 500024.5,
+          "y": 4400050
+        },
+        "offset": -2,
+        "height": 3.5,
+        "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+        "arrow": "closed",
+        "extOffset": 0.2857142857142857,
+        "textGap": 0.25,
+        "decimals": 1,
+        "unit": "cm",
+        "prefix": "~",
+        "suffix": " cm",
+        "font": "arimo"
+      },
+      {
+        "kind": "text",
+        "id": 6,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500080,
+          "y": 4400000
+        },
+        "text": "Not",
+        "height": 2.0,
+        "rotation": 0
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Yazı stili oluştur: tablonun sonuna; tablo proje ayarıdır, geri alma adımı değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "create",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "name": "Not",
+              "font": "barlow"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+                  "name": "Not",
+                  "font": "barlow"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü stili oluştur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "dimension",
+            "operation": "create",
+            "dimension": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+              "name": "Harita",
+              "height": 2.5,
+              "arrowSize": 1.5,
+              "textPlace": "centre"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+                  "name": "Harita",
+                  "height": 2.5,
+                  "arrowSize": 1.5,
+                  "textPlace": "centre"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı stilini güncelle: eski değeri taşıyan yazılar yenisini alır, elle değiştirilen kalır, kilitli katmandaki sayılır; tek adım “Yazı stili”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "overpass",
+              "bold": true,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "changed": true,
+              "followed": 2,
+              "locked": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 5.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "overpass",
+                "bold": true
+              },
+              "2": {
+                "kind": "text",
+                "id": 2,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500020,
+                  "y": 4400000
+                },
+                "text": "102",
+                "height": 5.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "barlow",
+                "bold": true
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "overpass",
+                  "bold": true,
+                  "height": 5.0
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ]
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yazı stili",
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "arimo",
+                "bold": true
+              },
+              "2": {
+                "kind": "text",
+                "id": 2,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500020,
+                  "y": 4400000
+                },
+                "text": "102",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "barlow",
+                "bold": true
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "overpass",
+                  "bold": true,
+                  "height": 5.0
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı stilini güncelle: aynı tanım bir şey yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "arimo",
+              "bold": true,
+              "height": 3.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "changed": false,
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı stilini güncelle: eğik kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "name": "Yol adı",
+              "font": "overpass",
+              "oblique": 15.0,
+              "widthFactor": 0.8
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "changed": true,
+              "followed": 1,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500060,
+                  "y": 4400000
+                },
+                "text": "Atatürk Caddesi",
+                "height": 2.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                "font": "overpass",
+                "oblique": 15.0,
+                "widthFactor": 0.8
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden adlandır: nesneler stili kimliğiyle anar, değişmez; adım yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "rename",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "name": " Ada numarası "
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "arimo",
+                "bold": true
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada numarası",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil: yazılar görünüşlerini korur, bağlarını yitirir; tek adım",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+              "changed": true,
+              "followed": 1,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500060,
+                  "y": 4400000
+                },
+                "text": "Atatürk Caddesi",
+                "height": 2.0,
+                "rotation": 0,
+                "font": "overpass",
+                "italic": true,
+                "oblique": 15.0,
+                "widthFactor": 0.8
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                }
+              ]
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yazı stili",
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500060,
+                  "y": 4400000
+                },
+                "text": "Atatürk Caddesi",
+                "height": 2.0,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                "font": "overpass",
+                "italic": true,
+                "oblique": 15.0,
+                "widthFactor": 0.8
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil: kilitli katmandaki yazı bağını korur ve sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "changed": true,
+              "followed": 2,
+              "locked": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "1": {
+                "kind": "text",
+                "id": 1,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400000
+                },
+                "text": "101",
+                "height": 3.5,
+                "rotation": 0,
+                "font": "arimo",
+                "bold": true
+              },
+              "2": {
+                "kind": "text",
+                "id": 2,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500020,
+                  "y": 4400000
+                },
+                "text": "102",
+                "height": 3.5,
+                "rotation": 0,
+                "font": "barlow",
+                "bold": true
+              },
+              "3": {
+                "kind": "text",
+                "id": 3,
+                "layerId": "kilitli",
+                "attrs": {},
+                "p": {
+                  "x": 500040,
+                  "y": 4400000
+                },
+                "text": "103",
+                "height": 3.5,
+                "rotation": 0,
+                "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                "font": "arimo",
+                "bold": true
+              }
+            },
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü stilini güncelle: ölçü yenisini alır; adım “Ölçü stili”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "dimension",
+            "operation": "update",
+            "dimension": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "name": "Mimari",
+              "height": 5.0,
+              "arrow": "closed",
+              "arrowSize": 3.5,
+              "extOffset": 1.0,
+              "extBeyond": 1.75,
+              "textGap": 0.875,
+              "decimals": 2,
+              "unit": "cm",
+              "prefix": "~",
+              "suffix": " cm",
+              "font": "arimo"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "changed": true,
+              "followed": 1,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "5": {
+                "kind": "dimension",
+                "id": 5,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400050
+                },
+                "b": {
+                  "x": 500024.5,
+                  "y": 4400050
+                },
+                "offset": -2,
+                "height": 5.0,
+                "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                "arrow": "closed",
+                "arrowSize": 0.7,
+                "extOffset": 0.2,
+                "extBeyond": 0.35,
+                "textGap": 0.175,
+                "decimals": 2,
+                "unit": "cm",
+                "prefix": "~",
+                "suffix": " cm",
+                "font": "arimo"
+              }
+            },
+            "settings": {
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 5.0,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 2,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü stili",
+          "expect": {
+            "entities": {
+              "5": {
+                "kind": "dimension",
+                "id": 5,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400050
+                },
+                "b": {
+                  "x": 500024.5,
+                  "y": 4400050
+                },
+                "offset": -2,
+                "height": 3.5,
+                "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                "arrow": "closed",
+                "extOffset": 0.2857142857142857,
+                "textGap": 0.25,
+                "decimals": 1,
+                "unit": "cm",
+                "prefix": "~",
+                "suffix": " cm",
+                "font": "arimo"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü stilini sil: ölçü bağını yitirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "dimension",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+              "changed": true,
+              "followed": 1,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "5": {
+                "kind": "dimension",
+                "id": 5,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400050
+                },
+                "b": {
+                  "x": 500024.5,
+                  "y": 4400050
+                },
+                "offset": -2,
+                "height": 3.5,
+                "arrow": "closed",
+                "extOffset": 0.2857142857142857,
+                "textGap": 0.25,
+                "decimals": 1,
+                "unit": "cm",
+                "prefix": "~",
+                "suffix": " cm",
+                "font": "arimo"
+              }
+            },
+            "settings": {
+              "dimensionStyles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: izleyecek nesnelerin sayıları; yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Ada no",
+              "font": "overpass",
+              "bold": true,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "changed": true,
+              "followed": 2,
+              "locked": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula: yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "kind": "text",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102"
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur: tanımsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "create"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_definition",
+              "message": "Stilin tanımını text ile verin.",
+              "path": "text"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur: ölçü stili istenip yazı stili verilmiş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "dimension",
+            "operation": "create",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "name": "Not",
+              "font": "barlow"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_definition",
+              "message": "Stilin tanımını dimension ile verin.",
+              "path": "dimension"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil: stilsiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "remove"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_style",
+              "message": "Stili kimliğiyle verin (style).",
+              "path": "style"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden adlandır: boş ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "rename",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+            "name": "  "
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "Stilin adı boş olamaz; bir ad yazın.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur: tabloda olan kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "create",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+              "name": "Not",
+              "font": "barlow"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "duplicate_style",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101” kimlikli yazı stili zaten var; yeni stile başka bir kimlik verin ya da kimliği boş bırakın.",
+              "path": "text.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: projede olmayan stil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "update",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "name": "Not",
+              "font": "barlow"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "style_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103” kimlikli yazı stili projede yok.",
+              "path": "text.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil: projede olmayan ölçü stili",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "dimension",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "style_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202” kimlikli ölçü stili projede yok.",
+              "path": "style"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur: aynı ad, büyük küçük harf ayırmadan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "create",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "name": "ada NO",
+              "font": "barlow"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_style",
+              "message": "Yazı stilleri: “ada NO” adlı yazı stili iki kez var.",
+              "path": "text"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur: Standart ayrılmıştır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "create",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "name": "Standart",
+              "font": "barlow"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_style",
+              "message": "Yazı stilleri: “Standart” adı Standart'ındır; yazı stili başka bir ad almalı.",
+              "path": "text"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oluştur: yükseklik 0",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "create",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "name": "Not",
+              "font": "barlow",
+              "height": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_style",
+              "message": "Yazı stilleri: “Not” yazı stilinin yüksekliği 0 mm; sıfırdan büyük, en çok 1000 olmalı.",
+              "path": "text"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden adlandır: başka stilin adı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "rename",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "name": "ADA NO"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_style",
+              "message": "Yazı stilleri: “ADA NO” adlı yazı stili iki kez var.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                }
+              ],
+              "dimensionStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+                  "name": "Mimari",
+                  "height": 3.5,
+                  "arrow": "closed",
+                  "arrowSize": 3.5,
+                  "extOffset": 1.0,
+                  "extBeyond": 1.75,
+                  "textGap": 0.875,
+                  "decimals": 1,
+                  "unit": "cm",
+                  "prefix": "~",
+                  "suffix": " cm",
+                  "font": "arimo"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm çakışması: hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "create",
+            "text": {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "name": "Not",
+              "font": "barlow"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+              "changed": true,
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "text",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "settings": {
+              "textStyles": [
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+                  "name": "Ada no",
+                  "font": "arimo",
+                  "bold": true,
+                  "height": 3.5
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+                  "name": "Yol adı",
+                  "font": "overpass",
+                  "italic": true,
+                  "oblique": 15.0,
+                  "widthFactor": 0.8
+                },
+                {
+                  "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+                  "name": "Not",
+                  "font": "barlow"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

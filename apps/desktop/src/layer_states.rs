@@ -4,7 +4,9 @@
 //! settings (`layer_states`, KCAD schema 19), by the shared rules
 //! (`kentos_domain::layer_states`).
 //!
-//! Saving, updating, renaming and removing one change the project's settings:
+//! Every change goes through `cad.layers.states` (docs/adr/0248 §3), as
+//! Python's and MCP's do. Saving, updating, renaming and removing one change
+//! the project's settings:
 //! an edit, not an undo step; refused where the project's settings may not
 //! change (a cloud project without `project.edit`). Applying one changes the
 //! visibility and locks as the eye and the lock do (the tree's own changes,
@@ -19,7 +21,7 @@
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::LayerState;
+use kentos_contracts::{LayerState, LayerStatesOperation, LayersStates};
 use kentos_domain::layer_states::{self, LayerStateParts};
 use kentos_interaction::Level;
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -61,36 +63,8 @@ pub fn parts_text(parts: LayerStateParts) -> String {
     }
 }
 
-/// The first “Durum n” no state is named.
-pub fn next_state_name(states: &[LayerState]) -> String {
-    (1..)
-        .map(|n| format!("Durum {n}"))
-        .find(|name| !states.iter().any(|s| s.name == *name))
-        .unwrap_or_default()
-}
-
-/// The first “durum-n” no state has as its id.
-fn next_state_id(states: &[LayerState]) -> String {
-    (1..)
-        .map(|n| format!("durum-{n}"))
-        .find(|id| !states.iter().any(|s| s.id == *id))
-        .unwrap_or_default()
-}
-
-/// Why `name` may not name a state (other than `this`), or none.
-fn name_refused(states: &[LayerState], name: &str, this: Option<&str>) -> Option<String> {
-    if name.is_empty() {
-        return Some("Durumun adını yazın.".to_owned());
-    }
-    states
-        .iter()
-        .any(|s| s.name.trim() == name && Some(s.id.as_str()) != this)
-        .then(|| {
-            format!(
-                "“{name}” adında bir katman durumu var; başka bir ad yazın ya da o durumu seçip Güncelle'ye basın."
-            )
-        })
-}
+/// The first “Durum n” no state is named (the shared rule).
+pub use kentos_domain::layer_states::next_state_name;
 
 /// The window: the chosen state and the fields below the list.
 #[derive(Debug, Clone)]
@@ -141,17 +115,8 @@ impl App {
             .is_some_and(|d| layer_states::matches(d.model.layers().nodes(), state))
     }
 
-    /// The project's states replaced by `states`: an edit, not an undo step.
-    fn write_states(&mut self, states: Vec<LayerState>) {
-        if let Some(doc) = self.document.as_mut() {
-            let mut settings = doc.model.settings().clone();
-            settings.layer_states = states;
-            doc.model.set_settings(settings);
-        }
-    }
-
     /// Saves the tree as a new state named `name` keeping `parts`; its id, or
-    /// none when refused (said).
+    /// none when refused (said). Through `cad.layers.states` (docs/adr/0248 §3).
     pub(crate) fn save_layer_state(
         &mut self,
         name: &str,
@@ -161,27 +126,20 @@ impl App {
             self.warn(locked);
             return None;
         }
-        let doc = self.document.as_ref()?;
-        let mut states = doc.model.settings().layer_states.clone();
-        let name = name.trim();
-        if let Some(refused) = name_refused(&states, name, None) {
-            self.warn(refused);
-            return None;
-        }
-        let state = layer_states::capture(
-            doc.model.layers().nodes(),
-            &next_state_id(&states),
-            name,
-            parts,
-        );
-        let id = state.id.clone();
-        states.push(state);
-        self.write_states(states);
+        let mut input = LayersStates::new(LayerStatesOperation::Save, None);
+        input.name = Some(name.trim().to_owned());
+        input.locks = Some(parts.locks);
+        input.styles = Some(parts.styles);
+        let done = self.layer_states_command(input)?;
         self.say(
             Level::Success,
-            format!("“{name}” katman durumu kaydedildi: {}.", parts_text(parts)),
+            format!(
+                "“{}” katman durumu kaydedildi: {}.",
+                name.trim(),
+                parts_text(parts)
+            ),
         );
-        Some(id)
+        Some(done.state)
     }
 
     /// Saves the tree at once as “Durum n” with its visibility and styles
@@ -203,16 +161,20 @@ impl App {
             self.warn(locked);
             return false;
         }
-        let Some(doc) = self.document.as_ref() else {
+        let Some(name) = self
+            .layer_states()
+            .iter()
+            .find(|s| s.id == id)
+            .map(|s| s.name.clone())
+        else {
             return false;
         };
-        let mut states = doc.model.settings().layer_states.clone();
-        let Some(at) = states.iter().position(|s| s.id == id) else {
+        let mut input = LayersStates::new(LayerStatesOperation::Update, Some(id.to_owned()));
+        input.locks = Some(parts.locks);
+        input.styles = Some(parts.styles);
+        if self.layer_states_command(input).is_none() {
             return false;
-        };
-        let name = states[at].name.clone();
-        states[at] = layer_states::capture(doc.model.layers().nodes(), id, &name, parts);
-        self.write_states(states);
+        }
         self.say(
             Level::Success,
             format!(
@@ -229,21 +191,23 @@ impl App {
             self.warn(locked);
             return false;
         }
-        let mut states = self.layer_states().to_vec();
-        let Some(at) = states.iter().position(|s| s.id == id) else {
+        let Some(old) = self
+            .layer_states()
+            .iter()
+            .find(|s| s.id == id)
+            .map(|s| s.name.clone())
+        else {
             return false;
         };
-        let old = states[at].name.clone();
         let name = name.trim();
         if name == old {
             return true;
         }
-        if let Some(refused) = name_refused(&states, name, Some(id)) {
-            self.warn(refused);
+        let mut input = LayersStates::new(LayerStatesOperation::Rename, Some(id.to_owned()));
+        input.name = Some(name.to_owned());
+        if self.layer_states_command(input).is_none() {
             return false;
         }
-        states[at].name = name.to_owned();
-        self.write_states(states);
         self.say(
             Level::Success,
             format!("“{old}” katman durumunun adı “{name}” oldu."),
@@ -257,16 +221,19 @@ impl App {
             self.warn(locked);
             return false;
         }
-        let mut states = self.layer_states().to_vec();
-        let Some(at) = states.iter().position(|s| s.id == id) else {
+        let Some(old) = self
+            .layer_states()
+            .iter()
+            .find(|s| s.id == id)
+            .map(|s| s.name.clone())
+        else {
             return false;
         };
-        let old = states.remove(at);
-        self.write_states(states);
-        self.say(
-            Level::Success,
-            format!("“{}” katman durumu silindi.", old.name),
-        );
+        let input = LayersStates::new(LayerStatesOperation::Remove, Some(id.to_owned()));
+        if self.layer_states_command(input).is_none() {
+            return false;
+        }
+        self.say(Level::Success, format!("“{old}” katman durumu silindi."));
         true
     }
 
@@ -275,49 +242,35 @@ impl App {
     /// their styles too in one undo step “Katman durumu: <ad>”; what it
     /// changed is said, and its nodes the drawing no longer has.
     pub(crate) fn apply_layer_state(&mut self, id: &str) {
-        let Some(state) = self.layer_states().iter().find(|s| s.id == id).cloned() else {
+        let Some(name) = self
+            .layer_states()
+            .iter()
+            .find(|s| s.id == id)
+            .map(|s| s.name.clone())
+        else {
             return;
         };
-        let Some(doc) = self.document.as_mut() else {
+        let input = LayersStates::new(LayerStatesOperation::Apply, Some(id.to_owned()));
+        let Some(c) = self.layer_states_command(input) else {
             return;
         };
-        let model = &mut doc.model;
-        let c = layer_states::changes(model.layers().nodes(), &state);
-        for (node, visible) in &c.visible {
-            model.set_layer_visible(node, *visible);
-        }
-        for (node, _) in &c.locked {
-            model.toggle_layer_locked(node);
-        }
-        if !c.styles.is_empty() {
-            let label = format!("Katman durumu: {}", state.name);
-            let group = model.begin_group(&label);
-            for (node, style) in &c.styles {
-                model.set_layer_style(node, style.clone(), &label);
-            }
-            model.end_group(group);
-        }
         let mut parts = Vec::new();
-        if !c.visible.is_empty() {
-            parts.push(format!("{} görünürlük", c.visible.len()));
+        if c.visible > 0 {
+            parts.push(format!("{} görünürlük", c.visible));
         }
-        if !c.locked.is_empty() {
-            parts.push(format!("{} kilit", c.locked.len()));
+        if c.locked > 0 {
+            parts.push(format!("{} kilit", c.locked));
         }
-        if !c.styles.is_empty() {
-            parts.push(format!("{} stil", c.styles.len()));
+        if c.styles > 0 {
+            parts.push(format!("{} stil", c.styles));
         }
         if parts.is_empty() {
-            self.say(
-                Level::Info,
-                format!("Katmanlar zaten “{}” durumunda.", state.name),
-            );
+            self.say(Level::Info, format!("Katmanlar zaten “{name}” durumunda."));
         } else {
             self.say(
                 Level::Success,
                 format!(
-                    "“{}” katman durumu uygulandı: {} değişti.",
-                    state.name,
+                    "“{name}” katman durumu uygulandı: {} değişti.",
                     parts.join(", ")
                 ),
             );

@@ -81,6 +81,13 @@ Liste:
   `.kcad` şema 42 ve `FORMATS_VERSION` 54 (web'in `io/` okuyucusu, `version.ts` 53), `fixtures/shell/v1/layout.json`'ın `bottomTab`'ında
   `address` ve `log.json`'ın sekmelerinde Adres (web'in `layoutPlan` ve `logPlan` testleri), komut kataloğunda `cad.addresses.define`,
   `fixtures/processing/v1/address.*` (web'in İşlemler'inde araç yok).
+- [ ] `CADP-08` (ADR 0248, 12 Ekim): web'de gerekenler: beş komutun işleyicileri (`product/`: `cad.layers.edit`, `cad.layers.set`,
+  `cad.layers.states`, `cad.styles.edit`, `cad.settings.set`) ve Katmanlar paneli, Kopyasını oluştur, Katmanları birleştir,
+  Kullanılmayanları temizle, Katman durumları, Alanlar, katman araçları ve şeridin Ölçek'inin onlardan yazması; belgeye `moveLayer`
+  (geri alınır, “Katmanı taşı”) ve `setLayerLocked`; komut koşucusuna (`product/fixtures.test.ts`) `activeLayer`, `name`,
+  `settings` beklentileri; bilinen bozulmalar: komut kataloğunda beş yeni komut (masaüstünün), `fixtures/commands/v1`'de beş dosya
+  (web'in koşucusunda kaydı olmayan komut), `fixtures/layers/v1/purge.json`'un altlık durumu (servis katmanı temizlenmez:
+  `model/layerPurge.ts`'in `removable`'ı), Yazı ve Ölçü stillerinin değişmeyen nesneyi yazmaması (`app/styleTables.ts`).
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek

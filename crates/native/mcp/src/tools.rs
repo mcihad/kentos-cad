@@ -360,6 +360,14 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.info"
             // Without opacity, mode or mask it takes a layer's composition away (docs/adr/0226 §3, §4).
             | "cad.layers.compose"
+            // The layer tree's, the styles' and the settings' commands remove layers,
+            // groups, objects, definitions, states and styles, hide and rename, and
+            // assign a coordinate system (docs/adr/0248).
+            | "cad.layers.edit"
+            | "cad.layers.set"
+            | "cad.layers.states"
+            | "cad.styles.edit"
+            | "cad.settings.set"
     );
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \

@@ -77,6 +77,7 @@ mod keytips;
 mod label_scenes;
 mod labelling;
 mod labels;
+mod layer_commands;
 mod layer_fields;
 mod layer_filters;
 mod layer_info;
