@@ -232,8 +232,8 @@ Her mutating istekte uygun `expectedRevision`, idempotency ve actor/scope bilgis
 
 ### 6.2 Kaynak geometri ve referans kimliği
 
-- [ ] **CAD-DATA-13:** Entity UUID'lerine ek olarak köşe, segment, eğri aralığı ve blok içi alt nesne için kararlı referans tasarla.
-- [ ] **CAD-DATA-14:** Referanslar vertex index'e körü körüne bağlı olmasın; köşe ekle/sil ve kenar bölme sırasında eşleme/invalidasyon politikası tanımlansın.
+- [ ] **CAD-DATA-13:** Entity UUID'lerine ek olarak köşe, segment, eğri aralığı ve blok içi alt nesne için kararlı referans tasarla. — *Kısmen (12 Ekim; CADP-06/07, ADR 0249: köşe, kenar ortası, uç, merkez ve düğüm; eğri aralığı ve blok içi açık).*
+- [x] **CAD-DATA-14:** Referanslar vertex index'e körü körüne bağlı olmasın; köşe ekle/sil ve kenar bölme sırasında eşleme/invalidasyon politikası tanımlansın. — **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
 - [ ] **CAD-DATA-15:** Daire/yay/elips kaynakları analitik kalsın; ölçme, snap ve trim çizilen kırık çizgi üzerinden yapılmasın.
 - [ ] **CAD-DATA-16:** Genel NURBS için derece, knot dizisi, kontrol noktaları, ağırlıklar, periodic/closed, fit/tangent ve tolerans alanlarını ekle.
 - [ ] **CAD-DATA-17:** Mevcut Catmull–Rom eğrisi yeni NURBS modeline tahminsiz göç etsin veya açık ayrı subtype olarak korunsun; eski çizimin biçimi değişmesin.
@@ -363,13 +363,13 @@ Araştırma dayanağı: Dynamic block, aynı tanımın farklı boyut ve görün�
 
 AutoCAD'de ilişkili ölçü, ölçtüğü geometri değiştiğinde konum/yön/değerini izler; kopan ilişki ayrıca görülebilir ve yeniden bağlanabilir. KentOS `DimensionEntity` şu anda koordinatları ve görünüşü taşıyor, ölçülen entity/alt geometri için kalıcı bir referans alanı taşımıyor. [E05; Autodesk ilişkili ölçüler](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-MAC-Core/files/GUID-3559D5D2-AD15-4167-9BD9-EE5FCEB4F8CE.htm)
 
-- [ ] **CAD-ANNO-01:** Ölçü uçları/merkezi/kenarı için `EntityRef/SubentityRef` tabanlı ilişki modeli ekle; derived koordinatlar kaynak bağdan hesaplanabilsin.
-- [ ] **CAD-ANNO-02:** Free point, ilişkili, kısmen ilişkili ve kopuk durumları açıkça sakla; son görünen koordinat kaybolmasın.
-- [ ] **CAD-ANNO-03:** Move/stretch/trim/join/vertex edit, blok redef ve xref reload sırasında referans eşleme/invalidasyon politikasını uygula.
-- [ ] **CAD-ANNO-04:** Kopuk ölçü rozeti, bağlı geometri vurgusu, reason code ve yeniden bağlama komutu olsun.
-- [ ] **CAD-ANNO-05:** Yeniden bağlama önizlemesi ölçü değerinin nasıl değişeceğini gösterip tek adımda uygulanabilsin.
-- [ ] **CAD-ANNO-06:** Kaynak değişikliği ile bağlı ölçü güncellemesi aynı changeset ve undo grubunda olsun.
-- [ ] **CAD-ANNO-07:** Zincir, baz, açı, radius/diameter, ordinate, arc length ve jogged ölçü yöntemlerinin ilişkili karşılıklarını tamamla.
+- [x] **CAD-ANNO-01:** Ölçü uçları/merkezi/kenarı için `EntityRef/SubentityRef` tabanlı ilişki modeli ekle; derived koordinatlar kaynak bağdan hesaplanabilsin. — **Bitti (12 Ekim; CADP-06/07, ADR 0249: nokta yöntemlerinin uçları).**
+- [x] **CAD-ANNO-02:** Free point, ilişkili, kısmen ilişkili ve kopuk durumları açıkça sakla; son görünen koordinat kaybolmasın. — **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
+- [ ] **CAD-ANNO-03:** Move/stretch/trim/join/vertex edit, blok redef ve xref reload sırasında referans eşleme/invalidasyon politikasını uygula. — *Kısmen (12 Ekim; CADP-06/07, ADR 0249: taşıma, esnetme ve köşe düzenlemesi izler; budama ve birleştirmede eşleme, blok ve xref açık).*
+- [ ] **CAD-ANNO-04:** Kopuk ölçü rozeti, bağlı geometri vurgusu, reason code ve yeniden bağlama komutu olsun. — *Kısmen (12 Ekim; CADP-06/07, ADR 0249: kopuk işareti, nedeni ve Yeniden bağla; bağlı geometri vurgusu açık).*
+- [x] **CAD-ANNO-05:** Yeniden bağlama önizlemesi ölçü değerinin nasıl değişeceğini gösterip tek adımda uygulanabilsin. — **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
+- [x] **CAD-ANNO-06:** Kaynak değişikliği ile bağlı ölçü güncellemesi aynı changeset ve undo grubunda olsun. — **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
+- [ ] **CAD-ANNO-07:** Zincir, baz, açı, radius/diameter, ordinate, arc length ve jogged ölçü yöntemlerinin ilişkili karşılıklarını tamamla. — *Kısmen (12 Ekim; CADP-06/07, ADR 0249: Koordinat bağlanır; zincir, baz, açı, yarıçap, çap, yay uzunluğu ve kırıklı açık).*
 - [ ] **CAD-ANNO-08:** DIMSPACE/DIMBREAK eşdeğeri; spacing, çizgi kesintisi, text move, inside/outside ve fit politikası sun.
 - [ ] **CAD-ANNO-09:** Birincil/alternatif unit, tolerance, limit, fraction, rounding increment, zero suppression ve açık ölçü value override destekle.
 - [ ] **CAD-ANNO-10:** Hesaplanan ölçü ile kullanıcı metni/override ayrımı belli olsun; yanlış yazılmış override geometrinin gerçek ölçüsü gibi raporlanmasın.
@@ -888,8 +888,8 @@ Bağımlılık omurgası:
 3. Python/MCP `new drawing` birim parametrelerini ve mevcut API birim açıklamalarını eşitle. — ✅ **Bitti (12 Ekim; CADP-03, ADR 0245).**
 4. Semantik `offset` dikey dilimini UI/native/web/headless/Python/MCP ile kur. — ✅ **Bitti (12 Ekim; CADP-04, ADR 0246; web ADR 0228 gereği TODOS §0.2'de).**
 5. Aynı kalıpla `trim/extend/fillet` ve ilişkili ölçü oluşturmayı tamamla.
-6. Subentity ID ve reference migration/invalidasyon tasarımını yaz; bağımsız testlerle uygula.
-7. Dimension associativity, annotation monitor ve reassociate ilk dilimini çıkar.
+6. Subentity ID ve reference migration/invalidasyon tasarımını yaz; bağımsız testlerle uygula. — ✅ **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
+7. Dimension associativity, annotation monitor ve reassociate ilk dilimini çıkar. — ✅ **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
 8. Katman/stil/settings CRUD işlemlerini kataloga al; SDK/MCP kapsamını eşitle. — ✅ **Bitti (12 Ekim; CADP-08, ADR 0248).**
 9. Pafta kitabını `.kcad` kaynak kapsamına alma ve cihaz kitaplarından göç yolunu uygula.
 10. Gerçek AI Surface host ve çizim context/query/plan/execute zincirini bağla.
@@ -902,7 +902,7 @@ Bu maddeler mevcut planı yazmak için kullanıcı yanıtı gerektiren sorular d
 
 - [ ] **DEC-01:** DWG codec; platform, lisans/dağıtım, offline/remote ve destek seviyesi kararını POC sonrası ver.
 - [ ] **DEC-02:** Genel constraints çözücüsü; robust geometry, deterministic result, lisans ve WASM/native performans kararı ver.
-- [ ] **DEC-03:** Subentity reference; ID graph, split/join eşlemesi ve blok/xref nested path biçimini seç.
+- [ ] **DEC-03:** Subentity reference; ID graph, split/join eşlemesi ve blok/xref nested path biçimini seç. — *Kısmen (12 Ekim; CADP-06/07, ADR 0249: yer ve başvuru biçimi seçildi; parçalanma ve birleşmede eşleme ile blok ve xref yolu açık).*
 - [ ] **DEC-04:** Style/settings/sheet undo; mevcut ayrık davranış ile yeni composite changeset'i göç planıyla uzlaştır.
 - [ ] **DEC-05:** Kağıt uzayı; mevcut sheet item modelinin CAD entity/viewport gereksinimleriyle entegrasyonunu belirle.
 - [ ] **DEC-06:** Mimari nesne; kaynak parametre ve generated display sahipliği, cleanup ve dependency güncelleme sırasını belirle.

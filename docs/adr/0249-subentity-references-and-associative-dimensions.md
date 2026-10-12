@@ -122,6 +122,9 @@ koordinatlarını korur (`CAD-ANNO-02`).
 - İz: `fixtures/interaction/v1/dimension-refs.json` masaüstünde üç kipte (us, tr-q, hidpi); bir beklenti bilerek bozulunca düştüğü
   görüldü. Resimler `kentos-cad kullan dimension-refs`.
 
+- Tam takımlar (12 Ekim, birleşik dal): `pnpm rust:test` 3377, `pnpm rust:test:desktop` 1428, `pnpm py:test` 69 test geçti; clippy
+  ve bağımlılık yönü temiz.
+
 ## Sonuçlar
 
 - Nesneden alınan ölçüler (Yarıçap, Çap, Yay uzunluğu, Kırıklı yarıçap, Açı) ve Zincir, Baz ve Hızlı ölçü bu işte bağlanmaz.
