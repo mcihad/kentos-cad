@@ -144,18 +144,18 @@
 
 ## 4. CAD-AUD — Kapsam envanteri ve gerçek boşlukların ölçülmesi — P0
 
-- [ ] **CAD-AUD-01:** Mevcut envantere CAD kapsam etiketi ekle; GIS, CAD ve ortak altyapı ayrı filtrelenebilsin.
-- [ ] **CAD-AUD-02:** Her araç, pencere, özellik satırı, menü ve kısayol için yaptığı ürün işlemini çıkar; yalnız komut ID listesine dayanma.
-- [ ] **CAD-AUD-03:** Araç yöntemlerini ve seçeneklerini ayrıca say: örneğin daire merkez–yarıçap/iki nokta/üç nokta/teğet yöntemleri ayrı davranış satırları olsun.
-- [ ] **CAD-AUD-04:** Üretilen capability manifestinde `operationId`, command/version, nesne türleri, seçenekler, input/output/plan, birim ve hata kodları bulunsun.
-- [ ] **CAD-AUD-05:** Her satırda UI, yazılı komut, Python, AI/MCP, web, desktop, headless, test kanıtı ve eksik nedenini göster.
-- [ ] **CAD-AUD-06:** `create/edit` gibi genel komutların son geometri yazma desteği ile yüksek seviyeli semantik işlem desteğini farklı sütunlarda göster.
-- [ ] **CAD-AUD-07:** Katman oluşturma/silme/adlandırma, stil tanımlama, proje ayarı, pafta ve dışa aktarma işlemlerini özellikle uçtan uca denetle.
-- [ ] **CAD-AUD-08:** Güncel pafta masaüstü yollarını envanterle karşılaştır; eski `none/pending` etiketlerini kaynak ve davranış kanıtına göre düzelt.
-- [ ] **CAD-AUD-09:** Python ve MCP yeni proje oluşturma akışında `drawingUnit` eksikliğini doğrula. Python bağlayıcısında bu alanın `None` verilmesi ve MCP girdisinde olmaması ilk düzeltme listesine girsin. [E12, E14]
+- [x] **CAD-AUD-01:** Mevcut envantere CAD kapsam etiketi ekle; GIS, CAD ve ortak altyapı ayrı filtrelenebilsin. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
+- [x] **CAD-AUD-02:** Her araç, pencere, özellik satırı, menü ve kısayol için yaptığı ürün işlemini çıkar; yalnız komut ID listesine dayanma. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
+- [x] **CAD-AUD-03:** Araç yöntemlerini ve seçeneklerini ayrıca say: örneğin daire merkez–yarıçap/iki nokta/üç nokta/teğet yöntemleri ayrı davranış satırları olsun. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
+- [x] **CAD-AUD-04:** Üretilen capability manifestinde `operationId`, command/version, nesne türleri, seçenekler, input/output/plan, birim ve hata kodları bulunsun. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
+- [x] **CAD-AUD-05:** Her satırda UI, yazılı komut, Python, AI/MCP, web, desktop, headless, test kanıtı ve eksik nedenini göster. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
+- [x] **CAD-AUD-06:** `create/edit` gibi genel komutların son geometri yazma desteği ile yüksek seviyeli semantik işlem desteğini farklı sütunlarda göster. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
+- [ ] **CAD-AUD-07:** Katman oluşturma/silme/adlandırma, stil tanımlama, proje ayarı, pafta ve dışa aktarma işlemlerini özellikle uçtan uca denetle. — *Kısmen (12 Ekim; CADP-08, ADR 0248: katman, stil ve proje ayarı komutla; pafta ve dışa aktarma açık).*
+- [x] **CAD-AUD-08:** Güncel pafta masaüstü yollarını envanterle karşılaştır; eski `none/pending` etiketlerini kaynak ve davranış kanıtına göre düzelt. — **Bitti (12 Ekim; CADP-02, ADR 0247).**
+- [x] **CAD-AUD-09:** Python ve MCP yeni proje oluşturma akışında `drawingUnit` eksikliğini doğrula. Python bağlayıcısında bu alanın `None` verilmesi ve MCP girdisinde olmaması ilk düzeltme listesine girsin. [E12, E14] — **Bitti (12 Ekim; CADP-03, ADR 0245).**
 - [ ] **CAD-AUD-10:** Arayüzde mevcut ama doğrudan belge/proje ayarı yazan yolları listele; ortak command yoluna taşıma planı oluştur.
-- [ ] **CAD-AUD-11:** Kayıtlı olup sessiz no-op çalışan handler, tamamlanmamış seçenek ve ulaşılamayan komut için otomatik denetim ekle.
-- [ ] **CAD-AUD-12:** Kaynak, üretilmiş katalog, Python wrapper ve MCP schema arasındaki sapmayı CI'da hata yap.
+- [x] **CAD-AUD-11:** Kayıtlı olup sessiz no-op çalışan handler, tamamlanmamış seçenek ve ulaşılamayan komut için otomatik denetim ekle. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
+- [x] **CAD-AUD-12:** Kaynak, üretilmiş katalog, Python wrapper ve MCP schema arasındaki sapmayı CI'da hata yap. — **Bitti (12 Ekim; CADP-01, ADR 0244).**
 - [ ] **CAD-AUD-13:** Gerçek bir mimari ofis çiziminin üretim gününü görev listesine çevir; çizerken yapılan bütün eylemleri manifest satırlarına eşle.
 - [ ] **CAD-AUD-14:** Her yeni CAD işi için “hangi mevcut modül genişletilecek?” bilgisini zorunlu kıl; aynı yeteneğin ikinci bir uygulaması açılmasın.
 
@@ -165,12 +165,12 @@
 
 Bugün `cad.entities.edit` girdisindeki `operation`, büyük ölçüde undo adını belirliyor; asıl değişiklikler `changes` içindeki önceden hesaplanmış geometrilerdir. UI ortak geometri hesabını çağırıp sonucu bu komuta veriyor. Örneğin Python'un “200 mm ötele” yapması için son geometriyi kendisinin üretmesi gerekebilir. Bu, mutation eşdeğerliği sağlar; hedeflenen **işlem eşdeğerliğini** tek başına sağlamaz. [E07]
 
-- [ ] **CAD-CMD-01:** Mevcut düşük seviyeli geometri yaması komutlarını koru; üzerlerine kaynak ID ve işlem parametreleri alan tipli semantik komutlar ekle.
-- [ ] **CAD-CMD-02:** Öteleme girdisi; kaynaklar, mesafe/birim, taraf noktası veya yön, noktadan geçme, iki yana, kaynak silme ve hedef katmanı açıkça taşısın.
+- [ ] **CAD-CMD-01:** Mevcut düşük seviyeli geometri yaması komutlarını koru; üzerlerine kaynak ID ve işlem parametreleri alan tipli semantik komutlar ekle. — *Kısmen (12 Ekim; CADP-04, ADR 0246: Ötele (`cad.entities.offset`) semantik; Buda, Uzat ve öbürleri CADP-05).*
+- [x] **CAD-CMD-02:** Öteleme girdisi; kaynaklar, mesafe/birim, taraf noktası veya yön, noktadan geçme, iki yana, kaynak silme ve hedef katmanı açıkça taşısın. — **Bitti (12 Ekim; CADP-04, ADR 0246).**
 - [ ] **CAD-CMD-03:** Buda/uzat girdisi; hedef alt kenar, kesici/sınır nesneleri, seçim bölgesi, izdüşüm/uzantı politikası ve toleransı taşısın.
 - [ ] **CAD-CMD-04:** Fillet/chamfer girdisi; hedef alt kenarlar, seçilen taraf, yarıçap veya iki mesafe/açı, trim politikası ve tüm köşeler seçeneğini taşısın.
 - [ ] **CAD-CMD-05:** Stretch, join, break, divide, boundary, hatch ve ölçü oluşturma işlemlerinde aynı semantik girdi yaklaşımını tamamla.
-- [ ] **CAD-CMD-06:** UI araçları bu semantik komutların plan/execute yolunu kullansın; hesap UI'da ve Python'da farklı şekillerde tekrar edilmesin.
+- [ ] **CAD-CMD-06:** UI araçları bu semantik komutların plan/execute yolunu kullansın; hesap UI'da ve Python'da farklı şekillerde tekrar edilmesin. — *Kısmen (12 Ekim; CADP-04, ADR 0246: Ötele aracı önizlemeyi komutun planından çizer; öbür araçlar sırada).*
 - [ ] **CAD-CMD-07:** İşlem descriptor'larında desteklenen nesne türü/yöntem kombinasyonlarını ve açık red nedenlerini keşfedilebilir yap.
 - [ ] **CAD-CMD-08:** `discover → validate → plan → execute → progress/result` akışını veri, proje, dosya ve uzun işlerde tutarlı uygula.
 - [ ] **CAD-CMD-09:** Plan; dokunulan nesneler, bağımlı nesneler, eklenen/silinen/değişen sayıları, bbox, kayıp/uyarı ve kaynak revision'larını dönsün.
@@ -178,8 +178,8 @@ Bugün `cad.entities.edit` girdisindeki `operation`, büyük ölçüde undo adı
 - [ ] **CAD-CMD-11:** `expectedRevision` yanında gerekli nesne/tanım/asset revision'larını doğrula; xref veya blok değişikliği eski planı geçersiz kılsın.
 - [ ] **CAD-CMD-12:** Ağ veya süreç retry'ında mutating çağrının iki kez uygulanmasını önleyen idempotency sözleşmesi kur; yalnız client request ID taşımayı yeterli sayma.
 - [ ] **CAD-CMD-13:** İlişkili geometri güncellemeleri ve mimari türevler aynı transaction içinde yazılsın; commit sırasında yeniden doğrulansın.
-- [ ] **CAD-CMD-14:** Nesneler, bloklar, stiller, proje ayarları ve paftaların birlikte değiştiği iş için ortak changeset tasarla.
-- [ ] **CAD-CMD-15:** Mevcut stil değişikliğinde stil tablosunun undo dışında, nesne güncellemelerinin undo içinde olması gibi ayrık davranışları incele; yeni bütüncül undo politikası için ADR ve göç kararı yaz. [E18]
+- [ ] **CAD-CMD-14:** Nesneler, bloklar, stiller, proje ayarları ve paftaların birlikte değiştiği iş için ortak changeset tasarla. — *Kısmen (12 Ekim; CADP-08, ADR 0248: katman, stil ve ayar komutları ayrı; ortak değişiklik kümesi açık).*
+- [x] **CAD-CMD-15:** Mevcut stil değişikliğinde stil tablosunun undo dışında, nesne güncellemelerinin undo içinde olması gibi ayrık davranışları incele; yeni bütüncül undo politikası için ADR ve göç kararı yaz. [E18] — **Bitti (12 Ekim; CADP-08, ADR 0248: ayrık davranış korundu, bütüncül geri alma için göç yolu ADR'de).**
 - [ ] **CAD-CMD-16:** Uzun hesap snapshot üzerinde çalışsın; UI/document lock'u boyunca kullanıcı girdisi veya network cevabı beklenmesin.
 - [ ] **CAD-CMD-17:** İptal; hesap, staged sonuç ve commit aşamalarında tanımlı olsun. Commit tamamlandıktan sonraki “Durdur”, sonucu belirsiz bırakmasın.
 - [ ] **CAD-CMD-18:** Replay kaydı; command/version, normalized input, kaynak revision, birim/UCS, algoritma sürümü, seed, uyarı ve çıktı ID eşlemesini taşısın.
@@ -217,12 +217,12 @@ Her mutating istekte uygun `expectedRevision`, idempotency ve actor/scope bilgis
 
 ### 6.1 Birimler, koordinatlar ve 2D UCS
 
-- [ ] **CAD-DATA-01:** Mevcut iç koordinat/birim politikasını bütün SDK'larda açıklaştır: yerel CAD geometrisi metrede saklanıyor, mm/cm/m giriş/gösterim sınırında çevriliyor. Yeni kolay API birimli miktar alabilir; mevcut metre tabanlı wire değerlerini sessizce farklı yorumlamasın. [E06]
-- [ ] **CAD-DATA-02:** Yeni proje komutuna `workspace`, yerel/gerçek koordinat seçimi, `drawingUnit`, plot scale ve font dahil sihirbazdaki bütün ürün parametrelerini ekle.
-- [ ] **CAD-DATA-03:** `Document.new`, yerel bağlayıcı ve `drawing.new` MCP şeması aynı birim parametrelerini desteklesin.
+- [x] **CAD-DATA-01:** Mevcut iç koordinat/birim politikasını bütün SDK'larda açıklaştır: yerel CAD geometrisi metrede saklanıyor, mm/cm/m giriş/gösterim sınırında çevriliyor. Yeni kolay API birimli miktar alabilir; mevcut metre tabanlı wire değerlerini sessizce farklı yorumlamasın. [E06] — **Bitti (12 Ekim; CADP-03, ADR 0245).**
+- [x] **CAD-DATA-02:** Yeni proje komutuna `workspace`, yerel/gerçek koordinat seçimi, `drawingUnit`, plot scale ve font dahil sihirbazdaki bütün ürün parametrelerini ekle. — **Bitti (12 Ekim; CADP-03, ADR 0245).**
+- [x] **CAD-DATA-03:** `Document.new`, yerel bağlayıcı ve `drawing.new` MCP şeması aynı birim parametrelerini desteklesin. — **Bitti (12 Ekim; CADP-03, ADR 0245).**
 - [ ] **CAD-DATA-04:** Birim değiştirirken “yalnız gösterimi değiştir” ile “geometriyi ölçekle” farklı işlemler olsun; açık kaynak/hedef birimle planlansın.
-- [ ] **CAD-DATA-05:** Uzunluk, alan, açı, çizgi kalınlığı, yazı yüksekliği ve kağıt boyları şemada birimleriyle belgelensin.
-- [ ] **CAD-DATA-06:** Toplu ölçü sonuçları birim/CRS/UCS/metot bilgisi taşısın; yalnız sayı döndürmesin.
+- [ ] **CAD-DATA-05:** Uzunluk, alan, açı, çizgi kalınlığı, yazı yüksekliği ve kağıt boyları şemada birimleriyle belgelensin. — *Kısmen (12 Ekim; CADP-03, ADR 0245: Python ve MCP birimleri söyler; katalog şemalarının birimleri açık).*
+- [ ] **CAD-DATA-06:** Toplu ölçü sonuçları birim/CRS/UCS/metot bilgisi taşısın; yalnız sayı döndürmesin. — *Kısmen (12 Ekim; CADP-03, ADR 0245: Python ve MCP ölçüleri `units`'i söyler; CRS, UCS ve metot açık).*
 - [ ] **CAD-DATA-07:** İçe alma `INSUNITS`, blok birimi ve hedef proje birimini birlikte değerlendirsin; belirsiz dosyada sessiz ölçekleme yapmasın.
 - [ ] **CAD-DATA-08:** CAD X/Y ile GIS doğu/kuzey gösterimi korunmalı; API kanonik eksenleri, UI etiketleri ve polar açı başlangıcı açıklanmalı.
 - [ ] **CAD-DATA-09:** Kaydırılabilir/döndürülebilir 2D UCS; world, önceki, nesneye hizalı, iki nokta ve adlı UCS işlemlerini desteklesin.
@@ -883,14 +883,14 @@ Bağımlılık omurgası:
 
 ### 24.1 İlk uygulanacak 12 somut iş
 
-1. CAD operasyon/alt seçenek manifestini çıkar; UI–Python–AI kapsam farklarını üret.
-2. Pafta kaynakları ile eski envanter farkını düzelt; gerçek var/eksik durumunu belgele.
-3. Python/MCP `new drawing` birim parametrelerini ve mevcut API birim açıklamalarını eşitle.
-4. Semantik `offset` dikey dilimini UI/native/web/headless/Python/MCP ile kur.
+1. CAD operasyon/alt seçenek manifestini çıkar; UI–Python–AI kapsam farklarını üret. — ✅ **Bitti (12 Ekim; CADP-01, ADR 0244).**
+2. Pafta kaynakları ile eski envanter farkını düzelt; gerçek var/eksik durumunu belgele. — ✅ **Bitti (12 Ekim; CADP-02, ADR 0247).**
+3. Python/MCP `new drawing` birim parametrelerini ve mevcut API birim açıklamalarını eşitle. — ✅ **Bitti (12 Ekim; CADP-03, ADR 0245).**
+4. Semantik `offset` dikey dilimini UI/native/web/headless/Python/MCP ile kur. — ✅ **Bitti (12 Ekim; CADP-04, ADR 0246; web ADR 0228 gereği TODOS §0.2'de).**
 5. Aynı kalıpla `trim/extend/fillet` ve ilişkili ölçü oluşturmayı tamamla.
 6. Subentity ID ve reference migration/invalidasyon tasarımını yaz; bağımsız testlerle uygula.
 7. Dimension associativity, annotation monitor ve reassociate ilk dilimini çıkar.
-8. Katman/stil/settings CRUD işlemlerini kataloga al; SDK/MCP kapsamını eşitle.
+8. Katman/stil/settings CRUD işlemlerini kataloga al; SDK/MCP kapsamını eşitle. — ✅ **Bitti (12 Ekim; CADP-08, ADR 0248).**
 9. Pafta kitabını `.kcad` kaynak kapsamına alma ve cihaz kitaplarından göç yolunu uygula.
 10. Gerçek AI Surface host ve çizim context/query/plan/execute zincirini bağla.
 11. DWG karar matrisi ve gerçek ofis dosyalarından codec POC yap; seçim kararını ayrı ADR'ye yaz.

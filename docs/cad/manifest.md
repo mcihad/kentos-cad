@@ -17,10 +17,10 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 19 | 54 | 4 | 34 | 111 |
+| semantic | 21 | 69 | 5 | 38 | 133 |
 | geometry | 30 | 84 | 0 | 8 | 122 |
 | processing | 0 | 11 | 2 | 140 | 153 |
-| none | 2 | 38 | 58 | 10 | 108 |
+| none | 0 | 23 | 57 | 6 | 86 |
 | query | 0 | 21 | 0 | 4 | 25 |
 | session | 0 | 78 | 27 | 5 | 110 |
 | host | 0 | 15 | 7 | 4 | 26 |
@@ -31,7 +31,7 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 450 satırdan 242'i: geometry 114, none 98, processing 13, query 17.
+CBS'ye özgü olmayan 450 satırdan 224'i: geometry 114, none 80, processing 13, query 17.
 
 ### Sonucu çağıran hesaplar (geometry) — 114
 
@@ -152,7 +152,7 @@ CBS'ye özgü olmayan 450 satırdan 242'i: geometry 114, none 98, processing 13,
 | `tool.vertex` | Köşe ekle/sil | cad | cad.entities.edit `vertexAdd` |  |
 | `tool.vertexPoints` | Köşelere nokta | shared | cad.entities.create `vertexPoints` |  |
 
-### Ürün komutu yok (none) — 98
+### Ürün komutu yok (none) — 80
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -174,15 +174,7 @@ CBS'ye özgü olmayan 450 satırdan 242'i: geometry 114, none 98, processing 13,
 | `file.import.shp` | Shapefile… | shared | — |  |
 | `file.print` | Yazdır ve pafta çıktısı… | shared | — |  |
 | `file.saveSelection` | Seçilenleri dosyaya kaydet… | shared | — |  |
-| `file.settings` | Proje ayarları… | shared | — | Proje ayarları doğrudan yazılır; cad.settings.* yok. |
 | `file.takeFrom` | Başka çizimden al… | shared | — |  |
-| `layer.duplicate` | Kopyasını oluştur | none | — |  |
-| `layer.fields` | Alanlar… | shared | — |  |
-| `layer.merge` | Katmanları birleştir… | shared | — |  |
-| `layer.purge` | Kullanılmayanları temizle… | shared | — |  |
-| `layer.stateSave` | Yeni katman durumu kaydet | shared | — |  |
-| `layer.states` | Katman durumları… | shared | — |  |
-| `layer.unisolate` | Yalıtımı kaldır | shared | — |  |
 | `pointcloud.vpcSave` | Sanal bulut olarak kaydet… | shared | — |  |
 | `sheet.align.bottom` | Alta hizala | none | — | Pafta komutları katalogda yok (plan §17). |
 | `sheet.align.center` | Yatayda ortala | none | — | Pafta komutları katalogda yok (plan §17). |
@@ -243,17 +235,7 @@ CBS'ye özgü olmayan 450 satırdan 242'i: geometry 114, none 98, processing 13,
 | `sheet.zoomPage` | Sayfayı sığdır | none | — | Pafta komutları katalogda yok (plan §17). |
 | `sheet.zoomReal` | Gerçek boyut | none | — | Pafta komutları katalogda yok (plan §17). |
 | `sheet.zoomSelection` | Seçime yakınlaş | none | — | Pafta komutları katalogda yok (plan §17). |
-| `style.dimensionStyles` | Ölçü stilleri… | cad | — |  |
-| `style.textStyles` | Yazı stilleri… | cad | — | Stil tabloları doğrudan yazılır (plan CAD-CMD-15). |
-| `tool.layerIsolate` | Katmanı yalıt | shared | — |  |
-| `tool.layerLock` | Katmanı kilitle | shared | — |  |
-| `tool.layerMakeActive` | Katmanı etkin yap | shared | — |  |
-| `tool.layerOff` | Katmanı gizle | shared | — |  |
 | `topology.rules` | Topoloji kuralları | shared | — |  |
-| `workspace.cad` | CAD | shared | — | Proje türü proje ayarı; komutu yok. |
-| `workspace.disaster` | Afet Analizi | shared | — | Proje türü proje ayarı; komutu yok. |
-| `workspace.gis` | CBS | shared | — | Proje türü proje ayarı; komutu yok. |
-| `workspace.plan3d` | 3D Plan | shared | — | Proje türü proje ayarı; komutu yok. |
 
 ### Yalnız İşlemler'den (processing) — 13
 

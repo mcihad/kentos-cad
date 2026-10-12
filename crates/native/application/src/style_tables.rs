@@ -1,5 +1,6 @@
 //! The project's text and dimension styles saved (docs/adr/0183 §1, §5; the
-//! web's `app/styleTables.ts`): the table becomes the project's (an edit,
+//! web's `app/styleTables.ts`; the Yazı stilleri and Ölçü stilleri windows and
+//! `cad.styles.edit`, docs/adr/0248 §4): the table becomes the project's (an edit,
 //! never an undo step), then the objects follow in one undo step “Yazı
 //! stili” or “Ölçü stili” (`cad.entities.edit`'s `textStyle` and
 //! `dimensionStyle`): those of a style whose values changed take the new
@@ -9,13 +10,13 @@
 
 use std::collections::HashMap;
 
+use crate::geometry::{edit_geometry, shape};
+use crate::{ExecutionContext, edit};
 use kentos_contracts::{
     DimensionStyleDef, EditOperation, EntitiesEdit, Entity, EntityEdit, TextLook, TextStyleDef,
     follow_dimension_style, follow_text_style,
 };
 use kentos_domain::{Document, Slot};
-use kentos_native_application::geometry::{edit_geometry, shape};
-use kentos_native_application::{ExecutionContext, edit};
 
 /// What saving did: the objects that followed, those left on locked layers,
 /// and what to say (the command's refusal).
@@ -81,7 +82,7 @@ fn follow(doc: &mut Document, operation: EditOperation, updates: Vec<(Slot, Enti
         other => Saved {
             changed: 0,
             locked,
-            said: crate::properties::said_of(other),
+            said: crate::said_of(other),
         },
     }
 }
@@ -109,6 +110,7 @@ pub fn save_text_styles(doc: &mut Document, next: Vec<TextStyleDef>) -> Saved {
         let Some(old) = t.face.text_style.as_ref().and_then(|id| before.get(id)) else {
             continue;
         };
+        let was = t;
         let mut t = t.clone();
         match after.get(&old.id) {
             // A style deleted: the text keeps its look, without the link.
@@ -129,6 +131,10 @@ pub fn save_text_styles(doc: &mut Document, next: Vec<TextStyleDef>) -> Saved {
                 t.width_factor = look.width_factor;
                 t.height = look.height;
             }
+        }
+        // A style renamed, or changed in what the text no longer held, leaves it as it is.
+        if t == *was {
+            continue;
         }
         updates.push((Slot(t.base.id), Entity::Text(t)));
     }
@@ -158,6 +164,7 @@ pub fn save_dimension_styles(doc: &mut Document, next: Vec<DimensionStyleDef>) -
         let Some(old) = d.look.dim_style.as_ref().and_then(|id| before.get(id)) else {
             continue;
         };
+        let was = d;
         let mut d = d.clone();
         match after.get(&old.id) {
             None => d.look.dim_style = None,
@@ -167,6 +174,9 @@ pub fn save_dimension_styles(doc: &mut Document, next: Vec<DimensionStyleDef>) -
                 d.look = look;
                 d.height = height;
             }
+        }
+        if d == *was {
+            continue;
         }
         updates.push((Slot(d.base.id), Entity::Dimension(d)));
     }

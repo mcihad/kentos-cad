@@ -7,7 +7,7 @@
 //! layer is listed to be unlocked first and cannot be checked. Temizle removes
 //! the checked ones nothing staying uses: the definitions (in rounds), the
 //! layers and the groups (deepest first) in one undo step “Kullanılmayanları
-//! temizle”, then the project library's symbols and assets, which keeps no
+//! temizle” (`cad.layers.edit`'s purge, docs/adr/0248 §1), then the project library's symbols and assets, which keeps no
 //! undo (docs/adr/0092). A project without `project.edit` may not change its
 //! tree.
 
@@ -15,10 +15,8 @@ use std::collections::BTreeSet;
 
 use iced::widget::{Column, button, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{BlockId, Entity};
-use kentos_domain::layer_purge::{
-    self, PurgeBlock, PurgeFound, PurgeIds, PurgeItem, PurgeKind, PurgeObject, PurgeSource,
-};
+use kentos_contracts::{LayerEditOperation, LayersEdit};
+use kentos_domain::layer_purge::{self, PurgeFound, PurgeIds, PurgeItem, PurgeKind};
 use kentos_interaction::Level;
 use kentos_native_style::library::{ItemKind, Source};
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -70,30 +68,6 @@ fn msg(event: Event) -> Message {
     Message::LayerPurge(event)
 }
 
-fn object_of(e: &Entity) -> PurgeObject {
-    let base = e.base();
-    PurgeObject {
-        layer: base.layer_id.clone(),
-        symbol: base.symbol.clone(),
-        block: match e {
-            Entity::Insert(i) => Some(i.block.to_text()),
-            _ => None,
-        },
-        // A picture's image (docs/adr/0192 §2) and a raster's file (docs/adr/0204 §2).
-        asset: match e {
-            Entity::Image(i) => i.image.asset.clone(),
-            Entity::Raster(r) => r.raster.asset.clone(),
-            _ => None,
-        },
-        // Its embedded photos (docs/adr/0225 §1).
-        attachments: base
-            .attachments
-            .iter()
-            .filter_map(|a| a.asset.clone())
-            .collect(),
-    }
-}
-
 /// “2 katman, 1 grup, 3 sembol”: the counts that are not naught.
 fn counts_text(removed: &PurgeIds) -> String {
     [
@@ -116,23 +90,7 @@ impl App {
         let Some(doc) = &self.document else {
             return PurgeFound::default();
         };
-        let model = &doc.model;
-        let layers = model.layers();
-        let src = PurgeSource {
-            tree: layers.nodes(),
-            active: layers.active(),
-            objects: model.entities().map(object_of).collect(),
-            blocks: model
-                .blocks()
-                .iter()
-                .map(|b| PurgeBlock {
-                    id: b.id.to_text(),
-                    name: b.name.clone(),
-                    objects: b.entities.iter().map(object_of).collect(),
-                })
-                .collect(),
-            library: self.purge_library(),
-        };
+        let src = layer_purge::source_of(&doc.model, self.purge_library());
         layer_purge::found(&src)
     }
 
@@ -192,53 +150,29 @@ impl App {
             return false;
         }
         let library = self.purge_library();
-        let Some(doc) = self.document.as_mut() else {
+        let Some(doc) = self.document.as_ref() else {
             return false;
         };
         let (removed, kept) = {
-            let model = &doc.model;
-            let layers = model.layers();
-            let src = PurgeSource {
-                tree: layers.nodes(),
-                active: layers.active(),
-                objects: model.entities().map(object_of).collect(),
-                blocks: model
-                    .blocks()
-                    .iter()
-                    .map(|b| PurgeBlock {
-                        id: b.id.to_text(),
-                        name: b.name.clone(),
-                        objects: b.entities.iter().map(object_of).collect(),
-                    })
-                    .collect(),
-                library,
-            };
+            let src = layer_purge::source_of(&doc.model, library);
             layer_purge::removed(&src, checked)
         };
-        let model = &mut doc.model;
+        // The layers, groups and definitions through `cad.layers.edit`'s purge
+        // (docs/adr/0248 §1), named one by one: it takes exactly these.
         if !(removed.blocks.is_empty() && removed.layers.is_empty() && removed.groups.is_empty()) {
-            let group = model.begin_group("Kullanılmayanları temizle");
-            let mut refused = None;
-            for id in removed.blocks.iter().filter_map(|t| BlockId::parse(t)) {
-                if let Err(r) = model.remove_block(id) {
-                    refused = Some(r.to_string());
-                    break;
-                }
-            }
-            for id in removed.layers.iter().chain(&removed.groups) {
-                if refused.is_some() {
-                    break;
-                }
-                if let Err(r) = model.remove_layer(id) {
-                    refused = Some(r.to_string());
-                }
-            }
-            if let Some(why) = refused {
-                model.cancel_group(group);
-                self.warn(why);
+            let mut input = LayersEdit::new(LayerEditOperation::Purge);
+            input.layers = Some(
+                removed
+                    .layers
+                    .iter()
+                    .chain(&removed.groups)
+                    .cloned()
+                    .collect(),
+            );
+            input.blocks = Some(removed.blocks.clone());
+            if self.edit_layers(input).is_none() {
                 return false;
             }
-            model.end_group(group);
         }
         if !(removed.symbols.is_empty() && removed.assets.is_empty()) {
             for id in removed.symbols.iter().chain(&removed.assets) {

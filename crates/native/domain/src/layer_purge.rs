@@ -4,9 +4,10 @@
 //! scripts/fixtures/layer_purge_cases.py).
 //!
 //! What may go: the layers (not the active one, not locked with their groups'
-//! locks), the groups (not locked), the block definitions, the project
-//! library's symbols and assets. Something stays when anything that stays
-//! uses it: a layer an object of the drawing or of a staying definition is on;
+//! locks, not drawn from a map service: docs/adr/0248 §1), the groups (not
+//! locked), the block definitions, the project library's symbols and assets.
+//! Something stays when anything that stays uses it: a layer an object of
+//! the drawing or of a staying definition is on;
 //! a group a staying node is under; a definition an insert of the drawing or
 //! of a staying definition places; a symbol an object draws with, a staying
 //! layer's style names (`ref`) or a template of any library names (`symbol`);
@@ -252,7 +253,9 @@ fn removable(src: &PurgeSource<'_>, locked: &HashSet<String>) -> HashSet<Key> {
             continue;
         }
         match n.kind {
-            LayerNodeType::Layer if n.id != src.active => {
+            // A layer drawn from a map service holds no objects but draws the
+            // service: it is in use (docs/adr/0248 §1).
+            LayerNodeType::Layer if n.id != src.active && n.service.is_none() => {
                 out.insert(key(PurgeKind::Layers, &n.id));
             }
             LayerNodeType::Group => {
@@ -473,4 +476,52 @@ pub fn removed(src: &PurgeSource<'_>, checked: &PurgeIds) -> (PurgeIds, usize) {
     }
     let kept = asked.len() - going.len();
     (out, kept)
+}
+
+/// An object as the rule reads it.
+pub fn object_of(e: &kentos_contracts::Entity) -> PurgeObject {
+    use kentos_contracts::Entity;
+    let base = e.base();
+    PurgeObject {
+        layer: base.layer_id.clone(),
+        symbol: base.symbol.clone(),
+        block: match e {
+            Entity::Insert(i) => Some(i.block.to_text()),
+            _ => None,
+        },
+        // A picture's image (docs/adr/0192 §2) and a raster's file (docs/adr/0204 §2).
+        asset: match e {
+            Entity::Image(i) => i.image.asset.clone(),
+            Entity::Raster(r) => r.raster.asset.clone(),
+            _ => None,
+        },
+        // Its embedded photos (docs/adr/0225 §1).
+        attachments: base
+            .attachments
+            .iter()
+            .filter_map(|a| a.asset.clone())
+            .collect(),
+    }
+}
+
+/// What the rule reads of the drawing, with `library` the items of every
+/// source (the desktop's style library; none for a command, which takes
+/// layers, groups and definitions only, docs/adr/0248 §1).
+pub fn source_of(doc: &crate::Document, library: Vec<PurgeItem>) -> PurgeSource<'_> {
+    let layers = doc.layers();
+    PurgeSource {
+        tree: layers.nodes(),
+        active: layers.active(),
+        objects: doc.entities().map(object_of).collect(),
+        blocks: doc
+            .blocks()
+            .iter()
+            .map(|b| PurgeBlock {
+                id: b.id.to_text(),
+                name: b.name.clone(),
+                objects: b.entities.iter().map(object_of).collect(),
+            })
+            .collect(),
+        library,
+    }
 }

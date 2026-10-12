@@ -112842,6 +112842,1679 @@
           }
         }
       ]
+    },
+    {
+      "id": "cad.layers.edit",
+      "version": 1,
+      "title": "Katman düzenle",
+      "summary": "Katman ağacını tek geri alma adımıyla değiştirir (operation): add yeni katman ya da grup ekler (kind; name verilmezse “Yeni katman”, “Yeni grup”, ağaçta bir tane olacak biçimde; parent bir grup ya da grubuna girilecek katman, verilmezse en üst; index gruptaki yeri, üstte 0; color, lineType, lineWeight, visible, locked; activate yeni katmanı etkin yapar), style katmanın ya da grubun rengini (#rrggbb ya da fg, fg-dim, ink, paper), çizgi tipini ve kalınlığını (0–100 mm) yazar, kilitli düğüm de alır; move düğümü bir gruba (parent; verilmezse en üst) ve yerine (index) taşır; remove katmanı ya da grubu altındakiler ve üzerlerindeki nesnelerle siler (son katman, etkin katman ve kilitli düğüm silinmez); duplicate katmanı stili, görünürlüğü, alanları ve nesnelerinin kopyalarıyla aynı gruba “<ad> kopyası” olarak kopyalar; merge kaynak katmanların (layers) nesnelerini hedef katmana (layer) taşır ve kaynakları siler, etkin katman kaynaksa hedef etkin olur; fields katmanın alanlarını yazar ve renames ile nesnelerinin anahtarlarını yeniden adlandırır; purge boş katmanları, boş kalan grupları ve hiçbir yerde kullanılmayan blok tanımlarını siler (layers ve blocks verilirse yalnız onları; kalanların kullandığı kalır, kept'te sayılır). Hiçbir şey değişmezse hiçbir şey yazılmaz (changed false). Adım adı işlemin adıdır: Katman ekle, Grup ekle, Katman rengi, Çizgi tipi, Çizgi kalınlığı, Katman stili, Katmanı taşı, Katman sil, Katmanı kopyala, Katmanları birleştir, Alanlar, Kullanılmayanları temizle. Ad, görünürlük, kilit ve etkin katman cad.layers.set'tedir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "FieldRename": {
+            "description": "A field renamed on a layer's objects (`cad.layers.edit`'s `fields`): the\nkey `from` becomes `to`, its values kept.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "LayerEditOperation": {
+            "description": "What `cad.layers.edit` does; it names the undo step.",
+            "oneOf": [
+              {
+                "const": "add",
+                "description": "A new layer or group (“Katman ekle”, “Grup ekle”).",
+                "type": "string"
+              },
+              {
+                "const": "style",
+                "description": "A node's colour, line type or line weight (“Katman rengi”, “Çizgi\ntipi”, “Çizgi kalınlığı”; more than one: “Katman stili”).",
+                "type": "string"
+              },
+              {
+                "const": "move",
+                "description": "A node into another group or place (“Katmanı taşı”).",
+                "type": "string"
+              },
+              {
+                "const": "remove",
+                "description": "A layer or a group with everything under it and the objects on them\n(“Katman sil”, docs/adr/0072).",
+                "type": "string"
+              },
+              {
+                "const": "duplicate",
+                "description": "A layer copied with its objects (“Katmanı kopyala”, docs/adr/0177 §3).",
+                "type": "string"
+              },
+              {
+                "const": "merge",
+                "description": "Layers' objects moved to a target layer and the layers removed\n(“Katmanları birleştir”, docs/adr/0177 §3).",
+                "type": "string"
+              },
+              {
+                "const": "fields",
+                "description": "A layer's fields (“Alanlar”, docs/adr/0199 §3).",
+                "type": "string"
+              },
+              {
+                "const": "purge",
+                "description": "The empty layers, the groups left empty and the definitions nothing\nplaces (“Kullanılmayanları temizle”, docs/adr/0177 §5).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "enum": [
+              "text",
+              "integer",
+              "decimal",
+              "date",
+              "boolean"
+            ],
+            "type": "string"
+          },
+          "LayerNodeType": {
+            "enum": [
+              "group",
+              "layer"
+            ],
+            "type": "string"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.layers.edit` v1: one change of the layer tree as one undo\nstep named after it.\n\n- `add`: `kind` (absent: a layer), `name` (absent: “Yeni katman” or “Yeni\n  grup”, made one of its kind as “Yeni katman 2”), `parent` (a group it\n  goes into, or a layer whose group it goes into; absent: the top),\n  `index` (its place among the group's nodes, first on top; absent or\n  past the end: last), `color`, `lineType`, `lineWeight` (absent: `fg`,\n  continuous, 0.18 mm), `visible` (absent: true), `locked` (absent:\n  false), `activate` (a new layer becomes the active one in the same step;\n  a group never does);\n- `style`: `layer`, and any of `color`, `lineType`, `lineWeight`; a locked\n  node takes it too (a look, as `cad.layers.renderer`'s);\n- `move`: `layer`, `parent` (a group; absent: the top), `index` (as add's);\n- `remove`: `layer`; the objects on it (on every layer under a group) go\n  in the same step;\n- `duplicate`: `layer`, `name` (absent: “<ad> kopyası”, made one of its\n  kind); the copy goes last into the layer's group with its style,\n  visibility and fields, unlocked, and copies of its objects;\n- `merge`: `layer` (the target), `layers` (the sources; the target among\n  them and repeats are passed over); the sources' objects go to the\n  target and the sources are removed. A source that is the active layer\n  gives that to the target first, outside the step (a tree change, as\n  the eye);\n- `fields`: `layer`, `fields` (absent: none), `renames` (keys moved on\n  its objects, all at once);\n- `purge`: `layers` (the layers and groups to take, by id; absent: every\n  one found), `blocks` (the definitions, by id; absent: every one\n  found); what something staying uses stays and is counted in `kept`.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(style, move, remove, duplicate, merge and fields without `layer`),\n`no_layers` (merge without a source), `empty_name` (add and duplicate\nwith a name that is empty or only white space), `nothing_to_set` (style\nwithout a colour, line type or line weight), `invalid_color` (not\n`#rrggbb` nor `fg`, `fg-dim`, `ink`, `paper`), `invalid_line_weight`\n(not from 0 to 100 mm), `invalid_fields` (`fields_problem`); then\n`invalid_revision`, `revision_conflict` (status `conflict`); then, for the\nnode: `layer_not_found` (`layer`, `parent`, `layers[i]`), `not_a_group`\n(move's `parent` a layer), `move_into_itself` (move's `parent` the node or\nunder it), `not_a_layer` (duplicate, merge's target and sources, fields: a\ngroup), `service_layer` (duplicate, merge's target and sources, fields: a\nlayer drawn from a map service), `layer_locked` (move: the node or the\ngroup it goes into locked, by itself or a group above; duplicate, merge's\ntarget and sources: locked), `unknown_block` (purge's `blocks[i]`),\n`layer_refused` (what the drawing refuses: remove's last, active or\nlocked node, docs/adr/0072; fields' renames giving an object two\nattributes of one name). A change that changes nothing (the same style,\nthe same place, the same fields, nothing to purge) writes nothing and\nanswers `changed` false.",
+        "properties": {
+          "activate": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "blocks": {
+            "description": "Purge's block definitions, by their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fields": {
+            "description": "The layer's fields (docs/adr/0199 §1).",
+            "items": {
+              "$ref": "#/$defs/LayerField"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "index": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerNodeType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Add's kind of node; absent: a layer."
+          },
+          "layer": {
+            "description": "The node it acts on; merge's target.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "Merge's sources; purge's layers and groups.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "lineType": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LineType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lineWeight": {
+            "description": "Plot line weight, mm.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "locked": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "Add's and duplicate's name, trimmed.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/LayerEditOperation"
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "renames": {
+            "items": {
+              "$ref": "#/$defs/FieldRename"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "visible": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "LayersEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.edit` v1, and what plan says it would do.",
+        "properties": {
+          "blocks": {
+            "description": "Purge's definitions taken away, in the order they went.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "description": "Whether anything was written (an undo step).",
+            "type": "boolean"
+          },
+          "kept": {
+            "description": "Purge's asked ones that stay because something staying uses them.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "layer": {
+            "description": "The node added or copied (a new `layer-N`), the node changed, merge's\ntarget; absent for purge.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "objects": {
+            "description": "The objects removed (remove), copied (duplicate) or moved (merge).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "removed": {
+            "description": "The nodes taken away: merge's sources, purge's layers then groups\n(deepest first).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "objects",
+          "removed",
+          "blocks",
+          "kept",
+          "revision"
+        ],
+        "title": "LayersEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.edit` v1, and what plan says it would do.",
+        "properties": {
+          "blocks": {
+            "description": "Purge's definitions taken away, in the order they went.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "description": "Whether anything was written (an undo step).",
+            "type": "boolean"
+          },
+          "kept": {
+            "description": "Purge's asked ones that stay because something staying uses them.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "layer": {
+            "description": "The node added or copied (a new `layer-N`), the node changed, merge's\ntarget; absent for purge.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "objects": {
+            "description": "The objects removed (remove), copied (duplicate) or moved (merge).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "removed": {
+            "description": "The nodes taken away: merge's sources, purge's layers then groups\n(deepest first).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "objects",
+          "removed",
+          "blocks",
+          "kept",
+          "revision"
+        ],
+        "title": "LayersEdited",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Ofis şablonunun bir katmanı: Duvar, kırmızı, 0,5 mm, etkin",
+          "input": {
+            "activate": true,
+            "color": "#FF0000",
+            "lineWeight": 0.5,
+            "name": "Duvar",
+            "operation": "add"
+          },
+          "output": {
+            "blocks": [],
+            "changed": true,
+            "kept": 0,
+            "layer": "layer-12",
+            "objects": 0,
+            "removed": [],
+            "revision": "9"
+          }
+        },
+        {
+          "title": "Mimari grubuna taşı, en üste",
+          "input": {
+            "index": 0,
+            "layer": "layer-12",
+            "operation": "move",
+            "parent": "mimari"
+          }
+        },
+        {
+          "title": "Eski katmanları Bina katmanına birleştir",
+          "input": {
+            "layer": "bina",
+            "layers": [
+              "bina-eski",
+              "yapi"
+            ],
+            "operation": "merge"
+          },
+          "output": {
+            "blocks": [],
+            "changed": true,
+            "kept": 0,
+            "layer": "bina",
+            "objects": 48,
+            "removed": [
+              "bina-eski",
+              "yapi"
+            ],
+            "revision": "12"
+          }
+        },
+        {
+          "title": "Kullanılmayanları temizle",
+          "input": {
+            "operation": "purge"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.set",
+      "version": 1,
+      "title": "Katman ağacı",
+      "summary": "Katmanlar panelinin göz, kilit, ad ve etkin katman değişikliklerini yapar (operation): rename (layer, name), visible ve locked (layer, value; grubun gizliliği ve kilidi altındakilerin hepsine geçer), active (layer: nesne alan bir katman; grup ve servis katmanı olmaz), isolate (layers: bu düğümler, üstlerindeki gruplar ve altlarındakiler görünür, gerisi gizlenir) ve showAll (hepsi görünür). Bunlar ağacın kendi değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz. Değişmeyen hiçbir şey yazmaz (changed false). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "LayerSetOperation": {
+            "description": "What `cad.layers.set` does.",
+            "enum": [
+              "rename",
+              "visible",
+              "locked",
+              "active",
+              "isolate",
+              "showAll"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,\nthe lock and the name in the Katmanlar panel make it. Each is an edit of\nthe drawing (it gets dirty, its revision moves) but no undo step\n(docs/adr/0020); making a layer active is kept in the file but is no\nedit (the revision stays).\n\n- `rename`: `layer`, `name` (trimmed);\n- `visible`, `locked`: `layer`, `value`; a group's lock holds for\n  everything under it, a hidden group hides everything under it;\n- `active`: `layer`, a layer holding objects;\n- `isolate`: `layers`: these nodes, the groups above them and everything\n  under them shown, the rest hidden;\n- `showAll`: every node shown.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(rename, visible, locked, active without `layer`), `no_layers` (isolate\nwithout a node), `empty_name` (rename with a name empty or only white\nspace), `no_value` (visible, locked without `value`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`layer_not_found` (`layer`, `layers[i]`), `not_a_layer` (active: a\ngroup), `service_layer` (active: a layer drawn from a map service holds\nno objects). A change that changes nothing answers `changed` false.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/LayerSetOperation"
+          },
+          "value": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "LayersSet",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.set` v1, and what plan says it would do.",
+        "properties": {
+          "active": {
+            "description": "The layer active afterwards.",
+            "type": "string"
+          },
+          "changed": {
+            "description": "Whether the tree changed.",
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "active",
+          "revision"
+        ],
+        "title": "LayersChanged",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.set` v1, and what plan says it would do.",
+        "properties": {
+          "active": {
+            "description": "The layer active afterwards.",
+            "type": "string"
+          },
+          "changed": {
+            "description": "Whether the tree changed.",
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "active",
+          "revision"
+        ],
+        "title": "LayersChanged",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Bina katmanını kilitle",
+          "input": {
+            "layer": "bina",
+            "operation": "locked",
+            "value": true
+          },
+          "output": {
+            "active": "parsel",
+            "changed": true,
+            "revision": "14"
+          }
+        },
+        {
+          "title": "Yalnız Kadastro grubu görünsün",
+          "input": {
+            "layers": [
+              "kadastro"
+            ],
+            "operation": "isolate"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.layers.states",
+      "version": 1,
+      "title": "Katman durumları",
+      "summary": "Projenin adlı katman durumlarını yönetir (operation): save ağacın şimdiki görünürlüğünü, istenirse kilitlerini (locks) ve katmanların stillerini (styles, verilmezse açık) yeni bir durum olarak kaydeder (name verilmezse “Durum n”); update durumu (state) şimdiki ağaçtan yeniden kaydeder; rename durumu yeniden adlandırır; remove siler; apply durumu uygular: adını verdiği ve ağaçta hâlâ olan düğümlerin görünürlüğü ve (saklandıysa) kilidi ağacın kendi değişikliği olarak, katmanların stilleri tek geri alma adımında (“Katman durumu: <ad>”) yazılır; ağaçta olmayan düğümler missing'de sayılır. Durumlar proje ayarıdır: kaydetmek, güncellemek, adlandırmak ve silmek çizimi kirli yapar, geri alma adımı değildir. Adlar baştaki ve sondaki boşluklar sayılmadan bir kez kullanılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "LayerStatesOperation": {
+            "description": "What `cad.layers.states` does.",
+            "enum": [
+              "save",
+              "update",
+              "rename",
+              "remove",
+              "apply"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.layers.states` v1 (docs/adr/0177 §4).\n\n- `save`: the tree as it is, as a new state: `name` (absent: the first\n  free “Durum n”), `locks` (absent: false), `styles` (absent: true); its\n  id the first free `durum-n`;\n- `update`: `state` saved again from the tree as it is, keeping `locks`\n  and `styles` (absent: what it kept);\n- `rename`: `state`, `name` (trimmed);\n- `remove`: `state`;\n- `apply`: `state`: the visibility and the locks (when kept) of the\n  nodes it names that the tree still has become what it kept (the tree's\n  own changes, no undo step), their styles (when kept) in one undo step\n  “Katman durumu: <ad>”.\n\nThe states are the project's settings: saving, updating, renaming and\nremoving make the drawing dirty and are no undo step.\n\nRefusals (`CommandError.code`), checked in this order: `no_state`\n(update, rename, remove, apply without `state`), `empty_name` (rename,\nor save with a name, empty or only white space); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`state_not_found`, `duplicate_name` (another state has the name, spaces\nat its ends aside).",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "locks": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/LayerStatesOperation"
+          },
+          "state": {
+            "description": "The state's id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "styles": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "LayersStates",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.states` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed.",
+            "type": "boolean"
+          },
+          "locked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "missing": {
+            "description": "Apply's nodes the tree no longer has.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "state": {
+            "description": "The state saved, updated, renamed, removed or applied.",
+            "type": "string"
+          },
+          "styles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "visible": {
+            "description": "Apply's nodes shown or hidden, locked or unlocked, restyled.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "state",
+          "changed",
+          "visible",
+          "locked",
+          "styles",
+          "missing",
+          "revision"
+        ],
+        "title": "LayerStatesDone",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.states` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed.",
+            "type": "boolean"
+          },
+          "locked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "missing": {
+            "description": "Apply's nodes the tree no longer has.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "state": {
+            "description": "The state saved, updated, renamed, removed or applied.",
+            "type": "string"
+          },
+          "styles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "visible": {
+            "description": "Apply's nodes shown or hidden, locked or unlocked, restyled.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "state",
+          "changed",
+          "visible",
+          "locked",
+          "styles",
+          "missing",
+          "revision"
+        ],
+        "title": "LayerStatesDone",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Pafta görünümünü kilitleriyle kaydet",
+          "input": {
+            "locks": true,
+            "name": "Pafta",
+            "operation": "save"
+          },
+          "output": {
+            "changed": true,
+            "locked": 0,
+            "missing": 0,
+            "revision": "15",
+            "state": "durum-1",
+            "styles": 0,
+            "visible": 0
+          }
+        },
+        {
+          "title": "Pafta görünümüne dön",
+          "input": {
+            "operation": "apply",
+            "state": "durum-1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.styles.edit",
+      "version": 1,
+      "title": "Yazı ve ölçü stilleri",
+      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AnnotationStyleKind": {
+            "description": "Which table `cad.styles.edit` changes.",
+            "enum": [
+              "text",
+              "dimension"
+            ],
+            "type": "string"
+          },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
+          "DimensionStyleDef": {
+            "description": "A named dimension style (docs/adr/0183 §3): sizes in paper mm.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, mm; absent: the arrowhead's default times the height.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "decimals": {
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimLineColor": {
+                "description": "The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "dimLineWeight": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extColor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extLineType": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineType"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "extOffset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extWeight": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "height": {
+                "description": "The value's height on paper, mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "description": "One of its kind among the project's dimension styles (a UUIDv7).",
+                "type": "string"
+              },
+              "name": {
+                "description": "As a text style's.",
+                "type": "string"
+              },
+              "prefix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "suffix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textColor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textGap": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "height"
+            ],
+            "type": "object"
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "StyleEditOperation": {
+            "description": "What `cad.styles.edit` does.",
+            "enum": [
+              "create",
+              "update",
+              "rename",
+              "remove"
+            ],
+            "type": "string"
+          },
+          "TextStyleDef": {
+            "description": "A named text style (docs/adr/0183 §2).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "font": {
+                "$ref": "#/$defs/DrawingFont"
+              },
+              "fontFile": {
+                "description": "The typeface file a DXF named for it, written back as it came.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The texts' height on paper, mm; absent: the tool's height.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "One of its kind among the project's text styles (a UUIDv7).",
+                "type": "string"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "name": {
+                "description": "Its name: trimmed, one of its kind whatever its letters' case, never\n`STANDARD_STYLE`.",
+                "type": "string"
+              },
+              "oblique": {
+                "description": "As a text's (`TextFace::oblique`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "As a text's; absent: 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "font"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.styles.edit` v1.\n\n- `create`: the kind's definition (`text` or `dimension`); an empty id\n  gives it a new one (a UUIDv7), a given id must be new. It goes last in\n  the table; nothing follows it yet;\n- `update`: the kind's definition, whose id names the style it replaces\n  (its place kept). The texts (or dimensions) of the style take its new\n  values where they still held the old ones (`follow_text_style`,\n  `follow_dimension_style`), in one undo step;\n- `rename`: `style`, `name`; the objects name the style by its id and\n  do not change;\n- `remove`: `style`; its objects keep their look and lose the link, in\n  one undo step.\n\nThe table is the project's setting: changing it makes the drawing dirty\nand is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects\non locked layers are left as they are and counted in `locked`.\n\nRefusals (`CommandError.code`), checked in this order: `no_definition`\n(create, update without the kind's definition), `no_style` (rename,\nremove without `style`), `empty_name` (rename with a name empty or only\nwhite space); then `invalid_revision`, `revision_conflict` (status\n`conflict`); `style_not_found` (update's id, rename's and remove's\n`style`), `duplicate_style` (create's given id the table has);\n`invalid_style` (the table it would leave, by `text_styles_problem` or\n`dimension_styles_problem`: the names, then each style's values).",
+        "properties": {
+          "dimension": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DimensionStyleDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Create's and update's dimension style."
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "$ref": "#/$defs/AnnotationStyleKind"
+          },
+          "name": {
+            "description": "Rename's new name, trimmed.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/StyleEditOperation"
+          },
+          "style": {
+            "description": "Rename's and remove's style, by its id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TextStyleDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Create's and update's text style."
+          }
+        },
+        "required": [
+          "kind",
+          "operation"
+        ],
+        "title": "StylesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.styles.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the table changed.",
+            "type": "boolean"
+          },
+          "followed": {
+            "description": "The objects written in the undo step.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "locked": {
+            "description": "The objects a locked layer kept as they were.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "style": {
+            "description": "The style's id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "style",
+          "changed",
+          "followed",
+          "locked",
+          "revision"
+        ],
+        "title": "StylesEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.styles.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the table changed.",
+            "type": "boolean"
+          },
+          "followed": {
+            "description": "The objects written in the undo step.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "locked": {
+            "description": "The objects a locked layer kept as they were.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "style": {
+            "description": "The style's id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "style",
+          "changed",
+          "followed",
+          "locked",
+          "revision"
+        ],
+        "title": "StylesEdited",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Ada no yazı stili: Arimo, kalın, 3,5 mm",
+          "input": {
+            "kind": "text",
+            "operation": "create",
+            "text": {
+              "bold": true,
+              "font": "arimo",
+              "height": 3.5,
+              "id": "",
+              "name": "Ada no"
+            }
+          }
+        },
+        {
+          "title": "Mimari ölçü stilini sil",
+          "input": {
+            "kind": "dimension",
+            "operation": "remove",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201"
+          },
+          "output": {
+            "changed": true,
+            "followed": 12,
+            "locked": 0,
+            "revision": "21",
+            "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.settings.set",
+      "version": 1,
+      "title": "Proje ayarları",
+      "summary": "Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis), srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), secondSrid (kayıttaki, projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır) ve drawingFont. Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AngleUnit": {
+            "enum": [
+              "grad",
+              "deg"
+            ],
+            "type": "string"
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
+          },
+          "Workspace": {
+            "description": "A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each\nwith its own scene, axes and ribbon; every command still runs in both.\n`plan3d` and `disaster` are announced (\"Yakında\") and cannot be chosen yet;\na file naming them shows as CBS. There is no hybrid type any more.",
+            "oneOf": [
+              {
+                "enum": [
+                  "cad",
+                  "gis",
+                  "plan3d",
+                  "disaster"
+                ],
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet);\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2);\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system).",
+        "properties": {
+          "angleUnit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AngleUnit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "areaDecimals": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "areaUnit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AreaUnit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "drawingFont": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingFont"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "drawingUnit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingUnit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lengthDecimals": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "plotScale": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "projectType": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Workspace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "secondSrid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "srid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "title": "SettingsSet",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.settings.set` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "The keys whose value changed, in the input's documented order\n(`drawingUnit` too when a system made the unit metres).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "followed": {
+            "description": "The annotations that took the new plot scale's height (one undo step).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "locked": {
+            "description": "The annotations a locked layer kept at the old height.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "followed",
+          "locked",
+          "revision"
+        ],
+        "title": "SettingsChanged",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.settings.set` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "The keys whose value changed, in the input's documented order\n(`drawingUnit` too when a system made the unit metres).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "followed": {
+            "description": "The annotations that took the new plot scale's height (one undo step).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "locked": {
+            "description": "The annotations a locked layer kept at the old height.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made\nagainst), as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "followed",
+          "locked",
+          "revision"
+        ],
+        "title": "SettingsChanged",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Mimari proje: CAD, 1:100, yerel ve milimetre",
+          "input": {
+            "drawingUnit": "mm",
+            "plotScale": 100,
+            "projectType": "cad",
+            "srid": 0
+          },
+          "output": {
+            "changed": [
+              "projectType",
+              "srid",
+              "drawingUnit",
+              "plotScale"
+            ],
+            "followed": 0,
+            "locked": 0,
+            "revision": "3"
+          }
+        },
+        {
+          "title": "TUREF / TM33 ata, WGS 84'ü ikinci sistem yap",
+          "input": {
+            "secondSrid": 4326,
+            "srid": 5256
+          }
+        }
+      ]
     }
   ]
 }

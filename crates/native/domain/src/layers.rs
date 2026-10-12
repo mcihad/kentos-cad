@@ -242,6 +242,84 @@ impl LayerTree {
             .is_some()
     }
 
+    /// A node's own lock set; whether it changed (`cad.layers.set`, docs/adr/0248 §2).
+    pub(crate) fn set_locked(&mut self, id: &str, locked: bool) -> bool {
+        match self.node_mut(id) {
+            Some(node) if node.locked != locked => {
+                node.locked = locked;
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Where [`LayerTree::move_node`] would put a node: its group (none: the
+    /// top) and its place there once it left its own (past the end: last);
+    /// none when it cannot go there: an unknown node, a `parent` that is not
+    /// one of the tree's groups, or is the node or under it.
+    pub fn move_place(
+        &self,
+        id: &str,
+        parent: Option<&str>,
+        index: Option<usize>,
+    ) -> Option<(Option<String>, usize)> {
+        let from = self.paths.get(id)?;
+        let len = match parent {
+            Some(group) => {
+                let path = self.paths.get(group)?;
+                let node = self.get(group)?;
+                if node.kind != LayerNodeType::Group || path.starts_with(from) {
+                    return None;
+                }
+                node.children.len()
+            }
+            None => self.roots.len(),
+        };
+        let (now, _) = self.place_of(id)?;
+        // Leaving its own group makes that one a node shorter.
+        let len = if now.as_deref() == parent {
+            len - 1
+        } else {
+            len
+        };
+        Some((parent.map(str::to_owned), index.map_or(len, |i| i.min(len))))
+    }
+
+    /// Moves a node with everything under it to `index` among the nodes of
+    /// `parent` (none: the top) as [`LayerTree::move_place`] gives it; the
+    /// active layer stays (docs/adr/0248 §1). Whether it moved.
+    pub(crate) fn move_node(&mut self, id: &str, parent: Option<&str>, index: usize) -> bool {
+        let Some((to_parent, to_index)) = self.move_place(id, parent, Some(index)) else {
+            return false;
+        };
+        if self.place_of(id) == Some((to_parent.clone(), to_index)) {
+            return false;
+        }
+        let Some(from) = self.paths.get(id).cloned() else {
+            return false;
+        };
+        let Some((&at, above)) = from.split_last() else {
+            return false;
+        };
+        let Some(node) = list_mut(&mut self.roots, above)
+            .filter(|list| at < list.len())
+            .map(|list| list.remove(at))
+        else {
+            return false;
+        };
+        self.reindex();
+        let group = to_parent
+            .as_deref()
+            .and_then(|g| self.paths.get(g).cloned())
+            .unwrap_or_default();
+        if let Some(list) = list_mut(&mut self.roots, &group) {
+            let at = to_index.min(list.len());
+            list.insert(at, node);
+        }
+        self.reindex();
+        true
+    }
+
     /// A layer's own snapping on the layer, or on every layer of the group (a
     /// group keeps none); `None` takes it off (docs/adr/0163 §4). Whether any changed.
     pub(crate) fn set_snap(&mut self, id: &str, snap: Option<LayerSnap>) -> bool {

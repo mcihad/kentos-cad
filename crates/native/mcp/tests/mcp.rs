@@ -80,6 +80,11 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.layers.labels",
         "cad.labels.pin",
         "cad.layers.renderer",
+        "cad.layers.edit",
+        "cad.layers.set",
+        "cad.layers.states",
+        "cad.styles.edit",
+        "cad.settings.set",
     ] {
         assert!(names.contains(&name), "{name}");
     }
@@ -96,6 +101,11 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.layers.labels",
         "cad.labels.pin",
         "cad.layers.renderer",
+        "cad.layers.edit",
+        "cad.layers.set",
+        "cad.layers.states",
+        "cad.styles.edit",
+        "cad.settings.set",
     ] {
         let tool = tools
             .iter()
@@ -234,6 +244,100 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "the same id, the same area"
     );
     let _ = std::fs::remove_dir_all(dir);
+}
+
+/// A model sets a drawing up as the desktop would (docs/adr/0248): a layer
+/// added, renamed and locked, a text style, the plot scale; a user's setting
+/// is refused by the schema, not quietly dropped.
+#[test]
+fn layers_styles_and_settings_go_through_their_tools() {
+    let mut server = Server::new();
+    let made = call(
+        &mut server,
+        "drawing.new",
+        json!({ "name": "Ofis", "srid": 5256 }),
+    );
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let added = call(
+        &mut server,
+        "cad.layers.edit",
+        json!({ "drawing": drawing, "operation": "add", "name": "Duvar", "color": "#FF0000", "lineWeight": 0.5, "activate": true }),
+    );
+    assert_eq!(added["structuredContent"]["status"], "completed", "{added}");
+    let layer = added["structuredContent"]["output"]["layer"]
+        .as_str()
+        .expect("its id")
+        .to_owned();
+    let renamed = call(
+        &mut server,
+        "cad.layers.set",
+        json!({ "drawing": drawing, "operation": "rename", "layer": layer, "name": "Duvarlar" }),
+    );
+    assert_eq!(renamed["structuredContent"]["output"]["changed"], true);
+    let locked = call(
+        &mut server,
+        "cad.layers.set",
+        json!({ "drawing": drawing, "operation": "locked", "layer": layer, "value": true }),
+    );
+    assert_eq!(
+        locked["structuredContent"]["output"]["active"],
+        layer.as_str()
+    );
+    let tree = call(&mut server, "drawing.layers", json!({ "drawing": drawing }));
+    let node = tree["structuredContent"]["layers"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|n| n["id"] == layer.as_str())
+        .expect("the layer");
+    assert_eq!(node["name"], "Duvarlar");
+    assert_eq!(node["locked"], true);
+    assert_eq!(node["style"]["color"], "#FF0000");
+
+    let style = call(
+        &mut server,
+        "cad.styles.edit",
+        json!({ "drawing": drawing, "kind": "text", "operation": "create",
+                "text": { "id": "", "name": "Oda adı", "font": "arimo", "height": 2.5 } }),
+    );
+    assert_eq!(style["structuredContent"]["status"], "completed", "{style}");
+    let scaled = call(
+        &mut server,
+        "cad.settings.set",
+        json!({ "drawing": drawing, "plotScale": 100, "projectType": "cad" }),
+    );
+    assert_eq!(
+        scaled["structuredContent"]["output"]["changed"],
+        json!(["projectType", "plotScale"])
+    );
+    let summary = call(
+        &mut server,
+        "drawing.summary",
+        json!({ "drawing": drawing }),
+    );
+    assert_eq!(summary["structuredContent"]["settings"]["plotScale"], 100.0);
+    assert_eq!(
+        summary["structuredContent"]["settings"]["textStyles"][0]["name"],
+        "Oda adı"
+    );
+    // A theme is the user's, not the drawing's: the schema has no such key.
+    let refused = ask(
+        &mut server,
+        9,
+        "tools/call",
+        json!({ "name": "cad.settings.set", "arguments": { "drawing": drawing, "theme": "dark" } }),
+    );
+    let text = refused.to_string();
+    assert!(text.contains("theme"), "{refused}");
+    let summary = call(
+        &mut server,
+        "drawing.summary",
+        json!({ "drawing": drawing }),
+    );
+    assert_eq!(summary["structuredContent"]["settings"]["plotScale"], 100.0);
 }
 
 #[test]

@@ -99,7 +99,8 @@ pub mod adjoin;
 pub mod align;
 pub mod align_distribute;
 pub mod angle;
-pub mod annotation_scale;
+/// Moved to the commands' crate, where `cad.settings.set` follows a plot scale too (docs/adr/0248 §5).
+pub use kentos_native_application::annotation_follow as annotation_scale;
 pub mod arc;
 pub mod area;
 pub mod array;
@@ -219,7 +220,8 @@ mod standard_layer;
 pub mod station_labels;
 pub mod station_offset;
 pub mod stretch;
-pub mod style_tables;
+/// Moved to the commands' crate, where `cad.styles.edit` writes through it (docs/adr/0248 §4).
+pub use kentos_native_application::style_tables;
 pub mod styles;
 pub mod table;
 pub mod table_place;

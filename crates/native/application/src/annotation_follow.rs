@@ -7,12 +7,12 @@
 //! and are counted. The setting itself is an edit of the project, not an
 //! undo step.
 
+use crate::geometry::{edit_geometry, shape};
+use crate::{ExecutionContext, edit};
 use kentos_contracts::{
     CommandResult, EditOperation, EntitiesEdit, EntityEdit, ScaleChange, follow_annotation_scale,
 };
 use kentos_domain::{Document, Slot};
-use kentos_native_application::geometry::{edit_geometry, shape};
-use kentos_native_application::{ExecutionContext, edit};
 
 /// What following a change did: the objects written, those a locked layer
 /// kept, and the command's refusal when it refused.
@@ -77,7 +77,7 @@ pub fn follow_annotation_change(doc: &mut Document, change: &ScaleChange) -> Fol
         other => Followed {
             written: 0,
             locked,
-            refused: crate::properties::said_of(other).into_iter().next(),
+            refused: crate::said_of(other).into_iter().next(),
         },
     }
 }

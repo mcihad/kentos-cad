@@ -231,10 +231,10 @@ impl App {
                 }
             }
             Named::Space => {
-                if let Some(doc) = &mut self.document
+                if self.document.is_some()
                     && let Some(id) = current
                 {
-                    doc.model.toggle_layer_visible(&id);
+                    self.toggle_layer_visible(&id);
                 }
             }
             Named::F2 => {
@@ -285,7 +285,11 @@ impl App {
         }
         match doc.model.layers().get(id).map(|n| (n.kind, n.expanded)) {
             Some((LayerNodeType::Layer, _)) => {
-                doc.model.set_active_layer(id);
+                let input = kentos_contracts::LayersSet::new(
+                    kentos_contracts::LayerSetOperation::Active,
+                    Some(id.to_owned()),
+                );
+                self.set_layers(input);
             }
             Some((LayerNodeType::Group, expanded)) => doc.model.set_layer_expanded(id, !expanded),
             None => {}

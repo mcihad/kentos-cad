@@ -3,18 +3,20 @@
 //! JSON (the catalog's wire form, `status`-tagged).
 
 use kentos_contracts::{
-    AddressesDefine, ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, EntitiesArray,
-    DimensionsReassociate, EntitiesCreate, EntitiesDelete, EntitiesEdit, EntitiesOffset, EntitiesSetProperties,
-    EntitiesTransform, LabelsPin, LayersCompose, LayersFilter, LayersInfo, LayersLabels,
-    LayersRenderer, LayersService, LayersTime, LineCreate, NetworkDefine, PointCreate,
-    PolygonCreate, PolylineCreate, ScenariosEdit,
+    AddressesDefine, ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, DimensionsReassociate,
+    EntitiesArray, EntitiesCreate, EntitiesDelete, EntitiesEdit, EntitiesOffset,
+    EntitiesSetProperties, EntitiesTransform, LabelsPin, LayersCompose, LayersEdit, LayersFilter,
+    LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
+    LineCreate, NetworkDefine, PointCreate, PolygonCreate, PolylineCreate, ScenariosEdit,
+    SettingsSet, StylesEdit,
 };
 use kentos_domain::Document;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, create, delete, dimensions_reassociate, edit, labels_pin, layers_compose, layers_filter, layers_info,
-    layers_labels, layers_renderer, layers_service, layers_time, line, network_define, offset,
-    point, polygon, polyline, scenarios_edit, set, transform,
+    circle, create, delete, dimensions_reassociate, edit, labels_pin, layers_compose, layers_edit,
+    layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
+    layers_states, layers_time, line, network_define, offset, point, polygon, polyline,
+    scenarios_edit, set, settings_set, styles_edit, transform,
 };
 use serde_json::Value;
 
@@ -116,6 +118,11 @@ pub fn run(
         kentos_contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
         kentos_contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
         kentos_contracts::CAD_LAYERS_RENDERER => run!(layers_renderer, LayersRenderer),
+        kentos_contracts::CAD_LAYERS_EDIT => run!(layers_edit, LayersEdit),
+        kentos_contracts::CAD_LAYERS_SET => run!(layers_set, LayersSet),
+        kentos_contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
+        kentos_contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
+        kentos_contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         other => return Err(refusal(other)),
     };
     answer.map_err(|e| {

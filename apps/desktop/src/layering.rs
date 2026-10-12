@@ -22,9 +22,13 @@ use std::time::{Duration, Instant};
 
 use iced::widget::{button, container, row, tooltip};
 use iced::{Center, Element, Task};
-use kentos_contracts::{LayerNode, LayerNodeType, LineType};
-use kentos_domain::{NewLayer, Slot};
+use kentos_contracts::{
+    LayerEditOperation, LayerNode, LayerNodeType, LayerSetOperation, LayersEdit, LayersSet,
+    LineType,
+};
+use kentos_domain::Slot;
 use kentos_interaction::Level;
+use kentos_native_application::layers_edit;
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::style;
 use kentos_ui::widget::tree_view::RENAME;
@@ -221,14 +225,83 @@ impl App {
             }
             return Task::none();
         }
+        // The eye, the lock, the name and the active layer are `cad.layers.set`'s,
+        // a style `cad.layers.edit`'s (docs/adr/0248 §6).
+        match event {
+            Event::Activate(id) => {
+                self.set_layers(LayersSet::new(LayerSetOperation::Active, Some(id)));
+                return Task::none();
+            }
+            Event::Isolate(id) => {
+                let mut input = LayersSet::new(LayerSetOperation::Isolate, None);
+                input.layers = Some(vec![id]);
+                self.set_layers(input);
+                return Task::none();
+            }
+            Event::Color(id, color) => {
+                let mut input = LayersEdit::new(LayerEditOperation::Style);
+                input.layer = Some(id);
+                input.color = Some(color);
+                self.edit_layers(input);
+                return Task::none();
+            }
+            Event::LineType(id, line_type) => {
+                let mut input = LayersEdit::new(LayerEditOperation::Style);
+                input.layer = Some(id);
+                input.line_type = Some(line_type);
+                self.edit_layers(input);
+                return Task::none();
+            }
+            Event::LineWeight(id, weight) => {
+                let mut input = LayersEdit::new(LayerEditOperation::Style);
+                input.layer = Some(id);
+                input.line_weight = Some(weight);
+                self.edit_layers(input);
+                return Task::none();
+            }
+            Event::RenameDone => {
+                if let Some((id, name)) = self.renaming.take() {
+                    // An empty name leaves the name as it was (the shared document's rule).
+                    if !name.trim().is_empty() {
+                        let mut input = LayersSet::new(LayerSetOperation::Rename, Some(id));
+                        input.name = Some(name);
+                        self.set_layers(input);
+                    }
+                }
+                return Task::none();
+            }
+            // As Yeni katman: one step, the new layer made active (the web's since bdaed77).
+            Event::AddBeside(id) => {
+                let Some(doc) = &self.document else {
+                    return Task::none();
+                };
+                let name = doc.model.layers().unique_name(layers_edit::NEW_LAYER);
+                let mut input = LayersEdit::new(LayerEditOperation::Add);
+                input.name = Some(name.clone());
+                input.parent = Some(id);
+                input.activate = Some(true);
+                if self.edit_layers(input).is_some() {
+                    self.say(
+                        Level::Success,
+                        format!("“{name}” katmanı eklendi ve etkin yapıldı."),
+                    );
+                }
+                return Task::none();
+            }
+            _ => {}
+        }
         let Some(doc) = &mut self.document else {
             return Task::none();
         };
         let model = &mut doc.model;
         match event {
-            Event::Activate(id) => {
-                model.set_active_layer(&id);
-            }
+            Event::Activate(_)
+            | Event::Isolate(_)
+            | Event::Color(..)
+            | Event::LineType(..)
+            | Event::LineWeight(..)
+            | Event::RenameDone
+            | Event::AddBeside(_) => {}
             // Handled above, before the drawing is borrowed.
             Event::Duplicate(_)
             | Event::MergeInto(_)
@@ -238,7 +311,6 @@ impl App {
             | Event::FilterFromSelection(_)
             | Event::FilterClear(_)
             | Event::Info(_) => {}
-            Event::Isolate(id) => model.isolate_layer(&id),
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
                 let Some(node) = model.layers().get(&id) else {
@@ -256,37 +328,12 @@ impl App {
                 self.selection.set(slots);
                 self.output(format!("{name}: {n} nesne seçildi."));
             }
-            Event::Color(id, color) => restyle(model, &id, "Katman rengi", |s| s.color = color),
-            Event::LineType(id, line_type) => {
-                restyle(model, &id, "Çizgi tipi", |s| s.line_type = line_type);
-            }
-            Event::LineWeight(id, weight) => {
-                restyle(model, &id, "Çizgi kalınlığı", |s| {
-                    s.line_weight = weight
-                });
-            }
             Event::RenameInput(text) => {
                 if let Some((_, name)) = &mut self.renaming {
                     *name = text;
                 }
             }
-            Event::RenameDone => {
-                if let Some((id, name)) = self.renaming.take() {
-                    model.rename_layer(&id, &name);
-                }
-            }
             Event::RenameCancel => self.renaming = None,
-            // As Yeni katman: one step, the new layer made active (the web's since bdaed77).
-            Event::AddBeside(id) => {
-                let name = model.layers().unique_name("Yeni katman");
-                match model.add_layer(NewLayer::layer(name.clone()), Some(&id), true) {
-                    Ok(_) => self.say(
-                        Level::Success,
-                        format!("“{name}” katmanı eklendi ve etkin yapıldı."),
-                    ),
-                    Err(refusal) => self.warn(refusal.to_string()),
-                }
-            }
             Event::Rename(_) | Event::Remove(_) | Event::ZoomTo(_) => {}
         }
         Task::none()
@@ -383,9 +430,11 @@ impl App {
         let name = node.name.clone();
         let group = node.kind == LayerNodeType::Group;
         let layers = doc.model.layers().leaves_of(id).len();
-        match doc.model.remove_layer(id) {
-            Err(refusal) => self.warn(refusal.to_string()),
-            Ok(gone) => {
+        let mut input = LayersEdit::new(LayerEditOperation::Remove);
+        input.layer = Some(id.to_owned());
+        if let Some(done) = self.edit_layers(input) {
+            let gone = done.objects as usize;
+            {
                 if self.selected_layer.as_deref() == Some(id) {
                     self.selected_layer = None;
                 }
@@ -763,21 +812,20 @@ impl App {
             self.warn(why);
             return;
         }
-        let Some(doc) = &mut self.document else {
+        let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
         };
-        let name = doc.model.layers().unique_name("Yeni katman");
-        let active = doc.model.layers().active().to_owned();
-        match doc
-            .model
-            .add_layer(NewLayer::layer(name.clone()), Some(&active), true)
-        {
-            Ok(_) => self.say(
+        let name = doc.model.layers().unique_name(layers_edit::NEW_LAYER);
+        let mut input = LayersEdit::new(LayerEditOperation::Add);
+        input.name = Some(name.clone());
+        input.parent = Some(doc.model.layers().active().to_owned());
+        input.activate = Some(true);
+        if self.edit_layers(input).is_some() {
+            self.say(
                 Level::Success,
                 format!("“{name}” katmanı eklendi ve etkin yapıldı."),
-            ),
-            Err(refusal) => self.warn(refusal.to_string()),
+            );
         }
     }
 
@@ -787,17 +835,16 @@ impl App {
             self.warn(why);
             return;
         }
-        let Some(doc) = &mut self.document else {
+        let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
         };
-        let name = doc.model.layers().unique_name("Yeni grup");
-        match doc
-            .model
-            .add_layer(NewLayer::group(name.clone()), None, false)
-        {
-            Ok(_) => self.say(Level::Success, format!("“{name}” grubu eklendi.")),
-            Err(refusal) => self.warn(refusal.to_string()),
+        let name = doc.model.layers().unique_name(layers_edit::NEW_GROUP);
+        let mut input = LayersEdit::new(LayerEditOperation::Add);
+        input.kind = Some(LayerNodeType::Group);
+        input.name = Some(name.clone());
+        if self.edit_layers(input).is_some() {
+            self.say(Level::Success, format!("“{name}” grubu eklendi."));
         }
     }
 
@@ -942,20 +989,6 @@ fn leaves<'a>(node: &'a LayerNode, out: &mut Vec<&'a str>) {
                 leaves(child, out);
             }
         }
-    }
-}
-
-/// A layer's style changed by `change`, as one undo step named `label` (the
-/// web's `setLayerStyle`).
-fn restyle(
-    model: &mut kentos_domain::Document,
-    id: &str,
-    label: &str,
-    change: impl FnOnce(&mut kentos_contracts::LayerStyle),
-) {
-    if let Some(mut style) = model.layers().get(id).map(|n| n.style.clone()) {
-        change(&mut style);
-        model.set_layer_style(id, style, label);
     }
 }
 
@@ -1229,7 +1262,11 @@ mod tests {
 }
 
 /// Pictures for the owner: the layer tree following the selection, one
-/// layer (its group opened) and several; `.run/shots/katman-secimi-*`.
+/// layer (its group opened) and several; `.run/shots/katman-secimi-*`. The
+/// last two show the tree after the panel's own changes went through the
+/// layer commands (docs/adr/0248 §6): a layer added beside Bina, coloured,
+/// dashed, locked and renamed, a group added; and Katman durumları with a
+/// state saved and one applied.
 /// `cargo test -p kentos-desktop layering::screens -- --ignored --nocapture`
 #[cfg(test)]
 #[test]
@@ -1242,7 +1279,9 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["tek", "cok", "menu", "renk", "ad", "sil"] {
+            for name in [
+                "tek", "cok", "menu", "renk", "ad", "sil", "komutlar", "durumlar",
+            ] {
                 let mut app = crate::files_testing::app_with_drawing();
                 let _ = app
                     .settings
@@ -1293,6 +1332,42 @@ fn screens() {
                     }
                     "sil" => {
                         let _ = app.update(Message::Layer(Event::Remove("cizim".into())));
+                    }
+                    "komutlar" => {
+                        let _ = app.update(Message::Layer(Event::AddBeside("bina".into())));
+                        let id = app
+                            .document
+                            .as_ref()
+                            .expect("open")
+                            .model
+                            .layers()
+                            .active()
+                            .to_owned();
+                        let _ =
+                            app.update(Message::Layer(Event::Color(id.clone(), "#E5484D".into())));
+                        let _ = app.update(Message::Layer(Event::LineType(
+                            id.clone(),
+                            LineType::Dashed,
+                        )));
+                        let _ = app.update(Message::Layer(Event::LineWeight(id.clone(), 0.5)));
+                        let _ = app.update(Message::Layer(Event::Rename(id.clone())));
+                        let _ = app.update(Message::Layer(Event::RenameInput("Duvar".into())));
+                        let _ = app.update(Message::Layer(Event::RenameDone));
+                        let _ = app.update(Message::LayerLocked(id));
+                        let _ = app.update(Message::Run("layer.newGroup"));
+                        app.selection.set(Vec::new());
+                    }
+                    "durumlar" => {
+                        let parts = kentos_domain::layer_states::LayerStateParts {
+                            locks: true,
+                            styles: true,
+                        };
+                        // The sample drawing's Çizim is hidden: the first state keeps it so.
+                        app.save_layer_state("Çizim gizli", parts);
+                        let _ = app.update(Message::LayerVisible("cizim".into()));
+                        app.save_layer_state("Çizim açık", parts);
+                        app.apply_layer_state("durum-1");
+                        let _ = app.update(Message::Run("layer.states"));
                     }
                     _ => {}
                 }

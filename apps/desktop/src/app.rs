@@ -1617,16 +1617,9 @@ impl App {
             Message::Python(event) => return self.python_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
-            Message::LayerVisible(id) => {
-                if let Some(doc) = &mut self.document {
-                    doc.model.toggle_layer_visible(&id);
-                }
-            }
-            Message::LayerLocked(id) => {
-                if let Some(doc) = &mut self.document {
-                    doc.model.toggle_layer_locked(&id);
-                }
-            }
+            // Through `cad.layers.set`, as Python and MCP do (docs/adr/0248 §6).
+            Message::LayerVisible(id) => self.toggle_layer_visible(&id),
+            Message::LayerLocked(id) => self.toggle_layer_locked(&id),
             Message::LayerExpanded(id) => {
                 if let Some(doc) = &mut self.document
                     && let Some(expanded) = doc.find(&id).map(|n| !n.expanded)
@@ -2277,8 +2270,8 @@ impl App {
             "help.about" => self.dialog = Some(Dialog::About),
             "help.shortcuts" => return self.open_shortcuts(),
             // An edit, not an undo step (web: LayerStore.showAll).
-            "layer.showAll" => match &mut self.document {
-                Some(doc) => doc.model.show_all_layers(),
+            "layer.showAll" => match &self.document {
+                Some(_) => self.show_all_layers(),
                 None => self.output("Açık çizim yok."),
             },
             // Kopyasını oluştur and Katmanları birleştir (docs/adr/0177 §3): the active layer's;

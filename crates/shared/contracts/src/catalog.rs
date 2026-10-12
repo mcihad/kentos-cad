@@ -2270,6 +2270,196 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // The layer tree (docs/adr/0248 §1), held together by fixtures/commands/v1/cad.layers.edit.json.
+        // The web is paused (docs/adr/0228): the desktop's host alone runs these five for now.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_EDIT.into(),
+            version: crate::CAD_LAYERS_EDIT_VERSION,
+            title: "Katman düzenle".into(),
+            summary: "Katman ağacını tek geri alma adımıyla değiştirir (operation): add yeni katman ya da grup ekler (kind; name verilmezse “Yeni katman”, “Yeni grup”, ağaçta bir tane olacak biçimde; parent bir grup ya da grubuna girilecek katman, verilmezse en üst; index gruptaki yeri, üstte 0; color, lineType, lineWeight, visible, locked; activate yeni katmanı etkin yapar), \
+                      style katmanın ya da grubun rengini (#rrggbb ya da fg, fg-dim, ink, paper), çizgi tipini ve kalınlığını (0–100 mm) yazar, kilitli düğüm de alır; move düğümü bir gruba (parent; verilmezse en üst) ve yerine (index) taşır; \
+                      remove katmanı ya da grubu altındakiler ve üzerlerindeki nesnelerle siler (son katman, etkin katman ve kilitli düğüm silinmez); duplicate katmanı stili, görünürlüğü, alanları ve nesnelerinin kopyalarıyla aynı gruba “<ad> kopyası” olarak kopyalar; \
+                      merge kaynak katmanların (layers) nesnelerini hedef katmana (layer) taşır ve kaynakları siler, etkin katman kaynaksa hedef etkin olur; fields katmanın alanlarını yazar ve renames ile nesnelerinin anahtarlarını yeniden adlandırır; \
+                      purge boş katmanları, boş kalan grupları ve hiçbir yerde kullanılmayan blok tanımlarını siler (layers ve blocks verilirse yalnız onları; kalanların kullandığı kalır, kept'te sayılır). \
+                      Hiçbir şey değişmezse hiçbir şey yazılmaz (changed false). Adım adı işlemin adıdır: Katman ekle, Grup ekle, Katman rengi, Çizgi tipi, Çizgi kalınlığı, Katman stili, Katmanı taşı, Katman sil, Katmanı kopyala, Katmanları birleştir, Alanlar, Kullanılmayanları temizle. \
+                      Ad, görünürlük, kilit ve etkin katman cad.layers.set'tedir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersEdit>(),
+            output: schema::<crate::LayersEdited>(),
+            plan: Some(schema::<crate::LayersEdited>()),
+            examples: vec![
+                CommandExample {
+                    title: "Ofis şablonunun bir katmanı: Duvar, kırmızı, 0,5 mm, etkin".into(),
+                    input: json!({ "operation": "add", "name": "Duvar", "color": "#FF0000", "lineWeight": 0.5, "activate": true }),
+                    output: Some(json!({ "layer": "layer-12", "changed": true, "objects": 0, "removed": [], "blocks": [], "kept": 0, "revision": "9" })),
+                },
+                CommandExample {
+                    title: "Mimari grubuna taşı, en üste".into(),
+                    input: json!({ "operation": "move", "layer": "layer-12", "parent": "mimari", "index": 0 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Eski katmanları Bina katmanına birleştir".into(),
+                    input: json!({ "operation": "merge", "layer": "bina", "layers": ["bina-eski", "yapi"] }),
+                    output: Some(json!({ "layer": "bina", "changed": true, "objects": 48, "removed": ["bina-eski", "yapi"], "blocks": [], "kept": 0, "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Kullanılmayanları temizle".into(),
+                    input: json!({ "operation": "purge" }),
+                    output: None,
+                },
+            ],
+        },
+        // The tree's own changes (docs/adr/0248 §2), held together by fixtures/commands/v1/cad.layers.set.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_SET.into(),
+            version: crate::CAD_LAYERS_SET_VERSION,
+            title: "Katman ağacı".into(),
+            summary: "Katmanlar panelinin göz, kilit, ad ve etkin katman değişikliklerini yapar (operation): rename (layer, name), visible ve locked (layer, value; grubun gizliliği ve kilidi altındakilerin hepsine geçer), \
+                      active (layer: nesne alan bir katman; grup ve servis katmanı olmaz), isolate (layers: bu düğümler, üstlerindeki gruplar ve altlarındakiler görünür, gerisi gizlenir) ve showAll (hepsi görünür). \
+                      Bunlar ağacın kendi değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz. Değişmeyen hiçbir şey yazmaz (changed false). \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersSet>(),
+            output: schema::<crate::LayersChanged>(),
+            plan: Some(schema::<crate::LayersChanged>()),
+            examples: vec![
+                CommandExample {
+                    title: "Bina katmanını kilitle".into(),
+                    input: json!({ "operation": "locked", "layer": "bina", "value": true }),
+                    output: Some(json!({ "changed": true, "active": "parsel", "revision": "14" })),
+                },
+                CommandExample {
+                    title: "Yalnız Kadastro grubu görünsün".into(),
+                    input: json!({ "operation": "isolate", "layers": ["kadastro"] }),
+                    output: None,
+                },
+            ],
+        },
+        // Katman durumları (docs/adr/0248 §3), held together by fixtures/commands/v1/cad.layers.states.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_STATES.into(),
+            version: crate::CAD_LAYERS_STATES_VERSION,
+            title: "Katman durumları".into(),
+            summary: "Projenin adlı katman durumlarını yönetir (operation): save ağacın şimdiki görünürlüğünü, istenirse kilitlerini (locks) ve katmanların stillerini (styles, verilmezse açık) yeni bir durum olarak kaydeder (name verilmezse “Durum n”); \
+                      update durumu (state) şimdiki ağaçtan yeniden kaydeder; rename durumu yeniden adlandırır; remove siler; apply durumu uygular: adını verdiği ve ağaçta hâlâ olan düğümlerin görünürlüğü ve (saklandıysa) kilidi ağacın kendi değişikliği olarak, \
+                      katmanların stilleri tek geri alma adımında (“Katman durumu: <ad>”) yazılır; ağaçta olmayan düğümler missing'de sayılır. Durumlar proje ayarıdır: kaydetmek, güncellemek, adlandırmak ve silmek çizimi kirli yapar, geri alma adımı değildir. \
+                      Adlar baştaki ve sondaki boşluklar sayılmadan bir kez kullanılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersStates>(),
+            output: schema::<crate::LayerStatesDone>(),
+            plan: Some(schema::<crate::LayerStatesDone>()),
+            examples: vec![
+                CommandExample {
+                    title: "Pafta görünümünü kilitleriyle kaydet".into(),
+                    input: json!({ "operation": "save", "name": "Pafta", "locks": true }),
+                    output: Some(json!({ "state": "durum-1", "changed": true, "visible": 0, "locked": 0, "styles": 0, "missing": 0, "revision": "15" })),
+                },
+                CommandExample {
+                    title: "Pafta görünümüne dön".into(),
+                    input: json!({ "operation": "apply", "state": "durum-1" }),
+                    output: None,
+                },
+            ],
+        },
+        // Yazı ve ölçü stilleri (docs/adr/0248 §4), held together by fixtures/commands/v1/cad.styles.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_STYLES_EDIT.into(),
+            version: crate::CAD_STYLES_EDIT_VERSION,
+            title: "Yazı ve ölçü stilleri".into(),
+            summary: "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), \
+                      update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; \
+                      remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. \
+                      Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StylesEdit>(),
+            output: schema::<crate::StylesEdited>(),
+            plan: Some(schema::<crate::StylesEdited>()),
+            examples: vec![
+                CommandExample {
+                    title: "Ada no yazı stili: Arimo, kalın, 3,5 mm".into(),
+                    input: json!({
+                        "kind": "text",
+                        "operation": "create",
+                        "text": { "id": "", "name": "Ada no", "font": "arimo", "bold": true, "height": 3.5 }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Mimari ölçü stilini sil".into(),
+                    input: json!({ "kind": "dimension", "operation": "remove", "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201" }),
+                    output: Some(json!({ "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201", "changed": true, "followed": 12, "locked": 0, "revision": "21" })),
+                },
+            ],
+        },
+        // Proje ayarları by key (docs/adr/0248 §5), held together by fixtures/commands/v1/cad.settings.set.json.
+        CommandDescriptor {
+            id: crate::CAD_SETTINGS_SET.into(),
+            version: crate::CAD_SETTINGS_SET_VERSION,
+            title: "Proje ayarları".into(),
+            summary: "Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis), srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), \
+                      secondSrid (kayıttaki, projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), \
+                      plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır) ve drawingFont. \
+                      Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SettingsSet>(),
+            output: schema::<crate::SettingsChanged>(),
+            plan: Some(schema::<crate::SettingsChanged>()),
+            examples: vec![
+                CommandExample {
+                    title: "Mimari proje: CAD, 1:100, yerel ve milimetre".into(),
+                    input: json!({ "projectType": "cad", "srid": 0, "drawingUnit": "mm", "plotScale": 100 }),
+                    output: Some(json!({ "changed": ["projectType", "srid", "drawingUnit", "plotScale"], "followed": 0, "locked": 0, "revision": "3" })),
+                },
+                CommandExample {
+                    title: "TUREF / TM33 ata, WGS 84'ü ikinci sistem yap".into(),
+                    input: json!({ "srid": 5256, "secondSrid": 4326 }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -2486,6 +2676,21 @@ mod tests {
                     crate::CAD_LAYERS_RENDERER => {
                         serde_json::from_value::<crate::LayersRenderer>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_EDIT => {
+                        serde_json::from_value::<crate::LayersEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LAYERS_SET => {
+                        serde_json::from_value::<crate::LayersSet>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LAYERS_STATES => {
+                        serde_json::from_value::<crate::LayersStates>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STYLES_EDIT => {
+                        serde_json::from_value::<crate::StylesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SETTINGS_SET => {
+                        serde_json::from_value::<crate::SettingsSet>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -2592,6 +2797,26 @@ mod tests {
                         }
                         crate::CAD_LAYERS_RENDERER => {
                             serde_json::from_value::<crate::LayersRendered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_EDIT => {
+                            serde_json::from_value::<crate::LayersEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_SET => {
+                            serde_json::from_value::<crate::LayersChanged>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_STATES => {
+                            serde_json::from_value::<crate::LayerStatesDone>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_STYLES_EDIT => {
+                            serde_json::from_value::<crate::StylesEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SETTINGS_SET => {
+                            serde_json::from_value::<crate::SettingsChanged>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

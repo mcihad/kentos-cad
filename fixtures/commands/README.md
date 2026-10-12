@@ -20,6 +20,11 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.entities.set.json` | `cad.entities.set` v1 (Öznitelikler: katman, renk, kalınlık, sembol, öznitelik, etiket) | 32 |
 | `v1/cad.blocks.define.json` | `cad.blocks.define` v1 (ADR 0144: Blok oluştur) | 23 |
 | `v1/cad.blocks.edit.json` | `cad.blocks.edit` v1 (ADR 0144: Bloklar paneli) | 22 |
+| `v1/cad.layers.edit.json` | `cad.layers.edit` v1 (ADR 0248: ekle, stil, taşı, sil, kopyala, birleştir, alanlar, temizle; masaüstünün) | 59 |
+| `v1/cad.layers.set.json` | `cad.layers.set` v1 (ADR 0248: ad, göz, kilit, etkin katman, yalıt, hepsini göster; masaüstünün) | 25 |
+| `v1/cad.layers.states.json` | `cad.layers.states` v1 (ADR 0248: adlı katman durumları; masaüstünün) | 20 |
+| `v1/cad.styles.edit.json` | `cad.styles.edit` v1 (ADR 0248: yazı ve ölçü stilleri; masaüstünün) | 25 |
+| `v1/cad.settings.set.json` | `cad.settings.set` v1 (ADR 0248: proje ayarları anahtarla; masaüstünün) | 28 |
 
 **Yalnız masaüstünün durumları** `v1/desktop/`'tadır ([ADR 0207](../../docs/adr/0207-point-clouds-and-large-data.md) §10): nokta bulutunu şimdilik yalnız masaüstü ekler, çizer ve işler (sahibin kararı, 8 Ekim 2026), web'in koşucusu bu klasörü okumaz (`v1/*.json`). Biçim aynıdır; masaüstünün koşucusu (`the_desktops_own_cases_match_its_handlers`) dosya başına 20 durum aramaz. Durumları KentOS kodu olmadan sözleşmenin kurallarından `scripts/fixtures/pointcloud_command_cases.py` yazar (`--check` farkı arar). Web nokta bulutunu alınca durumlar yukarıdaki dosyalara taşınır.
 
@@ -100,6 +105,9 @@ Yalnız yazılan alanlar denetlenir.
 | `layers` | katman ağacının tamamı, her düğüm bütün alanlarıyla (ADR 0208 §15) |
 | `connections` | projenin bağlantıları (ADR 0208 §2) |
 | `networks` | projenin ağları (ADR 0209 §2) |
+| `activeLayer` | etkin katmanın kimliği; `"$layer"` da olur (ADR 0248) |
+| `name` | çizimin adı (ADR 0248 §6) |
+| `settings` | `{ "anahtar": değer }`: projenin ayarlarından yalnız verilenler, alan alan eşit; yazılmayan (boş liste, verilmeyen değer) `null` (ADR 0248) |
 
 ## Kurallar
 
@@ -117,4 +125,7 @@ Yalnız yazılan alanlar denetlenir.
 - Hesap pencerelerinin “Çizime ekle”si (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) noktaları `cad.entities.create`'le yazar: adı etiket ve öznitelik (Ad, Tür, kot bulunduysa Z (m)), adım pencerenin adı.
 - Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir: alana çevrilen daire, mercek ve dairesel kesit böyledir. Taramanın halkası en az 3 köşelidir. `cad.polygon.create` en az 3 köşe ister.
 - Bir özellik değişikliğinin (`cad.entities.set`) beklenen nesnesini sözleşmenin kuralı kurar: verilen katman, renk, sembol ve etiket nesnenin kendisinin yerine geçer, null onu kaldırır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır; başka hiçbir alanı değişmez. Zaten istendiği gibi olan nesne çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Dosyayı `scripts/fixtures/set_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
+- Katman ağacının, stillerin ve ayarların komutları (ADR 0248) web dururken yalnız masaüstünde ve Python'da koşar; durumları KentOS
+  kodu olmadan `scripts/fixtures/layer_tree_command_cases.py` (üç dosya), `style_edit_command_cases.py` ve
+  `settings_set_command_cases.py` yazar (`--check` farkı arar). Web dönüşte işleyicilerini ve üç yeni beklentiyi alır (TODOS.md §0.2).
 - −0 dosyada yazılmaz: JavaScript'in yazdığı JSON onu 0 yapar. −0'ın korunduğu iki koşucunun kendi testlerindedir (`apps/web/src/wasm/transform.wasm.test.ts`, `crates/native/application/tests/all/transform.rs`).

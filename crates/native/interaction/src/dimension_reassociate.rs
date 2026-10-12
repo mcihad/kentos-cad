@@ -13,7 +13,7 @@ use kentos_contracts::{
     DimensionEntity, DimensionPoint, DimensionStyle, DimensionsReassociate, Entity, PlaceOn,
     PointBinding, SubPlace, SubRef,
 };
-use kentos_domain::{Document, Slot};
+use kentos_domain::Document;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, dimensions_reassociate};
 
@@ -83,7 +83,6 @@ fn dimension(e: &Entity, doc: &Document) -> bool {
 /// The dimension picked and what was given so far.
 #[derive(Clone, Debug)]
 struct Picking {
-    slot: Slot,
     uid: String,
     was: DimensionEntity,
     points: &'static [DimensionPoint],
@@ -141,7 +140,6 @@ impl DimensionReassociate {
             return;
         }
         self.picking = Some(Picking {
-            slot,
             uid: edge::uid(cx.doc, slot),
             was: d.clone(),
             points,

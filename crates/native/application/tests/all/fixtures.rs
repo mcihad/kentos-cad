@@ -12,9 +12,10 @@ use std::path::PathBuf;
 
 use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
-    CAD_ENTITIES_SET, DimensionsReassociate, EntitiesCreate, EntitiesOffset, EntitiesSetProperties, LabelsPin,
-    LayersCompose, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService,
-    LayersTime, NetworkDefine, OffsetBy, ScenariosEdit,
+    CAD_ENTITIES_SET, DimensionsReassociate, EntitiesCreate, EntitiesOffset, EntitiesSetProperties,
+    LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer,
+    LayersService, LayersSet, LayersStates, LayersTime, NetworkDefine, OffsetBy, ScenariosEdit,
+    SettingsSet, StylesEdit,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -27,9 +28,10 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, delete, dimensions_reassociate, edit, labels_pin, layers_compose, layers_filter, layers_info, layers_labels,
-    layers_renderer, layers_service, layers_time, line, network_define, offset, point, polygon,
-    polyline, scenarios_edit, set, transform,
+    circle, delete, dimensions_reassociate, edit, labels_pin, layers_compose, layers_edit,
+    layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
+    layers_states, layers_time, line, network_define, offset, point, polygon, polyline,
+    scenarios_edit, set, settings_set, styles_edit, transform,
 };
 use serde_json::{Value, json};
 
@@ -381,6 +383,46 @@ impl Input for LabelsPin {
 impl Input for LayersRenderer {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for LayersEdit {
+    /// `lineWeight` (which the step's input must give, docs/adr/0248 §1).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "lineWeight" => self.line_weight.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for LayersSet {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for LayersStates {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+/// No style's number is a NaN or ±∞ case: the table's rule refuses them as
+/// any other value out of its bounds (docs/adr/0248 §4).
+impl Input for StylesEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for SettingsSet {
+    /// `plotScale` (which the step's input must give, docs/adr/0248 §5).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "plotScale" => self.plot_scale.as_mut(),
+            _ => None,
+        }
     }
 }
 
@@ -969,6 +1011,11 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
         kentos_domain::contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
         kentos_domain::contracts::CAD_LAYERS_RENDERER => run!(layers_renderer, LayersRenderer),
+        kentos_domain::contracts::CAD_LAYERS_EDIT => run!(layers_edit, LayersEdit),
+        kentos_domain::contracts::CAD_LAYERS_SET => run!(layers_set, LayersSet),
+        kentos_domain::contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
+        kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
+        kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
@@ -1266,6 +1313,26 @@ fn check(
                 let got = serde_json::to_value(&doc.settings().networks)
                     .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, want, "ağlar", at)?;
+            }
+            // The active layer and the drawing's name (docs/adr/0248 §2, §5).
+            "activeLayer" => expect_same(
+                &json!(doc.layers().active()),
+                &fill(want, doc, state, at)?,
+                "etkin katman",
+                at,
+            )?,
+            "name" => expect_same(&json!(doc.name()), want, "çizimin adı", at)?,
+            // The project's settings, only the keys given; an absent one is null (docs/adr/0248).
+            "settings" => {
+                let got = serde_json::to_value(doc.settings()).map_err(|e| format!("{at}: {e}"))?;
+                for (k, v) in want.as_object().unwrap_or(&empty) {
+                    expect_same(
+                        got.get(k).unwrap_or(&Value::Null),
+                        v,
+                        &format!("ayar {k}"),
+                        at,
+                    )?;
+                }
             }
             // The project's address data (docs/adr/0229 §2).
             "addressLocators" => {

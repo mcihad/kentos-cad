@@ -76,6 +76,16 @@ AngleUnitName = Literal["grad", "deg"]
 """The names of :class:`AngleUnit`, for a plain string."""
 
 
+class AnnotationStyleKind(_StrEnum):
+    """Which table `cad.styles.edit` changes."""
+    TEXT = "text"
+    DIMENSION = "dimension"
+
+
+AnnotationStyleKindName = Literal["text", "dimension"]
+"""The names of :class:`AnnotationStyleKind`, for a plain string."""
+
+
 class AreaLabelMode(_StrEnum):
     """Where an area's label goes.
 
@@ -791,6 +801,32 @@ LabelsModeName = Literal["single", "rules", "off"]
 """The names of :class:`LabelsMode`, for a plain string."""
 
 
+class LayerEditOperation(_StrEnum):
+    """What `cad.layers.edit` does; it names the undo step.
+
+    - ``add``: A new layer or group (“Katman ekle”, “Grup ekle”).
+    - ``style``: A node's colour, line type or line weight (“Katman rengi”, “Çizgi
+    - ``move``: A node into another group or place (“Katmanı taşı”).
+    - ``remove``: A layer or a group with everything under it and the objects on them
+    - ``duplicate``: A layer copied with its objects (“Katmanı kopyala”, docs/adr/0177 §3).
+    - ``merge``: Layers' objects moved to a target layer and the layers removed
+    - ``fields``: A layer's fields (“Alanlar”, docs/adr/0199 §3).
+    - ``purge``: The empty layers, the groups left empty and the definitions nothing
+    """
+    ADD = "add"
+    STYLE = "style"
+    MOVE = "move"
+    REMOVE = "remove"
+    DUPLICATE = "duplicate"
+    MERGE = "merge"
+    FIELDS = "fields"
+    PURGE = "purge"
+
+
+LayerEditOperationName = Literal["add", "style", "move", "remove", "duplicate", "merge", "fields", "purge"]
+"""The names of :class:`LayerEditOperation`, for a plain string."""
+
+
 class LayerFieldKind(_StrEnum):
     """What a field holds (docs/adr/0199 §1)."""
     TEXT = "text"
@@ -829,6 +865,33 @@ class LayerServiceOperation(_StrEnum):
 
 LayerServiceOperationName = Literal["add", "addFeed", "update", "remove"]
 """The names of :class:`LayerServiceOperation`, for a plain string."""
+
+
+class LayerSetOperation(_StrEnum):
+    """What `cad.layers.set` does."""
+    RENAME = "rename"
+    VISIBLE = "visible"
+    LOCKED = "locked"
+    ACTIVE = "active"
+    ISOLATE = "isolate"
+    SHOW_ALL = "showAll"
+
+
+LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll"]
+"""The names of :class:`LayerSetOperation`, for a plain string."""
+
+
+class LayerStatesOperation(_StrEnum):
+    """What `cad.layers.states` does."""
+    SAVE = "save"
+    UPDATE = "update"
+    RENAME = "rename"
+    REMOVE = "remove"
+    APPLY = "apply"
+
+
+LayerStatesOperationName = Literal["save", "update", "rename", "remove", "apply"]
+"""The names of :class:`LayerStatesOperation`, for a plain string."""
 
 
 class LeaderArrow(_StrEnum):
@@ -1275,6 +1338,18 @@ class StackMode(_StrEnum):
 
 StackModeName = Literal["always", "ifNeeded"]
 """The names of :class:`StackMode`, for a plain string."""
+
+
+class StyleEditOperation(_StrEnum):
+    """What `cad.styles.edit` does."""
+    CREATE = "create"
+    UPDATE = "update"
+    RENAME = "rename"
+    REMOVE = "remove"
+
+
+StyleEditOperationName = Literal["create", "update", "rename", "remove"]
+"""The names of :class:`StyleEditOperation`, for a plain string."""
 
 
 class TableAlign(_StrEnum):
@@ -5128,6 +5203,28 @@ class FieldChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldRename(_Model):
+    """A field renamed on a layer's objects (`cad.layers.edit`'s `fields`): the
+    key `from` becomes `to`, its values kept.
+    """
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldRename:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FileCommit(_Model):
     """Input of `project.file.commit` v1: the verified upload that becomes the
     next revision. `expectedVersions["@file"]` is the revision the client's
@@ -6829,6 +6926,49 @@ class LayerStateNode(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerStatesDone(_Model):
+    """Output of `cad.layers.states` v1, and what plan says it would do.
+    Attributes:
+        state: The state saved, updated, renamed, removed or applied.
+        changed: Whether anything changed.
+        visible: Apply's nodes shown or hidden, locked or unlocked, restyled.
+        missing: Apply's nodes the tree no longer has.
+        revision: The document's revision afterwards (plan: the one it was made
+            against), as decimal text.
+    """
+    state: str
+    changed: bool
+    visible: int
+    locked: int
+    styles: int
+    missing: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["state"] = self.state
+        out["changed"] = self.changed
+        out["visible"] = self.visible
+        out["locked"] = self.locked
+        out["styles"] = self.styles
+        out["missing"] = self.missing
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerStatesDone:
+        return cls(
+            state=data["state"],
+            changed=data["changed"],
+            visible=data["visible"],
+            locked=data["locked"],
+            styles=data["styles"],
+            missing=data["missing"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerStyle(_Model):
     """A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.
     Attributes:
@@ -6914,6 +7054,35 @@ class LayerTime(_Model):
             cumulative=data.get("cumulative", UNSET),
             end=data.get("end", UNSET),
             key=data.get("key", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersChanged(_Model):
+    """Output of `cad.layers.set` v1, and what plan says it would do.
+    Attributes:
+        changed: Whether the tree changed.
+        active: The layer active afterwards.
+        revision: The document's revision afterwards (plan: the one it was made
+            against), as decimal text.
+    """
+    changed: bool
+    active: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["active"] = self.active
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersChanged:
+        return cls(
+            changed=data["changed"],
+            active=data["active"],
+            revision=data["revision"],
         )
 
 
@@ -7023,6 +7192,194 @@ class LayersComposed(_Model):
             layer=data["layer"],
             changed=data["changed"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersEdit(_Model):
+    """Input of `cad.layers.edit` v1: one change of the layer tree as one undo
+    step named after it.
+
+    - `add`: `kind` (absent: a layer), `name` (absent: “Yeni katman” or “Yeni
+      grup”, made one of its kind as “Yeni katman 2”), `parent` (a group it
+      goes into, or a layer whose group it goes into; absent: the top),
+      `index` (its place among the group's nodes, first on top; absent or
+      past the end: last), `color`, `lineType`, `lineWeight` (absent: `fg`,
+      continuous, 0.18 mm), `visible` (absent: true), `locked` (absent:
+      false), `activate` (a new layer becomes the active one in the same step;
+      a group never does);
+    - `style`: `layer`, and any of `color`, `lineType`, `lineWeight`; a locked
+      node takes it too (a look, as `cad.layers.renderer`'s);
+    - `move`: `layer`, `parent` (a group; absent: the top), `index` (as add's);
+    - `remove`: `layer`; the objects on it (on every layer under a group) go
+      in the same step;
+    - `duplicate`: `layer`, `name` (absent: “<ad> kopyası”, made one of its
+      kind); the copy goes last into the layer's group with its style,
+      visibility and fields, unlocked, and copies of its objects;
+    - `merge`: `layer` (the target), `layers` (the sources; the target among
+      them and repeats are passed over); the sources' objects go to the
+      target and the sources are removed. A source that is the active layer
+      gives that to the target first, outside the step (a tree change, as
+      the eye);
+    - `fields`: `layer`, `fields` (absent: none), `renames` (keys moved on
+      its objects, all at once);
+    - `purge`: `layers` (the layers and groups to take, by id; absent: every
+      one found), `blocks` (the definitions, by id; absent: every one
+      found); what something staying uses stays and is counted in `kept`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer`
+    (style, move, remove, duplicate, merge and fields without `layer`),
+    `no_layers` (merge without a source), `empty_name` (add and duplicate
+    with a name that is empty or only white space), `nothing_to_set` (style
+    without a colour, line type or line weight), `invalid_color` (not
+    `#rrggbb` nor `fg`, `fg-dim`, `ink`, `paper`), `invalid_line_weight`
+    (not from 0 to 100 mm), `invalid_fields` (`fields_problem`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`); then, for the
+    node: `layer_not_found` (`layer`, `parent`, `layers[i]`), `not_a_group`
+    (move's `parent` a layer), `move_into_itself` (move's `parent` the node or
+    under it), `not_a_layer` (duplicate, merge's target and sources, fields: a
+    group), `service_layer` (duplicate, merge's target and sources, fields: a
+    layer drawn from a map service), `layer_locked` (move: the node or the
+    group it goes into locked, by itself or a group above; duplicate, merge's
+    target and sources: locked), `unknown_block` (purge's `blocks[i]`),
+    `layer_refused` (what the drawing refuses: remove's last, active or
+    locked node, docs/adr/0072; fields' renames giving an object two
+    attributes of one name). A change that changes nothing (the same style,
+    the same place, the same fields, nothing to purge) writes nothing and
+    answers `changed` false.
+    Attributes:
+        blocks: Purge's block definitions, by their ids.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        fields: The layer's fields (docs/adr/0199 §1).
+        kind: Add's kind of node; absent: a layer.
+        layer: The node it acts on; merge's target.
+        layers: Merge's sources; purge's layers and groups.
+        line_weight: Plot line weight, mm.
+        name: Add's and duplicate's name, trimmed.
+    """
+    operation: LayerEditOperation | LayerEditOperationName
+    activate: bool | None | Unset = UNSET
+    blocks: list[str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    fields: list[LayerField] | None | Unset = UNSET
+    index: int | None | Unset = UNSET
+    kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    locked: bool | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+    renames: list[FieldRename] | None | Unset = UNSET
+    visible: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.activate is not UNSET:
+            out["activate"] = self.activate
+        if self.blocks is not UNSET:
+            out["blocks"] = None if self.blocks is None else list(self.blocks)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
+        if self.index is not UNSET:
+            out["index"] = self.index
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.locked is not UNSET:
+            out["locked"] = self.locked
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.renames is not UNSET:
+            out["renames"] = None if self.renames is None else [e0.to_json() for e0 in self.renames]
+        if self.visible is not UNSET:
+            out["visible"] = self.visible
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersEdit:
+        return cls(
+            operation=_enum_in(LayerEditOperation, data["operation"]),
+            activate=data.get("activate", UNSET),
+            blocks=UNSET if "blocks" not in data else None if data["blocks"] is None else list(data["blocks"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else [LayerField.from_json(e0) for e0 in data["fields"]],
+            index=data.get("index", UNSET),
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(LayerNodeType, data["kind"]),
+            layer=data.get("layer", UNSET),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            locked=data.get("locked", UNSET),
+            name=data.get("name", UNSET),
+            parent=data.get("parent", UNSET),
+            renames=UNSET if "renames" not in data else None if data["renames"] is None else [FieldRename.from_json(e0) for e0 in data["renames"]],
+            visible=data.get("visible", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersEdited(_Model):
+    """Output of `cad.layers.edit` v1, and what plan says it would do.
+    Attributes:
+        changed: Whether anything was written (an undo step).
+        objects: The objects removed (remove), copied (duplicate) or moved (merge).
+        removed: The nodes taken away: merge's sources, purge's layers then groups
+            (deepest first).
+        blocks: Purge's definitions taken away, in the order they went.
+        kept: Purge's asked ones that stay because something staying uses them.
+        revision: The document's revision after the write (plan: the one it was made
+            against), as decimal text.
+        layer: The node added or copied (a new `layer-N`), the node changed, merge's
+            target; absent for purge.
+    """
+    changed: bool
+    objects: int
+    removed: list[str]
+    blocks: list[str]
+    kept: int
+    revision: str
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["objects"] = self.objects
+        out["removed"] = list(self.removed)
+        out["blocks"] = list(self.blocks)
+        out["kept"] = self.kept
+        out["revision"] = self.revision
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersEdited:
+        return cls(
+            changed=data["changed"],
+            objects=data["objects"],
+            removed=list(data["removed"]),
+            blocks=list(data["blocks"]),
+            kept=data["kept"],
+            revision=data["revision"],
+            layer=data.get("layer", UNSET),
         )
 
 
@@ -7574,6 +7931,130 @@ class LayersServiced(_Model):
         return cls(
             layer=data["layer"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersSet(_Model):
+    """Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,
+    the lock and the name in the Katmanlar panel make it. Each is an edit of
+    the drawing (it gets dirty, its revision moves) but no undo step
+    (docs/adr/0020); making a layer active is kept in the file but is no
+    edit (the revision stays).
+
+    - `rename`: `layer`, `name` (trimmed);
+    - `visible`, `locked`: `layer`, `value`; a group's lock holds for
+      everything under it, a hidden group hides everything under it;
+    - `active`: `layer`, a layer holding objects;
+    - `isolate`: `layers`: these nodes, the groups above them and everything
+      under them shown, the rest hidden;
+    - `showAll`: every node shown.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer`
+    (rename, visible, locked, active without `layer`), `no_layers` (isolate
+    without a node), `empty_name` (rename with a name empty or only white
+    space), `no_value` (visible, locked without `value`); then
+    `invalid_revision`, `revision_conflict` (status `conflict`);
+    `layer_not_found` (`layer`, `layers[i]`), `not_a_layer` (active: a
+    group), `service_layer` (active: a layer drawn from a map service holds
+    no objects). A change that changes nothing answers `changed` false.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    operation: LayerSetOperation | LayerSetOperationName
+    expected_revision: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    value: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersSet:
+        return cls(
+            operation=_enum_in(LayerSetOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer=data.get("layer", UNSET),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            name=data.get("name", UNSET),
+            value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersStates(_Model):
+    """Input of `cad.layers.states` v1 (docs/adr/0177 §4).
+
+    - `save`: the tree as it is, as a new state: `name` (absent: the first
+      free “Durum n”), `locks` (absent: false), `styles` (absent: true); its
+      id the first free `durum-n`;
+    - `update`: `state` saved again from the tree as it is, keeping `locks`
+      and `styles` (absent: what it kept);
+    - `rename`: `state`, `name` (trimmed);
+    - `remove`: `state`;
+    - `apply`: `state`: the visibility and the locks (when kept) of the
+      nodes it names that the tree still has become what it kept (the tree's
+      own changes, no undo step), their styles (when kept) in one undo step
+      “Katman durumu: <ad>”.
+
+    The states are the project's settings: saving, updating, renaming and
+    removing make the drawing dirty and are no undo step.
+
+    Refusals (`CommandError.code`), checked in this order: `no_state`
+    (update, rename, remove, apply without `state`), `empty_name` (rename,
+    or save with a name, empty or only white space); then
+    `invalid_revision`, `revision_conflict` (status `conflict`);
+    `state_not_found`, `duplicate_name` (another state has the name, spaces
+    at its ends aside).
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        state: The state's id.
+    """
+    operation: LayerStatesOperation | LayerStatesOperationName
+    expected_revision: str | None | Unset = UNSET
+    locks: bool | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    state: str | None | Unset = UNSET
+    styles: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.locks is not UNSET:
+            out["locks"] = self.locks
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.state is not UNSET:
+            out["state"] = self.state
+        if self.styles is not UNSET:
+            out["styles"] = self.styles
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersStates:
+        return cls(
+            operation=_enum_in(LayerStatesOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            locks=data.get("locks", UNSET),
+            name=data.get("name", UNSET),
+            state=data.get("state", UNSET),
+            styles=data.get("styles", UNSET),
         )
 
 
@@ -10908,6 +11389,136 @@ class ServiceParam(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SettingsChanged(_Model):
+    """Output of `cad.settings.set` v1, and what plan says it would do.
+    Attributes:
+        changed: The keys whose value changed, in the input's documented order
+            (`drawingUnit` too when a system made the unit metres).
+        followed: The annotations that took the new plot scale's height (one undo step).
+        locked: The annotations a locked layer kept at the old height.
+        revision: The document's revision afterwards (plan: the one it was made
+            against), as decimal text.
+    """
+    changed: list[str]
+    followed: int
+    locked: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["followed"] = self.followed
+        out["locked"] = self.locked
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SettingsChanged:
+        return cls(
+            changed=list(data["changed"]),
+            followed=data["followed"],
+            locked=data["locked"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SettingsSet(_Model):
+    """Input of `cad.settings.set` v1: the keys given change, the others stay.
+    Unknown keys are refused by the schema (a user's or a device's setting,
+    a theme, a key of another command): they are not the project's.
+
+    - `name`: the drawing's name, trimmed;
+    - `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen
+      yet);
+    - `srid`: the project's coordinate system, an EPSG code of the registry,
+      or 0 for a local project without one; it is assigned, the coordinates
+      stay as they are (CLAUDE.md §5). It takes the place of a defined system
+      (docs/adr/0168 §1); a system makes the drawing unit metres;
+    - `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the
+      registry other than the project's own, or 0 for none; it takes the
+      place of a defined second system;
+    - `drawingUnit`: a local project's unit (docs/adr/0165 §2);
+    - `lengthDecimals`, `areaDecimals`: 0 to 4;
+    - `areaUnit`, `angleUnit`;
+    - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
+      leaders, dimensions and tables at the old general height take the new
+      one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);
+    - `drawingFont`: the drawing's typeface.
+
+    Settings are an edit of the project, no undo step (docs/adr/0049).
+
+    Refusals (`CommandError.code`), checked in this order: `nothing_to_set`
+    (no key), `empty_name`, `invalid_project_type`, `invalid_decimals`
+    (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
+    (`srid`, then `secondSrid`: not 0 and not in the registry); then
+    `invalid_revision`, `revision_conflict` (status `conflict`);
+    `second_needs_system` (a second system for a project without one),
+    `second_is_own` (the second system the project's own), `unit_needs_local`
+    (a unit other than metres for a project with a system).
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET
+    area_decimals: int | None | Unset = UNSET
+    area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET
+    drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    length_decimals: int | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    plot_scale: float | None | Unset = UNSET
+    project_type: Workspace | WorkspaceName | None | Unset = UNSET
+    second_srid: int | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.angle_unit is not UNSET:
+            out["angleUnit"] = None if self.angle_unit is None else _enum_out(self.angle_unit)
+        if self.area_decimals is not UNSET:
+            out["areaDecimals"] = self.area_decimals
+        if self.area_unit is not UNSET:
+            out["areaUnit"] = None if self.area_unit is None else _enum_out(self.area_unit)
+        if self.drawing_font is not UNSET:
+            out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
+        if self.drawing_unit is not UNSET:
+            out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.length_decimals is not UNSET:
+            out["lengthDecimals"] = self.length_decimals
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.plot_scale is not UNSET:
+            out["plotScale"] = None if self.plot_scale is None else float(self.plot_scale)
+        if self.project_type is not UNSET:
+            out["projectType"] = None if self.project_type is None else _enum_out(self.project_type)
+        if self.second_srid is not UNSET:
+            out["secondSrid"] = self.second_srid
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SettingsSet:
+        return cls(
+            angle_unit=UNSET if "angleUnit" not in data else None if data["angleUnit"] is None else _enum_in(AngleUnit, data["angleUnit"]),
+            area_decimals=data.get("areaDecimals", UNSET),
+            area_unit=UNSET if "areaUnit" not in data else None if data["areaUnit"] is None else _enum_in(AreaUnit, data["areaUnit"]),
+            drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
+            drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            length_decimals=data.get("lengthDecimals", UNSET),
+            name=data.get("name", UNSET),
+            plot_scale=UNSET if "plotScale" not in data else None if data["plotScale"] is None else float(data["plotScale"]),
+            project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
+            second_srid=data.get("secondSrid", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SplineEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -11005,6 +11616,115 @@ class StreetSource(_Model):
             name=data["name"],
             district=data.get("district", UNSET),
             neighbourhood=data.get("neighbourhood", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StylesEdit(_Model):
+    """Input of `cad.styles.edit` v1.
+
+    - `create`: the kind's definition (`text` or `dimension`); an empty id
+      gives it a new one (a UUIDv7), a given id must be new. It goes last in
+      the table; nothing follows it yet;
+    - `update`: the kind's definition, whose id names the style it replaces
+      (its place kept). The texts (or dimensions) of the style take its new
+      values where they still held the old ones (`follow_text_style`,
+      `follow_dimension_style`), in one undo step;
+    - `rename`: `style`, `name`; the objects name the style by its id and
+      do not change;
+    - `remove`: `style`; its objects keep their look and lose the link, in
+      one undo step.
+
+    The table is the project's setting: changing it makes the drawing dirty
+    and is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects
+    on locked layers are left as they are and counted in `locked`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_definition`
+    (create, update without the kind's definition), `no_style` (rename,
+    remove without `style`), `empty_name` (rename with a name empty or only
+    white space); then `invalid_revision`, `revision_conflict` (status
+    `conflict`); `style_not_found` (update's id, rename's and remove's
+    `style`), `duplicate_style` (create's given id the table has);
+    `invalid_style` (the table it would leave, by `text_styles_problem` or
+    `dimension_styles_problem`: the names, then each style's values).
+    Attributes:
+        dimension: Create's and update's dimension style.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        name: Rename's new name, trimmed.
+        style: Rename's and remove's style, by its id.
+        text: Create's and update's text style.
+    """
+    kind: AnnotationStyleKind | AnnotationStyleKindName
+    operation: StyleEditOperation | StyleEditOperationName
+    dimension: DimensionStyleDef | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    text: TextStyleDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["operation"] = _enum_out(self.operation)
+        if self.dimension is not UNSET:
+            out["dimension"] = None if self.dimension is None else self.dimension.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.text is not UNSET:
+            out["text"] = None if self.text is None else self.text.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StylesEdit:
+        return cls(
+            kind=_enum_in(AnnotationStyleKind, data["kind"]),
+            operation=_enum_in(StyleEditOperation, data["operation"]),
+            dimension=UNSET if "dimension" not in data else None if data["dimension"] is None else DimensionStyleDef.from_json(data["dimension"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            style=data.get("style", UNSET),
+            text=UNSET if "text" not in data else None if data["text"] is None else TextStyleDef.from_json(data["text"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StylesEdited(_Model):
+    """Output of `cad.styles.edit` v1, and what plan says it would do.
+    Attributes:
+        style: The style's id.
+        changed: Whether the table changed.
+        followed: The objects written in the undo step.
+        locked: The objects a locked layer kept as they were.
+        revision: The document's revision afterwards (plan: the one it was made
+            against), as decimal text.
+    """
+    style: str
+    changed: bool
+    followed: int
+    locked: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["style"] = self.style
+        out["changed"] = self.changed
+        out["followed"] = self.followed
+        out["locked"] = self.locked
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StylesEdited:
+        return cls(
+            style=data["style"],
+            changed=data["changed"],
+            followed=data["followed"],
+            locked=data["locked"],
+            revision=data["revision"],
         )
 
 
@@ -13687,6 +14407,8 @@ __all__ = [
     "AngleUnit",
     "AngleUnitName",
     "AnnotationHeights",
+    "AnnotationStyleKind",
+    "AnnotationStyleKindName",
     "ArcCreate",
     "ArcCreated",
     "ArcEntity",
@@ -13823,6 +14545,7 @@ __all__ = [
     "FeedKindName",
     "FieldChoice",
     "FieldNetworkDirection",
+    "FieldRename",
     "FileCommit",
     "FileCommitted",
     "FileTableSource",
@@ -13886,6 +14609,8 @@ __all__ = [
     "LabelsPinned",
     "LayerAction",
     "LayerCompose",
+    "LayerEditOperation",
+    "LayerEditOperationName",
     "LayerField",
     "LayerFieldKind",
     "LayerFieldKindName",
@@ -13897,14 +14622,22 @@ __all__ = [
     "LayerNodeTypeName",
     "LayerServiceOperation",
     "LayerServiceOperationName",
+    "LayerSetOperation",
+    "LayerSetOperationName",
     "LayerSnap",
     "LayerState",
     "LayerStateNode",
+    "LayerStatesDone",
+    "LayerStatesOperation",
+    "LayerStatesOperationName",
     "LayerStyle",
     "LayerTime",
+    "LayersChanged",
     "LayersCompose",
     "LayersComposePlan",
     "LayersComposed",
+    "LayersEdit",
+    "LayersEdited",
     "LayersFilter",
     "LayersFilterPlan",
     "LayersFiltered",
@@ -13920,6 +14653,8 @@ __all__ = [
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",
+    "LayersSet",
+    "LayersStates",
     "LayersTime",
     "LayersTimePlan",
     "LayersTimed",
@@ -14072,6 +14807,8 @@ __all__ = [
     "ServiceKindName",
     "ServiceLayer",
     "ServiceParam",
+    "SettingsChanged",
+    "SettingsSet",
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SplineEntity",
@@ -14080,6 +14817,10 @@ __all__ = [
     "StackModeName",
     "StartSubPlace",
     "StreetSource",
+    "StyleEditOperation",
+    "StyleEditOperationName",
+    "StylesEdit",
+    "StylesEdited",
     "SubPlace",
     "SubRef",
     "SurveySettings",

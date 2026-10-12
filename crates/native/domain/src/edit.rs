@@ -37,6 +37,7 @@ pub mod labels {
     pub const LAYER_REMOVE: &str = "Katman sil";
     pub const LAYER_ADD: &str = "Katman ekle";
     pub const GROUP_ADD: &str = "Grup ekle";
+    pub const LAYER_MOVE: &str = "Katmanı taşı";
     pub const BLOCK_ADD: &str = "Blok tanımla";
     pub const BLOCK_CHANGE: &str = "Blok değiştir";
     pub const BLOCK_REMOVE: &str = "Blok sil";
@@ -636,6 +637,16 @@ impl Document {
         }
     }
 
+    /// Locks or unlocks a layer or group; an edit when it changes, never an
+    /// undo step (`cad.layers.set`, docs/adr/0248 §2). Whether it changed.
+    pub fn set_layer_locked(&mut self, id: &str, locked: bool) -> bool {
+        let changed = self.layers.set_locked(id, locked);
+        if changed {
+            self.mark_edited();
+        }
+        changed
+    }
+
     /// A layer's own snapping, on a group's every layer (docs/adr/0163 §4):
     /// an edit, not an undo step, as a lock is.
     pub fn set_layer_snap(&mut self, id: &str, snap: Option<LayerSnap>) {
@@ -757,6 +768,40 @@ impl Document {
             Ok::<(), Refusal>(())
         });
         Ok(id)
+    }
+
+    /// Moves a node with everything under it into the group `parent` (none:
+    /// the top of the tree) at `index` among its nodes once it left its own
+    /// place (none or past the end: last, drawn under everything else), as
+    /// one undo step “Katmanı taşı” (into the open transaction or group, if
+    /// one is). The objects stay on their layers; the active layer stays.
+    /// Refused, with nothing changed, when it cannot go there: an unknown
+    /// node, a `parent` that is not one of the tree's groups, or is the node
+    /// itself or under it. Returns whether it moved (the same place: no step).
+    pub fn move_layer(
+        &mut self,
+        id: &str,
+        parent: Option<&str>,
+        index: Option<usize>,
+    ) -> Result<bool, Refusal> {
+        let Some(to) = self.layers.move_place(id, parent, index) else {
+            return Err(Refusal(format!(
+                "“{id}” düğümü oraya taşınamaz: grup çizimde yok ya da düğümün kendisi veya altında."
+            )));
+        };
+        let Some(from) = self.layers.place_of(id) else {
+            return Ok(false);
+        };
+        if from == to {
+            return Ok(false);
+        }
+        let op = Op::LayerMove {
+            layer: id.to_owned(),
+            from,
+            to,
+        };
+        self.record(vec![op], labels::LAYER_MOVE);
+        Ok(true)
     }
 
     /// Whether any object is on a layer of this node or under it now.

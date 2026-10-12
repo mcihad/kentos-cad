@@ -81,6 +81,13 @@ Liste:
   `.kcad` şema 42 ve `FORMATS_VERSION` 54 (web'in `io/` okuyucusu, `version.ts` 53), `fixtures/shell/v1/layout.json`'ın `bottomTab`'ında
   `address` ve `log.json`'ın sekmelerinde Adres (web'in `layoutPlan` ve `logPlan` testleri), komut kataloğunda `cad.addresses.define`,
   `fixtures/processing/v1/address.*` (web'in İşlemler'inde araç yok).
+- [ ] `CADP-08` (ADR 0248, 12 Ekim): web'de gerekenler: beş komutun işleyicileri (`product/`: `cad.layers.edit`, `cad.layers.set`,
+  `cad.layers.states`, `cad.styles.edit`, `cad.settings.set`) ve Katmanlar paneli, Kopyasını oluştur, Katmanları birleştir,
+  Kullanılmayanları temizle, Katman durumları, Alanlar, katman araçları ve şeridin Ölçek'inin onlardan yazması; belgeye `moveLayer`
+  (geri alınır, “Katmanı taşı”) ve `setLayerLocked`; komut koşucusuna (`product/fixtures.test.ts`) `activeLayer`, `name`,
+  `settings` beklentileri; bilinen bozulmalar: komut kataloğunda beş yeni komut (masaüstünün), `fixtures/commands/v1`'de beş dosya
+  (web'in koşucusunda kaydı olmayan komut), `fixtures/layers/v1/purge.json`'un altlık durumu (servis katmanı temizlenmez:
+  `model/layerPurge.ts`'in `removable`'ı), Yazı ve Ölçü stillerinin değişmeyen nesneyi yazmaması (`app/styleTables.ts`).
 - [ ] `CAD-CMD-02` (ADR 0246, 12 Ekim; plan/cad.md §24.1 madde 4): web'de gerekenler: `cad.entities.offset` işleyicisi `product/`'ta
   (web'in `edit` işleyicisine `offset` işlemiyle yazan, çekirdeğin `offsetEntity` ve `offsetThroughDistance`'ı WASM'dan; masaüstünün
   `offset.rs`'i gibi), web'in Ötele aracı (`tools/edgeTools.ts`'in `OffsetTool`'u) önizlemede komutun planını, tıklamada yazmasını
@@ -1026,8 +1033,13 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   oturan noktası bağlanır (Hizalı, Doğrusal, Koordinat, Semt, Eğim); belge kayıttan önce izler, aynı geri alma adımında; kopan bağ
   nedeniyle kalır ve çizimde işaretlenir; `cad.dimensions.reassociate` (26 ortak durum, `dimension_command_cases.py`), Yeniden bağla
   aracı (Açıklama › Ölçü), Öznitelikler'de İlişki ve Serbest bırak; Python ve MCP; iz `dimension-refs.json`. Manifestte semantic.
-- [ ] `CADP-08` Katman, stil ve ayar işlemleri katalogda; SDK ve MCP eşit (plan `CAD-CMD-14`, `15`; §5.1 `cad.layers.*`,
-  `cad.styles.*`, `cad.settings.*`).
+- [x] `CADP-08` Katman, stil ve ayar işlemleri katalogda; SDK ve MCP eşit (plan `CAD-CMD-14`, `15`; §5.1 `cad.layers.*`,
+  `cad.styles.*`, `cad.settings.*`). — **12 Ekim, [ADR 0248](docs/adr/0248-layer-style-and-settings-commands.md)** (paralel ajan, dal
+  `cad-layers`, PR #23): `cad.layers.edit` (ekle, görünüş, taşı, sil, kopya, birleştir, alanlar, temizle; her biri geri alma adımı),
+  `cad.layers.set` (ad, göz, kilit, etkin, yalıt, hepsini göster; adımsız, ortak belge durumlarının kuralı), `cad.layers.states`,
+  `cad.styles.edit`, `cad.settings.set`; masaüstünün Katmanlar paneli ve pencereleri bunlarla yazar; 157 ortak durum üç bağımsız
+  betikten; Python ve MCP. Temizle altlığı boş katman saymaz; değişmeyen stil kaydı adım yazmaz. Açık: geri alınabilir ayar ve stil
+  tabloları ile ortak değişiklik kümesi (`CAD-CMD-14`), dondurma ve çizim bayrakları, katman durumlarının alışverişi.
 - [ ] `CADP-09` Pafta kitabı `.kcad`'in kaynağında; cihaz kitaplarından göç (plan §17.1).
 - [ ] `CADP-10` Uygulamanın gerçek AI yüzeyi ve çizimin bağlam, sorgu, plan ve yürütme zinciri (plan §19).
 - [ ] `CADP-11` DWG karar matrisi ve gerçek ofis dosyalarıyla kodek denemesi; seçim ayrı ADR'de (plan §16.1, `DEC-01`).
