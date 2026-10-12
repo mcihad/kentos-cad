@@ -12,10 +12,10 @@ use std::path::PathBuf;
 
 use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
-    CAD_ENTITIES_SET, DimensionsReassociate, EntitiesCreate, EntitiesOffset, EntitiesSetProperties,
-    LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer,
-    LayersService, LayersSet, LayersStates, LayersTime, NetworkDefine, OffsetBy, ScenariosEdit,
-    SettingsSet, StylesEdit,
+    CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
+    EntitiesOffset, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose, LayersEdit,
+    LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates,
+    LayersTime, NetworkDefine, OffsetBy, ScenariosEdit, SettingsSet, StylesEdit,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -28,10 +28,11 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, delete, dimensions_reassociate, edit, labels_pin, layers_compose, layers_edit,
-    layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
-    layers_states, layers_time, line, network_define, offset, point, polygon, polyline,
-    scenarios_edit, set, settings_set, styles_edit, transform,
+    circle, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
+    entities_fillet, entities_trim, labels_pin, layers_compose, layers_edit, layers_filter,
+    layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
+    layers_time, line, network_define, offset, point, polygon, polyline, scenarios_edit, set,
+    settings_set, styles_edit, transform,
 };
 use serde_json::{Value, json};
 
@@ -365,6 +366,48 @@ impl Input for LayersCompose {
 impl Input for LayersLabels {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for EntitiesTrim {
+    /// `picks[0].at.x`, `boundaries.max.y` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if let Some(rest) = path.strip_prefix("boundaries.") {
+            let Some(kentos_domain::contracts::TrimBoundaries::Area { min, max }) =
+                &mut self.boundaries
+            else {
+                return None;
+            };
+            return match rest {
+                "min.x" => Some(&mut min.x),
+                "min.y" => Some(&mut min.y),
+                "max.x" => Some(&mut max.x),
+                "max.y" => Some(&mut max.y),
+                _ => None,
+            };
+        }
+        let rest = path.strip_prefix("picks[")?;
+        let (i, rest) = rest.split_once(']')?;
+        let p = &mut self.picks.get_mut(i.parse::<usize>().ok()?)?.at;
+        match rest {
+            ".at.x" => Some(&mut p.x),
+            ".at.y" => Some(&mut p.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for EntitiesFillet {
+    /// `radius` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        (path == "radius").then_some(&mut self.radius)
+    }
+}
+
+impl Input for EntitiesChamfer {
+    /// `distance` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        (path == "distance").then_some(&mut self.distance)
     }
 }
 
@@ -993,6 +1036,10 @@ fn run_op(
         CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
         CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
         kentos_domain::contracts::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
+        kentos_domain::contracts::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
+        kentos_domain::contracts::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),
+        kentos_domain::contracts::CAD_ENTITIES_FILLET => run!(entities_fillet, EntitiesFillet),
+        kentos_domain::contracts::CAD_ENTITIES_CHAMFER => run!(entities_chamfer, EntitiesChamfer),
         kentos_domain::contracts::CAD_DIMENSIONS_REASSOCIATE => {
             run!(dimensions_reassociate, DimensionsReassociate)
         }

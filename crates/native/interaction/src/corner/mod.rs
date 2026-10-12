@@ -16,7 +16,8 @@
 //! - Esc steps back to finding a corner; with none picked, the tool leaves.
 //!
 //! The sides take their new geometry and the arc or the cut is a new object
-//! from the first side, in one undo step through `cad.entities.edit`. The
+//! from the first side, in one undo step through `cad.entities.fillet` or
+//! `cad.entities.chamfer` (docs/adr/0250), whose plan is the preview. The
 //! corner found, its reach, the pulled size and every piece are the shared
 //! core's (`corner_near`, `pulled_distance`, `corner_of_path`,
 //! `fillet_lines`, `chamfer_lines`, `fillet_arc`, `chamfer_line`).
@@ -24,16 +25,18 @@
 mod plan;
 mod site;
 
-use kentos_contracts::{EditOperation, EntityEdit};
+use kentos_contracts::{CommandResult, CornerPick, EntitiesChamfer, EntitiesFillet, TrimPick};
 use kentos_domain::Slot;
 use kentos_geometry_core::tools::drawing::offset_along;
 use kentos_geometry_core::tools::editing::{fillet_radius_for, pulled_distance};
+use kentos_native_application::corner::{Request, plan_in as corner_plan};
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, entities_chamfer, entities_fillet};
 
 use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::plain_number;
+use crate::points::{self, plain_number};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
     Context, Cursor, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
@@ -124,13 +127,6 @@ impl CornerTool {
         match self.kind {
             Kind::Fillet => "Köşe yuvarla",
             Kind::Chamfer => "Pah",
-        }
-    }
-
-    fn operation(&self) -> EditOperation {
-        match self.kind {
-            Kind::Fillet => EditOperation::Fillet,
-            Kind::Chamfer => EditOperation::Chamfer,
         }
     }
 
@@ -234,60 +230,70 @@ impl CornerTool {
         self.drawn = Preview::default();
     }
 
-    /// Writes the corner through `cad.entities.edit` (the web's `commit`): the
-    /// sides take their whole new geometry, the arc or the cut is a new
-    /// object from the first side. A refusal leaves the corner picked.
+    /// The command's corner: a path's vertex, or two lines and their picks.
+    fn pick_of(c: &Corner, cx: &Context<'_>) -> CornerPick {
+        match c.site {
+            Site::Vertex { slot, vertex } => CornerPick::Vertex {
+                uid: edge::uid(cx.doc, slot),
+                index: u32::try_from(vertex).unwrap_or(u32::MAX),
+            },
+            Site::Lines {
+                first,
+                pick1,
+                second,
+                pick2,
+            } => CornerPick::Lines {
+                first: TrimPick {
+                    uid: edge::uid(cx.doc, first),
+                    at: points::wire(pick1),
+                },
+                second: TrimPick {
+                    uid: edge::uid(cx.doc, second),
+                    at: points::wire(pick2),
+                },
+            },
+        }
+    }
+
+    /// Writes the corner through `cad.entities.fillet` or `.chamfer` (docs/adr/0250; the web's
+    /// `commit`): the sides take their whole new geometry, the arc or the cut is a new object
+    /// from the first side; without Kırp only the arc or the cut is added. A refusal leaves the
+    /// corner picked.
     fn commit(&mut self, op: Op, cx: &mut Context<'_>) {
         let Some(c) = self.corner else { return };
-        let plan = match plan::plan(&c, op, cx.doc) {
-            Ok(plan) => plan,
-            Err(error) => {
-                if !error.is_empty() {
-                    cx.say(Level::Warn, error);
-                }
-                return;
-            }
+        let trim = self.memory().corner_trim;
+        let corner = Self::pick_of(&c, cx);
+        let mut ecx = ExecutionContext::new(cx.doc);
+        let result = match op {
+            Op::Radius(radius) => entities_fillet::execute(
+                &mut ecx,
+                EntitiesFillet {
+                    corner,
+                    radius,
+                    trim: Some(trim),
+                    expected_revision: None,
+                },
+            ),
+            Op::Cut(distance, second) => entities_chamfer::execute(
+                &mut ecx,
+                EntitiesChamfer {
+                    corner,
+                    distance,
+                    second: Some(second),
+                    trim: Some(trim),
+                    expected_revision: None,
+                },
+            ),
         };
-        if !self.memory().corner_trim {
-            let Some(piece) = plan::piece(&c, op) else {
-                cx.say(
-                    Level::Warn,
-                    "Kırpmadan çalışırken sıfırdan büyük bir boyut verin; yoksa eklenecek bir şey yok.",
-                );
-                return;
-            };
-            let like = c.slots()[0];
-            let from = edge::uid(cx.doc, like);
-            let Some(geometry) = edge::geometry(&piece) else {
-                return;
-            };
-            let change = EntityEdit::add(from, geometry, None);
-            if edge::write(self.operation(), vec![change], cx).is_none() {
-                return;
-            }
-            self.remember(op, cx);
-            let text = format!("{} Kenarlar kırpılmadı.", self.done(op));
-            cx.say(Level::Success, text);
-            return self.reset();
-        }
-        let mut changes = Vec::new();
-        for (slot, s) in &plan.updates {
-            let uid = edge::uid(cx.doc, *slot);
-            if let Some(geometry) = edge::geometry(s) {
-                changes.push(EntityEdit::Update { uid, geometry });
-            }
-        }
-        if let Some((like, s)) = &plan.add {
-            let from = edge::uid(cx.doc, *like);
-            if let Some(geometry) = edge::geometry(s) {
-                changes.push(EntityEdit::add(from, geometry, None));
-            }
-        }
-        if edge::write(self.operation(), changes, cx).is_none() {
+        if points::written(result, cx).is_none() {
             return;
         }
         self.remember(op, cx);
-        let text = self.done(op);
+        let text = if trim {
+            self.done(op)
+        } else {
+            format!("{} Kenarlar kırpılmadı.", self.done(op))
+        };
         cx.say(Level::Success, text);
         self.reset();
     }
@@ -335,18 +341,19 @@ impl CornerTool {
                     .tone(Tone::Snap),
             );
         }
-        if let Ok(plan) = plan::plan(&c, op, doc) {
-            if !self.memory().corner_trim {
-                if let Some(piece) = plan::piece(&c, op) {
-                    out = out.and(Outline::of(&piece, None, 2.5, Tone::Accent));
-                }
-            } else {
-                for (_, s) in &plan.updates {
-                    out = out.and(Outline::of(s, Some([5.0, 3.0]), 2.0, Tone::Accent));
-                }
-                if let Some((_, s)) = &plan.add {
-                    out = out.and(Outline::of(s, None, 2.5, Tone::Accent));
-                }
+        // The command's plan: the sides as they would be dashed, the arc or the cut solid.
+        let request = Request {
+            corner: &Self::pick_of(&c, cx),
+            size: op,
+            trim: self.memory().corner_trim,
+            expected_revision: None,
+        };
+        if let CommandResult::Completed { output, .. } = corner_plan(doc, request) {
+            for e in &output.changed {
+                out = out.and(Outline::of(&shape(e), Some([5.0, 3.0]), 2.0, Tone::Accent));
+            }
+            for e in &output.created {
+                out = out.and(Outline::of(&shape(e), None, 2.5, Tone::Accent));
             }
             if let Some(mouse) = self.mouse {
                 self.drawn.tag = Some(Tag {

@@ -20,11 +20,12 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{EditOperation, EntityEdit};
+use kentos_contracts::{CornerPick, EditOperation, EntitiesChamfer, EntitiesFillet, EntityEdit};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::fillet::CornerOp;
 use kentos_geometry_core::ops::reshape::{all_corners, reverse, simplify};
+use kentos_native_application::{ExecutionContext, entities_chamfer, entities_fillet};
 
 use crate::Vec2;
 use crate::corner::parse_cut;
@@ -33,7 +34,7 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{MAX_GHOSTS, Modify, Stages};
 use crate::object::ObjectAction;
-use crate::points::plain_length;
+use crate::points::{self, plain_length};
 use crate::prompt::Prompt;
 use crate::tool::{Context, Flow, Marker, MarkerShape, Memory, Preview, Stroke, Tag, Tone};
 
@@ -599,6 +600,42 @@ impl Stages for Reshape {
             let text = self.changes_nothing(&plan);
             cx.say(Level::Warn, text);
             return Flow::Stay;
+        }
+        // Every corner by its meaning (docs/adr/0250): the objects the plan rounds or cuts.
+        if matches!(self.kind, Kind::FilletAll | Kind::ChamferAll) {
+            let [a, b] = self.value(cx.memory);
+            let corner = CornerPick::All {
+                uids: plan
+                    .edits
+                    .iter()
+                    .map(|(slot, _)| edge::uid(cx.doc, *slot))
+                    .collect(),
+            };
+            let mut ecx = ExecutionContext::new(cx.doc);
+            let result = if self.kind == Kind::FilletAll {
+                let input = EntitiesFillet {
+                    corner,
+                    radius: a,
+                    trim: None,
+                    expected_revision: None,
+                };
+                entities_fillet::execute(&mut ecx, input)
+            } else {
+                let input = EntitiesChamfer {
+                    corner,
+                    distance: a,
+                    second: Some(b),
+                    trim: None,
+                    expected_revision: None,
+                };
+                entities_chamfer::execute(&mut ecx, input)
+            };
+            if points::written(result, cx).is_none() {
+                return Flow::Stay;
+            }
+            let text = self.done_message(&plan, &cx.format());
+            cx.say(Level::Success, text);
+            return Flow::Exit;
         }
         let changes: Vec<EntityEdit> = plan
             .edits

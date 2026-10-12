@@ -165,12 +165,12 @@
 
 Bugün `cad.entities.edit` girdisindeki `operation`, büyük ölçüde undo adını belirliyor; asıl değişiklikler `changes` içindeki önceden hesaplanmış geometrilerdir. UI ortak geometri hesabını çağırıp sonucu bu komuta veriyor. Örneğin Python'un “200 mm ötele” yapması için son geometriyi kendisinin üretmesi gerekebilir. Bu, mutation eşdeğerliği sağlar; hedeflenen **işlem eşdeğerliğini** tek başına sağlamaz. [E07]
 
-- [ ] **CAD-CMD-01:** Mevcut düşük seviyeli geometri yaması komutlarını koru; üzerlerine kaynak ID ve işlem parametreleri alan tipli semantik komutlar ekle. — *Kısmen (12 Ekim; CADP-04, ADR 0246: Ötele (`cad.entities.offset`) semantik; Buda, Uzat ve öbürleri CADP-05).*
+- [ ] **CAD-CMD-01:** Mevcut düşük seviyeli geometri yaması komutlarını koru; üzerlerine kaynak ID ve işlem parametreleri alan tipli semantik komutlar ekle. — *Kısmen (13 Ekim; ADR 0246, 0250: Ötele, Buda, Uzat, Köşe yuvarla ve Pah semantik; Esnet, Birleştir, Kır, Böl ve öbürleri açık).*
 - [x] **CAD-CMD-02:** Öteleme girdisi; kaynaklar, mesafe/birim, taraf noktası veya yön, noktadan geçme, iki yana, kaynak silme ve hedef katmanı açıkça taşısın. — **Bitti (12 Ekim; CADP-04, ADR 0246).**
-- [ ] **CAD-CMD-03:** Buda/uzat girdisi; hedef alt kenar, kesici/sınır nesneleri, seçim bölgesi, izdüşüm/uzantı politikası ve toleransı taşısın.
-- [ ] **CAD-CMD-04:** Fillet/chamfer girdisi; hedef alt kenarlar, seçilen taraf, yarıçap veya iki mesafe/açı, trim politikası ve tüm köşeler seçeneğini taşısın.
-- [ ] **CAD-CMD-05:** Stretch, join, break, divide, boundary, hatch ve ölçü oluşturma işlemlerinde aynı semantik girdi yaklaşımını tamamla.
-- [ ] **CAD-CMD-06:** UI araçları bu semantik komutların plan/execute yolunu kullansın; hesap UI'da ve Python'da farklı şekillerde tekrar edilmesin. — *Kısmen (12 Ekim; CADP-04, ADR 0246: Ötele aracı önizlemeyi komutun planından çizer; öbür araçlar sırada).*
+- [x] **CAD-CMD-03:** Buda/uzat girdisi; hedef alt kenar, kesici/sınır nesneleri, seçim bölgesi, izdüşüm/uzantı politikası ve toleransı taşısın. — **Bitti (13 Ekim; CADP-05, ADR 0250).**
+- [x] **CAD-CMD-04:** Fillet/chamfer girdisi; hedef alt kenarlar, seçilen taraf, yarıçap veya iki mesafe/açı, trim politikası ve tüm köşeler seçeneğini taşısın. — **Bitti (13 Ekim; CADP-05, ADR 0250).**
+- [ ] **CAD-CMD-05:** Stretch, join, break, divide, boundary, hatch ve ölçü oluşturma işlemlerinde aynı semantik girdi yaklaşımını tamamla. — *Kısmen (13 Ekim; ADR 0250: ilişkili ölçü yerleriyle oluşturulur; Esnet, Birleştir, Kır, Böl, Sınır ve Tarama açık).*
+- [ ] **CAD-CMD-06:** UI araçları bu semantik komutların plan/execute yolunu kullansın; hesap UI'da ve Python'da farklı şekillerde tekrar edilmesin. — *Kısmen (13 Ekim; ADR 0246, 0250: Ötele, Buda, Uzat, Köşe yuvarla, Pah ve tüm köşeler araçları planla önizler, komutla yazar; öbür araçlar sırada).*
 - [ ] **CAD-CMD-07:** İşlem descriptor'larında desteklenen nesne türü/yöntem kombinasyonlarını ve açık red nedenlerini keşfedilebilir yap.
 - [ ] **CAD-CMD-08:** `discover → validate → plan → execute → progress/result` akışını veri, proje, dosya ve uzun işlerde tutarlı uygula.
 - [ ] **CAD-CMD-09:** Plan; dokunulan nesneler, bağımlı nesneler, eklenen/silinen/değişen sayıları, bbox, kayıp/uyarı ve kaynak revision'larını dönsün.
@@ -887,7 +887,7 @@ Bağımlılık omurgası:
 2. Pafta kaynakları ile eski envanter farkını düzelt; gerçek var/eksik durumunu belgele. — ✅ **Bitti (12 Ekim; CADP-02, ADR 0247).**
 3. Python/MCP `new drawing` birim parametrelerini ve mevcut API birim açıklamalarını eşitle. — ✅ **Bitti (12 Ekim; CADP-03, ADR 0245).**
 4. Semantik `offset` dikey dilimini UI/native/web/headless/Python/MCP ile kur. — ✅ **Bitti (12 Ekim; CADP-04, ADR 0246; web ADR 0228 gereği TODOS §0.2'de).**
-5. Aynı kalıpla `trim/extend/fillet` ve ilişkili ölçü oluşturmayı tamamla.
+5. Aynı kalıpla `trim/extend/fillet` ve ilişkili ölçü oluşturmayı tamamla. — ✅ **Bitti (13 Ekim; CADP-05, ADR 0250).**
 6. Subentity ID ve reference migration/invalidasyon tasarımını yaz; bağımsız testlerle uygula. — ✅ **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
 7. Dimension associativity, annotation monitor ve reassociate ilk dilimini çıkar. — ✅ **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
 8. Katman/stil/settings CRUD işlemlerini kataloga al; SDK/MCP kapsamını eşitle. — ✅ **Bitti (12 Ekim; CADP-08, ADR 0248).**

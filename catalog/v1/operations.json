@@ -1087,36 +1087,60 @@
       "note": "Kaynaklar, mesafe ya da geçilecek nokta, taraf, iki yana ve kaynağı sil komuta verilir (ADR 0246)."
     },
     "trim": {
-      "level": "geometry",
-      "operation": "trim",
+      "level": "semantic",
+      "via": [
+        "cad.entities.trim"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Seçimler (nesne ve tıklanan yer) ve sınırlar (görünümün dikdörtgeni ya da Sınır seç) komuta verilir (ADR 0250).",
       "methods": {
-        "Tıklayarak": "geometry",
-        "Çit": "geometry"
+        "Tıklayarak": "semantic",
+        "Çit": "semantic"
       }
     },
     "extend": {
-      "level": "geometry",
-      "operation": "extend",
+      "level": "semantic",
+      "via": [
+        "cad.entities.extend"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Seçimler ve sınırlar komuta verilir; her uç bir kez (ADR 0250).",
       "methods": {
-        "Tıklayarak": "geometry",
-        "Çit": "geometry"
+        "Tıklayarak": "semantic",
+        "Çit": "semantic"
       }
     },
     "fillet": {
-      "level": "geometry",
-      "operation": "fillet"
+      "level": "semantic",
+      "via": [
+        "cad.entities.fillet"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Köşe (yolun köşesi ya da iki çizgi), yarıçap ve Kırp komuta verilir (ADR 0250)."
     },
     "filletAll": {
-      "level": "geometry",
-      "operation": "fillet"
+      "level": "semantic",
+      "via": [
+        "cad.entities.fillet"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler `all` köşesiyle ve yarıçap komuta verilir (ADR 0250)."
     },
     "chamfer": {
-      "level": "geometry",
-      "operation": "chamfer"
+      "level": "semantic",
+      "via": [
+        "cad.entities.chamfer"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Köşe, iki mesafe ve Kırp komuta verilir (ADR 0250)."
     },
     "chamferAll": {
-      "level": "geometry",
-      "operation": "chamfer"
+      "level": "semantic",
+      "via": [
+        "cad.entities.chamfer"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler `all` köşesiyle ve iki mesafe komuta verilir (ADR 0250)."
     },
     "break": {
       "level": "geometry",

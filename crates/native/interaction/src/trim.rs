@@ -19,24 +19,22 @@
 //!   undo step. An object cut by an earlier crossing is cut again where it
 //!   now is; the boundaries are the same as a click's.
 //!
-//! A trim replaces the object by its pieces, the first in its place; an
-//! extend gives it its new geometry; both through `cad.entities.edit`. What
-//! is cut and grown is the shared geometry store's (`trim_preview`,
-//! `extend_preview`: the boundaries near the target, then `trim_entity`,
-//! `extend_entity`), as the web asks it.
+//! What a click and a fence do is the semantic commands' (docs/adr/0250):
+//! `cad.entities.trim` and `cad.entities.extend` with the picks and the
+//! boundaries (those picked, or the view's rectangle), run with the tool's
+//! store; the preview is the command's plan. A trim replaces the object by
+//! its pieces, the first in its place; an extend gives it its new geometry.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_contracts::{CommandResult, EntitiesTrim, EntitiesTrimmed, TrimBoundaries, TrimPick};
 use kentos_domain::Slot;
-use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
-use kentos_geometry_core::ops::curve_cuts::{Cut, Geometry};
-use kentos_geometry_core::ops::offset::through_distance;
-use kentos_geometry_core::ops::path::{nearest_s, path_of};
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, codes, trim};
 
 use crate::edge::{self, Hover, Outline};
 use crate::fence::{self, Fence};
 use crate::format::Format;
 use crate::log::Level;
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tone, Tool};
 use crate::{Vec2, js_trim};
@@ -46,14 +44,20 @@ pub const TRIM_ID: &str = "trim";
 /// The extend tool's id: its command is `tool.extend`.
 pub const EXTEND_ID: &str = "extend";
 
-/// How near a crossing must lie to a piece to be on it, metres.
-const ON_PIECE: f64 = 1e-6;
-
 /// What a click does without Shift.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Act {
     Trim,
     Extend,
+}
+
+impl Act {
+    fn core(self) -> trim::Act {
+        match self {
+            Act::Trim => trim::Act::Trim,
+            Act::Extend => trim::Act::Extend,
+        }
+    }
 }
 
 /// The trim or the extend tool.
@@ -126,83 +130,71 @@ impl Boundary {
         }
     }
 
-    fn chosen(&self) -> Option<Vec<f64>> {
-        self.bounds
-            .as_ref()
-            .map(|ids| ids.iter().map(|s| f64::from(s.0)).collect())
+    /// The command's boundaries: those picked with Sınır seç, else every shown edge in view.
+    fn boundaries(&self, cx: &Context<'_>) -> TrimBoundaries {
+        match &self.bounds {
+            Some(slots) => TrimBoundaries::Objects {
+                uids: slots.iter().map(|s| edge::uid(cx.doc, *s)).collect(),
+            },
+            None => {
+                let v = cx.view.visible();
+                TrimBoundaries::Area {
+                    min: points::wire(Vec2::new(v.min_x, v.min_y)),
+                    max: points::wire(Vec2::new(v.max_x, v.max_y)),
+                }
+            }
+        }
     }
 
-    /// The object at `slot` trimmed at `at`: the pieces that stay, from the store.
-    fn cut(&self, slot: Slot, e: &Entity, at: Vec2, cx: &Context<'_>) -> Cut {
-        let chosen = self.chosen();
-        cx.spatial.store().trim_preview(
-            &edge::core(e),
-            at,
-            Some(f64::from(slot.0)),
-            chosen.as_deref(),
-            &cx.view.visible(),
-        )
+    /// What `cad.entities.trim` (`.extend`) is asked for the picks.
+    fn request(&self, picks: Vec<(Slot, Vec2)>, cx: &Context<'_>) -> EntitiesTrim {
+        EntitiesTrim {
+            picks: picks
+                .into_iter()
+                .map(|(slot, at)| TrimPick {
+                    uid: edge::uid(cx.doc, slot),
+                    at: points::wire(at),
+                })
+                .collect(),
+            boundaries: Some(self.boundaries(cx)),
+            expected_revision: None,
+        }
     }
 
-    /// The object at `slot` extended at the end nearest `at`, from the store.
-    fn grow(&self, slot: Slot, e: &Entity, at: Vec2, cx: &Context<'_>) -> Geometry {
-        let chosen = self.chosen();
-        cx.spatial.store().extend_preview(
-            &edge::core(e),
-            at,
-            Some(f64::from(slot.0)),
-            chosen.as_deref(),
-            &cx.view.visible(),
-        )
+    /// The command for the picks, with the tool's store: the answer as it is.
+    fn run(
+        &self,
+        act: Act,
+        picks: Vec<(Slot, Vec2)>,
+        cx: &mut Context<'_>,
+    ) -> CommandResult<EntitiesTrimmed> {
+        let input = self.request(picks, cx);
+        let mut ecx = ExecutionContext::with_store(cx.doc, cx.spatial.store());
+        trim::execute(&mut ecx, input, act.core())
     }
 
     fn trim_at(&mut self, slot: Slot, at: Vec2, cx: &mut Context<'_>) {
-        let Some(e) = cx.doc.get(slot).cloned() else {
-            return;
-        };
-        if edge::refuse_holed(&e, "budama", cx) {
-            return;
-        }
-        match self.cut(slot, &e, at, cx) {
-            Cut::Error(error) => cx.say(Level::Warn, error),
-            Cut::Pieces(pieces) => {
-                let shapes: Vec<_> = pieces.into_iter().map(|p| p.shape).collect();
-                if edge::replace(EditOperation::Trim, slot, &shapes, cx) {
-                    cx.say(
-                        Level::Success,
-                        format!("Budandı: {} parça kaldı.", shapes.len()),
-                    );
-                }
-                self.hover = None;
-            }
+        let result = self.run(Act::Trim, vec![(slot, at)], cx);
+        if let Some(out) = points::written(result, cx) {
+            let left = out.changed.len() + out.created.len();
+            cx.say(Level::Success, format!("Budandı: {left} parça kaldı."));
+            let doc = &*cx.doc;
+            cx.selection.retain(|s| doc.get(s).is_some());
+            cx.selection.set_hover(None);
+            self.hover = None;
         }
     }
 
     fn extend_at(&mut self, slot: Slot, at: Vec2, cx: &mut Context<'_>) {
-        let Some(e) = cx.doc.get(slot).cloned() else {
-            return;
-        };
-        match self.grow(slot, &e, at, cx) {
-            Geometry::Error(error) => cx.say(Level::Warn, error),
-            Geometry::Ok(grown) => {
-                let uid = edge::uid(cx.doc, slot);
-                let written = edge::geometry(&grown.shape).and_then(|geometry| {
-                    edge::write(
-                        EditOperation::Extend,
-                        vec![EntityEdit::Update { uid, geometry }],
-                        cx,
-                    )
-                });
-                if written.is_some() {
-                    cx.say(Level::Success, "Uzatıldı.");
-                }
-            }
+        let result = self.run(Act::Extend, vec![(slot, at)], cx);
+        if points::written(result, cx).is_some() {
+            cx.say(Level::Success, "Uzatıldı.");
         }
     }
 
-    /// Çit: what the fence crosses trimmed or extended, all as one edit. What
-    /// could not be done is said with the first reason; with nothing done,
-    /// nothing is written.
+    /// Çit: what the fence crosses trimmed or extended, all as one command (each crossing a pick,
+    /// an object's in their order). What could not be done is said with the first reason; with
+    /// nothing done, nothing is written.
     fn apply_fence(&mut self, cx: &mut Context<'_>) {
         let hits = fence::crossed(self.fence.points(), cx);
         let (verb, done) = match self.act {
@@ -216,142 +208,55 @@ impl Boundary {
             );
             return;
         }
-        let (mut changes, mut objects, mut skipped) = (Vec::new(), 0, 0);
-        let mut why: Option<String> = None;
-        for (slot, crossings) in hits {
-            let Some(e) = cx.doc.get(slot).cloned() else {
-                continue;
-            };
-            let work = match self.act {
-                Act::Trim => self.fence_trim(slot, &e, &crossings, cx),
-                Act::Extend => self.fence_extend(slot, &e, &crossings, cx),
-            };
-            skipped += work.skipped;
-            if why.is_none() {
-                why = work.why;
-            }
-            if !work.changes.is_empty() {
-                objects += 1;
-                changes.extend(work.changes);
-            }
-        }
+        let picks: Vec<(Slot, Vec2)> = hits
+            .into_iter()
+            .flat_map(|(slot, crossings)| crossings.into_iter().map(move |at| (slot, at)))
+            .collect();
+        let result = self.run(self.act, picks, cx);
         self.fence.clear();
-        if changes.is_empty() {
-            let reason = why.map(|w| format!(" {w}")).unwrap_or_default();
-            cx.say(
-                Level::Warn,
-                format!(
-                    "Çit hiçbir nesneyi {}; nesne değişmedi.{reason}",
-                    verb_of(self.act)
-                ),
-            );
-            return;
-        }
-        let operation = match self.act {
-            Act::Trim => EditOperation::Trim,
-            Act::Extend => EditOperation::Extend,
-        };
-        if edge::write(operation, changes, cx).is_none() {
-            return;
-        }
-        let doc = &*cx.doc;
-        cx.selection.retain(|s| doc.get(s).is_some());
-        cx.selection.set_hover(None);
-        let mut text = format!("Çit: {objects} nesne {done}.");
-        if skipped > 0 {
-            text.push_str(&format!(" {skipped} kesişim işlenemedi"));
-            match why {
-                Some(w) => text.push_str(&format!(": {w}")),
-                None => text.push('.'),
-            }
-        }
-        cx.say(Level::Success, text);
-    }
-
-    /// The trims of one object crossed by the fence, one after another: each
-    /// crossing cuts the piece it is on, so what an earlier one took away is not cut twice.
-    fn fence_trim(&self, slot: Slot, e: &Entity, crossings: &[Vec2], cx: &Context<'_>) -> Work {
-        let mut work = Work::default();
-        if matches!(e, Entity::Polygon(p) if p.holes.as_ref().is_some_and(|x| !x.is_empty())) {
-            work.skipped = crossings.len();
-            work.why = Some(
-                "Adalı alanda budama yapılamaz; önce Patlat ile halkalarına ayırın.".to_owned(),
-            );
-            return work;
-        }
-        let (chosen, view) = (self.chosen(), cx.view.visible());
-        let mut pieces = vec![shape(e)];
-        for &at in crossings {
-            let Some(i) = piece_at(&pieces, at) else {
-                continue;
-            };
-            let target = CoreEntity::new(pieces[i].clone());
-            let cut = cx.spatial.store().trim_preview(
-                &target,
-                at,
-                Some(f64::from(slot.0)),
-                chosen.as_deref(),
-                &view,
-            );
-            match cut {
-                Cut::Pieces(now) => {
-                    pieces.splice(i..=i, now.into_iter().map(|p| p.shape));
-                    work.done = true;
+        match result {
+            CommandResult::Completed { output, warnings } => {
+                let doc = &*cx.doc;
+                cx.selection.retain(|s| doc.get(s).is_some());
+                cx.selection.set_hover(None);
+                let objects = match self.act {
+                    Act::Trim => output.changed.len() + output.removed.len(),
+                    Act::Extend => output.changed.len(),
+                };
+                let mut text = format!("Çit: {objects} nesne {done}.");
+                let skipped: Vec<_> = warnings
+                    .iter()
+                    .filter(|w| w.code == codes::TRIM_FAILED || w.code == codes::EXTEND_FAILED)
+                    .collect();
+                if let Some(first) = skipped.first() {
+                    text.push_str(&format!(
+                        " {} kesişim işlenemedi: {}",
+                        skipped.len(),
+                        first.message
+                    ));
                 }
-                Cut::Error(error) => work.fail(error),
+                cx.say(Level::Success, text);
             }
-        }
-        if work.done {
-            work.changes = edge::replace_changes(cx.doc, slot, &pieces);
-        }
-        work
-    }
-
-    /// The extends of one object crossed by the fence: each end at most once,
-    /// the one nearest the crossing.
-    fn fence_extend(&self, slot: Slot, e: &Entity, crossings: &[Vec2], cx: &Context<'_>) -> Work {
-        let mut work = Work::default();
-        let (chosen, view) = (self.chosen(), cx.view.visible());
-        let mut current = shape(e);
-        let mut used = [false; 2];
-        for &at in crossings {
-            let Some(path) = path_of(&current).filter(|p| !p.closed) else {
-                work.fail(
-                    "Yalnız açık çizgiler, çoklu çizgiler ve yaylar uzatılabilir.".to_owned(),
+            CommandResult::Failed { error }
+                if error.code == codes::TRIM_FAILED || error.code == codes::EXTEND_FAILED =>
+            {
+                cx.say(
+                    Level::Warn,
+                    format!(
+                        "Çit hiçbir nesneyi {}; nesne değişmedi. {}",
+                        verb_of(self.act),
+                        error.message
+                    ),
                 );
-                continue;
-            };
-            let end = usize::from(nearest_s(&path, at) > path.length / 2.0);
-            if std::mem::replace(&mut used[end], true) {
-                continue;
             }
-            let target = CoreEntity::new(current.clone());
-            let grown = cx.spatial.store().extend_preview(
-                &target,
-                at,
-                Some(f64::from(slot.0)),
-                chosen.as_deref(),
-                &view,
-            );
-            match grown {
-                Geometry::Ok(g) => {
-                    current = g.shape;
-                    work.done = true;
-                }
-                Geometry::Error(error) => work.fail(error),
+            other => {
+                points::written(other, cx);
             }
         }
-        if let (true, Some(geometry)) = (work.done, edge::geometry(&current)) {
-            work.changes = vec![EntityEdit::Update {
-                uid: edge::uid(cx.doc, slot),
-                geometry,
-            }];
-        }
-        work
     }
 
-    /// The preview under the pointer: the trim's pieces over the whole object,
-    /// or the extended object (the web's `preview`).
+    /// The preview under the pointer, from the command's plan: the whole object dashed in the
+    /// danger colour and the pieces that stay over it, or the extended object (the web's `preview`).
     fn redraw(&mut self, cx: &Context<'_>) {
         self.drawn = Preview::default();
         if self.picking {
@@ -359,24 +264,23 @@ impl Boundary {
         }
         let Some(h) = self.hover else { return };
         let Some(e) = cx.doc.get(h.slot) else { return };
-        let out = match self.act_for(self.shift) {
-            Act::Trim => {
-                if matches!(e, Entity::Polygon(p) if p.holes.as_ref().is_some_and(|x| !x.is_empty()))
-                {
-                    return;
-                }
-                let Cut::Pieces(pieces) = self.cut(h.slot, e, h.at, cx) else {
-                    return;
-                };
-                // The whole object dashed red, the pieces that stay solid on top: what stays red goes.
-                pieces.iter().fold(
-                    Outline::of(&shape(e), Some([5.0, 3.0]), 2.0, Tone::Danger),
-                    |out, p| out.and(Outline::of(&p.shape, None, 1.5, Tone::Accent)),
-                )
-            }
-            Act::Extend => match self.grow(h.slot, e, h.at, cx) {
-                Geometry::Ok(g) => Outline::of(&g.shape, Some([4.0, 3.0]), 1.5, Tone::Accent),
-                Geometry::Error(_) => return,
+        let act = self.act_for(self.shift);
+        let input = self.request(vec![(h.slot, h.at)], cx);
+        let CommandResult::Completed { output, .. } =
+            trim::plan_in(cx.doc, Some(cx.spatial.store()), &input, act.core())
+        else {
+            return;
+        };
+        let shapes = output.changed.iter().chain(&output.created).map(shape);
+        let out = match act {
+            // What stays red goes.
+            Act::Trim => shapes.fold(
+                Outline::of(&shape(e), Some([5.0, 3.0]), 2.0, Tone::Danger),
+                |out, p| out.and(Outline::of(&p, None, 1.5, Tone::Accent)),
+            ),
+            Act::Extend => match shapes.into_iter().next() {
+                Some(g) => Outline::of(&g, Some([4.0, 3.0]), 1.5, Tone::Accent),
+                None => return,
             },
         };
         self.drawn = Preview {
@@ -387,39 +291,12 @@ impl Boundary {
     }
 }
 
-/// What the fence did to one object: the edits, what it could not do and why.
-#[derive(Default)]
-struct Work {
-    changes: Vec<EntityEdit>,
-    done: bool,
-    skipped: usize,
-    why: Option<String>,
-}
-
-impl Work {
-    fn fail(&mut self, error: String) {
-        self.skipped += 1;
-        self.why.get_or_insert(error);
-    }
-}
-
 /// What the tool does to an object, for a sentence: `budayamadı`, `uzatamadı`.
 fn verb_of(act: Act) -> &'static str {
     match act {
         Act::Trim => "budayamadı",
         Act::Extend => "uzatamadı",
     }
-}
-
-/// The piece of a cut object a crossing lies on, if any is left there.
-fn piece_at(pieces: &[Shape], at: Vec2) -> Option<usize> {
-    pieces
-        .iter()
-        .enumerate()
-        .map(|(i, p)| (i, through_distance(p, at)))
-        .filter(|(_, d)| *d < ON_PIECE)
-        .min_by(|a, b| a.1.total_cmp(&b.1))
-        .map(|(i, _)| i)
 }
 
 impl Tool for Boundary {

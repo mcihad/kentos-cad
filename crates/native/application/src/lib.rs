@@ -51,7 +51,12 @@ pub mod geometry;
 pub mod info_templates;
 pub mod label_texts;
 pub mod labels_pin;
+pub mod corner;
 pub mod dimensions_reassociate;
+mod edge_commands;
+pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
+pub mod geometry_store;
+pub mod trim;
 pub mod layer_filter;
 pub mod layers_compose;
 pub mod layers_edit;
@@ -191,6 +196,23 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_DIMENSIONS_REASSOCIATE,
         kentos_contracts::CAD_DIMENSIONS_REASSOCIATE_VERSION,
+    ),
+    // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250).
+    (
+        kentos_contracts::CAD_ENTITIES_TRIM,
+        kentos_contracts::CAD_ENTITIES_TRIM_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_EXTEND,
+        kentos_contracts::CAD_ENTITIES_EXTEND_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_FILLET,
+        kentos_contracts::CAD_ENTITIES_FILLET_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_CHAMFER,
+        kentos_contracts::CAD_ENTITIES_CHAMFER_VERSION,
     ),
     // Katman stili's renderers ([`layers_renderer`], docs/adr/0213 §5).
     (
