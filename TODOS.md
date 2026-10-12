@@ -87,6 +87,10 @@ Liste:
   kullanır; kayıt (`product/registry.ts`) ve katalogda `hosts`'a Web; oynatılacak iz `edge-tools.json` (değişmedi); ortak durumlar
   `fixtures/commands/v1/cad.entities.offset.json` web'in koşucusunda; bilinen bozulmalar: `product/fixtures.test.ts` bu dosyanın
   komutunu web'de bulamaz (“web'de çalışmıyor”); komut kataloğunda `cad.entities.offset` (yalnız `Desktop` işaretli).
+- [ ] `.kcad` şema 43 (ADR 0249 §4, 12 Ekim): web'de gerekenler: `io/columns.ts`'in ölçü satırı `REFS` bayrağını (bit 28: başvuru
+  maskesi, başvuru başına yerin türü, sayıları ve kopma bayrağı; metinlerde nesnenin kimliği ve kopma nedeni; `columns.rs`'in tablosu)
+  okur ve yazar; `io/version.ts`'in `FORMATS_VERSION`'ı 55 (web'de 53 kaldı); bilinen bozulmalar: web'in `kcad.wasm.test.ts`'i
+  `dimension-refs.kcad`'i ve `broken/dimension-refs-*`'i okur; `io/columns.ts` bit 28'i bilmez, başvurulu ölçünün sütunlarını okuyamaz.
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
