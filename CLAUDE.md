@@ -1780,7 +1780,8 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   ([ADR 0244](docs/adr/0244-cad-operation-manifest.md)) bitti (12 Ekim): eşleme `catalog/v1/operations.json`, üreteç
   `scripts/cad/manifest.py`, çıktı `docs/cad/manifest.{json,md}` (654 satır; CBS'ye özgü olmayan 449 satırın 243'ü Python ve AI için
   boşluk). `CADP-02` ([ADR 0247](docs/adr/0247-sheet-commands-on-the-desktop.md)) bitti: pafta komutlarının masaüstündeki yerleri
-  `equivalents.json`'da, Ad ver yerinde (liste, ağaç, F2); `kentos-sheet-ui` masaüstü takımında. Sahibin izniyle (12 Ekim) iki paralel ajan: `CADP-03` (dal `cad-units`, ADR 0245) ve `CADP-04` (dal `cad-offset`,
+  `equivalents.json`'da, Ad ver yerinde (liste, ağaç, F2); `kentos-sheet-ui` masaüstü takımında. Sahibin izniyle (12 Ekim) iki paralel ajan: `CADP-03` (dal `cad-units`, ADR 0245; PR #21 birleşti: Python ve MCP'de yeni
+  çizimin birimi ve sihirbazın parametreleri, cevaplarda `units`) ve `CADP-04` (dal `cad-offset`,
   ADR 0246); ağır işler `/tmp/kentos-heavy.sh` kilidiyle sırayla. PR'leri ana ajan birleştirir; birleştirirken eşleme ve manifest
   yeniden yazılır.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;

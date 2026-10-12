@@ -988,8 +988,12 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   58 komut yerleriyle `apps/desktop/equivalents.json`'da (54 var, Atlas ve Karelaj bekliyor, Yakınlaştır ve Uzaklaştır yalnız
   tekerlekle); eksik çıkan Ad ver eklendi (paftalar listesinde ve öğe ağacında yerinde, F2); masaüstünde olmayan CAD tarafı öğeleri
   62'den 8'e; `kentos-sheet-ui`'ın testleri `pnpm rust:test:desktop`'ta (macOS'ta düşen bir tuş testi düzeldi).
-- [ ] `CADP-03` Yeni çizimin birimi ve sihirbazın parametreleri Python'da ve MCP'de; API'lerin birim açıklamaları (plan `CAD-AUD-09`,
-  `CAD-DATA-01`–`03`, `05`, `06`). Paralel ajan, dal `cad-units`, ADR 0245.
+- [x] `CADP-03` Yeni çizimin birimi ve sihirbazın parametreleri Python'da ve MCP'de; API'lerin birim açıklamaları (plan `CAD-AUD-09`,
+  `CAD-DATA-01`–`03`, `05`, `06`). — **12 Ekim, [ADR 0245](docs/adr/0245-new-drawing-units-in-python-and-mcp.md)** (paralel ajan, dal
+  `cad-units`, PR #21): `kentos_project::new_request` sihirbazın `Draft`'ını adlarla doldurur (ad, tür, yerel ya da gerçek koordinat,
+  srid, il, çizim birimi, ölçek, yazı tipi; sihirbazın sözleriyle retler); başsız sunucu, Python (`Document.new`, `Units`) ve MCP
+  (`drawing.new`) aynı kuralla; özet ve ölçü `units`'i söyler (tel değerleri metrede kalır). Açık: katalog şemalarının birimleri
+  (`CAD-DATA-05`'in kalanı) ve projenin biriminin değiştirilmesi (`CAD-DATA-04`).
 - [ ] `CADP-04` Anlamsal Ötele: `cad.entities.offset` arayüzde, masaüstünde, başsız sunucuda, Python'da ve MCP'de (plan `CAD-CMD-01`,
   `02`, `06`). Paralel ajan, dal `cad-offset`, ADR 0246.
 - [ ] `CADP-05` Aynı kalıpla Buda, Uzat, Köşe yuvarla ve ilişkili ölçü oluşturma (plan `CAD-CMD-03`–`05`).
