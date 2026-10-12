@@ -73,7 +73,10 @@ Geri dönüşün sırası:
 
 Liste:
 
-- (henüz yok)
+- [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
+  vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
+  Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
+  çizimde 0,0'a 2 × 1,5 m'lik bir alan çizip seçin ve ona yakınlaşın.
 
 ## 1. Koddan doğrulanan mevcut durum
 
