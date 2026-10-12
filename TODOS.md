@@ -8,6 +8,15 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 **Kesin web sınırı:** Web ayrı TypeScript/DOM uygulamasıdır. Desktop/Iced uygulaması web'e export edilmeyecek, uygulamanın tamamı WASM'a çevrilmeyecek. Web kendi komut/etkileşim/belge orkestrasyonunu ve WebGPU/WebGL renderer'larını korur. Ortak yürütülebilir KentOS kodu hesaplama kütüphaneleridir; veri/komut şemaları uyum için paylaşılır, uygun WGSL shader kaynakları ayrıca ortak kullanılabilir. Ortak Rust application veya wgpu renderer'ı web'e derleme hedefi yoktur.
 
+**Web'e ara (sahibin kesin kararı, 12 Ekim 2026; [ADR 0228](docs/adr/0228-web-pause-desktop-and-cloud-first.md)):**
+
+- Web katmanının son hâli **`1aad00d0`**'dır. Bundan sonra maddeler yalnız masaüstünde ve gerektiğinde bulutta, Python'da ve MCP'de
+  yapılır. Web'e masaüstü ve bulut tamamen bitince, sahibin sözüyle dönülür.
+- Ortak çekirdek, sözleşmeler, bağımsız başvurular, ortak fixture'lar ve izler aynen sürer.
+- Kod, ileride mobil uygulama (önce görüntüleme) ve web eklenecekmiş gibi modüler kalır.
+- Yalnız masaüstünde biten her madde §0.2'ye web'de gerekenleri yazar. Aşağıdaki maddelerde “iki platform” geçen kabul koşulları web için
+  §0.2'ye ertelenmiş sayılır.
+
 **Kesin dosya sınırı:** `.kcad` yalnız proje kaydetme/yükleme için sürümlü binary/byte dosyasıdır. Dosyaya veritabanı, SQL, kalıcı sorgu/arama indeksi veya doğrudan vector tile sunma görevi verilmeyecek. İlk mesajdaki aranabilir/tile kaynaklı container düşüncesi, kullanıcının bu sadeleştirmesiyle kapsamdan çıkmıştır. Büyük veri sorguları PostGIS/provider, bulut proje kataloğu ve erişim kuralları KentOS server sorumluluğudur; yerel belge açıldıktan sonraki geçici pick/snap indeksleri bu karardan etkilenmez.
 
 ## 0. Belgenin kullanımı ve öncelikler
@@ -26,7 +35,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 | Kullanıcı hedefi | Yol haritasındaki karşılığı |
 |---|---|
 | Rust ile devam, ortak hesaplama | §2–4: Rust hesaplama kütüphaneleri, uyumlu ayrı uygulamalar |
-| Desktop ve web aynı kullanım kalitesi | §5–8: komut oturumu, dinamik giriş, KentOS UI, wgpu |
+| Desktop ve web aynı kullanım kalitesi | §5–8: komut oturumu, dinamik giriş, KentOS UI, wgpu (web'e ara: ADR 0228, §0.2) |
+| Masaüstü ve bulut önce, web sonra; ileride mobil (görüntüleme) | ADR 0228; §0.2 Web'e ertelenenler; modüler düzen (`crates/shared`, `crates/native`, `crates/render/wgpu`) |
 | Python embed ve Python kütüphaneleri | §14: CPython/PyO3, Pyodide, ortak SDK |
 | Tam AI surface | §15: katalog, sorgu, önizleme, çalıştırma, MCP, kapsam testleri |
 | `kentos-rc` bu depoya ve KentOS UI ad alanına | §6: dosya/modül bazında taşıma ve ayrıştırma |
@@ -38,6 +48,32 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 | İleride olası Martin benzeri rol | §12.5: ayrı karara bağlı gelecek seçeneği; mevcut teslimlerin bağımlılığı değil |
 | 3D şehir, yol, harita ve mimari | §16–19: CAD/GIS, civil, BIM, dijital ikiz ve yayın |
 | Uzun ömürlü yüksek performans | §13, §20–23: worker, test, işletim ve teslim kapıları |
+
+### 0.2 Web'e ertelenenler (ADR 0228)
+
+Web'in son hâli `1aad00d0`'dır (12 Ekim 2026). Bu liste web'e dönüşün planıdır. Şunlar buraya bir satır yazar:
+
+- yalnız masaüstünde biten her madde;
+- web'i bozduğu bilinen her ortak değişiklik (şema, `FORMATS_VERSION`, çekirdeğin imzası, web testinin okuduğu fixture).
+
+Satırın biçimi:
+
+```text
+- [ ] `ID` (ADR NNNN, commit): web'de gerekenler: WASM bağlayıcısı ve TS sarmalayıcısı (…), arayüz (araç, pencere, şerit,
+  ikon), oynatılacak izler (…), resimler, envanter; bilinen bozulmalar (…).
+```
+
+Geri dönüşün sırası:
+
+1. `1aad00d0`'daki web'den başlanır.
+2. Web'in takımı (`pnpm typecheck`, `pnpm test`, `pnpm e2e:interaction`) koşar; bozulanlar düzeltilir.
+3. Bu liste sırayla kapatılır.
+4. `catalog/v1/additions.json` web'in kaydına alınır, `pnpm inventory` koşar.
+5. docs/MADDE-TARIFI.md'nin iki platform kuralı geri gelir.
+
+Liste:
+
+- (henüz yok)
 
 ## 1. Koddan doğrulanan mevcut durum
 

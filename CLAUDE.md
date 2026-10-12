@@ -15,6 +15,25 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Web katmanına ara (sahibin kesin kararı, 12 Ekim 2026; [ADR 0228](docs/adr/0228-web-pause-desktop-and-cloud-first.md)).**
+  - Web'in son hâli **`1aad00d0`**'dır. Bundan sonra maddeler yalnız masaüstünde ve gerektiğinde bulutta (`kentosd`), Python'da ve
+    MCP'de yapılır.
+  - `apps/web/`'e yeni özellik yazılmaz. Web'in denetimleri (typecheck, Vitest, build, e2e, `e2e:interaction`, resimler, `pnpm inventory`)
+    madde takımında koşmaz; `docs/inventory/web.*` `1aad00d0`'daki hâliyle donar.
+  - Web'e masaüstü ve bulut tamamen bitince, sahibin sözüyle dönülür. Geri dönüşün planı TODOS.md §0.2 “Web'e ertelenenler”dir: yalnız
+    masaüstünde biten her madde oraya satırını yazar.
+  - Aynen sürenler:
+    - ortak çekirdek (`crates/shared/*`) ve sözleşmeler (TS türleri ve katalog üretilmeye devam eder);
+    - bağımsız Python başvuruları;
+    - ortak fixture'lar ve etkileşim izleri (masaüstünde oynatılır);
+    - WASM bağlayıcıları yalnız derlenir, yeni işleve bağlayıcı yazılmaz.
+  - Yeni komutların arayüz kaydı (ad, ikon, açıklama, kısayol, şeritteki yer) web'in envanteri yerine `catalog/v1/additions.json`'dadır
+    (ilk tüketicisi `GIS-40`).
+  - Kod, ileride mobil (önce görüntüleme) ve web eklenecekmiş gibi modüler kalır:
+    - hesap `crates/shared`'te;
+    - arayüzden bağımsız uygulama katmanı `crates/native`'te (Iced, wgpu ve pencere bilmez; `pnpm arch:deps` zorlar);
+    - çizim hattı `crates/render/wgpu`'da;
+    - Iced yalnız `crates/ui`'da ve kabuklarda. Masaüstü kabuğu incedir: sunum olmayan iş `crates/native`'e ya da `crates/shared`'e yazılır.
 - Web bağımsız TypeScript/DOM uygulamasıdır; desktop'ın web export'u değildir.
   Yalnız hesaplama/codec kütüphaneleri dar WASM bağlayıcılarıyla kullanılır.
   Web'in belge, komut, etkileşim, settings ve render orkestrasyonu TS'te kalır.
@@ -361,7 +380,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   sağ tık menüleri ve tek seferlik kenet vardır (ADR 0059); çizimin
   yazıları (yazı nesnesi, ölçü değeri, etiket; projenin yazı tipiyle), ölçü çizgileri ve yardımcı
   çizgiler çizilir (ADR 0055).
-  Web özellikleri envanter üzerinden adım adım masaüstüne taşınır. İki platformda da yalnız şerit
+  Web özellikleri envanter üzerinden adım adım masaüstüne taşındı; ADR 0228'den beri masaüstü öndedir, web geri dönüşte yetişir. İki platformda da yalnız şerit
   arayüzü vardır; web'in klasik arayüzü (menü çubuğu, araç çubuğu, kayan araç kutusu) kaldırıldı
   (sahibin kararları, 27 Eylül ve 2 Ekim; ADR 0155).
 - Web WebGPU/WebGL2 renderer'larını korur. Uygun WGSL kaynakları native ile
@@ -385,7 +404,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 KentOS; harita mühendisliği, kadastro, imar ve hassas CAD/GIS çalışmaları için
 geliştirilir. 18 uygulaması, imar planı, ifraz/tevhit, yol, mimari ve dijital
 ikiz projeleri gelişim yönüdür; hepsi bugün tamamlanmış ürün değildir.
-Web ve native masaüstü hedeflenir; mobil/dar ekran şu an öncelik değildir.
+Web ve native masaüstü hedeflenir; web'e ara verildi (ADR 0228), şimdi masaüstü ve bulut. İleride görüntüleme için bir mobil
+uygulama da yapılacak; kod ona hazır, modüler tutulur. Mobil ya da dar ekran arayüzü şu an iş değildir.
 Web kabuğunun mevcut alt sınırı 1100×600 px'tir. Arayüz Türkçe; kod,
 tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS CAD'dir.
 
@@ -422,7 +442,9 @@ Web'e göre verilen kısa dosya yolları `apps/web/src/` altındadır.
 ## 2. Çalıştırma
 
 Komutlar depo kökünden çalışır; kesin kaynak `package.json`,
-`apps/web/package.json`, `Cargo.toml` ve `rust-toolchain.toml` dosyalarıdır.
+`apps/web/package.json`, `Cargo.toml` ve `rust-toolchain.toml` dosyalarıdır. Web dururken (ADR 0228) web'in komutları (`pnpm dev`,
+`typecheck`, `test`, `build`, `e2e*`, `inventory`, `shots.mjs`, web'in perf betikleri) madde takımında koşmaz. Aşağıda dururlar, geri
+dönüşte kullanılır. Masaüstü ve ortak komutlar aynen geçerlidir.
 
 ```bash
 make                     # gruplu komut listesi; servisler: make dev/run/desktop/stop/status
@@ -1083,7 +1105,8 @@ dispose/cancel yolu olsun. Kullanıcının mevcut değişikliklerini koruyun.
 tema/yazı ölçeği kontrolü yapılır. Çalıştırılmayan kontrol ve nedenini bildirin.
 Üretim iddiası veya tamamlandı işareti için TODOS.md kabul kapılarını kullanın.
 Komut, araç, ayar, pencere, depo ya da `.kcad` alanı değiştiyse `pnpm inventory`
-çalıştırın; farkı okuyup değişiklikle aynı commit'e koyun (docs/inventory/README.md).
+çalıştırın; farkı okuyup değişiklikle aynı commit'e koyun (docs/inventory/README.md). Web dururken (ADR 0228) envanter donmuştur;
+yeni komutların kaydı `catalog/v1/additions.json`'dadır, web'de gerekenler TODOS.md §0.2'ye yazılır.
 
 ## 9. Yeni iş ekleme tarifleri
 
@@ -1108,7 +1131,7 @@ kalıcılık ve live-apply davranışını birlikte ekleyin. Ayar
 ### 9.4 Test
 
 - Web davranışında `pnpm typecheck`, ilgili Vitest testleri ve kapsamına göre
-  `pnpm test/build`; UI değişiminde tarayıcı e2e ve açık/koyu/Büyük yazı kontrolü.
+  `pnpm test/build`; UI değişiminde tarayıcı e2e ve açık/koyu/Büyük yazı kontrolü. Web dururken (ADR 0228) bunlar koşmaz.
 - Rust/hesap değişiminde ilgili native testler, clippy, WASM fixture/bağımsız
   referanslar; sözleşme değişiminde Rust → TS üretimi ve drift denetimi.
   Sözleşme tipi ürün komutu kataloğunun şemasını da değiştirir:
@@ -1720,8 +1743,10 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   İstatistik/Grafik'in Alan ve Uzunluk'u çizim biriminde ve karesinde (Öznitelikler gibi); İşlemler, ağ maliyetleri ve semboller
   metrede. Birim derlemenin şemasında (`Schema::unit`, web bağlamının `unit`'i), çözümleyici geometri değerlerini ve başka katmana
   bakan işlevlerin ölçülerini çevirir (`resolve`); okuma birimi `expression_unit::reading_unit`, web `readingUnit`; birimli
-  durumlar `geometry.json`'un `units`'inde. Sıradaki `GIS-40`:
-  sahip, ona geçmeden önce “çok kritik bir kararını” söyleyecek (12 Ekim); karar gelmeden başlanmaz.
+  durumlar `geometry.json`'un `units`'inde. Sahibin kararı geldi (12 Ekim): **web katmanına ara**
+  ([ADR 0228](docs/adr/0228-web-pause-desktop-and-cloud-first.md)). Web'in son hâli `1aad00d0`'dır; bundan sonra masaüstü ve
+  gerektiğinde bulut. Sıradaki `GIS-40` adres arama yalnız masaüstünde (ADR 0229); ilk adımı yeni komutların arayüz kaydı
+  `catalog/v1/additions.json` ve masaüstünün okuyucusudur.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM
@@ -1772,6 +1797,8 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   Ölçme sekmesi.
 - Çalışma düzeni: çekirdek, masaüstü ve web aynı oturumda (29 Eylül akşamından beri alt ajan yok); her
   iş iki platformda kullanılarak resimlenir, commit'lenir; main belli noktalarda (tamamlanan adımlardan sonra) push'lanır (sahibin isteği, 30 Eylül).
+  12 Ekim'den beri (ADR 0228) yalnız çekirdek, masaüstü ve gerektiğinde bulut. Resimler masaüstünün, izler masaüstünde oynatılır.
+  Yalnız masaüstünde biten her madde TODOS.md §0.2'ye web'de gerekenleri yazar.
 
 ## 11. Teknik borç
 

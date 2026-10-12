@@ -6,14 +6,29 @@ Bu belge bir TODOS.md maddesinin hangi sırayla ve nasıl yapıldığını anlat
 Kuralların kaynağı CLAUDE.md'dir. Bu belge onları iş sırasına koyar ve sık atlanan ayrıntıları yineler. Çelişki olursa CLAUDE.md ve
 sahibin son kararı geçerlidir.
 
+> **Web'e ara (sahibin kesin kararı, 12 Ekim 2026; [ADR 0228](adr/0228-web-pause-desktop-and-cloud-first.md)).**
+>
+> - Web'in son hâli `1aad00d0`'dır. Maddeler yalnız masaüstünde ve gerektiğinde bulutta, Python'da ve MCP'de yapılır.
+> - Aşağıda web'e ait her adım (**Web** diye işaretli) web dururken atlanır. Onun yerine maddenin web'de neler gerektirdiği TODOS.md
+>   §0.2 “Web'e ertelenenler”e bir satırla yazılır.
+> - Ortak çekirdek, sözleşmeler, bağımsız başvurular, ortak fixture'lar ve izler aynen sürer.
+> - Web'e dönüşte bu belgenin iki platform kuralları geri gelir.
+
 ## 0. Değişmeyen ilkeler
 
 - **Bir madde tek parçadır:** bir ADR, bir commit (ADR içinde), bir tam takım, bir push ve bir rapor. Madde alt adımlara bölünüp ayrı
   ayrı commit'lenmez.
-- **İki platform:** masaüstü (Rust/Iced, `apps/desktop`) ve web (TS/DOM, `apps/web`) birlikte yapılır. Gerekiyorsa bulut (`kentosd`)
-  ve otomasyon (Python, MCP) da eklenir. Sahip aksini söylemedikçe platform sorulmaz.
-- **Hesap tek yerdedir:** ortak Rust çekirdeği (`crates/shared/*`). Web onu WASM'la çağırır, masaüstü doğrudan. TS'te geometri ya da
-  sayı algoritması yazılmaz.
+- **Masaüstü önce (ADR 0228):** madde masaüstünde (Rust/Iced, `apps/desktop`, `crates/native/*`) yapılır. Gerekiyorsa bulut (`kentosd`)
+  ve otomasyon (Python, MCP) da eklenir. Web (TS/DOM, `apps/web`) dururken yazılmaz; web'de gerekenler TODOS.md §0.2'ye yazılır. Sahip
+  aksini söylemedikçe platform sorulmaz. (12 Ekim'e dek madde iki platformda birlikte yapılıyordu; web'e dönüşte bu kural geri gelir.)
+- **Modüler düzen (mobil ve web için):** kod, mobil (önce görüntüleme) ve web yarın eklenecekmiş gibi yazılır.
+  - Hesap ve kurallar `crates/shared/*`'tadır.
+  - Belge, komutlar, araç oturumu, işlemler, proje ve stil `crates/native/*`'tadır; bunlar Iced, wgpu ve pencere bilmez (`pnpm arch:deps`).
+  - Çizim hattı `crates/render/wgpu`'dadır.
+  - Iced yalnız `crates/ui`'da ve kabuklardadır. `apps/desktop/src`'ye yalnız sunum yazılır; kural, hesap, durum makinesi ve
+    biçimlendirme alttaki crate'lere yazılır.
+- **Hesap tek yerdedir:** ortak Rust çekirdeği (`crates/shared/*`). Masaüstü onu doğrudan çağırır, web (dönüşte) WASM'la. TS'te
+  geometri ya da sayı algoritması yazılmaz.
 - **Bağımsız doğrulama:** her kural ve hesap, KentOS kodu kullanmadan yazılmış bir Python başvurusuyla denetlenir (`--check`).
   - Beklenen değer KentOS'un kendi çıktısından üretilmez.
   - Tolerans büyütülmez.
@@ -63,6 +78,7 @@ hangisinin seçildiği, birimler, sınırlar, ret kodları ve iletileri.
 
 - **Durum:** kabul edildi (YYYY-AA-GG). Kapsam: sahibin sözleri ya da kararları (alıntıyla); ilke “Performance First”; madde tek parçada biter.
 - **Bağlam belgesi:** TODOS.md `ID`, ilgili ADR'ler.
+- **Web:** ertelendi (ADR 0228); geri dönüşte gerekenler TODOS.md §0.2'de.
 
 ## Bağlam
 Kullanıcının sorunu, profesyonel araçların karşılığı, KentOS'ta bugün ne olmadığı.
@@ -108,7 +124,8 @@ Projede ya da nesnede kalıcı yeni bir alan varsa yeni bir şema numarası gere
     - `schema_of`'a ekle. Kural: yalnız yeni alan varken yeni şema yazılır, öbür çizimler bayt bayt eskisi gibi kalır.
   - `decode.rs`, `decode/objects.rs`: `Features` bayrağını ekle.
   - Konu için ayrı modüller aç: `encode/<konu>.rs`, `decode/<konu>.rs`. Yazıcı da okuyucu da sözleşmenin kurallarıyla bütünü denetler.
-- **Sürüm:** `FORMATS_VERSION`'ı iki yerde artır: `crates/shared/contracts/src/formats.rs` ve `apps/web/src/io/version.ts`.
+- **Sürüm:** `FORMATS_VERSION`'ı `crates/shared/contracts/src/formats.rs`'te artır. Web'in kopyası (`apps/web/src/io/version.ts`) web
+  dururken değiştirilmez, §0.2'ye yazılır.
 - **Spesifikasyon:** `docs/specs/kcad-v2.md`'ye yeni bölümü yaz.
 - **Bağımsız Python:**
   - Okuyucu `tools/kcad/kcad.py`: sabitler, alanların tablosu ve kuralların bağımsız kopyası.
@@ -116,7 +133,8 @@ Projede ya da nesnede kalıcı yeni bir alan varsa yeni bir şema numarası gere
     (`fixtures/kcad/v2/broken/`), `expected.json`.
   - Gelecek sürümü temsil eden bozuk dosyayı bir ileri taşı: `broken/schema-version-N.kcad` → `N+1`.
   - Denetim: `python3 scripts/fixtures/kcad_v2_reference.py --check` ve `python3 tools/kcad/kcad.py validate DOSYA`.
-- **Web:** `apps/web/src/io/kcad.ts`, `model/snapshot.ts`; nesne türüyse tipli sütunlar `io/columns.ts` ↔ `crates/shared/kcad/src/columns.rs`.
+- **Web** (dururken atlanır; şema ve `FORMATS_VERSION` §0.2'ye yazılır): `apps/web/src/io/kcad.ts`, `model/snapshot.ts`; nesne türüyse
+  tipli sütunlar `io/columns.ts` ↔ `crates/shared/kcad/src/columns.rs`.
 - **Başka biçimler:** DXF, GeoJSON ve Shapefile alanı taşıyamıyorsa bunu söylemeleri gerekir (kayıp raporu).
 
 ## 5. Çekirdek hesap ve bağımsız başvuru
@@ -133,9 +151,9 @@ Projede ya da nesnede kalıcı yeni bir alan varsa yeni bir şema numarası gere
   - Kural: betik beklentiyi KentOS'tan almaz. Fixture değişirse farkı oku.
 - **Testler:** çekirdeğin testleri aynı dosyayı okur (`crates/shared/<crate>/tests/all/<konu>.rs`). Yeni test dosyası `tests/all/`'a
   modül olarak eklenir. Web için WASM testi `*.wasm.test.ts`.
-- **WASM:** bağlayıcı `crates/wasm/<paket>/src/`; derleme `pnpm wasm`. `pkg/` elle düzenlenmez. Ağır ve seyrek kullanılan modül
-  tembel yüklenir (`io/<konu>/module.ts` gibi).
-- **TS sarmalayıcıları:** `apps/web/src/model/ops/<konu>.ts` (`op<…>('ad')`). Hesap yeniden yazılmaz.
+- **WASM** (Web; dururken yeni bağlayıcı yazılmaz, var olanlar yalnız derlenir): bağlayıcı `crates/wasm/<paket>/src/`; derleme
+  `pnpm wasm`. `pkg/` elle düzenlenmez. Ağır ve seyrek kullanılan modül tembel yüklenir (`io/<konu>/module.ts` gibi).
+- **TS sarmalayıcıları** (Web; dururken atlanır): `apps/web/src/model/ops/<konu>.ts` (`op<…>('ad')`). Hesap yeniden yazılmaz.
 
 ## 6. Ürün komutu, gerekiyorsa
 
@@ -143,12 +161,12 @@ Belgeyi değiştiren her yeni iş bir ürün komutundan geçer. Python ve AI ayr
 
 - **Sözleşme:** `crates/shared/contracts/src/cad_<konu>.rs`. Girdi, çıktı, plan, ret kodları ve sıraları doc yorumunda yazılır.
 - **İşleyiciler:**
-  - web `apps/web/src/product/<komut>.ts`, `product/registry.ts`, `product/checks.ts`;
+  - web `apps/web/src/product/<komut>.ts`, `product/registry.ts`, `product/checks.ts` (Web; dururken atlanır);
   - masaüstü `crates/native/application/src/<komut>.rs`, `codes.rs`, `checks.rs`, `lib.rs`.
 - **Ortak durumlar:** `fixtures/commands/v1/<komut>.json`. Bunları sözleşmenin kurallarından yazan bağımsız betik
   `scripts/fixtures/<konu>_command_cases.py --check`'tir.
 - **Oynatıcılar** (yeni bir beklenti türü varsa üçüne de eklenir):
-  - web `apps/web/src/product/fixtures.test.ts`,
+  - web `apps/web/src/product/fixtures.test.ts` (Web; dururken atlanır),
   - masaüstü `crates/native/application/tests/all/fixtures.rs`,
   - Python `python/tests/test_command_cases.py`.
 - **Başsız sunucu:** `crates/native/headless/src/dispatch.rs`.
@@ -157,7 +175,12 @@ Belgeyi değiştiren her yeni iş bir ürün komutundan geçer. Python ve AI ayr
 
 ## 7. Masaüstü ve web arayüzü
 
-İki platform aynı davranışı ve aynı adları taşır. Davranış ortak fixture'larla eşit tutulur.
+İki platform aynı davranışı ve aynı adları taşır. Davranış ortak fixture'larla eşit tutulur. Web dururken (ADR 0228) yalnız masaüstü
+sütunu yapılır.
+
+- **Yeni komutun arayüz kaydı:** web dururken yeni komutların adı, kısa adı, ikonu, açıklaması, takma adları, kısayolları ve şeritteki
+  yeri platformdan bağımsız `catalog/v1/additions.json`'a yazılır. Masaüstü bunu web'in donmuş envanteriyle birlikte okur; dosyanın
+  kurallarını masaüstünün testi denetler. İlk tüketicisi `GIS-40`'tır.
 
 | İş | Web | Masaüstü |
 |---|---|---|
@@ -188,9 +211,9 @@ Belgeyi değiştiren her yeni iş bir ürün komutundan geçer. Python ve AI ayr
 - **Sahne:** gerekiyorsa `fixtures/interaction/v1/<ad>.kcad`. Mümkünse bağımsız bir Python betiğiyle üretilir
   (`scripts/fixtures/<ad>_scene.py --check`).
 - **Oynatıcılar:**
-  - web `pnpm e2e:interaction` (tarayıcıda, üç varyant),
+  - web `pnpm e2e:interaction` (tarayıcıda, üç varyant; Web: dururken koşmaz, yeni izler §0.2'ye yazılır),
   - masaüstü `cargo test -p kentos-desktop traces` (pencere açmadan).
-  - Yeni bir eylem ya da beklenti türü iki oynatıcıya birlikte eklenir.
+  - Yeni bir eylem ya da beklenti türü iki oynatıcıya birlikte eklenir; web dururken yalnız masaüstüne, web'inki §0.2'ye yazılır.
 - **Kullanım senaryosu** (isteğe bağlı): `./target/debug/kentos-cad kullan <ad>` ve `pnpm -C apps/web e2e:use <ad>`.
 
 ## 9. Bulut, Python ve MCP, gerekiyorsa
@@ -222,8 +245,8 @@ Belgeyi değiştiren her yeni iş bir ürün komutundan geçer. Python ve AI ayr
 
 ## 11. Resimler ve görsel inceleme
 
-- **Web:** `(cd apps/web && node scripts/e2e/shots.mjs <grup>)`; sahneler `shots.mjs`'te `SCENES.<grup>` altında tanımlanır.
-  Resimler `apps/web/scripts/e2e/out/shots/<grup>/`'a düşer.
+- **Web** (dururken çekilmez): `(cd apps/web && node scripts/e2e/shots.mjs <grup>)`; sahneler `shots.mjs`'te `SCENES.<grup>` altında
+  tanımlanır. Resimler `apps/web/scripts/e2e/out/shots/<grup>/`'a düşer.
 - **Masaüstü:** `KENTOS_SHOTS_ONLY=a,b cargo test -p kentos-desktop tools_screens -- --ignored --nocapture` (ya da modülün kendi
   `screens` testi). Resimler `.run/shots/`'a düşer. GPU gerektiren sahnelerde `KENTOS_SNAPSHOT_BACKEND=wgpu` verilir.
 - **Ölçüler:** her sahne 1440×900 ve 1100×650'de, açık ve koyu temada çekilir.
@@ -237,6 +260,10 @@ Belgeyi değiştiren her yeni iş bir ürün komutundan geçer. Python ve AI ayr
 - **Envanter:** `pnpm inventory` `docs/inventory/web.json` ve `web.md`'yi yeniden yazar.
   - Farkı oku: yeni komutlar ve pencereler “masaüstünde” görünmeli.
   - Görünmüyorsa `equivalents.json` ya da `ported.json` eksiktir.
+  - Web dururken envanter `1aad00d0`'daki hâliyle donar ve `pnpm inventory` koşmaz. Yeni komutlar `catalog/v1/additions.json`'dadır;
+    `ported.json` masaüstünün testiyle güncellenmeye devam eder.
+- **Web'e ertelenenler** (web dururken her maddede): TODOS.md §0.2'ye maddenin satırı yazılır: WASM bağlayıcısı ve TS sarmalayıcısı,
+  arayüz, oynatılacak izler, resimler, envanter ve bilinen bozulmalar.
 - **ADR'nin Uygulama'sı:** dosyalar ve modüller, katman katman (sözleşme, çekirdek, masaüstü, web, sunucu, otomasyon). Seçilen
   ikonlar adlarıyla, ayrılan ya da sonraya kalanlar nedenleriyle.
 - **ADR'nin Doğrulama'sı:**
@@ -277,17 +304,15 @@ Belgeyi değiştiren her yeni iş bir ürün komutundan geçer. Python ve AI ayr
    - Push'tan önce tam takım bir kez koşar:
 
    ```sh
-   pnpm typecheck
-   pnpm test                    # Vitest
    pnpm rust:test               # cargo test + clippy -D warnings + bağımlılık yönü
-   pnpm rust:test:desktop       # KentOS UI, çizim hattı, masaüstü: test + clippy
-   pnpm py:test                 # Python SDK ve ortak komut durumları
-   pnpm e2e:interaction         # ortak izler web'de (masaüstündekiler rust:test:desktop'ta)
-   pnpm build
-   pnpm inventory
+   pnpm rust:test:desktop       # KentOS UI, çizim hattı, masaüstü (izler dahil): test + clippy
+   pnpm py:test                 # Python SDK ve ortak komut durumları (komut ya da Python değiştiyse)
    python3 scripts/fixtures/<dokunulan>_cases.py --check   # dokunulan her bağımsız başvuru
    python3 scripts/fixtures/kcad_v2_reference.py --check   # .kcad değiştiyse
    ```
+
+   Web dururken (ADR 0228) web'in komutları koşmaz: `pnpm typecheck`, `pnpm test`, `pnpm e2e:interaction`, `pnpm build`,
+   `pnpm inventory`. Web'e dönüşte yukarıdaki listenin başına geri eklenir.
 
    - Denetim komutu `&&` zincirinde `| tail`'e verilmez (çıkış kodu kaybolur): önce çıkış koduna bakılır, sonra commit'lenir.
    - Düşen test düzeltilir; atlanan ya da koşmayan denetim raporda söylenir.
@@ -370,14 +395,16 @@ Birden çok ajan aynı makinede çalışırken:
 - [ ] Sözleşme ve kuralları; TS türleri ve katalog üretildi
 - [ ] `.kcad` (gerekiyorsa): kodek, spesifikasyon, Python okuyucusu ve yazıcısı, örnek ve bozuk dosyalar, `FORMATS_VERSION`
 - [ ] Çekirdek hesap ve testleri; bağımsız başvuru (`--check`) ve `fixtures/<konu>/v1`
-- [ ] WASM bağlayıcısı ve TS sarmalayıcıları
-- [ ] Ürün komutu (gerekiyorsa): iki işleyici, ortak durumlar, üç oynatıcı, SDK, MCP
-- [ ] Masaüstü ve web arayüzü: araçlar, pencereler, şerit, menü, ikonlar, Öznitelikler, alt panel, İşlemler
-- [ ] Ortak etkileşim izleri, iki oynatıcıda
+- [ ] (Web; dururken §0.2'ye) WASM bağlayıcısı ve TS sarmalayıcıları
+- [ ] Ürün komutu (gerekiyorsa): masaüstü işleyicisi, ortak durumlar, masaüstü ve Python oynatıcıları, SDK, MCP (web'inki §0.2'ye)
+- [ ] Masaüstü arayüzü: araçlar, pencereler, şerit, menü, ikonlar, Öznitelikler, alt panel, İşlemler; yeni komutların kaydı
+      `catalog/v1/additions.json`'da
+- [ ] Sunum olmayan iş `crates/native`'te ya da `crates/shared`'te (mobil ve web için modüler düzen)
+- [ ] Ortak etkileşim izleri, masaüstü oynatıcısında
 - [ ] Bulut, Python, MCP (gerekiyorsa)
 - [ ] Release süreleri, ADR'de bütçeyle
-- [ ] Resimler: iki platform, 1440×900 ve 1100×650, açık ve koyu tema; incelendi, sahibe gönderildi
-- [ ] Envanter, `equivalents.json`, `ported.json`
+- [ ] Resimler: masaüstü, 1440×900 ve 1100×650, açık ve koyu tema; incelendi, sahibe gönderildi
+- [ ] `ported.json`; TODOS.md §0.2'ye maddenin web satırı (envanter web dururken donmuş)
 - [ ] ADR'nin Uygulama'sı ve Doğrulama'sı, TODOS.md `[x]`, CLAUDE.md §0, §2, §10.1
 - [ ] Yalnız kendi dosyalarına rustfmt; düşen `use` ve `mod` satırı yok
 - [ ] Tam takım geçti (çıkış kodları okundu)

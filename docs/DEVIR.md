@@ -1,5 +1,13 @@
 # Devir notları
 
+> **12 Ekim 2026 notu ([ADR 0228](adr/0228-web-pause-desktop-and-cloud-first.md), sahibin kesin kararı):** web katmanına ara verildi.
+>
+> - Web'in son hâli `1aad00d0`'dır. Bundan sonra maddeler yalnız masaüstünde ve gerektiğinde bulutta, Python'da ve MCP'de yapılır.
+> - Ortak çekirdek, sözleşmeler, bağımsız başvurular, ortak fixture'lar ve izler aynen sürer.
+> - Kod, ileride mobil (önce görüntüleme) ve web eklenecekmiş gibi modüler kalır.
+> - Web'e dönüşün planı TODOS.md §0.2 “Web'e ertelenenler”dir.
+> - Aşağıdaki notlarda web'e ait kurallar, web'e dönülünce yeniden geçerli olur.
+
 > **25 Eylül 2026 notu (TODOS.md `BASE-01`):** Bu dosya 24 Eylül'ün devir notudur. Güncel yol haritası [TODOS.md](../TODOS.md), güncel kurallar [CLAUDE.md](../CLAUDE.md)'dir. Kapsam kararları [ADR 0010](adr/0010-platform-boundaries.md) (web/masaüstü sınırı), [ADR 0011](adr/0011-kcad-binary-snapshot.md) (binary `.kcad`) ve [ADR 0012](adr/0012-server-scope-project-cloud.md)'dedir (proje bulutu, Martin kapsam dışı). Bu belgenin bölümlerinin durumu:
 >
 > - **Geçerli:**
