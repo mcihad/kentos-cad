@@ -17,7 +17,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 
 from .. import _native
 from ._runtime import _enum_out, _Model, decode, dumps
@@ -27,6 +27,8 @@ from .types import (
     Bounds,
     DrawingFont,
     DrawingFontName,
+    DrawingUnit,
+    DrawingUnitName,
     Entity,
     LayerNode,
     LayerNodeType,
@@ -136,17 +138,57 @@ class Page:
 
 
 @dataclass(frozen=True, slots=True)
+class Units:
+    """The units of the values a drawing gives and takes (docs/adr/0245).
+
+    Coordinates, lengths and areas are in the project's plane, metres (or
+    degrees in a geographic system), whatever the drawing unit: a 4000 mm
+    wall in a millimetre project is written 4.0. The drawing unit is only
+    how the desktop's windows read and write lengths (docs/adr/0165 §2)."""
+
+    length: str
+    """Coordinates and lengths: ``m``, or ``degree`` in a geographic system."""
+    area: str
+    """Areas: ``m2``, or ``degree2``."""
+    drawing: DrawingUnit
+    """The project's drawing unit: a local project's own, else metres."""
+
+    def from_metres(self, value: float) -> float:
+        """A length in metres in the drawing unit (4.0 m is 4000.0 in mm)."""
+        return value * _PER_METRE[self.drawing]
+
+    def to_metres(self, value: float) -> float:
+        """A length in the drawing unit in metres (4000.0 mm is 4.0 m)."""
+        return value / _PER_METRE[self.drawing]
+
+
+_PER_METRE = {DrawingUnit.MM: 1000.0, DrawingUnit.CM: 100.0, DrawingUnit.M: 1.0}
+
+
+def _units(raw: Mapping[str, Any] | None) -> Units:
+    # A desktop older than docs/adr/0245 says none: its values are metres.
+    raw = raw or {}
+    return Units(
+        length=str(raw.get("length", "m")),
+        area=str(raw.get("area", "m2")),
+        drawing=DrawingUnit(raw.get("drawing", "m")),
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class Measure:
-    """An object's measures in the project's units, from its source
-    geometry (not a drawn approximation)."""
+    """An object's measures from its source geometry (not a drawn
+    approximation), in the units ``units`` names: metres and m² in the
+    project's plane, never the drawing unit."""
 
     uid: str
     kind: str
     area: float | None
-    """Plane area of a closed shape (m²); None for an open one."""
+    """Plane area of a closed shape (``units.area``, m²); None for an open one."""
     length: float | None
-    """Length of a line or a path, perimeter of a closed shape (m); None for a point or a text."""
+    """Length of a line or a path, perimeter of a closed shape (``units.length``, m); None for a point or a text."""
     bounds: Bounds
+    units: Units
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +215,8 @@ class DocumentInfo:
     """Read from an old v1 JSON file: a save needs a new path."""
     can_undo: bool
     can_redo: bool
+    units: Units
+    """What the values are in: metres in the project's plane; ``units.drawing`` is the drawing unit."""
 
 
 BoundsLike = Bounds | Sequence[float]
@@ -210,28 +254,51 @@ class Document:
     @classmethod
     def new(
         cls,
-        name: str = "Adsız proje",
+        name: str | None = None,
         *,
-        srid: int,
-        plot_scale: float = 1000.0,
         workspace: Workspace | WorkspaceName = Workspace.GIS,
+        coords: Literal["local", "real"] | None = None,
+        srid: int | None = None,
+        province: int | None = None,
+        drawing_unit: DrawingUnit | DrawingUnitName | None = None,
+        plot_scale: float | None = None,
         drawing_font: DrawingFont | DrawingFontName = DrawingFont.BARLOW,
     ) -> Document:
-        """A new project, as Yeni proje makes it: the standard layer tree,
-        the zone's work area, the default units. ``srid`` is the project's
-        coordinate system (5254…5259 TUREF/TM, 32635…32638 UTM …); it is
-        asked, never guessed. ``workspace`` is the project's type: CBS
-        (``gis``) or CAD (``cad``), docs/adr/0165."""
-        return cls(
-            _host(
-                _native.Session.new_project,
-                name,
-                int(srid),
-                float(plot_scale),
-                _enum_out(workspace),
-                _enum_out(drawing_font),
-            )
-        )
+        """A new project, as the Yeni proje wizard makes it (docs/adr/0165,
+        0245): its type's layer tree, start view and units.
+
+        - ``workspace``: CBS (``gis``) or CAD (``cad``).
+        - ``coords``: a CAD project's coordinates, ``local`` (no system,
+          SRID 0, from 0,0) or ``real``; by default local for CAD without a
+          ``srid``, real otherwise. A CBS project always has a system.
+        - ``srid``: the coordinate system (5254…5259 TUREF/TM, 32635…32638
+          UTM …), 0 for local. A project with a system needs it or a
+          ``province`` (plate code), whose TUREF zone is then taken; it is
+          never guessed.
+        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``);
+          one with a system is in metres.
+        - ``plot_scale``: 1000 for 1:1000; by default 1 for a local project,
+          1000 for any other.
+
+        Units: geometry is always metres in the project's plane, whatever
+        the drawing unit. A 4000 × 3000 mm room in a ``mm`` project is
+        written ``(0, 0), (4, 0), (4, 3), (0, 3)`` and measures 12 m²;
+        :attr:`DocumentInfo.units` converts. A refusal raises
+        :class:`InvalidInput` (or :class:`UnknownSystem`) in the wizard's words."""
+        choices: dict[str, Any] = {
+            "workspace": _enum_out(workspace),
+            "drawingFont": _enum_out(drawing_font),
+        }
+        optional = {
+            "name": name,
+            "coords": coords,
+            "srid": None if srid is None else int(srid),
+            "province": None if province is None else int(province),
+            "drawingUnit": None if drawing_unit is None else _enum_out(drawing_unit),
+            "plotScale": None if plot_scale is None else float(plot_scale),
+        }
+        choices.update({k: v for k, v in optional.items() if v is not None})
+        return cls(_host(_native.Session.new_project, json.dumps(choices)))
 
     @classmethod
     def open(cls, path: str | os.PathLike[str]) -> Document:
@@ -271,6 +338,7 @@ class Document:
             legacy=s["legacy"],
             can_undo=s["canUndo"],
             can_redo=s["canRedo"],
+            units=_units(s.get("units")),
         )
 
     @property
@@ -295,6 +363,12 @@ class Document:
     def settings(self) -> ProjectSettings:
         """The project's settings: its coordinate system (``srid``), units, scale."""
         return self.info().settings
+
+    @property
+    def units(self) -> Units:
+        """What the drawing's values are in: metres in the project's plane;
+        ``units.drawing`` is the drawing unit (docs/adr/0245)."""
+        return self.info().units
 
     @property
     def active_layer(self) -> str:
@@ -402,6 +476,7 @@ class Document:
             area=raw.get("area"),
             length=raw.get("length"),
             bounds=decode(Bounds, raw["bounds"], "Document.measure"),
+            units=_units(raw.get("units")),
         )
 
     # ------------------------------------------------------------ history
@@ -465,4 +540,4 @@ def _walk(nodes: Iterable[LayerNode]) -> Iterator[LayerNode]:
         yield from _walk(n.children)
 
 
-__all__ = ["BoundsLike", "Document", "DocumentInfo", "Measure", "Page", "Record", "Saved", "current"]
+__all__ = ["BoundsLike", "Document", "DocumentInfo", "Measure", "Page", "Record", "Saved", "Units", "current"]

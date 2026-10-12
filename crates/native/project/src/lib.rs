@@ -6,7 +6,8 @@
 //! types them ([`survey_form`]), its variables as Proje ayarları ›
 //! Değişkenler types them ([`variable_form`]) and the `@` values its
 //! expressions read ([`variables`]), the drawing a new project starts as
-//! ([`new_project`]) and what the Yeni proje wizard asks ([`wizard`]), the
+//! ([`new_project`]), what the Yeni proje wizard asks ([`wizard`]) and the
+//! same choices asked by name from a script or an agent ([`new_request`]), the
 //! web's `geo/crs.ts`, `model/newProject.ts` and `model/newProjectWizard.ts`.
 //! The desktop and the headless command host (Python, AI) use the same.
 #![forbid(unsafe_code)]
@@ -19,6 +20,7 @@ pub mod choice_form;
 pub mod crs;
 pub mod definition_form;
 pub mod new_project;
+pub mod new_request;
 pub mod provinces;
 pub mod survey_form;
 pub mod systems;

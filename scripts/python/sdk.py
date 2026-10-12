@@ -718,7 +718,9 @@ read and written again is the same JSON. An optional field left out is
 :data:`UNSET` (falsy) and is not sent; ``None`` is null, which for most
 fields means the same, and for a few (``color``, ``symbol``, ``label`` of
 ``cad.entities.set``) means "remove it".
-Coordinates are x east (Y), y north (X), in the project's units (m).
+Coordinates are x east (Y), y north (X). Coordinates, lengths and areas are
+metres (m²) in the project's plane, degrees in a geographic system, whatever
+the project's drawing unit: 4000 mm is written 4.0 (docs/adr/0245).
 """
 
 from __future__ import annotations
@@ -1167,7 +1169,9 @@ INIT_DOC = '''"""``kentos.cad``: KentOS CAD from Python (docs/adr/0131).
 
 A refusal raises (:class:`CommandFailed` …) and writes nothing; a warning
 goes to :mod:`warnings` (:class:`CommandWarning`). Coordinates are x east
-(Y), y north (X), in the project's units (m).
+(Y), y north (X), in metres in the project's plane whatever its drawing unit
+(``Document.new(workspace="cad", drawing_unit="mm")``: a 4000 mm wall is
+written 4.0; :class:`Units` converts; docs/adr/0245).
 """
 '''
 

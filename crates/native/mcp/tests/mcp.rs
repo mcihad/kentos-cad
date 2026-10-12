@@ -835,3 +835,90 @@ fn a_layer_takes_a_heat_map_and_gives_it_back() {
         "{refused}"
     );
 }
+
+/// A CAD project in millimetres (docs/adr/0245): a 4000 × 3000 mm room is
+/// written in metres, measures 12 m², and the project says mm is its unit.
+#[test]
+fn a_millimetre_cad_project_takes_metres_and_says_its_unit() {
+    let mut server = Server::new();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let new = listed["result"]["tools"]
+        .as_array()
+        .expect("tools")
+        .iter()
+        .find(|t| t["name"] == "drawing.new")
+        .expect("drawing.new")
+        .clone();
+    assert_eq!(new["inputSchema"]["required"], json!([]));
+    assert_eq!(
+        new["inputSchema"]["properties"]["drawingUnit"]["enum"],
+        json!(["mm", "cm", "m"])
+    );
+
+    let made = call(
+        &mut server,
+        "drawing.new",
+        json!({ "name": "Oda", "workspace": "cad", "drawingUnit": "mm" }),
+    );
+    assert_eq!(made["isError"], false, "{made}");
+    let summary = &made["structuredContent"]["summary"];
+    assert_eq!(summary["settings"]["srid"], 0);
+    assert_eq!(summary["settings"]["workspace"], "cad");
+    assert_eq!(summary["settings"]["drawingUnit"], "mm");
+    assert_eq!(summary["settings"]["plotScale"], 1.0);
+    assert_eq!(
+        summary["units"],
+        json!({ "length": "m", "area": "m2", "drawing": "mm" })
+    );
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let layer = summary["activeLayer"].as_str().expect("a layer").to_owned();
+    let room = json!([{"x": 0.0, "y": 0.0}, {"x": 4.0, "y": 0.0}, {"x": 4.0, "y": 3.0}, {"x": 0.0, "y": 3.0}]);
+    let written = call(
+        &mut server,
+        "cad.polygon.create",
+        json!({ "drawing": drawing, "layerId": layer, "pts": room }),
+    );
+    let uid = written["structuredContent"]["output"]["uid"]
+        .as_str()
+        .expect("its id")
+        .to_owned();
+    let measured = call(
+        &mut server,
+        "drawing.measure",
+        json!({ "drawing": drawing, "uid": uid }),
+    );
+    assert_eq!(measured["structuredContent"]["area"], 12.0);
+    assert_eq!(measured["structuredContent"]["length"], 14.0);
+    assert_eq!(
+        measured["structuredContent"]["units"],
+        json!({ "length": "m", "area": "m2", "drawing": "mm" })
+    );
+
+    // What the wizard cannot make is refused in its words.
+    let refused = call(
+        &mut server,
+        "drawing.new",
+        json!({ "srid": 5256, "drawingUnit": "mm" }),
+    );
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "invalid_input"
+    );
+    let unnamed = call(
+        &mut server,
+        "drawing.new",
+        json!({ "srid": 5256, "name": "" }),
+    );
+    assert_eq!(
+        unnamed["structuredContent"]["error"]["message"],
+        "Proje adı boş olamaz."
+    );
+    let unknown = call(&mut server, "drawing.new", json!({ "srid": 4 }));
+    assert_eq!(
+        unknown["structuredContent"]["error"]["code"],
+        "unknown_system"
+    );
+}

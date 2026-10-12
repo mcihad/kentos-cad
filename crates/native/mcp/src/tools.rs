@@ -7,7 +7,7 @@
 use std::path::Path;
 
 use kentos_domain::Uuid;
-use kentos_headless::{HeadlessError, NewDrawing, Op, Session};
+use kentos_headless::{HeadlessError, Op, Session, new_drawing};
 use serde_json::{Value, json};
 
 use crate::cloud;
@@ -70,17 +70,24 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.new",
             "Yeni çizim",
-            "Yeni bir proje başlatır (standart katman ağacı, dilimin çalışma alanı, varsayılan birimler); \
-             koordinat sistemi sorulur, tahmin edilmez.",
+            "Yeni bir proje başlatır, Yeni proje sihirbazının kurallarıyla (docs/adr/0165, 0245): türün katman \
+             ağacı, açılış görünümü, birimler. CBS projesinin koordinat sistemi sorulur (srid ya da ilin \
+             dilimi için province), tahmin edilmez; CAD projesi srid'siz yereldir (SRID 0, 0,0'dan başlar) \
+             ve drawingUnit'iyle çizilir. Birimler: geometri her zaman projenin düzleminde metredir \
+             (coğrafi sistemde derece); drawingUnit yalnız pencerelerin okuyup yazdığı birimdir. 4000 × 3000 \
+             mm'lik oda mm projesinde de 4 × 3 olarak yazılır ve 12 m² ölçülür.",
             object(
                 json!({
-                    "name": { "type": "string", "description": "Projenin adı." },
-                    "srid": { "type": "integer", "description": "Koordinat sistemi (5254…5259 TUREF/TM, 32635…32638 UTM …)." },
-                    "plotScale": { "type": "number", "description": "Çizim ölçeği paydası (1000: 1:1000)." },
+                    "name": { "type": "string", "description": "Projenin adı; verilmezse “Yeni proje”." },
                     "workspace": { "type": "string", "enum": ["cad", "gis"], "description": "Proje türü (docs/adr/0165): cad ya da gis; verilmezse gis." },
-                    "drawingFont": { "type": "string", "description": "Çizimin yazı tipi (barlow, arimo …)." }
+                    "coords": { "type": "string", "enum": ["local", "real"], "description": "CAD projesinin koordinatları: local (sistem yok, SRID 0) ya da real. Verilmezse srid'den: srid yok ya da 0 ise local; CBS projesi her zaman real." },
+                    "srid": { "type": "integer", "minimum": 0, "description": "Koordinat sistemi (5254…5259 TUREF/TM, 32635…32638 UTM …; 0 yerel). Koordinat sistemli projede srid ya da province gerekir." },
+                    "province": { "type": "integer", "minimum": 1, "maximum": 81, "description": "İlin plaka kodu: proje onun merkezinde açılır; srid yoksa ilin TUREF dilimi alınır. Yerel projede verilmez." },
+                    "drawingUnit": { "type": "string", "enum": ["mm", "cm", "m"], "description": "Yerel CAD projesinin çizim birimi; verilmezse m. Koordinat sistemli proje metrededir. Yalnız okuma ve yazma birimidir: araçların girdisi ve ölçüler yine metrededir." },
+                    "plotScale": { "type": "number", "exclusiveMinimum": 0, "description": "Çizim ölçeği paydası (1000: 1:1000); verilmezse yerel projede 1, ötekinde 1000." },
+                    "drawingFont": { "type": "string", "description": "Çizimin yazı tipi (barlow, arimo …); verilmezse barlow." }
                 }),
-                &["srid"],
+                &[],
             ),
             annotations(false, false),
         ),
@@ -128,7 +135,8 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.summary",
             "Çizimin özeti",
-            "Ad, revizyon, nesne sayısı, proje ayarları (SRID, birimler, ölçek), etkin katman, geri alma durumu.",
+            "Ad, revizyon, nesne sayısı, proje ayarları (SRID, birimler, ölçek), değerlerin birimleri (units: \
+             length m ya da degree, area m2 ya da degree2, drawing projenin çizim birimi), etkin katman, geri alma durumu.",
             object(json!({ "drawing": drawing_arg() }), &["drawing"]),
             annotations(true, false),
         ),
@@ -170,7 +178,8 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.measure",
             "Ölç",
-            "Nesnenin alanı (m²), uzunluğu ya da çevresi (m) ve kutusu; kaynak geometriden.",
+            "Nesnenin alanı, uzunluğu ya da çevresi ve kutusu; kaynak geometriden. Birimleri units'te: projenin \
+             düzleminde metre ve m² (coğrafi sistemde derece), çizim birimi mm olsa da.",
             object(
                 json!({ "drawing": drawing_arg(), "uid": uid }),
                 &["drawing", "uid"],
@@ -355,7 +364,9 @@ fn command_tool(c: &Value) -> Value {
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \
          conflict (error: code, message, path). plan'ın revision'u expectedRevision olarak verilirse \
-         yalnız o plan yazılır. Koordinatlar x doğu (Y), y kuzey (X), metre.",
+         yalnız o plan yazılır. Koordinatlar x doğu (Y), y kuzey (X); koordinatlar, uzunluklar ve alanlar \
+         projenin düzleminde metre ve m²'dir (coğrafi sistemde derece), projenin çizim birimi mm ya da cm \
+         olsa da: 4000 mm 4 yazılır (docs/adr/0245).",
         c["summary"].as_str().unwrap_or_default()
     );
     json!({
@@ -528,39 +539,7 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
             opened(server, session)
         }
         "drawing.new" => {
-            let srid = args
-                .get("srid")
-                .and_then(Value::as_u64)
-                .and_then(|s| u32::try_from(s).ok())
-                .ok_or_else(|| {
-                    refused(
-                        "invalid_input",
-                        "srid gerekli: projenin koordinat sistemi (ör. 5256).",
-                    )
-                })?;
-            let named = |field: &str, default: &str| -> Result<Value, Value> {
-                Ok(json!(text(args, field).unwrap_or(default)))
-            };
-            let choices = NewDrawing {
-                name: text(args, "name").unwrap_or("Adsız proje").to_owned(),
-                srid,
-                plot_scale: args
-                    .get("plotScale")
-                    .and_then(Value::as_f64)
-                    .unwrap_or(1000.0),
-                workspace: serde_json::from_value(named("workspace", "gis")?)
-                    .map_err(|_| refused("invalid_input", "workspace: cad ya da gis."))?,
-                drawing_font: serde_json::from_value(named("drawingFont", "barlow")?).map_err(
-                    |_| {
-                        refused(
-                            "invalid_input",
-                            "drawingFont bilinen bir yazı tipi değil (barlow, arimo …).",
-                        )
-                    },
-                )?,
-                province: None,
-                drawing_unit: None,
-            };
+            let choices = new_drawing(args).map_err(host)?;
             let session = Session::new(&choices).map_err(host)?;
             opened(server, session)
         }
