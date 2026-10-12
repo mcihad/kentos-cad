@@ -245,6 +245,24 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+/* Not the point editor's table, whose classes the tab borrows: no row number column (narrow, in the third ink), no
+   weightier second column, no minimum width that pushes the numbers out of a narrow panel. */
+.ptable .chart__grid {
+  min-width: 0;
+}
+.ptable .chart__grid th:first-child,
+.ptable .chart__grid td:first-child {
+  width: auto;
+}
+.ptable .chart__grid th:first-child {
+  color: var(--c-text-2);
+}
+.ptable .chart__grid td:first-child {
+  color: var(--c-text);
+}
+.ptable .chart__grid td:nth-child(2) {
+  font-weight: 400;
+}
 /* The tooltip: values lead in the first ink, names follow in the second (docs/adr/0227 §6). */
 .chart__tip {
   position: absolute;
