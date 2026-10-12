@@ -91,6 +91,13 @@ Liste:
   maskesi, başvuru başına yerin türü, sayıları ve kopma bayrağı; metinlerde nesnenin kimliği ve kopma nedeni; `columns.rs`'in tablosu)
   okur ve yazar; `io/version.ts`'in `FORMATS_VERSION`'ı 55 (web'de 53 kaldı); bilinen bozulmalar: web'in `kcad.wasm.test.ts`'i
   `dimension-refs.kcad`'i ve `broken/dimension-refs-*`'i okur; `io/columns.ts` bit 28'i bilmez, başvurulu ölçünün sütunlarını okuyamaz.
+- [ ] `CADP-06`, `CADP-07` (ADR 0249, 12 Ekim): web'de gerekenler: belgede ilişkili ölçünün izlenmesi (`model/`'de taramaların
+  izlemesinin yanında, `crates/native/domain/src/dimension_ties.rs` gibi; çekirdeğin `subrefFollow`, `subrefPoint`, `subrefPlaceAt`'i
+  WASM'dan), deponun bağ ve kopuk dizinleri; `cad.dimensions.reassociate` işleyicisi `product/`'ta ve katalogda `hosts`'a Web; ölçü
+  aracının kenetin yerini bağlaması (`tools/dimensionTool.ts`), Yeniden bağla aracı, Öznitelikler'de İlişki ve Serbest bırak, çizimde
+  kopuk bağ işareti; `cad.entities.edit`'in başvurusuz güncellemesinde ölçünün başvurularını koruma; iz oynatıcısına `refs`
+  beklentisi; oynatılacak iz `dimension-refs.json`; bilinen bozulmalar: komut kataloğunda `cad.dimensions.reassociate` (yalnız
+  `Desktop`), `fixtures/commands/v1/cad.dimensions.reassociate.json` web'in koşucusunda kayıtsız komut.
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
@@ -1010,8 +1017,15 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   önizlemeyi komutun planından çizer; 30 ortak durum kesirlerle bağımsız başvurudan; Python ve MCP aracın kopyasını bit bit yazar.
   Manifestte Ötele `semantic`.
 - [ ] `CADP-05` Aynı kalıpla Buda, Uzat, Köşe yuvarla ve ilişkili ölçü oluşturma (plan `CAD-CMD-03`–`05`).
-- [ ] `CADP-06` Alt nesne kimliği ve başvuruların göçü ve geçersizleşmesi (plan `CAD-DATA-13`, `14`; `DEC-03`).
-- [ ] `CADP-07` İlişkili ölçü: bağ, izleme ve yeniden bağlama (plan §11.1).
+- [x] `CADP-06` Alt nesne kimliği ve başvuruların göçü ve geçersizleşmesi (plan `CAD-DATA-13`, `14`; `DEC-03`). — **12 Ekim,
+  [ADR 0249](docs/adr/0249-subentity-references-and-associative-dimensions.md)** (CADP-07 ile tek parça; `.kcad` kısmı paralel ajanda):
+  yer (`node`, `start`, `end`, `center`, `vertex`, `mid`) ve başvuru (`uid`, yer, `broken`); çekirdeğin `ops::subref`'i yapı aynıysa
+  yeri korur, değiştiyse köşeyi bit bit arar (`vertex_gone`, `ambiguous`); bağımsız başvuru `subref_cases.py` (17 yer, 25 izleme, 11
+  kenet); `.kcad` şema 43, `FORMATS_VERSION` 55. Açık: blok içi yerler, parçalanan ve birleşen nesnelerde eşleme (`DEC-03`'ün kalanı).
+- [x] `CADP-07` İlişkili ölçü: bağ, izleme ve yeniden bağlama (plan §11.1). — **12 Ekim, ADR 0249:** ölçü aracının kenetle bir yere
+  oturan noktası bağlanır (Hizalı, Doğrusal, Koordinat, Semt, Eğim); belge kayıttan önce izler, aynı geri alma adımında; kopan bağ
+  nedeniyle kalır ve çizimde işaretlenir; `cad.dimensions.reassociate` (26 ortak durum, `dimension_command_cases.py`), Yeniden bağla
+  aracı (Açıklama › Ölçü), Öznitelikler'de İlişki ve Serbest bırak; Python ve MCP; iz `dimension-refs.json`. Manifestte semantic.
 - [ ] `CADP-08` Katman, stil ve ayar işlemleri katalogda; SDK ve MCP eşit (plan `CAD-CMD-14`, `15`; §5.1 `cad.layers.*`,
   `cad.styles.*`, `cad.settings.*`).
 - [ ] `CADP-09` Pafta kitabı `.kcad`'in kaynağında; cihaz kitaplarından göç (plan §17.1).

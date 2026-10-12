@@ -270,7 +270,7 @@ fn snapped_elevation(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) -> Option
 
 /// The place on an object a snap stands on, when it is one (docs/adr/0249 §3): the snap's kind and exact point name
 /// one of the object's places (`ops::subref::place_at`). A nearest point, an intersection or a typed point is none.
-fn snapped_place(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) -> Option<SubRef> {
+pub(crate) fn snapped_place(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) -> Option<SubRef> {
     let hit = snap?;
     if !(0.0..=f64::from(u32::MAX)).contains(&hit.id) || hit.point != p {
         return None;

@@ -85,9 +85,46 @@ koordinatlarını korur (`CAD-ANNO-02`).
 
 ## Uygulama
 
-Uygulama bölümü işin sonunda yazılır.
+- **Sözleşme:** `crates/shared/contracts/src/subref.rs` (`SubPlace`, `SubRef`, `DimensionRefs`, `SUBREF_BROKEN`, `broken_words`);
+  `DimensionEntity.refs` ve `EntityGeometry::Dimension.refs`; komut `cad_dimensions.rs` (`DimensionsReassociate`, `PointBinding`,
+  `PlaceOn`, çıktı ve plan). Ret kodları `invalid_refs`, `not_a_dimension`, `no_such_place`.
+- **Çekirdek:** `kentos_geometry_core::ops::subref` (`point`, `follow`, `place_at`). Yer yalnız yolda ve çok noktalıda yapı taşır;
+  `place_at` kenetin türünü ve tam noktasını nesnenin yerlerine eşler (Uç nokta: baş, son ve köşeler; Orta nokta: ortalar; Merkez;
+  Nokta: düğümler).
+- **Belge (`kentos_domain`):** `dimension_ties.rs`'in `follow_dimensions`'ı `commit`'te taramaların izlemesinden sonra çalışır;
+  deponun `ties` dizini canlı başvuruların nesnelerini de tutar, `broken` dizini kopuk başvurulu ölçüleri (çizimin işareti tarama
+  yapmaz). Kendi başına düzenlenen ölçünün noktası, adım o noktaya yeni bir başvuru vermediyse bağını bırakır.
+- **Uygulama:** `dimensions_reassociate.rs` (komut); `edit.rs`'in Update'i başvurusuz geometride ölçünün başvurularını korur
+  (Öznitelikler'in yazmaları çekirdeğin şeklinden kurulur, şekil başvuru taşımaz); `unlinked` kopyanın başvurularını düşürür;
+  oluşturma ve düzenleme başvuruları `invalid_refs` ile denetler. Başsız sunucu, Python (`kentos.cad.dimensions.reassociate`) ve MCP
+  komutu katalogdan alır.
+- **Etkileşim:** ölçü aracı (`dimension.rs`) noktayı aldığı kenetin yerini `places`'te tutar ve yazarken `refs`'e koyar; Yeniden bağla
+  aracı `dimension_reassociate.rs` (ölçü, sonra her noktanın yeri; Enter olduğu gibi, S serbest; önizlemede yeni ölçü ve değeri);
+  Öznitelikler'in Serbest bırak'ı `properties::free_dimensions` (tek adım).
+- **Masaüstü:** Öznitelikler'de İlişki satırı (`rows/dimension.rs`'in `relation`'ı) ve Serbest bırak; çizimde kopan noktada uyarı üçgeni
+  (`marks.rs`'in `broken`'ı, belgenin `broken_dimensions`'ından); şeritte CAD › Açıklama › Ölçü'de Yeniden bağla
+  (`catalog/v1/additions.json`, ikon `dimensionReassociate`); işlem manifestinde `semantic`.
+- **Kayıt:** `.kcad` şema 43 ve `FORMATS_VERSION` 55 (§4); tipli sütunlarda ölçünün `REFS` işareti (bit 28).
+- **İz oynatıcısı:** nesne beklentisinde `refs` (`a`, `b:vertex_gone`).
 
 ## Doğrulama
 
 - Bağımsız başvuru `scripts/fixtures/subref_cases.py` (KentOS kodu olmadan): 17 yer, 25 izleme durumu; çekirdek aynı sonucu verir
   (`geocode` gibi `tests/all/subref.rs`). Başvuru, çizginin ortasının taşınınca kopması hatasını yakaladı.
+- Ortak komut durumları `fixtures/commands/v1/cad.dimensions.reassociate.json` (26), bağımsız başvuru
+  `scripts/fixtures/dimension_command_cases.py` (yerler tanımlarından, değerler kesin); masaüstünde ve Python'da koşar.
+- Belge: `crates/native/domain/tests/all/dimension_ties.rs` (köşe çekilince izler ve tek geri alma, eklenen köşede yeniden bağlanır,
+  silinen köşede ve silinen nesnede kopar, kendi başına taşınan uç bağını bırakır).
+- Uygulama: `crates/native/application/tests/all/reassociate.rs` (izler, kopar, yeniden bağlanır ve yine izler; kopya bağsız;
+  Öznitelikler'in başvurusuz yazması bağları korur).
+- Kayıt: `cargo test -p kentos-kcad` (`dimension_refs.rs`), bağımsız yazıcı ve okuyucu (`kcad_v2_reference.py`, `tools/kcad/kcad.py`),
+  `dimension-refs.kcad` ve yedi bozuk dosya.
+- İz: `fixtures/interaction/v1/dimension-refs.json` masaüstünde üç kipte (us, tr-q, hidpi); bir beklenti bilerek bozulunca düştüğü
+  görüldü. Resimler `kentos-cad kullan dimension-refs`.
+
+## Sonuçlar
+
+- Nesneden alınan ölçüler (Yarıçap, Çap, Yay uzunluğu, Kırıklı yarıçap, Açı) ve Zincir, Baz ve Hızlı ölçü bu işte bağlanmaz.
+- Blok içindeki yerler (iç içe yol) ve parçalanan ya da birleşen nesnelerde yerin eşlenmesi (`DEC-03`'ün kalanı) açık.
+- Kesişim, teğet ve yakın kenetleri yer değildir; bunlarla alınan nokta serbesttir.
+

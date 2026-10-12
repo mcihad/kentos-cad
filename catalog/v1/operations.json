@@ -705,6 +705,13 @@
     "address.providers": {
       "level": "host"
     },
+    "tool.dimensionReassociate": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.reassociate"
+      ],
+      "note": "Ölçü, nokta ve nesnenin yeri komuta verilir; nokta yerinden hesaplanır (ADR 0249)."
+    },
     "processing.run.address.geocode": {
       "level": "processing",
       "python": "kentos.address",
@@ -887,7 +894,7 @@
     },
     "dimension": {
       "level": "semantic",
-      "note": "Ölçü tanım noktalarını saklar; nesneye bağlı (ilişkili) değildir.",
+      "note": "Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in kenetle bir yere oturan noktası nesneye bağlanır (refs, ADR 0249); öbür türler tanım noktalarını saklar.",
       "methods": {
         "Hizalı": "semantic",
         "Doğrusal": "semantic",

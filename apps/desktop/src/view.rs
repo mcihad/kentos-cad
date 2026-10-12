@@ -711,6 +711,7 @@ impl App {
                     marked: self.vertex_marks(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
+                    broken: self.broken_marks(),
                     tracking: self.tracking_marks(&format),
                     crosshair: self.crosshair_mark(),
                     locks: self.lock_marks(&format),
@@ -862,6 +863,7 @@ impl App {
             problem: self
                 .topology_problem()
                 .or_else(|| self.networks.mark.clone()),
+            broken: self.broken_marks(),
             tracking: None,
             crosshair: None,
             locks: None,

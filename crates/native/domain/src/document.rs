@@ -191,6 +191,11 @@ impl Document {
 
     /// The revision of what a file would hold: it changes with every edit,
     /// undo, redo and layer change. Only comparisons mean something.
+    /// The dimensions with a broken reference, in slot order: what the drawing marks (docs/adr/0249 §3).
+    pub fn broken_dimensions(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.store.broken_dimensions()
+    }
+
     pub fn revision(&self) -> u64 {
         self.edits
     }

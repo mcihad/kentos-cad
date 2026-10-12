@@ -243,6 +243,23 @@ pub(super) fn rows(
         type_row("Uzatma tipi", Part::Ext, dims, slots, locked),
         color_row("Değer rengi", Part::Value, dims, slots, locked),
     ]);
+    // Its references (docs/adr/0249 §3): the point methods' points follow places on objects.
+    if let Some(text) = common_relation(dims) {
+        let any = dims.iter().any(|d| d.refs.is_some());
+        let row = Row::text("İlişki", &text);
+        rows.push(if any {
+            row.editor(edit(select(
+                &text,
+                [(
+                    "Serbest bırak",
+                    false,
+                    Event::DimensionFree(slots.to_vec()),
+                )],
+            )))
+        } else {
+            row
+        });
+    }
     // An ordinate's axis: its Y (0) or its X (90).
     if dims
         .iter()
@@ -301,4 +318,42 @@ pub(super) fn rows(
         });
     }
     rows
+}
+
+/// How many measured points a dimension's kind binds (docs/adr/0249 §3): two for the point methods, one for an
+/// ordinate (its other point is the leader's end); none for the kinds taken from an object.
+fn bindable(d: &DimensionEntity) -> usize {
+    match d.style {
+        None | Some(DimensionStyle::Linear | DimensionStyle::Azimuth | DimensionStyle::Slope) => 2,
+        Some(DimensionStyle::Ordinate) => 1,
+        _ => 0,
+    }
+}
+
+/// A dimension's İlişki: Bağlı (2/2), Kısmen bağlı (1/2), Kopuk: köşe silindi, Serbest; none for a kind that binds
+/// nothing.
+pub(super) fn relation(d: &DimensionEntity) -> Option<String> {
+    let total = bindable(d);
+    if total == 0 {
+        return None;
+    }
+    let Some(refs) = &d.refs else {
+        return Some("Serbest".into());
+    };
+    if let Some(why) = refs.each().find_map(|(_, r)| r.broken.as_deref()) {
+        return Some(format!("Kopuk: {}", kentos_contracts::broken_words(why)));
+    }
+    let live = refs.each().count();
+    Some(if live >= total {
+        format!("Bağlı ({live}/{total})")
+    } else {
+        format!("Kısmen bağlı ({live}/{total})")
+    })
+}
+
+/// The dimensions' common İlişki, “Çeşitli” when they differ; none when one binds nothing.
+fn common_relation(dims: &[&DimensionEntity]) -> Option<String> {
+    let all: Vec<String> = dims.iter().map(|d| relation(d)).collect::<Option<_>>()?;
+    let first = all.first()?.clone();
+    Some(if all.iter().all(|r| *r == first) { first } else { MIXED.to_owned() })
 }

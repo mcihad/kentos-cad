@@ -377,3 +377,46 @@ fn said<T>(result: CommandResult<T>) -> Vec<String> {
         CommandResult::Queued { .. } | CommandResult::Cancelled => Vec::new(),
     }
 }
+
+/// İlişki ▾'s Serbest bırak (docs/adr/0249 §3): the dimensions in `slots` let every point go through
+/// `cad.dimensions.reassociate`, as one step “Ölçüyü yeniden bağla”; those without references left out. What to say:
+/// the command's refusal.
+pub fn free_dimensions(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
+    use kentos_contracts::{DimensionPoint, DimensionsReassociate, PointBinding};
+    use kentos_native_application::dimensions_reassociate;
+    let inputs: Vec<DimensionsReassociate> = slots
+        .iter()
+        .filter_map(|&slot| match doc.get(slot) {
+            Some(Entity::Dimension(d)) => {
+                let refs = d.refs.as_ref()?;
+                let points = refs
+                    .each()
+                    .map(|(k, _)| PointBinding {
+                        point: match k {
+                            "a" => DimensionPoint::A,
+                            "b" => DimensionPoint::B,
+                            _ => DimensionPoint::C,
+                        },
+                        to: None,
+                    })
+                    .collect();
+                Some(DimensionsReassociate {
+                    uid: doc.uid(slot)?.to_string(),
+                    points,
+                    expected_revision: None,
+                })
+            }
+            _ => None,
+        })
+        .collect();
+    let group = doc.begin_group(dimensions_reassociate::LABEL);
+    let mut out = Vec::new();
+    for input in inputs {
+        out.extend(said(dimensions_reassociate::execute(
+            &mut ExecutionContext::new(doc),
+            input,
+        )));
+    }
+    doc.end_group(group);
+    out
+}

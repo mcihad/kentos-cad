@@ -89,6 +89,8 @@ pub enum Event {
     /// angle, 0 for Y and 90 for X (docs/adr/0147 §7).
     DimensionMask(Vec<Slot>, bool),
     DimensionAxis(Vec<Slot>, f64),
+    /// İlişki ▾'s Serbest bırak: the dimensions' points let go (docs/adr/0249 §3).
+    DimensionFree(Vec<Slot>),
     /// A dimension's line's colour (`#RRGGBB`; none: the object's), weight
     /// on paper (mm; none: a hairline) and type (none: continuous): the
     /// dimension line's and its arrowheads', the extension lines', the
@@ -590,6 +592,7 @@ impl App {
                     (d.mask != mask).then(|| DimensionEntity { mask, ..d.clone() })
                 })
             }
+            Event::DimensionFree(slots) => properties::free_dimensions(model, &slots),
             Event::DimensionAxis(slots, angle) => {
                 let y = angle == 0.0;
                 properties::change_dimensions(model, &slots, |d| {

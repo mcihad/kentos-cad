@@ -58,6 +58,8 @@ pub(crate) struct Store {
     /// The hatches whose region follows an object, by that object's
     /// persistent id (docs/adr/0186 §6).
     ties: HashMap<Uuid, BTreeSet<Slot>>,
+    /// The dimensions with a broken reference (docs/adr/0249 §3): what the drawing marks.
+    broken: BTreeSet<Slot>,
 }
 
 /// The objects a hatch's region follows: its closed object, islands and
@@ -83,6 +85,12 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
         }),
         _ => Vec::new(),
     }
+}
+
+/// Whether a dimension has a broken reference (docs/adr/0249 §3).
+fn has_broken(stored: &Stored) -> bool {
+    matches!(&*stored.entity, Entity::Dimension(d)
+        if d.refs.as_ref().is_some_and(|r| r.each().any(|(_, s)| !s.live())))
 }
 
 /// The object a text writes the label of, when it is a linked text (docs/adr/0175 §4).
@@ -138,6 +146,9 @@ impl Store {
         for of in ties_of(stored) {
             self.ties.entry(of).or_default().insert(stored.slot());
         }
+        if has_broken(stored) {
+            self.broken.insert(stored.slot());
+        }
     }
 
     fn unlink(&mut self, stored: &Stored) {
@@ -157,6 +168,12 @@ impl Store {
                 }
             }
         }
+        self.broken.remove(&stored.slot());
+    }
+
+    /// The dimensions with a broken reference, in slot order (docs/adr/0249 §3).
+    pub fn broken_dimensions(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.broken.iter().copied()
     }
 
     /// Every object in document order.
