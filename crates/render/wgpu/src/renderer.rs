@@ -293,6 +293,22 @@ impl Renderer {
         };
         let scaled = !settings.hi_dpi && frame.scale_factor > 1.0;
         let own = samples > 1 || scaled || frame.keep_picture;
+        state.viewport = [
+            frame.origin_px[0],
+            frame.origin_px[1],
+            frame.size_px[0].max(1.0),
+            frame.size_px[1].max(1.0),
+        ];
+        // A picture shown pixel for pixel lands on whole device pixels, its corners rounded as Iced
+        // rounds the primitive's clip. Composed over an area a fraction of a pixel off, the nearest
+        // sampler reads the picture at its pixels' edges: rows and columns come twice or not at all,
+        // and a slanted line breaks into beads (the symbol designer's preview in its centred dialog,
+        // any area at a fractional scale). A picture scaled up is laid over the area as it is.
+        state.placed = if scaled {
+            state.viewport
+        } else {
+            whole_pixels(frame.origin_px, frame.size_px)
+        };
         let (size_px, scale_factor) = if scaled {
             (
                 [
@@ -302,14 +318,8 @@ impl Renderer {
                 1.0,
             )
         } else {
-            (frame.size_px, frame.scale_factor)
+            ([state.placed[2], state.placed[3]], frame.scale_factor)
         };
-        state.viewport = [
-            frame.origin_px[0],
-            frame.origin_px[1],
-            frame.size_px[0].max(1.0),
-            frame.size_px[1].max(1.0),
-        ];
         state.clear = settings.background.to_f32();
         if own {
             let size = [size_px[0].max(1.0) as u32, size_px[1].max(1.0) as u32];
@@ -374,18 +384,25 @@ impl Renderer {
         } else {
             (frame.size_px, frame.scale_factor)
         };
+        // The picture's camera follows it onto whole pixels: the drawing stays on the host's pixels
+        // (the overlays and the canvas drawn over it agree to the pixel).
+        let camera = if state.own && !scaled {
+            camera_at(frame.camera, state.viewport, state.placed, scale_factor)
+        } else {
+            *frame.camera
+        };
         state.drawn = Drawn {
             size_px: drawn_size,
             scale_factor: drawn_scale,
             center: [
-                frame.camera.center.x - frame.origin.x,
-                frame.camera.center.y - frame.origin.y,
+                camera.center.x - frame.origin.x,
+                camera.center.y - frame.origin.y,
             ],
             origin: [frame.origin.x, frame.origin.y],
-            scale: frame.camera.scale,
-            screen_scale: frame.camera.screen_scale(),
+            scale: camera.scale,
+            screen_scale: camera.screen_scale(),
         };
-        let uniform = frame.camera.frame_uniform(
+        let uniform = camera.frame_uniform(
             frame.origin,
             drawn_size,
             drawn_scale,
@@ -669,14 +686,16 @@ impl Renderer {
             timestamp_writes: None,
             occlusion_query_set: None,
         });
-        let [x, y, w, h] = state.viewport;
+        let [x, y, w, h] = state.placed;
         pass.set_viewport(x, y, w, h, 0.0, 1.0);
         pass.set_scissor_rect(clip[0], clip[1], clip[2].max(1), clip[3].max(1));
         self.compose.draw(&mut pass, targets);
-        // The overlays over the picture, at the host's resolution.
+        // The overlays over the picture, at the host's resolution, in the host's area.
         if let (Some((_, bind)), Some(host)) = (&state.overlay, self.pipelines.get(&1))
             && state.overlays > 0
         {
+            let [x, y, w, h] = state.viewport;
+            pass.set_viewport(x, y, w, h, 0.0, 1.0);
             pass.set_bind_group(0, bind, &[]);
             let all = state.parts.len();
             state.draw_parts(&mut pass, host, all - state.overlays..all);
@@ -995,6 +1014,8 @@ struct View {
     failed: Option<SampleFailure>,
     /// The area in the host's frame, device pixels: x, y, width, height.
     viewport: [f32; 4],
+    /// Where the view's own picture is laid: the area on whole pixels (see [`Renderer::prepare`]).
+    placed: [f32; 4],
     clear: [f32; 4],
     /// What the last prepared frame is drawn at (the styled layers' frame).
     drawn: Drawn,
@@ -1030,6 +1051,33 @@ struct Drawn {
     scale: f64,
     /// The screen scale 1:N at 96 dpi.
     screen_scale: f64,
+}
+
+/// The area `origin`, `size` (device pixels) with its corners on whole pixels, as Iced snaps a
+/// primitive's clip: x, y, width, height.
+fn whole_pixels(origin: [f32; 2], size: [f32; 2]) -> [f32; 4] {
+    let (x0, y0) = (origin[0].round(), origin[1].round());
+    let (x1, y1) = ((origin[0] + size[0]).round(), (origin[1] + size[1]).round());
+    [x0, y0, (x1 - x0).max(1.0), (y1 - y0).max(1.0)]
+}
+
+/// `camera` for a picture laid at `placed` instead of the host's `area` (device pixels, x, y,
+/// width, height): its centre moved by what the picture's middle is off the area's, so a point
+/// lands on the host's pixel it would have.
+fn camera_at(camera: &Camera, area: [f32; 4], placed: [f32; 4], scale_factor: f64) -> Camera {
+    let px_per_unit = camera.scale * scale_factor;
+    if px_per_unit.is_nan() || px_per_unit <= 0.0 {
+        return *camera;
+    }
+    let off =
+        |i: usize| f64::from(area[i] - placed[i]) + f64::from(area[i + 2] - placed[i + 2]) / 2.0;
+    Camera {
+        center: Vec2::new(
+            camera.center.x - off(0) / px_per_unit,
+            camera.center.y + off(1) / px_per_unit,
+        ),
+        ..*camera
+    }
 }
 
 /// A frame uniform's buffer and its bind group.
@@ -1072,6 +1120,7 @@ impl View {
             working: 1,
             failed: None,
             viewport: [0.0, 0.0, 1.0, 1.0],
+            placed: [0.0, 0.0, 1.0, 1.0],
             clear: [0.0, 0.0, 0.0, 1.0],
             drawn: Drawn::default(),
             styled: None,
@@ -1319,5 +1368,53 @@ impl Chunks {
             .fold((0, 0), |(calls, elements), (_, local)| {
                 (calls + 1, elements + u64::from(local.end - local.start))
             })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Where a world point lands in the host's frame, device pixels, drawn by `camera` into
+    /// `area` (x, y, width, height) at `scale` device pixels a logical pixel.
+    fn host_px(camera: &Camera, area: [f32; 4], p: Vec2, scale: f64) -> [f64; 2] {
+        let px_per_unit = camera.scale * scale;
+        [
+            f64::from(area[0]) + f64::from(area[2]) / 2.0 + (p.x - camera.center.x) * px_per_unit,
+            f64::from(area[1]) + f64::from(area[3]) / 2.0 - (p.y - camera.center.y) * px_per_unit,
+        ]
+    }
+
+    #[test]
+    fn a_picture_lands_on_whole_pixels_and_the_drawing_where_it_was() {
+        // A centred dialog's area: half a pixel off, a fraction of a pixel wide.
+        let area = [60.5, 160.5, 619.33, 630.0];
+        let placed = whole_pixels([area[0], area[1]], [area[2], area[3]]);
+        assert_eq!(placed, [61.0, 161.0, 619.0, 630.0]);
+        let camera = Camera {
+            center: Vec2::new(1234.5, -87.25),
+            scale: 3.7,
+            width: 400.0,
+            height: 420.0,
+        };
+        for scale in [1.0, 1.25] {
+            let moved = camera_at(&camera, area, placed, scale);
+            for p in [
+                Vec2::new(1234.5, -87.25),
+                Vec2::new(1300.0, -10.0),
+                Vec2::new(1100.0, -200.0),
+            ] {
+                let [hx, hy] = host_px(&camera, area, p, scale);
+                let [px, py] = host_px(&moved, placed, p, scale);
+                assert!(
+                    (hx - px).abs() < 1e-6 && (hy - py).abs() < 1e-6,
+                    "{p:?} at {scale}: {hx}, {hy} against {px}, {py}"
+                );
+            }
+        }
+        // An area on whole pixels is its own place, its camera as it was.
+        let whole = [10.0, 20.0, 300.0, 200.0];
+        assert_eq!(whole_pixels([10.0, 20.0], [300.0, 200.0]), whole);
+        assert_eq!(camera_at(&camera, whole, whole, 1.0), camera);
     }
 }

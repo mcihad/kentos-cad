@@ -268,6 +268,66 @@ fn screens() {
             setup: |app| new(app, "marker", &["geometryGenerator"]),
             click: Some("Adım ekle"),
         },
+        // A thin line on the sample with a slanted edge (the owner's picture, 12 Oct): 0.18 mm at 4 px a mm.
+        Scene {
+            name: "ince-cizgi",
+            setup: |app| {
+                let _ = app.update(Message::LayerStyle(LayerEvent::Open(Some("parsel".into()))));
+                let _ = app.update(Message::LayerStyle(LayerEvent::Kind(Kind::Single)));
+                let symbol = json!({ "type": "fill", "layers": [
+                    { "id": "0", "type": "simpleLine", "color": "ink", "width": 0.18 },
+                ] });
+                let _ = app.update(Message::LayerStyle(LayerEvent::Design(
+                    SetAt::Single,
+                    GeometryClass::Fill,
+                    "Tek sembol (alan)".into(),
+                    symbol,
+                )));
+                de(app, Event::Sample(Geometry::Hole));
+            },
+            click: None,
+        },
+        // The same line as a sine wave: many short segments, a joint every few pixels.
+        Scene {
+            name: "ince-dalga",
+            setup: |app| {
+                let _ = app.update(Message::LayerStyle(LayerEvent::Open(Some("parsel".into()))));
+                let _ = app.update(Message::LayerStyle(LayerEvent::Kind(Kind::Single)));
+                let symbol = json!({ "type": "fill", "layers": [
+                    { "id": "0", "type": "simpleLine", "color": "ink", "width": 0.18,
+                      "wave": { "shape": "sine", "length": 4, "amplitude": 1 } },
+                ] });
+                let _ = app.update(Message::LayerStyle(LayerEvent::Design(
+                    SetAt::Single,
+                    GeometryClass::Fill,
+                    "Tek sembol (alan)".into(),
+                    symbol,
+                )));
+                de(app, Event::Sample(Geometry::Hole));
+            },
+            click: None,
+        },
+        // Closer (16 px a mm): a wave's segments a few pixels long, their joints apart.
+        Scene {
+            name: "ince-dalga-yakin",
+            setup: |app| {
+                let _ = app.update(Message::LayerStyle(LayerEvent::Open(Some("parsel".into()))));
+                let _ = app.update(Message::LayerStyle(LayerEvent::Kind(Kind::Single)));
+                let symbol = json!({ "type": "fill", "layers": [
+                    { "id": "0", "type": "simpleLine", "color": "ink", "width": 0.18,
+                      "wave": { "shape": "sine", "length": 4, "amplitude": 1 } },
+                ] });
+                let _ = app.update(Message::LayerStyle(LayerEvent::Design(
+                    SetAt::Single,
+                    GeometryClass::Fill,
+                    "Tek sembol (alan)".into(),
+                    symbol,
+                )));
+                de(app, Event::Sample(Geometry::Hole));
+                de(app, Event::Zoom(4.0));
+            },
+            click: None,
+        },
         Scene {
             name: "soru",
             setup: |app| {

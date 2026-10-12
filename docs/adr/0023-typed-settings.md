@@ -232,3 +232,25 @@
   - Önce: üst katman tuvali 1288 × 759 px.
   - Sonra: 2576 × 1518 px; sahne tuvali 1288 × 759'da kalır.
   - Ölçü kutusu, "Uç nokta" etiketi ve artı imleç keskin; çizim etiketi ("P.108") çizimle aynı kalitede.
+
+## Ek (12 Ekim 2026): resim tam piksellere oturur
+
+- **Sahibin bildirimi:** Sembol tasarımcısının önizlemesinde ince çizgi bozuk; eğik kenar kırık ve boncuklu, sinüs ve dalga çizgilerinde de
+  aynısı. Web'in önizlemesi pürüzsüz.
+- **Neden:** Kendi hedefine çizen alanın resmi Iced'in karesine alanın viewport'uyla basılıyordu. Viewport alanın kesirli sınırıydı. Önizleme
+  ortalanmış pencerede durduğu için köşesi yarım piksele düşüyordu. Resim ise kesirli boyun tam sayıya kesilmişiydi. Birebir basmanın en yakın
+  örnekleyicisi her ekran pikselini resmin iki pikseli arasındaki sınırdan okudu. Hangisini aldığı yuvarlamaya kaldı. Kimi satır ve sütun iki
+  kez geldi, kimi hiç gelmedi. Eğik çizgide çoğalan her satır bir boncuk ve bir basamaktı (önizlemenin resminde 217. ve 218. satırlar aynıydı).
+  Aynı yol kesirli ölçekte (%125, %150) çizim alanını ve stil kitaplığının sembol resimlerini de bozuyordu.
+- **Karar** (`crates/render/wgpu/src/renderer.rs`):
+  - Birebir basılan resim tam piksellere oturur: köşeleri Iced'in ilkelin kırpma kutusunu yuvarladığı gibi en yakın piksele yuvarlanır
+    (`whole_pixels`). Resmin boyu bu kutunun boyudur; her ekran pikseli resmin bir pikselini gösterir.
+  - Resmin kamerası resmin ortasının alanın ortasından kaydığı kadar kayar (`camera_at`). Çizim ekranın aynı pikselinde kalır; üstüne çizilen
+    vurgu ve Iced'in tuvali (yazılar, kenet işaretleri) pikseline denk düşer. Vurgu alanın kendi viewport'unda çizilir.
+  - HiDPI kapalıyken büyütülen resim eskisi gibi alanın üstüne yumuşak örnekleyiciyle serilir.
+  - Tam piksellerdeki alanda (%100 ölçek, tam sayılı yerleşim) hiçbir şey değişmez.
+- **Doğrulama:**
+  - `cargo test -p kentos-render-wgpu renderer::tests`: kesirli alanda resmin yeri ve kaydırılmış kamerayla dünya noktalarının ekrandaki yeri,
+    1× ve 1,25×.
+  - Sembol tasarımcısının üç sahnesi (`ince-cizgi`, `ince-dalga`, `ince-dalga-yakin`; `.run/shots/sdes-ince-*`): 0,18 mm'lik düz çizgide
+    satırlar düzenli ilerler, dalgada topak kalmaz.
