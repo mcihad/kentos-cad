@@ -39,7 +39,7 @@
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | xline, ray | | p, dir | |
 //! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any |
-//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any |
+//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs, then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
 //! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any |
@@ -62,7 +62,7 @@
 //! (docs/adr/0183), and bit 27 (`LINES`) for its line fields (docs/adr/0205
 //! §6): a line flags int follows (`LINE_*`: 1 dimension line colour, 2 its
 //! weight, 4 its type, 8 extension lines' colour, 16 their weight, 32 their
-//! type, 64 the value's colour);
+//! type, 64 the value's colour), and bit 28 (`REFS`) for its references (docs/adr/0249 §4);
 //! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror; leader: text, arrow, mask (no value;
 //! docs/adr/0146), arrow size (docs/adr/0205 §7); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
@@ -100,13 +100,13 @@ use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionArrow,
-    DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit,
-    EllipseEntity, Entity, EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity,
-    HatchGradient, HatchPattern, HatchPatternType, ImageEntity, ImageFields, InsertEntity,
-    LeaderArrow, LeaderEntity, LineEntity, LineType, Paragraph, PathEntity, PatternLine,
-    PointEntity, PointPart, RasterEntity, RasterFields, RasterRender, RasterSample, RasterStretch,
-    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign,
-    TextEntity, TextFace, TextRun, TextScript, Vec2,
+    DimensionEntity, DimensionLook, DimensionRefs, DimensionStyle, DimensionTextPlace, DrawingFont,
+    DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, GradientShape, HatchAssoc,
+    HatchEntity, HatchGradient, HatchPattern, HatchPatternType, ImageEntity, ImageFields,
+    InsertEntity, LeaderArrow, LeaderEntity, LineEntity, LineType, Paragraph, PathEntity,
+    PatternLine, PointEntity, PointPart, RasterEntity, RasterFields, RasterRender, RasterSample,
+    RasterStretch, RingGeometry, SplineEntity, SubPlace, SubRef, TableAlign, TableEntity,
+    TableGrid, TableSource, TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2,
 };
 
 use crate::error::{Code, KcadError};
@@ -246,6 +246,19 @@ const EXT_COLOR: u32 = 8;
 const EXT_WEIGHT: u32 = 16;
 const EXT_LINE_TYPE: u32 = 32;
 const TEXT_COLOR: u32 = 64;
+/// A dimension's references follow (docs/adr/0249 §4): a mask int (1 `a`, 2 `b`, 4 `c`), then per
+/// reference its place's kind (its place in `PLACE_KINDS`), the kind's numbers and whether it broke
+/// (0 or 1); its object's id (UUID text) and, when it broke, why.
+const REFS: u32 = 1 << 28;
+/// A reference's place kinds, numbered as the columns hold them, and how many numbers each has.
+const PLACE_KINDS: [(&str, usize); 6] = [
+    ("node", 1),
+    ("start", 0),
+    ("end", 0),
+    ("center", 0),
+    ("vertex", 3),
+    ("mid", 3),
+];
 /// The line types, numbered as the columns hold them (the contract's order).
 const LINE_TYPES: [LineType; 4] = [
     LineType::Continuous,
@@ -788,7 +801,7 @@ impl Packer {
                 mask,
                 za,
                 zb,
-                refs: _,
+                refs,
                 look,
             }) => {
                 self.point(a);
@@ -903,6 +916,34 @@ impl Packer {
                         .flatten()
                     {
                         self.text(c);
+                    }
+                }
+                if let Some(refs) = refs {
+                    flags |= REFS;
+                    let mask = [&refs.a, &refs.b, &refs.c]
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, r)| r.is_some())
+                        .fold(0, |m, (i, _)| m | 1 << i);
+                    self.int(mask);
+                    for (_, r) in refs.each() {
+                        let (kind, numbers) = match r.place {
+                            SubPlace::Node { part } => (0, [part, 0, 0]),
+                            SubPlace::Start => (1, [0; 3]),
+                            SubPlace::End => (2, [0; 3]),
+                            SubPlace::Center => (3, [0; 3]),
+                            SubPlace::Vertex { part, ring, index } => (4, [part, ring, index]),
+                            SubPlace::Mid { part, ring, index } => (5, [part, ring, index]),
+                        };
+                        self.int(kind);
+                        for x in &numbers[..PLACE_KINDS[kind as usize].1] {
+                            self.int(*x);
+                        }
+                        self.int(u32::from(r.broken.is_some()));
+                        self.text(&r.uid.to_text());
+                        if let Some(b) = &r.broken {
+                            self.text(b);
+                        }
                     }
                 }
             }
@@ -1734,7 +1775,7 @@ fn allowed(kind: u8) -> u32 {
         14 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look,
         // schema 30's lines (docs/adr/0205 §6).
-        11 => OPT.iter().fold(0, |m, b| m | b) | LINES,
+        11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS,
         // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
         12 => OPT[..6].iter().fold(0, |m, b| m | b),
         13 => OPT[0],
@@ -2106,6 +2147,62 @@ fn geometry(
             } else {
                 None
             };
+            // What its points follow (docs/adr/0249 §4).
+            let refs = if flags & REFS != 0 {
+                let mask = c.int()?;
+                if mask & !7 != 0 {
+                    return Err(broken(&format!("ölçünün başvuru maskesi {mask}")));
+                }
+                let mut slots = [None, None, None];
+                for (i, slot) in slots.iter_mut().enumerate() {
+                    if mask & 1 << i == 0 {
+                        continue;
+                    }
+                    let kind = c.usize()?;
+                    let (_, n) = *PLACE_KINDS
+                        .get(kind)
+                        .ok_or_else(|| broken(&format!("başvurunun yer türü {kind}")))?;
+                    let mut numbers = [0; 3];
+                    for x in &mut numbers[..n] {
+                        *x = c.int()?;
+                    }
+                    let [part, ring, index] = numbers;
+                    let spot = match kind {
+                        0 => SubPlace::Node { part },
+                        1 => SubPlace::Start,
+                        2 => SubPlace::End,
+                        3 => SubPlace::Center,
+                        4 => SubPlace::Vertex { part, ring, index },
+                        _ => SubPlace::Mid { part, ring, index },
+                    };
+                    let is_broken = match c.int()? {
+                        0 => false,
+                        1 => true,
+                        v => return Err(broken(&format!("başvurunun kopma bayrağı {v}"))),
+                    };
+                    let t = c.text(|| place("refs"))?;
+                    let uid = EntityId::parse(&t)
+                        .ok_or_else(|| broken(&format!("başvurunun nesnesinin kimliği “{t}”")))?;
+                    let why = if is_broken {
+                        Some(c.text(|| place("refs"))?)
+                    } else {
+                        None
+                    };
+                    *slot = Some(SubRef {
+                        uid,
+                        place: spot,
+                        broken: why,
+                    });
+                }
+                let [ra, rb, rc] = slots;
+                Some(DimensionRefs {
+                    a: ra,
+                    b: rb,
+                    c: rc,
+                })
+            } else {
+                None
+            };
             Entity::Dimension(DimensionEntity {
                 base,
                 a,
@@ -2119,7 +2216,7 @@ fn geometry(
                 mask: has(4),
                 za,
                 zb,
-                refs: None, // the web's columns: docs/adr/0249 (TODOS.md §0.2)
+                refs,
                 look: DimensionLook {
                     dim_style,
                     arrow,

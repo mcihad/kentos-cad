@@ -153,6 +153,14 @@ SCHEMA_WITH_ATTACHMENTS = 40
 SCHEMA_WITH_COMPOSE = 41
 # Schema 42: schema 41 and the settings' `addressLocators`, the project's address data (docs/adr/0229 §2).
 SCHEMA_WITH_ADDRESSES = 42
+# Schema 43: schema 42 and a dimension's `refs`, the places on objects its points follow; only in the drawing
+# (docs/adr/0249 §4).
+SCHEMA_WITH_DIMENSION_REFS = 43
+# A reference's places and how many numbers (part, ring, index) each has; the codes of a broken one
+# (kentos_contracts::subref).
+SUBREF_PLACES = {"node": 1, "start": 0, "end": 0, "center": 0, "vertex": 3, "mid": 3}
+SUBREF_INDEX_LIMIT = 10_000_000
+SUBREF_BROKEN = ("object_gone", "kind_changed", "no_such_place", "vertex_gone", "ambiguous")
 # Address data's bounds and levels (kentos_contracts::address).
 ADDRESS_LOCATOR_LIMIT = 16
 ADDRESS_MIN_SCORES = (50, 100)
@@ -305,7 +313,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1791,6 +1799,7 @@ class _Schema:
         self.attachments = version >= SCHEMA_WITH_ATTACHMENTS
         self.compose = version >= SCHEMA_WITH_COMPOSE
         self.addresses = version >= SCHEMA_WITH_ADDRESSES
+        self.dim_refs = version >= SCHEMA_WITH_DIMENSION_REFS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3583,6 +3592,37 @@ class _Schema:
             self.fail("bad_value", "taramanın ilişkisi bir nesneyi iki kez gösteriyor")
         return a
 
+    def sub_place(self, v):
+        """A place on an object (docs/adr/0249 §1): its `kind`, then the numbers that kind has, each at most
+        SUBREF_INDEX_LIMIT; a number its kind does not have is an unknown field."""
+        n = 0
+        if type(v) is dict and "kind" in v:
+            n = SUBREF_PLACES[self.at("kind", self.enum(tuple(SUBREF_PLACES)), v["kind"])]
+        table = {"kind": (self.text, True)}
+        for key in ("part", "ring", "index")[:n]:
+            table[key] = (self.sub_index, True)
+        return self.fields(table)(v)
+
+    def sub_index(self, v):
+        x = self.uint(64)(v)
+        if x > SUBREF_INDEX_LIMIT:
+            self.fail("bad_value", f"{x} aralık dışında (0…{SUBREF_INDEX_LIMIT})")
+        return x
+
+    def subref(self, v):
+        r = self.fields({"uid": (self.id16, True), "place": (self.sub_place, True), "broken": (self.text, False)})(v)
+        if "broken" in r and r["broken"] not in SUBREF_BROKEN:
+            self.fail("bad_value", f"Başvurunun kopma nedeni “{r['broken']}” bilinmiyor.")
+        return r
+
+    def dimension_refs(self, v):
+        """What a dimension's points follow (docs/adr/0249 §4): `a`, `b`, `c`; references none of its points has
+        are not written."""
+        refs = self.fields({"a": (self.subref, False), "b": (self.subref, False), "c": (self.subref, False)})(v)
+        if not refs:
+            self.fail("bad_value", "Ölçünün başvuruları boş: hiç başvuru yoksa alan yazılmaz.")
+        return refs
+
     def pattern_rules(self, p):
         """A pattern's and a gradient's fields (docs/adr/0186 §1) as the commands check them; the first three kinds as
         they always were (their angle and spacing unread here)."""
@@ -3893,6 +3933,9 @@ ENTITY_KINDS = {
             if s.annotation
             else {}
         ),
+        # Schema 43 (docs/adr/0249 §4): what its points follow, only in the drawing (a block definition's objects have
+        # no persistent ids to name).
+        **({"refs": (s.dimension_refs, False)} if s.dim_refs and s.inside is None else {}),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the
     # drawing (a block definition's objects have no persistent ids to name).

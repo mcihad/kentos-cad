@@ -360,8 +360,14 @@ pub const SCHEMA_WITH_COMPOSE: u32 = 41;
 /// readers refuse such a file instead of losing them.
 pub const SCHEMA_WITH_ADDRESSES: u32 = 42;
 
+/// Schema 43 (docs/specs/kcad-v2.md §6.6, docs/adr/0249 §4): a dimension's
+/// `refs` (the places on objects its points follow), written only when a
+/// dimension of the drawing has one; older readers refuse such a file instead
+/// of losing them. A block definition's dimensions have none.
+pub const SCHEMA_WITH_DIMENSION_REFS: u32 = 43;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 41] = [
+pub const SCHEMAS: [u32; 42] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -403,6 +409,7 @@ pub const SCHEMAS: [u32; 41] = [
     SCHEMA_WITH_ATTACHMENTS,
     SCHEMA_WITH_COMPOSE,
     SCHEMA_WITH_ADDRESSES,
+    SCHEMA_WITH_DIMENSION_REFS,
 ];
 
 /// The file a drawing is saved as.

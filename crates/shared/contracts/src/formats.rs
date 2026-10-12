@@ -124,7 +124,10 @@ use crate::layer::LineType;
 /// 54: address data (docs/adr/0229 §2): `.kcad` document schema 42, the settings'
 ///    `addressLocators` (a project's doors', streets' and areas' layers and fields). The web's copy
 ///    (`apps/web/src/io/version.ts`) stays 53 while the web is paused (docs/adr/0228).
-pub const FORMATS_VERSION: u32 = 54;
+/// 55: associative dimensions (docs/adr/0249 §4): `.kcad` document schema 43, a dimension's `refs`
+///    (the places on objects its points `a`, `b` and `c` follow; the typed columns' dimension
+///    `REFS` flag). The web's copy stays 53 while the web is paused.
+pub const FORMATS_VERSION: u32 = 55;
 
 // ── Every import ────────────────────────────────────────────────────────
 

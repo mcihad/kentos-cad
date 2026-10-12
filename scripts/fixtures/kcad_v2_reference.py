@@ -1263,6 +1263,8 @@ KINDS = {
         "font": (enum(DRAWING_FONTS), False),
         # Schema 30 (docs/adr/0205 §6): its lines.
         **LINE_FIELDS,
+        # Schema 43 (docs/adr/0249 §4): what its points follow; only in the drawing.
+        "refs": (lambda r: dimension_refs(r), False),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the drawing.
     "hatch": {
@@ -1384,6 +1386,29 @@ def hatch_assoc(a):
     return cmap(fields(a, {"outer": (lambda u: blob(uid_bytes(u)), True), "islands": (ids, False), "cutouts": (ids, False), "seed": (point, True)}, "assoc"))
 
 
+# A reference's places and the numbers each has (docs/adr/0249 §1); the codes of a broken one.
+SUBREF_PLACES = {"node": ("part",), "start": (), "end": (), "center": (), "vertex": ("part", "ring", "index"), "mid": ("part", "ring", "index")}
+SUBREF_BROKEN = ("object_gone", "kind_changed", "no_such_place", "vertex_gone", "ambiguous")
+
+
+def subref(r):
+    """A reference (schema 43, docs/adr/0249 §4): the object's persistent id, the place (its kind, then the numbers it
+    has, as unsigned integers), why it broke only when it did."""
+    place = r["place"]
+    numbers = SUBREF_PLACES[place["kind"]]
+    assert set(place) == {"kind", *numbers}, place
+    assert all(0 <= place[k] <= 10_000_000 for k in numbers), place
+    assert r.get("broken", SUBREF_BROKEN[0]) in SUBREF_BROKEN, r
+    encoded_place = cmap({"kind": text(place["kind"]), **{k: uint(place[k]) for k in numbers}})
+    return cmap(fields(r, {"uid": (lambda u: blob(uid_bytes(u)), True), "place": (lambda _: encoded_place, True), "broken": (text, False)}, "başvuru"))
+
+
+def dimension_refs(refs):
+    """What a dimension's points follow (schema 43, docs/adr/0249 §4): `a`, `b`, `c`; none, no field."""
+    assert refs, "boş başvurular yazılmaz"
+    return cmap(fields(refs, {"a": (subref, False), "b": (subref, False), "c": (subref, False)}, "refs"))
+
+
 def entity(e, uid, index):
     """An object; `uid` None for a block definition's object, which has no persistent id (schema 6)."""
     kind = e["kind"]
@@ -1420,6 +1445,7 @@ def entity(e, uid, index):
         cloud_shape(e)
     # A block definition's objects have no persistent ids to name (docs/adr/0186 §6).
     assert "assoc" not in e or uid is not None, "blok tanımının taraması nesnelere bağlı olamaz"
+    assert "refs" not in e or uid is not None, "blok tanımının ölçüsü nesnelere bağlı olamaz"
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
     assert body.get("header", True) is not None, f"nesne {index}: header yalnız true yazılır"
     assert body.get("mirror", True) is not None, f"nesne {index}: mirror yalnız true yazılır"
@@ -1479,7 +1505,7 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
+    """The oldest schema that holds the drawing: 43 with a dimension's references (docs/adr/0249 §4), 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
     attachments or a layer's actions or card (docs/adr/0225), 39 with vertex measures (docs/adr/0224), 38 with a raster's
     dataset or its look's edges (docs/adr/0243 §6), 37 with the settings' variables (docs/adr/0214 §2.3), 36 with the
     label engine's fields, a layer's labelling or an object's
@@ -1568,6 +1594,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    if any(e["kind"] == "dimension" and "refs" in e for e in entities):
+        return 43
     if settings and "addressLocators" in settings:
         return 42
     if composed(layers):
@@ -1846,7 +1874,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-43.kcad"] = container(root(cmap(parts), version=uint(43)))
+    files["schema-version-44.kcad"] = container(root(cmap(parts), version=uint(44)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2116,6 +2144,22 @@ def broken(minimal_content, minimal_file):
     files["hatch-assoc-seed-nan.kcad"] = in_schema(23, hatch_of(ansi, assoc=cmap({"outer": blob(uid_bytes(m["uids"][0])), "seed": array([nan, f64(0.0)])})))
     files["hatch-assoc-islands-empty.kcad"] = in_schema(23, hatch_of(ansi, assoc=tie(islands=array([]))))
     files["hatch-assoc-in-block.kcad"] = with_blocks([block(1, "Tarama", [cmap({"hatch": cmap({"attrs": cmap({}), "layerId": text("0"), "ring": square, "pattern": cmap(ansi), "assoc": tie()})})])], version=23)
+    # A dimension's references are schema 43's (docs/adr/0249 §4): in schema 42 an unknown field, in a block definition
+    # too (its objects have no persistent ids to name); no references, no field; an id not nil; a place's kind and a
+    # broken one's code known; a field neither the references nor a reference nor a place has, unknown.
+    corner = lambda i, **extra: cmap({"uid": blob(uid_bytes(m["uids"][0])), "place": cmap({"kind": text("vertex"), "part": uint(0), "ring": uint(0), "index": uint(i)}), **extra})
+    dim_body = {"a": point(one["p"]), "b": point({"x": one["p"]["x"] + 10.0, "y": one["p"]["y"]}), "offset": f64(2.0), "height": f64(2.5)}
+
+    def dimension_of(refs):
+        return cmap({"dimension": cmap({**common, **dim_body, "refs": refs})})
+
+    files["dimension-refs-in-schema-42.kcad"] = in_schema(42, dimension_of(cmap({"a": corner(0)})))
+    files["dimension-refs-empty.kcad"] = in_schema(43, dimension_of(cmap({})))
+    files["dimension-refs-zero-uid.kcad"] = in_schema(43, dimension_of(cmap({"a": cmap({"uid": blob(bytes(16)), "place": cmap({"kind": text("start")})})})))
+    files["dimension-refs-unknown-kind.kcad"] = in_schema(43, dimension_of(cmap({"a": cmap({"uid": blob(uid_bytes(m["uids"][0])), "place": cmap({"kind": text("edge")})})})))
+    files["dimension-refs-unknown-broken.kcad"] = in_schema(43, dimension_of(cmap({"b": corner(1, broken=text("lost"))})))
+    files["dimension-refs-unknown-field.kcad"] = in_schema(43, dimension_of(cmap({"a": corner(0), "d": corner(1)})))
+    files["dimension-refs-in-block.kcad"] = with_blocks([block(1, "Ölçü", [cmap({"dimension": cmap({"attrs": cmap({}), "layerId": text("0"), **dim_body, "refs": cmap({"a": corner(0)})})})])], version=43)
     # A picture is schema 24's (docs/adr/0192): in schema 23 an unknown kind; only in the drawing; a positive size, one
     # source, a clip of three corners or more inside the picture, an opacity from 0.1 to 1, `mirror` only when true.
     def image_of(**extra):
@@ -2919,6 +2963,7 @@ def build():
     out["attachments.kcad"] = container(document(load("attachments.json")))
     out["compose.kcad"] = container(document(load("compose.json")))
     out["addresses.kcad"] = container(document(load("addresses.json")))
+    out["dimension-refs.kcad"] = container(document(load("dimension-refs.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():
