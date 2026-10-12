@@ -9,17 +9,22 @@
 
 use kentos_contracts::{Entity, LabelStyle, LabelsMode, LayerNode, LineLabelMode, default_label};
 use kentos_expression::rows::{As, RowsInput, TEXT, evaluate_rows_on};
-use kentos_expression::{Expr, compile};
+use kentos_expression::{Expr, Schema, Unit, compile_with};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::label_text::fill_template;
 
 use crate::layer_filter::{kind_label, vertex_count};
 
-/// An expression for a label (its text or its class's condition), compiled;
-/// `$sıra` and `$ölçek` refused (a label's text does not change with the run
-/// or the drawing's scale).
-pub fn compile_label_expression(source: &str) -> Result<Expr, String> {
-    let e = compile(source).map_err(|e| e.text())?;
+/// An expression for a label (its text or its class's condition), compiled
+/// in `unit` (a label is a reading: the project's drawing unit,
+/// `expression_unit`); `$sıra` and `$ölçek` refused (a label's text does not
+/// change with the run or the drawing's scale).
+pub fn compile_label_expression(source: &str, unit: Unit) -> Result<Expr, String> {
+    let schema = Schema {
+        unit,
+        ..Schema::default()
+    };
+    let e = compile_with(source, &schema).map_err(|e| e.text())?;
     if e.needs.index {
         return Err("Etikette $sıra kullanılamaz.".into());
     }
@@ -51,13 +56,10 @@ pub enum LayerTexts {
     },
 }
 
-fn text_class(style: &LabelStyle, when: Option<&str>) -> TextClass {
-    let w = when.map(compile_label_expression).transpose();
-    let t = style
-        .text
-        .as_deref()
-        .map(compile_label_expression)
-        .transpose();
+fn text_class(style: &LabelStyle, when: Option<&str>, unit: Unit) -> TextClass {
+    let compiled = |s: &str| compile_label_expression(s, unit);
+    let w = when.map(compiled).transpose();
+    let t = style.text.as_deref().map(compiled).transpose();
     let error = w.as_ref().err().or(t.as_ref().err()).cloned();
     TextClass {
         when: w.ok().flatten(),
@@ -68,8 +70,8 @@ fn text_class(style: &LabelStyle, when: Option<&str>) -> TextClass {
     }
 }
 
-/// A layer's classes as the desktop asks them.
-pub fn layer_texts(node: Option<&LayerNode>) -> LayerTexts {
+/// A layer's classes as the desktop asks them, their expressions in `unit`.
+pub fn layer_texts(node: Option<&LayerNode>, unit: Unit) -> LayerTexts {
     let style = node.map(|n| &n.style);
     match style.and_then(|s| s.labels.as_ref()) {
         Some(l) if l.mode == LabelsMode::Off => LayerTexts::Off,
@@ -77,13 +79,13 @@ pub fn layer_texts(node: Option<&LayerNode>) -> LayerTexts {
             classes: l
                 .classes
                 .iter()
-                .map(|c| text_class(&c.style, c.when.as_deref()))
+                .map(|c| text_class(&c.style, c.when.as_deref(), unit))
                 .collect(),
             defaults: false,
         },
         _ => match style.and_then(|s| s.label.as_ref()) {
             Some(single) => LayerTexts::Classes {
-                classes: vec![text_class(single, None)],
+                classes: vec![text_class(single, None, unit)],
                 defaults: false,
             },
             None => LayerTexts::Classes {

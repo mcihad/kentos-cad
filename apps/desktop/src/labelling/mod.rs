@@ -315,10 +315,11 @@ impl App {
     fn labelling_check(&self, w: &mut Window) {
         let given = w.input();
         let mut said: Vec<String> = Vec::new();
+        let unit = self.reading_unit();
         let compiled = |source: &Option<String>| {
             source
                 .as_deref()
-                .and_then(|s| compile_label_expression(s).err())
+                .and_then(|s| compile_label_expression(s, unit).err())
         };
         if let Some(Some(label)) = &given.label {
             if let Some(p) = style_problem(label) {

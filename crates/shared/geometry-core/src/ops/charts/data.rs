@@ -114,41 +114,55 @@ impl Column {
     }
 }
 
-/// The geometry measures' keys and names (docs/adr/0227 §2).
+/// The geometry measures' keys (docs/adr/0227 §2).
 pub const AREA_KEY: &str = "$alan";
-pub const AREA_LABEL: &str = "Alan (m²)";
 pub const LENGTH_KEY: &str = "$uzunluk";
-pub const LENGTH_LABEL: &str = "Uzunluk (m)";
 
-/// Alan (m²) and Uzunluk (m) from the geometry store's measure records
-/// (`store::draw::measure_record`, one a row): an area where the object has
-/// one, a length (an area's perimeter) where it has one, else empty. A
-/// column no object has a value of is left out (a layer of lines has no
-/// area, one of points neither).
-pub fn geometry_columns(records: &[f64]) -> Vec<Column> {
+/// The geometry measures' names in a unit `per_metre` of which make a metre
+/// (1, 100, 1000): `Alan (mm²)`, `Uzunluk (mm)` in a local project in
+/// millimetres (docs/adr/0165 §2).
+pub fn measure_labels(per_metre: f64) -> (String, String) {
+    let mark = if per_metre == 1000.0 {
+        "mm"
+    } else if per_metre == 100.0 {
+        "cm"
+    } else {
+        "m"
+    };
+    (format!("Alan ({mark}²)"), format!("Uzunluk ({mark})"))
+}
+
+/// Alan and Uzunluk from the geometry store's measure records
+/// (`store::draw::measure_record`, one a row) in the project's unit,
+/// `per_metre` of which make a metre (docs/adr/0165 §2: the tabs show
+/// readings): an area where the object has one, a length (an area's
+/// perimeter) where it has one, else empty. A column no object has a value
+/// of is left out (a layer of lines has no area, one of points neither).
+pub fn geometry_columns(records: &[f64], per_metre: f64) -> Vec<Column> {
     use crate::store::draw::{HAS_AREA, HAS_LENGTH, MEASURE_STRIDE};
     let mut area = Vec::new();
     let mut length = Vec::new();
     for r in records.chunks_exact(MEASURE_STRIDE) {
         let flags = r[0] as u32;
         area.push(if flags & HAS_AREA != 0 {
-            r[2]
+            r[2] * (per_metre * per_metre)
         } else {
             f64::NAN
         });
         length.push(if flags & HAS_LENGTH != 0 {
-            r[1]
+            r[1] * per_metre
         } else {
             f64::NAN
         });
     }
     let some = |v: &[f64]| v.iter().any(|x| x.is_finite());
+    let (area_label, length_label) = measure_labels(per_metre);
     let mut out = Vec::new();
     if some(&area) {
-        out.push(Column::of_measures(AREA_KEY, AREA_LABEL, &area));
+        out.push(Column::of_measures(AREA_KEY, &area_label, &area));
     }
     if some(&length) {
-        out.push(Column::of_measures(LENGTH_KEY, LENGTH_LABEL, &length));
+        out.push(Column::of_measures(LENGTH_KEY, &length_label, &length));
     }
     out
 }

@@ -5,6 +5,7 @@ import type { LayerFilter } from '../../contracts/generated/LayerFilter';
 import { attributeFields, entityObjects } from '../../model/expression/builderObjects';
 import { compileFilter, filterPassesIn } from '../../model/layerFilter';
 import { layerFilterProblem } from '../../model/layerFilterRules';
+import { readingUnit } from '../../model/projectSettings';
 import { layersFilter } from '../../product/layersFilter';
 import { builderButton } from '../expression/builderApi';
 import { h, replaceChildren } from '../dom';
@@ -35,7 +36,10 @@ export function openLayerFilter(ctx: AppContext, layerId?: string): void {
   let layer = candidates.find((l) => l.id === first)?.id ?? candidates[0].id;
   let expression = '';
   let objects: string[] = [];
-  const geometry = { evaluateExpression: (...a: Parameters<typeof ctx.view.evaluateExpression>) => ctx.view.evaluateExpression(...a) };
+  const geometry = {
+    evaluateExpression: (...a: Parameters<typeof ctx.view.evaluateExpression>) => ctx.view.evaluateExpression(...a),
+    evaluateExpressionIn: (...a: Parameters<typeof ctx.view.evaluateExpressionIn>) => ctx.view.evaluateExpressionIn(...a),
+  };
 
   const load = () => {
     const f = layers.get(layer)?.filter;
@@ -79,7 +83,8 @@ export function openLayerFilter(ctx: AppContext, layerId?: string): void {
       for (const e of doc.byLayer(layer).slice(0, 2000)) for (const k of Object.keys(e.attrs)) counts.set(k, (counts.get(k) ?? 0) + 1);
       return attributeFields([...counts].map(([name, count]) => ({ name, count })));
     },
-    objects: () => entityObjects(doc.byLayer(layer).slice(0, 5000), (id) => layers.get(id)?.name ?? id, { geometry }),
+    // The builder previews in the project's unit, as the filter compares (docs/adr/0165 §2).
+    objects: () => entityObjects(doc.byLayer(layer).slice(0, 5000), (id) => layers.get(id)?.name ?? id, { geometry, context: { unit: readingUnit(doc.settings) } }),
     context: `${LAYER_FILTER_TITLE} · İfade`,
     fail: (m) => log.error(m),
   });
@@ -137,7 +142,7 @@ export function openLayerFilter(ctx: AppContext, layerId?: string): void {
       save.disabled = true;
       return replaceChildren(summary, summaryLine('warn', `Süzgeç: ${problem}.`));
     }
-    const r = compileFilter(f);
+    const r = compileFilter(f, readingUnit(doc.settings));
     if (!r.ok) {
       save.disabled = true;
       exprInput.classList.add('is-invalid');

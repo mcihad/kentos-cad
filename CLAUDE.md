@@ -455,7 +455,8 @@ python3 scripts/fixtures/create_command_cases.py --check   # cad.entities.create
 python3 scripts/fixtures/set_command_cases.py --check   # cad.entities.set durumlarını (Öznitelikler: katman, renk, sembol, öznitelik, etiket) sözleşmenin kuralından denetle (ADR 0066)
 cargo test --release -p kentos-interaction --test perf -- --ignored --nocapture   # masaüstü deposu: eşitleme, kenet ve seçme süreleri (ADR 0029)
 cargo test --release -p kentos-expression --test perf -- --ignored --nocapture   # ifade motoru 10⁵ ve 10⁶ nesnede (ADR 0100; web yolu apps/web/scripts/perf/expression.test.ts)
-python3 scripts/fixtures/expression_geometry.py --check   # ifadelerin geometri değerlerini (alan, ağırlık merkezi, kutu) bağımsız hesapla denetle (ADR 0100)
+python3 scripts/fixtures/expression_geometry.py --check   # ifadelerin geometri değerlerini (alan, ağırlık merkezi, kutu; metrede ve yerel projenin cm ve mm biriminde, ADR 0165 §2) bağımsız hesapla denetle (ADR 0100)
+KENTOS_SHOTS_ONLY=cad-mm-etiket cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mm projesinde `$alan` etiketi ve Öznitelikler aynı birimde, .run/shots/arac-cad-mm-etiket-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs units); ADR 0165'in “ifadeler çizim biriminde” eki)
 KENTOS_WRITE_BUILDER=1 cargo test -p kentos-expression --test builder   # İfade oluşturucunun yanıtlarını (fixtures/expression/v2/builder.json) yeniden yaz; farkı okuyun (ADR 0100 §5)
 python3 scripts/fixtures/expression_language.py --check   # dil eklerinin değerlerini (durum, içinde, arasında, gibi, benzer, boş, ^, yeni işlevler) bağımsız başvuruyla denetle (ADR 0100 §4)
 (cd apps/web && node scripts/e2e/builder.mjs)   # İfade oluşturucu web'de klavye ve fareyle (açma, tamamlama, ağaç, değerler, önizleme, Vazgeç, Tamam)
@@ -1713,7 +1714,13 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   koordinat ekseni simgesi her zaman sol altta (0,0 ekrandayken orijine gidiyordu; ADR 0165'in 12 Ekim eki, resmi `tools_screens`'in
   `cad-eksen-simgesi`'si) ve macOS'ta düşen üç denetim: pafta ve vitrinin birer testi (Ctrl yerine platformun komut tuşu,
   `Modifiers::COMMAND`) ve web'in iz oynatıcısının Ctrl'li tıklaması (macOS'ta Chrome onu sağ tık sayar; `tracePlayer.mjs` orada ⌘ basar;
-  Veride ara'nın ve Topoloji kuralları'nın izleri). Sıradaki `GIS-40`:
+  Veride ara'nın ve Topoloji kuralları'nın izleri). Ardından (12 Ekim) Grafik'in Tablo görünümü dar panelde sayılarını gösterir
+  (nokta editörünün `ptable` kuralları ezildi) ve sahibin bildirimiyle ifadeler çizim biriminde (ADR 0165'in “ifadeler çizim
+  biriminde” eki): mm ya da cm projesinde etiketin metni ve koşulu, bilgi kartı, katman süzgeci, tablo süzgeci, oluşturucu ve
+  İstatistik/Grafik'in Alan ve Uzunluk'u çizim biriminde ve karesinde (Öznitelikler gibi); İşlemler, ağ maliyetleri ve semboller
+  metrede. Birim derlemenin şemasında (`Schema::unit`, web bağlamının `unit`'i), çözümleyici geometri değerlerini ve başka katmana
+  bakan işlevlerin ölçülerini çevirir (`resolve`); okuma birimi `expression_unit::reading_unit`, web `readingUnit`; birimli
+  durumlar `geometry.json`'un `units`'inde. Sıradaki `GIS-40`:
   sahip, ona geçmeden önce “çok kritik bir kararını” söyleyecek (12 Ekim); karar gelmeden başlanmaz.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek

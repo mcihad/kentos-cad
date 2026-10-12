@@ -19,9 +19,17 @@ and, for each, the values the definitions give:
 - objects without an area: the centroid is the anchor (a line's midpoint,
   a path's middle vertex, a point).
 
+In a local project's drawing unit (docs/adr/0165 §2, the 12 Ekim addendum)
+the same objects' values are read in it: `units` holds each object in
+centimetres and millimetres, every length and coordinate the metre value
+times the unit (exactly, rounded once), every area times its square, the
+corner count as it is, an empty value empty; the tolerance (0.1 µm, as in
+metres) is in the unit too.
+
 `--check` rebuilds the file in memory and compares it with the one on disk.
 Rust compares the engine with this file (crates/shared/expression/tests/typed.rs)
-within a stated tolerance.
+within a stated tolerance; the web does too
+(apps/web/src/model/expression/geometryFixture.test.ts).
 """
 import json
 import math
@@ -226,17 +234,45 @@ def collinear():
     )
 
 
+# The tolerance in metres: 0.1 µm, far below a survey's precision, far above float noise at projected coordinates.
+TOLERANCE = F(1, 10**7)
+
+# Local projects' drawing units: their names and how many of each make a metre.
+UNITS = [("cm", 100), ("mm", 1000)]
+
+
+def power(name):
+    """What a value measures: an area (2), the corner count (0), a length or a coordinate (1)."""
+    return {"alan": 2, "köşe": 0}.get(name, 1)
+
+
+def in_unit(values, k):
+    """The values in a unit `k` of which make a metre, and their tolerances there."""
+    out, tol = {}, {}
+    for name, v in values.items():
+        p = power(name)
+        out[name] = v if v is None or p == 0 else float(F(v) * k**p)
+        tol[name] = float(TOLERANCE * k**p) if p else 0
+    return out, tol
+
+
 def build():
     cases = []
     for make in [square, clockwise_l, with_hole, half_disk_edge, hatch_with_hole, circle, line, polyline, point, collinear, two_parts]:
         name, entity, expected = make()[:3]
         entity = {"id": len(cases) + 1, "layerId": "a", "attrs": {}, **entity}
         cases.append({"name": name, "entity": entity, "values": expected})
+    units = []
+    for unit, k in UNITS:
+        for c in cases:
+            values, tolerance = in_unit(c["values"], k)
+            units.append({"name": f"{c['name']}, {unit}", "unit": unit, "perMetre": k, "entity": c["entity"], "values": values, "tolerance": tolerance})
     return {
         "format": "kentos.expression-geometry",
         "version": 2,
-        "note": "İfadelerin nesneden doğrudan okuduğu geometri değerleri, motordan bağımsız hesaplanmış: düz halkaların alanı ve ağırlık merkezi kesirli sayılarla (delikler düşülür), yarım daire kenar yarım dairenin kendi formülleriyle, daire πr² ve merkezi, kutular köşelerden. Y sağa (kodda x), X yukarı (kodda y). Değer null: nesnenin öyle bir değeri yok. Üretici scripts/fixtures/expression_geometry.py.",
+        "note": "İfadelerin nesneden doğrudan okuduğu geometri değerleri, motordan bağımsız hesaplanmış: düz halkaların alanı ve ağırlık merkezi kesirli sayılarla (delikler düşülür), yarım daire kenar yarım dairenin kendi formülleriyle, daire πr² ve merkezi, kutular köşelerden. Y sağa (kodda x), X yukarı (kodda y). Değer null: nesnenin öyle bir değeri yok. units: aynı nesneler yerel projenin çizim biriminde (cm, mm; ADR 0165 §2): uzunluk ve koordinat metre değeri × birim, alan × birimin karesi, köşe sayısı aynı, boş boş; tolerans birimde. Üretici scripts/fixtures/expression_geometry.py.",
         "cases": cases,
+        "units": units,
     }
 
 

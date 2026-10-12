@@ -412,6 +412,7 @@ mod tests {
                 f("Kat", FieldType::Number, FieldSource::User),
             ],
             world: false,
+            ..Default::default()
         }
     }
 

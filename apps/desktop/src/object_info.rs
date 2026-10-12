@@ -14,6 +14,7 @@ use kentos_contracts::{Entity, InfoCard, LayerAction};
 use kentos_domain::Slot;
 use kentos_expression::template::{TargetKind, target_kind};
 use kentos_geometry_core::crs::{Datum, System, transform_in};
+use kentos_native_application::expression_unit::Unit;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::info_templates::{CompiledTemplate, compile_template};
 use kentos_native_application::layer_filter::kind_label;
@@ -29,18 +30,20 @@ thread_local! {
         RefCell::new(HashMap::new());
 }
 
-/// `text` as a template, compiled once per text.
-pub(crate) fn compiled(text: &str) -> Result<Rc<CompiledTemplate>, String> {
+/// `text` as a template in `unit` (the drawing's readings', `App::reading_unit`),
+/// compiled once per text and unit.
+pub(crate) fn compiled(text: &str, unit: Unit) -> Result<Rc<CompiledTemplate>, String> {
     COMPILED.with(|cache| {
         let mut cache = cache.borrow_mut();
-        if let Some(known) = cache.get(text) {
+        let key = format!("{}\u{0}{text}", unit.factor());
+        if let Some(known) = cache.get(&key) {
             return known.clone();
         }
-        let made = compile_template(text).map(Rc::new);
+        let made = compile_template(text, unit).map(Rc::new);
         if cache.len() > 500 {
             cache.clear();
         }
-        cache.insert(text.to_owned(), made.clone());
+        cache.insert(key, made.clone());
         made
     })
 }
@@ -122,8 +125,9 @@ impl App {
                 &own
             }
         };
+        let unit = self.reading_unit();
         list.iter()
-            .map(|a| match compiled(&a.target) {
+            .map(|a| match compiled(&a.target, unit) {
                 Err(why) => ObjectAction {
                     name: a.name.clone(),
                     target: None,
@@ -205,9 +209,10 @@ impl App {
     /// or the default card (its kind and label, every attribute).
     pub(crate) fn object_card(&self, e: &Entity, card: Option<&InfoCard>) -> ObjectCard {
         let mut error = None;
+        let unit = self.reading_unit();
         let mut text = |source: Option<&String>, what: &str| -> Option<String> {
             let source = source?;
-            match compiled(source) {
+            match compiled(source, unit) {
                 Ok(t) => Some(self.filled(&t, e)),
                 Err(why) => {
                     error.get_or_insert_with(|| format!("{what}: {why}"));

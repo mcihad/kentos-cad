@@ -515,9 +515,12 @@ export class CoreChartWork {
     typed(() => this.get().addMeasures(key, label, values));
   }
 
-  /** Alan (m²) and Uzunluk (m) from the geometry store's measure records (one a row), each where an object has one: the keys added. */
-  addGeometry(records: Float64Array): string[] {
-    return typed(() => this.get().addGeometry(records));
+  /**
+   * Alan and Uzunluk from the geometry store's measure records (one a row), each where an object has one, in the unit
+   * `perMetre` of which make a metre: the keys added.
+   */
+  addGeometry(records: Float64Array, perMetre: number): string[] {
+    return typed(() => this.get().addGeometry(records, perMetre));
   }
 
   seal(): void {

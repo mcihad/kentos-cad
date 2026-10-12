@@ -5,10 +5,13 @@
 //! `WorldCall` (its layer's name, its constant text, its inner expressions
 //! compiled on their own) and a `World` node with the object's own
 //! arguments. The fields only inner expressions name leave the field list.
+//! A geometry value and a measure of the calls to other objects speak the
+//! schema's unit (docs/adr/0165 §2): metres, or a local project's drawing
+//! unit, multiplied in where they are read (an empty value stays empty).
 
 use crate::host::Schema;
 use crate::library::{Family, Func, Var};
-use crate::parser::Node;
+use crate::parser::{BinOp, Node};
 use crate::program::Program;
 use crate::value::Value;
 use crate::world::WorldCall;
@@ -103,7 +106,19 @@ impl Resolver<'_> {
                 Node::Like(x, b(p), fold, negated)
             }
             Node::IsNull(x, negated) => Node::IsNull(b(x), negated),
-            n @ (Node::Lit(_) | Node::Field(_) | Node::Var(_) | Node::World(..)) => n,
+            Node::Var(v) => self.var(v),
+            n @ (Node::Lit(_) | Node::Field(_) | Node::World(..)) => n,
+        }
+    }
+
+    /// A geometry value in the schema's unit: lengths and coordinates times
+    /// the unit, areas times its square; the rest as it is.
+    fn var(&self, v: Var) -> Node {
+        let k = self.schema.unit.factor();
+        match measure_of(v) {
+            Some(Measure::Length) => times(Node::Var(v), k),
+            Some(Measure::Area) => times(Node::Var(v), k * k),
+            None => Node::Var(v),
         }
     }
 
@@ -128,6 +143,12 @@ impl Resolver<'_> {
             group: None,
             condition: None,
         };
+        let k = self.schema.unit.factor();
+        // kesişir, kesişen_sayısı and kesişenler's own argument is a distance in the unit; the calls measure in metres.
+        let distance = matches!(
+            f,
+            Func::Intersects | Func::IntersectCount | Func::Intersecting
+        );
         let mut own = Vec::new();
         for (arg, role) in args.into_iter().zip(roles(f).unwrap_or_default()) {
             match role {
@@ -136,6 +157,7 @@ impl Resolver<'_> {
                 Role::Value => call.value = Some(self.inner(arg)),
                 Role::Group => call.group = Some(self.inner(arg)),
                 Role::Condition => call.condition = Some(self.inner(arg)),
+                Role::Current if distance => own.push(per(self.node(arg), k)),
                 Role::Current => own.push(self.node(arg)),
             }
         }
@@ -150,8 +172,56 @@ impl Resolver<'_> {
             call.layer = Some(String::new());
         }
         self.world.push(call);
-        Node::World(self.world.len() as u32 - 1, own)
+        let node = Node::World(self.world.len() as u32 - 1, own);
+        match f {
+            Func::Distance | Func::OverlapLength => times(node, k),
+            Func::OverlapArea => times(node, k * k),
+            _ => node,
+        }
     }
+}
+
+/// What a geometry value measures: a length (coordinates and distances too) or an area.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Measure {
+    Length,
+    Area,
+}
+
+fn measure_of(v: Var) -> Option<Measure> {
+    match v {
+        Var::Area => Some(Measure::Area),
+        Var::Length
+        | Var::Y
+        | Var::X
+        | Var::CentroidY
+        | Var::CentroidX
+        | Var::MinY
+        | Var::MaxY
+        | Var::MinX
+        | Var::MaxX
+        | Var::Width
+        | Var::Height => Some(Measure::Length),
+        Var::Vertices | Var::Kind | Var::Layer | Var::Label | Var::Index | Var::Id | Var::Scale => {
+            None
+        }
+    }
+}
+
+/// `n × k`, `n` itself in metres (k = 1). The language's product of an empty value is empty.
+fn times(n: Node, k: f64) -> Node {
+    if k == 1.0 {
+        return n;
+    }
+    Node::Bin(BinOp::Mul, Box::new(n), Box::new(Node::Lit(Value::Num(k))))
+}
+
+/// `n ÷ k`, `n` itself in metres: a distance written in the unit, in metres.
+fn per(n: Node, k: f64) -> Node {
+    if k == 1.0 {
+        return n;
+    }
+    Node::Bin(BinOp::Div, Box::new(n), Box::new(Node::Lit(Value::Num(k))))
 }
 
 /// An expression over other objects: its fields text attributes.

@@ -10,6 +10,7 @@ import { attributeFields, entityObjects } from '../../model/expression/builderOb
 import { DEFAULT_LABELS } from '../../model/labelDefaults';
 import { labelStyleProblem, layerLabelsProblem } from '../../model/labelRules';
 import { labelExpression } from '../../model/labelTexts';
+import { readingUnit } from '../../model/projectSettings';
 import { layersLabels } from '../../product/layersLabels';
 import { builderButton } from '../expression/builderApi';
 import { h, replaceChildren } from '../dom';
@@ -59,7 +60,10 @@ export function openLabels(ctx: AppContext, layerId?: string): void {
   let selected = 0;
   let obstacle: LabelObstacle | null = null;
   let tab: LabelTab = 'text';
-  const geometry = { evaluateExpression: (...a: Parameters<typeof ctx.view.evaluateExpression>) => ctx.view.evaluateExpression(...a) };
+  const geometry = {
+    evaluateExpression: (...a: Parameters<typeof ctx.view.evaluateExpression>) => ctx.view.evaluateExpression(...a),
+    evaluateExpressionIn: (...a: Parameters<typeof ctx.view.evaluateExpressionIn>) => ctx.view.evaluateExpressionIn(...a),
+  };
 
   const load = () => {
     const node = layers.get(layer);
@@ -94,7 +98,8 @@ export function openLabels(ctx: AppContext, layerId?: string): void {
       get,
       set: put,
       fields: fieldsOf,
-      objects: () => entityObjects(doc.byLayer(layer).slice(0, 5000), (id) => layers.get(id)?.name ?? id, { geometry }),
+      // The builder previews in the project's unit, as the labels show (docs/adr/0165 §2).
+      objects: () => entityObjects(doc.byLayer(layer).slice(0, 5000), (id) => layers.get(id)?.name ?? id, { geometry, context: { unit: readingUnit(doc.settings) } }),
       context: `${LABELS_TITLE} · İfade`,
       fail: (m) => log.error(m),
     });

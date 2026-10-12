@@ -82,12 +82,15 @@ impl FromJson for VariableJson {
 }
 
 /// What the page says of the objects: their fields as a list (the builder's
-/// first form), or `{ fields, variables, world }` with the `@` values and
-/// whether the functions that look at other layers are given (docs/adr/0214).
+/// first form), or `{ fields, variables, world, unit }` with the `@` values,
+/// whether the functions that look at other layers are given (docs/adr/0214)
+/// and how many of the unit the geometry values speak make a metre (absent:
+/// metres; docs/adr/0165 §2).
 struct SchemaArg {
     fields: Vec<FieldJson>,
     variables: Vec<VariableJson>,
     world: bool,
+    unit: f64,
 }
 
 impl FromJson for SchemaArg {
@@ -97,6 +100,7 @@ impl FromJson for SchemaArg {
                 fields: Vec::<FieldJson>::from_json(v)?,
                 variables: Vec::new(),
                 world: false,
+                unit: 1.0,
             }),
             Json::Obj(entries) => {
                 let get = |k: &str| entries.iter().find(|(key, _)| key == k).map(|(_, v)| v);
@@ -110,9 +114,13 @@ impl FromJson for SchemaArg {
                         None => Vec::new(),
                     },
                     world: matches!(get("world"), Some(Json::Bool(true))),
+                    unit: match get("unit") {
+                        Some(Json::Num(k)) => *k,
+                        _ => 1.0,
+                    },
                 })
             }
-            _ => Err("alanlar bir dizi ya da { fields, variables, world } olmalı.".into()),
+            _ => Err("alanlar bir dizi ya da { fields, variables, world, unit } olmalı.".into()),
         }
     }
 }
@@ -122,6 +130,7 @@ fn schema(arg: SchemaArg) -> Result<Schema, String> {
         fields,
         variables,
         world,
+        unit,
     } = arg;
     let fields = fields
         .into_iter()
@@ -154,6 +163,7 @@ fn schema(arg: SchemaArg) -> Result<Schema, String> {
             })
             .collect(),
         world,
+        unit: crate::Unit::per_metre(unit),
     })
 }
 

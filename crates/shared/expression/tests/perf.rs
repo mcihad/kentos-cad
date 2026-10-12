@@ -384,6 +384,7 @@ fn typed_and_shapes(sizes: &[usize], runs: usize, warm: usize) -> Vec<(String, S
             description: String::new(),
         }],
         world: false,
+        ..Default::default()
     };
     for &n in sizes {
         let kat: Vec<f64> = (0..n).map(|i| (i % 12) as f64).collect();

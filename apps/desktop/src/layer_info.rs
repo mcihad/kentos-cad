@@ -13,6 +13,7 @@ use kentos_contracts::{
 };
 use kentos_domain::Slot;
 use kentos_interaction::Level;
+use kentos_native_application::expression_unit::Unit;
 use kentos_native_application::{ExecutionContext, layers_info};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
@@ -113,13 +114,14 @@ impl Window {
             out.push(format!("Kart: {p}."));
         }
         for a in &actions {
-            if let Err(why) = crate::object_info::compiled(&a.target) {
+            // Only whether it compiles is asked: the unit changes no error.
+            if let Err(why) = crate::object_info::compiled(&a.target, Unit::METRE) {
                 out.push(format!("“{}” eyleminin hedefi: {why}", a.name));
             }
         }
         for (source, what) in [(&card.title, "Başlık"), (&card.text, "Metin")] {
             if let Some(source) = source
-                && let Err(why) = crate::object_info::compiled(source)
+                && let Err(why) = crate::object_info::compiled(source, Unit::METRE)
             {
                 out.push(format!("{what}: {why}"));
             }

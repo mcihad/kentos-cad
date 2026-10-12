@@ -21,6 +21,7 @@ fn schema() -> Schema {
             },
         ],
         world: false,
+        ..Default::default()
     }
 }
 

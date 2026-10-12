@@ -10,7 +10,7 @@
 use kentos_contracts::Entity;
 use kentos_expression::rows::As;
 use kentos_expression::template::{self, Template};
-use kentos_expression::{Expr, compile};
+use kentos_expression::{Expr, Schema, Unit, compile_with};
 use kentos_geometry_core::entity::Shape;
 
 use crate::label_texts::values;
@@ -22,14 +22,19 @@ pub struct CompiledTemplate {
     pub exprs: Vec<Expr>,
 }
 
-/// `text` as a template; why not as the dialogs say it (“12. karakterde:
-/// …”, the position the template's own).
-pub fn compile_template(text: &str) -> Result<CompiledTemplate, String> {
+/// `text` as a template, its expressions in `unit` (a card is a reading:
+/// the project's drawing unit, `expression_unit`); why not as the dialogs
+/// say it (“12. karakterde: …”, the position the template's own).
+pub fn compile_template(text: &str, unit: Unit) -> Result<CompiledTemplate, String> {
     let t = template::parse(text).map_err(|e| e.text())?;
+    let schema = Schema {
+        unit,
+        ..Schema::default()
+    };
     let mut exprs = Vec::new();
     for (source, at) in t.expressions() {
-        let e =
-            compile(source).map_err(|e| format!("{}. karakterde: {}", at + e.at - 1, e.message))?;
+        let e = compile_with(source, &schema)
+            .map_err(|e| format!("{}. karakterde: {}", at + e.at - 1, e.message))?;
         if e.needs.index {
             return Err(format!("{at}. karakterde: Şablonda $sıra kullanılamaz."));
         }

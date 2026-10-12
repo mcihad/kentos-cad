@@ -6,6 +6,7 @@
 use std::collections::BTreeMap;
 
 use kentos_contracts::{Entity, EntityBase, PathEntity, Vec2};
+use kentos_native_application::expression_unit::Unit;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::info_templates::compile_template;
 
@@ -54,8 +55,11 @@ fn timing() {
     let list: Vec<Entity> = (0..10_000).map(parcel).collect();
     let refs: Vec<&Entity> = list.iter().collect();
     let shapes: Vec<_> = list.iter().map(shape).collect();
-    let template = compile_template("Parsel {Ada}/{Parsel}, {Mahalle}: {yuvarla($alan, 2)} m²")
-        .expect("compiles");
+    let template = compile_template(
+        "Parsel {Ada}/{Parsel}, {Mahalle}: {yuvarla($alan, 2)} m²",
+        Unit::METRE,
+    )
+    .expect("compiles");
     let name = |_: &str| "Parsel".to_owned();
     let mut best = f64::INFINITY;
     let mut texts = Vec::new();

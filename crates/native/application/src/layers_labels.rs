@@ -15,6 +15,7 @@ use kentos_contracts::{
     LayersLabelsPlan, layer_labels_problem, style_problem,
 };
 use kentos_domain::Document;
+use kentos_expression::Unit;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
@@ -29,10 +30,11 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::Failed(error(code, message, Some(path.to_owned())))
 }
 
-/// The expressions' compiling: a text or a condition that does not compile answers.
+/// The expressions' compiling: a text or a condition that does not compile
+/// answers (in metres: the unit changes no error).
 fn expression(source: Option<&str>, what: String, path: String) -> Result<(), Stop> {
     match source {
-        Some(s) => compile_label_expression(s)
+        Some(s) => compile_label_expression(s, Unit::METRE)
             .map(|_| ())
             .map_err(|why| fail(codes::INVALID_EXPRESSION, format!("{what}: {why}"), &path)),
         None => Ok(()),

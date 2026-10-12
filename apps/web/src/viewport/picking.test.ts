@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import type { CadDocument } from '../model/document';
-import type { Entity } from '../model/entities';
+import { crsBySrid, LOCAL_SRID } from '../geo/crs';
+import { CadDocument } from '../model/document';
+import type { Entity, NewEntity } from '../model/entities';
+import { LayerStore } from '../model/layers';
 import { mirror, rotation, scaling, translation, type Affine } from '../model/geom/affine';
 import { transformEntity } from '../model/ops/transform';
 import { createSampleProject } from '../model/sampleProject';
 import { Gen, toJson } from '../wasm/calls/harness';
 import { SCENE_LAYER_IDS, SCENE_SCALES, SCENE_TOLERANCES, sceneCursor, sceneDocument, sceneEntity, sceneKinds, sceneRect } from '../wasm/calls/sets/store-scene';
-import { PickIndex } from './picking';
+import { LABELS_HIDDEN, LABELS_UNPLACED, PickIndex } from './picking';
 
 /**
  * The geometry store follows the document (docs/adr/0008, S1): through
@@ -200,4 +202,41 @@ describe('the geometry store follows the document', () => {
     const g = new Gen(81);
     expect(follow(sceneDocument(g, 400), g).join('\n')).toBe('');
   }, 120_000);
+});
+
+describe('labels and filters read lengths and areas in the drawing unit (docs/adr/0165 §2, the 12 Ekim addendum)', () => {
+  /** Every label over the drawing, a place or not, its texts sorted. */
+  const labelTexts = (index: PickIndex): string[] => [...index.labels({ minX: -10, minY: -10, maxX: 20, maxY: 20 }, 40, null, LABELS_UNPLACED | LABELS_HIDDEN).texts].sort();
+
+  it('labels and filters a local project in millimetres as Öznitelikler shows it, and again in another unit', () => {
+    const layers = new LayerStore([{ id: 'cizim', name: 'Çizim' }], 'cizim');
+    const doc = new CadDocument({ name: 'Deneme', layers, origin: { x: 0, y: 0 } });
+    doc.settings.crs.set(crsBySrid(LOCAL_SRID)!);
+    doc.settings.drawingUnit.set('mm');
+    // A 2 × 1.5 m area and a 1 × 1 m one: 3 and 1 m², 3 000 000 and 1 000 000 mm².
+    const square = (x: number, w: number, h: number) =>
+      doc.add({ kind: 'polygon', layerId: 'cizim', attrs: {}, pts: [{ x, y: 0 }, { x: x + w, y: 0 }, { x: x + w, y: h }, { x, y: h }] } as NewEntity);
+    const big = square(0, 2, 1.5);
+    const small = square(5, 1, 1);
+    layers.setStyle('cizim', { label: { placement: 'center', size: 10, text: "$alan || ' / ' || $uzunluk" } });
+    const index = new PickIndex(doc);
+    try {
+      expect(labelTexts(index)).toEqual(['1000000 / 4000', '3000000 / 7000']);
+      // In metres the same label reads m² and m.
+      doc.settings.drawingUnit.set('m');
+      expect(labelTexts(index)).toEqual(['1 / 4', '3 / 7']);
+      doc.settings.drawingUnit.set('mm');
+      expect(doc.setLayerFilter('cizim', { expression: '$alan > 2000000' }, 'Katman süzgeci')).toBe(true);
+      expect(index.filterShown(big.id)).toBe(true);
+      expect(index.filterShown(small.id)).toBe(false);
+      expect(labelTexts(index)).toEqual(['3000000 / 7000']);
+      // In metres the same filter leaves out both: neither is labelled.
+      doc.settings.drawingUnit.set('m');
+      expect(index.filterShown(big.id)).toBe(false);
+      expect(index.filterShown(small.id)).toBe(false);
+      expect(labelTexts(index)).toEqual([]);
+    } finally {
+      index.dispose();
+    }
+  });
 });

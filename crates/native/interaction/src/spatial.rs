@@ -55,6 +55,7 @@ use kentos_geometry_core::store::polygon::PolygonMode;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
 use kentos_native_application::blocks::{core_blocks, piece_entities};
+use kentos_native_application::expression_unit::{Unit, reading_unit};
 use kentos_native_application::geometry::{drawing_font, shape};
 use kentos_native_application::label_texts::{
     label_defaults_json, label_layers_json, layer_texts, object_texts, texts_key,
@@ -96,11 +97,13 @@ pub struct Spatial {
     kept: std::cell::RefCell<(Vec<f64>, usize, f64)>,
 }
 
-/// A layer's filter as the store's marks were made with it: compiled (or why
-/// not: then nothing passes), and how many of the layer's objects pass.
+/// A layer's filter as the store's marks were made with it: compiled in the
+/// project's unit (or why not: then nothing passes), and how many of the
+/// layer's objects pass.
 #[derive(Debug)]
 struct Filtered {
     filter: LayerFilter,
+    unit: Unit,
     compiled: Result<CompiledFilter, String>,
     passed: usize,
     total: usize,
@@ -247,11 +250,13 @@ impl Spatial {
             }
             self.label_layers = table;
         }
+        // A label reads lengths and areas in the project's unit: another unit makes every layer's texts again.
+        let unit = reading_unit(doc.settings());
         let mut whole: Vec<String> = Vec::new();
         let mut seen = std::collections::HashSet::new();
         for l in &leaves {
             seen.insert(l.id.clone());
-            let key = texts_key(l);
+            let key = format!("{}|{}", texts_key(l), unit.factor());
             if self.label_keys.get(&l.id) != Some(&key) {
                 if self.label_keys.contains_key(&l.id) && !all {
                     whole.push(l.id.clone());
@@ -285,7 +290,7 @@ impl Spatial {
             }
         }
         for (layer, list) in by_layer {
-            let t = layer_texts(doc.layers().get(&layer));
+            let t = layer_texts(doc.layers().get(&layer), unit);
             let store = &self.store;
             let texts = object_texts(&list, &t, &names, &|i| {
                 store.get(f64::from(list[i].base().id)).map(|it| &it.shape)
@@ -363,14 +368,18 @@ impl Spatial {
             self.store
                 .set_filtered(ids.into_iter().map(|id| (id, false)));
         }
+        // Another drawing unit compares the conditions' lengths and areas in it (docs/adr/0165 §2).
+        let unit = reading_unit(doc.settings());
         let whole: Vec<String> = next
             .iter()
-            .filter(|(id, f)| self.filters.get(*id).map(|x| &x.filter) != Some(*f))
+            .filter(|(id, f)| {
+                self.filters.get(*id).map(|x| (&x.filter, x.unit)) != Some((*f, unit))
+            })
             .map(|(id, _)| id.clone())
             .collect();
         for id in &whole {
             let filter = next[id].clone();
-            let compiled = compile_filter(&filter);
+            let compiled = compile_filter(&filter, unit);
             // A list: only its objects can pass. It is turned into slots once (the document's index
             // of persistent ids), and the layer's other objects are left out unread (docs/adr/0211 §6).
             let listed: Option<HashSet<Slot, BuildHasherDefault<SlotHasher>>> = compiled
@@ -390,6 +399,7 @@ impl Spatial {
                 id.clone(),
                 Filtered {
                     filter,
+                    unit,
                     compiled,
                     passed: 0,
                     total: doc.count(id),

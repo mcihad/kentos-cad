@@ -770,6 +770,8 @@ fn filter_passes(
         } else {
             Vec::new()
         },
+        // The table shows readings: its filter compares them in the project's unit (docs/adr/0165 §2).
+        unit: kentos_native_application::expression_unit::reading_unit(model.settings()),
         ..kentos_expression::Schema::default()
     };
     match kentos_expression::compile_with(source, &schema) {

@@ -11,7 +11,7 @@ use std::collections::HashSet;
 
 use kentos_contracts::{Entity, EntityId, LayerFilter};
 use kentos_expression::rows::{As, RowsInput, evaluate_rows_on};
-use kentos_expression::{Expr, compile};
+use kentos_expression::{Expr, Schema, Unit, compile_with};
 use kentos_geometry_core::entity::Shape;
 
 /// A filter ready to ask.
@@ -21,14 +21,19 @@ pub struct CompiledFilter {
     objects: Option<HashSet<EntityId>>,
 }
 
-/// A filter compiled; the condition's error as the dialog says it
-/// (“12. karakterde: …”). `$sıra` and `$ölçek` are refused: a filter must
-/// not change with the run or the drawing's scale.
-pub fn compile_filter(filter: &LayerFilter) -> Result<CompiledFilter, String> {
+/// A filter compiled, its condition in `unit` (a filter compares readings:
+/// the project's drawing unit, `expression_unit`); the condition's error as
+/// the dialog says it (“12. karakterde: …”). `$sıra` and `$ölçek` are
+/// refused: a filter must not change with the run or the drawing's scale.
+pub fn compile_filter(filter: &LayerFilter, unit: Unit) -> Result<CompiledFilter, String> {
     let expr = match &filter.expression {
         None => None,
         Some(text) => {
-            let e = compile(text).map_err(|e| e.text())?;
+            let schema = Schema {
+                unit,
+                ..Schema::default()
+            };
+            let e = compile_with(text, &schema).map_err(|e| e.text())?;
             if e.needs.index {
                 return Err(
                     "Süzgeçte $sıra kullanılamaz: süzgeç çalıştırmaya göre değişmemeli.".into(),
@@ -214,6 +219,7 @@ impl CompiledFilter {
 /// document itself (a run's copy has no geometry store). A layer whose
 /// condition does not compile leaves out all its objects.
 pub fn left_out(doc: &kentos_domain::Document) -> HashSet<kentos_domain::Slot> {
+    let unit = crate::expression_unit::reading_unit(doc.settings());
     let mut out = HashSet::new();
     for node in doc.layers().leaves() {
         let Some(filter) = &node.filter else {
@@ -226,7 +232,7 @@ pub fn left_out(doc: &kentos_domain::Document) -> HashSet<kentos_domain::Slot> {
             .by_layer_with_uids(&node.id)
             .map(|(uid, e)| (e, EntityId(*uid.as_bytes())))
             .collect();
-        let pass = match compile_filter(filter) {
+        let pass = match compile_filter(filter, unit) {
             Err(_) => vec![false; list.len()],
             Ok(c) => {
                 let shapes: Vec<Shape> = if c.reads_geometry() {

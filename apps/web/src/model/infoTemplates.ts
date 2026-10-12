@@ -36,23 +36,28 @@ export type TemplateResult = { ok: true; template: CompiledTemplate } | { ok: fa
 
 const cache = new Map<string, TemplateResult>();
 
-/** `text` as a template, compiled once per text; why not as the dialogs say it (“12. karakterde: …”, the template's own position). */
-export function compileTemplate(text: string): TemplateResult {
-  let r = cache.get(text);
+/**
+ * `text` as a template, its expressions in `unit` (a card is a reading: the project's drawing unit, `readingUnit`;
+ * docs/adr/0165 §2), compiled once per text and unit; why not as the dialogs say it (“12. karakterde: …”, the
+ * template's own position).
+ */
+export function compileTemplate(text: string, unit = 1): TemplateResult {
+  const key = `${unit}\u0000${text}`;
+  let r = cache.get(key);
   if (r) return r;
-  r = compileFresh(text);
+  r = compileFresh(text, unit);
   if (cache.size > 500) cache.clear();
-  cache.set(text, r);
+  cache.set(key, r);
   return r;
 }
 
-function compileFresh(text: string): TemplateResult {
+function compileFresh(text: string, unit: number): TemplateResult {
   const split = templateParse(text);
   if (split.error) return { ok: false, error: `${split.error.at}. karakterde: ${split.error.message}` };
   const exprs: CompiledExpression[] = [];
   for (const p of split.pieces) {
     if (p.kind !== 'expr') continue;
-    const c = compileExpression(p.text);
+    const c = compileExpression(p.text, unit === 1 ? undefined : { unit });
     if (!c.ok) return { ok: false, error: `${p.at + c.at - 1}. karakterde: ${c.error}` };
     if (c.expr.needs.index) return { ok: false, error: `${p.at}. karakterde: Şablonda $sıra kullanılamaz.` };
     if (c.expr.needs.scale) return { ok: false, error: `${p.at}. karakterde: Şablonda $ölçek kullanılamaz.` };

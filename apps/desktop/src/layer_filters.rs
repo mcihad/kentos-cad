@@ -205,7 +205,7 @@ impl App {
             w.lines = vec![(Kind::Warn, format!("Süzgeç: {problem}."))];
             return;
         }
-        let compiled = match compile_filter(&f) {
+        let compiled = match compile_filter(&f, self.reading_unit()) {
             Ok(c) => c,
             Err(why) => {
                 w.ready = false;

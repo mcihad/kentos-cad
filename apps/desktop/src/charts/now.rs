@@ -17,8 +17,15 @@ use crate::app::App;
 use crate::document::Document;
 use crate::features::Show;
 
-/// A layer's data as read: the drawing's session and generation, and the layer.
-pub(crate) type LayerKey = (u64, u64, String);
+/// A layer's data as read: the drawing's session and generation, the layer, and the unit (its bits).
+pub(crate) type LayerKey = (u64, u64, String, u64);
+
+/// The key `layer`'s data is read under now: Alan and Uzunluk are in the
+/// project's unit, so another unit reads the layer again (docs/adr/0165 §2).
+pub(crate) fn layer_key(doc: &Document, layer: &str) -> LayerKey {
+    let unit = doc.model.settings().unit().per_metre().to_bits();
+    (doc.session, doc.model.generation(), layer.to_owned(), unit)
+}
 
 /// What the data is.
 #[derive(Clone, Debug, PartialEq)]
@@ -63,7 +70,7 @@ pub(crate) struct ChartNow {
 impl App {
     /// The layer's data as the drawing is now, read again when it changed.
     pub(crate) fn layer_data_now(&self, doc: &Document, layer: &str) -> LayerKey {
-        let key = (doc.session, doc.model.generation(), layer.to_owned());
+        let key = layer_key(doc, layer);
         let mut held = self.charts.layer_data.borrow_mut();
         if held.as_ref().is_none_or(|(k, _)| *k != key) {
             *held = Some((key.clone(), LayerData::of(self, doc, layer)));

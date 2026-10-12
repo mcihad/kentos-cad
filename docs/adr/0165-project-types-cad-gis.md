@@ -127,6 +127,35 @@ gerekiyor”. Simge AutoCAD'in UCS simgesi gibi 0,0 ekrandayken orijinde duruyor
 çevresinde olduğundan simge çizimin ortasına geliyordu. Artık iki platformda da her zaman çizim alanının sol altındadır (kenarlardan
 30 px; web `drawUcsIcon`, masaüstü `map_marks::ucs_at`).
 
+### 12 Ekim eki: ifadeler çizim biriminde
+
+Sahibin bildirimi (12 Ekim): “mm birimler çizim birimi seçiyorum, etiket olarak $alan expression yazıyorum ama alan m2 cinsinden
+yazılıyor uzunluk ta benzer şekilde, object inspector doğru ama expression doğru değil”. §2'nin “birimin değdiği yerler” listesinde
+ifade dili unutulmuştu: `$alan`, `$uzunluk`, `$y`, `$x`, `$merkez_*`, kutunun değerleri ve başka katmana bakan işlevlerin ölçüleri
+her yerde metreydi. Kural:
+
+- **Okumalar projenin biriminde:** etiketin metni ve sınıfının koşulu (Etiketleri yazıya çevir de), bilgi kartı ve eylemler, katman
+  süzgeci, Öznitelik tablosunun süzgeci, bunların ε'siyle açılan İfade oluşturucu ve İstatistik ile Grafik'in Alan ve Uzunluk
+  sütunları (ADR 0227 §2) uzunluğu, koordinatı ve uzaklığı çizim biriminde, alanı onun karesinde (mm, mm²) okur; Öznitelikler'in
+  gösterdiğiyle aynı.
+- **Metrik bağlamlar metrede kalır:** İşlemler (araçların sayıları gibi ifadeleri de: “Çizginin parçası” `$uzunluk`'u metre okur),
+  ağın maliyetleri ve semboller (boyları metrede). Uzaklığı ifadeden alan bir İşlemler aracı birimle bozulurdu.
+- **Motor:** birim derlemenin şemasındadır (`Schema::unit`, web'de bağlamın `unit`'i: metrenin kaç birim olduğu); çözümleyici
+  (`resolve`) geometri değerini yüklendiği yerde birimle (alanı karesiyle) çarpar, `uzaklık`, `kesişim_uzunluğu` sonuçlarını
+  birimle, `kesişim_alanı`'nı karesiyle çarpar, `kesişir`, `kesişen_sayısı`, `kesişenler`'in verilen uzaklığını birime böler; iç
+  ifadeler (`topla($alan)`) de aynı yoldan geçer. Dilde boşun çarpımı boştur: `$alan boş` değişmez. Metre projesinde ağaç
+  yazıldığı gibi kalır, sonuçlar bit bit aynıdır. Okuma birimi `kentos_native_application::expression_unit::reading_unit`, web'de
+  `readingUnit` (`model/projectSettings.ts`).
+- **Yenilenme:** birim değişince iki platformun geometri deposu bütün katmanların etiket metinlerini ve süzgeçlerini yeniden kurar
+  (anahtarlarında birim), İstatistik ve Grafik veriyi yeniden okur.
+- **Oluşturucu:** `$alan`, `$uzunluk`, `$genişlik`, `$yükseklik`'in açıklaması birimi ve İşlemler kuralını söyler.
+- **Doğrulama:** `fixtures/expression/v2/geometry.json`'un `units`'i her nesneyi cm ve mm'de tutar (bağımsız başvuru
+  `expression_geometry.py`; metre değeri kesirle birimle çarpılır, bir kez yuvarlanır; tolerans birimde); iki platform okur
+  (`typed.rs`, `geometryFixture.test.ts`). Başka katmana bakan işlevler mm ile metre arasında (`language.rs`), depolar uç uca: mm
+  projesinde `$alan || ' / ' || $uzunluk` etiketi “3000000 / 7000” yazar, `$alan > 2000000` süzgeci 3 m²'lik alanı geçirir, birim
+  metreye dönünce etiket “3 / 7” olur ve süzgeç ikisini de dışarıda bırakır (masaüstü `drawing_unit.rs`, web `picking.test.ts`);
+  geometri sütunları üç birimde (`charts.rs`, `charts.test.ts`).
+
 ## Bu ADR'de olmayanlar
 
 - CBS sahnesinde altlık harita karoları (dış XYZ ya da yayın kararı; CLAUDE.md §17).

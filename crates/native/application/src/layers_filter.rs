@@ -19,6 +19,7 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 /// The stable codes of the answers (`CommandError.code`).
 pub use crate::codes;
+use crate::expression_unit::reading_unit;
 use crate::layer_filter::{CompiledFilter, compile_filter};
 
 /// The undo step's name.
@@ -42,13 +43,15 @@ fn check(
                     "filter",
                 ));
             }
-            Some(compile_filter(f).map_err(|why| {
-                fail(
-                    codes::INVALID_EXPRESSION,
-                    format!("Süzgecin ifadesi: {why}"),
-                    "filter/expression",
-                )
-            })?)
+            Some(
+                compile_filter(f, reading_unit(doc.settings())).map_err(|why| {
+                    fail(
+                        codes::INVALID_EXPRESSION,
+                        format!("Süzgecin ifadesi: {why}"),
+                        "filter/expression",
+                    )
+                })?,
+            )
         }
     };
     checks::revision(doc, input.expected_revision.as_deref())?;

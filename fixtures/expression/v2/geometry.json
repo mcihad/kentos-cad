@@ -1,7 +1,7 @@
 {
  "format": "kentos.expression-geometry",
  "version": 2,
- "note": "İfadelerin nesneden doğrudan okuduğu geometri değerleri, motordan bağımsız hesaplanmış: düz halkaların alanı ve ağırlık merkezi kesirli sayılarla (delikler düşülür), yarım daire kenar yarım dairenin kendi formülleriyle, daire πr² ve merkezi, kutular köşelerden. Y sağa (kodda x), X yukarı (kodda y). Değer null: nesnenin öyle bir değeri yok. Üretici scripts/fixtures/expression_geometry.py.",
+ "note": "İfadelerin nesneden doğrudan okuduğu geometri değerleri, motordan bağımsız hesaplanmış: düz halkaların alanı ve ağırlık merkezi kesirli sayılarla (delikler düşülür), yarım daire kenar yarım dairenin kendi formülleriyle, daire πr² ve merkezi, kutular köşelerden. Y sağa (kodda x), X yukarı (kodda y). Değer null: nesnenin öyle bir değeri yok. units: aynı nesneler yerel projenin çizim biriminde (cm, mm; ADR 0165 §2): uzunluk ve koordinat metre değeri × birim, alan × birimin karesi, köşe sayısı aynı, boş boş; tolerans birimde. Üretici scripts/fixtures/expression_geometry.py.",
  "cases": [
   {
    "name": "kare, projeksiyon koordinatlarında",
@@ -505,6 +505,1346 @@
     "genişlik": 100.0,
     "yükseklik": 40.0,
     "köşe": 12
+   }
+  }
+ ],
+ "units": [
+  {
+   "name": "kare, projeksiyon koordinatlarında, cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420030.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420030.75
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 10000.0,
+    "alan": 6000000.0,
+    "merkez_y": 48701025.0,
+    "merkez_x": 442001575.0,
+    "min_y": 48700025.0,
+    "max_y": 48702025.0,
+    "min_x": 442000075.0,
+    "max_x": 442003075.0,
+    "genişlik": 2000.0,
+    "yükseklik": 3000.0,
+    "köşe": 4
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "L biçimli, saat yönünde, cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 2,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487010.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487010.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487030.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487030.25,
+      "y": 4420000.75
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 14000.0,
+    "alan": 6000000.0,
+    "merkez_y": 48701025.0,
+    "merkez_x": 442001575.0,
+    "min_y": 48700025.0,
+    "max_y": 48703025.0,
+    "min_x": 442000075.0,
+    "max_x": 442004075.0,
+    "genişlik": 3000.0,
+    "yükseklik": 4000.0,
+    "köşe": 6
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "delikli (delik ters yönde), cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 3,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420040.75
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.25,
+        "y": 4420010.75
+       },
+       {
+        "x": 487010.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420010.75
+       }
+      ]
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 23000.0,
+    "alan": 18500000.0,
+    "merkez_y": 48702585.81081081,
+    "merkez_x": 442002115.5405405,
+    "min_y": 48700025.0,
+    "max_y": 48705025.0,
+    "min_x": 442000075.0,
+    "max_x": 442004075.0,
+    "genişlik": 5000.0,
+    "yükseklik": 4000.0,
+    "köşe": 8
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "bir kenarı yarım daire (bulge 1), cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 4,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420010.75
+     }
+    ],
+    "bulges": [
+     0,
+     0,
+     1,
+     0
+    ]
+   },
+   "values": {
+    "uzunluk": 7141.592653589794,
+    "alan": 3570796.3267948967,
+    "merkez_y": 48701025.0,
+    "merkez_x": 442000981.65014106,
+    "min_y": 48700025.0,
+    "max_y": 48702025.0,
+    "min_x": 442000075.0,
+    "max_x": 442002075.0,
+    "genişlik": 2000.0,
+    "yükseklik": 2000.0,
+    "köşe": 4
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "tarama, delikli, cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 5,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "hatch",
+    "ring": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 8,
+      "y": 0
+     },
+     {
+      "x": 8,
+      "y": 6
+     },
+     {
+      "x": 0,
+      "y": 6
+     }
+    ],
+    "holes": [
+     [
+      {
+       "x": 2,
+       "y": 2
+      },
+      {
+       "x": 4,
+       "y": 2
+      },
+      {
+       "x": 4,
+       "y": 4
+      },
+      {
+       "x": 2,
+       "y": 4
+      }
+     ]
+    ],
+    "pattern": {
+     "type": "solid",
+     "angle": 0,
+     "spacing": 1
+    }
+   },
+   "values": {
+    "uzunluk": null,
+    "alan": 440000.0,
+    "merkez_y": 409.09090909090907,
+    "merkez_x": 300.0,
+    "min_y": 0.0,
+    "max_y": 800.0,
+    "min_x": 0.0,
+    "max_x": 600.0,
+    "genişlik": 800.0,
+    "yükseklik": 600.0,
+    "köşe": null
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "daire, cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 6,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "circle",
+    "c": {
+     "x": 487005.25,
+     "y": 4420007.75
+    },
+    "r": 3.0
+   },
+   "values": {
+    "uzunluk": 1884.9555921538758,
+    "alan": 282743.3388230814,
+    "merkez_y": 48700525.0,
+    "merkez_x": 442000775.0,
+    "min_y": 48700225.0,
+    "max_y": 48700825.0,
+    "min_x": 442000475.0,
+    "max_x": 442001075.0,
+    "genişlik": 600.0,
+    "yükseklik": 600.0,
+    "köşe": null
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "çizgi, cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 7,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 3.0,
+     "y": 4.0
+    },
+    "b": {
+     "x": 9.0,
+     "y": 12.0
+    }
+   },
+   "values": {
+    "uzunluk": 1000.0,
+    "alan": null,
+    "merkez_y": 600.0,
+    "merkez_x": 800.0,
+    "min_y": 300.0,
+    "max_y": 900.0,
+    "min_x": 400.0,
+    "max_x": 1200.0,
+    "genişlik": 600.0,
+    "yükseklik": 800.0,
+    "köşe": 2
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "çoklu çizgi, cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 8,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 3.0,
+      "y": 4.0
+     },
+     {
+      "x": 3.0,
+      "y": 10.0
+     },
+     {
+      "x": 9.0,
+      "y": 10.0
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 1700.0,
+    "alan": null,
+    "merkez_y": 300.0,
+    "merkez_x": 1000.0,
+    "min_y": 0.0,
+    "max_y": 900.0,
+    "min_x": 0.0,
+    "max_x": 1000.0,
+    "genişlik": 900.0,
+    "yükseklik": 1000.0,
+    "köşe": 4
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "nokta, cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 9,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "point",
+    "p": {
+     "x": 487001.75,
+     "y": 4419998.25
+    }
+   },
+   "values": {
+    "uzunluk": null,
+    "alan": null,
+    "merkez_y": 48700175.0,
+    "merkez_x": 441999825.0,
+    "min_y": 48700175.0,
+    "max_y": 48700175.0,
+    "min_x": 441999825.0,
+    "max_x": 441999825.0,
+    "genişlik": 0.0,
+    "yükseklik": 0.0,
+    "köşe": 1
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "alansız kapalı alan (doğrusal köşeler), cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 10,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 2.0,
+      "y": 0.0
+     },
+     {
+      "x": 6.0,
+      "y": 0.0
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 1200.0,
+    "alan": 0.0,
+    "merkez_y": 266.66666666666663,
+    "merkez_x": 0.0,
+    "min_y": 0.0,
+    "max_y": 600.0,
+    "min_x": 0.0,
+    "max_x": 0.0,
+    "genişlik": 600.0,
+    "yükseklik": 0.0,
+    "köşe": 3
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "iki parçalı alan (büyüğü delikli), cm",
+   "unit": "cm",
+   "perMetre": 100,
+   "entity": {
+    "id": 11,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420040.75
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.25,
+        "y": 4420010.75
+       },
+       {
+        "x": 487010.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420010.75
+       }
+      ]
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 487080.25,
+        "y": 4420005.75
+       },
+       {
+        "x": 487100.25,
+        "y": 4420005.75
+       },
+       {
+        "x": 487100.25,
+        "y": 4420035.75
+       },
+       {
+        "x": 487080.25,
+        "y": 4420035.75
+       }
+      ]
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 33000.0,
+    "alan": 24500000.0,
+    "merkez_y": 48704162.75510204,
+    "merkez_x": 442002105.6122449,
+    "min_y": 48700025.0,
+    "max_y": 48710025.0,
+    "min_x": 442000075.0,
+    "max_x": 442004075.0,
+    "genişlik": 10000.0,
+    "yükseklik": 4000.0,
+    "köşe": 12
+   },
+   "tolerance": {
+    "uzunluk": 1e-05,
+    "alan": 0.001,
+    "merkez_y": 1e-05,
+    "merkez_x": 1e-05,
+    "min_y": 1e-05,
+    "max_y": 1e-05,
+    "min_x": 1e-05,
+    "max_x": 1e-05,
+    "genişlik": 1e-05,
+    "yükseklik": 1e-05,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "kare, projeksiyon koordinatlarında, mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420030.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420030.75
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 100000.0,
+    "alan": 600000000.0,
+    "merkez_y": 487010250.0,
+    "merkez_x": 4420015750.0,
+    "min_y": 487000250.0,
+    "max_y": 487020250.0,
+    "min_x": 4420000750.0,
+    "max_x": 4420030750.0,
+    "genişlik": 20000.0,
+    "yükseklik": 30000.0,
+    "köşe": 4
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "L biçimli, saat yönünde, mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 2,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487010.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487010.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487030.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487030.25,
+      "y": 4420000.75
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 140000.0,
+    "alan": 600000000.0,
+    "merkez_y": 487010250.0,
+    "merkez_x": 4420015750.0,
+    "min_y": 487000250.0,
+    "max_y": 487030250.0,
+    "min_x": 4420000750.0,
+    "max_x": 4420040750.0,
+    "genişlik": 30000.0,
+    "yükseklik": 40000.0,
+    "köşe": 6
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "delikli (delik ters yönde), mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 3,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420040.75
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.25,
+        "y": 4420010.75
+       },
+       {
+        "x": 487010.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420010.75
+       }
+      ]
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 230000.0,
+    "alan": 1850000000.0,
+    "merkez_y": 487025858.1081081,
+    "merkez_x": 4420021155.405405,
+    "min_y": 487000250.0,
+    "max_y": 487050250.0,
+    "min_x": 4420000750.0,
+    "max_x": 4420040750.0,
+    "genişlik": 50000.0,
+    "yükseklik": 40000.0,
+    "köşe": 8
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "bir kenarı yarım daire (bulge 1), mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 4,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420010.75
+     }
+    ],
+    "bulges": [
+     0,
+     0,
+     1,
+     0
+    ]
+   },
+   "values": {
+    "uzunluk": 71415.92653589793,
+    "alan": 357079632.6794897,
+    "merkez_y": 487010250.0,
+    "merkez_x": 4420009816.5014105,
+    "min_y": 487000250.0,
+    "max_y": 487020250.0,
+    "min_x": 4420000750.0,
+    "max_x": 4420020750.0,
+    "genişlik": 20000.0,
+    "yükseklik": 20000.0,
+    "köşe": 4
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "tarama, delikli, mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 5,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "hatch",
+    "ring": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 8,
+      "y": 0
+     },
+     {
+      "x": 8,
+      "y": 6
+     },
+     {
+      "x": 0,
+      "y": 6
+     }
+    ],
+    "holes": [
+     [
+      {
+       "x": 2,
+       "y": 2
+      },
+      {
+       "x": 4,
+       "y": 2
+      },
+      {
+       "x": 4,
+       "y": 4
+      },
+      {
+       "x": 2,
+       "y": 4
+      }
+     ]
+    ],
+    "pattern": {
+     "type": "solid",
+     "angle": 0,
+     "spacing": 1
+    }
+   },
+   "values": {
+    "uzunluk": null,
+    "alan": 44000000.0,
+    "merkez_y": 4090.909090909091,
+    "merkez_x": 3000.0,
+    "min_y": 0.0,
+    "max_y": 8000.0,
+    "min_x": 0.0,
+    "max_x": 6000.0,
+    "genişlik": 8000.0,
+    "yükseklik": 6000.0,
+    "köşe": null
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "daire, mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 6,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "circle",
+    "c": {
+     "x": 487005.25,
+     "y": 4420007.75
+    },
+    "r": 3.0
+   },
+   "values": {
+    "uzunluk": 18849.55592153876,
+    "alan": 28274333.882308137,
+    "merkez_y": 487005250.0,
+    "merkez_x": 4420007750.0,
+    "min_y": 487002250.0,
+    "max_y": 487008250.0,
+    "min_x": 4420004750.0,
+    "max_x": 4420010750.0,
+    "genişlik": 6000.0,
+    "yükseklik": 6000.0,
+    "köşe": null
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "çizgi, mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 7,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 3.0,
+     "y": 4.0
+    },
+    "b": {
+     "x": 9.0,
+     "y": 12.0
+    }
+   },
+   "values": {
+    "uzunluk": 10000.0,
+    "alan": null,
+    "merkez_y": 6000.0,
+    "merkez_x": 8000.0,
+    "min_y": 3000.0,
+    "max_y": 9000.0,
+    "min_x": 4000.0,
+    "max_x": 12000.0,
+    "genişlik": 6000.0,
+    "yükseklik": 8000.0,
+    "köşe": 2
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "çoklu çizgi, mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 8,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 3.0,
+      "y": 4.0
+     },
+     {
+      "x": 3.0,
+      "y": 10.0
+     },
+     {
+      "x": 9.0,
+      "y": 10.0
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 17000.0,
+    "alan": null,
+    "merkez_y": 3000.0,
+    "merkez_x": 10000.0,
+    "min_y": 0.0,
+    "max_y": 9000.0,
+    "min_x": 0.0,
+    "max_x": 10000.0,
+    "genişlik": 9000.0,
+    "yükseklik": 10000.0,
+    "köşe": 4
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "nokta, mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 9,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "point",
+    "p": {
+     "x": 487001.75,
+     "y": 4419998.25
+    }
+   },
+   "values": {
+    "uzunluk": null,
+    "alan": null,
+    "merkez_y": 487001750.0,
+    "merkez_x": 4419998250.0,
+    "min_y": 487001750.0,
+    "max_y": 487001750.0,
+    "min_x": 4419998250.0,
+    "max_x": 4419998250.0,
+    "genişlik": 0.0,
+    "yükseklik": 0.0,
+    "köşe": 1
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "alansız kapalı alan (doğrusal köşeler), mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 10,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 2.0,
+      "y": 0.0
+     },
+     {
+      "x": 6.0,
+      "y": 0.0
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 12000.0,
+    "alan": 0.0,
+    "merkez_y": 2666.6666666666665,
+    "merkez_x": 0.0,
+    "min_y": 0.0,
+    "max_y": 6000.0,
+    "min_x": 0.0,
+    "max_x": 0.0,
+    "genişlik": 6000.0,
+    "yükseklik": 0.0,
+    "köşe": 3
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
+   }
+  },
+  {
+   "name": "iki parçalı alan (büyüğü delikli), mm",
+   "unit": "mm",
+   "perMetre": 1000,
+   "entity": {
+    "id": 11,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420040.75
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.25,
+        "y": 4420010.75
+       },
+       {
+        "x": 487010.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420010.75
+       }
+      ]
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 487080.25,
+        "y": 4420005.75
+       },
+       {
+        "x": 487100.25,
+        "y": 4420005.75
+       },
+       {
+        "x": 487100.25,
+        "y": 4420035.75
+       },
+       {
+        "x": 487080.25,
+        "y": 4420035.75
+       }
+      ]
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 330000.0,
+    "alan": 2450000000.0,
+    "merkez_y": 487041627.55102044,
+    "merkez_x": 4420021056.122449,
+    "min_y": 487000250.0,
+    "max_y": 487100250.0,
+    "min_x": 4420000750.0,
+    "max_x": 4420040750.0,
+    "genişlik": 100000.0,
+    "yükseklik": 40000.0,
+    "köşe": 12
+   },
+   "tolerance": {
+    "uzunluk": 0.0001,
+    "alan": 0.1,
+    "merkez_y": 0.0001,
+    "merkez_x": 0.0001,
+    "min_y": 0.0001,
+    "max_y": 0.0001,
+    "min_x": 0.0001,
+    "max_x": 0.0001,
+    "genişlik": 0.0001,
+    "yükseklik": 0.0001,
+    "köşe": 0
    }
   }
  ]

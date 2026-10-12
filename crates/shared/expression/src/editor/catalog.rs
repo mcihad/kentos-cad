@@ -652,6 +652,7 @@ mod tests {
                 },
             ],
             world: false,
+            ..Default::default()
         }
     }
 

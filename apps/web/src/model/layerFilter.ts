@@ -3,6 +3,7 @@ import type { CadDocument } from './document';
 import type { Entity } from './entities';
 import { IdMarks } from './idMarks';
 import { compileExpression, expressionError, type CompiledExpression, type ExprGeometry } from './expression/expression';
+import { readingUnit } from './projectSettings';
 
 /**
  * Katman süzgeci (docs/adr/0211 §3): a layer's filter compiled and asked over its objects, as İfadeyle seç asks a
@@ -20,11 +21,14 @@ export interface CompiledFilter {
 
 export type FilterCompile = { ok: true; filter: CompiledFilter } | { ok: false; error: string };
 
-/** A filter compiled; the condition's error as the dialog says it (“12. karakterde: …”), `$sıra` and `$ölçek` refused. */
-export function compileFilter(f: LayerFilter): FilterCompile {
+/**
+ * A filter compiled, its condition in `unit` (a filter compares readings: the project's drawing unit, `readingUnit`;
+ * docs/adr/0165 §2); the condition's error as the dialog says it (“12. karakterde: …”), `$sıra` and `$ölçek` refused.
+ */
+export function compileFilter(f: LayerFilter, unit = 1): FilterCompile {
   let expression: CompiledExpression | null = null;
   if (f.expression != null) {
-    const r = compileExpression(f.expression);
+    const r = compileExpression(f.expression, unit === 1 ? undefined : { unit });
     if (!r.ok) return { ok: false, error: expressionError(r) };
     if (r.expr.needs.index) return { ok: false, error: 'Süzgeçte $sıra kullanılamaz: süzgeç çalıştırmaya göre değişmemeli.' };
     if (r.expr.needs.scale) return { ok: false, error: 'Süzgeçte $ölçek kullanılamaz: süzgeç çizimin ölçeğine göre değişmemeli.' };
@@ -111,10 +115,11 @@ export function filterCondition(f: CompiledFilter, list: readonly Entity[], laye
  */
 export function leftOut(doc: CadDocument): Set<number> {
   const out = new Set<number>();
+  const unit = readingUnit(doc.settings);
   for (const node of doc.layers.leaves()) {
     if (!node.filter || node.service) continue;
     const list = doc.byLayer(node.id);
-    const r = compileFilter(node.filter);
+    const r = compileFilter(node.filter, unit);
     const pass = r.ok ? filterPassesIn(doc, r.filter, list, (id) => doc.layers.get(id)?.name ?? id) : list.map(() => false);
     list.forEach((e, i) => {
       if (!pass[i]) out.add(e.id);

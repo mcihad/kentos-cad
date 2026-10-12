@@ -109,6 +109,7 @@ impl Calc {
             fields,
             variables: Vec::new(),
             world: false,
+            ..Default::default()
         };
         let expr = compile_with(source, &schema).map_err(|e| e.text())?;
         let mut refs = Vec::with_capacity(expr.fields.len());

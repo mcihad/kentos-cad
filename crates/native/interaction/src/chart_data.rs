@@ -4,7 +4,8 @@
 //! columns are its fields in order (their aliases; a value list sorts by
 //! what it shows), then the keys no field names in the natural order (their
 //! kind the one Verilerden al gives every object's value), then the
-//! geometry's Alan (m²) and Uzunluk (m) from the store's measure records. A
+//! geometry's Alan and Uzunluk from the store's measure records, in the
+//! project's unit (docs/adr/0165 §2: m², or mm² in a project in mm). A
 //! cell is its value's canonical text and what it shows, empty, or refused
 //! as written.
 
@@ -65,11 +66,13 @@ fn column(f: &LayerField, label: String, entities: &[&Entity]) -> Column {
 
 /// A layer's columns: its fields, then its objects' other keys (their kind
 /// inferred from every object), then the geometry's two from `records` (the
-/// store's measure records of the objects, one a row; none: no geometry).
+/// store's measure records of the objects, one a row; none: no geometry) in
+/// the unit `per_metre` of which make a metre.
 pub fn layer_columns(
     fields: &[LayerField],
     entities: &[&Entity],
     records: Option<&[f64]>,
+    per_metre: f64,
 ) -> Vec<Column> {
     let named: std::collections::HashSet<&str> = fields.iter().map(|f| f.name.as_str()).collect();
     let mut others: BTreeMap<String, Vec<&str>> = BTreeMap::new();
@@ -98,7 +101,7 @@ pub fn layer_columns(
         out.push(column(&f, key.clone(), entities));
     }
     if let Some(records) = records {
-        out.extend(geometry_columns(records));
+        out.extend(geometry_columns(records, per_metre));
     }
     out
 }

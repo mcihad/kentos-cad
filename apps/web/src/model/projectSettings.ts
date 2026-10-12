@@ -29,6 +29,17 @@ export type { CrsDefinition, DatumTransform, DimensionStyleDef, DrawingFont, Dra
 
 /** How many of a drawing unit make a metre (docs/adr/0165 §2). */
 export const UNIT_PER_METRE: Record<DrawingUnit, number> = { mm: 1000, cm: 100, m: 1 };
+
+/**
+ * The unit an expression's geometry values speak where they are readings (docs/adr/0165 §2, the 12 Ekim addendum): a
+ * label's text and its class's condition, the information card and the actions, a layer's filter, Öznitelik
+ * tablosu's filter and the builder over them read lengths, coordinates and areas in the project's drawing unit, as
+ * Öznitelikler shows them; İşlemler, a network's costs and the symbols keep metres, as their own numbers do. How many
+ * of it make a metre (the desktop's `expression_unit::reading_unit`).
+ */
+export function readingUnit(settings: { readonly unit: DrawingUnit }): number {
+  return UNIT_PER_METRE[settings.unit];
+}
 /** Every drawing unit a file may name. */
 export const DRAWING_UNIT_IDS: readonly DrawingUnit[] = ['mm', 'cm', 'm'];
 

@@ -161,6 +161,10 @@
   - masaüstü: `expression::tests` (9) ve resimler (`expression::tests::screens`).
 - **Akış görünümü:** metinle gidip gelen düğüm görünümü artık isteğe bağlı değil; sahibin önceliği, ayrı bir kararla (ADR 0101).
 
+Geometri değerlerinin birimi (12 Ekim eki): metre projesinde metre; yerel projede, değerler okuma olan yerlerde (etiket, bilgi
+kartı, süzgeçler) çizim birimi ve karesi; İşlemler, ağ maliyetleri ve semboller metrede. Kural ve motordaki yeri ADR 0165'in
+“ifadeler çizim biriminde” ekinde.
+
 ## Ölçüm
 
 i5-11300H, 15 GB, Ubuntu 26.04.1; native `--release`, web Node 24 ve `--profile wasm`. Nesneler: Parsel 1…n, Nitelik (her üçüncüsü Tarla), 0…1000 m² alan. p50.

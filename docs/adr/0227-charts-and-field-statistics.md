@@ -57,7 +57,8 @@ ilişkiye bakmak için grafik yoktur; İşlemler'in eğri veren tabloları (ROC,
     eğri) ve **Uzunluk (m)** (çizginin, yolun ve yayın uzunluğu; alanın çevresi, delikleri dahil; ADR 0063'ün toplamlarının ölçüleri).
     Değer, geometri deposunun float64 ölçüsünün 3 kesir basamaklı ondalık metnidir (ikili değerin tam açılımı, yarımlar çifte;
     `statistics::fixed`); ölçüsü olmayan nesnede boş. Hiçbir nesnesinde değeri olmayan ölçünün sütunu yoktur (çizgilerin katmanında
-    Alan (m²), noktalarınkinde ikisi de).
+    Alan (m²), noktalarınkinde ikisi de). Yerel projede ikisi çizim biriminde ve karesindedir: **Alan (mm²)**, **Uzunluk (mm)**
+    (12 Ekim eki; kural ADR 0165'in “ifadeler çizim biriminde” ekinde).
 - **İşlemler tablosunun sütunları:** tablonun sütunları sırasıyla; türleri Verilerden al'ın kuralıyla bütün satırlardan.
 - **Kimlik ve sıra** (istatistiklerde ve grafiklerde aynı): Sayı tam değeriyle (`1.50` ile `1.5` aynı değerdir; gösterilişi tek
   biçimlerden ilk görülenidir), Tarih takvimle, Evet/hayır Hayır önce, Metin başındaki ve sonundaki boşluklar atılmış yazısıyla (boşluk

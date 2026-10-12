@@ -231,6 +231,7 @@ mod tests {
                 })
                 .collect(),
             world: false,
+            ..Default::default()
         }
     }
 

@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { layerColumns } from '../../model/chartData';
 import { ChartData } from '../../model/ops/charts';
+import { UNIT_PER_METRE } from '../../model/projectSettings';
 import type { TableShow } from '../../model/ops/featureTable';
 
 /**
@@ -26,7 +27,8 @@ export class LayerData {
     const entities = doc.byLayer(layer).filter((e) => view.geometry.filterShown(e.id));
     const ids = entities.map((e) => e.id);
     const columns = layerColumns(doc.layers.get(layer)?.fields ?? [], entities);
-    return new LayerData(layer, ids, new ChartData(ids.length, columns, view.geometry.measures(ids)));
+    // Alan and Uzunluk are readings: in the project's unit (docs/adr/0165 §2).
+    return new LayerData(layer, ids, new ChartData(ids.length, columns, view.geometry.measures(ids), UNIT_PER_METRE[doc.settings.unit]));
   }
 
   /** Göster's rows: every object, the selected ones or the ones in the view. */

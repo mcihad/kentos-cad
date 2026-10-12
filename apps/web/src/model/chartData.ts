@@ -7,8 +7,8 @@ import { naturalOrder } from './ops/pointEditor';
  * A chart's data (docs/adr/0227 §2), read from a layer's objects or from an İşlemler table; the desktop's is
  * `kentos_interaction::chart_data`. A layer's columns are its fields in order (their aliases; a value list sorts by what
  * it shows), then the keys no field names in the natural order (their kind the one Verilerden al gives every object's
- * value), then the geometry's Alan (m²) and Uzunluk (m) (`ops/charts.ts` adds them from the store). A cell is its
- * value's canonical text and what it shows, empty, or refused as written. What to chart first is the core's
+ * value), then the geometry's Alan and Uzunluk in the project's unit (`ops/charts.ts` adds them from the store). A
+ * cell is its value's canonical text and what it shows, empty, or refused as written. What to chart first is the core's
  * (`ChartData.complete`, `forColumn`, `forTable`).
  */
 

@@ -337,6 +337,7 @@ fn the_additions_give_the_independent_references_values() {
         fields: Vec::new(),
         variables,
         world: true,
+        ..Default::default()
     };
     let layers = doc["layers"].as_array().expect("layers");
     let all: Vec<&Json> = layers
@@ -438,4 +439,153 @@ fn the_additions_give_the_independent_references_values() {
         wrong.join("\n")
     );
     assert!(values >= 900, "{values}");
+}
+
+/// In a local project's drawing unit (docs/adr/0165 §2) the calls to other
+/// objects speak it too: a distance, an overlap's length and a sum of
+/// lengths in the unit, an overlap's area and a sum of areas in its square,
+/// and the distance a call is given is read in it; a ratio of two measures
+/// does not change. Each source in millimetres against the same in metres,
+/// on the additions' layers, in a batch and one object at a time.
+#[test]
+fn the_calls_to_other_objects_speak_the_drawing_unit() {
+    let text = std::fs::read_to_string(EXTRAS).expect("the fixture is readable");
+    let doc: Json = serde_json::from_str(&text).expect("the fixture is JSON");
+    let layers = doc["layers"].as_array().expect("layers");
+    let all: Vec<&Json> = layers
+        .iter()
+        .flat_map(|l| l["objects"].as_array().expect("objects"))
+        .collect();
+    let mut store = Store::new();
+    store
+        .put_json(&serde_json::to_string(&all).expect("JSON"))
+        .expect("the store reads the objects");
+    let mine: Vec<Layer> = layers
+        .iter()
+        .map(|l| {
+            let objects = l["objects"].as_array().expect("objects");
+            Layer {
+                name: l["name"].as_str().expect("a name"),
+                ids: objects
+                    .iter()
+                    .map(|o| o["id"].as_f64().expect("an id"))
+                    .collect(),
+                attrs: objects
+                    .iter()
+                    .map(|o| o["attrs"].as_object().expect("attributes"))
+                    .collect(),
+                store: &store,
+            }
+        })
+        .collect();
+    let world = World {
+        layers: mine
+            .iter()
+            .map(|l| WorldLayer {
+                name: l.name.to_owned(),
+                ids: l.ids.clone(),
+                objects: l,
+            })
+            .collect(),
+        store: Some(&store),
+    };
+    let parcels = &mine[layers
+        .iter()
+        .position(|l| l["id"] == doc["evaluated"])
+        .expect("the evaluated layer")];
+    let metres = Schema {
+        world: true,
+        ..Default::default()
+    };
+    let mm = Schema {
+        world: true,
+        unit: kentos_expression::Unit::per_metre(1000.0),
+        ..Default::default()
+    };
+    // In millimetres, in metres, and how many of the first the second is.
+    let pairs: [(&str, &str, f64); 11] = [
+        ("topla($alan)", "topla($alan)", 1e6),
+        ("topla($uzunluk, Mahalle)", "topla($uzunluk, Mahalle)", 1e3),
+        ("uzaklık('Durak')", "uzaklık('Durak')", 1e3),
+        (
+            "kesişim_alanı('Sit alanı')",
+            "kesişim_alanı('Sit alanı')",
+            1e6,
+        ),
+        (
+            "kesişim_uzunluğu('Sit alanı')",
+            "kesişim_uzunluğu('Sit alanı')",
+            1e3,
+        ),
+        (
+            "kesişim_alanı('Sit alanı') / $alan",
+            "kesişim_alanı('Sit alanı') / $alan",
+            1.0,
+        ),
+        (
+            "kesişen_sayısı('Durak', 25000)",
+            "kesişen_sayısı('Durak', 25)",
+            1.0,
+        ),
+        ("kesişir('Durak', 15000)", "kesişir('Durak', 15)", 1.0),
+        (
+            "kesişenler('Durak', Ad, 1000000, Ad != 'Okul')",
+            "kesişenler('Durak', Ad, 1000, Ad != 'Okul')",
+            1.0,
+        ),
+        ("$y", "$y", 1e3),
+        ("$merkez_x", "$merkez_x", 1e3),
+    ];
+    let mut wrong = Vec::new();
+    for (in_mm, in_m, k) in pairs {
+        let a = compile_with(in_mm, &mm).expect("compiles in millimetres");
+        let b = compile_with(in_m, &metres).expect("compiles in metres");
+        let (sa, sb) = (Session::new(&a, &world), Session::new(&b, &world));
+        let (ca, cb) = (
+            a.evaluate_objects_in(parcels as &dyn Objects<'_>, As::Value, Some(&world)),
+            b.evaluate_objects_in(parcels as &dyn Objects<'_>, As::Value, Some(&world)),
+        );
+        let (mut at_a, mut at_b) = ((0, 0), (0, 0));
+        for i in 0..parcels.ids.len() {
+            let one = |e: &Expr, s: &Session| {
+                encode(&e.evaluate(&OneOf {
+                    layer: parcels,
+                    i,
+                    fields: &e.fields,
+                    world: s,
+                }))
+            };
+            for (path, got, want) in [
+                ("tek", one(&a, &sa), one(&b, &sb)),
+                (
+                    "sütun",
+                    encode_column(&ca, i, &mut at_a),
+                    encode_column(&cb, i, &mut at_b),
+                ),
+            ] {
+                let fine = match (
+                    got[0].as_str(),
+                    got.get(1).and_then(Json::as_f64),
+                    want.get(1).and_then(Json::as_f64),
+                ) {
+                    (Some("n"), Some(g), Some(w)) => {
+                        (g - w * k).abs() <= 1e-9 * js_max(js_max(g.abs(), (w * k).abs()), 1.0)
+                    }
+                    _ => got == want,
+                };
+                if !fine {
+                    wrong.push(format!(
+                        "{in_mm:?} [{path}] nesne {}: {got} ≠ {want} × {k}",
+                        i + 1
+                    ));
+                }
+            }
+        }
+    }
+    assert!(
+        wrong.is_empty(),
+        "{} fark:\n{}",
+        wrong.len(),
+        wrong.join("\n")
+    );
 }

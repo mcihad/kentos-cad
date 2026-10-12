@@ -11,7 +11,7 @@ use kentos_expression::geometry::{self, Shapes};
 use kentos_expression::rows::{As, Column, EMPTY, NUMBER, TEXT};
 use kentos_expression::{
     Builtin, FieldDef, FieldRef, FieldSource, FieldType, Geometry, Measured, Objects, Schema,
-    Scope, Value, compile, compile_with,
+    Scope, Unit, Value, compile, compile_with,
 };
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::entity::{Entity, Shape};
@@ -110,6 +110,7 @@ fn schema() -> Schema {
             },
         ],
         world: false,
+        ..Default::default()
     }
 }
 
@@ -383,23 +384,58 @@ impl Scope for One<'_> {
     }
 }
 
-/// The geometry values against the independent reference, in a batch and one object at a time.
-#[test]
-fn geometry_values_match_the_reference() {
+fn reference() -> Json {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../../fixtures/expression/v2/geometry.json"
     );
     let text = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{path}: {e}"));
-    let file = Json::parse(&text).unwrap_or_else(|e| panic!("{path}: {e}"));
+    Json::parse(&text).unwrap_or_else(|e| panic!("{path}: {e}"))
+}
+
+/// The geometry values against the independent reference, in a batch and one object at a time.
+#[test]
+fn geometry_values_match_the_reference() {
+    let file = reference();
     let Json::Arr(cases) = file.get("cases") else {
         panic!("cases")
     };
+    assert!(check_cases(cases) >= 200);
+}
+
+/// The same objects in a local project's drawing unit (docs/adr/0165 §2):
+/// lengths and coordinates in it, areas in its square, empty values empty.
+#[test]
+fn geometry_values_in_a_drawing_unit_match_the_reference() {
+    let file = reference();
+    let Json::Arr(cases) = file.get("units") else {
+        panic!("units")
+    };
+    assert!(check_cases(cases) >= 400);
+}
+
+/// Checks every value of `cases` in a batch and one object at a time, each
+/// in its case's unit (`perMetre`; none: metres) within its tolerance (none:
+/// 0.1 µm, far below a survey's precision, far above float noise at
+/// projected coordinates: the double's step at 4.4e6 is 9.3e-10). How many
+/// were checked.
+fn check_cases(cases: &[Json]) -> usize {
     let mut checked = 0;
     for case in cases {
         let name = match case.get("name") {
             Json::Str(s) => s.clone(),
             _ => String::new(),
+        };
+        let schema = Schema {
+            unit: match case.get("perMetre") {
+                Json::Num(k) => Unit::per_metre(*k),
+                _ => Unit::METRE,
+            },
+            ..Schema::default()
+        };
+        let tolerance = |var: &str| match case.get("tolerance").get(var) {
+            Json::Num(t) => *t,
+            _ => 1e-7,
         };
         let entity =
             Entity::from_json(case.get("entity")).unwrap_or_else(|e| panic!("{name}: {e}"));
@@ -418,17 +454,16 @@ fn geometry_values_match_the_reference() {
             panic!("{name}: values")
         };
         for (var, want) in values {
-            let e = compile(&format!("${var}"))
+            let e = compile_with(&format!("${var}"), &schema)
                 .unwrap_or_else(|e| panic!("{name} ${var}: {}", e.text()));
             let batch = value_at(&e.evaluate_objects(&layer, As::Value), 0).into_owned();
             let one = e.evaluate(&One(&shapes[0])).into_owned();
+            let tol = tolerance(var);
             for (path, got) in [("parti", batch), ("tek", one)] {
                 match (want, got) {
                     (Json::Null, Value::Null) => {}
                     (Json::Num(w), Value::Num(g)) => {
-                        // 0.1 µm: far below a survey's precision, far above float noise at
-                        // projected coordinates (the double's step at 4.4e6 is 9.3e-10).
-                        assert!((g - w).abs() <= 1e-7, "{name} ${var} [{path}]: {g} ≠ {w}");
+                        assert!((g - w).abs() <= tol, "{name} ${var} [{path}]: {g} ≠ {w}");
                     }
                     (w, g) => panic!("{name} ${var} [{path}]: {g:?} ≠ {w:?}"),
                 }
@@ -436,5 +471,5 @@ fn geometry_values_match_the_reference() {
             }
         }
     }
-    assert!(checked >= 200, "{checked}");
+    checked
 }

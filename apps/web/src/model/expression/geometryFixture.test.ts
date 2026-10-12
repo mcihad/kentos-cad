@@ -14,10 +14,37 @@ interface Case {
   name: string;
   entity: Entity;
   values: Record<string, number | null>;
+  /** A local project's drawing unit (docs/adr/0165 §2): how many of it make a metre, and each value's tolerance in it. */
+  perMetre?: number;
+  tolerance?: Record<string, number>;
 }
 
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, e: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
-const file = JSON.parse(fs.readFileSync(new URL('../../../../../fixtures/expression/v2/geometry.json', import.meta.url), 'utf8')) as { cases: Case[] };
+const file = JSON.parse(fs.readFileSync(new URL('../../../../../fixtures/expression/v2/geometry.json', import.meta.url), 'utf8')) as { cases: Case[]; units: Case[] };
+
+/** Checks every value of `cases` in its unit (none: metres) within its tolerance (none: 0.1 µm); how many were checked. */
+function check(cases: readonly Case[]): number {
+  let checked = 0;
+  for (const c of cases) {
+    const store = new CoreStore();
+    try {
+      store.put(JSON.stringify([c.entity]));
+      for (const [name, want] of Object.entries(c.values)) {
+        const r = compileExpression(`$${name}`, c.perMetre ? { unit: c.perMetre } : undefined);
+        if (!r.ok) throw new Error(`${c.name} $${name}: ${expressionError(r)}`);
+        const got = r.expr.evaluateAll({ entities: [c.entity], layerName: () => 'a', geometry: store }).value(0);
+        // 0.1 µm: far below a survey's precision, far above float noise at projected coordinates.
+        const tol = c.tolerance?.[name] ?? 1e-7;
+        if (want === null) expect(got, `${c.name} $${name}`).toBeNull();
+        else expect(Math.abs(Number(got) - want), `${c.name} $${name}: ${String(got)} ≠ ${want}`).toBeLessThanOrEqual(tol);
+        checked++;
+      }
+    } finally {
+      store.dispose();
+    }
+  }
+  return checked;
+}
 
 describe('geometry values against the reference (fixtures/expression/v2/geometry.json)', () => {
   it('has a case for an area of several parts', () => {
@@ -26,25 +53,12 @@ describe('geometry values against the reference (fixtures/expression/v2/geometry
   });
 
   it('reads every value of every object as the reference has it, within 0.1 µm', () => {
-    let checked = 0;
-    for (const c of file.cases) {
-      const store = new CoreStore();
-      try {
-        store.put(JSON.stringify([c.entity]));
-        for (const [name, want] of Object.entries(c.values)) {
-          const r = compileExpression(`$${name}`);
-          if (!r.ok) throw new Error(`${c.name} $${name}: ${expressionError(r)}`);
-          const got = r.expr.evaluateAll({ entities: [c.entity], layerName: () => 'a', geometry: store }).value(0);
-          // 0.1 µm: far below a survey's precision, far above float noise at projected coordinates.
-          if (want === null) expect(got, `${c.name} $${name}`).toBeNull();
-          else expect(Math.abs(Number(got) - want), `${c.name} $${name}: ${String(got)} ≠ ${want}`).toBeLessThanOrEqual(1e-7);
-          checked++;
-        }
-      } finally {
-        store.dispose();
-      }
-    }
-    expect(checked).toBeGreaterThanOrEqual(100);
+    expect(check(file.cases)).toBeGreaterThanOrEqual(100);
+  });
+
+  it('reads them in a local project’s drawing unit: lengths in it, areas in its square, empty values empty', () => {
+    expect(new Set(file.units.map((c) => c.perMetre))).toEqual(new Set([100, 1000]));
+    expect(check(file.units)).toBeGreaterThanOrEqual(200);
   });
 
   it('counts every part’s ring and holes in $köşe: 12 for two parts, the first with a hole', () => {

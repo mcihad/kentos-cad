@@ -77,6 +77,42 @@ pub struct Schema {
     /// (İşlemler and the builder over them, docs/adr/0214 §1); the builder
     /// refuses and hides them elsewhere.
     pub world: bool,
+    /// The unit the geometry values speak: metres, or a local project's
+    /// drawing unit where the values are readings (docs/adr/0165 §2).
+    pub unit: Unit,
+}
+
+/// The unit an expression's geometry values speak (docs/adr/0165 §2, the 12
+/// Ekim addendum): the geometry keeps metres; compiling multiplies lengths,
+/// coordinates and distances by how many of the unit make a metre, areas by
+/// its square, and divides a distance the expression gives a function that
+/// looks at other layers. Metres leave the expression as written.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Unit(f64);
+
+impl Unit {
+    pub const METRE: Unit = Unit(1.0);
+
+    /// `per_metre`: how many of the unit make a metre (100 for cm, 1000 for
+    /// mm); anything but a finite positive number is metres.
+    pub fn per_metre(per_metre: f64) -> Unit {
+        if per_metre.is_finite() && per_metre > 0.0 {
+            Unit(per_metre)
+        } else {
+            Unit::METRE
+        }
+    }
+
+    /// How many of the unit make a metre.
+    pub fn factor(self) -> f64 {
+        self.0
+    }
+}
+
+impl Default for Unit {
+    fn default() -> Unit {
+        Unit::METRE
+    }
 }
 
 impl Schema {

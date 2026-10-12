@@ -669,3 +669,66 @@ fn a_column_and_a_tools_table_start_their_own_charts() {
     let s = for_table("stats.summary", &shaped(&[("Grup", Kind::Text)]));
     assert_eq!((s.value, s.aggregate), (None, Aggregate::Count));
 }
+
+/// Alan and Uzunluk read from the store's measure records in the project's
+/// unit (docs/adr/0165 §2: the tabs show readings): m² and m, or mm² and mm
+/// in a project in millimetres; a column no object has a value of is left
+/// out, an object without the measure has an empty cell.
+#[test]
+fn the_geometry_columns_speak_the_projects_unit() {
+    use kentos_geometry_core::ops::charts::data::geometry_columns;
+    use kentos_geometry_core::store::draw::{HAS_AREA, HAS_LENGTH, MEASURE_STRIDE};
+    // A 2 × 1.5 area (its perimeter 7) and a line 4 long.
+    let mut records = vec![0.0; 2 * MEASURE_STRIDE];
+    records[0] = f64::from(HAS_AREA | HAS_LENGTH);
+    records[1] = 7.0;
+    records[2] = 3.0;
+    records[MEASURE_STRIDE] = f64::from(HAS_LENGTH);
+    records[MEASURE_STRIDE + 1] = 4.0;
+    let cells = |c: &Column| -> Vec<String> {
+        c.cells
+            .iter()
+            .map(|cell| match cell {
+                Cell::Value(v, _) => v.clone(),
+                _ => String::new(),
+            })
+            .collect()
+    };
+    for (k, area, length, areas, lengths) in [
+        (
+            1.0,
+            "Alan (m²)",
+            "Uzunluk (m)",
+            ["3.000", ""],
+            ["7.000", "4.000"],
+        ),
+        (
+            100.0,
+            "Alan (cm²)",
+            "Uzunluk (cm)",
+            ["30000.000", ""],
+            ["700.000", "400.000"],
+        ),
+        (
+            1000.0,
+            "Alan (mm²)",
+            "Uzunluk (mm)",
+            ["3000000.000", ""],
+            ["7000.000", "4000.000"],
+        ),
+    ] {
+        let columns = geometry_columns(&records, k);
+        let got: Vec<(&str, &str, Vec<String>)> = columns
+            .iter()
+            .map(|c| (c.key.as_str(), c.label.as_str(), cells(c)))
+            .collect();
+        let want = vec![
+            ("$alan", area, areas.map(String::from).to_vec()),
+            ("$uzunluk", length, lengths.map(String::from).to_vec()),
+        ];
+        assert_eq!(got, want, "{k}");
+    }
+    // Points only: no column.
+    let points = vec![0.0; MEASURE_STRIDE];
+    assert!(geometry_columns(&points, 1000.0).is_empty());
+}

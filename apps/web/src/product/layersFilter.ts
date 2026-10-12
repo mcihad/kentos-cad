@@ -7,6 +7,7 @@ import { Refusal, type CadDocument } from '../model/document';
 import { compileFilter, filterPassesIn, type CompiledFilter } from '../model/layerFilter';
 import { layerFilterProblem } from '../model/layerFilterRules';
 import { filterOf, type LayerNode } from '../model/layers';
+import { readingUnit } from '../model/projectSettings';
 import { sameJson } from '../model/sameJson';
 import { checkRevision, error, failed, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
@@ -34,7 +35,7 @@ function check(doc: CadDocument, input: LayersFilter): Stop | Checked {
   if (input.filter) {
     const problem = layerFilterProblem(input.filter);
     if (problem) return failed(error('invalid_filter', `Katmanın süzgeci: ${problem}.`, 'filter'));
-    const r = compileFilter(input.filter);
+    const r = compileFilter(input.filter, readingUnit(doc.settings));
     if (!r.ok) return failed(error('invalid_expression', `Süzgecin ifadesi: ${r.error}`, 'filter/expression'));
     compiled = r.filter;
   }

@@ -182,7 +182,7 @@ impl App {
         let stats = self.charts.stats.borrow();
         let fresh = match (&stats.key, self.document.as_ref(), self.chart_layer()) {
             (Some((k, rows)), Some(doc), Some(layer)) => {
-                *k == (doc.session, doc.model.generation(), layer) && *rows == self.stats_rows_key()
+                *k == crate::charts::now::layer_key(doc, &layer) && *rows == self.stats_rows_key()
             }
             (None, _, None) | (None, None, _) => true,
             _ => false,

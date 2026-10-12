@@ -119,6 +119,9 @@ export class StatisticsPanel extends Component {
     this.d.add(ctx.doc.events.on('changed', dataChanged));
     this.d.add(ctx.doc.events.on('attrs', dataChanged));
     this.d.add(ctx.doc.layers.version.subscribe(dataChanged));
+    // Alan and Uzunluk are in the project's unit (docs/adr/0165 §2): another unit reads them again.
+    let unit = ctx.doc.settings.unit;
+    this.d.add(ctx.doc.settings.changed.subscribe(() => unit !== ctx.doc.settings.unit && ((unit = ctx.doc.settings.unit), dataChanged())));
     this.d.add(watchAll([ctx.selection.ids], () => (charts.show === 'selected' || !charts.layer) && this.schedule()));
     this.d.add(ctx.view.camera.changed.subscribe(() => charts.show === 'inView' && this.schedule()));
     this.d.add(() => cancelAnimationFrame(this.frame));

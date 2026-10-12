@@ -307,8 +307,11 @@ fn layer_filter_on_a_large_layer() {
             spatial.sync(&doc);
             store.push(ms(t.elapsed()));
             passed = spatial.filter_counts("parsel").expect("counted");
-            let compiled =
-                kentos_native_application::layer_filter::compile_filter(&filter).expect("compiles");
+            let compiled = kentos_native_application::layer_filter::compile_filter(
+                &filter,
+                kentos_native_application::expression_unit::Unit::METRE,
+            )
+            .expect("compiles");
             let t = Instant::now();
             let counted =
                 kentos_native_application::layers_filter::count(&doc, "parsel", Some(&compiled));
@@ -510,7 +513,7 @@ fn charts_on_a_large_layer() {
     let mut setup = Vec::new();
     for _ in 0..7 {
         let t = Instant::now();
-        let columns = layer_columns(&two, &refs, None);
+        let columns = layer_columns(&two, &refs, None, 1.0);
         let mut work = Work::new(DataSet {
             rows: N_OBJECTS,
             columns,
@@ -525,7 +528,7 @@ fn charts_on_a_large_layer() {
     let refs: Vec<&Entity> = entities.iter().collect();
     let mut work = Work::new(DataSet {
         rows: N_OBJECTS,
-        columns: layer_columns(&three, &refs, None),
+        columns: layer_columns(&three, &refs, None, 1.0),
     });
     let rows: Vec<u32> = (0..N_OBJECTS as u32).collect();
     work.read(0);

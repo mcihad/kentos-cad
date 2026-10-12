@@ -155,9 +155,10 @@ export class ChartData {
 
   /**
    * `geometry`: the objects' measure records from the geometry store (`ctx.view.geometry.measures`), which add the
-   * columns Alan (m²) and Uzunluk (m) after `columns` (their keys `$alan`, `$uzunluk`).
+   * columns Alan and Uzunluk after `columns` (their keys `$alan`, `$uzunluk`), in the unit `perMetre` of which make a
+   * metre (docs/adr/0165 §2: m², or mm² in a project in millimetres).
    */
-  constructor(rows: number, columns: readonly DataColumn[], geometry?: Float64Array) {
+  constructor(rows: number, columns: readonly DataColumn[], geometry?: Float64Array, perMetre = 1) {
     this.rows = rows;
     this.work = new CoreChartWork(rows);
     for (const c of columns) {
@@ -189,9 +190,10 @@ export class ChartData {
     const all: DataColumn[] = [...columns];
     if (geometry) {
       // Each where an object has one: a layer of lines has no area, one of points neither.
-      const added = this.work.addGeometry(geometry);
-      if (added.includes(AREA_KEY)) all.push({ key: AREA_KEY, label: 'Alan (m²)', kind: 'number', labelled: false });
-      if (added.includes(LENGTH_KEY)) all.push({ key: LENGTH_KEY, label: 'Uzunluk (m)', kind: 'number', labelled: false });
+      const added = this.work.addGeometry(geometry, perMetre);
+      const mark = perMetre === 1000 ? 'mm' : perMetre === 100 ? 'cm' : 'm';
+      if (added.includes(AREA_KEY)) all.push({ key: AREA_KEY, label: `Alan (${mark}²)`, kind: 'number', labelled: false });
+      if (added.includes(LENGTH_KEY)) all.push({ key: LENGTH_KEY, label: `Uzunluk (${mark})`, kind: 'number', labelled: false });
     }
     this.columns = all;
     this.work.seal();

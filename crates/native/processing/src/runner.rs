@@ -9,7 +9,7 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use kentos_contracts::Entity;
 use kentos_domain::{Document, NewLayer, Slot, default_style};
 use kentos_expression::world::{World, WorldLayer};
-use kentos_expression::{Schema, Variable, compile_with};
+use kentos_expression::{Schema, Unit, Variable, compile_with};
 use serde_json::{Value, json};
 
 use crate::expression::{EntityObjects, Evaluation, preview_expression};
@@ -403,10 +403,12 @@ impl Runner {
             return None;
         };
         let src = js_trim(values.get(name)?.as_str()?);
+        // İşlemler measures in metres, as its own numbers do (docs/adr/0165 §2).
         let schema = Schema {
             fields: Vec::new(),
             variables: scene.variables(),
             world: true,
+            unit: Unit::METRE,
         };
         let expr = compile_with(src, &schema).ok()?;
         let input = tool
@@ -768,10 +770,12 @@ impl Runner {
     /// applies the result on the host ([`Runner::finish`]).
     pub fn compute(job: &Job, doc: &Document, feedback: &mut dyn Feedback) -> RunResult {
         let units = Defaults::of(doc);
+        // İşlemler measures in metres, as its own numbers do (docs/adr/0165 §2).
         let schema = Schema {
             fields: Vec::new(),
             variables: job.variables.clone(),
             world: true,
+            unit: Unit::METRE,
         };
         let mut resolved = Resolved::borrowed(&job.values);
         let mut objects: Vec<&Entity> = Vec::new();

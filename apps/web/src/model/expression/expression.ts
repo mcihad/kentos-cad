@@ -42,10 +42,10 @@ export interface ExprNeeds {
 export interface ExprGeometry {
   evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData;
   /**
-   * The same in a context (docs/adr/0214): the schema as JSON (`{ variables, world }`), and the layers the calls to
-   * other objects look at, whose objects are in this store too. A store without it evaluates without the context.
+   * The same in a context (docs/adr/0214): the schema as JSON (`{ variables, world, unit }`), and the layers the calls
+   * to other objects look at, whose objects are in this store too.
    */
-  evaluateExpressionIn?(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData;
+  evaluateExpressionIn(source: string, context: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number, world?: ExprWorldTable): ExprColumnData;
 }
 
 /** A `@` value (docs/adr/0214 §2.3): one of the project's variables or a built-in one. */
@@ -56,11 +56,20 @@ export interface ExprVariable {
   readonly description?: string;
 }
 
-/** Where an expression is compiled (docs/adr/0214): its `@` values, and whether calls to other layers can be used. */
+/**
+ * Where an expression is compiled (docs/adr/0214): its `@` values, whether calls to other layers can be used, and the
+ * unit its geometry values speak.
+ */
 export interface ExprContext {
   readonly variables?: readonly ExprVariable[];
   /** İşlemler and the builder over them: the functions that look at other layers (toplama, kesişir …). */
   readonly world?: boolean;
+  /**
+   * How many of the unit the geometry values speak make a metre (docs/adr/0165 §2): a local project's drawing unit
+   * where the values are readings (`readingUnit`); absent: metres. Lengths, coordinates and distances are multiplied
+   * by it, areas by its square.
+   */
+  readonly unit?: number;
 }
 
 /** What an expression's calls to other layers read (docs/adr/0214 §3). */
@@ -136,7 +145,7 @@ export type CompileResult = { ok: true; expr: CompiledExpression } | { ok: false
 
 type Compiled = { ok: true; fields: string[]; needs: ExprNeeds; world?: ExprWorldNeeds; unknown?: string[] } | { ok: false; error: string; at: number };
 const exprCompile = op<(source: string) => Compiled>('exprCompile');
-const exprCompileIn = op<(source: string, context: { variables: readonly ExprVariable[]; world: boolean }) => Compiled>('exprCompileIn');
+const exprCompileIn = op<(source: string, context: { variables: readonly ExprVariable[]; world: boolean; unit?: number }) => Compiled>('exprCompileIn');
 
 /**
  * Compiles an expression; with a context (docs/adr/0214) its `@` values are
@@ -144,7 +153,8 @@ const exprCompileIn = op<(source: string, context: { variables: readonly ExprVar
  * call does not compile.
  */
 export function compileExpression(source: string, context?: ExprContext): CompileResult {
-  const ctx = context ? { variables: context.variables ?? [], world: context.world === true } : null;
+  const unit = context?.unit !== undefined && context.unit !== 1 ? { unit: context.unit } : {};
+  const ctx = context ? { variables: context.variables ?? [], world: context.world === true, ...unit } : null;
   const r = ctx ? exprCompileIn(source, ctx) : exprCompile(source);
   if (!r.ok) return { ok: false, error: r.error, at: r.at };
   const { fields, needs } = r;
@@ -278,7 +288,7 @@ function evaluateAll(source: string, fields: readonly string[], needs: ExprNeeds
   const { texts, lens, numbers } = exprTable(fields, needs, list, o.layerName);
   if (o.geometry) {
     const ids = Float64Array.from(list, (e) => e.id);
-    if (context && o.geometry.evaluateExpressionIn) {
+    if (context) {
       const table = world ? worldTable(world, o) : undefined;
       return column(o.geometry.evaluateExpressionIn(source, context, ids, texts, lens, numbers, o.plotScale ?? NaN, WANT[as], table));
     }

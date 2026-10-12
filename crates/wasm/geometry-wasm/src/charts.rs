@@ -116,16 +116,21 @@ impl ChartWork {
         Ok(())
     }
 
-    /// Alan (m²) and Uzunluk (m) from the geometry store's measure records
-    /// (`GeometryStore.measures`, one a row), each where an object has one:
-    /// the keys of the columns added.
+    /// Alan and Uzunluk from the geometry store's measure records
+    /// (`GeometryStore.measures`, one a row), each where an object has one,
+    /// in the unit `per_metre` of which make a metre (docs/adr/0165 §2): the
+    /// keys of the columns added.
     #[wasm_bindgen(js_name = addGeometry)]
-    pub fn add_geometry(&mut self, records: &[f64]) -> Result<Vec<String>, JsError> {
+    pub fn add_geometry(
+        &mut self,
+        records: &[f64],
+        per_metre: f64,
+    ) -> Result<Vec<String>, JsError> {
         let stride = kentos_geometry_core::store::draw::MEASURE_STRIDE;
         if records.len() != self.rows * stride {
             return Err(err("ölçü kayıtlarının sayısı satır sayısı değil".to_owned()));
         }
-        let added = kentos_geometry_core::ops::charts::data::geometry_columns(records);
+        let added = kentos_geometry_core::ops::charts::data::geometry_columns(records, per_metre);
         let keys = added.iter().map(|c| c.key.clone()).collect();
         self.columns.extend(added);
         Ok(keys)

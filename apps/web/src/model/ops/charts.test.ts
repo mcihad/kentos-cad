@@ -83,4 +83,21 @@ describe('charts against the reference (docs/adr/0227)', () => {
     expect(data.complete({ kind: 'line', aggregate: 'mean' })).toMatchObject({ kind: 'line', aggregate: 'mean', x: 'Eşik' });
     data.free();
   });
+
+  it('reads Alan and Uzunluk in the project’s unit: m² and m, or mm² and mm in a project in millimetres', () => {
+    // The store's measure records (six numbers a row: flags, length, area …): a 2 × 1.5 area and a line 4 long.
+    const records = Float64Array.from([3, 7, 3, 0, 0, 0, 1, 4, 0, 0, 0, 0]);
+    for (const [perMetre, area, length, sum] of [
+      [1, 'Alan (m²)', 'Uzunluk (m)', '3.000'],
+      [1000, 'Alan (mm²)', 'Uzunluk (mm)', '3000000.000'],
+    ] as const) {
+      const data = new ChartData(2, [], records, perMetre);
+      expect(data.columns.map((c) => [c.key, c.label])).toEqual([
+        ['$alan', area],
+        ['$uzunluk', length],
+      ]);
+      expect(data.summary(0, Uint32Array.from([0, 1])).sum).toBe(sum);
+      data.free();
+    }
+  });
 });

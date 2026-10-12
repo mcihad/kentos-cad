@@ -38,7 +38,9 @@ impl LayerData {
             .get(layer)
             .map(|n| n.fields.clone())
             .unwrap_or_default();
-        let columns = layer_columns(&fields, &entities, Some(&records));
+        // Alan and Uzunluk are readings: in the project's unit (docs/adr/0165 §2).
+        let per_metre = model.settings().unit().per_metre();
+        let columns = layer_columns(&fields, &entities, Some(&records), per_metre);
         let at = slots
             .iter()
             .enumerate()

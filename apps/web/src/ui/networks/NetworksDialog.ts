@@ -117,7 +117,10 @@ export function openNetworksDialog(ctx: AppContext, chosenId?: string): void {
         check();
       },
       fields: () => attributeFields(fieldNames(f)),
-      objects: () => entityObjects(doc.byLayer(layer()).slice(0, 5000), (id) => doc.layers.get(id)?.name ?? id, { geometry: { evaluateExpression: (...a) => ctx.view.evaluateExpression(...a) } }),
+      objects: () =>
+        entityObjects(doc.byLayer(layer()).slice(0, 5000), (id) => doc.layers.get(id)?.name ?? id, {
+          geometry: { evaluateExpression: (...a) => ctx.view.evaluateExpression(...a), evaluateExpressionIn: (...a) => ctx.view.evaluateExpressionIn(...a) },
+        }),
       context: `${NETWORKS_TITLE} · ${label}`,
       fail: (m) => ctx.log.error(m),
     });

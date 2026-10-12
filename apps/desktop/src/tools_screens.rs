@@ -191,6 +191,8 @@ fn ribbon_scenes() -> Vec<Scene> {
                 24.0,
             );
         }),
+        // docs/adr/0165's “ifadeler çizim biriminde” addendum: a label's `$alan` in mm² beside Öznitelikler.
+        ("cad-mm-etiket", mm_labels),
         ("serit-harita", |app| app.tab = "map"),
         // docs/adr/0141: two zooms in and a step back, so that Önceki and Sonraki görünüm are both on.
         ("serit-gorunum", |app| {
@@ -200,6 +202,71 @@ fn ribbon_scenes() -> Vec<Scene> {
             }
         }),
     ]
+}
+
+/// A local CAD project in millimetres: a 2 × 1.5 m parcel and a 1 × 1 m one,
+/// their layer labelled with `$alan`, the first selected; its label and
+/// Öznitelikler both read mm² (docs/adr/0165 §2, the 12 Ekim addendum).
+fn mm_labels(app: &mut App) {
+    crate::files_testing::make_cad(app);
+    let doc = app.document.as_mut().expect("a drawing");
+    let settings = kentos_contracts::ProjectSettings {
+        srid: 0,
+        drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+        // An architect's scale: the lines' paper widths stay thin around two-metre rooms.
+        plot_scale: 50.0,
+        ..doc.model.settings().clone()
+    };
+    doc.model.set_settings(settings);
+    let layer = doc.model.layers().active().to_owned();
+    let mut slots = Vec::new();
+    for (x, w, h) in [(0.0, 2.0, 1.5), (2.5, 1.0, 1.0)] {
+        let p = |x: f64, y: f64| kentos_contracts::Vec2 { x, y };
+        let base = kentos_contracts::EntityBase {
+            id: 0,
+            layer_id: layer.clone(),
+            color: None,
+            attrs: [("Ad".to_owned(), if w > 1.5 { "Salon" } else { "Oda" }.to_owned())].into(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        };
+        slots.push(
+            doc.model
+                .add(kentos_contracts::Entity::Polygon(kentos_contracts::PathEntity {
+                    base,
+                    pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],
+                    ms: None,
+                    bulges: None,
+                    holes: None,
+                    zs: None,
+                    parts: None,
+                }))
+                .expect("a slot"),
+        );
+    }
+    // A plain style: the sample's parcel band would hide two-metre rooms.
+    let mut style = kentos_domain::default_style();
+    style.label = Some(
+        serde_json::from_str(
+            r#"{"placement":"center","size":12,"text":"Ad || ' ' || $alan || ' mm²'"}"#,
+        )
+        .expect("a label style"),
+    );
+    doc.model.set_layer_style(&layer, style, "Etiketler");
+    crate::elevation_scenes::select(app, &slots[..1]);
+    crate::elevation_scenes::panel_room(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: -0.5,
+            min_y: -0.6,
+            max_x: 4.0,
+            max_y: 2.1,
+        },
+        24.0,
+    );
 }
 
 /// Every scene of the new tools: the ribbon's, then each tool's (the tool

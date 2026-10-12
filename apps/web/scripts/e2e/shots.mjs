@@ -7588,6 +7588,54 @@ function statsScenes() {
   ];
 }
 
+// İfadeler çizim biriminde (docs/adr/0165 §2, the 12 Ekim addendum): the drawing made a local CAD project in
+// millimetres at 1:50, two rooms on the active layer, a plain style labelling them `Ad || ' ' || $alan || ' mm²'`, the
+// larger selected: its label and Öznitelikler both read mm². The rooms are by the drawing's origin (the overlays reach
+// the GPU in float32 from it; the demo's is in TUREF coordinates). The settings and the style are put back after. The
+// desktop's is `tools_screens`' cad-mm-etiket, its rooms at 0,0.
+SCENES.units = [
+  {
+    id: 'cad-mm-etiket',
+    open: async (ui) => {
+      await ribbonOn(ui, { type: 'cad' });
+      await ui.eval(`import('/src/geo/crs.ts').then(({ crsBySrid, LOCAL_SRID }) => {
+        const k = window.kentos;
+        const { doc } = k;
+        const layer = doc.layers.active.value;
+        window.__mmBack = { crs: doc.settings.crs.value, unit: doc.settings.drawingUnit.value, scale: doc.settings.plotScale.value, layer, style: structuredClone(doc.layers.get(layer).style) };
+        doc.settings.crs.set(crsBySrid(LOCAL_SRID));
+        doc.settings.drawingUnit.set('mm');
+        doc.settings.plotScale.set(50);
+        doc.layers.replaceStyle(layer, { color: 'fg', lineType: 'continuous', lineWeight: 0.18, label: { placement: 'center', size: 12, text: "Ad || ' ' || $alan || ' mm²'" } });
+        const o = doc.origin;
+        const P = (x, y) => ({ x: o.x + x, y: o.y + y });
+        const ids = [[0, 2, 1.5, 'Salon'], [2.5, 1, 1, 'Oda']].map(([x, w, h, ad]) => doc.add({ kind: 'polygon', layerId: layer, attrs: { Ad: ad }, pts: [P(x, 0), P(x + w, 0), P(x + w, h), P(x, h)] }).id);
+        k.selection.set([ids[0]]);
+        k.view.camera.fit({ minX: o.x - 0.5, minY: o.y - 0.6, maxX: o.x + 4, maxY: o.y + 2.1 }, 24);
+      })`);
+      // Öznitelikler's Genel shut, as on the desktop: Geometri's Alan in sight.
+      await ui.waitFor(`!!document.querySelector('.props__section')`);
+      await ui.clickText('.props__section', 'Genel');
+      await ui.move(2, 2);
+      await ui.sleep(600);
+    },
+    close: async (ui) => {
+      await ui.eval(UNDO_ALL);
+      await ui.eval(`(() => {
+        const { doc } = window.kentos;
+        const b = window.__mmBack;
+        if (!b) return;
+        doc.layers.replaceStyle(b.layer, b.style);
+        doc.settings.crs.set(b.crs);
+        doc.settings.drawingUnit.set(b.unit);
+        doc.settings.plotScale.set(b.scale);
+        delete window.__mmBack;
+      })()`);
+      await ribbonOff(ui);
+    },
+  },
+];
+
 // Grafikler ve alan istatistikleri (docs/adr/0227) over a district's parcels with typed fields and its roads
 // (fixtures/interaction/v1/charts.kcad, scripts/fixtures/chart_scene.py): İstatistik with Kullanım chosen, then the six
 // kinds: Çubuk by Kullanım with the Ticaret parcels selected (their bar marked), Pasta of the parcels' area by Kullanım,

@@ -14,6 +14,7 @@ import type { LayerTime } from '../contracts/generated/LayerTime';
 import type { LayerFilter } from '../contracts/generated/LayerFilter';
 import { IdMarks } from '../model/idMarks';
 import { compileFilter, filterPasses, filterPassesIn, type CompiledFilter } from '../model/layerFilter';
+import { readingUnit } from '../model/projectSettings';
 import type { TimeWindow } from '../model/time';
 import { CoreStore, op, type CoreStyleProgram, type ExprColumnData, type ExprWorldTable, type StyledOut } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
@@ -207,7 +208,9 @@ export class PickIndex {
    * The layers' filters the objects' marks were made with (docs/adr/0211 §3), by layer id: the object last seen and,
    * once it was asked, its JSON (an undo gives back a copy of the same filter); compiled.
    */
-  private sentFilters = new Map<string, { filter: LayerFilter; key?: string }>();
+  private sentFilters = new Map<string, { filter: LayerFilter; unit: number; key?: string }>();
+  /** The unit the labels' texts and the filters' conditions read lengths and areas in (docs/adr/0165 §2). */
+  private unit: number;
   /** The label engine's layers as last sent (docs/adr/0212 §3.1), and each layer's texts' setting the texts were made with. */
   private sentLabelLayers = '';
   private sentTexts = new Map<string, string>();
@@ -225,6 +228,16 @@ export class PickIndex {
     // Text boxes (picking, window selection, extents) are measured in the project's drawing typeface.
     this.store.setFont(doc.settings.drawingFont.value);
     this.d.add(doc.settings.drawingFont.subscribe((f) => this.store.setFont(f)));
+    // Another drawing unit: the labels' texts and the filters' conditions are made again in it.
+    this.unit = readingUnit(doc.settings);
+    this.d.add(
+      doc.settings.changed.subscribe(() => {
+        if (readingUnit(doc.settings) === this.unit) return;
+        this.unit = readingUnit(doc.settings);
+        this.layersDirty = true;
+        this.soon();
+      }),
+    );
     this.d.add(doc.events.on('touched', ({ ids }) => this.touch(ids)));
     this.d.add(
       doc.events.on('reset', () => {
@@ -341,7 +354,7 @@ export class PickIndex {
       for (const l of layers.leaves()) {
         if (l.service) continue;
         seen.add(l.id);
-        const key = JSON.stringify([l.name, l.style.label ?? null, l.style.labels?.mode ?? null, l.style.labels?.classes ?? null]);
+        const key = JSON.stringify([this.unit, l.name, l.style.label ?? null, l.style.labels?.mode ?? null, l.style.labels?.classes ?? null]);
         if (this.sentTexts.get(l.id) !== key) {
           if (this.sentTexts.has(l.id)) whole.push(l.id);
           this.sentTexts.set(l.id, key);
@@ -352,7 +365,7 @@ export class PickIndex {
     const name = (id: string) => layers.get(id)?.name ?? id;
     const send = (list: readonly Entity[], id: string) => {
       if (!list.length) return;
-      const t = objectTexts(list, layerTexts(layers.get(id)), name, this.store);
+      const t = objectTexts(list, layerTexts(layers.get(id), this.unit), name, this.store);
       this.store.setObjectLabels(t.ids, t.from, t.classes, t.texts, t.lens, t.zs);
     };
     for (const id of whole) send(this.doc.byLayer(id), id);
@@ -416,17 +429,18 @@ export class PickIndex {
     if (layersChanged) {
       const next = new Map<string, LayerFilter>();
       for (const l of this.doc.layers.leaves()) if (l.filter && !l.service) next.set(l.id, l.filter);
+      const unit = this.unit;
       for (const [id, f] of next) {
         const was = this.sentFilters.get(id);
-        if (was?.filter === f) continue;
+        if (was?.filter === f && was.unit === unit) continue;
         if (!was) {
           whole.push(id);
-          this.sentFilters.set(id, { filter: f });
+          this.sentFilters.set(id, { filter: f, unit });
           continue;
         }
         const key = JSON.stringify(f);
-        if ((was.key ??= JSON.stringify(was.filter)) !== key) whole.push(id);
-        this.sentFilters.set(id, { filter: f, key });
+        if ((was.key ??= JSON.stringify(was.filter)) !== key || was.unit !== unit) whole.push(id);
+        this.sentFilters.set(id, { filter: f, unit, key });
       }
       // A filter taken away: the layer's objects come in again.
       for (const id of [...this.sentFilters.keys()])
@@ -437,7 +451,7 @@ export class PickIndex {
           this.sentFilters.delete(id);
         }
       for (const id of whole) {
-        const r = compileFilter(next.get(id)!);
+        const r = compileFilter(next.get(id)!, this.unit);
         this.filters.set(id, r.ok ? { compiled: r.filter, error: null } : { compiled: null, error: r.error });
       }
     }

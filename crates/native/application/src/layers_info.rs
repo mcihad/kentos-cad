@@ -16,6 +16,7 @@ use kentos_contracts::{
     actions_problem,
 };
 use kentos_domain::{Document, LayerInfo};
+use kentos_expression::Unit;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
@@ -54,7 +55,7 @@ fn check(doc: &Document, input: &LayersInfo) -> Result<LayerNode, Stop> {
         ));
     }
     for (i, a) in input.actions.iter().enumerate() {
-        compile_template(&a.target).map_err(|why| {
+        compile_template(&a.target, Unit::METRE).map_err(|why| {
             fail(
                 codes::INVALID_TEMPLATE,
                 format!("“{}” eyleminin hedefi: {why}", a.name),
@@ -68,7 +69,7 @@ fn check(doc: &Document, input: &LayersInfo) -> Result<LayerNode, Stop> {
             (&card.text, "Kartın metni", "card/text"),
         ] {
             if let Some(text) = text {
-                compile_template(text)
+                compile_template(text, Unit::METRE)
                     .map_err(|why| fail(codes::INVALID_TEMPLATE, format!("{what}: {why}"), path))?;
             }
         }

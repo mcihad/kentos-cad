@@ -9,6 +9,7 @@ import { ENTITY_KIND_LABEL, entityAnchor, type Entity } from '../model/entities'
 import { compileTemplate, needsPlace, templateTarget, templateTexts, type CompiledTemplate } from '../model/infoTemplates';
 import { crsTransformIn, type System } from '../model/geom/crsTransform';
 import { crsSettings, datumChoices, ownSystem } from '../model/projectCrs';
+import { readingUnit } from '../model/projectSettings';
 import type { AppContext } from './context';
 
 const WGS84: System = { kind: 'geographic', datum: 'WGS84' };
@@ -49,14 +50,18 @@ function filled(ctx: AppContext, t: CompiledTemplate, e: Entity): string {
   const place = needsPlace(t) ? placeOf(ctx, e) : null;
   const layerName = (id: string) => ctx.doc.layers.get(id)?.name ?? id;
   // The geometry store the object is in: its geometry values ($alan, $merkez_y …) come from its shape there.
-  const geometry = { evaluateExpression: (...a: Parameters<typeof ctx.view.evaluateExpression>) => ctx.view.evaluateExpression(...a) };
+  const geometry = {
+    evaluateExpression: (...a: Parameters<typeof ctx.view.evaluateExpression>) => ctx.view.evaluateExpression(...a),
+    evaluateExpressionIn: (...a: Parameters<typeof ctx.view.evaluateExpressionIn>) => ctx.view.evaluateExpressionIn(...a),
+  };
   return templateTexts(t, [e], layerName, geometry, () => place)[0] ?? '';
 }
 
 /** The object's layer's actions (or `actions`, a window's draft), each filled for it. */
 export function objectActions(ctx: AppContext, e: Entity, actions: readonly LayerAction[] = ctx.doc.layers.get(e.layerId)?.actions ?? []): ObjectAction[] {
+  const unit = readingUnit(ctx.doc.settings);
   return actions.map((a) => {
-    const t = compileTemplate(a.target);
+    const t = compileTemplate(a.target, unit);
     if (!t.ok) return { name: a.name, target: null, error: t.error, kind: 'refused' };
     const target = filled(ctx, t.template, e).trim();
     return { name: a.name, target, error: null, kind: templateTarget(target) };
@@ -83,9 +88,10 @@ export function runAction(ctx: AppContext, action: ObjectAction): void {
  */
 export function objectCard(ctx: AppContext, e: Entity, card: InfoCard | undefined = ctx.doc.layers.get(e.layerId)?.card): ObjectCard {
   let error: string | null = null;
+  const unit = readingUnit(ctx.doc.settings);
   const text = (source: string | undefined, what: string): string | null => {
     if (source == null) return null;
-    const t = compileTemplate(source);
+    const t = compileTemplate(source, unit);
     if (!t.ok) {
       error ??= `${what}: ${t.error}`;
       return null;

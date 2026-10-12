@@ -57,7 +57,7 @@ pub mod walk;
 pub mod world;
 
 pub use host::{
-    Builtin, FieldDef, FieldRef, FieldSource, FieldType, Geometry, Objects, Schema, Variable,
+    Builtin, FieldDef, FieldRef, FieldSource, FieldType, Geometry, Objects, Schema, Unit, Variable,
 };
 use library::Var;
 use parser::{Node, Parser};

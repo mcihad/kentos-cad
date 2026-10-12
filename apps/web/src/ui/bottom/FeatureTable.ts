@@ -18,6 +18,7 @@ import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { clickPick } from './PointTable';
 import { appVariables } from '../../app/expressionVariables';
+import { readingUnit } from '../../model/projectSettings';
 import { exportItems } from './featureExport';
 
 /**
@@ -140,7 +141,7 @@ export class FeatureTable extends Component {
       objects: () =>
         entityObjects(this.model.entities, (id) => ctx.doc.layers.get(id)?.name ?? id, {
           geometry: { evaluateExpression: (...a) => ctx.view.evaluateExpression(...a), evaluateExpressionIn: (...a) => ctx.view.evaluateExpressionIn(...a) },
-          context: { variables: appVariables(ctx) },
+          context: { variables: appVariables(ctx), unit: readingUnit(ctx.doc.settings) },
         }),
       context: `${FEATURE_TEXTS.filter}`,
       variables: () => appVariables(ctx),
@@ -270,8 +271,9 @@ export class FeatureTable extends Component {
     const source = kept.filter.trim();
     if (!source) return null;
     const { ctx } = this;
-    // The filter is evaluated when asked: it reads the project's `@` values (docs/adr/0214 §2.3).
-    const c = compileExpression(source, { variables: appVariables(ctx) });
+    // The filter is evaluated when asked: it reads the project's `@` values (docs/adr/0214 §2.3) and compares the
+    // table's readings in the project's unit (docs/adr/0165 §2).
+    const c = compileExpression(source, { variables: appVariables(ctx), unit: readingUnit(ctx.doc.settings) });
     if (!c.ok) {
       this.filterError = expressionError(c);
       return entities.map(() => false);

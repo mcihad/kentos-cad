@@ -43,6 +43,7 @@ pub mod delete;
 mod dimension;
 pub mod edit;
 pub mod elevation;
+pub mod expression_unit;
 pub mod geometry;
 pub mod info_templates;
 pub mod label_texts;

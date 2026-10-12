@@ -37,8 +37,9 @@ use kentos_domain::Slot;
 use kentos_expression::editor::{
     self as core, Bracket, Check, Completion, Help, Item, Kind, Signature, ValueItem, units,
 };
-use kentos_expression::{FieldDef, FieldSource, FieldType, Schema, Variable};
+use kentos_expression::{FieldDef, FieldSource, FieldType, Schema, Unit, Variable};
 use kentos_interaction::Level;
+use kentos_native_application::expression_unit::reading_unit;
 use kentos_processing::ParamKind;
 use kentos_processing::features;
 use kentos_processing::values::FeaturesValue;
@@ -210,8 +211,14 @@ fn ev(e: Event) -> Message {
 }
 
 /// Today's text attributes as the builder's fields, with how many objects
-/// have each; and the `@` values (docs/adr/0214 §2.3).
-fn attribute_fields(fields: &[(String, usize)], variables: Vec<Variable>, world: bool) -> Schema {
+/// have each; the `@` values (docs/adr/0214 §2.3); and the unit the
+/// geometry values speak where the expression goes (docs/adr/0165 §2).
+fn attribute_fields(
+    fields: &[(String, usize)],
+    variables: Vec<Variable>,
+    world: bool,
+    unit: Unit,
+) -> Schema {
     Schema {
         fields: fields
             .iter()
@@ -224,10 +231,20 @@ fn attribute_fields(fields: &[(String, usize)], variables: Vec<Variable>, world:
             .collect(),
         variables,
         world,
+        unit,
     }
 }
 
 impl App {
+    /// The unit an expression over the drawing's readings speaks (a label, a
+    /// card, a filter; docs/adr/0165 §2): the project's drawing unit, metres
+    /// without a drawing.
+    pub(crate) fn reading_unit(&self) -> Unit {
+        self.document
+            .as_ref()
+            .map_or(Unit::METRE, |d| reading_unit(d.model.settings()))
+    }
+
     /// The `@` values the drawing's expressions read (docs/adr/0214 §2.3):
     /// the project's variables, then the built-in ones with this device's
     /// clock in its zone and the signed-in person; none without a drawing.
@@ -652,7 +669,8 @@ impl App {
             Target::Processing(name.to_owned()),
             def.label.clone(),
             value,
-            attribute_fields(&fields, variables, true),
+            // İşlemler measures in metres, as its own numbers do (docs/adr/0165 §2).
+            attribute_fields(&fields, variables, true, Unit::METRE),
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
@@ -693,7 +711,7 @@ impl App {
             Target::FeatureFilter,
             crate::features::texts::FILTER.to_owned(),
             &self.features.filter,
-            attribute_fields(&fields, variables, false),
+            attribute_fields(&fields, variables, false, self.reading_unit()),
             Objects {
                 slots: rows.slots.clone(),
             },
@@ -738,7 +756,8 @@ impl App {
             Target::Network(field),
             crate::networks::window::TITLE.to_owned(),
             &value,
-            attribute_fields(&counts, Vec::new(), false),
+            // A network's costs are measured in metres (docs/adr/0165 §2).
+            attribute_fields(&counts, Vec::new(), false, Unit::METRE),
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
@@ -803,11 +822,12 @@ impl App {
                 }
             }
         }
+        let unit = reading_unit(doc.model.settings());
         let mut builder = Builder::new(
             target,
             context,
             value,
-            attribute_fields(&counts, Vec::new(), false),
+            attribute_fields(&counts, Vec::new(), false, unit),
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());

@@ -32,34 +32,39 @@ export type LayerTexts = { readonly off: true } | { readonly off: false; readonl
 
 const compiled = new Map<string, { expr: CompiledExpression | null; error: string | null }>();
 
-/** An expression compiled once per source; `$sıra` and `$ölçek` refused (a label's text does not change with the run or the scale). */
-export function labelExpression(source: string): { expr: CompiledExpression | null; error: string | null } {
-  let c = compiled.get(source);
+/**
+ * An expression compiled once per source and unit (a label is a reading: `unit` is the project's drawing unit,
+ * `readingUnit`; docs/adr/0165 §2); `$sıra` and `$ölçek` refused (a label's text does not change with the run or the
+ * scale).
+ */
+export function labelExpression(source: string, unit = 1): { expr: CompiledExpression | null; error: string | null } {
+  const key = `${unit}\u0000${source}`;
+  let c = compiled.get(key);
   if (!c) {
-    const r = compileExpression(source);
+    const r = compileExpression(source, unit === 1 ? undefined : { unit });
     if (!r.ok) c = { expr: null, error: r.at > 1 ? `${r.at}. karakterde: ${r.error}` : r.error };
     else if (r.expr.needs.index) c = { expr: null, error: 'Etikette $sıra kullanılamaz.' };
     else if (r.expr.needs.scale) c = { expr: null, error: 'Etikette $ölçek kullanılamaz.' };
     else c = { expr: r.expr, error: null };
     if (compiled.size > 500) compiled.clear();
-    compiled.set(source, c);
+    compiled.set(key, c);
   }
   return c;
 }
 
-function textClass(style: LabelStyle, when?: string): TextClass {
-  const w = when ? labelExpression(when) : { expr: null, error: null };
-  const t = style.text ? labelExpression(style.text) : { expr: null, error: null };
+function textClass(style: LabelStyle, when: string | undefined, unit: number): TextClass {
+  const w = when ? labelExpression(when, unit) : { expr: null, error: null };
+  const t = style.text ? labelExpression(style.text, unit) : { expr: null, error: null };
   return { when: w.expr, text: t.expr, template: style.template, contour: style.line === 'contour', error: w.error ?? t.error };
 }
 
-/** A layer's classes as the page asks them. */
-export function layerTexts(node: LayerNode | undefined): LayerTexts {
+/** A layer's classes as the page asks them, their expressions in `unit` (`readingUnit`). */
+export function layerTexts(node: LayerNode | undefined, unit = 1): LayerTexts {
   const labels: LayerLabels | undefined = node?.style.labels;
   if (labels?.mode === 'off') return { off: true };
-  if (labels?.mode === 'rules') return { off: false, classes: (labels.classes ?? []).map((c) => textClass(c.style, c.when)), defaults: false };
+  if (labels?.mode === 'rules') return { off: false, classes: (labels.classes ?? []).map((c) => textClass(c.style, c.when, unit)), defaults: false };
   const single = node?.style.label;
-  return single ? { off: false, classes: [textClass(single)], defaults: false } : { off: false, classes: [], defaults: true };
+  return single ? { off: false, classes: [textClass(single, undefined, unit)], defaults: false } : { off: false, classes: [], defaults: true };
 }
 
 /** A contour's height: its first vertex's elevation, else NaN. */
