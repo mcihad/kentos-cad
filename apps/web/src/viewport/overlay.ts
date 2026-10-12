@@ -738,14 +738,11 @@ const UCS_ARM = 38;
 
 /**
  * A CAD project's coordinate axes (docs/adr/0165 §5) in place of grid north and the scale bar: X to the right and Y
- * up from a small square, at the bottom left, or on the origin when 0,0 is on screen with room for the arms and their
- * names, as AutoCAD's UCS icon (the desktop's map_marks.rs).
+ * up from a small square, always at the bottom left (the owner's wish of 12 Oct: it stood on the origin when 0,0 was on
+ * screen, as AutoCAD's UCS icon does, in the middle of a local drawing; the desktop's map_marks.rs).
  */
 export function drawUcsIcon(g: CanvasRenderingContext2D, cam: Camera, pal: CanvasPalette): void {
-  const s = cam.worldToScreen({ x: 0, y: 0 });
-  const room = UCS_ARM + 16;
-  const on = Number.isFinite(s.x) && Number.isFinite(s.y) && s.x >= UCS_MARGIN && s.x + room <= cam.width && s.y <= cam.height - UCS_MARGIN && s.y - room >= 0;
-  const o = on ? s : { x: UCS_MARGIN, y: cam.height - UCS_MARGIN };
+  const o = { x: UCS_MARGIN, y: cam.height - UCS_MARGIN };
   g.save();
   g.strokeStyle = pal.fg;
   g.fillStyle = pal.fg;

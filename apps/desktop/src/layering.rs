@@ -536,6 +536,21 @@ impl App {
                     event(Event::Fields(id.clone())),
                 )
                 .icon(crate::icons::from_web(Some("layerFields")))
+                // İstatistik and Grafik (docs/adr/0227 §8): its fields summed up, its chart.
+                .item(
+                    "İstatistik",
+                    Message::Charts(crate::charts::Event::OpenStatistics(Some(id.clone()))),
+                )
+                .icon(crate::icons::from_web(Some("fieldStatistics")))
+                .item(
+                    "Grafik",
+                    Message::Charts(crate::charts::Event::Open {
+                        layer: Some(id.clone()),
+                        kind: None,
+                        spec: None,
+                    }),
+                )
+                .icon(crate::icons::from_web(Some("chart")))
                 // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
                 .item(
                     if node.time.is_some() {

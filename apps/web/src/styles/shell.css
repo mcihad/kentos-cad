@@ -637,6 +637,14 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
+/* Too narrow for every name: the tabs behind by their icon only (their name in the tooltip), the open one whole. */
+.bottom__tabs--compact .tab[aria-selected='false'] {
+  padding-left: 7px;
+  padding-right: 7px;
+}
+.bottom__tabs--compact .tab[aria-selected='false'] > span:not(.badge) {
+  display: none;
+}
 .bottom__actions {
   display: flex;
   align-items: center;

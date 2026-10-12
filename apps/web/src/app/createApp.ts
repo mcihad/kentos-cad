@@ -41,6 +41,7 @@ import { TimeSlider } from './timeSlider';
 import { registerTimeCommands } from './timeCommands';
 import { registerLabelCommands } from './labelCommands';
 import { registerLayerFilterCommands } from './layerFilterCommands';
+import { registerChartCommands } from './charts';
 import { registerAttachmentCommands } from './attachments';
 import { registerObjectInfoCommands } from './objectInfoCommands';
 import { registerNetworkCommands } from './networkCommands';
@@ -201,6 +202,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   registerNetworkCommands(ctx);
   registerTimeCommands(ctx);
   registerLayerFilterCommands(ctx);
+  registerChartCommands(ctx);
   registerAttachmentCommands(ctx);
   registerObjectInfoCommands(ctx);
   registerLabelCommands(ctx);

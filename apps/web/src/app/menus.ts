@@ -149,6 +149,8 @@ export const MAIN_MENU: TopMenu[] = [
       // A layer's fields, its objects' table and the data sources (docs/adr/0199).
       sec('Tablo'),
       'data.featureTable',
+      'data.statistics',
+      'data.chart',
       'layer.fields',
       'data.sources',
     ],

@@ -91,6 +91,8 @@ export const PRIMARY_COMMANDS: ReadonlySet<string> = new Set([
 /** Large buttons a panel may have; more would crowd out the small ones. */
 export const MAX_LARGE = 4;
 
+/** Grafik's six kinds (docs/adr/0227 §8), under the Tablo panel's ▾. */
+const CHART_COMMANDS = ['chart.bar', 'chart.pie', 'chart.histogram', 'chart.box', 'chart.scatter', 'chart.line'];
 /** The layer actions by an object, Yalıtımı kaldır, Katmanı eşle, Katmana kopyala and Katmanları birleştir (docs/adr/0177 §1–§3), under Katmanlar's ▾ in every ribbon. */
 const LAYER_ACTIONS = ['tool.layerOff', 'tool.layerIsolate', 'layer.unisolate', 'tool.layerLock', 'tool.layerMakeActive', 'tool.layerMatch', 'tool.copyToLayer', 'layer.merge', 'layer.states', 'layer.stateSave', 'layer.purge', 'layer.list'];
 
@@ -138,7 +140,7 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'crs' },
       { menu: 'analysis' },
       // Öznitelik tablosu, a layer's fields and the data sources (docs/adr/0199 §3, §4, §7).
-      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
+      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'data.statistics', 'data.chart', 'layer.fields', 'data.sources'], under: CHART_COMMANDS },
     ],
     launchers: { 'Koordinat sistemi': { command: 'crs.set', title: 'Proje ayarları: koordinat sistemi' } },
   },
@@ -386,7 +388,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       // Topoloji kuralları (docs/adr/0202 §8): the rules and their check beside the cleaning.
       { pick: 'Topoloji', icon: 'topologyCheck', commands: ['topology.check', 'topology.rules'] },
       // Öznitelik tablosu and a layer's fields (docs/adr/0199 §3, §4).
-      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
+      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'data.statistics', 'data.chart', 'layer.fields', 'data.sources'], under: CHART_COMMANDS },
       { menu: 'analysis', sections: ['Karşılaştırma'] },
       { menu: 'calc', sections: ['Kayıtlı ölçüler'] },
       { menu: 'tools' },
@@ -478,7 +480,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
         ],
       },
       // Öznitelik tablosu, a layer's fields and the data sources (docs/adr/0199 §3, §4, §7).
-      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'layer.fields', 'data.sources'] },
+      { pick: 'Tablo', icon: 'featureTable', commands: ['data.featureTable', 'data.statistics', 'data.chart', 'layer.fields', 'data.sources'], under: CHART_COMMANDS },
       // Nesne ekleri (docs/adr/0225 §2–§5): ArcGIS Pro's attachments, GeoTagged Photos To Points and pop-ups.
       { pick: 'Ekler', icon: 'attachment', commands: ['attachment.add', 'attachment.addLink', 'file.import.photos', 'layer.info'] },
       // Veride ara (docs/adr/0178): a value in the layers' data, and a place by its coordinates.

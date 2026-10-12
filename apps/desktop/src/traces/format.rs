@@ -141,6 +141,9 @@ pub struct Step {
     /// The paragraph editor (docs/adr/0182 §4): its text typed, letters
     /// chosen and formatted, then kept or dropped.
     pub(super) paragraph: Option<ParagraphStep>,
+    /// Grafik's n-th element pressed (1 first), as a click on the chart
+    /// does; `shift` and `ctrl` held (docs/adr/0227 §6).
+    pub(super) chart_press: Option<u32>,
     pub(super) expect: Option<Expect>,
     /// For the reader; not checked.
     #[allow(dead_code)]
@@ -207,6 +210,12 @@ pub struct Expect {
     /// after Sıra joined by “ | ”), exact (docs/adr/0199 §4).
     #[serde(rename = "featureTable")]
     pub(super) feature_table: Option<FeatureTableExpect>,
+    /// Grafik's kind, numbers (the cells joined by “ | ”) and the elements
+    /// the selection marks (1 first); the headers when given (docs/adr/0227).
+    pub(super) chart: Option<ChartExpect>,
+    /// İstatistik's count and summary rows (the cells joined by “ | ”),
+    /// exact, once every row is counted (docs/adr/0227 §3).
+    pub(super) statistics: Option<SearchExpect>,
     /// Topoloji's count line and rows (Katman, Kural, Sorun, Nesneler, Ölçü
     /// joined by “ | ”), exact (docs/adr/0202 §5).
     pub(super) topology: Option<SearchExpect>,
@@ -310,6 +319,17 @@ pub struct MagnifierExpect {
     pub(super) zoom: u32,
     pub(super) side: Option<String>,
     pub(super) center: Option<[f64; 2]>,
+}
+
+/// Grafik as a step sees it: its kind, the headers (when the step names
+/// them), every row of its numbers and the marked elements.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChartExpect {
+    pub(super) kind: String,
+    pub(super) columns: Option<Vec<String>>,
+    pub(super) rows: Vec<String>,
+    pub(super) marked: Vec<u32>,
 }
 
 /// Arama as a step sees it: the count line and every row.

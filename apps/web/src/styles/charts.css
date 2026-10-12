@@ -1,0 +1,306 @@
+/* ── İstatistik and Grafik, the bottom panel's tabs (docs/adr/0227 §8) ───────── */
+
+/* İstatistik: the summary table at the left, the chosen field's statistics and values at the right. */
+.stats__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.stats__scroll {
+  flex: 1;
+  min-width: 0;
+}
+.stats__table {
+  min-width: calc(640px * var(--ui-scale));
+}
+.stats .ptable__scroll th {
+  padding: 0 12px;
+  height: 26px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.stats .ptable__scroll th.num {
+  text-align: right;
+}
+/* The field's name, not a row number (the point editor's first column). */
+.stats .ptable__scroll th:first-child,
+.stats .ptable__scroll td:first-child {
+  width: auto;
+  max-width: calc(220px * var(--ui-scale));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--c-text);
+  font-weight: 500;
+}
+.stats .ptable__scroll td:nth-child(2) {
+  color: var(--c-text-2);
+  font-weight: 400;
+}
+.stats tbody tr {
+  cursor: pointer;
+}
+.stats__detail {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: calc(320px * var(--ui-scale));
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 12px 10px;
+  border-left: 1px solid var(--c-line);
+  background: var(--c-panel);
+}
+.stats__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.stats__name {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stats__kind {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.stats__grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  margin: 0 0 8px;
+  font-size: var(--fs-sm);
+}
+.stats__grid dt {
+  color: var(--c-text-2);
+}
+.stats__grid dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.stats__subhead {
+  padding: 4px 0;
+  border-top: 1px solid var(--c-line);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.stats__values {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+.stats__values li {
+  display: grid;
+  grid-template-columns: 1fr auto calc(56px * var(--ui-scale));
+  gap: 10px;
+  align-items: center;
+  height: calc(24px * var(--ui-scale));
+  padding: 0 4px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.stats__values li:hover {
+  background: var(--c-hover);
+}
+.stats__vtext {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stats__vcount,
+.stats__vshare {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.stats__vshare {
+  color: var(--c-text-3);
+}
+.stats__value--mark .stats__vtext {
+  color: var(--c-text-3);
+  font-style: italic;
+}
+.stats__values li.stats__more {
+  color: var(--c-text-3);
+  cursor: default;
+}
+.stats__values li.stats__more:hover {
+  background: none;
+}
+.stats__note,
+.chart__note {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin-top: 6px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.stats__note .icon,
+.chart__note .icon {
+  flex: none;
+  color: var(--c-warn);
+}
+
+/* Grafik: the kind's settings at the left, the chart (or its table) at the right. */
+.chart__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.chart__settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: none;
+  width: calc(260px * var(--ui-scale));
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 12px;
+  border-right: 1px solid var(--c-line);
+  background: var(--c-panel);
+}
+.chart__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chart__label {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+.chart__row .dropdown {
+  width: 100% !important;
+}
+.chart__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 2px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.chart__main {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+.chart__stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--c-panel);
+}
+.chart__stage[hidden] {
+  display: none;
+}
+.chart__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  cursor: default;
+}
+.chart__table {
+  flex: 1;
+}
+.chart__table[hidden] {
+  display: none;
+}
+.chart__grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.chart__grid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 26px;
+  padding: 0 12px;
+  background: var(--c-panel);
+  border-bottom: 1px solid var(--c-line);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-align: left;
+}
+.chart__grid td {
+  height: 24px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--c-line-soft);
+  white-space: nowrap;
+}
+.chart__grid .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* The tooltip: values lead in the first ink, names follow in the second (docs/adr/0227 §6). */
+.chart__tip {
+  position: absolute;
+  z-index: 2;
+  max-width: calc(280px * var(--ui-scale));
+  padding: 6px 8px;
+  border-radius: var(--r-md);
+  background: var(--c-tooltip);
+  box-shadow: var(--shadow-pop);
+  pointer-events: none;
+  font-size: var(--fs-xs);
+}
+.chart__tipline {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  white-space: nowrap;
+}
+.chart__tipvalue {
+  color: var(--c-text);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.chart__tipline--lead .chart__tipvalue {
+  font-weight: 600;
+}
+.chart__tiplabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--c-text-2);
+}
+/* Saçılım's dragged box. */
+.chart__band {
+  position: absolute;
+  border: 1px solid var(--c-accent-line);
+  background: var(--c-accent-soft);
+  pointer-events: none;
+}
+.seg--icons .seg__opt--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(30px * var(--ui-scale));
+  padding: 0;
+}
+.seg--icons .seg__opt--icon[aria-checked='true'] .icon {
+  color: var(--c-accent-text);
+}
+/* A long layer path stays on one line, shortened. */
+.stats .dropdown__value,
+.chart .dropdown__value {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.stats .ptable__group,
+.chart .ptable__group {
+  min-width: 0;
+}

@@ -294,6 +294,16 @@ pub const PORTED: &[&str] = &[
     "data.featureTable",
     "layer.fields",
     "data.sources",
+    // Grafikler ve alan istatistikleri (docs/adr/0227 §8): the İstatistik tab (statistics/), the
+    // Grafik tab and its six kinds (charts/).
+    "data.statistics",
+    "data.chart",
+    "chart.bar",
+    "chart.pie",
+    "chart.histogram",
+    "chart.box",
+    "chart.scatter",
+    "chart.line",
     // docs/adr/0195: Görünüm kipleri.
     "view.colorMode.color",
     "view.colorMode.mono",

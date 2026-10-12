@@ -6,6 +6,9 @@
 //!   (message_log.rs, docs/adr/0114);
 //! - Noktalar (`point.editor` opens it on this tab): every point of the
 //!   drawing in a table, sorted, searched and filtered (points/, docs/adr/0153);
+//! - İstatistik and Grafik (`data.statistics`, `data.chart` open them): a
+//!   layer's fields summed up and its charts, linked to the selection
+//!   (statistics/, charts/, docs/adr/0227);
 //! - Arama (`data.search` opens it on this tab): the data search and the
 //!   place typed by its coordinates (search/, docs/adr/0178);
 //! - Topoloji (`topology.check` opens it on this tab): the topology rules'
@@ -50,6 +53,10 @@ pub enum BottomTab {
     Points,
     /// Öznitelik tablosu (features/, docs/adr/0199 §4).
     Table,
+    /// Alan istatistikleri (statistics/, docs/adr/0227 §3).
+    Statistics,
+    /// Grafik (charts/, docs/adr/0227 §4).
+    Chart,
     /// Veride ara (search/, docs/adr/0178).
     Search,
     /// Topoloji kuralları' findings (topology/, docs/adr/0202 §5).
@@ -61,11 +68,13 @@ pub enum BottomTab {
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 9] = [
+    const ALL: [BottomTab; 11] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
         BottomTab::Table,
+        BottomTab::Statistics,
+        BottomTab::Chart,
         BottomTab::Search,
         BottomTab::Topology,
         BottomTab::ServiceInfo,
@@ -139,6 +148,12 @@ impl App {
                 Tab::new(plan::TAB_TABLE)
                     .icon(from_web(Some("featureTable")))
                     .closable(false),
+                Tab::new(plan::TAB_STATISTICS)
+                    .icon(from_web(Some("fieldStatistics")))
+                    .closable(false),
+                Tab::new(plan::TAB_CHART)
+                    .icon(from_web(Some("chart")))
+                    .closable(false),
                 Tab::new(plan::TAB_SEARCH)
                     .icon(from_web(Some("dataSearch")))
                     .closable(false),
@@ -177,6 +192,8 @@ impl App {
             BottomTab::Coords => self.coordinate_list(),
             BottomTab::Points => self.points_tab(),
             BottomTab::Table => self.features_tab(),
+            BottomTab::Statistics => self.statistics_tab(),
+            BottomTab::Chart => self.chart_tab(),
             BottomTab::Search => self.data_tab(),
             BottomTab::Topology => self.topology_tab(),
             BottomTab::ServiceInfo => self.service_info_tab(),
@@ -207,6 +224,8 @@ impl App {
             BottomTab::Coords => plan::TAB_COORDS,
             BottomTab::Points => plan::TAB_POINTS,
             BottomTab::Table => plan::TAB_TABLE,
+            BottomTab::Statistics => plan::TAB_STATISTICS,
+            BottomTab::Chart => plan::TAB_CHART,
             BottomTab::Search => plan::TAB_SEARCH,
             BottomTab::Topology => plan::TAB_TOPOLOGY,
             BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,

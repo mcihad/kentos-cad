@@ -26,6 +26,9 @@ mod calc;
 mod catalog;
 #[cfg(test)]
 mod centerline_scenes;
+#[cfg(test)]
+mod chart_scenes;
+mod charts;
 mod clipboard;
 mod cloud;
 #[cfg(test)]
@@ -192,6 +195,7 @@ mod sources;
 mod start;
 #[cfg(test)]
 mod stationing_scenes;
+mod statistics;
 #[cfg(test)]
 mod stats_scenes;
 mod style;

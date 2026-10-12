@@ -77,7 +77,7 @@ Başlangıç görünümü:
 
 ### 5. Sahne
 
-- **CAD sahnesi:** sol altta koordinat ekseni simgesi (X ve Y okları; 0,0 ekrandaysa orada durur); kuzey oku ve ölçek çubuğu yok; okumalar çizim biriminde; zemin varsayılanı koyu (arduvaz).
+- **CAD sahnesi:** sol altta koordinat ekseni simgesi (X ve Y okları; her zaman sol altta: 12 Ekim eki); kuzey oku ve ölçek çubuğu yok; okumalar çizim biriminde; zemin varsayılanı koyu (arduvaz).
 - **CBS sahnesi:** kuzey oku (grid kuzeyi) ve ölçek çubuğu (bugünkü gibi); okumalar Y, X ve metrede; zemin temaya uyar.
 - `appearance.drawingBackground` yeni varsayılanı **“Türe göre”** (`mode`): CAD'de arduvaz, CBS'de tema. Kullanıcı bir zemin seçerse her türde o kullanılır.
 - **Ölçek seçici:** durum çubuğunun ekran ölçeği yazılabilir ve listeden seçilebilir olur (1:N); seçilince görünüm o ölçeğe yakınlaşır (QGIS'in ölçek kutusu gibi). İki türde de vardır.
@@ -119,6 +119,13 @@ Başlangıç görünümü:
      (Zincir, Baz ve Hızlı ölçü), Tarama, Kılavuz, Çok satırlı yazı, Metin dosyası yerleştir, Revizyon bulutu (`app/workspaces.ts`'in
      gizleme listesi; envanterden masaüstüne). CBS'de Yazı ve Etiketleri yazıya çevir kalır. Gizli komut yazılarak çalışır, CBS
      projesindeki ölçü, kılavuz ve çok satırlı yazı çizilir ve düzenlenir: tür yalnız arayüzü seçer.
+
+### 12 Ekim eki: koordinat ekseni simgesi her zaman sol altta
+
+Sahibin bildirimi (12 Ekim): “cad modunda soldaki xy koordinat okları sayfanın ortasına geliyor, onların sürekli sol altta olması
+gerekiyor”. Simge AutoCAD'in UCS simgesi gibi 0,0 ekrandayken orijinde duruyordu; yerel sistemli (SRID 0) CAD projesinde çizim 0,0
+çevresinde olduğundan simge çizimin ortasına geliyordu. Artık iki platformda da her zaman çizim alanının sol altındadır (kenarlardan
+30 px; web `drawUcsIcon`, masaüstü `map_marks::ucs_at`).
 
 ## Bu ADR'de olmayanlar
 

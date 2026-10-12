@@ -105,6 +105,8 @@ export const DIALOG_TEXTS = {
     save: 'Kaydet',
     saveHint: 'Tabloyu Excel (XLSX), OpenDocument (ODS) ya da CSV dosyasına yazar; sayılar sayı olarak.',
     copied: 'Tablo panoya kopyalandı.',
+    chart: 'Grafik',
+    chartHint: 'Tabloyu alt panelin Grafik sekmesinde gösterir: ROC eğrisi, kesit, zaman serisi ve histogram kendi grafikleriyle, öbürleri çubukla.',
   },
   expression: {
     fields: 'Alanlar',

@@ -532,6 +532,9 @@ export class LayersPanel extends Panel {
         },
         // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
         { label: n.fields?.length ? `Alanlar… (${n.fields.length})` : 'Alanlar…', icon: 'layerFields', run: () => void this.ctx.commands.execute('layer.fields', n.id) },
+        // İstatistik and Grafik (docs/adr/0227 §8): its fields summed up, its chart.
+        { label: 'İstatistik', icon: 'fieldStatistics', run: () => void this.ctx.commands.execute('data.statistics', n.id) },
+        { label: 'Grafik', icon: 'chart', run: () => void this.ctx.commands.execute('data.chart', n.id) },
         // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
         { label: n.time ? 'Zaman ayarları… (zamansal)' : 'Zaman ayarları…', icon: 'timeLayer', run: () => void this.ctx.commands.execute('time.layer', n.id) },
         // Katman süzgeci (docs/adr/0211 §4): the window, the selection's objects, taken away.

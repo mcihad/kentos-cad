@@ -110,6 +110,7 @@ pub mod boundary;
 pub mod breaking;
 pub mod calc;
 pub mod centerline;
+pub mod chart_data;
 pub mod circle;
 pub mod cleanup;
 pub mod clipboard;

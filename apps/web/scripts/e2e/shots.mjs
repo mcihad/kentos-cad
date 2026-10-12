@@ -7588,6 +7588,99 @@ function statsScenes() {
   ];
 }
 
+// Grafikler ve alan istatistikleri (docs/adr/0227) over a district's parcels with typed fields and its roads
+// (fixtures/interaction/v1/charts.kcad, scripts/fixtures/chart_scene.py): İstatistik with Kullanım chosen, then the six
+// kinds: Çubuk by Kullanım with the Ticaret parcels selected (their bar marked), Pasta of the parcels' area by Kullanım,
+// Histogram of the unit values, Kutu of the unit values by Kullanım, Saçılım of the unit value against the area with its
+// trend, Çizgi of the mean unit value by floors, the pointer over Konut's bar (its tooltip), Saçılım's dragged box
+// selecting the large parcels, and the bars' Tablo. The desktop's are `tools_screens`' grafik-*
+// (apps/desktop/src/chart_scenes.rs), at the same places with the same values.
+const CHARTS_SCENE = readFileSync(new URL('../../../../fixtures/interaction/v1/charts.kcad', import.meta.url), 'utf8');
+SCENES.charts = chartScenes();
+
+function chartScenes() {
+  /** The district open, the CBS ribbon's Giriş on. */
+  const opened = async (ui) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(CHARTS_SCENE)}, null))) throw new Error('charts.kcad did not load');
+    })()`);
+    await ribbonOn(ui, { ribbonTab: 'home', type: 'gis' });
+  };
+  /** The view fitted to the district once the bottom panel took its room. */
+  const settle = async (ui) => {
+    await ui.sleep(300);
+    await ui.eval(`(() => { const k = window.kentos; k.view.zoomExtents(); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+    await ui.sleep(500);
+  };
+  /** A chart of the parcels in the Grafik tab; `then` (the app `k`, the parcels `P`) after it opened. */
+  const chart = (spec, then = '') => async (ui) => {
+    await opened(ui);
+    await ui.eval(`import('/src/app/charts.ts').then((m) => {
+      const k = window.kentos;
+      const P = [...k.doc.byLayer('parsel')];
+      m.openChart(k, { layer: 'parsel', spec: ${JSON.stringify(spec)} });
+      ${then}
+    })`);
+    await settle(ui);
+  };
+  /** Element `e` (1 first) of the chart on screen. */
+  const at = (e) => `import('/src/app/charts.ts').then((m) => m.shownCharts.chart?.at(${e}) ?? null)`;
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(`(() => { const k = window.kentos; k.selection.clear(); })()`);
+    await ui.eval(`import('/src/app/charts.ts').then((m) => m.resetCharts())`);
+    await ribbonOff(ui);
+  };
+  const BAR = { kind: 'bar', category: 'Kullanım' };
+  const SCATTER = { kind: 'scatter', x: '$alan', y: ['Değer'] };
+  return [
+    {
+      id: 'grafik-istatistik',
+      open: async (ui) => {
+        await opened(ui);
+        await ui.eval(`import('/src/app/charts.ts').then((m) => m.openStatistics(window.kentos, 'parsel'))`);
+        await ui.waitFor(`!!document.querySelector('.stats tr[data-key="Kullanım"]')`);
+        await ui.clickSel('.stats tr[data-key="Kullanım"]');
+        await settle(ui);
+      },
+      close,
+    },
+    { id: 'grafik-cubuk', open: chart(BAR, `k.selection.set(P.filter((e) => e.attrs['Kullanım'] === 'T').map((e) => e.id));`), close },
+    { id: 'grafik-pasta', open: chart({ kind: 'pie', category: 'Kullanım', aggregate: 'sum', value: '$alan' }), close },
+    { id: 'grafik-histogram', open: chart({ kind: 'histogram', value: 'Değer' }), close },
+    { id: 'grafik-kutu', open: chart({ kind: 'box', value: 'Değer', group: 'Kullanım' }), close },
+    { id: 'grafik-sacilim', open: chart(SCATTER), close },
+    { id: 'grafik-cizgi', open: chart({ kind: 'line', x: 'Kat', y: ['Değer'], aggregate: 'mean' }), close },
+    {
+      id: 'grafik-ipucu',
+      open: async (ui) => {
+        await chart(BAR)(ui);
+        const e = await ui.eval(`import('/src/app/charts.ts').then((m) => 1 + (m.shownCharts.chart?.rows.findIndex((r) => r.startsWith('Konut |')) ?? -2))`);
+        const p = await ui.eval(at(e));
+        if (!p) throw new Error('Konut çubuğu yok');
+        await ui.move(p.x, p.y);
+        await ui.sleep(400);
+      },
+      close,
+    },
+    {
+      id: 'grafik-sacilim-secim',
+      open: async (ui) => {
+        await chart(SCATTER)(ui);
+        const r = await ui.eval(`(() => { const r = document.querySelector('.chart__canvas').getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; })()`);
+        await ui.drag(r.x + r.w * 0.62, r.y + r.h * 0.12, r.x + r.w * 0.97, r.y + r.h * 0.78);
+        await ui.move(2, 2);
+        await ui.sleep(500);
+      },
+      close,
+    },
+    { id: 'grafik-tablo', open: chart(BAR, `import('/src/app/charts.ts').then((m) => { m.charts.view = 'table'; m.chartRequests.set(m.chartRequests.value + 1); });`), close },
+  ];
+}
+
 // Uzaktan algılama (docs/adr/0242) over a synthetic satellite image of the shared valley: four bands made from its land
 // cover and its slopes' light, the same two years on (new houses north of the road, a felled stand), its coarse
 // multispectral and fine panchromatic pair, training areas and reference points (fixtures/interaction/v1/remote.kcad,

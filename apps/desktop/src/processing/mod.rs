@@ -231,6 +231,8 @@ pub enum Event {
     ChooseSave(String),
     /// Panoya kopyala for the run's table (Özet istatistik).
     CopyTable,
+    /// Grafik for the run's table (docs/adr/0227 §4): the bottom panel's Grafik tab shows it.
+    ChartTable,
     /// Kaydet ▾ for the run's table (docs/adr/0223 §2): written in a format.
     SaveTableAs(kentos_contracts::WorkbookFormat),
     /// Sonuçları seç, or Seçime yakınlaştır after a selecting tool.
@@ -440,6 +442,23 @@ impl App {
                 };
                 self.say(Level::Success, "Tablo panoya kopyalandı.".to_owned());
                 return iced::clipboard::write(crate::layer_list::tsv(&table.lines()));
+            }
+            Event::ChartTable => {
+                let (Some(table), Some(window)) =
+                    (self.processing_table(), &self.processing.dialog)
+                else {
+                    return Task::none();
+                };
+                let chart = crate::charts::ChartTable {
+                    title: window.tool.label.clone(),
+                    tool: window.tool.id.clone(),
+                    columns: table.columns,
+                    rows: table.rows,
+                };
+                // The window out of the chart's way, as Sonuçları seç leaves it.
+                self.processing.dialog = None;
+                self.dialog = None;
+                self.open_table_chart(chart);
             }
             Event::SaveTableAs(format) => {
                 let (Some(table), Some(window)) =

@@ -403,6 +403,10 @@ pub struct Observation {
     pub search: Option<(String, Vec<String>)>,
     /// Öznitelik tablosu's count, headers and rows, while its tab is open.
     pub feature_table: Option<(String, Vec<String>, Vec<String>)>,
+    /// Grafik's kind, headers, rows and marked elements (1 first), while its tab is open.
+    pub chart: Option<crate::charts::ChartSeen>,
+    /// İstatistik's count and summary rows, while its tab is open.
+    pub statistics: Option<(String, Vec<String>)>,
     /// Topoloji's count line and rows, while its tab is open.
     pub topology: Option<(String, Vec<String>)>,
     /// The place the data search marked, absolute.
@@ -774,6 +778,23 @@ impl<'a> Player<'a> {
         }
         if let Some(at) = step.click {
             return self.holding(step, |player| player.click(at, mouse::Button::Left));
+        }
+        // Grafik's element pressed, as a click on the chart publishes it (docs/adr/0227 §6).
+        if let Some(n) = step.chart_press {
+            if self.app.chart_seen().is_none() {
+                return Err("Grafik açık değil".to_owned());
+            }
+            let held = match (step.shift == Some(true), step.ctrl == Some(true)) {
+                (true, _) => Modifiers::SHIFT,
+                (_, true) => Modifiers::CTRL,
+                _ => Modifiers::empty(),
+            };
+            self.apply(Message::Modifiers(held))?;
+            let done = self.apply(Message::Charts(crate::charts::Event::Press(
+                n.checked_sub(1),
+            )));
+            self.apply(Message::Modifiers(Modifiers::empty()))?;
+            return done;
         }
         if let Some([from, to]) = step.drag {
             return self.holding(step, |player| player.drag(from, to));
@@ -1231,6 +1252,8 @@ impl<'a> Player<'a> {
             panel: app.bottom_tab_title().map(str::to_owned),
             search: app.data_seen(),
             feature_table: app.features_seen(),
+            chart: app.chart_seen(),
+            statistics: app.statistics_seen(),
             topology: app.topology_seen(),
             mark: app.data_mark().map(|p| [p.x, p.y]),
             overview: app.overview_extent(),
@@ -1378,6 +1401,8 @@ fn describe(step: &Step) -> String {
         format!("move {}", pair(at))
     } else if let Some(at) = step.rest {
         format!("rest {}", pair(at))
+    } else if let Some(n) = step.chart_press {
+        format!("chartPress {n}")
     } else if let Some(at) = step.click {
         let held = if step.shift == Some(true) {
             "Shift+"

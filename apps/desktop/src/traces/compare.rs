@@ -238,6 +238,33 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{:?}", (&want.count, &want.rows)),
         );
     }
+    if let Some(want) = &expect.chart {
+        let have = got.chart.clone();
+        let same = have.as_ref().is_some_and(|c| {
+            c.kind == want.kind
+                && c.rows == want.rows
+                && c.marked == want.marked
+                && want.columns.as_ref().is_none_or(|w| *w == c.columns)
+        });
+        check(
+            "chart",
+            same,
+            format!("{have:?}"),
+            format!(
+                "{:?}",
+                (&want.kind, &want.columns, &want.rows, &want.marked)
+            ),
+        );
+    }
+    if let Some(want) = &expect.statistics {
+        let have = got.statistics.clone();
+        check(
+            "statistics",
+            have.as_ref() == Some(&(want.count.clone(), want.rows.clone())),
+            format!("{have:?}"),
+            format!("{:?}", (&want.count, &want.rows)),
+        );
+    }
     if let Some(want) = &expect.feature_table {
         let have = got.feature_table.clone();
         let same = have.as_ref().is_some_and(|(count, columns, rows)| {
@@ -424,15 +451,22 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             use serde_json::Value;
             match (a, b) {
                 (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
-                (Value::Array(x), Value::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same(p, q)),
+                (Value::Array(x), Value::Array(y)) => {
+                    x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same(p, q))
+                }
                 (Value::Object(x), Value::Object(y)) => {
-                    x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| same(v, w)))
+                    x.len() == y.len()
+                        && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| same(v, w)))
                 }
                 _ => a == b,
             }
         }
         for (path, want) in want {
-            let have = got.layer_compose.get(path).cloned().unwrap_or(serde_json::Value::Null);
+            let have = got
+                .layer_compose
+                .get(path)
+                .cloned()
+                .unwrap_or(serde_json::Value::Null);
             check(
                 &format!("layerCompose[{path}]"),
                 same(&have, want),

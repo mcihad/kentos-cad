@@ -1,6 +1,7 @@
 import {
   AdjoinWork,
   angleDeg as wasmAngleDeg,
+  ChartWork,
   arrayObjects as wasmArrayObjects,
   bearingGrad as wasmBearingGrad,
   callOp,
@@ -489,6 +490,130 @@ export class CoreAdjoinWork {
 
   private get(): AdjoinWork {
     if (!this.raw) throw new Error('Bitişik alanın komşuları bırakıldı.');
+    return this.raw;
+  }
+}
+
+/**
+ * Grafikler ve alan istatistikleri's work kept in the core (docs/adr/0227 §11): a layer's or a table's data set once,
+ * then statistics, charts, layouts and clicks asked of it. A column crosses as one text with its cells' lengths in
+ * UTF-16 units (−1: empty), as the expression engine's rows do; results come back parsed, the bulk points as a
+ * Float32Array. `../model/ops/charts.ts` gives it its types.
+ */
+export class CoreChartWork {
+  private raw: ChartWork | null;
+
+  constructor(rows: number) {
+    this.raw = typed(() => new ChartWork(rows));
+  }
+
+  addColumn(key: string, label: string, kind: string, labelled: boolean, values: string, lens: Int32Array, shown: string, shownLens: Int32Array, refused: Uint32Array): void {
+    typed(() => this.get().addColumn(key, label, kind, labelled, values, lens, shown, shownLens, refused));
+  }
+
+  addMeasures(key: string, label: string, values: Float64Array): void {
+    typed(() => this.get().addMeasures(key, label, values));
+  }
+
+  /** Alan (m²) and Uzunluk (m) from the geometry store's measure records (one a row), each where an object has one: the keys added. */
+  addGeometry(records: Float64Array): string[] {
+    return typed(() => this.get().addGeometry(records));
+  }
+
+  seal(): void {
+    typed(() => this.get().seal());
+  }
+
+  summary(column: number, rows: Uint32Array): unknown {
+    return readResult(typed(() => this.get().summary(column, rows)));
+  }
+
+  detail(column: number, rows: Uint32Array): unknown {
+    return readResult(typed(() => this.get().detail(column, rows)));
+  }
+
+  valueRows(i: number): Uint32Array {
+    return typed(() => this.get().valueRows(i));
+  }
+
+  /** Where element `e` is pressed on the last layout (x, y), empty when it is not on the chart. */
+  elementAt(e: number): Float32Array {
+    return typed(() => this.get().elementAt(e));
+  }
+
+  /** The elements the selection marks, by their places. */
+  marked(): Uint32Array {
+    return typed(() => this.get().marked());
+  }
+
+  /** A spec made whole for this data (`specs::complete`). */
+  complete(spec: string): unknown {
+    return readResult(typed(() => this.get().complete(spec)));
+  }
+
+  /** İstatistik's Grafik for a column (`specs::for_column`). */
+  forColumn(key: string): unknown {
+    return readResult(typed(() => this.get().forColumn(key)));
+  }
+
+  /** An İşlemler table's chart, its tool's suggestion first (`specs::for_table`). */
+  forTable(tool: string): unknown {
+    return readResult(typed(() => this.get().forTable(tool)));
+  }
+
+  chart(spec: string, rows: Uint32Array): unknown {
+    return readResult(typed(() => this.get().chart(spec, rows)));
+  }
+
+  select(rows: Uint32Array): boolean {
+    return typed(() => this.get().select(rows));
+  }
+
+  layOut(frame: string): unknown {
+    const text = typed(() => this.get().layOut(frame));
+    return text ? readResult(text) : null;
+  }
+
+  points(): Float32Array {
+    return typed(() => this.get().points());
+  }
+
+  pointElements(): Uint32Array {
+    return typed(() => this.get().pointElements());
+  }
+
+  hit(x: number, y: number): number {
+    return typed(() => this.get().hit(x, y));
+  }
+
+  tip(element: number): unknown {
+    return readResult(typed(() => this.get().tip(element)));
+  }
+
+  elementRows(element: number): Uint32Array {
+    return typed(() => this.get().elementRows(element));
+  }
+
+  rowsWithin(x0: number, y0: number, x1: number, y1: number): Uint32Array {
+    return typed(() => this.get().rowsWithin(x0, y0, x1, y1));
+  }
+
+  layOutPlain(frame: string): unknown {
+    return readResult(typed(() => this.get().layOutPlain(frame)));
+  }
+
+  svg(frame: string, palette: string): string {
+    return typed(() => this.get().svg(frame, palette));
+  }
+
+  /** Releases the core's copy now instead of when the object is collected. */
+  free(): void {
+    this.raw?.free();
+    this.raw = null;
+  }
+
+  private get(): ChartWork {
+    if (!this.raw) throw new Error('Grafiğin verisi bırakıldı.');
     return this.raw;
   }
 }

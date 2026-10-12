@@ -4,6 +4,7 @@
 
 mod arrange;
 mod centerline;
+mod charts;
 mod crs;
 mod crs_custom;
 mod crs_ground;

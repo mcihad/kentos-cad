@@ -32,6 +32,9 @@ TABS = [
     {'id': 'coords', 'label': 'Koordinat listesi', 'icon': 'table'},
     {'id': 'points', 'label': 'Noktalar', 'icon': 'pointEditor'},
     {'id': 'table', 'label': 'Tablo', 'icon': 'featureTable'},
+    # Alan istatistikleri and Grafik (docs/adr/0227 §8).
+    {'id': 'statistics', 'label': 'İstatistik', 'icon': 'fieldStatistics'},
+    {'id': 'chart', 'label': 'Grafik', 'icon': 'chart'},
     {'id': 'search', 'label': 'Arama', 'icon': 'dataSearch'},
     # Topoloji kuralları' findings (docs/adr/0202 §5), Servis bilgisi's answers (docs/adr/0208 §11).
     {'id': 'topology', 'label': 'Topoloji', 'icon': 'topologyCheck'},

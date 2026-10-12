@@ -17,6 +17,9 @@ export const BOTTOM_TABS: readonly { id: BottomTab; label: string; icon: string 
   { id: 'coords', label: 'Koordinat listesi', icon: 'table' },
   { id: 'points', label: 'Noktalar', icon: 'pointEditor' },
   { id: 'table', label: 'Tablo', icon: 'featureTable' },
+  // Alan istatistikleri and Grafik (docs/adr/0227 §8).
+  { id: 'statistics', label: 'İstatistik', icon: 'fieldStatistics' },
+  { id: 'chart', label: 'Grafik', icon: 'chart' },
   { id: 'search', label: 'Arama', icon: 'dataSearch' },
   // Topoloji kuralları' findings (docs/adr/0202 §5).
   { id: 'topology', label: 'Topoloji', icon: 'topologyCheck' },

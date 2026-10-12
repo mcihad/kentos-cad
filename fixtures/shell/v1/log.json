@@ -24,6 +24,16 @@
    "icon": "featureTable"
   },
   {
+   "id": "statistics",
+   "label": "İstatistik",
+   "icon": "fieldStatistics"
+  },
+  {
+   "id": "chart",
+   "label": "Grafik",
+   "icon": "chart"
+  },
+  {
    "id": "search",
    "label": "Arama",
    "icon": "dataSearch"

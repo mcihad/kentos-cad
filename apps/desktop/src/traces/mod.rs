@@ -210,6 +210,7 @@ mod tests {
             magnifier: None,
             timebar: None,
             paragraph: None,
+            chart_press: None,
             expect: None,
             note: None,
         });

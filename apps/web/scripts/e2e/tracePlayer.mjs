@@ -264,6 +264,11 @@ async function toScreen([de, dn]) {
 const mouse = (type, x, y, extra = {}) => b.send('Input.dispatchMouseEvent', { type, x, y, button: 'none', ...extra });
 /** A step's held keys as the mouse events carry them (CDP: Shift is 8). */
 const held = (step) => (step.shift ? 8 : 0);
+/**
+ * A click's `ctrl` as the platform's command key: ⌘ on macOS, where Chrome takes Ctrl+click for a right click and sends
+ * no `click` (the app reads either key for a row's or a chart's press).
+ */
+const COMMAND = process.platform === 'darwin' ? 4 : 2;
 
 async function click(at, button = 'left', clickCount = 1, modifiers = 0) {
   const [x, y] = await toScreen(at);
@@ -525,7 +530,7 @@ async function panelAnswer(step) {
       return { x: r.left + Math.min(r.width / 2, 40), y: r.top + r.height / 2 };
     })()`);
     if (!at) throw missing(`${step.row}. sonuç satırı`);
-    const modifiers = (step.shift ? 8 : 0) | (step.ctrl ? 2 : 0);
+    const modifiers = (step.shift ? 8 : 0) | (step.ctrl ? COMMAND : 0);
     await mouse('mouseMoved', at.x, at.y, { modifiers });
     await mouse('mousePressed', at.x, at.y, { button: 'left', clickCount: 1, modifiers });
     await mouse('mouseReleased', at.x, at.y, { button: 'left', clickCount: 1, modifiers });
@@ -636,6 +641,18 @@ async function act(step) {
     pointer = step.drag[1];
     return;
   }
+  // Grafik's n-th element pressed (1 first), as a click on the chart does; Shift and Ctrl held (docs/adr/0227 §6).
+  if (step.chartPress !== undefined) {
+    const at = await b.eval(`import('/src/app/charts.ts').then((m) => m.shownCharts.chart?.at(${Number(step.chartPress)}) ?? null)`);
+    if (!at) throw new Error(`Grafik açık değil ya da ${step.chartPress}. öğesi yok`);
+    const modifiers = (step.shift ? 8 : 0) | (step.ctrl ? COMMAND : 0);
+    await mouse('mouseMoved', at.x, at.y, { modifiers });
+    await mouse('mousePressed', at.x, at.y, { button: 'left', clickCount: 1, modifiers });
+    await mouse('mouseReleased', at.x, at.y, { button: 'left', clickCount: 1, modifiers });
+    await sleep(60);
+    await mouse('mouseMoved', -5, -5);
+    return settled();
+  }
   // The paragraph editor (docs/adr/0182 §4): its text typed, letters chosen and formatted, then kept or dropped.
   if (step.paragraph) {
     const p = step.paragraph;
@@ -730,6 +747,8 @@ const observe = (mark) =>
     const k = window.kentos;
     const { parsePrompt } = await import('/src/ui/promptOptions.ts');
     const { lockWords } = await import('/src/tools/locks.ts');
+    const { shownCharts } = await import('/src/app/charts.ts');
+    const bottom = (tab) => k.ui.bottomExpanded.value && k.ui.bottomTab.value === tab;
     const field = document.querySelector('.cursor-input');
     let newest = null;
     for (const e of k.doc.all()) if (!newest || e.id > newest.id) newest = e;
@@ -888,6 +907,13 @@ const observe = (mark) =>
         };
       })(),
       mark: k.selection.mark.value && [k.selection.mark.value.x, k.selection.mark.value.y],
+      // Grafik's kind, numbers (the cells joined by “ | ”) and the elements the selection marks (1 first); İstatistik's
+      // count and summary rows once counted (docs/adr/0227).
+      chart: (() => {
+        const c = bottom('chart') && shownCharts.chart;
+        return c ? { kind: c.kind, columns: [...c.columns], rows: [...c.rows], marked: [...c.marked] } : null;
+      })(),
+      statistics: bottom('statistics') ? shownCharts.statistics : null,
       // The active layer's groups and name, and the colour and line weight new objects take (docs/adr/0176 §3).
       activeLayer: (() => {
         const names = [];
@@ -1073,6 +1099,10 @@ function compare(expect, got, t) {
             (want.side === undefined || have.side === want.side) &&
             (want.center === undefined || (c && Math.hypot(c[0] - want.center[0], c[1] - want.center[1]) <= t.clickTolerance));
       if (!ok) bad.push(`magnifier: ${JSON.stringify(have && { ...have, center: c })}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
+    } else if (key === 'chart') {
+      // The kind, the rows and the marks exactly; the headers only when the step names them (docs/adr/0227).
+      const ok = have && have.kind === want.kind && same(have.rows, want.rows) && same(have.marked, want.marked) && (want.columns === undefined || same(have.columns, want.columns));
+      if (!ok) bad.push(`chart: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);
     } else if (key === 'featureTable') {
       // The headers only when the step names them (docs/adr/0199 §4).
       const ok = have && have.count === want.count && same(have.rows, want.rows) && (want.columns === undefined || same(have.columns, want.columns));

@@ -1,3 +1,4 @@
+import { openTableChart } from '../../app/charts';
 import type { AppContext } from '../../app/context';
 import { layerListTsv } from '../../app/layerList';
 import { DisposableStore } from '../../core/disposable';
@@ -242,12 +243,19 @@ class ToolDialog {
     save.addEventListener('click', () => PopupMenu.open(exportItems(this.ctx, sheet, () => this.tool.label), save.getBoundingClientRect(), { owner: save }));
     // The button's listeners go with it when the result is painted again.
     tooltip(save, () => ({ title: T.result.save, description: T.result.saveHint }), 'top');
+    // Grafik (docs/adr/0227 §4): the table in the bottom panel's Grafik tab, the dialog out of its way.
+    const chart = h('button', { class: 'btn btn--ghost btn--small', type: 'button' }, icon('chart', 14), T.result.chart);
+    chart.addEventListener('click', () => {
+      this.dialog.close();
+      openTableChart(this.ctx, { title: this.tool.label, tool: this.tool.id, columns: table.columns, rows: table.rows });
+    });
+    tooltip(chart, () => ({ title: T.result.chart, description: T.result.chartHint }), 'top');
     // A column of numbers (every filled cell one) is right-aligned in figures; names and texts read from the left.
     const numeric = table.columns.map((_, i) => table.rows.some((r) => !!r[i]) && table.rows.every((r) => !r[i] || NUMBER_CELL.test(r[i])));
     const cell = (tag: 'th' | 'td', text: string, i: number) => h(tag, numeric[i] ? { class: 'num' } : null, text);
     replaceChildren(
       this.result,
-      h('div', { class: 'pgroup__title ptool__result-title' }, h('span', null, T.result.title), h('span', { class: 'ptool__result-actions' }, copy, save)),
+      h('div', { class: 'pgroup__title ptool__result-title' }, h('span', null, T.result.title), h('span', { class: 'ptool__result-actions' }, chart, copy, save)),
       h(
         'div',
         { class: 'ptool__result-table' },

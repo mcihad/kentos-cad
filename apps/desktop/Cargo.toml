@@ -62,7 +62,13 @@ png = { workspace = true }
 zune-jpeg = { workspace = true }
 # SVG for the new project wizard's pictures (docs/adr/0165 §3): Iced's SVG support,
 # already built for the sheet designer (crates/sheet-ui); nothing new in the lockfile.
-iced = { workspace = true, features = ["canvas", "svg"] }
+iced = { workspace = true, features = ["canvas", "svg", "image-without-codecs"] }
+# Grafikler (charts/, docs/adr/0227 §5, §7): a chart's shapes painted in the screen's pixels
+# with tiny-skia and shown as a canvas image (Iced's image support without codecs, built
+# already for the sheet designer); its PNG drawn by resvg from the core's SVG, with text in
+# KentOS's own faces. Nothing new in the lockfile.
+tiny-skia = { workspace = true }
+resvg = { workspace = true, features = ["text"] }
 # The trace player (traces.rs) runs the app's own tasks (save, open) without a
 # window: Iced's runtime crate, already in the binary through Iced and KentOS UI's
 # snapshot feature; no new package (docs/adr/0021).

@@ -814,6 +814,24 @@ export const ICONS = {
   serviceAreas:
     '<path d="M6.8 3.2 11 5.4 12 10.2 9.4 14.4 4.4 14.6 1.8 10.2 3 5.6z" fill="currentColor" fill-opacity=".22" stroke-width="1.1"/><path d="M13.4 6.6 17.6 8.4 18.4 13.4 15.6 17.4 10.6 17 8.4 12.8 10.2 8.2z" fill="currentColor" fill-opacity=".22" stroke-width="1.1"/><circle cx="6.6" cy="9.4" r="1.5" fill="currentColor" stroke="none"/><circle cx="13.6" cy="12.4" r="1.5" fill="currentColor" stroke="none"/>',
   // Öznitelik tablosu (docs/adr/0199 §4): a table and its layer's object (the owner's choice A).
+  // Grafikler ve alan istatistikleri (docs/adr/0227 §8): a field table with ranges and means; a framed chart; the six
+  // kinds (bars with rounded ends, a ring's slices, intervals under a bell curve, a box with an outlier, points with a
+  // trend line, a line with its markers).
+  fieldStatistics:
+    '<rect x="2" y="2.5" width="16" height="15" rx="1.2"/><path d="M2 6.2h16" stroke-width="1.2"/><path d="M4.3 9.6h2.2M4.3 12.4h2.2M4.3 15.2h2.2" stroke-width="1.1"/><path d="M9.6 9.6h6M11.2 12.4h4.2M9 15.2h3.4" stroke-width="2"/><circle cx="12.6" cy="9.6" r="1.25" fill="currentColor" stroke="none"/><circle cx="13.3" cy="12.4" r="1.25" fill="currentColor" stroke="none"/><circle cx="10.7" cy="15.2" r="1.25" fill="currentColor" stroke="none"/>',
+  chart:
+    '<rect x="2" y="2.5" width="16" height="15" rx="1.5"/><path d="M5 14.8V11.7a1.2 1.2 0 0 1 2.4 0V14.8M8.8 14.8V9.2a1.2 1.2 0 0 1 2.4 0V14.8M12.6 14.8V12.7a1.2 1.2 0 0 1 2.4 0V14.8" stroke-width="1.2"/><path d="M4.6 8.3 9.6 5.2l5.8 2" stroke-width="1.3"/>',
+  chartBar:
+    '<path d="M2 17.5h16" stroke-width="1.2"/><path d="M3.6 17V10.9a1.4 1.4 0 0 1 2.8 0V17M8.6 17V4.9a1.4 1.4 0 0 1 2.8 0V17M13.6 17V13.4a1.4 1.4 0 0 1 2.8 0V17Z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="M3.6 17V10.9a1.4 1.4 0 0 1 2.8 0V17M8.6 17V4.9a1.4 1.4 0 0 1 2.8 0V17M13.6 17V13.4a1.4 1.4 0 0 1 2.8 0V17"/>',
+  chartPie:
+    '<path d="M10.65 3.83A6.2 6.2 0 0 1 13.64 15.02" stroke-width="3" stroke-linecap="butt"/><path d="M12.52 15.66A6.2 6.2 0 0 1 4.34 12.52" stroke-width="3" stroke-linecap="butt" stroke-opacity=".55"/><path d="M3.94 11.29A6.2 6.2 0 0 1 9.35 3.83" stroke-width="3" stroke-linecap="butt" stroke-opacity=".3"/>',
+  chartHistogram:
+    '<path d="M2 17.5h16" stroke-width="1.2"/><path d="M3 17.5V14h2.8v3.5M5.8 17.5V9.5h2.8v8M8.6 17.5V6h2.8v11.5M11.4 17.5V10h2.8v7.5M14.2 17.5V14H17v3.5" stroke-width="1.1"/><path d="M2.5 15.2C5 15 6 6.5 10 4.2s5 10.8 7.5 11" stroke-width="1.3"/>',
+  chartBox:
+    '<path d="M10 3v3.5M10 13.5V17M8 3h4M8 17h4" stroke-width="1.2"/><rect x="6.2" y="6.5" width="7.6" height="7" rx="1" fill="currentColor" fill-opacity=".2"/><path d="M6.2 10.5h7.6" stroke-width="2"/><circle cx="15.8" cy="2.6" r="1.1" stroke-width="1.1"/>',
+  chartScatter: `<path d="M2.5 2.5v15h15" stroke-width="1.2"/><path d="M4.5 15.5 17 5" stroke-width="1.1" stroke-opacity=".7"/>${dot(5.6, 12.6, 1.3)}${dot(8.2, 13.6, 1.3)}${dot(9.2, 9.8, 1.3)}${dot(12, 10.6, 1.3)}${dot(12.8, 6.8, 1.3)}${dot(15.8, 7.6, 1.3)}`,
+  chartLine:
+    '<path d="M2.5 2.5v15h15" stroke-width="1.2"/><path d="M5 13.5 8.6 9.2l3.4 2.6 4.8-6.6" stroke-width="1.4"/><circle cx="5" cy="13.5" r="1.3" stroke-width="1.2"/><circle cx="8.6" cy="9.2" r="1.3" stroke-width="1.2"/><circle cx="12" cy="11.8" r="1.3" stroke-width="1.2"/><circle cx="16.8" cy="5.2" r="1.3" stroke-width="1.2"/>',
   featureTable:
     '<rect x="2" y="2.5" width="11.5" height="10" rx="1"/><path d="M2 6h11.5M2 9.25h11.5M6 6v6.5"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z" fill="currentColor" fill-opacity=".28" stroke="none"/><path d="m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z"/>',
   // Alanlar (docs/adr/0199 §3): a form of labelled boxes, the last a list (the owner's choice B).

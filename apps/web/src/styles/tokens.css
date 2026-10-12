@@ -86,6 +86,17 @@
   --c-danger: #ef6b61;
   --c-info: #6db3f2;
 
+  /* Charts (docs/adr/0227 §10): the categorical order, stepped for the dark surface; the folded categories' grey. */
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-8: #e66767;
+  --chart-other: #5d6875;
+
   --canvas-bg: #141a21;
   --canvas-fg: #e4eaf0;
   /* CAD colour 7: black on a light sheet, white on a dark one. */
@@ -157,6 +168,17 @@
   --c-warn: #b76e00;
   --c-danger: #c8372d;
   --c-info: #1f6fc4;
+
+  /* Charts (docs/adr/0227 §10): the same hues stepped for the light surface. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-6: #008300;
+  --chart-7: #4a3aa7;
+  --chart-8: #e34948;
+  --chart-other: #9aa3ad;
 
   --canvas-bg: #f8f9fa;
   --canvas-fg: #1e2833;

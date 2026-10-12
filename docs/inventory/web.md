@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 595 | 572 | 0 | 23 |
+| Komutlar | 603 | 580 | 0 | 23 |
 | Araçlar | 131 | 129 | 0 | 2 |
 | İşlem araçları | 137 | 137 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,7 +12,7 @@
 | Ayarlar | 95 | 95 | 0 | 0 |
 | Tarayıcı depoları | 12 | 12 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 844 | 844 | 0 | 0 |
-| Pencereler ve paneller | 143 | 143 | 0 | 0 |
+| Pencereler ve paneller | 145 | 145 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -60,7 +60,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 525 | 0 | 58 | 10 | 2 | 595 |
+| Komutlar | 533 | 0 | 58 | 10 | 2 | 603 |
 | Araçlar | 129 | 0 | 0 | 2 | 0 | 131 |
 | İşlem araçları | 137 | 0 | 0 | 0 | 0 | 137 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -68,7 +68,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 91 | 0 | 3 | 0 | 1 | 95 |
 | Tarayıcı depoları | 10 | 0 | 0 | 0 | 2 | 12 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 844 | 0 | 0 | 0 | 0 | 844 |
-| Pencereler ve paneller | 117 | 2 | 23 | 0 | 1 | 143 |
+| Pencereler ve paneller | 119 | 2 | 23 | 0 | 1 | 145 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -87,7 +87,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 595; ayrıca 10 iki platformda da bekliyor)
+#### Komutlar (58 / 603; ayrıca 10 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -190,7 +190,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (25 / 143)
+#### Pencereler ve paneller (25 / 145)
 
 - `apps/web/src/ui/io/GisImportDialog.ts#openKmlImport` openKmlImport
 - `apps/web/src/ui/io/TakeFromDialog.ts#openTakeFrom` openTakeFrom
@@ -220,4 +220,4 @@ Yok.
 
 ## Test başvurusu
 
-285 / 595 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+290 / 603 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

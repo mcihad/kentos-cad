@@ -5,6 +5,7 @@ pub mod areas;
 pub mod arrange;
 pub mod breaking;
 pub mod centerline;
+pub mod charts;
 pub mod cogo;
 pub mod compare;
 pub mod continuation;

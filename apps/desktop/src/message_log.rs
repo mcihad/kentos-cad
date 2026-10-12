@@ -165,6 +165,8 @@ impl App {
             BottomTab::Coords
             | BottomTab::Points
             | BottomTab::Table
+            | BottomTab::Statistics
+            | BottomTab::Chart
             | BottomTab::Search
             | BottomTab::Topology
             | BottomTab::ServiceInfo

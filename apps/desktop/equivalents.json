@@ -171,6 +171,8 @@
     "apps/web/src/ui/bottom/PointTable.ts#PointTable": { "desktop": "implemented", "where": "apps/desktop/src/points/ (ADR 0153)" },
     "apps/web/src/ui/bottom/SearchPanel.ts#SearchPanel": { "desktop": "implemented", "where": "apps/desktop/src/search/ (ADR 0178)" },
     "apps/web/src/ui/bottom/FeatureTable.ts#FeatureTable": { "desktop": "implemented", "where": "apps/desktop/src/features/ (ADR 0199 §4)" },
+    "apps/web/src/ui/bottom/StatisticsPanel.ts#StatisticsPanel": { "desktop": "implemented", "where": "apps/desktop/src/statistics/ (ADR 0227 §3, §8)" },
+    "apps/web/src/ui/bottom/ChartPanel.ts#ChartPanel": { "desktop": "implemented", "where": "apps/desktop/src/charts/ (ADR 0227 §4–§8)" },
     "apps/web/src/ui/layers/LayerFieldsDialog.ts#openLayerFields": { "desktop": "implemented", "where": "apps/desktop/src/layer_fields.rs (ADR 0199 §3)" },
     "apps/web/src/ui/sources/SourcesPanel.ts#SourcesPanel": { "desktop": "implemented", "where": "apps/desktop/src/sources/ (ADR 0199 §7)" },
     "apps/web/src/ui/bottom/TopologyPanel.ts#TopologyPanel": { "desktop": "implemented", "where": "apps/desktop/src/topology/ (ADR 0202 §5)" },

@@ -132,6 +132,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::distance_scenes::pointed());
     all.extend(crate::suitability_scenes::pointed());
     all.extend(crate::stats_scenes::pointed());
+    all.extend(crate::chart_scenes::pointed());
     all.extend(crate::remote_scenes::pointed());
     all.extend(crate::multidim_scenes::pointed());
     all.extend(crate::label_scenes::pointed());
@@ -177,6 +178,19 @@ fn ribbon_scenes() -> Vec<Scene> {
             app.tab = "modify";
         }),
         ("serit-duzenle", |app| app.tab = "edit"),
+        // docs/adr/0165's 12 Oct addendum: a CAD project's axes stay at the bottom left with 0,0 in the view's middle.
+        ("cad-eksen-simgesi", |app| {
+            crate::files_testing::make_cad(app);
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds {
+                    min_x: -60.0,
+                    min_y: -40.0,
+                    max_x: 60.0,
+                    max_y: 40.0,
+                },
+                24.0,
+            );
+        }),
         ("serit-harita", |app| app.tab = "map"),
         // docs/adr/0141: two zooms in and a step back, so that Önceki and Sonraki görünüm are both on.
         ("serit-gorunum", |app| {

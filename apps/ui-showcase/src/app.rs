@@ -3154,10 +3154,11 @@ mod tests {
     fn the_ribbon_collapses_and_quick_buttons_hide() {
         let mut app = Showcase::new();
 
+        // Ctrl+F1, ⌘F1 on macOS: the platform's command key the shortcuts read.
         assert!(matches!(
             shortcut(
                 keyboard::Key::Named(keyboard::key::Named::F1),
-                Modifiers::CTRL
+                Modifiers::COMMAND
             ),
             Some(Message::RibbonCollapsed)
         ));

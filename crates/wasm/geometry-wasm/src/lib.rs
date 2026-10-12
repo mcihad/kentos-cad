@@ -16,6 +16,7 @@ use kentos_geometry_core::triangulate::triangulate_many;
 use wasm_bindgen::prelude::*;
 
 pub mod adjoin;
+pub mod charts;
 pub mod faces;
 pub mod network;
 pub mod store;

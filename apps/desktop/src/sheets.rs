@@ -1329,12 +1329,13 @@ mod tests {
             kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0)).expect("a renderer");
         let image = snapshot.render(app.view(), &app.theme());
         assert_eq!((image.width, image.height), (1440, 900));
-        // Keys no field took go to the sheet mode while a sheet is in front: Ctrl+Z takes back the new sheet.
+        // Keys no field took go to the sheet mode while a sheet is in front: Ctrl+Z (⌘Z on macOS, the
+        // platform's command key the sheet mode reads) takes back the new sheet.
         let _ = app.update(Message::Sheet(Sheet::InspectorTab(InspectorTab::Page)));
         let undo = crate::keys::KeyPress {
             key: iced::keyboard::Key::Character("z".into()),
             physical: iced::keyboard::key::Physical::Code(iced::keyboard::key::Code::KeyZ),
-            modifiers: iced::keyboard::Modifiers::CTRL,
+            modifiers: iced::keyboard::Modifiers::COMMAND,
             text: None,
             repeat: false,
         };

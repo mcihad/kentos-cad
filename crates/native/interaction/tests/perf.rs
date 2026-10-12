@@ -423,3 +423,204 @@ fn label_texts_on_a_large_layer() {
         }
     );
 }
+
+/// A layer of `n` points for the charts (docs/adr/0227 §11): Grup of 30 values,
+/// Değer with two fraction digits, and with `xy` a Yaş too; deterministic.
+fn chart_entities(n: usize, xy: bool) -> Vec<Entity> {
+    use kentos_contracts::PointEntity;
+    (0..n)
+        .map(|i| {
+            let mut b = base("nokta");
+            b.id = i as u32 + 1;
+            // The R2 sequence's fractions (Roberts 2018): spread, not random.
+            let u = (i as f64 * 0.754_877_666_246_693).fract();
+            let v = (i as f64 * 0.569_840_290_998_053_2).fract();
+            b.attrs.insert("Grup".into(), format!("G{:02}", 1 + i % 30));
+            b.attrs
+                .insert("Değer".into(), format!("{:.2}", 1000.0 + 9000.0 * u));
+            if xy {
+                b.attrs
+                    .insert("Yaş".into(), format!("{}", (v * 80.0).floor() as i64));
+            }
+            Entity::Point(PointEntity {
+                base: b,
+                p: Wire {
+                    x: E + u * 1000.0,
+                    y: N + v * 1000.0,
+                },
+                z: None,
+                parts: None,
+            })
+        })
+        .collect()
+}
+
+/// Grafikler ve alan istatistikleri (docs/adr/0227 §11) on 100 000 objects:
+/// their data read (the fields' cells checked, the core's columns read), a
+/// field's summary, a field's statistics and values, Çubuk (Toplam, 30
+/// categories) with its layout, Histogram and Kutu (30 groups), Saçılım of
+/// 100 000 points with its layout, the selection's marks and a hover's hit.
+/// The median of seven runs against the ADR's desktop budget.
+#[test]
+#[ignore = "a measurement: run by hand in release"]
+fn charts_on_a_large_layer() {
+    use kentos_contracts::{LayerField, LayerFieldKind};
+    use kentos_geometry_core::ops::charts::Work;
+    use kentos_geometry_core::ops::charts::data::DataSet;
+    use kentos_geometry_core::ops::charts::layout::Frame;
+    use kentos_geometry_core::ops::charts::model::{Aggregate, ChartKind, Spec};
+    use kentos_interaction::chart_data::layer_columns;
+
+    const N_OBJECTS: usize = 100_000;
+    let median = |mut v: Vec<f64>| {
+        v.sort_by(f64::total_cmp);
+        v[v.len() / 2]
+    };
+    let say = |name: &str, ms: f64, budget: f64| {
+        println!(
+            "  {name:<52} {ms:>7.2} ms; bütçe {budget:>4} ms: {}",
+            if ms <= budget {
+                "bütçede"
+            } else {
+                "BÜTÇEYİ AŞIYOR"
+            }
+        );
+    };
+    let mut decimal = LayerField::new("Değer", LayerFieldKind::Decimal);
+    decimal.scale = Some(2);
+    let two = vec![
+        LayerField::new("Grup", LayerFieldKind::Text),
+        decimal.clone(),
+    ];
+    let three = vec![
+        LayerField::new("Grup", LayerFieldKind::Text),
+        decimal,
+        LayerField::new("Yaş", LayerFieldKind::Integer),
+    ];
+    let frame = Frame {
+        width: 900.0,
+        height: 260.0,
+        font: 12.0,
+        family: "Plus Jakarta Sans".into(),
+    };
+    println!("\nGrafikler, {N_OBJECTS} nesne:");
+    // The data: the fields' cells read from the objects, the core's columns read.
+    let entities = chart_entities(N_OBJECTS, false);
+    let refs: Vec<&Entity> = entities.iter().collect();
+    let mut setup = Vec::new();
+    for _ in 0..7 {
+        let t = Instant::now();
+        let columns = layer_columns(&two, &refs, None);
+        let mut work = Work::new(DataSet {
+            rows: N_OBJECTS,
+            columns,
+        });
+        work.read(0);
+        work.read(1);
+        setup.push(ms(t.elapsed()));
+    }
+    say("verinin kurulması (2 sütun)", median(setup), 40.0);
+
+    let entities = chart_entities(N_OBJECTS, true);
+    let refs: Vec<&Entity> = entities.iter().collect();
+    let mut work = Work::new(DataSet {
+        rows: N_OBJECTS,
+        columns: layer_columns(&three, &refs, None),
+    });
+    let rows: Vec<u32> = (0..N_OBJECTS as u32).collect();
+    work.read(0);
+    work.read(1);
+    work.read(2);
+    let runs = |f: &mut dyn FnMut()| {
+        let mut v = Vec::new();
+        for _ in 0..7 {
+            let t = Instant::now();
+            f();
+            v.push(ms(t.elapsed()));
+        }
+        median(v)
+    };
+    let s = runs(&mut || {
+        work.summary(1, &rows);
+    });
+    say("özet tablonun bir alanı (Değer)", s, 12.0);
+    let s = runs(&mut || {
+        work.detail(1, &rows);
+    });
+    say(
+        "seçilen alanın istatistikleri ve değerleri (Değer)",
+        s,
+        25.0,
+    );
+    let bars = Spec {
+        category: Some("Grup".into()),
+        aggregate: Aggregate::Sum,
+        value: Some("Değer".into()),
+        ..Spec::new(ChartKind::Bar)
+    };
+    let s = runs(&mut || {
+        work.chart(&bars, &rows).expect("bars");
+        work.lay_out(&frame);
+    });
+    say("çubuk (Toplam, 30 kategori), model ve yerleşim", s, 15.0);
+    let histogram = Spec {
+        value: Some("Değer".into()),
+        ..Spec::new(ChartKind::Histogram)
+    };
+    let s = runs(&mut || {
+        work.chart(&histogram, &rows).expect("histogram");
+        work.lay_out(&frame);
+    });
+    say("histogram, model ve yerleşim", s, 25.0);
+    let boxes = Spec {
+        value: Some("Değer".into()),
+        group: Some("Grup".into()),
+        ..Spec::new(ChartKind::Box)
+    };
+    let s = runs(&mut || {
+        work.chart(&boxes, &rows).expect("boxes");
+        work.lay_out(&frame);
+    });
+    say("kutu (30 grup), model ve yerleşim", s, 25.0);
+    let scatter = Spec {
+        x: Some("Değer".into()),
+        y: vec!["Yaş".into()],
+        ..Spec::new(ChartKind::Scatter)
+    };
+    let s = runs(&mut || {
+        work.chart(&scatter, &rows).expect("scatter");
+        work.lay_out(&frame);
+    });
+    say("saçılım (100 000 nokta), model ve yerleşim", s, 25.0);
+    // Half the objects selected, then the other half: the marks found again each time.
+    let halves = [
+        rows.iter()
+            .copied()
+            .filter(|r| r % 2 == 0)
+            .collect::<Vec<u32>>(),
+        rows.iter()
+            .copied()
+            .filter(|r| r % 2 == 1)
+            .collect::<Vec<u32>>(),
+    ];
+    let mut k = 0;
+    let s = runs(&mut || {
+        k += 1;
+        work.select(&halves[k % 2]);
+    });
+    say("seçimin vurgusu (50 000 seçili nesne)", s, 4.0);
+    work.lay_out(&frame);
+    let (mean, worst) = each(1000, |i| {
+        let x = 20.0 + (i as f32 * 0.754_877_7).fract() * 860.0;
+        let y = 20.0 + (i as f32 * 0.569_840_3).fract() * 220.0;
+        let _ = work.hit(x, y);
+    });
+    say(
+        &format!(
+            "üzerine gelme (tıklama sınaması; en yavaşı {:.0} µs)",
+            worst
+        ),
+        mean / 1000.0,
+        1.0,
+    );
+}

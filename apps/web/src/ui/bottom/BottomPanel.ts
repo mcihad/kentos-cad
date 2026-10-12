@@ -14,6 +14,9 @@ import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 import { vertexListing } from './coordinates';
 import { FeatureTable, resetFeatureTable } from './FeatureTable';
+import { ChartPanel } from './ChartPanel';
+import { StatisticsPanel } from './StatisticsPanel';
+import { resetCharts } from '../../app/charts';
 import { PointTable } from './PointTable';
 import { SearchPanel } from './SearchPanel';
 import { ServiceInfoPanel } from './ServiceInfoPanel';
@@ -49,6 +52,9 @@ export class BottomPanel extends Component {
   private search: SearchPanel | null = null;
   /** Tablo, the attribute table (docs/adr/0199 §4), while its tab is on screen. */
   private features: FeatureTable | null = null;
+  /** İstatistik and Grafik (docs/adr/0227 §8), while their tab is on screen. */
+  private statistics: StatisticsPanel | null = null;
+  private chart: ChartPanel | null = null;
   /** Topoloji, the topology rules' findings (docs/adr/0202 §5), while its tab is on screen. */
   private topology: TopologyPanel | null = null;
   /** Servis bilgisi, what the services said about a point (docs/adr/0208 §11), while its tab is on screen. */
@@ -73,15 +79,28 @@ export class BottomPanel extends Component {
           t.id === 'messages' ? this.badge : null,
         );
         b.addEventListener('click', () => ui.bottomTab.set(t.id));
+        // In a compact row the tab shows its icon only: its name is in the tooltip (docs/adr/0227 §8).
+        this.d.add(tooltip(b, () => ({ title: t.label }), 'top'));
         this.tabButtons.set(t.id, b);
         return b;
       }),
     );
+    // A row too narrow for every name shows the tabs behind by their icon only, as the dock's tabs do: no tab is out of reach.
+    const fit = () => {
+      tabs.classList.remove('bottom__tabs--compact');
+      if (tabs.scrollWidth > tabs.clientWidth + 1) tabs.classList.add('bottom__tabs--compact');
+    };
+    const observer = new ResizeObserver(fit);
+    observer.observe(tabs);
+    this.d.add(() => observer.disconnect());
+    this.d.add(ui.bottomTab.subscribe(() => queueMicrotask(fit)));
     const clear = h('button', { class: 'ibtn', type: 'button', 'aria-label': BOTTOM_TEXTS.clear }, icon('clear', 16));
     const collapse = h('button', { class: 'ibtn', type: 'button', 'aria-label': BOTTOM_TEXTS.close }, icon('chevronDown', 16));
     this.d.add(listen(clear, 'click', () => ctx.log.clear()));
     // Another drawing: the table's choices (its layer, search, sort) start again, as they do for a new session.
     this.d.add(ctx.doc.events.on('reset', () => resetFeatureTable()));
+    // Another drawing: İstatistik's and Grafik's choices start again (docs/adr/0227 §8).
+    this.d.add(ctx.doc.events.on('reset', () => resetCharts()));
     // Another drawing: the last check is another drawing's (docs/adr/0202 §3).
     this.d.add(ctx.doc.events.on('reset', () => resetTopology()));
     this.d.add(listen(collapse, 'click', () => ui.bottomExpanded.set(false)));
@@ -144,6 +163,8 @@ export class BottomPanel extends Component {
     this.d.add(() => this.features?.dispose());
     this.d.add(() => this.topology?.dispose());
     this.d.add(() => this.serviceInfo?.dispose());
+    this.d.add(() => this.statistics?.dispose());
+    this.d.add(() => this.chart?.dispose());
   }
 
   /**
@@ -207,6 +228,10 @@ export class BottomPanel extends Component {
     this.topology = null;
     this.serviceInfo?.dispose();
     this.serviceInfo = null;
+    this.statistics?.dispose();
+    this.statistics = null;
+    this.chart?.dispose();
+    this.chart = null;
     this.log = null;
     if (!this.ctx.ui.bottomExpanded.value) return;
     const tab = this.ctx.ui.bottomTab.value;
@@ -222,6 +247,14 @@ export class BottomPanel extends Component {
     if (tab === 'table') {
       this.features = new FeatureTable(this.ctx);
       return replaceChildren(this.content, this.features.el);
+    }
+    if (tab === 'statistics') {
+      this.statistics = new StatisticsPanel(this.ctx);
+      return replaceChildren(this.content, this.statistics.el);
+    }
+    if (tab === 'chart') {
+      this.chart = new ChartPanel(this.ctx);
+      return replaceChildren(this.content, this.chart.el);
     }
     if (tab === 'topology') {
       this.topology = new TopologyPanel(this.ctx);

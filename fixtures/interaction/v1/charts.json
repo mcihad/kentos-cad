@@ -1,0 +1,228 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "charts",
+  "title": "Grafikler ve alan istatistikleri (ADR 0227): Alan istatistikleri alt panelin İstatistik sekmesini açar, parsellerin her alanının özeti sayılır (Kat'ın ikisi boş, biri kurala uymaz); Çubuk grafik etkin katmanın ilk metin alanına (Ada) göre nesne sayısını gösterir; çizimde seçilen parselin çubuğu vurgulanır; çubuğa basmak nesnelerini seçer, Shift ekler, Ctrl çıkarır; Pasta grafik aynı seçimi diliminde vurgular",
+  "source": "Web'in StatisticsPanel'i ve ChartPanel'i, masaüstünün statistics/ ve charts/'ı, çekirdeğin ops::charts'ı (fields, model, specs, layout), ADR 0227",
+  "covers": [
+    "GIS-39"
+  ],
+  "document": "charts.kcad",
+  "view": {
+    "center": [
+      486626.0,
+      4421105.5
+    ],
+    "metresPerPixel": 0.5
+  },
+  "clickTolerance": 0.5,
+  "steps": [
+    {
+      "run": "data.statistics",
+      "note": "İstatistik: Parseller'in 63 nesnesi; her alanın dolu, boş, benzersiz, en az, en çok, ortalama ve toplamı; geometriden Alan (m²) ve Uzunluk (m)",
+      "expect": {
+        "panel": "İstatistik",
+        "statistics": {
+          "count": "63 nesne",
+          "rows": [
+            "Ada | Metin | 63 | 0 | 4 |  |  |  | ",
+            "Parsel | Sayı | 63 | 0 | 18 | 1 | 18 | 8.86 | 558",
+            "Kullanım | Metin | 63 | 0 | 6 |  |  |  | ",
+            "Kat | Sayı | 60 | 2 | 6 | 1 | 6 | 3.08 | 185",
+            "Emsal | Sayı | 63 | 0 | 7 | 0.00 | 2.10 | 1.0500 | 66.15",
+            "Ruhsat | Evet/hayır | 63 | 0 | 2 |  |  |  | ",
+            "Tescil tarihi | Tarih | 63 | 0 | 62 | 10.02.2014 | 26.12.2025 |  | ",
+            "Birim değer (TL/m²) | Sayı | 61 | 2 | 57 | 4890 | 10030 | 7374.43 | 449840",
+            "Alan (m²) | Sayı | 63 | 0 | 34 | 480.000 | 1023.000 | 731.71429 | 46098.000",
+            "Uzunluk (m) | Sayı | 63 | 0 | 20 | 88.000 | 128.000 | 108.28571 | 6822.000"
+          ]
+        }
+      }
+    },
+    {
+      "run": "chart.bar",
+      "note": "Çubuk grafik: ilk metin alanı Ada kategori, nesne sayısı",
+      "expect": {
+        "panel": "Grafik",
+        "chart": {
+          "kind": "bar",
+          "columns": [
+            "Ada",
+            "Nesne"
+          ],
+          "rows": [
+            "112 | 18",
+            "113 | 18",
+            "114 | 18",
+            "115 | 9"
+          ],
+          "marked": []
+        }
+      }
+    },
+    {
+      "click": [
+        -7,
+        -2
+      ],
+      "note": "Çizimde 113/14 parseli seçilir: 113'ün çubuğu vurgulanır",
+      "expect": {
+        "selected": [
+          32
+        ],
+        "chart": {
+          "kind": "bar",
+          "rows": [
+            "112 | 18",
+            "113 | 18",
+            "114 | 18",
+            "115 | 9"
+          ],
+          "marked": [
+            2
+          ]
+        }
+      }
+    },
+    {
+      "chartPress": 1,
+      "note": "112'nin çubuğuna basmak 18 parselini seçer",
+      "expect": {
+        "selected": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "chart": {
+          "kind": "bar",
+          "rows": [
+            "112 | 18",
+            "113 | 18",
+            "114 | 18",
+            "115 | 9"
+          ],
+          "marked": [
+            1
+          ]
+        }
+      }
+    },
+    {
+      "chartPress": 4,
+      "shift": true,
+      "note": "Shift: 115'in 9 parseli seçime eklenir",
+      "expect": {
+        "selected": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "chart": {
+          "kind": "bar",
+          "rows": [
+            "112 | 18",
+            "113 | 18",
+            "114 | 18",
+            "115 | 9"
+          ],
+          "marked": [
+            1,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "chartPress": 1,
+      "ctrl": true,
+      "note": "Ctrl: 112'nin parselleri seçimden çıkar",
+      "expect": {
+        "selected": [
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "chart": {
+          "kind": "bar",
+          "rows": [
+            "112 | 18",
+            "113 | 18",
+            "114 | 18",
+            "115 | 9"
+          ],
+          "marked": [
+            4
+          ]
+        }
+      }
+    },
+    {
+      "run": "chart.pie",
+      "note": "Pasta grafik: aynı kategori ve sayı, paylarıyla; seçim 115'in dilimini vurgular",
+      "expect": {
+        "chart": {
+          "kind": "pie",
+          "columns": [
+            "Ada",
+            "Nesne",
+            "Pay (%)"
+          ],
+          "rows": [
+            "112 | 18 | 28.6",
+            "113 | 18 | 28.6",
+            "114 | 18 | 28.6",
+            "115 | 9 | 14.3"
+          ],
+          "marked": [
+            4
+          ]
+        }
+      }
+    }
+  ]
+}

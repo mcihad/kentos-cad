@@ -44,12 +44,32 @@ pub struct Dec {
 }
 
 fn pow10(k: u32) -> Option<i128> {
-    10i128.checked_pow(k)
+    POW10.get(k as usize).copied()
 }
+
+/// 10^k for every k an i128 holds.
+const POW10: [i128; 39] = {
+    let mut t = [1i128; 39];
+    let mut k = 1;
+    while k < 39 {
+        t[k] = t[k - 1] * 10;
+        k += 1;
+    }
+    t
+};
+
+/// 10^k as doubles, each exact (10^22 is the last one a double holds).
+const POW10_F64: [f64; 23] = [
+    1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16,
+    1e17, 1e18, 1e19, 1e20, 1e21, 1e22,
+];
 
 impl Dec {
     /// At a larger scale (none when it does not fit).
-    fn at(self, scale: u32) -> Option<Dec> {
+    pub fn at(self, scale: u32) -> Option<Dec> {
+        if scale == self.scale {
+            return Some(self);
+        }
         if scale < self.scale {
             return None;
         }
@@ -80,14 +100,25 @@ impl Dec {
         if neg { format!("-{body}") } else { body }
     }
 
-    /// The nearest double (the text read, correctly rounded).
+    /// The nearest double (the text read, correctly rounded). An integer
+    /// part below 2^53 over a power of ten a double holds divides correctly
+    /// rounded, to the same double (Clinger's fast path); the rest is read
+    /// from the text.
     pub fn to_f64(self) -> f64 {
+        if self.m.unsigned_abs() < 1u128 << 53
+            && let Some(p) = POW10_F64.get(self.scale as usize)
+        {
+            return self.m as f64 / p;
+        }
         self.text().parse().unwrap_or(f64::NAN)
     }
 }
 
 /// Exact order of two decimals.
 pub fn compare(a: Dec, b: Dec) -> Ordering {
+    if a.scale == b.scale {
+        return a.m.cmp(&b.m);
+    }
     let s = a.scale.max(b.scale);
     match (a.at(s), b.at(s)) {
         (Some(x), Some(y)) => x.m.cmp(&y.m),
@@ -112,19 +143,18 @@ pub fn read_number(text: &str) -> Option<Dec> {
     if int.is_empty() && frac.is_empty() {
         return None;
     }
-    if !int.chars().chain(frac.chars()).all(|c| c.is_ascii_digit()) {
+    if !int.bytes().chain(frac.bytes()).all(|c| c.is_ascii_digit()) {
         return None;
     }
     let int = int.trim_start_matches('0');
     if int.len() + frac.len() > MAX_DIGITS {
         return None;
     }
-    let digits = format!("{int}{frac}");
-    let m: i128 = if digits.is_empty() {
-        0
-    } else {
-        digits.parse().ok()?
-    };
+    // At most 30 digits: the mantissa fits an i128 (a column of numbers reads one a row).
+    let m = int
+        .bytes()
+        .chain(frac.bytes())
+        .fold(0i128, |m, c| m * 10 + i128::from(c - b'0'));
     Some(Dec {
         m: if neg { -m } else { m },
         scale: frac.len() as u32,
@@ -216,13 +246,25 @@ pub fn figures(values: &[Option<&str>], scale: Option<u32>) -> Result<Figures, S
             None => f.skipped += 1,
         }
     }
-    f.read = nums.len();
+    let skipped = f.skipped;
+    let mut f = figures_of(&nums, scale)?;
+    f.skipped = skipped;
+    Ok(f)
+}
+
+/// The figures of numbers already read (Grafikler's columns, docs/adr/0227
+/// §3): as [`figures`] gives them, nothing skipped.
+pub fn figures_of(nums: &[Dec], scale: Option<u32>) -> Result<Figures, String> {
+    let mut f = Figures {
+        read: nums.len(),
+        ..Figures::default()
+    };
     if nums.is_empty() {
         return Ok(f);
     }
     let top = nums.iter().map(|d| d.scale).max().unwrap_or(0);
     let mut sum = Dec { m: 0, scale: top };
-    for d in &nums {
+    for d in nums {
         let d = d.at(top).ok_or(TOO_LARGE)?;
         sum.m = sum.m.checked_add(d.m).ok_or(TOO_LARGE)?;
     }
@@ -639,6 +681,39 @@ pub(crate) const OPS: &[Op] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The fast path gives the double the text reads to, bit for bit: the
+    /// integer parts at its edges and spread between, every scale it takes,
+    /// both signs; past its edges the text is read.
+    #[test]
+    fn a_decimals_double_is_its_texts() {
+        let mut x: u64 = 0x2545_f491_4f6c_dd1d;
+        let mut ms: Vec<i128> = vec![
+            0,
+            1,
+            9,
+            10,
+            (1 << 53) - 1,
+            1 << 53,
+            (1 << 53) + 1,
+            i128::from(u64::MAX),
+        ];
+        for _ in 0..20_000 {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            ms.push(i128::from(x >> (x % 50)));
+        }
+        for m in ms {
+            for scale in 0..=24 {
+                for m in [m, -m] {
+                    let d = Dec { m, scale };
+                    let read: f64 = d.text().parse().expect("a number");
+                    assert_eq!(d.to_f64().to_bits(), read.to_bits(), "{}", d.text());
+                }
+            }
+        }
+    }
 
     #[test]
     fn numbers_read_and_add_exactly() {

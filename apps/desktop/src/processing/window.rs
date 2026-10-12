@@ -18,7 +18,7 @@ use kentos_ui::theme::typography;
 use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::widget::radio::RadioGroup;
 use kentos_ui::widget::table::{self, Table};
-use kentos_ui::widget::{Dialog, Menu, MenuButton, horizontal_divider, overlay};
+use kentos_ui::widget::{Dialog, Menu, MenuButton, Tip, horizontal_divider, overlay, tip};
 
 use super::dialog::ToolDialog;
 use super::fields::{Env, control};
@@ -252,6 +252,11 @@ fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
                     .style(style::text::muted)
             )
             .width(Fill),
+            tip(
+                small("chart", "Grafik", Event::ChartTable),
+                Tip::new("Grafik").body("Tabloyu alt panelin Grafik sekmesinde gösterir: ROC eğrisi, kesit, zaman serisi ve histogram kendi grafikleriyle, öbürleri çubukla."),
+                iced::widget::tooltip::Position::Top,
+            ),
             small("copy", "Panoya kopyala", Event::CopyTable),
             // Kaydet ▾ (docs/adr/0223 §2): the table as XLSX, ODS or CSV.
             MenuButton::new(

@@ -335,6 +335,10 @@ pub enum Message {
     Points(crate::points::Event),
     /// The Tablo tab, Öznitelik tablosu (features/, docs/adr/0199 §4).
     Features(crate::features::Event),
+    /// The İstatistik tab (statistics/, docs/adr/0227 §3).
+    Statistics(crate::statistics::Event),
+    /// The Grafik tab (charts/, docs/adr/0227 §4).
+    Charts(crate::charts::Event),
     /// A table written as a file (docs/adr/0223 §2): what was written, or why not.
     TableWritten(crate::table_write::Outcome),
     /// Alanlar, a layer's fields (layer_fields.rs, docs/adr/0199 §3).
@@ -637,6 +641,8 @@ pub struct App {
     pub(crate) points: crate::points::PointsPanel,
     /// The bottom panel's Tablo tab: its choices and rows (features/, docs/adr/0199 §4).
     pub(crate) features: crate::features::FeaturesPanel,
+    /// The İstatistik and Grafik tabs: their choices and what was worked out (charts/, docs/adr/0227).
+    pub(crate) charts: crate::charts::ChartsPanel,
     /// Alanlar, while it is open (layer_fields.rs, docs/adr/0199 §3).
     pub(crate) layer_fields: Option<crate::layer_fields::Window>,
     /// The bottom panel's Arama tab: its choices and rows, and the place it marked (search/, docs/adr/0178).
@@ -986,6 +992,7 @@ impl App {
             properties_cache: Default::default(),
             points: Default::default(),
             features: Default::default(),
+            charts: Default::default(),
             layer_fields: None,
             search: Default::default(),
             topology: Default::default(),
@@ -1264,6 +1271,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // İstatistik's summaries, a few fields a frame (statistics/, docs/adr/0227 §11).
+            if self.stats_counting() {
+                window::frames().map(|_| Message::Statistics(crate::statistics::Event::Count))
+            } else {
+                Subscription::none()
+            },
             // While the key tips show (or Alt is down alone): a click or the
             // window losing the focus sends them away (ribbon_keys.rs).
             if self.key_tips.is_some() || self.alt_armed {
@@ -1324,6 +1337,8 @@ impl App {
         ]);
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());
+        // İstatistik and Grafik keep the layer they read (charts/).
+        self.follow_charts();
         // Bilgi's card goes with its tool and its object (info_card.rs).
         self.follow_info_card();
         self.cloud_after(Instant::now());
@@ -1461,6 +1476,8 @@ impl App {
             Message::BottomTab(tab) => self.show_bottom(tab),
             Message::Points(event) => return self.points_event(event),
             Message::Features(event) => return self.features_event(event),
+            Message::Statistics(event) => return self.statistics_event(event),
+            Message::Charts(event) => return self.charts_event(event),
             Message::TableWritten(outcome) => match outcome {
                 crate::table_write::Outcome::Written { file, rows, notes } => {
                     self.say(Level::Success, format!("“{file}” yazıldı: {rows} satır."));
@@ -1951,6 +1968,8 @@ impl App {
         self.view_history.clear();
         self.styles.follow_project(Some(doc.model.styles()));
         self.selection = Selection::new();
+        // İstatistik and Grafik start again on another drawing (docs/adr/0227 §8).
+        self.charts = Default::default();
         self.followed = Some((doc.session, doc.model.generation()));
         self.document = Some(doc);
     }
@@ -2184,6 +2203,14 @@ impl App {
             "point.editor" => self.show_bottom(crate::bottom::BottomTab::Points),
             // Öznitelik tablosu: the bottom panel's Tablo tab (features/, docs/adr/0199 §4).
             "data.featureTable" => self.open_feature_table(),
+            // Alan istatistikleri and Grafik: the bottom panel's İstatistik and Grafik tabs (docs/adr/0227 §8).
+            "data.statistics" => self.open_statistics(None),
+            "data.chart" => self.open_chart(None, None, None),
+            id if id.starts_with("chart.") => {
+                if let Some(k) = crate::charts::KINDS.iter().find(|k| k.command == id) {
+                    self.open_chart(None, Some(k.kind), None);
+                }
+            }
             // Veri kaynakları: the dock's Kaynaklar tab (sources/, docs/adr/0199 §7).
             "data.sources" => self.show_sources(),
             // Alanlar: the active layer's fields (layer_fields.rs; the layer tree's menu gives its layer).

@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 595,
-      "implemented": 572,
+      "total": 603,
+      "implemented": 580,
       "partial": 0,
       "pending": 23
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 143,
-      "implemented": 143,
+      "total": 145,
+      "implemented": 145,
       "partial": 0,
       "pending": 0
     },
@@ -102,12 +102,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 285,
-    "commandsOnDesktop": 525,
+    "commandsWithoutTests": 290,
+    "commandsOnDesktop": 533,
     "desktop": {
       "commands": {
-        "total": 595,
-        "implemented": 525,
+        "total": 603,
+        "implemented": 533,
         "partial": 0,
         "pending": 10,
         "none": 58,
@@ -170,8 +170,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 143,
-        "implemented": 117,
+        "total": 145,
+        "implemented": 119,
         "partial": 2,
         "pending": 0,
         "none": 23,
@@ -1158,6 +1158,172 @@
       ]
     },
     {
+      "id": "chart.bar",
+      "title": "Çubuk grafik",
+      "category": "Veri",
+      "icon": "chartBar",
+      "description": "Bir alanın değerlerine göre nesne sayısı ya da başka bir alanın toplamı, ortalaması, en azı, en çoğu, ortancası; en çok 30 çubuk, gerisi “Diğer”.",
+      "aliases": [
+        "CUBUKGRAFIK",
+        "BARCHART"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Yönet › Tablo",
+        "CBS › Veri › Tablo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/charts.json"
+      ]
+    },
+    {
+      "id": "chart.box",
+      "title": "Kutu grafiği",
+      "category": "Veri",
+      "icon": "chartBox",
+      "description": "Bir sayı alanının çeyrekleri, ortancası, bıyıkları ve aykırı değerleri; isteğe bağlı olarak bir alanın gruplarına göre.",
+      "aliases": [
+        "KUTUGRAFIGI",
+        "BOXPLOT"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Yönet › Tablo",
+        "CBS › Veri › Tablo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "chart.histogram",
+      "title": "Histogram",
+      "category": "Veri",
+      "icon": "chartHistogram",
+      "description": "Bir sayı alanının dağılımı eşit aralıklarla; aralık sayısı kendiliğinden (Sturges) ya da seçilerek; ortalama ve ortanca çizgileri.",
+      "aliases": [
+        "HISTOGRAMGRAFIK",
+        "DAGILIMGRAFIGI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Yönet › Tablo",
+        "CBS › Veri › Tablo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "chart.line",
+      "title": "Çizgi grafik",
+      "category": "Veri",
+      "icon": "chartLine",
+      "description": "Bir sayı alanına göre bir ya da birkaç değer (seriler); her satır bir nokta ya da her X için toplama. ROC, Kesit ve Zaman serisi tabloları için.",
+      "aliases": [
+        "CIZGIGRAFIK",
+        "LINECHART"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Yönet › Tablo",
+        "CBS › Veri › Tablo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "chart.pie",
+      "title": "Pasta grafik",
+      "category": "Veri",
+      "icon": "chartPie",
+      "description": "Bir alanın değerlerinin payları (nesne sayısı ya da bir alanın toplamı) halka dilimleriyle; en çok 8 renk, gerisi “Diğer”.",
+      "aliases": [
+        "PASTAGRAFIK",
+        "PIECHART"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Yönet › Tablo",
+        "CBS › Veri › Tablo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/charts.json"
+      ]
+    },
+    {
+      "id": "chart.scatter",
+      "title": "Saçılım grafiği",
+      "category": "Veri",
+      "icon": "chartScatter",
+      "description": "İki sayı alanının ilişkisi: her nesne bir nokta; en küçük kareler eğilim çizgisi ve R².",
+      "aliases": [
+        "SACILIMGRAFIGI",
+        "SCATTER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [
+        "CAD › Yönet › Tablo",
+        "CBS › Veri › Tablo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "cloud.conflicts",
       "title": "Kayıt çakışmalarını çöz…",
       "short": "Çakışmaları çöz",
@@ -1733,6 +1899,38 @@
       ]
     },
     {
+      "id": "data.chart",
+      "title": "Grafik",
+      "category": "Veri",
+      "icon": "chart",
+      "description": "Alt panelin Grafik sekmesi: bir katmanın ya da bir işlem tablosunun çubuk, pasta, histogram, kutu, saçılım ve çizgi grafiği. Grafiğe tıklamak nesneleri seçer, seçim grafikte vurgulanır; Tablo görünümü, Panoya kopyala, PNG ve SVG.",
+      "aliases": [
+        "GRAFIK",
+        "GRAFİK",
+        "CHART"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Tablo"
+      ],
+      "ribbon": [
+        "CAD › Yönet › Tablo",
+        "CBS › Veri › Tablo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "data.compare",
       "title": "Veri karşılaştır…",
       "category": "Veri",
@@ -1878,6 +2076,41 @@
         "desktop": "implemented"
       },
       "tests": []
+    },
+    {
+      "id": "data.statistics",
+      "title": "Alan istatistikleri",
+      "short": "İstatistik",
+      "category": "Veri",
+      "icon": "fieldStatistics",
+      "description": "Alt panelin İstatistik sekmesi: bir katmanın bütün alanlarının dolu, boş ve benzersiz değer sayıları, en azı, en çoğu, ortalaması ve toplamı; seçilen alanın çeyrekleri, ortancası, en sık değeri ve değerlerinin sayıları. Değere tıklamak nesnelerini seçer.",
+      "aliases": [
+        "ALANISTATISTIKLERI",
+        "ISTATISTIKPANELI",
+        "FIELDSTATS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Tablo"
+      ],
+      "ribbon": [
+        "CAD › Yönet › Tablo",
+        "CBS › Veri › Tablo"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/charts.json"
+      ]
     },
     {
       "id": "data.unmark",
@@ -31469,7 +31702,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/model/ops/charts.test.ts"
+      ]
     },
     {
       "id": "suitability.weightedOverlay",
@@ -45256,6 +45491,18 @@
       "desktopWhere": "apps/desktop/src/bottom.rs, message_log.rs, log_plan.rs (ADR 0058, 0114)"
     },
     {
+      "id": "apps/web/src/ui/bottom/ChartPanel.ts#ChartPanel",
+      "name": "ChartPanel",
+      "role": "panel",
+      "source": "apps/web/src/ui/bottom/ChartPanel.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/charts/ (ADR 0227 §4–§8)"
+    },
+    {
       "id": "apps/web/src/ui/bottom/CommandLine.ts#CommandLine",
       "name": "CommandLine",
       "role": "panel",
@@ -45326,6 +45573,18 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/services/info.rs, alt panelin Servis bilgisi sekmesi (ADR 0208 §11)"
+    },
+    {
+      "id": "apps/web/src/ui/bottom/StatisticsPanel.ts#StatisticsPanel",
+      "name": "StatisticsPanel",
+      "role": "panel",
+      "source": "apps/web/src/ui/bottom/StatisticsPanel.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/statistics/ (ADR 0227 §3, §8)"
     },
     {
       "id": "apps/web/src/ui/bottom/TopologyPanel.ts#TopologyPanel",
@@ -47048,6 +47307,8 @@
             "label": "Tablo",
             "items": [
               "data.featureTable",
+              "data.statistics",
+              "data.chart",
               "layer.fields",
               "data.sources"
             ]
@@ -48928,6 +49189,14 @@
                 "size": "small"
               },
               {
+                "command": "data.statistics",
+                "size": "small"
+              },
+              {
+                "command": "data.chart",
+                "size": "small"
+              },
+              {
                 "command": "layer.fields",
                 "size": "small"
               },
@@ -48936,7 +49205,14 @@
                 "size": "small"
               }
             ],
-            "overflow": [],
+            "overflow": [
+              "chart.bar",
+              "chart.pie",
+              "chart.histogram",
+              "chart.box",
+              "chart.scatter",
+              "chart.line"
+            ],
             "keep": false
           },
           {
@@ -53156,6 +53432,14 @@
                   "size": "small"
                 },
                 {
+                  "command": "data.statistics",
+                  "size": "small"
+                },
+                {
+                  "command": "data.chart",
+                  "size": "small"
+                },
+                {
                   "command": "layer.fields",
                   "size": "small"
                 },
@@ -53164,7 +53448,14 @@
                   "size": "small"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "chart.bar",
+                "chart.pie",
+                "chart.histogram",
+                "chart.box",
+                "chart.scatter",
+                "chart.line"
+              ],
               "keep": false
             },
             {
@@ -54680,6 +54971,14 @@
                   "size": "small"
                 },
                 {
+                  "command": "data.statistics",
+                  "size": "small"
+                },
+                {
+                  "command": "data.chart",
+                  "size": "small"
+                },
+                {
                   "command": "layer.fields",
                   "size": "small"
                 },
@@ -54688,7 +54987,14 @@
                   "size": "small"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "chart.bar",
+                "chart.pie",
+                "chart.histogram",
+                "chart.box",
+                "chart.scatter",
+                "chart.line"
+              ],
               "keep": false
             },
             {
@@ -57382,6 +57688,14 @@
     "closestFacility": "<path d=\"M4 16h5V5h5.5\" stroke-width=\"2.2\"/><path d=\"M9 16h7.5\" stroke-width=\"1\" stroke-dasharray=\"1.8 1.4\"/><circle cx=\"4\" cy=\"16\" r=\"2\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"2.8\" width=\"4\" height=\"4\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.1\"/><rect x=\"16.5\" y=\"14\" width=\"3\" height=\"3.6\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1\"/>",
     "odMatrix": "<path d=\"M4 4 16 6M4 4l12 9M4 10l12-4M4 10l12 3M4 16 16 6M4 16l12-3\" stroke-width=\".9\"/><circle cx=\"4\" cy=\"4\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4\" cy=\"10\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"4\" cy=\"16\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"4.5\" width=\"3.2\" height=\"3.2\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.1\"/><rect x=\"14.5\" y=\"11.4\" width=\"3.2\" height=\"3.2\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"1.1\"/>",
     "serviceAreas": "<path d=\"M6.8 3.2 11 5.4 12 10.2 9.4 14.4 4.4 14.6 1.8 10.2 3 5.6z\" fill=\"currentColor\" fill-opacity=\".22\" stroke-width=\"1.1\"/><path d=\"M13.4 6.6 17.6 8.4 18.4 13.4 15.6 17.4 10.6 17 8.4 12.8 10.2 8.2z\" fill=\"currentColor\" fill-opacity=\".22\" stroke-width=\"1.1\"/><circle cx=\"6.6\" cy=\"9.4\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.6\" cy=\"12.4\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
+    "fieldStatistics": "<rect x=\"2\" y=\"2.5\" width=\"16\" height=\"15\" rx=\"1.2\"/><path d=\"M2 6.2h16\" stroke-width=\"1.2\"/><path d=\"M4.3 9.6h2.2M4.3 12.4h2.2M4.3 15.2h2.2\" stroke-width=\"1.1\"/><path d=\"M9.6 9.6h6M11.2 12.4h4.2M9 15.2h3.4\" stroke-width=\"2\"/><circle cx=\"12.6\" cy=\"9.6\" r=\"1.25\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.3\" cy=\"12.4\" r=\"1.25\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10.7\" cy=\"15.2\" r=\"1.25\" fill=\"currentColor\" stroke=\"none\"/>",
+    "chart": "<rect x=\"2\" y=\"2.5\" width=\"16\" height=\"15\" rx=\"1.5\"/><path d=\"M5 14.8V11.7a1.2 1.2 0 0 1 2.4 0V14.8M8.8 14.8V9.2a1.2 1.2 0 0 1 2.4 0V14.8M12.6 14.8V12.7a1.2 1.2 0 0 1 2.4 0V14.8\" stroke-width=\"1.2\"/><path d=\"M4.6 8.3 9.6 5.2l5.8 2\" stroke-width=\"1.3\"/>",
+    "chartBar": "<path d=\"M2 17.5h16\" stroke-width=\"1.2\"/><path d=\"M3.6 17V10.9a1.4 1.4 0 0 1 2.8 0V17M8.6 17V4.9a1.4 1.4 0 0 1 2.8 0V17M13.6 17V13.4a1.4 1.4 0 0 1 2.8 0V17Z\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><path d=\"M3.6 17V10.9a1.4 1.4 0 0 1 2.8 0V17M8.6 17V4.9a1.4 1.4 0 0 1 2.8 0V17M13.6 17V13.4a1.4 1.4 0 0 1 2.8 0V17\"/>",
+    "chartPie": "<path d=\"M10.65 3.83A6.2 6.2 0 0 1 13.64 15.02\" stroke-width=\"3\" stroke-linecap=\"butt\"/><path d=\"M12.52 15.66A6.2 6.2 0 0 1 4.34 12.52\" stroke-width=\"3\" stroke-linecap=\"butt\" stroke-opacity=\".55\"/><path d=\"M3.94 11.29A6.2 6.2 0 0 1 9.35 3.83\" stroke-width=\"3\" stroke-linecap=\"butt\" stroke-opacity=\".3\"/>",
+    "chartHistogram": "<path d=\"M2 17.5h16\" stroke-width=\"1.2\"/><path d=\"M3 17.5V14h2.8v3.5M5.8 17.5V9.5h2.8v8M8.6 17.5V6h2.8v11.5M11.4 17.5V10h2.8v7.5M14.2 17.5V14H17v3.5\" stroke-width=\"1.1\"/><path d=\"M2.5 15.2C5 15 6 6.5 10 4.2s5 10.8 7.5 11\" stroke-width=\"1.3\"/>",
+    "chartBox": "<path d=\"M10 3v3.5M10 13.5V17M8 3h4M8 17h4\" stroke-width=\"1.2\"/><rect x=\"6.2\" y=\"6.5\" width=\"7.6\" height=\"7\" rx=\"1\" fill=\"currentColor\" fill-opacity=\".2\"/><path d=\"M6.2 10.5h7.6\" stroke-width=\"2\"/><circle cx=\"15.8\" cy=\"2.6\" r=\"1.1\" stroke-width=\"1.1\"/>",
+    "chartScatter": "<path d=\"M2.5 2.5v15h15\" stroke-width=\"1.2\"/><path d=\"M4.5 15.5 17 5\" stroke-width=\"1.1\" stroke-opacity=\".7\"/><circle cx=\"5.6\" cy=\"12.6\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"8.2\" cy=\"13.6\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.2\" cy=\"9.8\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12\" cy=\"10.6\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12.8\" cy=\"6.8\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.8\" cy=\"7.6\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "chartLine": "<path d=\"M2.5 2.5v15h15\" stroke-width=\"1.2\"/><path d=\"M5 13.5 8.6 9.2l3.4 2.6 4.8-6.6\" stroke-width=\"1.4\"/><circle cx=\"5\" cy=\"13.5\" r=\"1.3\" stroke-width=\"1.2\"/><circle cx=\"8.6\" cy=\"9.2\" r=\"1.3\" stroke-width=\"1.2\"/><circle cx=\"12\" cy=\"11.8\" r=\"1.3\" stroke-width=\"1.2\"/><circle cx=\"16.8\" cy=\"5.2\" r=\"1.3\" stroke-width=\"1.2\"/>",
     "featureTable": "<rect x=\"2\" y=\"2.5\" width=\"11.5\" height=\"10\" rx=\"1\"/><path d=\"M2 6h11.5M2 9.25h11.5M6 6v6.5\"/><path d=\"m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><path d=\"m12 13.4 3.6-2.4 3 2.4-1.1 5h-4.6z\"/>",
     "layerFields": "<path d=\"M2.5 4h4M2.5 9h4M2.5 14h4\" stroke-width=\"1.2\"/><rect x=\"8.5\" y=\"2.5\" width=\"9\" height=\"3\" rx=\".8\"/><rect x=\"8.5\" y=\"7.5\" width=\"9\" height=\"3\" rx=\".8\"/><rect x=\"8.5\" y=\"12.5\" width=\"9\" height=\"3\" rx=\".8\"/><path d=\"m15 13.5.9.9.9-.9\" stroke-width=\"1\"/>",
     "fieldsFromData": "<rect x=\"2.5\" y=\"3\" width=\"15\" height=\"4\" fill=\"currentColor\" fill-opacity=\".28\" stroke=\"none\"/><rect x=\"2.5\" y=\"3\" width=\"15\" height=\"14\" rx=\"1\"/><path d=\"M2.5 7h15M5 11h3M5 14.5h3\"/><path d=\"M13 15.5v-6M10.8 11.6 13 9.4l2.2 2.2\" stroke-width=\"1.3\"/>",

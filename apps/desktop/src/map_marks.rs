@@ -10,8 +10,9 @@
 //!
 //! A CAD project has neither: its scene shows the coordinate axes' icon
 //! instead (docs/adr/0165 §5; the web's `drawUcsIcon`), X to the right and
-//! Y up from a small square, at the bottom left, or on the origin when 0,0
-//! is on screen with room for it, as AutoCAD's UCS icon.
+//! Y up from a small square, always at the bottom left (the owner's wish of
+//! 12 Oct: it stood on the origin when 0,0 was on screen, as AutoCAD's UCS
+//! icon does, in the middle of a local drawing).
 //!
 //! They depend only on the view, so they are kept with the text's cached
 //! picture.
@@ -21,7 +22,7 @@ use iced::widget::canvas::{Frame, Path, Stroke, Text};
 use iced::widget::text;
 use iced::{Color, Font, Pixels, Point, Size, Vector};
 use kentos_interaction::Axes;
-use kentos_render_wgpu::{Camera, Vec2};
+use kentos_render_wgpu::Camera;
 use kentos_ui::theme::typography;
 
 use crate::labels::Colors;
@@ -51,27 +52,14 @@ pub fn paint(frame: &mut Frame, camera: &Camera, colors: &Colors, axes: Axes, li
                 colors,
             );
         }
-        Axes::Cad => ucs_icon(frame, ucs_at(camera, size), colors),
+        Axes::Cad => ucs_icon(frame, ucs_at(size), colors),
     }
 }
 
-/// Where the coordinate axes' icon stands: on the origin when 0,0 is on
-/// screen with room for the arms and their names, else at the bottom left.
-pub fn ucs_at(camera: &Camera, size: Size) -> Point {
-    let [x, y] = camera.world_to_screen(Vec2::new(0.0, 0.0));
-    let (x, y) = (x as f32, y as f32);
-    let room = UCS_ARM + 16.0;
-    let on = x.is_finite()
-        && y.is_finite()
-        && x >= UCS_MARGIN
-        && x + room <= size.width
-        && y <= size.height - UCS_MARGIN
-        && y - room >= 0.0;
-    if on {
-        Point::new(x, y)
-    } else {
-        Point::new(UCS_MARGIN, size.height - UCS_MARGIN)
-    }
+/// Where the coordinate axes' icon stands: the bottom left of the drawing
+/// area, wherever the origin is.
+pub fn ucs_at(size: Size) -> Point {
+    Point::new(UCS_MARGIN, size.height - UCS_MARGIN)
 }
 
 /// X to the right and Y up from a small square, each arm with its arrow and

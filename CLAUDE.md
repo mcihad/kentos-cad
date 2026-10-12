@@ -224,6 +224,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   bulanıklaştır, iç gölge, iç parıltı), katmanın Katman çizimi (saydamlık, 13 karışım kipi, etiketlerin ve işaretlerin maskesi; `.kcad` şema
   41, `cad.layers.compose`); çizim alanında üç çizim hattında aynı planla (paketli haritalar, bir grubun efektleri tek geçişte); Sembol
   tasarımcısında adımlar (Adım ekle ikonlu) ve Efektler, Katman stili'nde Katman çizimi (ADR 0226);
+  grafikler ve alan istatistikleri: alt panelin İstatistik sekmesi (katmanın bütün alanlarının özeti, seçilen alanın istatistikleri ve en çok
+  500 değeri, değere tık seçer; özetler karede 8 ms) ve Grafik sekmesi (Çubuk, Pasta, Histogram, Kutu, Saçılım, Çizgi; katmandan ya da
+  İşlemler'in sonuç tablosundan, ROC, Kesit, Zaman serisi ve Histogram kendi grafikleriyle; basmak seçer, Shift ekler, Ctrl çıkarır,
+  Saçılım'da kutu, çizimin seçimi vurgulanır; ipucu, Grafik | Tablo, Panoya kopyala, PNG ve SVG); `data.statistics`, `data.chart`,
+  `chart.*`; Katmanlar'ın sağ tıkında; hesap ve yerleşim çekirdekte (`ops::charts`, `kentos.charts/1`), web'e `ChartWork` (ADR 0227);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -678,6 +683,9 @@ python3 scripts/fixtures/effects_cases.py --check; python3 scripts/fixtures/laye
 KENTOS_GPU_TESTS=1 cargo test -p kentos-render-wgpu --test gpu; (cd apps/web && node scripts/e2e/compose.mjs)   # efektler, kipler ve maskeler gerçek GPU'da ve tarayıcının WebGPU ve WebGL2'sinde, 1× ve 4×, başvurunun resimleriyle (ADR 0226)
 cargo test --release -p kentos-render-wgpu --test gpu composition_timing -- --ignored --nocapture; (cd apps/web && node scripts/e2e/compose.mjs --time); cargo test --release -p kentos-native-style --test all generator_timing -- --ignored --nocapture   # Katman çiziminin kareye eklediği masaüstünde ve web'de (makinenin GPU'sunda), Geometri üretici'nin kuruluma eklediği, bütçeleriyle (ADR 0226 §7)
 KENTOS_SHOTS_ONLY=uretici,efekt,uretici-katman-ekle,uretici-adim-ekle cargo test -p kentos-desktop style::designer::screens -- --ignored --nocapture   # Sembol tasarımcısında Geometri üretici ve Efektler, .run/shots/sdes-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs symboldesigner --only generator,effects,add-step-menu,add-layer-menu-into-generator; ADR 0226)
+python3 scripts/fixtures/chart_cases.py --check; python3 scripts/fixtures/chart_scene.py --check   # grafiklerin ve alan istatistiklerinin kurallarını (alanların özetleri ve istatistikleri, altı grafiğin modeli, eksenler, 4 anlamlı basamak, yazı genişlikleri) Python'un kesirleriyle, KentOS kodu olmadan yazılmış başvurudan ve izlerin ve resimlerin sahnesini (fixtures/interaction/v1/charts.kcad) denetle; durumlar fixtures/charts/v1/cases.json (ADR 0227)
+KENTOS_SHOTS_ONLY=grafik-istatistik,grafik-cubuk,grafik-pasta,grafik-histogram,grafik-kutu,grafik-sacilim,grafik-cizgi,grafik-ipucu,grafik-sacilim-secim,grafik-tablo cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # İstatistik ve Grafik sekmelerinin masaüstü resimleri, .run/shots/arac-grafik-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs charts); ADR 0227)
+cargo test --release -p kentos-interaction --test perf charts_on_a_large_layer -- --ignored --nocapture; cargo test --release -p kentos-desktop charts::tests::painting_100000_points -- --ignored --nocapture   # 100 000 nesnede verinin kurulması, özet, alanın istatistikleri, altı grafiğin modeli ve yerleşimi, vurgu, tıklama ve masaüstünde saçılımın resmi bütçeleriyle (ADR 0227 §11); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; CHARTS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/charts.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
 cargo test --release -p kentos-formats --test all exif::timing -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all info_templates -- --ignored --nocapture; cargo test --release -p kentos-desktop a_card_opens_in_a_frame -- --ignored --nocapture   # 1 000 fotoğrafın EXIF'i, 10 000 nesnenin kart metni ve bir kartın açılması bütçeleriyle (ADR 0225 §7); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; ATTACH_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/attachments.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp apps/web/src/io/pkg/.stamp
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
 python3 scripts/fixtures/closing_cases.py --check   # dönük binaların 45 bloğunun kapanışını (dışa tampon GEOS'un, içe aşındırma kesin; kesişim çekirdeğinin bir kez yüz yitirdiği bloklar dahil) KentOS kodu olmadan denetle; --stress FILE çekirdeğin rastgele blokların kapanışlarını (KENTOS_CLOSINGS_OUT=FILE cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored) karşılaştırır; durumlar fixtures/geoprocess/v1/closings.json (ADR 0221 §10)
@@ -1694,7 +1702,19 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   Doğrulama'sında. Ardından sahibin bildirimleriyle iki düzeltme (12 Ekim): masaüstünde ikonlar kendi piksellerinde SVG belgesi
   olarak resvg ile çizilir (ADR 0054'ün eki); kendi hedefine çizen alanın resmi tam piksellere oturur, tasarımcının önizlemesinde
   ince çizgi ve dalga düzgün (ADR 0023'ün eki). Devir notu ve açık iş (yarı saydam çizginin köşesi iki kez boyanır):
-  [docs/devir/2026-10-12-gis-30.md](docs/devir/2026-10-12-gis-30.md). Sıradaki `GIS-39` ve `GIS-40`.
+  [docs/devir/2026-10-12-gis-30.md](docs/devir/2026-10-12-gis-30.md). `GIS-39` grafikler ve alan istatistikleri
+  ([ADR 0227](docs/adr/0227-charts-and-field-statistics.md); kapsamı ben belirledim) tek parçada bitti (12 Ekim): çekirdek `ops::charts`
+  (`data`, `fields`, `specs`, `model`, `ticks`, `fonts`, `layout`, `svg`, `work`, `json`; bağımsız başvuru `chart_cases.py`, 94 durum),
+  `ops::statistics`'in `figures_of`'u ve hızlandırılması (ayırmasız `read_number`, Clinger'in `to_f64`'ü; sonuçlar bit bit aynı); WASM
+  `ChartWork`; web'de `app/charts.ts`, `model/chartData.ts`, `model/ops/charts.ts`, `ui/bottom/StatisticsPanel.ts`, `ChartPanel.ts`,
+  `ui/charts/`; masaüstünde `kentos_interaction::chart_data`, `statistics/`, `charts/` (şekiller tiny-skia ile ekranın pikselinde, PNG
+  resvg ile); İşlemler penceresinde Grafik; ortak iz `charts.json` (oynatıcılarda `chartPress`, `chart` ve `statistics`), sahne
+  `chart_scene.py`; süreler ADR'nin Doğrulama'sında (ilk ölçümde üç iş bütçeyi aşıyordu). Aynı commit'te sahibin bildirimiyle CAD'in
+  koordinat ekseni simgesi her zaman sol altta (0,0 ekrandayken orijine gidiyordu; ADR 0165'in 12 Ekim eki, resmi `tools_screens`'in
+  `cad-eksen-simgesi`'si) ve macOS'ta düşen üç denetim: pafta ve vitrinin birer testi (Ctrl yerine platformun komut tuşu,
+  `Modifiers::COMMAND`) ve web'in iz oynatıcısının Ctrl'li tıklaması (macOS'ta Chrome onu sağ tık sayar; `tracePlayer.mjs` orada ⌘ basar;
+  Veride ara'nın ve Topoloji kuralları'nın izleri). Sıradaki `GIS-40`:
+  sahip, ona geçmeden önce “çok kritik bir kararını” söyleyecek (12 Ekim); karar gelmeden başlanmaz.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

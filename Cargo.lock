@@ -2591,10 +2591,12 @@ dependencies = [
  "kentos-svg-core",
  "kentos-ui",
  "png 0.18.1",
+ "resvg",
  "rfd",
  "roxmltree",
  "serde",
  "serde_json",
+ "tiny-skia",
  "zune-jpeg 0.5.15",
 ]
 

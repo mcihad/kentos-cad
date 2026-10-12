@@ -19,6 +19,10 @@ pub(crate) const TAB_COORDS: &str = "Koordinat listesi";
 pub(crate) const TAB_POINTS: &str = "Noktalar";
 /// Öznitelik tablosu (features/, docs/adr/0199 §4).
 pub(crate) const TAB_TABLE: &str = "Tablo";
+/// Alan istatistikleri (statistics/, docs/adr/0227 §3).
+pub(crate) const TAB_STATISTICS: &str = "İstatistik";
+/// Grafik (charts/, docs/adr/0227 §4).
+pub(crate) const TAB_CHART: &str = "Grafik";
 /// Veride ara (search/, docs/adr/0178).
 pub(crate) const TAB_SEARCH: &str = "Arama";
 /// Topoloji kuralları (topology/, docs/adr/0202 §5).
