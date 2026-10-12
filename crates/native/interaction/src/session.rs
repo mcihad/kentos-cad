@@ -209,6 +209,8 @@ pub const TOOLS: &[&str] = &[
     layer_tools::ACTIVE_ID,
     // Bilgi (docs/adr/0225 §5): an object's card.
     crate::identify::ID,
+    // Konumdan adres (docs/adr/0229 §13).
+    crate::address_reverse::ID,
     // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
     layer_move::MATCH_ID,
     layer_move::COPY_ID,
@@ -403,6 +405,7 @@ impl Session {
             layer_tools::LOCK_ID => Box::new(layer_tools::LayerTool::lock()),
             layer_tools::ACTIVE_ID => Box::new(layer_tools::LayerTool::make_active()),
             crate::identify::ID => Box::new(crate::identify::IdentifyTool::default()),
+            crate::address_reverse::ID => Box::new(crate::address_reverse::AddressReverse::new()),
             layer_move::MATCH_ID => Box::new(layer_move::LayerMove::layer_match()),
             layer_move::COPY_ID => Box::new(layer_move::LayerMove::copy_to_layer()),
             crate::label_tools::MOVE_ID => Box::new(crate::label_tools::LabelTool::move_label()),

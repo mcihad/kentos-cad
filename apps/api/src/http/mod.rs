@@ -1,6 +1,8 @@
 //! The HTTP API (CLAUDE.md §14): routes, shared state and the middleware
 //! every request passes (request id, trace, panic guard, timeout, body limit).
 
+#[cfg(test)]
+mod addresses_tests;
 pub mod auth;
 #[cfg(test)]
 mod catalog_tests;

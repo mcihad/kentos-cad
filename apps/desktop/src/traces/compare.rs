@@ -229,6 +229,15 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{:?}", (&want.count, &want.rows)),
         );
     }
+    if let Some(want) = &expect.address {
+        let have = got.address.clone();
+        check(
+            "address",
+            have.as_ref() == Some(&(want.count.clone(), want.rows.clone())),
+            format!("{have:?}"),
+            format!("{:?}", (&want.count, &want.rows)),
+        );
+    }
     if let Some(want) = &expect.topology {
         let have = got.topology.clone();
         check(

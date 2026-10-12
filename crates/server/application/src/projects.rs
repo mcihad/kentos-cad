@@ -207,6 +207,22 @@ pub fn check_networks(networks: &[kentos_contracts::NetworkDef], path: &str) -> 
     }
 }
 
+/// A project's address data by its rules (docs/adr/0229 §2), as the files' readers and
+/// `cad.addresses.define` check it; a refusal names the field at `path`. The layers a
+/// locator names need not exist: a missing one is left out when the locator is built.
+pub fn check_address_locators(
+    locators: &[kentos_contracts::AddressLocator],
+    path: &str,
+) -> AppResult<()> {
+    match kentos_contracts::address_locators_problem(locators) {
+        Some(problem) => Err(AppError::invalid_at(
+            path,
+            format!("Projenin adres verisi geçersiz: {problem}."),
+        )),
+        None => Ok(()),
+    }
+}
+
 /// The stored name of a storage mode (`project.storage`, migration 0006).
 pub fn storage_name(storage: ProjectStorage) -> &'static str {
     match storage {
@@ -312,6 +328,7 @@ pub async fn create(
     check_tree(&input.layers, &input.active_layer)?;
     check_services(&input.layers, &input.settings.connections)?;
     check_networks(&input.settings.networks, "settings.networks")?;
+    check_address_locators(&input.settings.address_locators, "settings.addressLocators")?;
     let description =
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;

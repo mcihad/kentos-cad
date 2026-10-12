@@ -51,6 +51,20 @@ AccessSourceName = Literal["owner", "grant", "policy"]
 """The names of :class:`AccessSource`, for a plain string."""
 
 
+class AddressesDefineOperation(_StrEnum):
+    """What `cad.addresses.define` does.
+
+    - ``set``: The locator replaces the project's of its id, or goes last.
+    - ``remove``: The locator of `id` goes.
+    """
+    SET = "set"
+    REMOVE = "remove"
+
+
+AddressesDefineOperationName = Literal["set", "remove"]
+"""The names of :class:`AddressesDefineOperation`, for a plain string."""
+
+
 class AngleUnit(_StrEnum):
     GRAD = "grad"
     DEG = "deg"
@@ -80,6 +94,22 @@ class AreaLabelMode(_StrEnum):
 
 AreaLabelModeName = Literal["horizontal", "free", "perimeter", "boundary", "parcel", "corner"]
 """The names of :class:`AreaLabelMode`, for a plain string."""
+
+
+class AreaLevel(_StrEnum):
+    """What an area layer's areas are.
+
+    - ``neighbourhood``: Mahalle (or köy).
+    - ``district``: İlçe.
+    - ``province``: İl.
+    """
+    NEIGHBOURHOOD = "neighbourhood"
+    DISTRICT = "district"
+    PROVINCE = "province"
+
+
+AreaLevelName = Literal["neighbourhood", "district", "province"]
+"""The names of :class:`AreaLevel`, for a plain string."""
 
 
 class AreaUnit(_StrEnum):
@@ -1719,6 +1749,119 @@ _TmDefinitionT = TypeVar("_TmDefinitionT", bound="TmDefinition")
 
 
 @dataclass(kw_only=True, slots=True)
+class AddressLocator(_Model):
+    """A project's address data (docs/adr/0229 §2).
+    Attributes:
+        id: Lower-case letters, digits and hyphens; one of its kind in the project.
+        name: Trimmed; one of its kind in the project.
+        min_score: The least score a match takes, within [`ADDRESS_MIN_SCORES`].
+        reach: How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].
+        areas: Bölgeler: at most one area layer of each level.
+        doors: Kapı noktaları: a point per door.
+        streets: Yollar: the streets' centre lines.
+    """
+    id: str
+    name: str
+    min_score: int
+    reach: float
+    areas: list[AreaSource] | Unset = UNSET
+    doors: DoorSource | None | Unset = UNSET
+    streets: StreetSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["minScore"] = self.min_score
+        out["reach"] = float(self.reach)
+        if self.areas is not UNSET:
+            out["areas"] = [e0.to_json() for e0 in self.areas]
+        if self.doors is not UNSET:
+            out["doors"] = None if self.doors is None else self.doors.to_json()
+        if self.streets is not UNSET:
+            out["streets"] = None if self.streets is None else self.streets.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressLocator:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            min_score=data["minScore"],
+            reach=float(data["reach"]),
+            areas=[AreaSource.from_json(e0) for e0 in data["areas"]] if "areas" in data else UNSET,
+            doors=UNSET if "doors" not in data else None if data["doors"] is None else DoorSource.from_json(data["doors"]),
+            streets=UNSET if "streets" not in data else None if data["streets"] is None else StreetSource.from_json(data["streets"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressesDefine(_Model):
+    """Input of `cad.addresses.define` v1.
+
+    - `set`: `locator`, which replaces the project's locator of its id or
+      goes last;
+    - `remove`: `id`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_locator` (set
+    without `locator`), `no_id` (remove without `id`), `invalid_locator` (the
+    locator, or the project's locators with it, by
+    `address_locators_problem`); then `invalid_revision`,
+    `revision_conflict` (status `conflict`), `unknown_locator` (remove: the
+    project has no locator of the id). A locator naming a layer the drawing
+    does not have is written, with the warning `unknown_layer`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    operation: AddressesDefineOperation | AddressesDefineOperationName
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    locator: AddressLocator | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.locator is not UNSET:
+            out["locator"] = None if self.locator is None else self.locator.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressesDefine:
+        return cls(
+            operation=_enum_in(AddressesDefineOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            locator=UNSET if "locator" not in data else None if data["locator"] is None else AddressLocator.from_json(data["locator"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddressesDefined(_Model):
+    """Output of `cad.addresses.define` v1, and its plan: the project's locators
+    as the write leaves them and the revision after it (a plan: before it).
+    """
+    locators: list[AddressLocator]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["locators"] = [e0.to_json() for e0 in self.locators]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddressesDefined:
+        return cls(
+            locators=[AddressLocator.from_json(e0) for e0 in data["locators"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AnnotationHeights(_Model):
     """The project's annotation heights on paper, mm (docs/adr/0205 §1): a
     height not given is its kind's default.
@@ -2017,6 +2160,36 @@ class AreaPart(_Model):
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AreaSource(_Model):
+    """An area layer: its level and which attribute names its areas.
+    Attributes:
+        district: A neighbourhood's district; only at that level.
+    """
+    layer: str
+    level: AreaLevel | AreaLevelName
+    name: str
+    district: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["level"] = _enum_out(self.level)
+        out["name"] = self.name
+        if self.district is not UNSET:
+            out["district"] = self.district
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaSource:
+        return cls(
+            layer=data["layer"],
+            level=_enum_in(AreaLevel, data["level"]),
+            name=data["name"],
+            district=data.get("district", UNSET),
         )
 
 
@@ -3507,6 +3680,59 @@ class DimensionStyleDef(_Model):
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DoorSource(_Model):
+    """The doors' layer and which of its attributes say what.
+    Attributes:
+        layer: The layer's id. A layer the project no longer has is said when the locator is built.
+        street: Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).
+        door: Kapı no: the outer door number (“12”, “12/A”).
+        code: Adres kodu (UAVT): a query that is one finds its door.
+    """
+    layer: str
+    street: str
+    door: str
+    building: str | None | Unset = UNSET
+    code: str | None | Unset = UNSET
+    district: str | None | Unset = UNSET
+    neighbourhood: str | None | Unset = UNSET
+    postcode: str | None | Unset = UNSET
+    province: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["street"] = self.street
+        out["door"] = self.door
+        if self.building is not UNSET:
+            out["building"] = self.building
+        if self.code is not UNSET:
+            out["code"] = self.code
+        if self.district is not UNSET:
+            out["district"] = self.district
+        if self.neighbourhood is not UNSET:
+            out["neighbourhood"] = self.neighbourhood
+        if self.postcode is not UNSET:
+            out["postcode"] = self.postcode
+        if self.province is not UNSET:
+            out["province"] = self.province
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DoorSource:
+        return cls(
+            layer=data["layer"],
+            street=data["street"],
+            door=data["door"],
+            building=data.get("building", UNSET),
+            code=data.get("code", UNSET),
+            district=data.get("district", UNSET),
+            neighbourhood=data.get("neighbourhood", UNSET),
+            postcode=data.get("postcode", UNSET),
+            province=data.get("province", UNSET),
         )
 
 
@@ -9230,6 +9456,7 @@ class ProjectSettings(_Model):
     """Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
     Attributes:
         plot_scale: Plot scale denominator (1:1000 → 1000).
+        address_locators: The project's address data (docs/adr/0229 §2), in the order they were made.
         annotation: The project's annotation heights on paper (docs/adr/0205 §1); absent:
             every kind's default.
         connections: The project's service connections without their secrets (docs/adr/0208 §2).
@@ -9261,6 +9488,7 @@ class ProjectSettings(_Model):
     area_unit: AreaUnit | AreaUnitName
     angle_unit: AngleUnit | AngleUnitName
     plot_scale: float
+    address_locators: list[AddressLocator] | Unset = UNSET
     annotation: AnnotationHeights | None | Unset = UNSET
     connections: list[ServiceConnection] | Unset = UNSET
     custom_crs: CrsDefinition | None | Unset = UNSET
@@ -9286,6 +9514,8 @@ class ProjectSettings(_Model):
         out["areaUnit"] = _enum_out(self.area_unit)
         out["angleUnit"] = _enum_out(self.angle_unit)
         out["plotScale"] = float(self.plot_scale)
+        if self.address_locators is not UNSET:
+            out["addressLocators"] = [e0.to_json() for e0 in self.address_locators]
         if self.annotation is not UNSET:
             out["annotation"] = None if self.annotation is None else self.annotation.to_json()
         if self.connections is not UNSET:
@@ -9329,6 +9559,7 @@ class ProjectSettings(_Model):
             area_unit=_enum_in(AreaUnit, data["areaUnit"]),
             angle_unit=_enum_in(AngleUnit, data["angleUnit"]),
             plot_scale=float(data["plotScale"]),
+            address_locators=[AddressLocator.from_json(e0) for e0 in data["addressLocators"]] if "addressLocators" in data else UNSET,
             annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else AnnotationHeights.from_json(data["annotation"]),
             connections=[ServiceConnection.from_json(e0) for e0 in data["connections"]] if "connections" in data else UNSET,
             custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
@@ -10336,6 +10567,37 @@ class SplineEntity(Entity):
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StreetSource(_Model):
+    """The streets' layer and which of its attributes say what.
+    Attributes:
+        name: Yol adı.
+    """
+    layer: str
+    name: str
+    district: str | None | Unset = UNSET
+    neighbourhood: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        if self.district is not UNSET:
+            out["district"] = self.district
+        if self.neighbourhood is not UNSET:
+            out["neighbourhood"] = self.neighbourhood
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StreetSource:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            district=data.get("district", UNSET),
+            neighbourhood=data.get("neighbourhood", UNSET),
         )
 
 
@@ -12813,6 +13075,11 @@ __all__ = [
     "AccessSource",
     "AccessSourceName",
     "AddEntityEdit",
+    "AddressLocator",
+    "AddressesDefine",
+    "AddressesDefineOperation",
+    "AddressesDefineOperationName",
+    "AddressesDefined",
     "AffineCrsPlane",
     "AffineTransform",
     "AlignTransform",
@@ -12826,7 +13093,10 @@ __all__ = [
     "ArcPlan",
     "AreaLabelMode",
     "AreaLabelModeName",
+    "AreaLevel",
+    "AreaLevelName",
     "AreaPart",
+    "AreaSource",
     "AreaUnit",
     "AreaUnitName",
     "AreasTableSource",
@@ -12902,6 +13172,7 @@ __all__ = [
     "DimensionStyleName",
     "DimensionTextPlace",
     "DimensionTextPlaceName",
+    "DoorSource",
     "DrawingFont",
     "DrawingFontName",
     "DrawingUnit",
@@ -13189,6 +13460,7 @@ __all__ = [
     "SplineEntityGeometry",
     "StackMode",
     "StackModeName",
+    "StreetSource",
     "SurveySettings",
     "TableAlign",
     "TableAlignName",

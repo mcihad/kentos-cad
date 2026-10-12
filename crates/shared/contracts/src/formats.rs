@@ -121,7 +121,10 @@ use crate::layer::LineType;
 ///    `actions` and `card`; `readExif` reads a photo's position, time and direction.
 /// 53: layer compositions (docs/adr/0226 §3, §4): `.kcad` document schema 41, a layer's `compose`
 ///    (opacity, blending mode, the mask of its labels and markers).
-pub const FORMATS_VERSION: u32 = 53;
+/// 54: address data (docs/adr/0229 §2): `.kcad` document schema 42, the settings'
+///    `addressLocators` (a project's doors', streets' and areas' layers and fields). The web's copy
+///    (`apps/web/src/io/version.ts`) stays 53 while the web is paused (docs/adr/0228).
+pub const FORMATS_VERSION: u32 = 54;
 
 // ── Every import ────────────────────────────────────────────────────────
 

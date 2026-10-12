@@ -135,6 +135,9 @@ pub enum ViewChange {
     /// Bilgi's card (docs/adr/0225 §5): the object it shows and the drawing's
     /// point it was clicked at, or none (closed).
     InfoCard(Option<(kentos_domain::Slot, Vec2)>),
+    /// Konumdan adres's place (docs/adr/0229 §13): the host looks for its
+    /// address in the Adres tab's source and shows it there.
+    AddressAt(Vec2),
 }
 
 /// Where a text field opens and how its text will look: its start, height in

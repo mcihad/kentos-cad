@@ -103,6 +103,7 @@ fn defaults(f: &Value) -> Defaults {
         measure_height_mm: d["measureHeightMm"].as_f64().unwrap_or(2.0),
         // The designer's cases have no networks (docs/adr/0209 §9).
         networks: Vec::new(),
+        address_sources: Vec::new(),
     }
 }
 

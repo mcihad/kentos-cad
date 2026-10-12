@@ -6,6 +6,7 @@
 //! 1, 2, 3 … in file order. The objects themselves are read in `objects.rs`,
 //! the block definitions in `blocks.rs`.
 
+mod addresses;
 mod blocks;
 mod compose;
 mod crs;
@@ -420,6 +421,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut connections = Vec::new();
     let mut networks = Vec::new();
     let mut variables = Vec::new();
+    let mut address_locators = Vec::new();
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
@@ -492,6 +494,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "connections" if has.services => connections = services::connections(r)?,
             "networks" if has.networks => networks = networks::networks(r)?,
             "variables" if has.variables => variables = variables::variables(r)?,
+            "addressLocators" if has.addresses => {
+                address_locators = addresses::address_locators(r)?
+            }
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             "dimensionStyles" if has.styles => {
                 dimension_styles = styles::dimension_styles(r, has.annotation)?
@@ -564,6 +569,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         connections,
         networks,
         variables,
+        address_locators,
     })
 }
 

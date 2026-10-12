@@ -38,6 +38,9 @@ fn fitted(app: &App, tab: &'static str, width: f32) -> (Vec<u8>, bool) {
 fn every_tab_fits_1100_pixels_without_scrolling() {
     let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
     typography::set(Typography::DEFAULT);
+    // The interface's own typefaces, as the app has them (main.rs): alone, without them, the
+    // words are measured in a fallback face some 8 % narrower than in the whole run.
+    typography::load();
     let mut app = app_with_drawing();
     // In every project type: each has its own ribbon (modes.rs).
     for mode in ["workspace.cad", "workspace.gis"] {
@@ -46,10 +49,15 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
         for tab in tabs {
             let (levels, overflow) = fitted(&app, tab, 1100.0);
             assert!(!overflow, "{mode} {tab}: does not fit 1100 px ({levels:?})");
-            // Wide windows show every panel as designed. CBS's Görünüm, eleven panels with
-            // the interface's own groups, is 3007 px since Yazıların boyu (docs/adr/0205).
-            let (wide, _) = fitted(&app, tab, 3200.0);
-            assert!(wide.iter().all(|&l| l == 0), "{mode} {tab}: {wide:?}");
+            // Wide windows show every panel as designed. CBS's Harita, twelve panels with
+            // Adres (docs/adr/0229 §13), is 3292 px in the interface's typefaces; its Analiz
+            // 3179 px.
+            let (wide, _) = fitted(&app, tab, 3400.0);
+            let full: f32 = groups(&app, tab).iter().map(|g| g.widths()[0]).sum();
+            assert!(
+                wide.iter().all(|&l| l == 0),
+                "{mode} {tab}: {wide:?} ({full} px)"
+            );
         }
     }
 }

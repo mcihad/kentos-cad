@@ -56,8 +56,8 @@ use crate::cad::{PROJECTION_VERSION, Stored, to_stored, to_stored_block};
 use crate::error::{AppError, AppResult};
 use crate::idempotency;
 use crate::projects::{
-    FEATURE_COLUMNS, FeatureRow, check_name, check_networks, check_services, check_srid,
-    check_tree, find_layer, gone, record,
+    FEATURE_COLUMNS, FeatureRow, check_address_locators, check_name, check_networks,
+    check_services, check_srid, check_tree, find_layer, gone, record,
 };
 
 /// Most object changes one command may carry; larger sets go in several commands.
@@ -437,6 +437,11 @@ pub async fn commit(
     // A project's networks keep their rules (docs/adr/0209 §2); the layers they name need not exist.
     if let Some(settings) = &patch.settings {
         check_networks(&settings.networks, "project.settings.networks")?;
+        // So does its address data (docs/adr/0229 §2).
+        check_address_locators(
+            &settings.address_locators,
+            "project.settings.addressLocators",
+        )?;
     }
     if new_srid != srid as u32 {
         check_srid(&mut tx, new_srid).await?;

@@ -247,6 +247,7 @@ mod tests {
             connections: Vec::new(),
             networks: Vec::new(),
             variables: Vec::new(),
+            address_locators: Vec::new(),
         })
     }
 

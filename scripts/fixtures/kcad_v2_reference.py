@@ -309,6 +309,8 @@ def settings(s):
                 "networks": (networks, False),
                 # Schema 37 (docs/adr/0214 §2.3): the project's variables.
                 "variables": (variables, False),
+                # Schema 42 (docs/adr/0229 §2): the project's address data.
+                "addressLocators": (address_locators, False),
             },
             "settings",
         )
@@ -908,6 +910,51 @@ def networks(list_):
     return nonempty(network)(list_)
 
 
+# Schema 42 (docs/adr/0229 §2): the project's address data; an optional field only when it has a value, the areas only
+# when there are some, a field's name never empty.
+AREA_LEVELS = ("neighbourhood", "district", "province")
+
+
+def field_name(t):
+    assert t, "boş alan adı yazılmaz"
+    return text(t)
+
+
+def door_source(d):
+    optional = ("neighbourhood", "district", "province", "postcode", "building", "code")
+    table = {"layer": (text, True), "street": (field_name, True), "door": (field_name, True), **{k: (field_name, False) for k in optional}}
+    return cmap(fields(d, table, "kapı noktaları"))
+
+
+def street_source(s_):
+    table = {"layer": (text, True), "name": (field_name, True), "neighbourhood": (field_name, False), "district": (field_name, False)}
+    return cmap(fields(s_, table, "yollar"))
+
+
+def area_source(a):
+    table = {"layer": (text, True), "level": (enum(AREA_LEVELS), True), "name": (field_name, True), "district": (field_name, False)}
+    return cmap(fields(a, table, "bölge"))
+
+
+def address_locator(l_):
+    table = {
+        "id": (text, True),
+        "name": (text, True),
+        "doors": (door_source, False),
+        "streets": (street_source, False),
+        "areas": (nonempty(area_source), False),
+        "minScore": (uint, True),
+        "reach": (finite, True),
+    }
+    return cmap(fields(l_, table, f"adres verisi {l_.get('id')}"))
+
+
+def address_locators(list_):
+    ids = [l_["id"] for l_ in list_]
+    assert len(set(ids)) == len(ids), "adres verisinin kimliği bir kez"
+    return nonempty(address_locator)(list_)
+
+
 # Schema 37 (docs/adr/0214 §2.3): the project's `@` variables; a label only when not empty, a value only when given.
 VARIABLE_KINDS = ("text", "number", "bool", "date")
 
@@ -1432,7 +1479,7 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
+    """The oldest schema that holds the drawing: 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
     attachments or a layer's actions or card (docs/adr/0225), 39 with vertex measures (docs/adr/0224), 38 with a raster's
     dataset or its look's edges (docs/adr/0243 §6), 37 with the settings' variables (docs/adr/0214 §2.3), 36 with the
     label engine's fields, a layer's labelling or an object's
@@ -1521,6 +1568,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    if settings and "addressLocators" in settings:
+        return 42
     if composed(layers):
         return 41
     if any("attachments" in e for e in entities) or informed(layers):
@@ -1797,7 +1846,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-42.kcad"] = container(root(cmap(parts), version=uint(42)))
+    files["schema-version-43.kcad"] = container(root(cmap(parts), version=uint(43)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2456,6 +2505,43 @@ def broken(minimal_content, minimal_file):
     files["network-costs-empty.kcad"] = networked([net(costs=array([]))])
     files["network-closed-blank.kcad"] = networked([net(closed=text("  "))])
 
+    # The project's address data is schema 42's (docs/adr/0229 §2): in schema 41 an unknown field; every rule of the
+    # contract's `address_locators_problem` broken one at a time; an empty list, an empty area list and a field's empty
+    # name refused as such.
+    def locator(**fields_):
+        base = {"id": text("adres-1"), "name": text("Numarataj"), "minScore": uint(85), "reach": f64(100.0),
+                "doors": cmap({"layer": text(top["id"]), "street": text("YOL"), "door": text("KAPI")})}
+        base.update({k: v for k, v in fields_.items() if v is not None})
+        for k in [k for k, v in fields_.items() if v is None]:
+            base.pop(k)
+        return cmap(base)
+
+    def addressed(list_, schema=42):
+        return on_layer({}, schema=schema, settings_extra={"addressLocators": array(list_)})
+
+    def area_(level="neighbourhood", **extra):
+        return cmap({"layer": text("mahalle"), "level": text(level), "name": text("AD"), **extra})
+
+    files["addresses-in-schema-41.kcad"] = addressed([locator()], schema=41)
+    files["addresses-empty.kcad"] = addressed([])
+    files["address-duplicate-id.kcad"] = addressed([locator(), locator(name=text("Numarataj 2"))])
+    files["address-duplicate-name.kcad"] = addressed([locator(), locator(id=text("adres-2"), name=text("NUMARATAJ"))])
+    files["address-bad-id.kcad"] = addressed([locator(id=text("Adres 1"))])
+    files["address-name-untrimmed.kcad"] = addressed([locator(name=text("Numarataj "))])
+    files["address-no-source.kcad"] = addressed([locator(doors=None)])
+    files["address-door-field-empty.kcad"] = addressed([locator(doors=cmap({"layer": text(top["id"]), "street": text("YOL"), "door": text("")}))])
+    files["address-door-field-untrimmed.kcad"] = addressed([locator(doors=cmap({"layer": text(top["id"]), "street": text(" YOL"), "door": text("KAPI")}))])
+    files["address-door-without-street.kcad"] = addressed([locator(doors=cmap({"layer": text(top["id"]), "door": text("KAPI")}))])
+    files["address-areas-empty.kcad"] = addressed([locator(areas=array([]))])
+    files["address-area-level-twice.kcad"] = addressed([locator(areas=array([area_(), area_()]))])
+    files["address-area-unknown-level.kcad"] = addressed([locator(areas=array([area_(level="village")]))])
+    files["address-district-area-district.kcad"] = addressed([locator(areas=array([area_(level="district", district=text("ILCE"))]))])
+    files["address-min-score.kcad"] = addressed([locator(minScore=uint(40))])
+    files["address-reach-zero.kcad"] = addressed([locator(reach=f64(0.0))])
+    files["address-reach-far.kcad"] = addressed([locator(reach=f64(20000.0))])
+    files["address-unknown-field.kcad"] = addressed([locator(note=text("x"))])
+    files["address-no-min-score.kcad"] = addressed([locator(minScore=None)])
+
     # A layer's time setting, a group's scenario and a scenario layer's base layer are schema 34's (docs/adr/0210 §2):
     # in schema 33 unknown fields; every rule of the contract's `LayerTime::problem`, `ScenarioInfo::problem` and
     # `scenarios_problem` broken one at a time.
@@ -2832,6 +2918,7 @@ def build():
     out["measures.kcad"] = container(document(load("measures.json")))
     out["attachments.kcad"] = container(document(load("attachments.json")))
     out["compose.kcad"] = container(document(load("compose.json")))
+    out["addresses.kcad"] = container(document(load("addresses.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

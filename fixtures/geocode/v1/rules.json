@@ -1,0 +1,1184 @@
+{
+  "format": "kentos.address-rules",
+  "lists": [
+    {
+      "name": "hiç tanım",
+      "problem": null,
+      "value": []
+    },
+    {
+      "name": "iki tanım",
+      "problem": null,
+      "value": [
+        {
+          "areas": [
+            {
+              "district": "ILCE",
+              "layer": "mahalle",
+              "level": "neighbourhood",
+              "name": "AD"
+            },
+            {
+              "layer": "ilce",
+              "level": "district",
+              "name": "AD"
+            }
+          ],
+          "doors": {
+            "building": "BINA_ADI",
+            "code": "UAVT",
+            "district": "ILCE",
+            "door": "KAPI_NO",
+            "layer": "kapi",
+            "neighbourhood": "MAHALLE",
+            "postcode": "POSTA_KODU",
+            "province": "IL",
+            "street": "YOL_ADI"
+          },
+          "id": "adres-1",
+          "minScore": 85,
+          "name": "Numarataj",
+          "reach": 100.0,
+          "streets": {
+            "layer": "yol",
+            "name": "YOL_ADI",
+            "neighbourhood": "MAHALLE"
+          }
+        },
+        {
+          "id": "a",
+          "minScore": 50,
+          "name": "A",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı kimlik",
+      "problem": "“a” kimlikli adres verisi iki kez var",
+      "value": [
+        {
+          "id": "a",
+          "minScore": 50,
+          "name": "A",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a",
+          "minScore": 50,
+          "name": "B",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı ad, büyük küçük harf",
+      "problem": "“a” adlı adres verisi iki kez var",
+      "value": [
+        {
+          "id": "a",
+          "minScore": 50,
+          "name": "A",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "b",
+          "minScore": 50,
+          "name": "a",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Türkçe ad: IŞIK ile ışık aynı",
+      "problem": "“ışık” adlı adres verisi iki kez var",
+      "value": [
+        {
+          "id": "a",
+          "minScore": 50,
+          "name": "IŞIK",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "b",
+          "minScore": 50,
+          "name": "ışık",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 tanım",
+      "problem": null,
+      "value": [
+        {
+          "id": "a0",
+          "minScore": 50,
+          "name": "A0",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a1",
+          "minScore": 50,
+          "name": "A1",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a2",
+          "minScore": 50,
+          "name": "A2",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a3",
+          "minScore": 50,
+          "name": "A3",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a4",
+          "minScore": 50,
+          "name": "A4",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a5",
+          "minScore": 50,
+          "name": "A5",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a6",
+          "minScore": 50,
+          "name": "A6",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a7",
+          "minScore": 50,
+          "name": "A7",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a8",
+          "minScore": 50,
+          "name": "A8",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a9",
+          "minScore": 50,
+          "name": "A9",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a10",
+          "minScore": 50,
+          "name": "A10",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a11",
+          "minScore": 50,
+          "name": "A11",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a12",
+          "minScore": 50,
+          "name": "A12",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a13",
+          "minScore": 50,
+          "name": "A13",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a14",
+          "minScore": 50,
+          "name": "A14",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a15",
+          "minScore": 50,
+          "name": "A15",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 tanım",
+      "problem": "projede 17 adres verisi var; en çok 16",
+      "value": [
+        {
+          "id": "a0",
+          "minScore": 50,
+          "name": "A0",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a1",
+          "minScore": 50,
+          "name": "A1",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a2",
+          "minScore": 50,
+          "name": "A2",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a3",
+          "minScore": 50,
+          "name": "A3",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a4",
+          "minScore": 50,
+          "name": "A4",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a5",
+          "minScore": 50,
+          "name": "A5",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a6",
+          "minScore": 50,
+          "name": "A6",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a7",
+          "minScore": 50,
+          "name": "A7",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a8",
+          "minScore": 50,
+          "name": "A8",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a9",
+          "minScore": 50,
+          "name": "A9",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a10",
+          "minScore": 50,
+          "name": "A10",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a11",
+          "minScore": 50,
+          "name": "A11",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a12",
+          "minScore": 50,
+          "name": "A12",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a13",
+          "minScore": 50,
+          "name": "A13",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a14",
+          "minScore": 50,
+          "name": "A14",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a15",
+          "minScore": 50,
+          "name": "A15",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "a16",
+          "minScore": 50,
+          "name": "A16",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ikincisi kurala uymuyor",
+      "problem": "“B” adres verisinin uzaklığı 0 m; 0'dan büyük, en çok 10 000 m olmalı",
+      "value": [
+        {
+          "id": "a",
+          "minScore": 50,
+          "name": "A",
+          "reach": 0.001,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        },
+        {
+          "id": "b",
+          "minScore": 50,
+          "name": "B",
+          "reach": 0.0,
+          "streets": {
+            "layer": "yol",
+            "name": "AD"
+          }
+        }
+      ]
+    }
+  ],
+  "locators": [
+    {
+      "name": "numarataj",
+      "problem": null,
+      "value": {
+        "areas": [
+          {
+            "district": "ILCE",
+            "layer": "mahalle",
+            "level": "neighbourhood",
+            "name": "AD"
+          },
+          {
+            "layer": "ilce",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "doors": {
+          "building": "BINA_ADI",
+          "code": "UAVT",
+          "district": "ILCE",
+          "door": "KAPI_NO",
+          "layer": "kapi",
+          "neighbourhood": "MAHALLE",
+          "postcode": "POSTA_KODU",
+          "province": "IL",
+          "street": "YOL_ADI"
+        },
+        "id": "adres-1",
+        "minScore": 85,
+        "name": "Numarataj",
+        "reach": 100.0,
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI",
+          "neighbourhood": "MAHALLE"
+        }
+      }
+    },
+    {
+      "name": "en kısa tanım",
+      "problem": null,
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "yalnız bölgeler",
+      "problem": null,
+      "value": {
+        "areas": [
+          {
+            "layer": "province",
+            "level": "province",
+            "name": "AD"
+          }
+        ],
+        "id": "b",
+        "minScore": 100,
+        "name": "B",
+        "reach": 10000.0
+      }
+    },
+    {
+      "name": "kimlik büyük harf",
+      "problem": "adres verisinin kimliği “Adres-1”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "id": "Adres-1",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "kimlik Türkçe harf",
+      "problem": "adres verisinin kimliği “adres-ı”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "id": "adres-ı",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "kimlik 40 karakter",
+      "problem": null,
+      "value": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "kimlik 41 karakter",
+      "problem": "adres verisinin kimliği “aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "ad boş",
+      "problem": "“a” adres verisinin adı boş, kırpılmamış ya da 80 karakterden uzun",
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "ad kırpılmamış",
+      "problem": "“a” adres verisinin adı boş, kırpılmamış ya da 80 karakterden uzun",
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "Numarataj ",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "ad 80 karakter",
+      "problem": null,
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "ad 81 karakter",
+      "problem": "“a” adres verisinin adı boş, kırpılmamış ya da 80 karakterden uzun",
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "kaynağı yok",
+      "problem": "“A” adres verisinin kaynağı yok; kapı noktaları, yollar ya da bölgelerden en az biri olmalı",
+      "value": {
+        "id": "a",
+        "minScore": 85,
+        "name": "A",
+        "reach": 100.0
+      }
+    },
+    {
+      "name": "kapı katmanının kimliği boş",
+      "problem": "“Numarataj” adres verisinin kapı katmanının kimliği boş",
+      "value": {
+        "areas": [
+          {
+            "district": "ILCE",
+            "layer": "mahalle",
+            "level": "neighbourhood",
+            "name": "AD"
+          },
+          {
+            "layer": "ilce",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "doors": {
+          "building": "BINA_ADI",
+          "code": "UAVT",
+          "district": "ILCE",
+          "door": "KAPI_NO",
+          "layer": "",
+          "neighbourhood": "MAHALLE",
+          "postcode": "POSTA_KODU",
+          "province": "IL",
+          "street": "YOL_ADI"
+        },
+        "id": "adres-1",
+        "minScore": 85,
+        "name": "Numarataj",
+        "reach": 100.0,
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI",
+          "neighbourhood": "MAHALLE"
+        }
+      }
+    },
+    {
+      "name": "kapıların yol alanı boşluk",
+      "problem": "“Numarataj” adres verisinin kapılarının yol alanı boş",
+      "value": {
+        "areas": [
+          {
+            "district": "ILCE",
+            "layer": "mahalle",
+            "level": "neighbourhood",
+            "name": "AD"
+          },
+          {
+            "layer": "ilce",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "doors": {
+          "building": "BINA_ADI",
+          "code": "UAVT",
+          "district": "ILCE",
+          "door": "KAPI_NO",
+          "layer": "kapi",
+          "neighbourhood": "MAHALLE",
+          "postcode": "POSTA_KODU",
+          "province": "IL",
+          "street": "  "
+        },
+        "id": "adres-1",
+        "minScore": 85,
+        "name": "Numarataj",
+        "reach": 100.0,
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI",
+          "neighbourhood": "MAHALLE"
+        }
+      }
+    },
+    {
+      "name": "kapıların kapı alanı kırpılmamış",
+      "problem": "“Numarataj” adres verisinin kapılarının kapı no alanı kırpılmamış, 64 karakterden uzun ya da denetim karakterli",
+      "value": {
+        "areas": [
+          {
+            "district": "ILCE",
+            "layer": "mahalle",
+            "level": "neighbourhood",
+            "name": "AD"
+          },
+          {
+            "layer": "ilce",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "doors": {
+          "building": "BINA_ADI",
+          "code": "UAVT",
+          "district": "ILCE",
+          "door": "KAPI_NO ",
+          "layer": "kapi",
+          "neighbourhood": "MAHALLE",
+          "postcode": "POSTA_KODU",
+          "province": "IL",
+          "street": "YOL_ADI"
+        },
+        "id": "adres-1",
+        "minScore": 85,
+        "name": "Numarataj",
+        "reach": 100.0,
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI",
+          "neighbourhood": "MAHALLE"
+        }
+      }
+    },
+    {
+      "name": "kapıların mahalle alanı 65 karakter",
+      "problem": "“Numarataj” adres verisinin kapılarının mahalle alanı kırpılmamış, 64 karakterden uzun ya da denetim karakterli",
+      "value": {
+        "areas": [
+          {
+            "district": "ILCE",
+            "layer": "mahalle",
+            "level": "neighbourhood",
+            "name": "AD"
+          },
+          {
+            "layer": "ilce",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "doors": {
+          "building": "BINA_ADI",
+          "code": "UAVT",
+          "district": "ILCE",
+          "door": "KAPI_NO",
+          "layer": "kapi",
+          "neighbourhood": "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
+          "postcode": "POSTA_KODU",
+          "province": "IL",
+          "street": "YOL_ADI"
+        },
+        "id": "adres-1",
+        "minScore": 85,
+        "name": "Numarataj",
+        "reach": 100.0,
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI",
+          "neighbourhood": "MAHALLE"
+        }
+      }
+    },
+    {
+      "name": "kapıların posta kodu alanında denetim karakteri",
+      "problem": "“Numarataj” adres verisinin kapılarının posta kodu alanı kırpılmamış, 64 karakterden uzun ya da denetim karakterli",
+      "value": {
+        "areas": [
+          {
+            "district": "ILCE",
+            "layer": "mahalle",
+            "level": "neighbourhood",
+            "name": "AD"
+          },
+          {
+            "layer": "ilce",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "doors": {
+          "building": "BINA_ADI",
+          "code": "UAVT",
+          "district": "ILCE",
+          "door": "KAPI_NO",
+          "layer": "kapi",
+          "neighbourhood": "MAHALLE",
+          "postcode": "POSTA\tKODU",
+          "province": "IL",
+          "street": "YOL_ADI"
+        },
+        "id": "adres-1",
+        "minScore": 85,
+        "name": "Numarataj",
+        "reach": 100.0,
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI",
+          "neighbourhood": "MAHALLE"
+        }
+      }
+    },
+    {
+      "name": "kapıların adres kodu alanı 64 karakter",
+      "problem": null,
+      "value": {
+        "areas": [
+          {
+            "district": "ILCE",
+            "layer": "mahalle",
+            "level": "neighbourhood",
+            "name": "AD"
+          },
+          {
+            "layer": "ilce",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "doors": {
+          "building": "BINA_ADI",
+          "code": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+          "district": "ILCE",
+          "door": "KAPI_NO",
+          "layer": "kapi",
+          "neighbourhood": "MAHALLE",
+          "postcode": "POSTA_KODU",
+          "province": "IL",
+          "street": "YOL_ADI"
+        },
+        "id": "adres-1",
+        "minScore": 85,
+        "name": "Numarataj",
+        "reach": 100.0,
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI",
+          "neighbourhood": "MAHALLE"
+        }
+      }
+    },
+    {
+      "name": "yol katmanının kimliği boş",
+      "problem": "“A” adres verisinin yol katmanının kimliği boş",
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "yolların ilçe alanı boş",
+      "problem": "“A” adres verisinin yollarının ilçe alanı boş",
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "district": "",
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "dört bölge katmanı",
+      "problem": "“A” adres verisinin bölge katmanları çok; her düzeyden en çok bir",
+      "value": {
+        "areas": [
+          {
+            "layer": "neighbourhood",
+            "level": "neighbourhood",
+            "name": "AD"
+          },
+          {
+            "layer": "district",
+            "level": "district",
+            "name": "AD"
+          },
+          {
+            "layer": "province",
+            "level": "province",
+            "name": "AD"
+          },
+          {
+            "layer": "province",
+            "level": "province",
+            "name": "AD"
+          }
+        ],
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "aynı düzey iki kez",
+      "problem": "“A” adres verisinin ilçe düzeyi iki kez var",
+      "value": {
+        "areas": [
+          {
+            "layer": "district",
+            "level": "district",
+            "name": "AD"
+          },
+          {
+            "layer": "district",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "bölge katmanının kimliği boş",
+      "problem": "“A” adres verisinin il katmanının kimliği boş",
+      "value": {
+        "areas": [
+          {
+            "layer": "",
+            "level": "province",
+            "name": "AD"
+          }
+        ],
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "bölgenin ad alanı boş",
+      "problem": "“A” adres verisinin il alanlarının ad alanı boş",
+      "value": {
+        "areas": [
+          {
+            "layer": "il",
+            "level": "province",
+            "name": " "
+          }
+        ],
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "ilçe alanlarında ilçe",
+      "problem": "“A” adres verisinin ilçe alanlarında ilçe alanı olmaz; yalnız mahalle alanlarının ilçesi yazılır",
+      "value": {
+        "areas": [
+          {
+            "district": "ILCE",
+            "layer": "district",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "mahalle alanlarında boş ilçe",
+      "problem": "“A” adres verisinin mahalle alanlarının ilçe alanı boş",
+      "value": {
+        "areas": [
+          {
+            "district": "",
+            "layer": "neighbourhood",
+            "level": "neighbourhood",
+            "name": "AD"
+          }
+        ],
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "en düşük puan 49",
+      "problem": "“A” adres verisinin en düşük puanı 49; 50 ile 100 arasında olmalı",
+      "value": {
+        "id": "a",
+        "minScore": 49,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "en düşük puan 101",
+      "problem": "“A” adres verisinin en düşük puanı 101; 50 ile 100 arasında olmalı",
+      "value": {
+        "id": "a",
+        "minScore": 101,
+        "name": "A",
+        "reach": 0.001,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "uzaklık sıfır",
+      "problem": "“A” adres verisinin uzaklığı 0 m; 0'dan büyük, en çok 10 000 m olmalı",
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 0.0,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "uzaklık eksi",
+      "problem": "“A” adres verisinin uzaklığı -5 m; 0'dan büyük, en çok 10 000 m olmalı",
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": -5.0,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    },
+    {
+      "name": "uzaklık 10 000 m'den büyük",
+      "problem": "“A” adres verisinin uzaklığı 10000.5 m; 0'dan büyük, en çok 10 000 m olmalı",
+      "value": {
+        "id": "a",
+        "minScore": 50,
+        "name": "A",
+        "reach": 10000.5,
+        "streets": {
+          "layer": "yol",
+          "name": "AD"
+        }
+      }
+    }
+  ],
+  "note": "The rules of a project's address data (docs/adr/0229 §2), each case with the contract's words; null where the value is one. scripts/fixtures/address_rules_cases.py writes the values from the ADR and checks the verdicts with tools/kcad/kcad.py's own copy of the rules; Rust (crates/shared/contracts/tests/all/address_rules.rs, KENTOS_WRITE_ADDRESS_RULES=1 writes the words) gives the words.",
+  "version": 1
+}

@@ -127,6 +127,7 @@ pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, M
         ParamKind::File { .. } => file(def, env),
         ParamKind::SaveFile { suffix, .. } => save_file(def, suffix, env),
         ParamKind::Network { .. } => network(def, env),
+        ParamKind::AddressSource => address_source(def, env),
         ParamKind::RasterValues {
             of,
             number,
@@ -799,6 +800,71 @@ fn file<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
 
 /// A network and its cost (docs/adr/0209 §10): the project's networks and the chosen one's costs (Uzunluk first),
 /// with Ağlar… beside them; a project without one says so and offers Ağlar….
+/// Adres kaynağı (docs/adr/0229 §11): the project's address data, then the device's providers, those that cannot
+/// be asked or whose results may not be written into a drawing dimmed with why; the two windows that make one below.
+fn address_source<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
+    use kentos_processing::address::{AddressHost, project_sources, provider_sources};
+    let ev = env.send;
+    let o = crate::address::online::online();
+    let providers = o.providers();
+    let mut online = provider_sources(&providers);
+    for (s, p) in online.iter_mut().zip(&providers) {
+        if s.why.is_none() {
+            s.why = o
+                .why_not(p)
+                .or_else(|| p.batch_refusal(1).map(|_| "toplu işte kullanılmaz".into()));
+        }
+    }
+    let locals = project_sources(env.doc);
+    let mut choices: Vec<Choice> = Vec::new();
+    let mut ids: Vec<Option<String>> = Vec::new();
+    if !locals.is_empty() {
+        choices.push(Choice::header("Projenin adres verisi"));
+        ids.push(None);
+        for s in &locals {
+            let short = s.name.split_once(": ").map_or(s.name.as_str(), |(_, n)| n);
+            choices.push(Choice::new(short).icon(crate::icons::from_web(Some("addressData"))));
+            ids.push(Some(s.id.clone()));
+        }
+    }
+    choices.push(Choice::header("Çevrimiçi sağlayıcılar"));
+    ids.push(None);
+    for s in &online {
+        let mut c =
+            Choice::new(s.name.clone()).icon(crate::icons::from_web(Some("addressProviders")));
+        if let Some(why) = &s.why {
+            c = c.disabled().detail(why.clone());
+        }
+        choices.push(c);
+        ids.push(Some(s.id.clone()));
+    }
+    let current = env.value(&def.name).as_str().unwrap_or("").to_owned();
+    let at = ids
+        .iter()
+        .position(|i| i.as_deref() == Some(current.as_str()));
+    let name = def.name.clone();
+    Select::new(choices, at, move |i| {
+        let id = ids
+            .get(i)
+            .cloned()
+            .flatten()
+            .unwrap_or_else(|| current.clone());
+        ev(Event::Value(name.clone(), json!(id)))
+    })
+    .placeholder("Adres kaynağı seçin")
+    .action(
+        crate::icons::from_web(Some("addressData")),
+        "Adres verisi…",
+        ev(Event::Command("address.data")),
+    )
+    .action(
+        crate::icons::from_web(Some("addressProviders")),
+        "Adres sağlayıcıları…",
+        ev(Event::Command("address.providers")),
+    )
+    .into()
+}
+
 fn network<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
     let ev = env.send;
     let networks = &env.doc.settings().networks;

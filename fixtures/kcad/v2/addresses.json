@@ -1,0 +1,198 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Adresler",
+  "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "addressLocators": [
+      {
+        "id": "adres-1",
+        "name": "Numarataj",
+        "doors": {
+          "layer": "kapi",
+          "street": "YOL_ADI",
+          "door": "KAPI_NO",
+          "neighbourhood": "MAHALLE",
+          "district": "ILCE",
+          "province": "IL",
+          "postcode": "POSTA_KODU",
+          "building": "BINA_ADI",
+          "code": "UAVT"
+        },
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI",
+          "neighbourhood": "MAHALLE"
+        },
+        "areas": [
+          {
+            "layer": "mahalle",
+            "level": "neighbourhood",
+            "name": "AD",
+            "district": "ILCE"
+          },
+          {
+            "layer": "ilce",
+            "level": "district",
+            "name": "AD"
+          }
+        ],
+        "minScore": 85,
+        "reach": 100.0
+      },
+      {
+        "id": "adres-2",
+        "name": "Yol orta hatları",
+        "streets": {
+          "layer": "yol",
+          "name": "YOL_ADI"
+        },
+        "minScore": 70,
+        "reach": 250.5
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol orta hattı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#0090FF",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "mahalle",
+      "name": "Mahalle",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#12A594",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "ilce",
+      "name": "İlçe",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8E4EC6",
+        "lineType": "continuous",
+        "lineWeight": 0.7
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "kapi",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "kapi",
+      "attrs": {
+        "YOL_ADI": "Atatürk Bulvarı",
+        "KAPI_NO": "12",
+        "MAHALLE": "Kızılay",
+        "ILCE": "Çankaya",
+        "IL": "Ankara",
+        "POSTA_KODU": "06420",
+        "BINA_ADI": "Gül Apartmanı",
+        "UAVT": "1234567890"
+      },
+      "p": {
+        "x": 500010.0,
+        "y": 4400005.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {
+        "YOL_ADI": "Atatürk Bulvarı",
+        "MAHALLE": "Kızılay"
+      },
+      "a": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "b": {
+        "x": 500100.0,
+        "y": 4400000.0
+      }
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "mahalle",
+      "attrs": {
+        "AD": "Kızılay Mahallesi",
+        "ILCE": "Çankaya"
+      },
+      "pts": [
+        {
+          "x": 499900.0,
+          "y": 4399900.0
+        },
+        {
+          "x": 500200.0,
+          "y": 4399900.0
+        },
+        {
+          "x": 500200.0,
+          "y": 4400200.0
+        },
+        {
+          "x": 499900.0,
+          "y": 4400200.0
+        }
+      ]
+    }
+  ],
+  "uids": [
+    "0192f5a1-7777-7000-8000-000000000501",
+    "0192f5a1-7777-7000-8000-000000000502",
+    "0192f5a1-7777-7000-8000-000000000503"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

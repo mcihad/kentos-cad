@@ -27,7 +27,7 @@ const fn category(
     }
 }
 
-pub const CATEGORIES: [Category; 29] = [
+pub const CATEGORIES: [Category; 30] = [
     category(
         "points",
         "Nokta işlemleri",
@@ -70,6 +70,13 @@ pub const CATEGORIES: [Category; 29] = [
         "Analiz",
         "measure",
         "Ölçüm, istatistik ve raporlar",
+    ),
+    // docs/adr/0229: addresses to places and places to addresses.
+    category(
+        "address",
+        "Adres",
+        "addressSearch",
+        "Adresleri eşleme, konumlara adres yazma",
     ),
     // docs/adr/0215: how near objects are to one another.
     category(

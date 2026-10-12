@@ -1,0 +1,20 @@
+{
+ "results": [
+  {
+   "address_components": [
+    {"long_name": "15", "short_name": "15", "types": ["street_number"]},
+    {"long_name": "Atatürk Bulvarı", "short_name": "Atatürk Blv.", "types": ["route"]},
+    {"long_name": "Kızılay", "short_name": "Kızılay", "types": ["administrative_area_level_4", "political"]},
+    {"long_name": "Çankaya", "short_name": "Çankaya", "types": ["administrative_area_level_2", "political"]},
+    {"long_name": "Ankara", "short_name": "Ankara", "types": ["administrative_area_level_1", "political"]},
+    {"long_name": "Türkiye", "short_name": "TR", "types": ["country", "political"]},
+    {"long_name": "06420", "short_name": "06420", "types": ["postal_code"]}
+   ],
+   "formatted_address": "Kızılay, Atatürk Blv. No:15, 06420 Çankaya/Ankara, Türkiye",
+   "geometry": {"location": {"lat": 39.9204812, "lng": 32.8546207}, "location_type": "ROOFTOP"},
+   "place_id": "ChIJ-örnek-yer-kimliği",
+   "types": ["street_address"]
+  }
+ ],
+ "status": "OK"
+}

@@ -1195,6 +1195,224 @@ fn the_transfer_cases_do_what_they_say() {
     );
 }
 
+/// Adres's cases (docs/adr/0229 §11, §12): written by
+/// scripts/fixtures/address_processing_cases.py from the locator's
+/// independent reference; the same run here and on the drawing's reading
+/// copy as the background runs it (the tools run only there).
+#[test]
+fn the_address_cases_do_what_they_say() {
+    let file = case_file("address.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check(c, play(c, &registry, false, &file["files"]), tol);
+        found.extend(check(c, play(c, &registry, true, &file["files"]), tol));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 8, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
+/// An online provider's answer, canned (the reference's real Nominatim
+/// answer, fixtures/geocode/v1/answers), and the requests it heard.
+struct Canned {
+    providers: Vec<kentos_services::geocode::Provider>,
+    body: Vec<u8>,
+    heard: Mutex<Vec<String>>,
+}
+
+impl kentos_processing::address::AddressHost for Canned {
+    fn providers(&self) -> Vec<kentos_services::geocode::Provider> {
+        self.providers.clone()
+    }
+
+    fn ask(
+        &self,
+        _provider: &kentos_services::geocode::Provider,
+        request: &kentos_services::geocode::request::GeoRequest,
+        _stop: &dyn Fn() -> bool,
+    ) -> Result<Vec<u8>, String> {
+        self.heard
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(request.url.clone());
+        Ok(self.body.clone())
+    }
+}
+
+/// A background run's messages with the device's providers.
+struct Online<'a> {
+    log: &'a mut Vec<LogLine>,
+    host: Arc<Canned>,
+}
+
+impl Feedback for Online<'_> {
+    fn addresses(&self) -> Option<Arc<dyn kentos_processing::address::AddressHost>> {
+        Some(self.host.clone())
+    }
+
+    fn progress(&mut self, _fraction: f64, _label: &str) {}
+
+    fn info(&mut self, message: String) {
+        self.log.push(LogLine {
+            level: Level::Info,
+            text: message,
+        });
+    }
+
+    fn warn(&mut self, message: String) {
+        self.log.push(LogLine::warn(message));
+    }
+
+    fn canceled(&self) -> bool {
+        false
+    }
+}
+
+/// Adresleri eşle with an online provider (docs/adr/0229 §10, §11): the
+/// provider is asked once for each address (rows of one folded address
+/// share its answer, an empty row asks nothing), and the best candidate by
+/// KentOS's score is written at its place in the project's system with the
+/// provider's name, attribution and own score.
+#[test]
+fn an_online_provider_is_asked_once_for_each_address() {
+    use kentos_geometry_core::crs::{Datum, System, transform_in};
+    use kentos_geometry_core::ops::geocode::{Status, parse};
+    use kentos_services::geocode::providers::Providers;
+    use kentos_services::geocode::{read, score};
+
+    let registry = Registry::builtin();
+    let tool = registry.tool("address.geocode").expect("the tool");
+    let mut nominatim = Providers::default().resolved().remove(0);
+    assert_eq!(nominatim.id, "nominatim-osm");
+    nominatim.enabled = true;
+    nominatim.accepted = Some(nominatim.terms);
+    let body = std::fs::read(folder().join("../../geocode/v1/answers/nominatim-search.json"))
+        .expect("the answer reads");
+    let canned = Arc::new(Canned {
+        providers: vec![nominatim.clone()],
+        body: body.clone(),
+        heard: Mutex::new(Vec::new()),
+    });
+    let mut host = TestHost {
+        doc: load("address.kcad"),
+        selection: Vec::new(),
+        view: None,
+    };
+    let before = state(&host.doc);
+    let mut values = default_values(&tool, &Defaults::of(&host.doc));
+    let rows = json!([
+        ["No", "Adres"],
+        ["1", "Atatürk Bulvarı, Çankaya"],
+        ["2", "  ATATÜRK bulvarı,   Çankaya "],
+        ["3", ""],
+    ]);
+    values.insert("file".into(), json!({ "name": "liste.csv", "rows": rows }));
+    values.insert("address".into(), json!("Adres"));
+    values.insert("via".into(), json!("provider:nominatim-osm"));
+    let mut runner = Runner::new();
+    let mut log = Vec::new();
+    let job = match runner.prepare(&host, &tool, &values, false, &mut log) {
+        Prepared::Ready(job) => job,
+        Prepared::Done(_) => panic!("the run is prepared: {log:?}"),
+    };
+    let copy = host.doc.reading_copy();
+    let result = Runner::compute(
+        &job,
+        &copy,
+        &mut Online {
+            log: &mut log,
+            host: canned.clone(),
+        },
+    );
+    let outcome = runner.finish(&mut host, job, result, false, &mut log);
+    let heard = canned
+        .heard
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .clone();
+    assert_eq!(heard.len(), 1, "{heard:?}");
+    assert!(heard[0].starts_with("https://nominatim.openstreetmap.org/search?q=Atat%C3%BCrk%20Bulvar%C4%B1,%20%C3%87ankaya&"), "{}", heard[0]);
+    let seen = observed(&Seen {
+        outcome,
+        log,
+        host,
+        before,
+    });
+    // The candidate the core's score picks (the answer has several Atatürk
+    // Bulvarı in Çankaya: a tie, written as the run asks), and its place in TUREF / TM30.
+    let parts = parse("Atatürk Bulvarı, Çankaya");
+    let read = read::forward(nominatim.kind, &body).expect("the answer reads");
+    let (i, points, _, status) = score::pick(&parts, &read.candidates, 85).expect("a candidate");
+    assert_ne!(status, Status::Unmatched);
+    let (matched, tied) = if status == Status::Tied {
+        (0, 2)
+    } else {
+        (2, 0)
+    };
+    assert_eq!(seen["status"], "ok", "{seen}");
+    assert_eq!(
+        seen["summary"],
+        format!(
+            "3 satırdan {matched} eşleşti, {tied} belirsiz, 0 eşleşmedi, 1 boş; 2 nokta yazıldı."
+        )
+    );
+    let c = &read.candidates[i];
+    let wgs84 = System::Geographic {
+        datum: Datum::Wgs84,
+    };
+    let doc = load("address.kcad");
+    let s = doc.settings();
+    let system = kentos_project::systems::own(s)
+        .and_then(|o| o.system)
+        .expect("the project's system");
+    let place = transform_in(
+        &wgs84,
+        &system,
+        kentos_geometry_core::vec2::Vec2::new(c.lon, c.lat),
+        &kentos_project::systems::choices(s),
+    )
+    .expect("the place transforms")
+    .point;
+    let added = seen["added"].as_array().expect("added");
+    assert_eq!(added.len(), 2, "{seen}");
+    for (a, text) in added
+        .iter()
+        .zip(["Atatürk Bulvarı, Çankaya", "ATATÜRK bulvarı,   Çankaya"])
+    {
+        assert_eq!(a["layerId"], "islem-adresler");
+        let attrs = &a["attrs"];
+        assert_eq!(attrs["Durum"], status.word());
+        assert_eq!(attrs["Puan"], points.to_string());
+        assert_eq!(attrs["Eşleşen adres"], c.label.as_str());
+        assert_eq!(attrs["Kaynak"], nominatim.name.as_str());
+        assert_eq!(attrs["Atıf"], nominatim.attribution.as_str());
+        assert_eq!(attrs["Girdi adresi"], text);
+        let (x, y) = (
+            a["p"]["x"].as_f64().expect("x"),
+            a["p"]["y"].as_f64().expect("y"),
+        );
+        assert!(
+            (x - place.x).abs() <= 1e-6 && (y - place.y).abs() <= 1e-6,
+            "{x} {y} {place:?}"
+        );
+    }
+}
+
 /// The scene of Veri aktar's timing (docs/adr/0216 §7), the web's too
 /// (apps/web/scripts/perf/transfer.test.ts): 10 000 parcels on a layer with
 /// typed fields, and a deed list of 10 000 rows, 9 900 of them the parcels'

@@ -39,6 +39,11 @@
    "icon": "dataSearch"
   },
   {
+   "id": "address",
+   "label": "Adres",
+   "icon": "addressSearch"
+  },
+  {
    "id": "topology",
    "label": "Topoloji",
    "icon": "topologyCheck"

@@ -59,6 +59,8 @@ pub enum BottomTab {
     Chart,
     /// Veride ara (search/, docs/adr/0178).
     Search,
+    /// Adres arama (address/, docs/adr/0229 §13).
+    Address,
     /// Topoloji kuralları' findings (topology/, docs/adr/0202 §5).
     Topology,
     /// Servis bilgisi's answers (services/info.rs, docs/adr/0208 §11).
@@ -68,7 +70,7 @@ pub enum BottomTab {
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 11] = [
+    const ALL: [BottomTab; 12] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
@@ -76,6 +78,7 @@ impl BottomTab {
         BottomTab::Statistics,
         BottomTab::Chart,
         BottomTab::Search,
+        BottomTab::Address,
         BottomTab::Topology,
         BottomTab::ServiceInfo,
         BottomTab::Messages,
@@ -157,6 +160,9 @@ impl App {
                 Tab::new(plan::TAB_SEARCH)
                     .icon(from_web(Some("dataSearch")))
                     .closable(false),
+                Tab::new(plan::TAB_ADDRESS)
+                    .icon(from_web(Some("addressSearch")))
+                    .closable(false),
                 Tab::new(plan::TAB_TOPOLOGY)
                     .icon(from_web(Some("topologyCheck")))
                     .closable(false),
@@ -195,6 +201,7 @@ impl App {
             BottomTab::Statistics => self.statistics_tab(),
             BottomTab::Chart => self.chart_tab(),
             BottomTab::Search => self.data_tab(),
+            BottomTab::Address => self.address_tab(),
             BottomTab::Topology => self.topology_tab(),
             BottomTab::ServiceInfo => self.service_info_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
@@ -227,6 +234,7 @@ impl App {
             BottomTab::Statistics => plan::TAB_STATISTICS,
             BottomTab::Chart => plan::TAB_CHART,
             BottomTab::Search => plan::TAB_SEARCH,
+            BottomTab::Address => plan::TAB_ADDRESS,
             BottomTab::Topology => plan::TAB_TOPOLOGY,
             BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
             BottomTab::Messages => plan::TAB_MESSAGES,

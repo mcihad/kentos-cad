@@ -680,6 +680,7 @@ impl App {
         self.session.is_running()
             && (id.strip_prefix("tool.") == Some(tool)
                 || (id == "crs.query" && tool == kentos_interaction::coordinate::ID)
+                || (id == "address.reverse" && tool == kentos_interaction::address_reverse::ID)
                 || (id == "pointcloud.query" && tool == kentos_interaction::cloud_query::ID))
     }
 
@@ -708,7 +709,7 @@ impl App {
                     grips,
                     hot: self.session.active_grip(),
                     marked: self.vertex_marks(),
-                    found: self.data_mark_label(),
+                    found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     tracking: self.tracking_marks(&format),
                     crosshair: self.crosshair_mark(),
@@ -857,7 +858,7 @@ impl App {
             grips,
             hot: self.session.active_grip(),
             marked: self.vertex_marks(),
-            found: self.data_mark_label(),
+            found: self.address_mark_label().or_else(|| self.data_mark_label()),
             problem: self
                 .topology_problem()
                 .or_else(|| self.networks.mark.clone()),
@@ -1710,6 +1711,8 @@ impl App {
             Asking::Feed => self.feed_window_view(),
             Asking::TopologyRules => self.topology_rules_view(),
             Asking::Networks => self.networks_view(),
+            Asking::AddressData => self.address_data_view(),
+            Asking::AddressProviders => self.address_providers_view(),
             Asking::TimeLayer => self.time_layer_view(),
             Asking::Scenario => self.scenario_view(),
             Asking::LayerStates => self.layer_states_view(),

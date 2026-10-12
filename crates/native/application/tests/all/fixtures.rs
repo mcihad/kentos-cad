@@ -11,24 +11,25 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{
+    AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
+    CAD_ENTITIES_SET, EntitiesCreate, EntitiesSetProperties, LabelsPin, LayersCompose,
+    LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersTime,
+    NetworkDefine, ScenariosEdit,
+};
+use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
     CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT, CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE,
     CAD_POINT_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, CircleCreate, DocumentSnapshotV1,
     EntitiesArray, EntitiesDelete, EntitiesEdit, EntitiesTransform, EntityEdit, EntityGeometry,
     LineCreate, PointCreate, PolygonCreate, PolylineCreate, Transform,
 };
-use kentos_domain::contracts::{
-    BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
-    EntitiesCreate, EntitiesSetProperties, LabelsPin, LayersCompose, LayersFilter, LayersInfo,
-    LayersLabels, LayersRenderer, LayersService, LayersTime, NetworkDefine, ScenariosEdit,
-};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, delete,
-    edit, labels_pin, layers_compose, layers_filter, layers_info, layers_labels, layers_renderer,
-    layers_service, layers_time, line, network_define, point, polygon, polyline, scenarios_edit,
-    set, transform,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
+    circle, delete, edit, labels_pin, layers_compose, layers_filter, layers_info, layers_labels,
+    layers_renderer, layers_service, layers_time, line, network_define, point, polygon, polyline,
+    scenarios_edit, set, transform,
 };
 use serde_json::{Value, json};
 
@@ -382,6 +383,16 @@ impl Input for NetworkDefine {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "network.tolerance" => self.network.as_mut().map(|n| &mut n.tolerance),
+            _ => None,
+        }
+    }
+}
+
+impl Input for AddressesDefine {
+    /// `locator.reach` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "locator.reach" => self.locator.as_mut().map(|l| &mut l.reach),
             _ => None,
         }
     }
@@ -920,6 +931,7 @@ fn run_op(
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
         kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
+        kentos_domain::contracts::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
         kentos_domain::contracts::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
         kentos_domain::contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         kentos_domain::contracts::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
@@ -1225,6 +1237,12 @@ fn check(
                 let got = serde_json::to_value(&doc.settings().networks)
                     .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, want, "ağlar", at)?;
+            }
+            // The project's address data (docs/adr/0229 §2).
+            "addressLocators" => {
+                let got = serde_json::to_value(&doc.settings().address_locators)
+                    .map_err(|e| format!("{at}: {e}"))?;
+                expect_same(&got, want, "adres verileri", at)?;
             }
             // A misspelt expectation would otherwise pass unchecked.
             other => return Err(format!("{at}: bilinmeyen beklenti “{other}”")),

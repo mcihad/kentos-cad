@@ -260,6 +260,7 @@ pub fn input_type_for(p: &ParamDef) -> Option<&'static str> {
         | ParamKind::File { .. }
         | ParamKind::SaveFile { .. }
         | ParamKind::Network { .. }
+        | ParamKind::AddressSource
         | ParamKind::RasterValues { .. }
         | ParamKind::RasterPairs { .. }
         | ParamKind::FieldMap { .. }

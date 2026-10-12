@@ -354,8 +354,14 @@ pub const SCHEMA_WITH_ATTACHMENTS: u32 = 40;
 /// instead of drawing it as it was not meant.
 pub const SCHEMA_WITH_COMPOSE: u32 = 41;
 
+/// Schema 42 (docs/specs/kcad-v2.md §6.4.10, docs/adr/0229 §2): the
+/// settings' `addressLocators` (a project's address data: its doors', streets'
+/// and areas' layers and fields), written only when the project has one; older
+/// readers refuse such a file instead of losing them.
+pub const SCHEMA_WITH_ADDRESSES: u32 = 42;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 40] = [
+pub const SCHEMAS: [u32; 41] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -396,6 +402,7 @@ pub const SCHEMAS: [u32; 40] = [
     SCHEMA_WITH_MEASURES,
     SCHEMA_WITH_ATTACHMENTS,
     SCHEMA_WITH_COMPOSE,
+    SCHEMA_WITH_ADDRESSES,
 ];
 
 /// The file a drawing is saved as.

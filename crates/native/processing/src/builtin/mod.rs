@@ -1,5 +1,6 @@
 //! The tools and models that ship with KentOS (the web's `builtin/`).
 
+pub mod address;
 pub mod calculate_field;
 pub mod convert;
 pub mod distance;
@@ -103,6 +104,9 @@ pub fn tools() -> Vec<Tool> {
         geometry::validity::repair_tool(),
         geometry::simplify::tool(),
         geometry::reproject::tool(),
+        // Adres (docs/adr/0229 §11, §12): the desktop's; the web's side waits (docs/adr/0228).
+        address::geocode::tool(),
+        address::reverse::tool(),
         // Ağ analizi (docs/adr/0209 §7, §10).
         network::closest_facility::tool(),
         network::od_matrix::tool(),

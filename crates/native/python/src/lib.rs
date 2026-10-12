@@ -16,6 +16,7 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+mod address;
 mod network;
 mod services;
 mod temporal;
@@ -246,6 +247,9 @@ fn local_commands() -> Vec<(&'static str, u32)> {
 mod native {
     #[pymodule_export]
     use super::{PySession, catalog, local_commands};
+    // kentos.address (docs/adr/0229 §14).
+    #[pymodule_export]
+    use super::address::{PyLocator, address_parse};
     // kentos.network (docs/adr/0209 §11).
     #[pymodule_export]
     use super::network::PyNetwork;

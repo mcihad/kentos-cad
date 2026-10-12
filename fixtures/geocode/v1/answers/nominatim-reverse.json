@@ -1,0 +1,35 @@
+{
+ "place_id": 209272120,
+ "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+ "osm_type": "node",
+ "osm_id": 9264836482,
+ "lat": "39.9207048",
+ "lon": "32.8539548",
+ "category": "railway",
+ "type": "stop",
+ "place_rank": 30,
+ "importance": 7.518501564045194e-05,
+ "addresstype": "railway",
+ "name": "15 Temmuz Kızılay Millî İrade",
+ "display_name": "15 Temmuz Kızılay Millî İrade, 15 Temmuz Milli İrade Meydanı, Kızılay, Devlet Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye",
+ "address": {
+  "railway": "15 Temmuz Kızılay Millî İrade",
+  "road": "15 Temmuz Milli İrade Meydanı",
+  "quarter": "Kızılay",
+  "suburb": "Devlet Mahallesi",
+  "city": "Ankara",
+  "town": "Çankaya",
+  "province": "Ankara",
+  "ISO3166-2-lvl4": "TR-06",
+  "region": "İç Anadolu Bölgesi",
+  "postcode": "06420",
+  "country": "Türkiye",
+  "country_code": "tr"
+ },
+ "boundingbox": [
+  "39.9206548",
+  "39.9207548",
+  "32.8539048",
+  "32.8540048"
+ ]
+}

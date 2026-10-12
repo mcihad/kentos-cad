@@ -401,6 +401,8 @@ pub struct Observation {
     pub panel: Option<String>,
     /// Arama's count line and rows, while its tab is open.
     pub search: Option<(String, Vec<String>)>,
+    /// Adres's status line and rows, while its tab is open (docs/adr/0229 §13).
+    pub address: Option<(String, Vec<String>)>,
     /// Öznitelik tablosu's count, headers and rows, while its tab is open.
     pub feature_table: Option<(String, Vec<String>, Vec<String>)>,
     /// Grafik's kind, headers, rows and marked elements (1 first), while its tab is open.
@@ -1033,7 +1035,8 @@ impl<'a> Player<'a> {
     fn answer_panel(&mut self, title: &str, step: &Step) -> Result<(), String> {
         let table = title == crate::log_plan::TAB_TABLE;
         let topology = title == crate::log_plan::TAB_TOPOLOGY;
-        if title != crate::log_plan::TAB_SEARCH && !table && !topology {
+        let address = title == crate::log_plan::TAB_ADDRESS;
+        if title != crate::log_plan::TAB_SEARCH && !table && !topology && !address {
             return Err(format!("“{title}” sekmesi izden yanıtlanamıyor"));
         }
         if self.app.bottom_tab_title() != Some(title) {
@@ -1076,6 +1079,8 @@ impl<'a> Player<'a> {
                 self.app.features_control(control)?
             } else if topology {
                 self.app.topology_control(control)?
+            } else if address {
+                self.app.address_control(control)?
             } else {
                 self.app.data_control(control)?
             };
@@ -1251,11 +1256,17 @@ impl<'a> Player<'a> {
             dialog: app.dialog_title(),
             panel: app.bottom_tab_title().map(str::to_owned),
             search: app.data_seen(),
+            address: app.address_seen(),
             feature_table: app.features_seen(),
             chart: app.chart_seen(),
             statistics: app.statistics_seen(),
             topology: app.topology_seen(),
-            mark: app.data_mark().map(|p| [p.x, p.y]),
+            // Adres's mark when it has one, else Koordinata git's (they give way to each other).
+            mark: app
+                .address_mark_label()
+                .map(|(p, _)| p)
+                .or_else(|| app.data_mark())
+                .map(|p| [p.x, p.y]),
             overview: app.overview_extent(),
             magnifier: app.magnifier_state(),
             time: app.time.slider.open.then(|| {

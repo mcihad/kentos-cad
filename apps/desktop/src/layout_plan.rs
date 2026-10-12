@@ -134,6 +134,7 @@ pub(crate) const FIELDS: [(&str, Rule); 17] = [
             "statistics",
             "chart",
             "search",
+            "address",
             "topology",
             "serviceInfo",
             "messages",

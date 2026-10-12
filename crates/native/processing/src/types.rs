@@ -38,6 +38,9 @@ pub struct Defaults {
     pub measure_height_mm: f64,
     /// The project's networks (docs/adr/0209): a network parameter takes the first of its kind.
     pub networks: Vec<kentos_contracts::NetworkDef>,
+    /// The sources an address source parameter offers (docs/adr/0229 §11): the project's address data, then
+    /// the device's providers the host adds; it takes the first that can be chosen.
+    pub address_sources: Vec<crate::address::SourceOption>,
 }
 
 impl Defaults {
@@ -53,6 +56,7 @@ impl Defaults {
             active_layer: doc.layers().active().to_owned(),
             measure_height_mm: s.annotation_mm(kentos_contracts::AnnotationKind::Measure),
             networks: s.networks.clone(),
+            address_sources: crate::address::project_sources(doc),
         }
     }
 
@@ -252,6 +256,9 @@ pub enum ParamKind {
     Network {
         prefers: kentos_contracts::NetworkKind,
     },
+    /// Where addresses are looked for (docs/adr/0229 §11): `locator:<id>`, the project's address data, or
+    /// `provider:<id>`, an online provider of the device's; the window lists [`Defaults::address_sources`].
+    AddressSource,
     /// A value for each raster of the features parameter `of` (docs/adr/0237 §9): `{ name: value }`, the
     /// rasters by their names in an expression; a number (`min`, `max`) or a text a row; `placeholder` in an
     /// empty row. What a row left empty means is the tool's.
@@ -412,6 +419,7 @@ impl ParamDef {
             ParamKind::File { .. } => "file",
             ParamKind::SaveFile { .. } => "saveFile",
             ParamKind::Network { .. } => "network",
+            ParamKind::AddressSource => "addressSource",
             ParamKind::RasterValues { .. } => "rasterValues",
             ParamKind::RasterPairs { .. } => "rasterPairs",
             ParamKind::FieldMap { .. } => "fieldMap",
@@ -663,6 +671,10 @@ pub trait Feedback {
     fn canceled(&self) -> bool;
     /// The host's files, for the tools that read and write them (docs/adr/0207 §7); none where there are none.
     fn files(&self) -> Option<std::sync::Arc<dyn crate::files::Files>> {
+        None
+    }
+    /// The device's online address providers (docs/adr/0229 §11); none where there are none.
+    fn addresses(&self) -> Option<std::sync::Arc<dyn crate::address::AddressHost>> {
         None
     }
 }

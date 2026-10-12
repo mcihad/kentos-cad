@@ -1,0 +1,169 @@
+[
+ {
+  "place_id": 209182820,
+  "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+  "osm_type": "way",
+  "osm_id": 10652794,
+  "lat": "39.9049172",
+  "lon": "32.8583704",
+  "category": "highway",
+  "type": "primary",
+  "place_rank": 26,
+  "importance": 0.053408518348973796,
+  "addresstype": "road",
+  "name": "Atatürk Bulvarı",
+  "display_name": "Atatürk Bulvarı, Tunalı, Remzi Oğuz Arık Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06680, Türkiye",
+  "address": {
+   "road": "Atatürk Bulvarı",
+   "quarter": "Tunalı",
+   "suburb": "Remzi Oğuz Arık Mahallesi",
+   "city": "Ankara",
+   "town": "Çankaya",
+   "province": "Ankara",
+   "ISO3166-2-lvl4": "TR-06",
+   "region": "İç Anadolu Bölgesi",
+   "postcode": "06680",
+   "country": "Türkiye",
+   "country_code": "tr"
+  },
+  "boundingbox": [
+   "39.9035848",
+   "39.9062292",
+   "32.8577781",
+   "32.8589095"
+  ]
+ },
+ {
+  "place_id": 209172584,
+  "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+  "osm_type": "way",
+  "osm_id": 1011602702,
+  "lat": "39.9246637",
+  "lon": "32.8548473",
+  "category": "highway",
+  "type": "primary",
+  "place_rank": 26,
+  "importance": 0.053408518348973796,
+  "addresstype": "road",
+  "name": "Atatürk Bulvarı",
+  "display_name": "Atatürk Bulvarı, Cumhuriyet Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye",
+  "address": {
+   "road": "Atatürk Bulvarı",
+   "suburb": "Cumhuriyet Mahallesi",
+   "city": "Ankara",
+   "town": "Çankaya",
+   "province": "Ankara",
+   "ISO3166-2-lvl4": "TR-06",
+   "region": "İç Anadolu Bölgesi",
+   "postcode": "06420",
+   "country": "Türkiye",
+   "country_code": "tr"
+  },
+  "boundingbox": [
+   "39.9232172",
+   "39.9261036",
+   "32.8544768",
+   "32.8552430"
+  ]
+ },
+ {
+  "place_id": 208687059,
+  "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+  "osm_type": "way",
+  "osm_id": 26317877,
+  "lat": "39.9181937",
+  "lon": "32.8540714",
+  "category": "highway",
+  "type": "primary",
+  "place_rank": 26,
+  "importance": 0.053408518348973796,
+  "addresstype": "road",
+  "name": "Atatürk Bulvarı",
+  "display_name": "Atatürk Bulvarı, Kızılay, Devlet Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye",
+  "address": {
+   "road": "Atatürk Bulvarı",
+   "quarter": "Kızılay",
+   "suburb": "Devlet Mahallesi",
+   "city": "Ankara",
+   "town": "Çankaya",
+   "province": "Ankara",
+   "ISO3166-2-lvl4": "TR-06",
+   "region": "İç Anadolu Bölgesi",
+   "postcode": "06420",
+   "country": "Türkiye",
+   "country_code": "tr"
+  },
+  "boundingbox": [
+   "39.9156879",
+   "39.9206941",
+   "32.8539101",
+   "32.8541528"
+  ]
+ },
+ {
+  "place_id": 208789396,
+  "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+  "osm_type": "way",
+  "osm_id": 27800111,
+  "lat": "39.9096039",
+  "lon": "32.8559958",
+  "category": "highway",
+  "type": "primary",
+  "place_rank": 26,
+  "importance": 0.053408518348973796,
+  "addresstype": "road",
+  "name": "Atatürk Bulvarı",
+  "display_name": "Atatürk Bulvarı, Kavaklıdere Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06680, Türkiye",
+  "address": {
+   "road": "Atatürk Bulvarı",
+   "suburb": "Kavaklıdere Mahallesi",
+   "city": "Ankara",
+   "town": "Çankaya",
+   "province": "Ankara",
+   "ISO3166-2-lvl4": "TR-06",
+   "region": "İç Anadolu Bölgesi",
+   "postcode": "06680",
+   "country": "Türkiye",
+   "country_code": "tr"
+  },
+  "boundingbox": [
+   "39.9089703",
+   "39.9102243",
+   "32.8556713",
+   "32.8562958"
+  ]
+ },
+ {
+  "place_id": 208627963,
+  "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+  "osm_type": "way",
+  "osm_id": 231667500,
+  "lat": "39.9191182",
+  "lon": "32.8542517",
+  "category": "highway",
+  "type": "primary",
+  "place_rank": 26,
+  "importance": 0.053408518348973796,
+  "addresstype": "road",
+  "name": "Atatürk Bulvarı",
+  "display_name": "Atatürk Bulvarı, Meşrutiyet Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye",
+  "address": {
+   "road": "Atatürk Bulvarı",
+   "suburb": "Meşrutiyet Mahallesi",
+   "city": "Ankara",
+   "town": "Çankaya",
+   "province": "Ankara",
+   "ISO3166-2-lvl4": "TR-06",
+   "region": "İç Anadolu Bölgesi",
+   "postcode": "06420",
+   "country": "Türkiye",
+   "country_code": "tr"
+  },
+  "boundingbox": [
+   "39.9175493",
+   "39.9206860",
+   "32.8541902",
+   "32.8542791"
+  ]
+ }
+]

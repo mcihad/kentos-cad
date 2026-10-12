@@ -206,6 +206,9 @@ pub struct Expect {
     /// Arama's count line and rows (Katman, Tür, Alan, Değer joined by “ | ”),
     /// exact (docs/adr/0178).
     pub(super) search: Option<SearchExpect>,
+    /// Adres's status line (as `count`) and rows (Adres, Tür, Puan, Mahalle, İlçe joined by “ | ”), exact
+    /// (docs/adr/0229 §13).
+    pub(super) address: Option<SearchExpect>,
     /// Öznitelik tablosu's count, headers (when given) and rows (the cells
     /// after Sıra joined by “ | ”), exact (docs/adr/0199 §4).
     #[serde(rename = "featureTable")]

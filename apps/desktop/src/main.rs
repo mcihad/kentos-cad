@@ -4,6 +4,9 @@
 //! `kentos-cad [çizim.kcad]` opens the drawing at once; `kentos-cad snapshot
 //! çıktı.png [çizim.kcad]` draws the window into an image without opening it.
 
+mod address;
+#[cfg(test)]
+mod address_scenes;
 mod annotation_scale;
 mod annotation_styles;
 mod app;

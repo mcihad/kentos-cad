@@ -1,0 +1,1649 @@
+{
+ "format": "kentos.geocode-online-cases",
+ "version": 1,
+ "note": "docs/adr/0229 §10; written by scripts/fixtures/geocode_online_cases.py from the ADR, without KentOS code. Answers: fixtures/geocode/v1/answers (OpenStreetMap data © OpenStreetMap contributors, ODbL)",
+ "requests": [
+  {
+   "id": "nominatim-osm",
+   "own": null,
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://nominatim.openstreetmap.org/search?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&format=jsonv2&addressdetails=1&limit=10&countrycodes=tr&viewbox=32.84,39.91,32.87,39.93&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": null,
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://nominatim.openstreetmap.org/search?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&format=jsonv2&addressdetails=1&limit=5&countrycodes=tr&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": null,
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://nominatim.openstreetmap.org/search?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&format=jsonv2&addressdetails=1&limit=10&countrycodes=tr&viewbox=32.84,39.91,32.87,39.93&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": null,
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://nominatim.openstreetmap.org/search?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&format=jsonv2&addressdetails=1&limit=5&countrycodes=tr&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": null,
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://nominatim.openstreetmap.org/reverse?lat=39.9208&lon=32.8541&format=jsonv2&addressdetails=1&zoom=18&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": null,
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://nominatim.openstreetmap.org/reverse?lat=41&lon=0&format=jsonv2&addressdetails=1&zoom=18&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": {
+    "id": "nominatim-osm",
+    "enabled": true,
+    "accepted": 1
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://nominatim.openstreetmap.org/search?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&format=jsonv2&addressdetails=1&limit=10&viewbox=32.84,39.91,32.87,39.93&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": {
+    "id": "nominatim-osm",
+    "enabled": true,
+    "accepted": 1
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://nominatim.openstreetmap.org/search?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&format=jsonv2&addressdetails=1&limit=5&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": {
+    "id": "nominatim-osm",
+    "enabled": true,
+    "accepted": 1
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://nominatim.openstreetmap.org/search?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&format=jsonv2&addressdetails=1&limit=10&viewbox=32.84,39.91,32.87,39.93&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": {
+    "id": "nominatim-osm",
+    "enabled": true,
+    "accepted": 1
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://nominatim.openstreetmap.org/search?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&format=jsonv2&addressdetails=1&limit=5&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": {
+    "id": "nominatim-osm",
+    "enabled": true,
+    "accepted": 1
+   },
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://nominatim.openstreetmap.org/reverse?lat=39.9208&lon=32.8541&format=jsonv2&addressdetails=1&zoom=18&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "nominatim-osm",
+   "own": {
+    "id": "nominatim-osm",
+    "enabled": true,
+    "accepted": 1
+   },
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://nominatim.openstreetmap.org/reverse?lat=41&lon=0&format=jsonv2&addressdetails=1&zoom=18&accept-language=tr",
+   "keyParam": null
+  },
+  {
+   "id": "photon-komoot",
+   "own": null,
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://photon.komoot.io/api?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&limit=10&lat=39.9208&lon=32.8541",
+   "keyParam": null
+  },
+  {
+   "id": "photon-komoot",
+   "own": null,
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://photon.komoot.io/api?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&limit=5",
+   "keyParam": null
+  },
+  {
+   "id": "photon-komoot",
+   "own": null,
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://photon.komoot.io/api?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&limit=10&lat=39.9208&lon=32.8541",
+   "keyParam": null
+  },
+  {
+   "id": "photon-komoot",
+   "own": null,
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://photon.komoot.io/api?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&limit=5",
+   "keyParam": null
+  },
+  {
+   "id": "photon-komoot",
+   "own": null,
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://photon.komoot.io/reverse?lat=39.9208&lon=32.8541&limit=1",
+   "keyParam": null
+  },
+  {
+   "id": "photon-komoot",
+   "own": null,
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://photon.komoot.io/reverse?lat=41&lon=0&limit=1",
+   "keyParam": null
+  },
+  {
+   "id": "arcgis-world",
+   "own": null,
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&f=json&outSR=4326&outFields=*&maxLocations=10&sourceCountry=TR&location=32.8541,39.9208&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": null,
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&f=json&outSR=4326&outFields=*&maxLocations=5&sourceCountry=TR&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": null,
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&f=json&outSR=4326&outFields=*&maxLocations=10&sourceCountry=TR&location=32.8541,39.9208&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": null,
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&f=json&outSR=4326&outFields=*&maxLocations=5&sourceCountry=TR&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": null,
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?location=32.8541,39.9208&f=json&outSR=4326&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": null,
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?location=0,41&f=json&outSR=4326&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": {
+    "id": "arcgis-world",
+    "enabled": true,
+    "accepted": 1,
+    "country": "TR",
+    "store": true
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&f=json&outSR=4326&outFields=*&maxLocations=10&sourceCountry=TR&location=32.8541,39.9208&langCode=TR&forStorage=true",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": {
+    "id": "arcgis-world",
+    "enabled": true,
+    "accepted": 1,
+    "country": "TR",
+    "store": true
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&f=json&outSR=4326&outFields=*&maxLocations=5&sourceCountry=TR&langCode=TR&forStorage=true",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": {
+    "id": "arcgis-world",
+    "enabled": true,
+    "accepted": 1,
+    "country": "TR",
+    "store": true
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&f=json&outSR=4326&outFields=*&maxLocations=10&sourceCountry=TR&location=32.8541,39.9208&langCode=TR&forStorage=true",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": {
+    "id": "arcgis-world",
+    "enabled": true,
+    "accepted": 1,
+    "country": "TR",
+    "store": true
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&f=json&outSR=4326&outFields=*&maxLocations=5&sourceCountry=TR&langCode=TR&forStorage=true",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": {
+    "id": "arcgis-world",
+    "enabled": true,
+    "accepted": 1,
+    "country": "TR",
+    "store": true
+   },
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?location=32.8541,39.9208&f=json&outSR=4326&langCode=TR&forStorage=true",
+   "keyParam": "token"
+  },
+  {
+   "id": "arcgis-world",
+   "own": {
+    "id": "arcgis-world",
+    "enabled": true,
+    "accepted": 1,
+    "country": "TR",
+    "store": true
+   },
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?location=0,41&f=json&outSR=4326&langCode=TR&forStorage=true",
+   "keyParam": "token"
+  },
+  {
+   "id": "google",
+   "own": null,
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://maps.googleapis.com/maps/api/geocode/json?address=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&language=tr&region=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "google",
+   "own": null,
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://maps.googleapis.com/maps/api/geocode/json?address=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&language=tr&region=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "google",
+   "own": null,
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://maps.googleapis.com/maps/api/geocode/json?address=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&language=tr&region=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "google",
+   "own": null,
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://maps.googleapis.com/maps/api/geocode/json?address=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&language=tr&region=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "google",
+   "own": null,
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://maps.googleapis.com/maps/api/geocode/json?latlng=39.9208,32.8541&language=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "google",
+   "own": null,
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://maps.googleapis.com/maps/api/geocode/json?latlng=41,0&language=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "sunucu-1",
+   "own": {
+    "id": "sunucu-1",
+    "kind": "pelias",
+    "name": "Pelias",
+    "url": "https://pelias.ornek.bel.tr/",
+    "country": "TR"
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://pelias.ornek.bel.tr/v1/search?text=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&size=10&focus.point.lat=39.9208&focus.point.lon=32.8541&boundary.country=TR",
+   "keyParam": "api_key"
+  },
+  {
+   "id": "sunucu-1",
+   "own": {
+    "id": "sunucu-1",
+    "kind": "pelias",
+    "name": "Pelias",
+    "url": "https://pelias.ornek.bel.tr/",
+    "country": "TR"
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://pelias.ornek.bel.tr/v1/search?text=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&size=5&boundary.country=TR",
+   "keyParam": "api_key"
+  },
+  {
+   "id": "sunucu-1",
+   "own": {
+    "id": "sunucu-1",
+    "kind": "pelias",
+    "name": "Pelias",
+    "url": "https://pelias.ornek.bel.tr/",
+    "country": "TR"
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://pelias.ornek.bel.tr/v1/search?text=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&size=10&focus.point.lat=39.9208&focus.point.lon=32.8541&boundary.country=TR",
+   "keyParam": "api_key"
+  },
+  {
+   "id": "sunucu-1",
+   "own": {
+    "id": "sunucu-1",
+    "kind": "pelias",
+    "name": "Pelias",
+    "url": "https://pelias.ornek.bel.tr/",
+    "country": "TR"
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://pelias.ornek.bel.tr/v1/search?text=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&size=5&boundary.country=TR",
+   "keyParam": "api_key"
+  },
+  {
+   "id": "sunucu-1",
+   "own": {
+    "id": "sunucu-1",
+    "kind": "pelias",
+    "name": "Pelias",
+    "url": "https://pelias.ornek.bel.tr/",
+    "country": "TR"
+   },
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://pelias.ornek.bel.tr/v1/reverse?point.lat=39.9208&point.lon=32.8541&size=1",
+   "keyParam": "api_key"
+  },
+  {
+   "id": "sunucu-1",
+   "own": {
+    "id": "sunucu-1",
+    "kind": "pelias",
+    "name": "Pelias",
+    "url": "https://pelias.ornek.bel.tr/",
+    "country": "TR"
+   },
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://pelias.ornek.bel.tr/v1/reverse?point.lat=41&point.lon=0&size=1",
+   "keyParam": "api_key"
+  },
+  {
+   "id": "sunucu-2",
+   "own": {
+    "id": "sunucu-2",
+    "kind": "nominatim",
+    "name": "Yerel",
+    "url": "http://10.0.0.5:8080"
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "http://10.0.0.5:8080/search?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&format=jsonv2&addressdetails=1&limit=10&viewbox=32.84,39.91,32.87,39.93&accept-language=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "sunucu-2",
+   "own": {
+    "id": "sunucu-2",
+    "kind": "nominatim",
+    "name": "Yerel",
+    "url": "http://10.0.0.5:8080"
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "http://10.0.0.5:8080/search?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&format=jsonv2&addressdetails=1&limit=5&accept-language=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "sunucu-2",
+   "own": {
+    "id": "sunucu-2",
+    "kind": "nominatim",
+    "name": "Yerel",
+    "url": "http://10.0.0.5:8080"
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "http://10.0.0.5:8080/search?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&format=jsonv2&addressdetails=1&limit=10&viewbox=32.84,39.91,32.87,39.93&accept-language=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "sunucu-2",
+   "own": {
+    "id": "sunucu-2",
+    "kind": "nominatim",
+    "name": "Yerel",
+    "url": "http://10.0.0.5:8080"
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "http://10.0.0.5:8080/search?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&format=jsonv2&addressdetails=1&limit=5&accept-language=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "sunucu-2",
+   "own": {
+    "id": "sunucu-2",
+    "kind": "nominatim",
+    "name": "Yerel",
+    "url": "http://10.0.0.5:8080"
+   },
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "http://10.0.0.5:8080/reverse?lat=39.9208&lon=32.8541&format=jsonv2&addressdetails=1&zoom=18&accept-language=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "sunucu-2",
+   "own": {
+    "id": "sunucu-2",
+    "kind": "nominatim",
+    "name": "Yerel",
+    "url": "http://10.0.0.5:8080"
+   },
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "http://10.0.0.5:8080/reverse?lat=41&lon=0&format=jsonv2&addressdetails=1&zoom=18&accept-language=tr",
+   "keyParam": "key"
+  },
+  {
+   "id": "sunucu-3",
+   "own": {
+    "id": "sunucu-3",
+    "kind": "arcgis",
+    "name": "Kurum",
+    "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer"
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer/findAddressCandidates?SingleLine=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&f=json&outSR=4326&outFields=*&maxLocations=10&location=32.8541,39.9208&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "sunucu-3",
+   "own": {
+    "id": "sunucu-3",
+    "kind": "arcgis",
+    "name": "Kurum",
+    "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer"
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer/findAddressCandidates?SingleLine=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&f=json&outSR=4326&outFields=*&maxLocations=5&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "sunucu-3",
+   "own": {
+    "id": "sunucu-3",
+    "kind": "arcgis",
+    "name": "Kurum",
+    "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer"
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer/findAddressCandidates?SingleLine=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&f=json&outSR=4326&outFields=*&maxLocations=10&location=32.8541,39.9208&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "sunucu-3",
+   "own": {
+    "id": "sunucu-3",
+    "kind": "arcgis",
+    "name": "Kurum",
+    "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer"
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer/findAddressCandidates?SingleLine=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&f=json&outSR=4326&outFields=*&maxLocations=5&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "sunucu-3",
+   "own": {
+    "id": "sunucu-3",
+    "kind": "arcgis",
+    "name": "Kurum",
+    "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer"
+   },
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer/reverseGeocode?location=32.8541,39.9208&f=json&outSR=4326&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "sunucu-3",
+   "own": {
+    "id": "sunucu-3",
+    "kind": "arcgis",
+    "name": "Kurum",
+    "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer"
+   },
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://cbs.ornek.bel.tr/arcgis/rest/services/Adres/GeocodeServer/reverseGeocode?location=0,41&f=json&outSR=4326&langCode=TR&forStorage=false",
+   "keyParam": "token"
+  },
+  {
+   "id": "sunucu-4",
+   "own": {
+    "id": "sunucu-4",
+    "kind": "photon",
+    "name": "Photon",
+    "url": "https://photon.ornek.bel.tr"
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://photon.ornek.bel.tr/api?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&limit=10&lat=39.9208&lon=32.8541",
+   "keyParam": null
+  },
+  {
+   "id": "sunucu-4",
+   "own": {
+    "id": "sunucu-4",
+    "kind": "photon",
+    "name": "Photon",
+    "url": "https://photon.ornek.bel.tr"
+   },
+   "forward": {
+    "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://photon.ornek.bel.tr/api?q=Atat%C3%BCrk%20Bulvar%C4%B1%2015,%20%C3%87ankaya,%20Ankara&limit=5",
+   "keyParam": null
+  },
+  {
+   "id": "sunucu-4",
+   "own": {
+    "id": "sunucu-4",
+    "kind": "photon",
+    "name": "Photon",
+    "url": "https://photon.ornek.bel.tr"
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 10,
+    "bias": {
+     "lon": 32.8541,
+     "lat": 39.9208,
+     "west": 32.84,
+     "south": 39.91,
+     "east": 32.87,
+     "north": 39.93
+    }
+   },
+   "url": "https://photon.ornek.bel.tr/api?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&limit=10&lat=39.9208&lon=32.8541",
+   "keyParam": null
+  },
+  {
+   "id": "sunucu-4",
+   "own": {
+    "id": "sunucu-4",
+    "kind": "photon",
+    "name": "Photon",
+    "url": "https://photon.ornek.bel.tr"
+   },
+   "forward": {
+    "text": "  İnönü Cd. No:3/A *ç&a=1  ",
+    "limit": 5,
+    "bias": null
+   },
+   "url": "https://photon.ornek.bel.tr/api?q=%C4%B0n%C3%B6n%C3%BC%20Cd.%20No:3/A%20*%C3%A7%26a%3D1&limit=5",
+   "keyParam": null
+  },
+  {
+   "id": "sunucu-4",
+   "own": {
+    "id": "sunucu-4",
+    "kind": "photon",
+    "name": "Photon",
+    "url": "https://photon.ornek.bel.tr"
+   },
+   "reverse": {
+    "lon": 32.8541,
+    "lat": 39.9208
+   },
+   "url": "https://photon.ornek.bel.tr/reverse?lat=39.9208&lon=32.8541&limit=1",
+   "keyParam": null
+  },
+  {
+   "id": "sunucu-4",
+   "own": {
+    "id": "sunucu-4",
+    "kind": "photon",
+    "name": "Photon",
+    "url": "https://photon.ornek.bel.tr"
+   },
+   "reverse": {
+    "lon": -1e-08,
+    "lat": 41.0000000449
+   },
+   "url": "https://photon.ornek.bel.tr/reverse?lat=41&lon=0&limit=1",
+   "keyParam": null
+  }
+ ],
+ "answers": [
+  {
+   "kind": "nominatim",
+   "direction": "forward",
+   "file": "nominatim-search.json",
+   "candidates": [
+    {
+     "lon": 32.8583704,
+     "lat": 39.9049172,
+     "label": "Atatürk Bulvarı, Tunalı, Remzi Oğuz Arık Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06680, Türkiye",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Remzi Oğuz Arık Mahallesi",
+      "Tunalı",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Remzi Oğuz Arık Mahallesi",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06680",
+     "name": "Atatürk Bulvarı",
+     "kind": "road",
+     "providerScore": 0.053408518348973796
+    },
+    {
+     "lon": 32.8548473,
+     "lat": 39.9246637,
+     "label": "Atatürk Bulvarı, Cumhuriyet Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Cumhuriyet Mahallesi",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Cumhuriyet Mahallesi",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "Atatürk Bulvarı",
+     "kind": "road",
+     "providerScore": 0.053408518348973796
+    },
+    {
+     "lon": 32.8540714,
+     "lat": 39.9181937,
+     "label": "Atatürk Bulvarı, Kızılay, Devlet Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Devlet Mahallesi",
+      "Kızılay",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Devlet Mahallesi",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "Atatürk Bulvarı",
+     "kind": "road",
+     "providerScore": 0.053408518348973796
+    },
+    {
+     "lon": 32.8559958,
+     "lat": 39.9096039,
+     "label": "Atatürk Bulvarı, Kavaklıdere Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06680, Türkiye",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Kavaklıdere Mahallesi",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Kavaklıdere Mahallesi",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06680",
+     "name": "Atatürk Bulvarı",
+     "kind": "road",
+     "providerScore": 0.053408518348973796
+    },
+    {
+     "lon": 32.8542517,
+     "lat": 39.9191182,
+     "label": "Atatürk Bulvarı, Meşrutiyet Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Meşrutiyet Mahallesi",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Meşrutiyet Mahallesi",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "Atatürk Bulvarı",
+     "kind": "road",
+     "providerScore": 0.053408518348973796
+    }
+   ],
+   "skipped": 0
+  },
+  {
+   "kind": "nominatim",
+   "direction": "reverse",
+   "file": "nominatim-reverse.json",
+   "candidate": {
+    "lon": 32.8539548,
+    "lat": 39.9207048,
+    "label": "15 Temmuz Kızılay Millî İrade, 15 Temmuz Milli İrade Meydanı, Kızılay, Devlet Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye",
+    "street": "15 Temmuz Milli İrade Meydanı",
+    "door": "",
+    "areas": [
+     "Devlet Mahallesi",
+     "Kızılay",
+     "Çankaya",
+     "Ankara"
+    ],
+    "neighbourhood": "Devlet Mahallesi",
+    "district": "Çankaya",
+    "province": "Ankara",
+    "postcode": "06420",
+    "name": "15 Temmuz Kızılay Millî İrade",
+    "kind": "railway",
+    "providerScore": 7.518501564045194e-05
+   }
+  },
+  {
+   "kind": "nominatim",
+   "direction": "reverse",
+   "file": "nominatim-error.json",
+   "candidate": null
+  },
+  {
+   "kind": "photon",
+   "direction": "forward",
+   "file": "photon-search.json",
+   "candidates": [
+    {
+     "lon": 32.8539508,
+     "lat": 39.920537,
+     "label": "15 Temmuz Kızılay Millî İrade, Atatürk Bulvarı, Devlet, Çankaya, Ankara, 06420",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Devlet",
+      "Kızılay",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Devlet",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "15 Temmuz Kızılay Millî İrade",
+     "kind": "house",
+     "providerScore": null
+    },
+    {
+     "lon": 32.8540831,
+     "lat": 39.9202316,
+     "label": "15 Temmuz Kızılay Millî İrade, Atatürk Bulvarı, Meşrutiyet, Çankaya, Ankara, 06420",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Meşrutiyet",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Meşrutiyet",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "15 Temmuz Kızılay Millî İrade",
+     "kind": "house",
+     "providerScore": null
+    },
+    {
+     "lon": 32.8538421,
+     "lat": 39.9202219,
+     "label": "15 Temmuz Kızılay Millî İrade, Atatürk Bulvarı, Devlet, Çankaya, Ankara, 06420",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Devlet",
+      "Kızılay",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Devlet",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "15 Temmuz Kızılay Millî İrade",
+     "kind": "house",
+     "providerScore": null
+    },
+    {
+     "lon": 32.8547716,
+     "lat": 39.9142536,
+     "label": "Ankara 17. Noterliği, Atatürk Bulvarı 151/1, Kavaklıdere, Ankara, 06680",
+     "street": "Atatürk Bulvarı",
+     "door": "151/1",
+     "areas": [
+      "Kavaklıdere",
+      "Kavaklıdere Mahallesi",
+      "Ankara"
+     ],
+     "neighbourhood": "Kavaklıdere Mahallesi",
+     "district": "",
+     "province": "Ankara",
+     "postcode": "06680",
+     "name": "Ankara 17. Noterliği",
+     "kind": "house",
+     "providerScore": null
+    }
+   ],
+   "skipped": 0
+  },
+  {
+   "kind": "photon",
+   "direction": "reverse",
+   "file": "photon-reverse.json",
+   "candidate": {
+    "lon": 32.8540497,
+    "lat": 39.9207759,
+    "label": "Ankara, Çankaya, 06420",
+    "street": "",
+    "door": "",
+    "areas": [
+     "Çankaya",
+     "Ankara"
+    ],
+    "neighbourhood": "",
+    "district": "Çankaya",
+    "province": "Ankara",
+    "postcode": "06420",
+    "name": "Ankara",
+    "kind": "district",
+    "providerScore": null
+   }
+  },
+  {
+   "kind": "arcgis",
+   "direction": "forward",
+   "file": "arcgis-candidates.json",
+   "candidates": [
+    {
+     "lon": 32.854612,
+     "lat": 39.920471,
+     "label": "Atatürk Bulvarı 15, Kızılay, 06420, Çankaya, Ankara, TUR",
+     "street": "Atatürk Bulvarı",
+     "door": "15",
+     "areas": [
+      "Kızılay Mahallesi",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Kızılay Mahallesi",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "",
+     "kind": "PointAddress",
+     "providerScore": 100.0
+    },
+    {
+     "lon": 32.854101,
+     "lat": 39.921003,
+     "label": "Atatürk Bulvarı, Kızılay, 06420, Çankaya, Ankara, TUR",
+     "street": "Atatürk Bulvarı",
+     "door": "",
+     "areas": [
+      "Kızılay Mahallesi",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Kızılay Mahallesi",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "",
+     "kind": "StreetName",
+     "providerScore": 98.4
+    }
+   ],
+   "skipped": 1
+  },
+  {
+   "kind": "arcgis",
+   "direction": "reverse",
+   "file": "arcgis-reverse.json",
+   "candidate": {
+    "lon": 32.85441,
+    "lat": 39.92038,
+    "label": "Atatürk Bulvarı 17, Kızılay, 06420, Çankaya, Ankara, TUR",
+    "street": "Atatürk Bulvarı",
+    "door": "17",
+    "areas": [
+     "Kızılay Mahallesi",
+     "Çankaya",
+     "Ankara"
+    ],
+    "neighbourhood": "Kızılay Mahallesi",
+    "district": "Çankaya",
+    "province": "Ankara",
+    "postcode": "06420",
+    "name": "",
+    "kind": "PointAddress",
+    "providerScore": null
+   }
+  },
+  {
+   "kind": "arcgis",
+   "direction": "forward",
+   "file": "arcgis-error.json",
+   "error": true
+  },
+  {
+   "kind": "google",
+   "direction": "forward",
+   "file": "google-geocode.json",
+   "candidates": [
+    {
+     "lon": 32.8546207,
+     "lat": 39.9204812,
+     "label": "Kızılay, Atatürk Blv. No:15, 06420 Çankaya/Ankara, Türkiye",
+     "street": "Atatürk Bulvarı",
+     "door": "15",
+     "areas": [
+      "Kızılay",
+      "Çankaya",
+      "Ankara"
+     ],
+     "neighbourhood": "Kızılay",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "",
+     "kind": "street_address",
+     "providerScore": null
+    }
+   ],
+   "skipped": 0
+  },
+  {
+   "kind": "google",
+   "direction": "forward",
+   "file": "google-denied.json",
+   "error": true
+  },
+  {
+   "kind": "pelias",
+   "direction": "forward",
+   "file": "pelias-search.json",
+   "candidates": [
+    {
+     "lon": 32.8546,
+     "lat": 39.92048,
+     "label": "Atatürk Bulvarı 15, Çankaya, Ankara, Türkiye",
+     "street": "Atatürk Bulvarı",
+     "door": "15",
+     "areas": [
+      "Kızılay",
+      "Ankara",
+      "Çankaya"
+     ],
+     "neighbourhood": "Kızılay",
+     "district": "Çankaya",
+     "province": "Ankara",
+     "postcode": "06420",
+     "name": "Atatürk Bulvarı 15",
+     "kind": "address",
+     "providerScore": 1.0
+    },
+    {
+     "lon": 32.85,
+     "lat": 39.93,
+     "label": "Ankara, Türkiye",
+     "street": "",
+     "door": "",
+     "areas": [
+      "Ankara"
+     ],
+     "neighbourhood": "",
+     "district": "",
+     "province": "Ankara",
+     "postcode": "",
+     "name": "Ankara",
+     "kind": "locality",
+     "providerScore": 0.6
+    }
+   ],
+   "skipped": 0
+  }
+ ],
+ "scores": [
+  {
+   "text": "Atatürk Bulvarı 15, Çankaya, Ankara",
+   "kind": "nominatim",
+   "file": "nominatim-search.json",
+   "scores": [
+    [
+     75,
+     "Yol"
+    ],
+    [
+     75,
+     "Yol"
+    ],
+    [
+     75,
+     "Yol"
+    ],
+    [
+     75,
+     "Yol"
+    ],
+    [
+     75,
+     "Yol"
+    ]
+   ],
+   "pick": {
+    "index": 0,
+    "score": 75,
+    "kind": "Yol",
+    "status": "Eşleşmedi"
+   }
+  },
+  {
+   "text": "Kızılay Mah. Atatürk Blv. No:15",
+   "kind": "photon",
+   "file": "photon-search.json",
+   "scores": [
+    [
+     75,
+     "Yol"
+    ],
+    [
+     45,
+     "Yol"
+    ],
+    [
+     75,
+     "Yol"
+    ],
+    [
+     45,
+     "Yol"
+    ]
+   ],
+   "pick": {
+    "index": 0,
+    "score": 75,
+    "kind": "Yol",
+    "status": "Eşleşmedi"
+   }
+  },
+  {
+   "text": "Atatürk Bulvarı No:15",
+   "kind": "arcgis",
+   "file": "arcgis-candidates.json",
+   "scores": [
+    [
+     100,
+     "Kapı"
+    ],
+    [
+     75,
+     "Yol"
+    ]
+   ],
+   "pick": {
+    "index": 0,
+    "score": 100,
+    "kind": "Kapı",
+    "status": "Eşleşti"
+   }
+  },
+  {
+   "text": "Atatürk Cad. No:15/B",
+   "kind": "google",
+   "file": "google-geocode.json",
+   "scores": [
+    [
+     90,
+     "Kapı"
+    ]
+   ],
+   "pick": {
+    "index": 0,
+    "score": 90,
+    "kind": "Kapı",
+    "status": "Eşleşti"
+   }
+  },
+  {
+   "text": "Kızılay Atatürk Bulvarı 15",
+   "kind": "pelias",
+   "file": "pelias-search.json",
+   "scores": [
+    [
+     100,
+     "Kapı"
+    ],
+    [
+     0,
+     "Diğer"
+    ]
+   ],
+   "pick": {
+    "index": 0,
+    "score": 100,
+    "kind": "Kapı",
+    "status": "Eşleşti"
+   }
+  },
+  {
+   "text": "Ankara",
+   "kind": "pelias",
+   "file": "pelias-search.json",
+   "scores": [
+    [
+     60,
+     "Bölge"
+    ],
+    [
+     85,
+     "Yer adı"
+    ]
+   ],
+   "pick": {
+    "index": 1,
+    "score": 85,
+    "kind": "Yer adı",
+    "status": "Eşleşti"
+   }
+  },
+  {
+   "text": "15 Temmuz Kızılay Millî İrade",
+   "kind": "photon",
+   "file": "photon-search.json",
+   "scores": [
+    [
+     85,
+     "Yer adı"
+    ],
+    [
+     85,
+     "Yer adı"
+    ],
+    [
+     85,
+     "Yer adı"
+    ],
+    [
+     0,
+     "Diğer"
+    ]
+   ],
+   "pick": {
+    "index": 0,
+    "score": 85,
+    "kind": "Yer adı",
+    "status": "Belirsiz"
+   }
+  },
+  {
+   "text": "Remzi Oğuz Arık",
+   "kind": "nominatim",
+   "file": "nominatim-search.json",
+   "scores": [
+    [
+     60,
+     "Bölge"
+    ],
+    [
+     0,
+     "Diğer"
+    ],
+    [
+     0,
+     "Diğer"
+    ],
+    [
+     0,
+     "Diğer"
+    ],
+    [
+     0,
+     "Diğer"
+    ]
+   ],
+   "pick": {
+    "index": 0,
+    "score": 60,
+    "kind": "Bölge",
+    "status": "Eşleşmedi"
+   }
+  }
+ ],
+ "batches": [
+  {
+   "rows": [
+    "Atatürk Blv. 12",
+    "ATATÜRK  blv. 12 ",
+    "",
+    "İnönü Cd. 3",
+    "  ",
+    "atatürk blv. 12"
+   ],
+   "keys": [
+    "ataturk blv. 12",
+    "inonu cd. 3"
+   ],
+   "at": [
+    0,
+    0,
+    null,
+    1,
+    null,
+    0
+   ]
+  }
+ ],
+ "lines": [
+  {
+   "columns": [
+    "Kızılay",
+    "Atatürk Bulvarı",
+    "15",
+    "Çankaya",
+    "Ankara",
+    ""
+   ],
+   "line": "Atatürk Bulvarı 15, Kızılay Mahallesi, Çankaya, Ankara"
+  },
+  {
+   "columns": [
+    "Kızılay Mahallesi",
+    "",
+    "",
+    "",
+    "",
+    "06420"
+   ],
+   "line": "Kızılay Mahallesi, 06420"
+  },
+  {
+   "columns": [
+    "",
+    "1203/1 Sokak",
+    "No: 5",
+    "",
+    "İzmir",
+    ""
+   ],
+   "line": "1203/1 Sokak No: 5, İzmir"
+  },
+  {
+   "columns": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+   ],
+   "line": ""
+  }
+ ]
+}

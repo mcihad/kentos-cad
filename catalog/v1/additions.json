@@ -1,0 +1,177 @@
+{
+  "format": "kentos.catalog-additions",
+  "version": 1,
+  "commands": [
+    {
+      "id": "address.search",
+      "title": "Adres ara",
+      "icon": "addressSearch",
+      "description": "Alt panelin Adres sekmesini açar ya da kapatır: yazılan adres projenin adres verisinde ya da açılmış bir çevrimiçi sağlayıcıda aranır, adaylar puanlarıyla listelenir. Git görünümü adaya getirir, Nokta ekle adayın yerine nokta yazar, Taşı seçili noktayı adayın yerine götürür.",
+      "aliases": [
+        "ADRESARA",
+        "ADRES",
+        "ADRESBUL"
+      ],
+      "shortcuts": [],
+      "category": "Adres",
+      "status": "implemented"
+    },
+    {
+      "id": "address.reverse",
+      "title": "Konumdan adres",
+      "icon": "addressReverse",
+      "description": "Çizimde tıklanan yerin adresini Adres sekmesinin kaynağından bulur: uzaklık içindeki en yakın kapı, yoksa en yakın yol, ve içinde kaldığı mahalle, ilçe ve il. Adres sekmede gösterilir, yeri işaretlenir; araç Esc'e dek sürer.",
+      "aliases": [
+        "KONUMDANADRES",
+        "TERSADRES"
+      ],
+      "shortcuts": [],
+      "category": "Adres",
+      "status": "implemented"
+    },
+    {
+      "id": "address.data",
+      "title": "Adres verisi…",
+      "short": "Adres verisi",
+      "icon": "addressData",
+      "description": "Projenin adres verisini tanımlar: kapı noktalarının, yol orta hatlarının ve mahalle, ilçe, il alanlarının katmanları ve alanları. Alanları tanı alan adlarından eşler, Denetle kapıları, yolları ve bölgeleri sayar, sorunları söyler. Tanım projededir; veri cihazdan çıkmaz.",
+      "aliases": [
+        "ADRESVERISI",
+        "ADRESVERİSİ",
+        "NUMARATAJ"
+      ],
+      "shortcuts": [],
+      "category": "Adres",
+      "status": "implemented"
+    },
+    {
+      "id": "address.providers",
+      "title": "Adres sağlayıcıları…",
+      "short": "Sağlayıcılar",
+      "icon": "addressProviders",
+      "description": "Çevrimiçi adres sağlayıcılarını açar ve ayarlar: Nominatim (OpenStreetMap), Photon, ArcGIS World Geocoding, Google ve kurumun kendi sunucuları. Her birinin koşulları, sınırları ve atfı kartındadır; koşulları onaylanmayan sağlayıcı kullanılmaz. Ayarlar ve anahtarlar bu cihazdadır.",
+      "aliases": [
+        "ADRESSAGLAYICILARI",
+        "ADRESSAĞLAYICILARI",
+        "GEOCODER"
+      ],
+      "shortcuts": [],
+      "category": "Adres",
+      "status": "implemented"
+    },
+    {
+      "id": "processing.run.address.geocode",
+      "title": "Adresleri eşle…",
+      "short": "Adresleri eşle",
+      "icon": "addressGeocode",
+      "description": "Bir tablonun her satırındaki adresi bulur ve yerine nokta yazar: dosyadan ya da katmandan, tek alan ya da ayrı alanlar; projenin adres verisiyle ya da açılmış bir çevrimiçi sağlayıcıyla. Eşleşmeyenler tabloda.",
+      "aliases": [
+        "ADRESEŞLE",
+        "ADRESESLE",
+        "GEOCODE"
+      ],
+      "shortcuts": [],
+      "category": "İşlemler",
+      "status": "implemented"
+    },
+    {
+      "id": "processing.run.address.reverse",
+      "title": "Konumlara adres yaz…",
+      "short": "Konumlara adres yaz",
+      "icon": "addressReverseBatch",
+      "description": "Nesnelerin yerlerinin adresini bulur ve özniteliklerine yazar (Adres, Mahalle, Yol, Kapı no, İlçe, İl, Posta kodu, uzaklık ve tür), tek adımda.",
+      "aliases": [
+        "ADRESYAZ",
+        "REVERSEGEOCODE"
+      ],
+      "shortcuts": [],
+      "category": "İşlemler",
+      "status": "implemented"
+    }
+  ],
+  "icons": {
+    "addressSearch": "<path d=\"M7 15.5S2.8 11.3 2.8 7.2a4.2 4.2 0 0 1 8.4 0c0 4.1-4.2 8.3-4.2 8.3z\"/><circle cx=\"7\" cy=\"7.2\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.8\" cy=\"12.8\" r=\"3.1\"/><path d=\"m16.1 15.1 2.2 2.2\"/>",
+    "addressReverse": "<circle cx=\"6.2\" cy=\"13.8\" r=\"2.6\"/><path d=\"M6.2 9.2v1.6M6.2 16.8v1.6M1.6 13.8h1.6M9.2 13.8h1.6\"/><rect x=\"10\" y=\"2.5\" width=\"8\" height=\"6\" rx=\"1.2\"/><path d=\"M12 4.8h4M12 6.6h2.6\" stroke-width=\"1.1\"/><path d=\"M8.6 11.4 11.2 9.2\" stroke-dasharray=\"1.2 1\" stroke-width=\"1.1\"/>",
+    "addressGeocode": "<path d=\"M2.5 4h7M2.5 7.5h7M2.5 11h5\" stroke-width=\"1.2\"/><path d=\"M3 15.5h5m-1.8-1.8 1.8 1.8-1.8 1.8\" stroke-width=\"1.2\"/><path d=\"M14.5 17.5s-3.6-3.5-3.6-6.8a3.6 3.6 0 0 1 7.2 0c0 3.3-3.6 6.8-3.6 6.8z\"/><circle cx=\"14.5\" cy=\"10.7\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/>",
+    "addressReverseBatch": "<circle cx=\"4\" cy=\"4.5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"6.5\" cy=\"10\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"3.5\" cy=\"15.5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M8.6 10h2.6m-1.6-1.6 1.6 1.6-1.6 1.6\" stroke-width=\"1.2\"/><path d=\"M13.5 5h4.5M13.5 8.5h4.5M13.5 12h4.5M13.5 15.5h3\" stroke-width=\"1.2\"/>",
+    "addressData": "<path d=\"M2.5 5.5 9 2.5l8.5 3v10l-7.5 2.5-7.5-3z\" stroke-dasharray=\"2.4 1.6\" stroke-width=\"1.1\"/><path d=\"M3.5 13 16.5 7\"/><circle cx=\"6.3\" cy=\"9.6\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10.8\" cy=\"7.6\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"12.6\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"14.4\" cy=\"10.7\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/>",
+    "addressProviders": "<circle cx=\"7.5\" cy=\"7.5\" r=\"5\"/><path d=\"M2.5 7.5h10M7.5 2.5c-1.5 1.5-2 3.2-2 5s.5 3.5 2 5M7.5 2.5c1.5 1.5 2 3.2 2 5s-.5 3.5-2 5\" stroke-width=\"1\"/><path d=\"M14.5 18.2s-3-2.9-3-5.6a3 3 0 0 1 6 0c0 2.7-3 5.6-3 5.6z\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"14.5\" cy=\"12.6\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>"
+  },
+  "ribbon": [
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "map",
+      "label": "Adres",
+      "icon": "addressSearch",
+      "after": "Altlık",
+      "items": [
+        {
+          "command": "address.search",
+          "size": "large"
+        },
+        {
+          "command": "address.reverse",
+          "size": "small"
+        },
+        {
+          "command": "address.data",
+          "size": "small"
+        },
+        {
+          "command": "address.providers",
+          "size": "small"
+        }
+      ],
+      "overflow": [
+        "processing.run.address.geocode",
+        "processing.run.address.reverse"
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "insert",
+      "label": "Adres",
+      "icon": "addressSearch",
+      "items": [
+        {
+          "command": "address.search",
+          "size": "large"
+        },
+        {
+          "command": "address.reverse",
+          "size": "small"
+        },
+        {
+          "command": "address.data",
+          "size": "small"
+        },
+        {
+          "command": "address.providers",
+          "size": "small"
+        }
+      ],
+      "overflow": [
+        "processing.run.address.geocode",
+        "processing.run.address.reverse"
+      ]
+    },
+    {
+      "modes": [
+        "cad",
+        "gis"
+      ],
+      "tab": "view",
+      "into": "Paneller",
+      "items": [
+        {
+          "command": "address.search",
+          "size": "small"
+        }
+      ]
+    }
+  ]
+}

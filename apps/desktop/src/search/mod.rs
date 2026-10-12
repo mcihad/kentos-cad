@@ -562,6 +562,11 @@ impl App {
         Task::none()
     }
 
+    /// Another mark took the place of Koordinata git's (Adres's Git, docs/adr/0229 §13).
+    pub(crate) fn search_unmark(&mut self) {
+        self.search.mark = None;
+    }
+
     /// Git: the view comes to the place typed, which is marked over the drawing.
     fn data_go(&mut self) {
         let (Some(p), Some(session)) =
@@ -570,6 +575,7 @@ impl App {
             return;
         };
         self.search.mark = Some((session, p));
+        self.address_unmark();
         self.navigating(|app| app.viewport.camera.center_on(p));
         let said = self
             .document

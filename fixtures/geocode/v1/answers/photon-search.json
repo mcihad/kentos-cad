@@ -1,0 +1,109 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 6554580491,
+    "osm_key": "railway",
+    "osm_value": "station",
+    "type": "house",
+    "name": "15 Temmuz Kızılay Millî İrade",
+    "street": "Atatürk Bulvarı",
+    "locality": "Kızılay",
+    "district": "Devlet",
+    "city": "Çankaya",
+    "state": "Ankara",
+    "country": "Türkiye",
+    "postcode": "06420",
+    "countrycode": "TR"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     32.8539508,
+     39.920537
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 6559768310,
+    "osm_key": "railway",
+    "osm_value": "stop",
+    "type": "house",
+    "name": "15 Temmuz Kızılay Millî İrade",
+    "street": "Atatürk Bulvarı",
+    "district": "Meşrutiyet",
+    "city": "Çankaya",
+    "state": "Ankara",
+    "country": "Türkiye",
+    "postcode": "06420",
+    "countrycode": "TR"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     32.8540831,
+     39.9202316
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 8458040329,
+    "osm_key": "railway",
+    "osm_value": "stop",
+    "type": "house",
+    "name": "15 Temmuz Kızılay Millî İrade",
+    "street": "Atatürk Bulvarı",
+    "locality": "Kızılay",
+    "district": "Devlet",
+    "city": "Çankaya",
+    "state": "Ankara",
+    "country": "Türkiye",
+    "postcode": "06420",
+    "countrycode": "TR"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     32.8538421,
+     39.9202219
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 12117365181,
+    "osm_key": "office",
+    "osm_value": "notary",
+    "type": "house",
+    "housenumber": "151/1",
+    "name": "Ankara 17. Noterliği",
+    "street": "Atatürk Bulvarı",
+    "locality": "Kavaklıdere Mahallesi",
+    "district": "Kavaklıdere",
+    "city": "Ankara",
+    "state": "Ankara",
+    "country": "Türkiye",
+    "postcode": "06680",
+    "countrycode": "TR"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     32.8547716,
+     39.9142536
+    ]
+   }
+  }
+ ]
+}

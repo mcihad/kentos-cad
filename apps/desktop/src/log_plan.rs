@@ -25,6 +25,8 @@ pub(crate) const TAB_STATISTICS: &str = "İstatistik";
 pub(crate) const TAB_CHART: &str = "Grafik";
 /// Veride ara (search/, docs/adr/0178).
 pub(crate) const TAB_SEARCH: &str = "Arama";
+/// Adres arama (address/, docs/adr/0229 §13).
+pub(crate) const TAB_ADDRESS: &str = "Adres";
 /// Topoloji kuralları (topology/, docs/adr/0202 §5).
 pub(crate) const TAB_TOPOLOGY: &str = "Topoloji";
 /// Servis bilgisi (services/info.rs, docs/adr/0208 §11).

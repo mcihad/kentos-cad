@@ -281,6 +281,11 @@ impl Feedback for Apart {
         self.files.clone()
     }
 
+    /// The device's online address providers (docs/adr/0229 §11): asked from this thread, at their pace.
+    fn addresses(&self) -> Option<Arc<dyn kentos_processing::address::AddressHost>> {
+        Some(crate::address::online::online().clone())
+    }
+
     fn progress(&mut self, fraction: f64, label: &str) {
         let now = Instant::now();
         if fraction < 1.0 && self.last.is_some_and(|t| now - t < PROGRESS_EVERY) {

@@ -1,0 +1,1769 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.addresses.define",
+  "commandVersion": 1,
+  "title": "Adres verisi: projenin adres verisini yaz ya da sil (ADR 0229 §14)",
+  "note": "scripts/fixtures/address_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_addresses.rs) KentOS kodu olmadan kurulur, kuralı bozan tanımların sözleri fixtures/geocode/v1/rules.json'dan. `expect.addressLocators` projenin adres verileridir. Adres verisi proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Adresler",
+    "settings": {
+      "srid": 5254,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow",
+      "addressLocators": [
+        {
+          "id": "adres-1",
+          "name": "Numarataj",
+          "doors": {
+            "layer": "kapi",
+            "street": "YOL_ADI",
+            "door": "KAPI_NO",
+            "neighbourhood": "MAHALLE"
+          },
+          "minScore": 85,
+          "reach": 100.0
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "yol",
+        "name": "Yol orta hattı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mahalle",
+        "name": "Mahalle",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "kapi",
+        "attrs": {
+          "YOL_ADI": "Atatürk Bulvarı",
+          "KAPI_NO": "12",
+          "MAHALLE": "Kızılay"
+        },
+        "p": {
+          "x": 500010,
+          "y": 4400005
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Ekle: yeni tanım sona; proje ayarıdır, geri alma adımı yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-2",
+              "name": "Yol orta hatları",
+              "streets": {
+                "layer": "yol",
+                "name": "YOL_ADI"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD",
+                  "district": "ILCE"
+                }
+              ],
+              "minScore": 70,
+              "reach": 250.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [
+                {
+                  "id": "adres-1",
+                  "name": "Numarataj",
+                  "doors": {
+                    "layer": "kapi",
+                    "street": "YOL_ADI",
+                    "door": "KAPI_NO",
+                    "neighbourhood": "MAHALLE"
+                  },
+                  "minScore": 85,
+                  "reach": 100.0
+                },
+                {
+                  "id": "adres-2",
+                  "name": "Yol orta hatları",
+                  "streets": {
+                    "layer": "yol",
+                    "name": "YOL_ADI"
+                  },
+                  "areas": [
+                    {
+                      "layer": "mahalle",
+                      "level": "neighbourhood",
+                      "name": "AD",
+                      "district": "ILCE"
+                    }
+                  ],
+                  "minScore": 70,
+                  "reach": 250.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              },
+              {
+                "id": "adres-2",
+                "name": "Yol orta hatları",
+                "streets": {
+                  "layer": "yol",
+                  "name": "YOL_ADI"
+                },
+                "areas": [
+                  {
+                    "layer": "mahalle",
+                    "level": "neighbourhood",
+                    "name": "AD",
+                    "district": "ILCE"
+                  }
+                ],
+                "minScore": 70,
+                "reach": 250.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: aynı kimlikli tanım yerinde değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-2",
+              "name": "Yol orta hatları",
+              "streets": {
+                "layer": "yol",
+                "name": "YOL_ADI"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD",
+                  "district": "ILCE"
+                }
+              ],
+              "minScore": 70,
+              "reach": 250.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [
+                {
+                  "id": "adres-1",
+                  "name": "Numarataj",
+                  "doors": {
+                    "layer": "kapi",
+                    "street": "YOL_ADI",
+                    "door": "KAPI_NO",
+                    "neighbourhood": "MAHALLE"
+                  },
+                  "minScore": 85,
+                  "reach": 100.0
+                },
+                {
+                  "id": "adres-2",
+                  "name": "Yol orta hatları",
+                  "streets": {
+                    "layer": "yol",
+                    "name": "YOL_ADI"
+                  },
+                  "areas": [
+                    {
+                      "layer": "mahalle",
+                      "level": "neighbourhood",
+                      "name": "AD",
+                      "district": "ILCE"
+                    }
+                  ],
+                  "minScore": 70,
+                  "reach": 250.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-1",
+              "name": "Numarataj",
+              "doors": {
+                "layer": "kapi",
+                "street": "YOL_ADI",
+                "door": "KAPI_NO",
+                "neighbourhood": "MAHALLE",
+                "code": "UAVT"
+              },
+              "minScore": 90,
+              "reach": 100.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [
+                {
+                  "id": "adres-1",
+                  "name": "Numarataj",
+                  "doors": {
+                    "layer": "kapi",
+                    "street": "YOL_ADI",
+                    "door": "KAPI_NO",
+                    "neighbourhood": "MAHALLE",
+                    "code": "UAVT"
+                  },
+                  "minScore": 90,
+                  "reach": 100.0
+                },
+                {
+                  "id": "adres-2",
+                  "name": "Yol orta hatları",
+                  "streets": {
+                    "layer": "yol",
+                    "name": "YOL_ADI"
+                  },
+                  "areas": [
+                    {
+                      "layer": "mahalle",
+                      "level": "neighbourhood",
+                      "name": "AD",
+                      "district": "ILCE"
+                    }
+                  ],
+                  "minScore": 70,
+                  "reach": 250.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE",
+                  "code": "UAVT"
+                },
+                "minScore": 90,
+                "reach": 100.0
+              },
+              {
+                "id": "adres-2",
+                "name": "Yol orta hatları",
+                "streets": {
+                  "layer": "yol",
+                  "name": "YOL_ADI"
+                },
+                "areas": [
+                  {
+                    "layer": "mahalle",
+                    "level": "neighbourhood",
+                    "name": "AD",
+                    "district": "ILCE"
+                  }
+                ],
+                "minScore": 70,
+                "reach": 250.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "adres-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "addressLocators": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimde olmayan katmanlar: tanım yazılır, her katman bir uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-2",
+              "name": "Yol orta hatları",
+              "streets": {
+                "layer": "yok",
+                "name": "AD"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD"
+                },
+                {
+                  "layer": "eski",
+                  "level": "district",
+                  "name": "AD"
+                }
+              ],
+              "minScore": 70,
+              "reach": 250.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [
+                {
+                  "id": "adres-1",
+                  "name": "Numarataj",
+                  "doors": {
+                    "layer": "kapi",
+                    "street": "YOL_ADI",
+                    "door": "KAPI_NO",
+                    "neighbourhood": "MAHALLE"
+                  },
+                  "minScore": 85,
+                  "reach": 100.0
+                },
+                {
+                  "id": "adres-2",
+                  "name": "Yol orta hatları",
+                  "streets": {
+                    "layer": "yok",
+                    "name": "AD"
+                  },
+                  "areas": [
+                    {
+                      "layer": "mahalle",
+                      "level": "neighbourhood",
+                      "name": "AD"
+                    },
+                    {
+                      "layer": "eski",
+                      "level": "district",
+                      "name": "AD"
+                    }
+                  ],
+                  "minScore": 70,
+                  "reach": 250.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unknown_layer",
+                "message": "“yok” kimlikli katman çizimde yok; adres dizini kurulurken bu katman atlanır.",
+                "path": "locator"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“eski” kimlikli katman çizimde yok; adres dizini kurulurken bu katman atlanır.",
+                "path": "locator"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              },
+              {
+                "id": "adres-2",
+                "name": "Yol orta hatları",
+                "streets": {
+                  "layer": "yok",
+                  "name": "AD"
+                },
+                "areas": [
+                  {
+                    "layer": "mahalle",
+                    "level": "neighbourhood",
+                    "name": "AD"
+                  },
+                  {
+                    "layer": "eski",
+                    "level": "district",
+                    "name": "AD"
+                  }
+                ],
+                "minScore": 70,
+                "reach": 250.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula: hiçbir şey yazılmaz, uyarılar söylenir",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-2",
+              "name": "Yol orta hatları",
+              "streets": {
+                "layer": "yok",
+                "name": "AD"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD"
+                },
+                {
+                  "layer": "eski",
+                  "level": "district",
+                  "name": "AD"
+                }
+              ],
+              "minScore": 70,
+              "reach": 250.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": [
+              {
+                "code": "unknown_layer",
+                "message": "“yok” kimlikli katman çizimde yok; adres dizini kurulurken bu katman atlanır.",
+                "path": "locator"
+              },
+              {
+                "code": "unknown_layer",
+                "message": "“eski” kimlikli katman çizimde yok; adres dizini kurulurken bu katman atlanır.",
+                "path": "locator"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yazılacak liste ve şimdiki sürüm; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-2",
+              "name": "Yol orta hatları",
+              "streets": {
+                "layer": "yol",
+                "name": "YOL_ADI"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD",
+                  "district": "ILCE"
+                }
+              ],
+              "minScore": 70,
+              "reach": 250.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [
+                {
+                  "id": "adres-1",
+                  "name": "Numarataj",
+                  "doors": {
+                    "layer": "kapi",
+                    "street": "YOL_ADI",
+                    "door": "KAPI_NO",
+                    "neighbourhood": "MAHALLE"
+                  },
+                  "minScore": 85,
+                  "reach": 100.0
+                },
+                {
+                  "id": "adres-2",
+                  "name": "Yol orta hatları",
+                  "streets": {
+                    "layer": "yol",
+                    "name": "YOL_ADI"
+                  },
+                  "areas": [
+                    {
+                      "layer": "mahalle",
+                      "level": "neighbourhood",
+                      "name": "AD",
+                      "district": "ILCE"
+                    }
+                  ],
+                  "minScore": 70,
+                  "reach": 250.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: bütün alanlarıyla (kapı, yol, üç düzeyde bölge; en düşük puan 50, en büyük uzaklık)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-3",
+              "name": "Bütün alanlarıyla",
+              "doors": {
+                "layer": "kapi",
+                "street": "YOL_ADI",
+                "door": "KAPI_NO",
+                "neighbourhood": "MAHALLE",
+                "district": "ILCE",
+                "province": "IL",
+                "postcode": "POSTA_KODU",
+                "building": "BINA_ADI",
+                "code": "UAVT"
+              },
+              "streets": {
+                "layer": "yol",
+                "name": "YOL_ADI",
+                "neighbourhood": "MAHALLE",
+                "district": "ILCE"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD",
+                  "district": "ILCE"
+                },
+                {
+                  "layer": "mahalle",
+                  "level": "district",
+                  "name": "ILCE_ADI"
+                },
+                {
+                  "layer": "mahalle",
+                  "level": "province",
+                  "name": "IL_ADI"
+                }
+              ],
+              "minScore": 50,
+              "reach": 10000.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [
+                {
+                  "id": "adres-1",
+                  "name": "Numarataj",
+                  "doors": {
+                    "layer": "kapi",
+                    "street": "YOL_ADI",
+                    "door": "KAPI_NO",
+                    "neighbourhood": "MAHALLE"
+                  },
+                  "minScore": 85,
+                  "reach": 100.0
+                },
+                {
+                  "id": "adres-3",
+                  "name": "Bütün alanlarıyla",
+                  "doors": {
+                    "layer": "kapi",
+                    "street": "YOL_ADI",
+                    "door": "KAPI_NO",
+                    "neighbourhood": "MAHALLE",
+                    "district": "ILCE",
+                    "province": "IL",
+                    "postcode": "POSTA_KODU",
+                    "building": "BINA_ADI",
+                    "code": "UAVT"
+                  },
+                  "streets": {
+                    "layer": "yol",
+                    "name": "YOL_ADI",
+                    "neighbourhood": "MAHALLE",
+                    "district": "ILCE"
+                  },
+                  "areas": [
+                    {
+                      "layer": "mahalle",
+                      "level": "neighbourhood",
+                      "name": "AD",
+                      "district": "ILCE"
+                    },
+                    {
+                      "layer": "mahalle",
+                      "level": "district",
+                      "name": "ILCE_ADI"
+                    },
+                    {
+                      "layer": "mahalle",
+                      "level": "province",
+                      "name": "IL_ADI"
+                    }
+                  ],
+                  "minScore": 50,
+                  "reach": 10000.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              },
+              {
+                "id": "adres-3",
+                "name": "Bütün alanlarıyla",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE",
+                  "district": "ILCE",
+                  "province": "IL",
+                  "postcode": "POSTA_KODU",
+                  "building": "BINA_ADI",
+                  "code": "UAVT"
+                },
+                "streets": {
+                  "layer": "yol",
+                  "name": "YOL_ADI",
+                  "neighbourhood": "MAHALLE",
+                  "district": "ILCE"
+                },
+                "areas": [
+                  {
+                    "layer": "mahalle",
+                    "level": "neighbourhood",
+                    "name": "AD",
+                    "district": "ILCE"
+                  },
+                  {
+                    "layer": "mahalle",
+                    "level": "district",
+                    "name": "ILCE_ADI"
+                  },
+                  {
+                    "layer": "mahalle",
+                    "level": "province",
+                    "name": "IL_ADI"
+                  }
+                ],
+                "minScore": 50,
+                "reach": 10000.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: silmenin listesi; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "remove",
+            "id": "adres-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "tanımsız yazma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_locator",
+              "message": "Yazılacak adres verisi (locator) verilmedi; tanımını verin.",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kimliksiz silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_id",
+              "message": "Silinecek adres verisinin kimliğini (id) verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş kimlikle silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": ""
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_id",
+              "message": "Silinecek adres verisinin kimliğini (id) verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan tanım: kimlik büyük harf",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "Adres-1",
+              "minScore": 50,
+              "name": "A",
+              "reach": 0.001,
+              "streets": {
+                "layer": "yol",
+                "name": "AD"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_locator",
+              "message": "adres verisinin kimliği “Adres-1”; 1–40 küçük harf, rakam ya da tire olmalı",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan tanım: kaynağı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "a",
+              "minScore": 85,
+              "name": "A",
+              "reach": 100.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_locator",
+              "message": "“A” adres verisinin kaynağı yok; kapı noktaları, yollar ya da bölgelerden en az biri olmalı",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan tanım: kapıların kapı alanı kırpılmamış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "areas": [
+                {
+                  "district": "ILCE",
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD"
+                },
+                {
+                  "layer": "ilce",
+                  "level": "district",
+                  "name": "AD"
+                }
+              ],
+              "doors": {
+                "building": "BINA_ADI",
+                "code": "UAVT",
+                "district": "ILCE",
+                "door": "KAPI_NO ",
+                "layer": "kapi",
+                "neighbourhood": "MAHALLE",
+                "postcode": "POSTA_KODU",
+                "province": "IL",
+                "street": "YOL_ADI"
+              },
+              "id": "adres-1",
+              "minScore": 85,
+              "name": "Numarataj",
+              "reach": 100.0,
+              "streets": {
+                "layer": "yol",
+                "name": "YOL_ADI",
+                "neighbourhood": "MAHALLE"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_locator",
+              "message": "“Numarataj” adres verisinin kapılarının kapı no alanı kırpılmamış, 64 karakterden uzun ya da denetim karakterli",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan tanım: aynı düzey iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "areas": [
+                {
+                  "layer": "district",
+                  "level": "district",
+                  "name": "AD"
+                },
+                {
+                  "layer": "district",
+                  "level": "district",
+                  "name": "AD"
+                }
+              ],
+              "id": "a",
+              "minScore": 50,
+              "name": "A",
+              "reach": 0.001,
+              "streets": {
+                "layer": "yol",
+                "name": "AD"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_locator",
+              "message": "“A” adres verisinin ilçe düzeyi iki kez var",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan tanım: ilçe alanlarında ilçe",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "areas": [
+                {
+                  "district": "ILCE",
+                  "layer": "district",
+                  "level": "district",
+                  "name": "AD"
+                }
+              ],
+              "id": "a",
+              "minScore": 50,
+              "name": "A",
+              "reach": 0.001,
+              "streets": {
+                "layer": "yol",
+                "name": "AD"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_locator",
+              "message": "“A” adres verisinin ilçe alanlarında ilçe alanı olmaz; yalnız mahalle alanlarının ilçesi yazılır",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan tanım: en düşük puan 49",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "a",
+              "minScore": 49,
+              "name": "A",
+              "reach": 0.001,
+              "streets": {
+                "layer": "yol",
+                "name": "AD"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_locator",
+              "message": "“A” adres verisinin en düşük puanı 49; 50 ile 100 arasında olmalı",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "kuralına uymayan tanım: uzaklık sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "a",
+              "minScore": 50,
+              "name": "A",
+              "reach": 0.0,
+              "streets": {
+                "layer": "yol",
+                "name": "AD"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_locator",
+              "message": "“A” adres verisinin uzaklığı 0 m; 0'dan büyük, en çok 10 000 m olmalı",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı adlı ikinci tanım (büyük küçük harf ayrımı yok)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-2",
+              "name": "NUMARATAJ",
+              "streets": {
+                "layer": "yol",
+                "name": "YOL_ADI"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD",
+                  "district": "ILCE"
+                }
+              ],
+              "minScore": 70,
+              "reach": 250.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_locator",
+              "message": "“NUMARATAJ” adlı adres verisi iki kez var",
+              "path": "locator"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-2",
+              "name": "Yol orta hatları",
+              "streets": {
+                "layer": "yol",
+                "name": "YOL_ADI"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD",
+                  "district": "ILCE"
+                }
+              ],
+              "minScore": 70,
+              "reach": 250.0
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm çakışması: plan edilen sürümden sonra çizim değişmişse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "locator": {
+              "id": "adres-2",
+              "name": "Yol orta hatları",
+              "streets": {
+                "layer": "yol",
+                "name": "YOL_ADI"
+              },
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD",
+                  "district": "ILCE"
+                }
+              ],
+              "minScore": 70,
+              "reach": 250.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "locators": [
+                {
+                  "id": "adres-1",
+                  "name": "Numarataj",
+                  "doors": {
+                    "layer": "kapi",
+                    "street": "YOL_ADI",
+                    "door": "KAPI_NO",
+                    "neighbourhood": "MAHALLE"
+                  },
+                  "minScore": 85,
+                  "reach": 100.0
+                },
+                {
+                  "id": "adres-2",
+                  "name": "Yol orta hatları",
+                  "streets": {
+                    "layer": "yol",
+                    "name": "YOL_ADI"
+                  },
+                  "areas": [
+                    {
+                      "layer": "mahalle",
+                      "level": "neighbourhood",
+                      "name": "AD",
+                      "district": "ILCE"
+                    }
+                  ],
+                  "minScore": 70,
+                  "reach": 250.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "adres-1",
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              },
+              {
+                "id": "adres-2",
+                "name": "Yol orta hatları",
+                "streets": {
+                  "layer": "yol",
+                  "name": "YOL_ADI"
+                },
+                "areas": [
+                  {
+                    "layer": "mahalle",
+                    "level": "neighbourhood",
+                    "name": "AD",
+                    "district": "ILCE"
+                  }
+                ],
+                "minScore": 70,
+                "reach": 250.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede olmayan tanımı silme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "id": "adres-9"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_locator",
+              "message": "“adres-9” kimlikli adres verisi projede yok. Var olan bir tanımın kimliğini verin.",
+              "path": "id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "addressLocators": [
+              {
+                "id": "adres-1",
+                "name": "Numarataj",
+                "doors": {
+                  "layer": "kapi",
+                  "street": "YOL_ADI",
+                  "door": "KAPI_NO",
+                  "neighbourhood": "MAHALLE"
+                },
+                "minScore": 85,
+                "reach": 100.0
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

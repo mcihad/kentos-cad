@@ -296,6 +296,10 @@ impl Feedback for Share<'_> {
         self.inner.files()
     }
 
+    fn addresses(&self) -> Option<std::sync::Arc<dyn crate::address::AddressHost>> {
+        self.inner.addresses()
+    }
+
     fn progress(&mut self, fraction: f64, label: &str) {
         let share = (self.done as f64 + fraction.clamp(0.0, 1.0)) / self.count as f64;
         self.inner.progress(share, label);

@@ -13,6 +13,7 @@
 //! `objects.rs`, the block definitions in `blocks.rs`, the enumerations'
 //! names in `names.rs`.
 
+mod addresses;
 mod blocks;
 mod compose;
 mod crs;
@@ -40,8 +41,8 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_COMPOSE,
-    SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
+    SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS,
+    SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS,
     SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP,
     SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
@@ -336,7 +337,8 @@ impl<'d> Encoder<'d> {
             + usize::from(has_heights(s))
             + usize::from(!s.connections.is_empty())
             + usize::from(!s.networks.is_empty())
-            + usize::from(!s.variables.is_empty());
+            + usize::from(!s.variables.is_empty())
+            + usize::from(!s.address_locators.is_empty());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -421,6 +423,12 @@ impl<'d> Encoder<'d> {
         self.w.uint(u64::from(s.area_decimals));
         self.key("lengthDecimals");
         self.w.uint(u64::from(s.length_decimals));
+        if !s.address_locators.is_empty() {
+            self.key("addressLocators");
+            self.at(Seg::Name("addressLocators"), |e| {
+                e.address_locators(&s.address_locators)
+            })?;
+        }
         if !s.datum_transforms.is_empty() {
             self.key("datumTransforms");
             self.at(Seg::Name("datumTransforms"), |e| {
@@ -1084,6 +1092,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 42 (docs/adr/0229 §2): the project's address data.
+    if !doc.settings.address_locators.is_empty() {
+        return SCHEMA_WITH_ADDRESSES;
     }
     // Schema 41 (docs/adr/0226 §3, §4): a layer's composition.
     if composed(&doc.layers) {

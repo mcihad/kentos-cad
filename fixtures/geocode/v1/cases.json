@@ -1,0 +1,4272 @@
+{
+ "format": "kentos.geocode-cases",
+ "version": 1,
+ "note": "docs/adr/0229 §3–§9, §13.1; written by scripts/fixtures/geocode_cases.py from the ADR, without KentOS code",
+ "folds": [
+  {
+   "text": "KIZILAY Mahallesi",
+   "folded": "kizilay mahallesi",
+   "tokens": [
+    "kizilay",
+    "mahallesi"
+   ]
+  },
+  {
+   "text": "İĞNECİ ŞÜKRÜ Çağ",
+   "folded": "igneci sukru cag",
+   "tokens": [
+    "igneci",
+    "sukru",
+    "cag"
+   ]
+  },
+  {
+   "text": "i̇stanbul",
+   "folded": "istanbul",
+   "tokens": [
+    "istanbul"
+   ]
+  },
+  {
+   "text": "Âşık Î Û",
+   "folded": "asik i u",
+   "tokens": [
+    "asik",
+    "i",
+    "u"
+   ]
+  },
+  {
+   "text": "No12/A",
+   "folded": "no12/a",
+   "tokens": [
+    "no",
+    "12",
+    "/",
+    "a"
+   ]
+  },
+  {
+   "text": "12a  ,1203/1. Sk.",
+   "folded": "12a  ,1203/1. sk.",
+   "tokens": [
+    "12a",
+    ",",
+    "1203",
+    "/",
+    "1",
+    "sk"
+   ]
+  },
+  {
+   "text": "Çankaya-Ankara: 06420",
+   "folded": "cankaya-ankara: 06420",
+   "tokens": [
+    "cankaya",
+    "-",
+    "ankara",
+    "06420"
+   ]
+  },
+  {
+   "text": "Ärzte ßtraße",
+   "folded": "ärzte ßtraße",
+   "tokens": [
+    "ärzte",
+    "ßtraße"
+   ]
+  }
+ ],
+ "parses": [
+  {
+   "text": "Kızılay Mah. Atatürk Blv. No:12/3 06420 Çankaya/Ankara",
+   "parsed": {
+    "postcode": "06420",
+    "street": "ataturk",
+    "streetKind": "BULVAR",
+    "door": "12",
+    "neighbourhood": "kizilay",
+    "district": "cankaya",
+    "province": "ankara",
+    "rest": [],
+    "untagged": false
+   }
+  },
+  {
+   "text": "Cumhuriyet Mahallesi 1203/1. Sokak No: 5/A",
+   "parsed": {
+    "postcode": null,
+    "street": "1203/1",
+    "streetKind": "SOKAK",
+    "door": "5a",
+    "neighbourhood": "cumhuriyet",
+    "district": null,
+    "province": null,
+    "rest": [],
+    "untagged": false
+   }
+  },
+  {
+   "text": "Atatürk Cad. 15. Sok. 7",
+   "parsed": {
+    "postcode": null,
+    "street": "15",
+    "streetKind": "SOKAK",
+    "door": "7",
+    "neighbourhood": null,
+    "district": null,
+    "province": null,
+    "rest": [
+     "ataturk"
+    ],
+    "untagged": false
+   }
+  },
+  {
+   "text": "Atatürk 12, Çankaya",
+   "parsed": {
+    "postcode": null,
+    "street": "ataturk",
+    "streetKind": null,
+    "door": "12",
+    "neighbourhood": null,
+    "district": null,
+    "province": null,
+    "rest": [
+     "cankaya"
+    ],
+    "untagged": true
+   }
+  },
+  {
+   "text": "Atatürk Cad. No:5 Kızılay Mah.",
+   "parsed": {
+    "postcode": null,
+    "street": "ataturk",
+    "streetKind": "CADDE",
+    "door": "5",
+    "neighbourhood": "kizilay",
+    "district": null,
+    "province": null,
+    "rest": [],
+    "untagged": false
+   }
+  },
+  {
+   "text": "No-12 Gazi Sokağı",
+   "parsed": {
+    "postcode": null,
+    "street": "12 gazi",
+    "streetKind": "SOKAK",
+    "door": null,
+    "neighbourhood": null,
+    "district": null,
+    "province": null,
+    "rest": [],
+    "untagged": false
+   }
+  },
+  {
+   "text": "Gölbaşı Köyü Merkez Sk. No:3 Gölbaşı / Ankara",
+   "parsed": {
+    "postcode": null,
+    "street": "merkez",
+    "streetKind": "SOKAK",
+    "door": "3",
+    "neighbourhood": "golbasi",
+    "district": "golbasi",
+    "province": "ankara",
+    "rest": [],
+    "untagged": false
+   }
+  },
+  {
+   "text": "ANKARA YOLU NO:  0045-b",
+   "parsed": {
+    "postcode": null,
+    "street": "ankara",
+    "streetKind": "YOL",
+    "door": "45b",
+    "neighbourhood": null,
+    "district": null,
+    "province": null,
+    "rest": [],
+    "untagged": false
+   }
+  },
+  {
+   "text": "Kızılay Atatürk Bulvarı 12",
+   "parsed": {
+    "postcode": null,
+    "street": "kizilay ataturk",
+    "streetKind": "BULVAR",
+    "door": "12",
+    "neighbourhood": null,
+    "district": null,
+    "province": null,
+    "rest": [],
+    "untagged": false
+   }
+  },
+  {
+   "text": "  ",
+   "parsed": {
+    "postcode": null,
+    "street": null,
+    "streetKind": null,
+    "door": null,
+    "neighbourhood": null,
+    "district": null,
+    "province": null,
+    "rest": [],
+    "untagged": true
+   }
+  },
+  {
+   "text": "Mah. Cad.",
+   "parsed": {
+    "postcode": null,
+    "street": null,
+    "streetKind": null,
+    "door": null,
+    "neighbourhood": null,
+    "district": null,
+    "province": null,
+    "rest": [],
+    "untagged": false
+   }
+  },
+  {
+   "text": "İstiklal Cd. No:1/2 D:3",
+   "parsed": {
+    "postcode": null,
+    "street": "istiklal",
+    "streetKind": "CADDE",
+    "door": "1",
+    "neighbourhood": null,
+    "district": null,
+    "province": null,
+    "rest": [
+     "d",
+     "3"
+    ],
+    "untagged": false
+   }
+  }
+ ],
+ "similarities": [
+  {
+   "a": "ataturk",
+   "b": "ataturk",
+   "similarity": 100
+  },
+  {
+   "a": "ataturk",
+   "b": "atatrk",
+   "similarity": 85
+  },
+  {
+   "a": "kizilay",
+   "b": "kizlay",
+   "similarity": 85
+  },
+  {
+   "a": "ataturk",
+   "b": "inonu",
+   "similarity": 14
+  },
+  {
+   "a": "1203/1",
+   "b": "1203/2",
+   "similarity": 0
+  },
+  {
+   "a": "1203/1",
+   "b": "1203/1",
+   "similarity": 100
+  },
+  {
+   "a": "15 temmuz",
+   "b": "15 temmz",
+   "similarity": 88
+  },
+  {
+   "a": "gazi mustafa kemal",
+   "b": "gazi mustafa kmal",
+   "similarity": 94
+  },
+  {
+   "a": "a",
+   "b": "b",
+   "similarity": 0
+  },
+  {
+   "a": "cumhuriyet",
+   "b": "cumhuriyt",
+   "similarity": 90
+  },
+  {
+   "a": "",
+   "b": "x",
+   "similarity": 0
+  }
+ ],
+ "fields": [
+  {
+   "kind": "doors",
+   "fields": [
+    "OBJECTID",
+    "MAHALLE_KODU",
+    "MAHALLE_ADI",
+    "YOL_ID",
+    "YOL_ADI",
+    "DIS_KAPI_NO",
+    "IC_KAPI_NO",
+    "ILCE",
+    "IL_ADI",
+    "POSTA_KODU",
+    "BINA_ADI",
+    "UAVT_KODU"
+   ],
+   "guess": {
+    "street": "YOL_ADI",
+    "door": "DIS_KAPI_NO",
+    "neighbourhood": "MAHALLE_ADI",
+    "district": "ILCE",
+    "province": "IL_ADI",
+    "postcode": "POSTA_KODU",
+    "building": "BINA_ADI",
+    "code": "UAVT_KODU"
+   }
+  },
+  {
+   "kind": "doors",
+   "fields": [
+    "Ad",
+    "Sokak",
+    "No",
+    "Mahalle",
+    "İlçe",
+    "Şehir",
+    "PK"
+   ],
+   "guess": {
+    "street": "Sokak",
+    "door": "No",
+    "neighbourhood": "Mahalle",
+    "district": "İlçe",
+    "province": "Şehir",
+    "postcode": "PK",
+    "building": null,
+    "code": null
+   }
+  },
+  {
+   "kind": "doors",
+   "fields": [
+    "csbm",
+    "kapino",
+    "mah_adi",
+    "adres_kodu",
+    "site_adi"
+   ],
+   "guess": {
+    "street": "csbm",
+    "door": "kapino",
+    "neighbourhood": "mah_adi",
+    "district": null,
+    "province": null,
+    "postcode": null,
+    "building": "site_adi",
+    "code": "adres_kodu"
+   }
+  },
+  {
+   "kind": "streets",
+   "fields": [
+    "YOL_ID",
+    "YOL_TIPI",
+    "YOL_ADI",
+    "MAHALLE",
+    "ILCE_ADI"
+   ],
+   "guess": {
+    "name": "YOL_ADI",
+    "neighbourhood": "MAHALLE",
+    "district": "ILCE_ADI"
+   }
+  },
+  {
+   "kind": "streets",
+   "fields": [
+    "ad",
+    "uzunluk"
+   ],
+   "guess": {
+    "name": "ad",
+    "neighbourhood": null,
+    "district": null
+   }
+  },
+  {
+   "kind": "neighbourhood",
+   "fields": [
+    "MAHALLE_KODU",
+    "MAHALLE_ADI",
+    "ILCE_ADI"
+   ],
+   "guess": {
+    "name": "MAHALLE_ADI",
+    "district": "ILCE_ADI"
+   }
+  },
+  {
+   "kind": "district",
+   "fields": [
+    "ILCE_KODU",
+    "ADI"
+   ],
+   "guess": {
+    "name": "ADI",
+    "district": null
+   }
+  },
+  {
+   "kind": "province",
+   "fields": [
+    "IL",
+    "NUFUS"
+   ],
+   "guess": {
+    "name": "IL",
+    "district": null
+   }
+  }
+ ],
+ "scenes": [
+  {
+   "name": "metres",
+   "scene": {
+    "perMetre": 1.0,
+    "doors": [
+     {
+      "order": 10,
+      "at": [
+       500010.0,
+       4400105.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "2",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": "1000000001"
+     },
+     {
+      "order": 11,
+      "at": [
+       500030.0,
+       4400105.0
+      ],
+      "street": "ATATÜRK BULVARI",
+      "door": "4",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 12,
+      "at": [
+       500070.0,
+       4400105.0
+      ],
+      "street": "Atatürk Blv.",
+      "door": "8",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 13,
+      "at": [
+       500090.0,
+       4400105.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "10",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 14,
+      "at": [
+       500108.0,
+       4400105.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "12",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "Gül Apartmanı",
+      "code": ""
+     },
+     {
+      "order": 15,
+      "at": [
+       500110.0,
+       4400105.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "12/A",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 16,
+      "at": [
+       500130.0,
+       4400105.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "14",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 17,
+      "at": [
+       500131.0,
+       4400105.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "14",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 18,
+      "at": [
+       500010.0,
+       4400095.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "1",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 19,
+      "at": [
+       500030.0,
+       4400095.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "3",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 20,
+      "at": [
+       500050.0,
+       4400095.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "5",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 21,
+      "at": [
+       500210.0,
+       4400105.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "2",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": "1000000002"
+     },
+     {
+      "order": 22,
+      "at": [
+       500230.0,
+       4400105.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "4",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 23,
+      "at": [
+       500210.0,
+       4400095.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "1",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 24,
+      "at": [
+       500295.0,
+       4400020.0
+      ],
+      "street": "1203/1 Sokak",
+      "door": "1",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 25,
+      "at": [
+       500305.0,
+       4400020.0
+      ],
+      "street": "1203/1. Sk.",
+      "door": "2",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 26,
+      "at": [
+       500295.0,
+       4400040.0
+      ],
+      "street": "1203/1 Sokak",
+      "door": "003",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 27,
+      "at": [
+       500295.0,
+       4400060.0
+      ],
+      "street": "1203/1 Sokak",
+      "door": "5",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 28,
+      "at": [
+       500010.0,
+       4400210.0
+      ],
+      "street": "7. Cadde",
+      "door": "1",
+      "neighbourhood": "Bahçelievler Mahallesi",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 29,
+      "at": [
+       500012.0,
+       4400215.0
+      ],
+      "street": "7. Cadde",
+      "door": "2",
+      "neighbourhood": "Bahçelievler Mahallesi",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 30,
+      "at": [
+       500150.0,
+       4400150.0
+      ],
+      "street": "",
+      "door": "9",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 31,
+      "at": [
+       500160.0,
+       4400150.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "A",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "",
+      "building": "",
+      "code": ""
+     }
+    ],
+    "streets": [
+     {
+      "order": 5,
+      "pts": [
+       [
+        500000.0,
+        4400100.0
+       ],
+       [
+        500200.0,
+        4400100.0
+       ]
+      ],
+      "name": "Atatürk Bulvarı",
+      "neighbourhood": "Kızılay",
+      "district": ""
+     },
+     {
+      "order": 6,
+      "pts": [
+       [
+        500200.0,
+        4400100.0
+       ],
+       [
+        500300.0,
+        4400100.0
+       ],
+       [
+        500400.0,
+        4400100.0
+       ]
+      ],
+      "name": "Atatürk Bulvarı",
+      "neighbourhood": "",
+      "district": ""
+     },
+     {
+      "order": 7,
+      "pts": [
+       [
+        500300.0,
+        4400000.0
+       ],
+       [
+        500300.0,
+        4400200.0
+       ]
+      ],
+      "name": "1203/1 Sokak",
+      "neighbourhood": "",
+      "district": ""
+     },
+     {
+      "order": 8,
+      "pts": [
+       [
+        500000.0,
+        4400300.0
+       ],
+       [
+        500150.0,
+        4400300.0
+       ],
+       [
+        500200.0,
+        4400300.0
+       ]
+      ],
+      "name": "Gazi Mustafa Kemal Bulvarı",
+      "neighbourhood": "",
+      "district": ""
+     },
+     {
+      "order": 9,
+      "pts": [
+       [
+        500420.0,
+        4400050.0
+       ],
+       [
+        500480.0,
+        4400050.0
+       ]
+      ],
+      "name": "Ankara Yolu",
+      "neighbourhood": "",
+      "district": "Çankaya"
+     }
+    ],
+    "areas": [
+     {
+      "order": 0,
+      "level": "neighbourhood",
+      "rings": [
+       [
+        [
+         500000.0,
+         4400000.0
+        ],
+        [
+         500200.0,
+         4400000.0
+        ],
+        [
+         500200.0,
+         4400200.0
+        ],
+        [
+         500000.0,
+         4400200.0
+        ]
+       ]
+      ],
+      "name": "Kızılay Mahallesi",
+      "district": "Çankaya"
+     },
+     {
+      "order": 1,
+      "level": "neighbourhood",
+      "rings": [
+       [
+        [
+         500200.0,
+         4400000.0
+        ],
+        [
+         500400.0,
+         4400000.0
+        ],
+        [
+         500400.0,
+         4400200.0
+        ],
+        [
+         500200.0,
+         4400200.0
+        ]
+       ]
+      ],
+      "name": "Cumhuriyet Mahallesi",
+      "district": "Çankaya"
+     },
+     {
+      "order": 2,
+      "level": "neighbourhood",
+      "rings": [
+       [
+        [
+         500000.0,
+         4400200.0
+        ],
+        [
+         500200.0,
+         4400200.0
+        ],
+        [
+         500200.0,
+         4400400.0
+        ],
+        [
+         500000.0,
+         4400400.0
+        ]
+       ]
+      ],
+      "name": "Bahçelievler",
+      "district": "Çankaya"
+     },
+     {
+      "order": 3,
+      "level": "district",
+      "rings": [
+       [
+        [
+         499950.0,
+         4399950.0
+        ],
+        [
+         500450.0,
+         4399950.0
+        ],
+        [
+         500450.0,
+         4400450.0
+        ],
+        [
+         499950.0,
+         4400450.0
+        ]
+       ]
+      ],
+      "name": "ÇANKAYA",
+      "district": ""
+     },
+     {
+      "order": 4,
+      "level": "province",
+      "rings": [
+       [
+        [
+         499900.0,
+         4399900.0
+        ],
+        [
+         500500.0,
+         4399900.0
+        ],
+        [
+         500500.0,
+         4400500.0
+        ],
+        [
+         499900.0,
+         4400500.0
+        ]
+       ]
+      ],
+      "name": "Ankara",
+      "district": ""
+     }
+    ]
+   },
+   "minScore": 85,
+   "limit": 20,
+   "counts": {
+    "doors": 20,
+    "streets": 6,
+    "lines": 5,
+    "neighbourhoods": 3,
+    "areas": 5,
+    "emptyStreets": 1,
+    "unreadDoors": 1
+   },
+   "forward": [
+    {
+     "text": "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500030.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Kapı",
+       "score": 70,
+       "at": [
+        500230.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      }
+     ]
+    },
+    {
+     "text": "Atatürk Bulvarı No:2",
+     "status": "Belirsiz",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": "1000000002"
+       },
+       "order": 21
+      },
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500010.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:2 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": "1000000001"
+       },
+       "order": 10
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Mahallesi Atatürk Bulvarı No:6",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı (aradeğer)",
+       "score": 90,
+       "at": [
+        500050.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:6 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "6",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Mah. Atatürk Cad. No:4",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 95,
+       "at": [
+        500030.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Kapı",
+       "score": 65,
+       "at": [
+        500230.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      }
+     ]
+    },
+    {
+     "text": "Kizilay Mh. Ataturk Blv No 12/A",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500110.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:12/A 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "12/A",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 15
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Mah. Atatürk Blv. No:12/B",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 95,
+       "at": [
+        500108.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:12 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "12",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "Gül Apartmanı",
+        "code": ""
+       },
+       "order": 14
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Mah. Atatürk Blv. No:99",
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Yol",
+       "score": 75,
+       "at": [
+        500070.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 10
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Atatrk Blv. No:4",
+     "status": "Belirsiz",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 85,
+       "at": [
+        500230.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Kapı",
+       "score": 85,
+       "at": [
+        500030.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      }
+     ]
+    },
+    {
+     "text": "Cumhuriyet Mahallesi 1203/1. Sokak No: 3",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500295.0,
+        4400040.0
+       ],
+       "label": "Cumhuriyet Mahallesi 1203/1 Sokak No:003 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "1203/1 Sokak",
+        "door": "003",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 26
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500300.0,
+        4400100.0
+       ],
+       "label": "Cumhuriyet Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Cumhuriyet Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 1
+      }
+     ]
+    },
+    {
+     "text": "1203/2 Sokak No:1",
+     "status": "Eşleşmedi",
+     "candidates": []
+    },
+    {
+     "text": "Kızılay",
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Atatürk Bulvarı No:4",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500030.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Kapı",
+       "score": 70,
+       "at": [
+        500230.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      }
+     ]
+    },
+    {
+     "text": "Gazi Mustafa Kemal Blv.",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Yol",
+       "score": 85,
+       "at": [
+        500100.0,
+        4400300.0
+       ],
+       "label": "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı",
+       "texts": {
+        "street": "Gazi Mustafa Kemal Bulvarı",
+        "door": "",
+        "neighbourhood": "Bahçelievler",
+        "district": "",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 8
+      }
+     ]
+    },
+    {
+     "text": "1000000002",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kod",
+       "score": 100,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": "1000000002"
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Atatürk Blv. No:2 06100",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": "1000000002"
+       },
+       "order": 21
+      },
+      {
+       "kind": "Kapı",
+       "score": 90,
+       "at": [
+        500010.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:2 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": "1000000001"
+       },
+       "order": 10
+      }
+     ]
+    },
+    {
+     "text": "7. Cadde No:1",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500010.0,
+        4400210.0
+       ],
+       "label": "Bahçelievler Mahallesi 7. Cadde No:1 Çankaya/Ankara",
+       "texts": {
+        "street": "7. Cadde",
+        "door": "1",
+        "neighbourhood": "Bahçelievler Mahallesi",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 28
+      }
+     ]
+    },
+    {
+     "text": "Bahçelievler",
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400300.0
+       ],
+       "label": "Bahçelievler Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Bahçelievler",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 2
+      }
+     ]
+    },
+    {
+     "text": "Atatürk 10",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500090.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:10 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "10",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 13
+      },
+      {
+       "kind": "Yol",
+       "score": 75,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Ankara Yolu",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Yol",
+       "score": 85,
+       "at": [
+        500450.0,
+        4400050.0
+       ],
+       "label": "Ankara Yolu Çankaya",
+       "texts": {
+        "street": "Ankara Yolu",
+        "door": "",
+        "neighbourhood": "",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 9
+      }
+     ]
+    },
+    {
+     "text": "Atatürk Bulvarı No:4 Çankaya",
+     "status": "Belirsiz",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500230.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500030.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      }
+     ]
+    },
+    {
+     "text": "Cumhuriyet Mh. Atatürk Bulvarı No:3",
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Yol",
+       "score": 75,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      },
+      {
+       "kind": "Kapı",
+       "score": 70,
+       "at": [
+        500030.0,
+        4400095.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:3 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "3",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 19
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500300.0,
+        4400100.0
+       ],
+       "label": "Cumhuriyet Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Cumhuriyet Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 1
+      }
+     ]
+    },
+    {
+     "text": "İnönü Caddesi No:1",
+     "status": "Eşleşmedi",
+     "candidates": []
+    }
+   ],
+   "columns": [
+    {
+     "columns": {
+      "neighbourhood": "Kızılay",
+      "street": "ATATÜRK BULVARI",
+      "door": "008",
+      "district": "Çankaya"
+     },
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500070.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Blv. No:8 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Blv.",
+        "door": "8",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 12
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400100.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "columns": {
+      "neighbourhood": "Cumhuriyet Mahallesi",
+      "street": "1203/1 Sokak",
+      "door": "No: 5"
+     },
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        500295.0,
+        4400060.0
+       ],
+       "label": "Cumhuriyet Mahallesi 1203/1 Sokak No:5 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "1203/1 Sokak",
+        "door": "5",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 27
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500300.0,
+        4400100.0
+       ],
+       "label": "Cumhuriyet Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Cumhuriyet Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 1
+      }
+     ]
+    },
+    {
+     "columns": {
+      "street": "Atatürk Bulvarı",
+      "door": "6/A",
+      "postcode": "06420"
+     },
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı (aradeğer)",
+       "score": 90,
+       "at": [
+        500050.0,
+        4400105.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:6a Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "6a",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Yol",
+       "score": 65,
+       "at": [
+        500210.0,
+        4400105.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "columns": {
+      "neighbourhood": "Bahçelievler",
+      "street": "",
+      "door": ""
+     },
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        500100.0,
+        4400300.0
+       ],
+       "label": "Bahçelievler Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Bahçelievler",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 2
+      }
+     ]
+    }
+   ],
+   "reverse": [
+    {
+     "at": [
+      500032.0,
+      4400106.0
+     ],
+     "reach": 100.0,
+     "place": {
+      "kind": "Kapı",
+      "at": [
+       500030.0,
+       4400105.0
+      ],
+      "distance": 2.23606797749979,
+      "texts": {
+       "street": "ATATÜRK BULVARI",
+       "door": "4",
+       "neighbourhood": "Kızılay",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "06420",
+       "building": "",
+       "code": ""
+      },
+      "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      500100.0,
+      4400300.0
+     ],
+     "reach": 100.0,
+     "place": {
+      "kind": "Yol",
+      "at": [
+       500100.0,
+       4400300.0
+      ],
+      "distance": 0.0,
+      "texts": {
+       "street": "Gazi Mustafa Kemal Bulvarı",
+       "door": "",
+       "neighbourhood": "Bahçelievler",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      500180.0,
+      4400380.0
+     ],
+     "reach": 10.0,
+     "place": {
+      "kind": "Bölge",
+      "at": [
+       500180.0,
+       4400380.0
+      ],
+      "distance": null,
+      "texts": {
+       "street": "",
+       "door": "",
+       "neighbourhood": "Bahçelievler",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Bahçelievler Mahallesi Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      501000.0,
+      4401000.0
+     ],
+     "reach": 100.0,
+     "place": null
+    },
+    {
+     "at": [
+      500200.0,
+      4400010.0
+     ],
+     "reach": 5.0,
+     "place": {
+      "kind": "Bölge",
+      "at": [
+       500200.0,
+       4400010.0
+      ],
+      "distance": null,
+      "texts": {
+       "street": "",
+       "door": "",
+       "neighbourhood": "Kızılay Mahallesi",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Kızılay Mahallesi Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      500450.0,
+      4400052.0
+     ],
+     "reach": 100.0,
+     "place": {
+      "kind": "Yol",
+      "at": [
+       500450.0,
+       4400050.0
+      ],
+      "distance": 2.0,
+      "texts": {
+       "street": "Ankara Yolu",
+       "door": "",
+       "neighbourhood": "",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Ankara Yolu Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      500300.0,
+      4400030.0
+     ],
+     "reach": 3.0,
+     "place": {
+      "kind": "Yol",
+      "at": [
+       500300.0,
+       4400030.0
+      ],
+      "distance": 0.0,
+      "texts": {
+       "street": "1203/1 Sokak",
+       "door": "",
+       "neighbourhood": "Cumhuriyet Mahallesi",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Cumhuriyet Mahallesi 1203/1 Sokak Çankaya/Ankara"
+     }
+    }
+   ]
+  },
+  {
+   "name": "millimetres",
+   "scene": {
+    "perMetre": 1000.0,
+    "doors": [
+     {
+      "order": 10,
+      "at": [
+       10000.0,
+       105000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "2",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": "1000000001"
+     },
+     {
+      "order": 11,
+      "at": [
+       30000.0,
+       105000.0
+      ],
+      "street": "ATATÜRK BULVARI",
+      "door": "4",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 12,
+      "at": [
+       70000.0,
+       105000.0
+      ],
+      "street": "Atatürk Blv.",
+      "door": "8",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 13,
+      "at": [
+       90000.0,
+       105000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "10",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 14,
+      "at": [
+       108000.0,
+       105000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "12",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "Gül Apartmanı",
+      "code": ""
+     },
+     {
+      "order": 15,
+      "at": [
+       110000.0,
+       105000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "12/A",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 16,
+      "at": [
+       130000.0,
+       105000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "14",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 17,
+      "at": [
+       131000.0,
+       105000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "14",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 18,
+      "at": [
+       10000.0,
+       95000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "1",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 19,
+      "at": [
+       30000.0,
+       95000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "3",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 20,
+      "at": [
+       50000.0,
+       95000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "5",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06420",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 21,
+      "at": [
+       210000.0,
+       105000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "2",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": "1000000002"
+     },
+     {
+      "order": 22,
+      "at": [
+       230000.0,
+       105000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "4",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 23,
+      "at": [
+       210000.0,
+       95000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "1",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 24,
+      "at": [
+       295000.0,
+       20000.0
+      ],
+      "street": "1203/1 Sokak",
+      "door": "1",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 25,
+      "at": [
+       305000.0,
+       20000.0
+      ],
+      "street": "1203/1. Sk.",
+      "door": "2",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 26,
+      "at": [
+       295000.0,
+       40000.0
+      ],
+      "street": "1203/1 Sokak",
+      "door": "003",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 27,
+      "at": [
+       295000.0,
+       60000.0
+      ],
+      "street": "1203/1 Sokak",
+      "door": "5",
+      "neighbourhood": "Cumhuriyet",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "06100",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 28,
+      "at": [
+       10000.0,
+       210000.0
+      ],
+      "street": "7. Cadde",
+      "door": "1",
+      "neighbourhood": "Bahçelievler Mahallesi",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 29,
+      "at": [
+       12000.0,
+       215000.0
+      ],
+      "street": "7. Cadde",
+      "door": "2",
+      "neighbourhood": "Bahçelievler Mahallesi",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 30,
+      "at": [
+       150000.0,
+       150000.0
+      ],
+      "street": "",
+      "door": "9",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "",
+      "building": "",
+      "code": ""
+     },
+     {
+      "order": 31,
+      "at": [
+       160000.0,
+       150000.0
+      ],
+      "street": "Atatürk Bulvarı",
+      "door": "A",
+      "neighbourhood": "Kızılay",
+      "district": "Çankaya",
+      "province": "Ankara",
+      "postcode": "",
+      "building": "",
+      "code": ""
+     }
+    ],
+    "streets": [
+     {
+      "order": 5,
+      "pts": [
+       [
+        0.0,
+        100000.0
+       ],
+       [
+        200000.0,
+        100000.0
+       ]
+      ],
+      "name": "Atatürk Bulvarı",
+      "neighbourhood": "Kızılay",
+      "district": ""
+     },
+     {
+      "order": 6,
+      "pts": [
+       [
+        200000.0,
+        100000.0
+       ],
+       [
+        300000.0,
+        100000.0
+       ],
+       [
+        400000.0,
+        100000.0
+       ]
+      ],
+      "name": "Atatürk Bulvarı",
+      "neighbourhood": "",
+      "district": ""
+     },
+     {
+      "order": 7,
+      "pts": [
+       [
+        300000.0,
+        0.0
+       ],
+       [
+        300000.0,
+        200000.0
+       ]
+      ],
+      "name": "1203/1 Sokak",
+      "neighbourhood": "",
+      "district": ""
+     },
+     {
+      "order": 8,
+      "pts": [
+       [
+        0.0,
+        300000.0
+       ],
+       [
+        150000.0,
+        300000.0
+       ],
+       [
+        200000.0,
+        300000.0
+       ]
+      ],
+      "name": "Gazi Mustafa Kemal Bulvarı",
+      "neighbourhood": "",
+      "district": ""
+     },
+     {
+      "order": 9,
+      "pts": [
+       [
+        420000.0,
+        50000.0
+       ],
+       [
+        480000.0,
+        50000.0
+       ]
+      ],
+      "name": "Ankara Yolu",
+      "neighbourhood": "",
+      "district": "Çankaya"
+     }
+    ],
+    "areas": [
+     {
+      "order": 0,
+      "level": "neighbourhood",
+      "rings": [
+       [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         200000.0,
+         0.0
+        ],
+        [
+         200000.0,
+         200000.0
+        ],
+        [
+         0.0,
+         200000.0
+        ]
+       ]
+      ],
+      "name": "Kızılay Mahallesi",
+      "district": "Çankaya"
+     },
+     {
+      "order": 1,
+      "level": "neighbourhood",
+      "rings": [
+       [
+        [
+         200000.0,
+         0.0
+        ],
+        [
+         400000.0,
+         0.0
+        ],
+        [
+         400000.0,
+         200000.0
+        ],
+        [
+         200000.0,
+         200000.0
+        ]
+       ]
+      ],
+      "name": "Cumhuriyet Mahallesi",
+      "district": "Çankaya"
+     },
+     {
+      "order": 2,
+      "level": "neighbourhood",
+      "rings": [
+       [
+        [
+         0.0,
+         200000.0
+        ],
+        [
+         200000.0,
+         200000.0
+        ],
+        [
+         200000.0,
+         400000.0
+        ],
+        [
+         0.0,
+         400000.0
+        ]
+       ]
+      ],
+      "name": "Bahçelievler",
+      "district": "Çankaya"
+     },
+     {
+      "order": 3,
+      "level": "district",
+      "rings": [
+       [
+        [
+         -50000.0,
+         -50000.0
+        ],
+        [
+         450000.0,
+         -50000.0
+        ],
+        [
+         450000.0,
+         450000.0
+        ],
+        [
+         -50000.0,
+         450000.0
+        ]
+       ]
+      ],
+      "name": "ÇANKAYA",
+      "district": ""
+     },
+     {
+      "order": 4,
+      "level": "province",
+      "rings": [
+       [
+        [
+         -100000.0,
+         -100000.0
+        ],
+        [
+         500000.0,
+         -100000.0
+        ],
+        [
+         500000.0,
+         500000.0
+        ],
+        [
+         -100000.0,
+         500000.0
+        ]
+       ]
+      ],
+      "name": "Ankara",
+      "district": ""
+     }
+    ]
+   },
+   "minScore": 85,
+   "limit": 20,
+   "counts": {
+    "doors": 20,
+    "streets": 6,
+    "lines": 5,
+    "neighbourhoods": 3,
+    "areas": 5,
+    "emptyStreets": 1,
+    "unreadDoors": 1
+   },
+   "forward": [
+    {
+     "text": "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        30000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Kapı",
+       "score": 70,
+       "at": [
+        230000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      }
+     ]
+    },
+    {
+     "text": "Atatürk Bulvarı No:2",
+     "status": "Belirsiz",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": "1000000002"
+       },
+       "order": 21
+      },
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        10000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:2 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": "1000000001"
+       },
+       "order": 10
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Mahallesi Atatürk Bulvarı No:6",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı (aradeğer)",
+       "score": 90,
+       "at": [
+        50000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:6 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "6",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Mah. Atatürk Cad. No:4",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 95,
+       "at": [
+        30000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Kapı",
+       "score": 65,
+       "at": [
+        230000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      }
+     ]
+    },
+    {
+     "text": "Kizilay Mh. Ataturk Blv No 12/A",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        110000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:12/A 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "12/A",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 15
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Mah. Atatürk Blv. No:12/B",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 95,
+       "at": [
+        108000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:12 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "12",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "Gül Apartmanı",
+        "code": ""
+       },
+       "order": 14
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Mah. Atatürk Blv. No:99",
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Yol",
+       "score": 75,
+       "at": [
+        70000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 10
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Atatrk Blv. No:4",
+     "status": "Belirsiz",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 85,
+       "at": [
+        230000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Kapı",
+       "score": 85,
+       "at": [
+        30000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      }
+     ]
+    },
+    {
+     "text": "Cumhuriyet Mahallesi 1203/1. Sokak No: 3",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        295000.0,
+        40000.0
+       ],
+       "label": "Cumhuriyet Mahallesi 1203/1 Sokak No:003 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "1203/1 Sokak",
+        "door": "003",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 26
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        300000.0,
+        100000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Cumhuriyet Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 1
+      }
+     ]
+    },
+    {
+     "text": "1203/2 Sokak No:1",
+     "status": "Eşleşmedi",
+     "candidates": []
+    },
+    {
+     "text": "Kızılay",
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      }
+     ]
+    },
+    {
+     "text": "Kızılay Atatürk Bulvarı No:4",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        30000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Kapı",
+       "score": 70,
+       "at": [
+        230000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      }
+     ]
+    },
+    {
+     "text": "Gazi Mustafa Kemal Blv.",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Yol",
+       "score": 85,
+       "at": [
+        100000.0,
+        300000.0
+       ],
+       "label": "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı",
+       "texts": {
+        "street": "Gazi Mustafa Kemal Bulvarı",
+        "door": "",
+        "neighbourhood": "Bahçelievler",
+        "district": "",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 8
+      }
+     ]
+    },
+    {
+     "text": "1000000002",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kod",
+       "score": 100,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": "1000000002"
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Atatürk Blv. No:2 06100",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": "1000000002"
+       },
+       "order": 21
+      },
+      {
+       "kind": "Kapı",
+       "score": 90,
+       "at": [
+        10000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:2 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "2",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": "1000000001"
+       },
+       "order": 10
+      }
+     ]
+    },
+    {
+     "text": "7. Cadde No:1",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        10000.0,
+        210000.0
+       ],
+       "label": "Bahçelievler Mahallesi 7. Cadde No:1 Çankaya/Ankara",
+       "texts": {
+        "street": "7. Cadde",
+        "door": "1",
+        "neighbourhood": "Bahçelievler Mahallesi",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 28
+      }
+     ]
+    },
+    {
+     "text": "Bahçelievler",
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        300000.0
+       ],
+       "label": "Bahçelievler Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Bahçelievler",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 2
+      }
+     ]
+    },
+    {
+     "text": "Atatürk 10",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        90000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:10 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "10",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 13
+      },
+      {
+       "kind": "Yol",
+       "score": 75,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "text": "Ankara Yolu",
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Yol",
+       "score": 85,
+       "at": [
+        450000.0,
+        50000.0
+       ],
+       "label": "Ankara Yolu Çankaya",
+       "texts": {
+        "street": "Ankara Yolu",
+        "door": "",
+        "neighbourhood": "",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 9
+      }
+     ]
+    },
+    {
+     "text": "Atatürk Bulvarı No:4 Çankaya",
+     "status": "Belirsiz",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        230000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "4",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 22
+      },
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        30000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "ATATÜRK BULVARI",
+        "door": "4",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      }
+     ]
+    },
+    {
+     "text": "Cumhuriyet Mh. Atatürk Bulvarı No:3",
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Yol",
+       "score": 75,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      },
+      {
+       "kind": "Kapı",
+       "score": 70,
+       "at": [
+        30000.0,
+        95000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:3 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "3",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 19
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        300000.0,
+        100000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Cumhuriyet Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 1
+      }
+     ]
+    },
+    {
+     "text": "İnönü Caddesi No:1",
+     "status": "Eşleşmedi",
+     "candidates": []
+    }
+   ],
+   "columns": [
+    {
+     "columns": {
+      "neighbourhood": "Kızılay",
+      "street": "ATATÜRK BULVARI",
+      "door": "008",
+      "district": "Çankaya"
+     },
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        70000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Blv. No:8 06420 Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Blv.",
+        "door": "8",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06420",
+        "building": "",
+        "code": ""
+       },
+       "order": 12
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        100000.0
+       ],
+       "label": "Kızılay Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Kızılay Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 0
+      },
+      {
+       "kind": "Yol",
+       "score": 45,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "columns": {
+      "neighbourhood": "Cumhuriyet Mahallesi",
+      "street": "1203/1 Sokak",
+      "door": "No: 5"
+     },
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı",
+       "score": 100,
+       "at": [
+        295000.0,
+        60000.0
+       ],
+       "label": "Cumhuriyet Mahallesi 1203/1 Sokak No:5 06100 Çankaya/Ankara",
+       "texts": {
+        "street": "1203/1 Sokak",
+        "door": "5",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "06100",
+        "building": "",
+        "code": ""
+       },
+       "order": 27
+      },
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        300000.0,
+        100000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Cumhuriyet Mahallesi",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 1
+      }
+     ]
+    },
+    {
+     "columns": {
+      "street": "Atatürk Bulvarı",
+      "door": "6/A",
+      "postcode": "06420"
+     },
+     "status": "Eşleşti",
+     "candidates": [
+      {
+       "kind": "Kapı (aradeğer)",
+       "score": 90,
+       "at": [
+        50000.0,
+        105000.0
+       ],
+       "label": "Kızılay Mahallesi Atatürk Bulvarı No:6a Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "6a",
+        "neighbourhood": "Kızılay",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 11
+      },
+      {
+       "kind": "Yol",
+       "score": 65,
+       "at": [
+        210000.0,
+        105000.0
+       ],
+       "label": "Cumhuriyet Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+       "texts": {
+        "street": "Atatürk Bulvarı",
+        "door": "",
+        "neighbourhood": "Cumhuriyet",
+        "district": "Çankaya",
+        "province": "Ankara",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 21
+      }
+     ]
+    },
+    {
+     "columns": {
+      "neighbourhood": "Bahçelievler",
+      "street": "",
+      "door": ""
+     },
+     "status": "Eşleşmedi",
+     "candidates": [
+      {
+       "kind": "Mahalle",
+       "score": 60,
+       "at": [
+        100000.0,
+        300000.0
+       ],
+       "label": "Bahçelievler Mahallesi Çankaya",
+       "texts": {
+        "street": "",
+        "door": "",
+        "neighbourhood": "Bahçelievler",
+        "district": "Çankaya",
+        "province": "",
+        "postcode": "",
+        "building": "",
+        "code": ""
+       },
+       "order": 2
+      }
+     ]
+    }
+   ],
+   "reverse": [
+    {
+     "at": [
+      32000.0,
+      106000.0
+     ],
+     "reach": 100.0,
+     "place": {
+      "kind": "Kapı",
+      "at": [
+       30000.0,
+       105000.0
+      ],
+      "distance": 2.23606797749979,
+      "texts": {
+       "street": "ATATÜRK BULVARI",
+       "door": "4",
+       "neighbourhood": "Kızılay",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "06420",
+       "building": "",
+       "code": ""
+      },
+      "label": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      100000.0,
+      300000.0
+     ],
+     "reach": 100.0,
+     "place": {
+      "kind": "Yol",
+      "at": [
+       100000.0,
+       300000.0
+      ],
+      "distance": 0.0,
+      "texts": {
+       "street": "Gazi Mustafa Kemal Bulvarı",
+       "door": "",
+       "neighbourhood": "Bahçelievler",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      180000.0,
+      380000.0
+     ],
+     "reach": 10.0,
+     "place": {
+      "kind": "Bölge",
+      "at": [
+       180000.0,
+       380000.0
+      ],
+      "distance": null,
+      "texts": {
+       "street": "",
+       "door": "",
+       "neighbourhood": "Bahçelievler",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Bahçelievler Mahallesi Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      1000000.0,
+      1000000.0
+     ],
+     "reach": 100.0,
+     "place": null
+    },
+    {
+     "at": [
+      200000.0,
+      10000.0
+     ],
+     "reach": 5.0,
+     "place": {
+      "kind": "Bölge",
+      "at": [
+       200000.0,
+       10000.0
+      ],
+      "distance": null,
+      "texts": {
+       "street": "",
+       "door": "",
+       "neighbourhood": "Kızılay Mahallesi",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Kızılay Mahallesi Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      450000.0,
+      52000.0
+     ],
+     "reach": 100.0,
+     "place": {
+      "kind": "Yol",
+      "at": [
+       450000.0,
+       50000.0
+      ],
+      "distance": 2.0,
+      "texts": {
+       "street": "Ankara Yolu",
+       "door": "",
+       "neighbourhood": "",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Ankara Yolu Çankaya/Ankara"
+     }
+    },
+    {
+     "at": [
+      300000.0,
+      30000.0
+     ],
+     "reach": 3.0,
+     "place": {
+      "kind": "Yol",
+      "at": [
+       300000.0,
+       30000.0
+      ],
+      "distance": 0.0,
+      "texts": {
+       "street": "1203/1 Sokak",
+       "door": "",
+       "neighbourhood": "Cumhuriyet Mahallesi",
+       "district": "Çankaya",
+       "province": "Ankara",
+       "postcode": "",
+       "building": "",
+       "code": ""
+      },
+      "label": "Cumhuriyet Mahallesi 1203/1 Sokak Çankaya/Ankara"
+     }
+    }
+   ]
+  }
+ ]
+}

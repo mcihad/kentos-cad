@@ -25,6 +25,8 @@ kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-processing = { path = "../processing" }
 # kentos.temporal (docs/adr/0210 §11): a temporal layer's objects and their persistent ids.
 kentos-domain = { path = "../domain" }
+# kentos.address (docs/adr/0229 §14): a project's address data read from the drawing as the apps read it.
+kentos-native-application = { path = "../application" }
 pyo3 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

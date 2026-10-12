@@ -167,6 +167,8 @@ impl App {
                 ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
                 // Bilgi's card moves to the object clicked, or closes (info_card.rs, docs/adr/0225 §5).
                 ViewChange::InfoCard(card) => self.info_card = card,
+                // Konumdan adres's place: its address looked for after the update (address/).
+                ViewChange::AddressAt(p) => self.address.wanted.push(p),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p)

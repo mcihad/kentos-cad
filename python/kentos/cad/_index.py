@@ -7,9 +7,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import arc, blocks, circle, entities, labels, layers, line, network, point, polygon, polyline, project, scenarios
+from . import addresses, arc, blocks, circle, entities, labels, layers, line, network, point, polygon, polyline, project, scenarios
 
 COMMANDS: dict[str, Any] = {
+    "cad.addresses.define": addresses.define,
     "cad.arc.create": arc.create,
     "cad.blocks.define": blocks.define,
     "cad.blocks.edit": blocks.edit,
@@ -58,4 +59,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("arc", "blocks", "circle", "entities", "labels", "layers", "line", "network", "point", "polygon", "polyline", "project", "scenarios",)
+NAMESPACES = ("addresses", "arc", "blocks", "circle", "entities", "labels", "layers", "line", "network", "point", "polygon", "polyline", "project", "scenarios",)

@@ -336,6 +336,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.service"
             // Its remove takes a network's definition away (docs/adr/0209 §11).
             | "cad.network.define"
+            // Its remove takes address data's definition away (docs/adr/0229 §14).
+            | "cad.addresses.define"
             // Without a time it takes a layer's away; apply removes a scenario's
             // layers and the base layers' objects (docs/adr/0210 §11).
             | "cad.layers.time"

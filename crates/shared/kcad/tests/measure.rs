@@ -89,6 +89,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             connections: Vec::new(),
             networks: Vec::new(),
             variables: Vec::new(),
+            address_locators: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,

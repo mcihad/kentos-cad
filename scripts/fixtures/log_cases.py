@@ -36,6 +36,8 @@ TABS = [
     {'id': 'statistics', 'label': 'İstatistik', 'icon': 'fieldStatistics'},
     {'id': 'chart', 'label': 'Grafik', 'icon': 'chart'},
     {'id': 'search', 'label': 'Arama', 'icon': 'dataSearch'},
+    # Adres arama's tab beside Arama (docs/adr/0229 §13; the desktop's while the web is paused, docs/adr/0228).
+    {'id': 'address', 'label': 'Adres', 'icon': 'addressSearch'},
     # Topoloji kuralları' findings (docs/adr/0202 §5), Servis bilgisi's answers (docs/adr/0208 §11).
     {'id': 'topology', 'label': 'Topoloji', 'icon': 'topologyCheck'},
     {'id': 'serviceInfo', 'label': 'Servis bilgisi', 'icon': 'serviceInfo'},

@@ -1741,6 +1741,60 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Adres verisi (docs/adr/0229 §14), held together by fixtures/commands/v1/cad.addresses.define.json.
+        // The web is paused (docs/adr/0228): the desktop's host alone runs it for now.
+        CommandDescriptor {
+            id: crate::CAD_ADDRESSES_DEFINE.into(),
+            version: crate::CAD_ADDRESSES_DEFINE_VERSION,
+            title: "Adres verisi".into(),
+            summary: "Projenin adres verilerine bir tanım yazar (set: aynı kimliklinin yerini alır, yoksa sona eklenir) ya da birini siler (remove). \
+                      Tanım, adres aramasının her aramada çizimden kurduğu dizinin kaynağıdır: kapı noktaları (nokta katmanı; yol ve kapı no alanları zorunlu, mahalle, ilçe, il, posta kodu, bina adı ve adres kodu isteğe bağlı), yollar (çizgi katmanı; ad zorunlu, mahalle ve ilçe isteğe bağlı) ve bölgeler (alan katmanları; mahalle, ilçe ve il düzeyinden en çok birer, ad zorunlu, mahallede ilçe isteğe bağlı); en düşük eşleşme puanı (50–100) ve Konumdan adres'in uzaklığı (metre). \
+                      Adres verisi proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Çizimde olmayan katmanı adlandıran tanım yazılır, unknown_layer uyarısıyla. \
+                      Adres arama ve konumdan adres çizimi değiştirmez; sonuçları cad.entities.create ile yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AddressesDefine>(),
+            output: schema::<crate::AddressesDefined>(),
+            plan: Some(schema::<crate::AddressesDefined>()),
+            examples: vec![
+                CommandExample {
+                    title: "Numarataj: kapı noktaları, yol orta hatları ve mahalle sınırları".into(),
+                    input: json!({
+                        "operation": "set",
+                        "locator": {
+                            "id": "adres-1",
+                            "name": "Numarataj",
+                            "doors": {
+                                "layer": "kapi",
+                                "street": "YOL_ADI",
+                                "door": "KAPI_NO",
+                                "neighbourhood": "MAHALLE",
+                                "district": "ILCE",
+                                "code": "UAVT"
+                            },
+                            "streets": { "layer": "yol-ekseni", "name": "YOL_ADI" },
+                            "areas": [{ "layer": "mahalle", "level": "neighbourhood", "name": "AD" }],
+                            "minScore": 85,
+                            "reach": 100.0
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Adres verisini sil".into(),
+                    input: json!({ "operation": "remove", "id": "adres-1" }),
+                    output: Some(json!({ "locators": [], "revision": "8" })),
+                },
+            ],
+        },
         // Zaman ayarları (docs/adr/0210 §11), held together by fixtures/commands/v1/cad.layers.time.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_TIME.into(),
@@ -2291,6 +2345,10 @@ mod tests {
                     crate::CAD_NETWORK_DEFINE => {
                         serde_json::from_value::<crate::NetworkDefine>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ADDRESSES_DEFINE => {
+                        serde_json::from_value::<crate::AddressesDefine>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_LAYERS_TIME => {
                         serde_json::from_value::<crate::LayersTime>(e.input.clone()).map(|_| ())
                     }
@@ -2378,6 +2436,10 @@ mod tests {
                         }
                         crate::CAD_NETWORK_DEFINE => {
                             serde_json::from_value::<crate::NetworkDefined>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ADDRESSES_DEFINE => {
+                            serde_json::from_value::<crate::AddressesDefined>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_TIME => {

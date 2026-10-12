@@ -1,0 +1,105 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "address-reverse",
+ "title": "Konumdan adres (ADR 0229 §8, §13): tıklanan ya da yazılan yerin adresi projenin adres verisinden: uzaklık içindeki en yakın kapı, yoksa en yakın yol, ve içinde kaldığı mahalle, ilçe ve il; sekmede tek satır, yeri işaretli; Esc biter",
+ "source": "kentos_interaction::address_reverse, masaüstünün address/ modülü, çekirdeğin Locator::reverse'ü; beklenenler scripts/fixtures/geocode_cases.py'nin başvurusundan (scripts/fixtures/address_scene.py), ADR 0229",
+ "covers": [
+  "GIS-40"
+ ],
+ "document": "addresses.kcad",
+ "view": {
+  "center": [
+   500200.0,
+   4400200.0
+  ],
+  "metresPerPixel": 0.5
+ },
+ "draft": {
+  "snap": true
+ },
+ "clickTolerance": 1.0,
+ "steps": [
+  {
+   "run": "address.reverse",
+   "note": "Konumdan adres: çizimde tıklanan yerin adresi Adres sekmesinin kaynağından",
+   "expect": {
+    "tool": "addressReverse"
+   }
+  },
+  {
+   "click": [
+    95.0,
+    -140.0
+   ],
+   "note": "Kenet açıkken kapı noktasına tıklamak: kapının kendisi, uzaklığı 0",
+   "expect": {
+    "panel": "Adres",
+    "tool": "addressReverse",
+    "address": {
+     "count": "Tıklanan yerin adresi",
+     "rows": [
+      "Cumhuriyet Mahallesi 1203/1 Sokak No:5 06100 Çankaya/Ankara | Kapı | 0.000 m | Cumhuriyet | Çankaya"
+     ]
+    },
+    "mark": [
+     95.0,
+     -140.0
+    ]
+   }
+  },
+  {
+   "text": "500150,4400250"
+  },
+  {
+   "key": "Enter",
+   "note": "Yazılan yer (Y,X), Bahçelievler'de: yakında kapı yok, en yakın yol (Gazi Mustafa Kemal Bulvarı) ve mahallesi; uzaklığı 50 m",
+   "expect": {
+    "panel": "Adres",
+    "tool": "addressReverse",
+    "address": {
+     "count": "Tıklanan yerin adresi",
+     "rows": [
+      "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı Çankaya/Ankara | Yol | 50.000 m | Bahçelievler | Çankaya"
+     ]
+    },
+    "mark": [
+     -50.0,
+     100.0
+    ]
+   }
+  },
+  {
+   "shot": "adres-konumdan",
+   "note": "Konumdan adres: yolun en yakın noktası işaretli, satırda uzaklık"
+  },
+  {
+   "text": "500470,4400470"
+  },
+  {
+   "key": "Enter",
+   "note": "İlçenin dışında, ilin içinde: kapı ve yol uzak, yalnız il",
+   "expect": {
+    "panel": "Adres",
+    "tool": "addressReverse",
+    "address": {
+     "count": "Tıklanan yerin adresi",
+     "rows": [
+      "Ankara | Bölge | — |  | "
+     ]
+    },
+    "mark": [
+     270.0,
+     270.0
+    ]
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Esc biter",
+   "expect": {
+    "tool": "select"
+   }
+  }
+ ]
+}

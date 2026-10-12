@@ -25,6 +25,7 @@ pub mod fillet;
 pub mod fit;
 pub mod generalize;
 pub mod generate;
+pub mod geocode;
 pub mod geoprocess;
 pub mod georef;
 pub mod grips;

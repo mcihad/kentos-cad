@@ -1,0 +1,28 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "osm_type": "N",
+    "osm_id": 25869410,
+    "osm_key": "place",
+    "osm_value": "city",
+    "type": "district",
+    "name": "Ankara",
+    "city": "Çankaya",
+    "state": "Ankara",
+    "country": "Türkiye",
+    "postcode": "06420",
+    "countrycode": "TR"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     32.8540497,
+     39.9207759
+    ]
+   }
+  }
+ ]
+}

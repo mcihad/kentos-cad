@@ -248,6 +248,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   İşlemler'in sonuç tablosundan, ROC, Kesit, Zaman serisi ve Histogram kendi grafikleriyle; basmak seçer, Shift ekler, Ctrl çıkarır,
   Saçılım'da kutu, çizimin seçimi vurgulanır; ipucu, Grafik | Tablo, Panoya kopyala, PNG ve SVG); `data.statistics`, `data.chart`,
   `chart.*`; Katmanlar'ın sağ tıkında; hesap ve yerleşim çekirdekte (`ops::charts`, `kentos.charts/1`), web'e `ChartWork` (ADR 0227);
+  adres arama, yalnız masaüstünde (web'e ara, ADR 0228): projenin adres verisi (kapı noktaları, yol orta hatları, mahalle, ilçe ve il
+  alanları katmanlarıyla ve alanlarıyla; en düşük puan, Konumdan adres uzaklığı; `.kcad` şema 42, `cad.addresses.define`); adresin
+  parçaları (Mah., Cad., Sk., Blv., No:, 12/A, posta kodu), yazım hatasına dayanıklı benzerlik, kapı, kapılar arası aradeğer, yol ve
+  mahalle adayları puanlarıyla, Eşleşti, Belirsiz, Eşleşmedi, adres kodu, konumdan adres (`ops::geocode`); çevrimiçi sağlayıcılar
+  (Nominatim, Photon, ArcGIS World, Google, kurum sunucuları) kartlarıyla: koşullar onaylanmadan kullanılmaz, hız, toplu iş ve saklama
+  kuralları kodda, önbellek ve anahtarlar cihazda (`kentos_services::geocode`); alt panelin Adres sekmesi (Kaynak, Ara, Konumdan adres;
+  Git ve işaret, Nokta ekle, Taşı), Konumdan adres aracı, Adres verisi ve Adres sağlayıcıları pencereleri, İşlemler'in Adres kategorisi
+  (Adresleri eşle, Konumlara adres yaz); şeritte CBS › Harita ve CAD › Ekle'de Adres; web dururken yeni komutların arayüz kaydı
+  `catalog/v1/additions.json`; Python `kentos.address` (ADR 0229);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -709,6 +718,13 @@ KENTOS_SHOTS_ONLY=uretici,efekt,uretici-katman-ekle,uretici-adim-ekle cargo test
 python3 scripts/fixtures/chart_cases.py --check; python3 scripts/fixtures/chart_scene.py --check   # grafiklerin ve alan istatistiklerinin kurallarını (alanların özetleri ve istatistikleri, altı grafiğin modeli, eksenler, 4 anlamlı basamak, yazı genişlikleri) Python'un kesirleriyle, KentOS kodu olmadan yazılmış başvurudan ve izlerin ve resimlerin sahnesini (fixtures/interaction/v1/charts.kcad) denetle; durumlar fixtures/charts/v1/cases.json (ADR 0227)
 KENTOS_SHOTS_ONLY=grafik-istatistik,grafik-cubuk,grafik-pasta,grafik-histogram,grafik-kutu,grafik-sacilim,grafik-cizgi,grafik-ipucu,grafik-sacilim-secim,grafik-tablo cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # İstatistik ve Grafik sekmelerinin masaüstü resimleri, .run/shots/arac-grafik-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs charts); ADR 0227)
 cargo test --release -p kentos-interaction --test perf charts_on_a_large_layer -- --ignored --nocapture; cargo test --release -p kentos-desktop charts::tests::painting_100000_points -- --ignored --nocapture   # 100 000 nesnede verinin kurulması, özet, alanın istatistikleri, altı grafiğin modeli ve yerleşimi, vurgu, tıklama ve masaüstünde saçılımın resmi bütçeleriyle (ADR 0227 §11); web'inki: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; CHARTS_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/charts.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp
+python3 scripts/fixtures/geocode_cases.py --check   # adres aramasının kurallarını (katlama ve sözcükler, adresin parçaları, adların benzerliği, dizin, adresten konuma adaylar ve puanları, konumdan adres, adresin yazılışı, alanların tanınması; metre ve milimetre projesi) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/geocode/v1/cases.json (ADR 0229)
+python3 scripts/fixtures/geocode_online_cases.py --check   # çevrimiçi sağlayıcıların isteklerini (parametreler, kodlama), yanıtlarının okunuşunu (OpenStreetMap'in gerçek yanıtları ve belgelerden yazılanlar, fixtures/geocode/v1/answers), adaylarının KentOS puanını ve toplu işin seçimini ADR'den denetle; durumlar fixtures/geocode/v1/online.json (ADR 0229 §10)
+python3 scripts/fixtures/address_rules_cases.py --check; python3 scripts/fixtures/address_define_command_cases.py --check   # adres verisinin tanımının kurallarını bağımsız KCAD okuyucusunun kurallarıyla (fixtures/geocode/v1/rules.json) ve cad.addresses.define durumlarını sözleşmenin kurallarından denetle (ADR 0229 §2, §14)
+python3 scripts/fixtures/address_processing_cases.py --check; python3 scripts/fixtures/address_scene.py --check   # Adres araçlarının İşlemler durumlarını (fixtures/processing/v1/address.json, address.kcad, adresler.csv) ve izlerin sahnesini ve izlerini (fixtures/interaction/v1/addresses.kcad, address-search.json, address-reverse.json) denetle (ADR 0229)
+cargo test --release -p kentos-geometry-core --test all geocode::timing -- --ignored --nocapture   # 200 000 kapılı şehirde dizin, tam ve hatalı adres, 100 000 adresin ayrıştırılması ve toplu eşlenmesi, 100 000 konumdan adres bütçeleriyle (ADR 0229 §17)
+KENTOS_SHOTS_ONLY=adres-serit,adres-serit-cad,adres-ara,adres-belirsiz,adres-kaynak,adres-konumdan,adres-verisi,adres-saglayicilar,adres-islem,adres-eslendi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # adres aramasının masaüstü resimleri, .run/shots/arac-adres-* (web'e ara, ADR 0228; ADR 0229)
+KENTOS_TRACES_ONLY=address-search,address-reverse cargo test -p kentos-desktop every_trace_passes   # adres aramasının izleri masaüstünde, üç çeşitte (ADR 0229)
 cargo test --release -p kentos-formats --test all exif::timing -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all info_templates -- --ignored --nocapture; cargo test --release -p kentos-desktop a_card_opens_in_a_frame -- --ignored --nocapture   # 1 000 fotoğrafın EXIF'i, 10 000 nesnenin kart metni ve bir kartın açılması bütçeleriyle (ADR 0225 §7); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; ATTACH_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/attachments.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp apps/web/src/io/pkg/.stamp
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
 python3 scripts/fixtures/closing_cases.py --check   # dönük binaların 45 bloğunun kapanışını (dışa tampon GEOS'un, içe aşındırma kesin; kesişim çekirdeğinin bir kez yüz yitirdiği bloklar dahil) KentOS kodu olmadan denetle; --stress FILE çekirdeğin rastgele blokların kapanışlarını (KENTOS_CLOSINGS_OUT=FILE cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored) karşılaştırır; durumlar fixtures/geoprocess/v1/closings.json (ADR 0221 §10)
@@ -1745,8 +1761,18 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   bakan işlevlerin ölçülerini çevirir (`resolve`); okuma birimi `expression_unit::reading_unit`, web `readingUnit`; birimli
   durumlar `geometry.json`'un `units`'inde. Sahibin kararı geldi (12 Ekim): **web katmanına ara**
   ([ADR 0228](docs/adr/0228-web-pause-desktop-and-cloud-first.md)). Web'in son hâli `1aad00d0`'dır; bundan sonra masaüstü ve
-  gerektiğinde bulut. Sıradaki `GIS-40` adres arama yalnız masaüstünde (ADR 0229); ilk adımı yeni komutların arayüz kaydı
-  `catalog/v1/additions.json` ve masaüstünün okuyucusudur.
+  gerektiğinde bulut. `GIS-40` adres arama ([ADR 0229](docs/adr/0229-address-search.md); kapsamı
+  sahibin kurallarıyla ben belirledim) tek parçada, yalnız masaüstünde bitti (12 Ekim): yeni komutların arayüz kaydı
+  `catalog/v1/additions.json` (komutlar, ikonlar, şerit yerleri; sözleşmenin kuralı `ui_catalog`, masaüstünün okuyucusu `catalog.rs`'in
+  `place_additions`'ı; `catalog/README.md`); sözleşmenin `AddressLocator`'ı ve `cad_addresses`'i (`cad.addresses.define`), `.kcad` şema
+  42 (`FORMATS_VERSION` 54); çekirdek `ops::geocode` (`fold`, `parse`, `similar`, `locator`, `forward`, `reverse`, `format`, `check`;
+  harf maskesiyle kesin ön süzgeç, adaylar iki aşamada; bağımsız başvuru `geocode_cases.py`), sağlayıcılar `kentos_services::geocode`
+  (`providers`, `request`, `read`, `score`; `geocode_online_cases.py`); masaüstünde `address/` (sekme, adres iş parçacığı `engine.rs`,
+  sağlayıcıların ev sahibi `online.rs`, pencereler `data.rs` ve `providers.rs`), araç `kentos_interaction::address_reverse`, alanların
+  tahmini `address_form`; İşlemler'in `kentos_processing::address`'i ve `builtin/address/`'i (ortak durumlar `address.json`); Python
+  `kentos.address`; ortak izler `address-search.json`, `address-reverse.json` (yeni beklenti `address`), sahne `address_scene.py`; süreler
+  ADR'nin Doğrulama'sında. Sağlayıcılarla canlı deneme yapılmadı. Sıradaki: **sahibin talimatı beklenir** (PlanGML `GIS-41` [M] sonra;
+  sahibin sözü, 12 Ekim: “Bu adım bitince bekle ben talimat vereceğim”).
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

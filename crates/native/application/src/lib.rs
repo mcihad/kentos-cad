@@ -29,6 +29,8 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod address_define;
+pub mod addresses;
 pub mod arc;
 pub mod array;
 pub mod blocks;
@@ -119,6 +121,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NETWORK_DEFINE,
         kentos_contracts::CAD_NETWORK_DEFINE_VERSION,
+    ),
+    // Adres verisi ([`address_define`], docs/adr/0229 §14).
+    (
+        kentos_contracts::CAD_ADDRESSES_DEFINE,
+        kentos_contracts::CAD_ADDRESSES_DEFINE_VERSION,
     ),
     // Zaman ayarları and the scenarios ([`layers_time`], [`scenarios_edit`], docs/adr/0210 §11).
     (

@@ -230,6 +230,15 @@ pub const UNKNOWN_NETWORK: &str = "unknown_network";
 /// A warning: a network names a layer the drawing does not have.
 pub const UNKNOWN_LAYER: &str = "unknown_layer";
 
+// ── cad.addresses.define (docs/adr/0229 §14) ───────────────────────────
+
+/// `set` without a locator.
+pub const NO_LOCATOR: &str = "no_locator";
+/// The locator, or the project's locators with it, against their rules (`address_locators_problem`).
+pub const INVALID_LOCATOR: &str = "invalid_locator";
+/// `remove` of a locator the project does not have.
+pub const UNKNOWN_LOCATOR: &str = "unknown_locator";
+
 // ── cad.layers.time and cad.scenarios.edit (docs/adr/0210 §11) ─────────
 
 /// A time setting against its rules (`LayerTime::problem`).

@@ -1,0 +1,11 @@
+{
+ "address": {
+  "Match_addr": "Atatürk Bulvarı 17, Kızılay, 06420, Çankaya, Ankara",
+  "LongLabel": "Atatürk Bulvarı 17, Kızılay, 06420, Çankaya, Ankara, TUR",
+  "ShortLabel": "Atatürk Bulvarı 17", "Addr_type": "PointAddress", "Type": "", "PlaceName": "",
+  "AddNum": "17", "Address": "Atatürk Bulvarı 17", "Block": "", "Sector": "", "Neighborhood": "Kızılay Mahallesi",
+  "District": "", "City": "Çankaya", "MetroArea": "", "Subregion": "Ankara", "Region": "Ankara", "Territory": "",
+  "Postal": "06420", "PostalExt": "", "CountryCode": "TUR"
+ },
+ "location": {"x": 32.85441, "y": 39.92038, "spatialReference": {"wkid": 4326, "latestWkid": 4326}}
+}

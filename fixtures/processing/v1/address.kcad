@@ -1,0 +1,918 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Adresler",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow",
+  "addressLocators": [
+   {
+    "id": "adres-1",
+    "name": "Numarataj",
+    "doors": {
+     "layer": "kapi",
+     "street": "YOL_ADI",
+     "door": "KAPI_NO",
+     "neighbourhood": "MAHALLE",
+     "district": "ILCE",
+     "province": "IL",
+     "postcode": "POSTA_KODU",
+     "building": "BINA_ADI",
+     "code": "UAVT"
+    },
+    "streets": {
+     "layer": "yol",
+     "name": "YOL_ADI",
+     "neighbourhood": "MAHALLE",
+     "district": "ILCE"
+    },
+    "areas": [
+     {
+      "layer": "mahalle",
+      "level": "neighbourhood",
+      "name": "AD",
+      "district": "ILCE"
+     },
+     {
+      "layer": "ilce",
+      "level": "district",
+      "name": "AD"
+     },
+     {
+      "layer": "il",
+      "level": "province",
+      "name": "AD"
+     }
+    ],
+    "minScore": 85,
+    "reach": 100.0
+   }
+  ]
+ },
+ "origin": {
+  "x": 500000.0,
+  "y": 4400000.0
+ },
+ "layers": [
+  {
+   "id": "kapi",
+   "name": "Kapı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol orta hattı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "mahalle",
+   "name": "Mahalle",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "ilce",
+   "name": "İlçe",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "il",
+   "name": "İl",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "olay",
+   "name": "Olay",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "basvuru",
+   "name": "Başvuru",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "0",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "mahalle",
+   "attrs": {
+    "AD": "Kızılay Mahallesi",
+    "ILCE": "Çankaya"
+   },
+   "pts": [
+    {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500200.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500200.0,
+     "y": 4400200.0
+    },
+    {
+     "x": 500000.0,
+     "y": 4400200.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "mahalle",
+   "attrs": {
+    "AD": "Cumhuriyet Mahallesi",
+    "ILCE": "Çankaya"
+   },
+   "pts": [
+    {
+     "x": 500200.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500400.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500400.0,
+     "y": 4400200.0
+    },
+    {
+     "x": 500200.0,
+     "y": 4400200.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "mahalle",
+   "attrs": {
+    "AD": "Bahçelievler",
+    "ILCE": "Çankaya"
+   },
+   "pts": [
+    {
+     "x": 500000.0,
+     "y": 4400200.0
+    },
+    {
+     "x": 500200.0,
+     "y": 4400200.0
+    },
+    {
+     "x": 500200.0,
+     "y": 4400400.0
+    },
+    {
+     "x": 500000.0,
+     "y": 4400400.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "ilce",
+   "attrs": {
+    "AD": "ÇANKAYA"
+   },
+   "pts": [
+    {
+     "x": 499950.0,
+     "y": 4399950.0
+    },
+    {
+     "x": 500450.0,
+     "y": 4399950.0
+    },
+    {
+     "x": 500450.0,
+     "y": 4400450.0
+    },
+    {
+     "x": 499950.0,
+     "y": 4400450.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "il",
+   "attrs": {
+    "AD": "Ankara"
+   },
+   "pts": [
+    {
+     "x": 499900.0,
+     "y": 4399900.0
+    },
+    {
+     "x": 500500.0,
+     "y": 4399900.0
+    },
+    {
+     "x": 500500.0,
+     "y": 4400500.0
+    },
+    {
+     "x": 499900.0,
+     "y": 4400500.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "yol",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "MAHALLE": "Kızılay"
+   },
+   "pts": [
+    {
+     "x": 500000.0,
+     "y": 4400100.0
+    },
+    {
+     "x": 500200.0,
+     "y": 4400100.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 7,
+   "layerId": "yol",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı"
+   },
+   "pts": [
+    {
+     "x": 500200.0,
+     "y": 4400100.0
+    },
+    {
+     "x": 500300.0,
+     "y": 4400100.0
+    },
+    {
+     "x": 500400.0,
+     "y": 4400100.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 8,
+   "layerId": "yol",
+   "attrs": {
+    "YOL_ADI": "1203/1 Sokak"
+   },
+   "pts": [
+    {
+     "x": 500300.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 500300.0,
+     "y": 4400200.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 9,
+   "layerId": "yol",
+   "attrs": {
+    "YOL_ADI": "Gazi Mustafa Kemal Bulvarı"
+   },
+   "pts": [
+    {
+     "x": 500000.0,
+     "y": 4400300.0
+    },
+    {
+     "x": 500150.0,
+     "y": 4400300.0
+    },
+    {
+     "x": 500200.0,
+     "y": 4400300.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 10,
+   "layerId": "yol",
+   "attrs": {
+    "YOL_ADI": "Ankara Yolu",
+    "ILCE": "Çankaya"
+   },
+   "pts": [
+    {
+     "x": 500420.0,
+     "y": 4400050.0
+    },
+    {
+     "x": 500480.0,
+     "y": 4400050.0
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 11,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "2",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420",
+    "UAVT": "1000000001"
+   },
+   "p": {
+    "x": 500010.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 12,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "ATATÜRK BULVARI",
+    "KAPI_NO": "4",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500030.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 13,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Blv.",
+    "KAPI_NO": "8",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500070.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 14,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "10",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500090.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 15,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "12",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420",
+    "BINA_ADI": "Gül Apartmanı"
+   },
+   "p": {
+    "x": 500108.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 16,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "12/A",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500110.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 17,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "14",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500130.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 18,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "14",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500131.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 19,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "1",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500010.0,
+    "y": 4400095.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 20,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "3",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500030.0,
+    "y": 4400095.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 21,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "5",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06420"
+   },
+   "p": {
+    "x": 500050.0,
+    "y": 4400095.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 22,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "2",
+    "MAHALLE": "Cumhuriyet",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06100",
+    "UAVT": "1000000002"
+   },
+   "p": {
+    "x": 500210.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 23,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "4",
+    "MAHALLE": "Cumhuriyet",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06100"
+   },
+   "p": {
+    "x": 500230.0,
+    "y": 4400105.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 24,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "1",
+    "MAHALLE": "Cumhuriyet",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06100"
+   },
+   "p": {
+    "x": 500210.0,
+    "y": 4400095.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 25,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "1203/1 Sokak",
+    "KAPI_NO": "1",
+    "MAHALLE": "Cumhuriyet",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06100"
+   },
+   "p": {
+    "x": 500295.0,
+    "y": 4400020.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 26,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "1203/1. Sk.",
+    "KAPI_NO": "2",
+    "MAHALLE": "Cumhuriyet",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06100"
+   },
+   "p": {
+    "x": 500305.0,
+    "y": 4400020.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 27,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "1203/1 Sokak",
+    "KAPI_NO": "003",
+    "MAHALLE": "Cumhuriyet",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06100"
+   },
+   "p": {
+    "x": 500295.0,
+    "y": 4400040.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 28,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "1203/1 Sokak",
+    "KAPI_NO": "5",
+    "MAHALLE": "Cumhuriyet",
+    "ILCE": "Çankaya",
+    "IL": "Ankara",
+    "POSTA_KODU": "06100"
+   },
+   "p": {
+    "x": 500295.0,
+    "y": 4400060.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 29,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "7. Cadde",
+    "KAPI_NO": "1",
+    "MAHALLE": "Bahçelievler Mahallesi",
+    "ILCE": "Çankaya",
+    "IL": "Ankara"
+   },
+   "p": {
+    "x": 500010.0,
+    "y": 4400210.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 30,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "7. Cadde",
+    "KAPI_NO": "2",
+    "MAHALLE": "Bahçelievler Mahallesi",
+    "ILCE": "Çankaya",
+    "IL": "Ankara"
+   },
+   "p": {
+    "x": 500012.0,
+    "y": 4400215.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 31,
+   "layerId": "kapi",
+   "attrs": {
+    "KAPI_NO": "9",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara"
+   },
+   "p": {
+    "x": 500150.0,
+    "y": 4400150.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 32,
+   "layerId": "kapi",
+   "attrs": {
+    "YOL_ADI": "Atatürk Bulvarı",
+    "KAPI_NO": "A",
+    "MAHALLE": "Kızılay",
+    "ILCE": "Çankaya",
+    "IL": "Ankara"
+   },
+   "p": {
+    "x": 500160.0,
+    "y": 4400150.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 33,
+   "layerId": "olay",
+   "attrs": {
+    "Ad": "O1"
+   },
+   "p": {
+    "x": 500032.0,
+    "y": 4400106.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 34,
+   "layerId": "olay",
+   "attrs": {
+    "Ad": "O2"
+   },
+   "p": {
+    "x": 500100.0,
+    "y": 4400300.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 35,
+   "layerId": "olay",
+   "attrs": {
+    "Ad": "O3"
+   },
+   "p": {
+    "x": 500180.0,
+    "y": 4400380.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 36,
+   "layerId": "olay",
+   "attrs": {
+    "Ad": "O4"
+   },
+   "p": {
+    "x": 500450.0,
+    "y": 4400052.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 37,
+   "layerId": "olay",
+   "attrs": {
+    "Ad": "O5"
+   },
+   "p": {
+    "x": 500300.0,
+    "y": 4400030.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 38,
+   "layerId": "olay",
+   "attrs": {
+    "Ad": "O6"
+   },
+   "p": {
+    "x": 501000.0,
+    "y": 4401000.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 39,
+   "layerId": "basvuru",
+   "attrs": {
+    "Mahalle": "Kızılay",
+    "Yol": "ATATÜRK BULVARI",
+    "Kapı": "008",
+    "No": "B1"
+   },
+   "p": {
+    "x": 499950.0,
+    "y": 4399950.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 40,
+   "layerId": "basvuru",
+   "attrs": {
+    "Mahalle": "Cumhuriyet Mahallesi",
+    "Yol": "1203/1 Sokak",
+    "Kapı": "No: 5",
+    "No": "B2"
+   },
+   "p": {
+    "x": 499949.0,
+    "y": 4399950.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 41,
+   "layerId": "basvuru",
+   "attrs": {
+    "Yol": "Atatürk Bulvarı",
+    "Kapı": "6/A",
+    "No": "B3"
+   },
+   "p": {
+    "x": 499948.0,
+    "y": 4399950.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 42,
+   "layerId": "basvuru",
+   "attrs": {
+    "Mahalle": "Bahçelievler",
+    "Yol": "Gazi Mustafa Kemal Blv.",
+    "No": "B4"
+   },
+   "p": {
+    "x": 499947.0,
+    "y": 4399950.0
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

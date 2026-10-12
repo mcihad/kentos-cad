@@ -213,6 +213,13 @@ pub struct ProjectSettings {
         ts(as = "Option<Vec<crate::ProjectVariable>>", optional)
     )]
     pub variables: Vec<crate::ProjectVariable>,
+    /// The project's address data (docs/adr/0229 §2), in the order they were made.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::AddressLocator>>", optional)
+    )]
+    pub address_locators: Vec<crate::AddressLocator>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -622,6 +629,8 @@ impl ProjectSettings {
             .and_then(crate::AnnotationHeights::sanitized);
         self.networks = crate::sanitized_networks(std::mem::take(&mut self.networks));
         self.variables = crate::sanitized_variables(std::mem::take(&mut self.variables));
+        self.address_locators =
+            crate::sanitized_address_locators(std::mem::take(&mut self.address_locators));
         self
     }
 }

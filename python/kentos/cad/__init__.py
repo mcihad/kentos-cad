@@ -27,12 +27,17 @@ from .document import *  # noqa: F403
 from .errors import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import arc, blocks, circle, entities, labels, layers, line, network, point, polygon, polyline, project, scenarios  # noqa: E402  isort: skip
+from . import addresses, arc, blocks, circle, entities, labels, layers, line, network, point, polygon, polyline, project, scenarios  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
     "AccessSourceName",
     "AddEntityEdit",
+    "AddressLocator",
+    "AddressesDefine",
+    "AddressesDefineOperation",
+    "AddressesDefineOperationName",
+    "AddressesDefined",
     "AffineCrsPlane",
     "AffineTransform",
     "AlignTransform",
@@ -46,7 +51,10 @@ __all__ = [
     "ArcPlan",
     "AreaLabelMode",
     "AreaLabelModeName",
+    "AreaLevel",
+    "AreaLevelName",
     "AreaPart",
+    "AreaSource",
     "AreaUnit",
     "AreaUnitName",
     "AreasTableSource",
@@ -135,6 +143,7 @@ __all__ = [
     "DimensionTextPlaceName",
     "Document",
     "DocumentInfo",
+    "DoorSource",
     "DrawingFont",
     "DrawingFontName",
     "DrawingUnit",
@@ -445,6 +454,7 @@ __all__ = [
     "SplineEntityGeometry",
     "StackMode",
     "StackModeName",
+    "StreetSource",
     "SurveySettings",
     "TableAlign",
     "TableAlignName",
@@ -492,6 +502,7 @@ __all__ = [
     "WorkspaceName",
     "XlineEntity",
     "XlineEntityGeometry",
+    "addresses",
     "arc",
     "blocks",
     "catalog",

@@ -78,6 +78,8 @@ impl CommandLine {
             Id::new(crate::find_replace::FIND_FIELD),
             // Arama's search box (search/, docs/adr/0178).
             Id::new(crate::search::SEARCH_FIELD),
+            // Adres's box (address/, docs/adr/0229 §13).
+            Id::new(crate::address::ADDRESS_FIELD),
             // Tabloyu düzenle's cell bar (tables/editor.rs, docs/adr/0184 §5).
             Id::new(crate::tables::editor::BAR),
             // Öznitelik tablosu's cell, Noktalar's (features/, points/cell.rs; docs/adr/0199 §4).

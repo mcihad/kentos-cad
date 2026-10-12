@@ -18,6 +18,7 @@
 //! - [`picture`]: a picture tile cut into the raster atlas's slots.
 //! - [`cache`]: HTTP's caching rules; [`presets`]: the ready basemaps;
 //!   [`attribution`]: credits as text.
+//! - [`geocode`]: Adres arama's online providers (docs/adr/0229 §10).
 //! - [`connect`]: Harita servisi's Bağlan (the requests in turn, the offer)
 //!   and the service layer a choice makes; [`feed`]: Servisten veri al's,
 //!   and the pages that take a feed's objects.
@@ -30,6 +31,7 @@ pub mod connect;
 pub mod crs;
 pub mod features;
 pub mod feed;
+pub mod geocode;
 pub mod gml;
 pub mod google;
 pub mod info;

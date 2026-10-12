@@ -1,0 +1,152 @@
+{
+  "format": "kentos.geocode-providers",
+  "version": 1,
+  "note": "docs/adr/0229 §10: the online address providers every platform offers, their limits and the terms card each shows. A provider is used only after the user has read its card, ticked it and turned it on; the card's `terms` number is the version accepted.",
+  "presets": [
+    {
+      "id": "nominatim-osm",
+      "kind": "nominatim",
+      "name": "Nominatim (OpenStreetMap)",
+      "url": "https://nominatim.openstreetmap.org",
+      "key": "none",
+      "rate": 1.0,
+      "parallel": 1,
+      "batch": 1000,
+      "store": "allowed",
+      "cacheDays": 90,
+      "terms": 1,
+      "attribution": "© OpenStreetMap katkıcıları (ODbL)",
+      "termsUrl": "https://operations.osmfoundation.org/policies/nominatim/",
+      "privacyUrl": "https://osmfoundation.org/wiki/Privacy_Policy",
+      "lines": [
+        "Gönderilen: aranan adres metni ya da tıklanan yerin WGS 84 koordinatları ile uygulamanın adı ve sürümü (kullanıcı ajanı).",
+        "Sunucu: nominatim.openstreetmap.org (OpenStreetMap Vakfı); verileri kendi gizlilik ilkesine göre işler.",
+        "Sınır: saniyede en çok bir istek, tek iş. Yazdıkça arama (otomatik tamamlama) yasaktır: KentOS yalnız Ara'ya ya da Enter'a basınca sorar.",
+        "Toplu iş: yalnız küçük, bir kerelik işler; bir çalıştırmada en çok 1 000 adres. Düzenli ya da bir günden uzun işler için kurumun sunucusunu kullanın.",
+        "Çizime yazma: sonuçlar yazılabilir; OpenStreetMap verisidir, ODbL atfı gerekir (Kaynak ve Atıf öznitelikleri).",
+        "Önbellek: yanıtlar bu cihazda 90 gün saklanır (kullanım ilkesinin şartı); aynı soru sunucuya yinelenmez."
+      ]
+    },
+    {
+      "id": "photon-komoot",
+      "kind": "photon",
+      "name": "Photon (komoot)",
+      "url": "https://photon.komoot.io",
+      "key": "none",
+      "rate": 1.0,
+      "parallel": 1,
+      "batch": 1000,
+      "store": "allowed",
+      "cacheDays": 90,
+      "terms": 1,
+      "attribution": "© OpenStreetMap katkıcıları (ODbL)",
+      "termsUrl": "https://photon.komoot.io",
+      "privacyUrl": "https://www.komoot.com/privacy",
+      "lines": [
+        "Gönderilen: aranan adres metni ya da tıklanan yerin WGS 84 koordinatları ile uygulamanın adı ve sürümü.",
+        "Sunucu: photon.komoot.io (komoot); verileri kendi gizlilik ilkesine göre işler.",
+        "Sınır: adil kullanım; yoğun kullanım yavaşlatılır, erişilebilirlik güvence altında değildir. KentOS saniyede en çok bir istek gönderir.",
+        "Toplu iş: bir çalıştırmada en çok 1 000 adres.",
+        "Çizime yazma: sonuçlar yazılabilir; OpenStreetMap verisidir, ODbL atfı gerekir.",
+        "Önbellek: yanıtlar bu cihazda 90 gün saklanır."
+      ]
+    },
+    {
+      "id": "arcgis-world",
+      "kind": "arcgis",
+      "name": "ArcGIS World Geocoding",
+      "url": "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer",
+      "key": "required",
+      "keyParam": "token",
+      "rate": 10.0,
+      "parallel": 4,
+      "batch": null,
+      "store": "withOption",
+      "cacheDays": 90,
+      "terms": 1,
+      "attribution": "Esri",
+      "termsUrl": "https://developers.arcgis.com/rest/geocode/find-address-candidates/",
+      "privacyUrl": "https://www.esri.com/en-us/privacy/overview",
+      "lines": [
+        "Gönderilen: aranan adres metni ya da tıklanan yerin WGS 84 koordinatları ve belirteciniz.",
+        "Sunucu: geocode-api.arcgis.com (Esri); verileri kendi gizlilik ilkesine göre işler.",
+        "Anahtar: ArcGIS Location Platform ya da ArcGIS Online API anahtarı (belirteç) gerekir; ücreti hesabınızındır.",
+        "Çizime yazma: yalnız “Sonuçları sakla” açıkken; o zaman her istek forStorage=true olur ve kredi harcar. Kapalıyken sonuçlar yalnız gösterilir.",
+        "Önbellek: yalnız saklanabilen sonuçlar, bu cihazda 90 gün.",
+        "Sınır: saniyede en çok 10 istek, aynı anda 4."
+      ]
+    },
+    {
+      "id": "google",
+      "kind": "google",
+      "name": "Google Geocoding",
+      "url": "https://maps.googleapis.com/maps/api/geocode/json",
+      "key": "required",
+      "keyParam": "key",
+      "rate": 10.0,
+      "parallel": 2,
+      "batch": 0,
+      "store": "never",
+      "cacheDays": 0,
+      "terms": 1,
+      "attribution": "Google Maps",
+      "termsUrl": "https://cloud.google.com/maps-platform/terms/maps-service-terms",
+      "privacyUrl": "https://policies.google.com/privacy",
+      "googleMap": true,
+      "lines": [
+        "Gönderilen: aranan adres metni ya da tıklanan yerin WGS 84 koordinatları ve API anahtarınız.",
+        "Sunucu: maps.googleapis.com (Google); verileri kendi gizlilik ilkesine göre işler.",
+        "Anahtar: Google Cloud hesabınızın Geocoding API anahtarı; ücreti hesabınızındır.",
+        "Koşullar 6.2: sonuçlar Google'ın olmayan bir haritayla birlikte kullanılamaz. KentOS Google'ın sonuçlarını yalnız çizimde görünen bir Google altlığı varken gösterir.",
+        "Koşullar 6.3: sonuçlar saklanamaz. Nokta ekle, Taşı ve toplu iş kapalıdır; önbellek yoktur.",
+        "Atıf: “Google Maps” sonuçların altında görünür."
+      ]
+    }
+  ],
+  "servers": {
+    "rate": 5.0,
+    "parallel": 2,
+    "rates": [
+      0.1,
+      50.0
+    ],
+    "parallels": [
+      1,
+      8
+    ],
+    "store": "allowed",
+    "cacheDays": 90,
+    "terms": 1,
+    "kinds": [
+      {
+        "kind": "nominatim",
+        "name": "Nominatim",
+        "key": "optional",
+        "keyParam": "key"
+      },
+      {
+        "kind": "photon",
+        "name": "Photon",
+        "key": "none"
+      },
+      {
+        "kind": "pelias",
+        "name": "Pelias",
+        "key": "optional",
+        "keyParam": "api_key"
+      },
+      {
+        "kind": "arcgis",
+        "name": "ArcGIS GeocodeServer",
+        "key": "optional",
+        "keyParam": "token"
+      }
+    ],
+    "lines": [
+      "Gönderilen: aranan adres metni ya da tıklanan yerin WGS 84 koordinatları ve varsa anahtarınız.",
+      "Sunucu: {host}; kurumunuzun ya da sizin seçtiğiniz bir sunucu. Koşulları ve gizlilik ilkesi onun sahibinindir.",
+      "Sınır: ayarladığınız hız ve aynı anda istek sayısı; toplu iş sınırsızdır.",
+      "Çizime yazma: sonuçlar yazılabilir. Önbellek: yanıtlar bu cihazda 90 gün saklanır."
+    ]
+  }
+}

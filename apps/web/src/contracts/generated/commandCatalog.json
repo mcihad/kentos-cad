@@ -25,6 +25,66 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "AddressLocator": {
+            "description": "A project's address data (docs/adr/0229 §2).",
+            "properties": {
+              "areas": {
+                "description": "Bölgeler: at most one area layer of each level.",
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kapı noktaları: a point per door."
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "minScore": {
+                "description": "The least score a match takes, within [`ADDRESS_MIN_SCORES`].",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "reach": {
+                "description": "How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].",
+                "format": "double",
+                "type": "number"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Yollar: the streets' centre lines."
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
           "AngleUnit": {
             "enum": [
               "grad",
@@ -211,6 +271,26 @@
               }
             ]
           },
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
           "AreaPart": {
             "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
@@ -270,6 +350,33 @@
             },
             "required": [
               "pts"
+            ],
+            "type": "object"
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
             ],
             "type": "object"
           },
@@ -1675,6 +1782,66 @@
                 "type": "string"
               }
             ]
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
           },
           "DrawingFont": {
             "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
@@ -5343,6 +5510,13 @@
           "ProjectSettings": {
             "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
             "properties": {
+              "addressLocators": {
+                "description": "The project's address data (docs/adr/0229 §2), in the order they were made.",
+                "items": {
+                  "$ref": "#/$defs/AddressLocator"
+                },
+                "type": "array"
+              },
               "angleUnit": {
                 "$ref": "#/$defs/AngleUnit"
               },
@@ -6362,6 +6536,35 @@
                 "type": "string"
               }
             ]
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
           },
           "SurveySettings": {
             "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171); the a priori standard\ndeviations of a network adjustment (docs/adr/0203 §1). Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
@@ -7927,6 +8130,66 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "AddressLocator": {
+            "description": "A project's address data (docs/adr/0229 §2).",
+            "properties": {
+              "areas": {
+                "description": "Bölgeler: at most one area layer of each level.",
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kapı noktaları: a point per door."
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "minScore": {
+                "description": "The least score a match takes, within [`ADDRESS_MIN_SCORES`].",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "reach": {
+                "description": "How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].",
+                "format": "double",
+                "type": "number"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Yollar: the streets' centre lines."
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
           "AngleUnit": {
             "enum": [
               "grad",
@@ -8023,6 +8286,53 @@
                 "type": "string"
               }
             ]
+          },
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
+            ],
+            "type": "object"
           },
           "AreaUnit": {
             "enum": [
@@ -8579,6 +8889,66 @@
                 "type": "string"
               }
             ]
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
           },
           "DrawingFont": {
             "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
@@ -10479,6 +10849,13 @@
           "ProjectSettings": {
             "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
             "properties": {
+              "addressLocators": {
+                "description": "The project's address data (docs/adr/0229 §2), in the order they were made.",
+                "items": {
+                  "$ref": "#/$defs/AddressLocator"
+                },
+                "type": "array"
+              },
               "angleUnit": {
                 "$ref": "#/$defs/AngleUnit"
               },
@@ -11065,6 +11442,35 @@
                 "type": "string"
               }
             ]
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
           },
           "SurveySettings": {
             "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171); the a priori standard\ndeviations of a network adjustment (docs/adr/0203 §1). Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
@@ -11714,6 +12120,66 @@
               }
             ]
           },
+          "AddressLocator": {
+            "description": "A project's address data (docs/adr/0229 §2).",
+            "properties": {
+              "areas": {
+                "description": "Bölgeler: at most one area layer of each level.",
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kapı noktaları: a point per door."
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "minScore": {
+                "description": "The least score a match takes, within [`ADDRESS_MIN_SCORES`].",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "reach": {
+                "description": "How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].",
+                "format": "double",
+                "type": "number"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Yollar: the streets' centre lines."
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
           "AngleUnit": {
             "enum": [
               "grad",
@@ -11900,6 +12366,26 @@
               }
             ]
           },
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
           "AreaPart": {
             "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
@@ -11959,6 +12445,33 @@
             },
             "required": [
               "pts"
+            ],
+            "type": "object"
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
             ],
             "type": "object"
           },
@@ -13353,6 +13866,66 @@
                 "type": "string"
               }
             ]
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
           },
           "DrawingFont": {
             "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
@@ -17009,6 +17582,13 @@
           "ProjectSettings": {
             "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
             "properties": {
+              "addressLocators": {
+                "description": "The project's address data (docs/adr/0229 §2), in the order they were made.",
+                "items": {
+                  "$ref": "#/$defs/AddressLocator"
+                },
+                "type": "array"
+              },
               "angleUnit": {
                 "$ref": "#/$defs/AngleUnit"
               },
@@ -18064,6 +18644,35 @@
                 "type": "string"
               }
             ]
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
           },
           "SurveySettings": {
             "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171); the a priori standard\ndeviations of a network adjustment (docs/adr/0203 §1). Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
@@ -86388,6 +86997,759 @@
           "output": {
             "networks": [],
             "revision": "12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.addresses.define",
+      "version": 1,
+      "title": "Adres verisi",
+      "summary": "Projenin adres verilerine bir tanım yazar (set: aynı kimliklinin yerini alır, yoksa sona eklenir) ya da birini siler (remove). Tanım, adres aramasının her aramada çizimden kurduğu dizinin kaynağıdır: kapı noktaları (nokta katmanı; yol ve kapı no alanları zorunlu, mahalle, ilçe, il, posta kodu, bina adı ve adres kodu isteğe bağlı), yollar (çizgi katmanı; ad zorunlu, mahalle ve ilçe isteğe bağlı) ve bölgeler (alan katmanları; mahalle, ilçe ve il düzeyinden en çok birer, ad zorunlu, mahallede ilçe isteğe bağlı); en düşük eşleşme puanı (50–100) ve Konumdan adres'in uzaklığı (metre). Adres verisi proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Çizimde olmayan katmanı adlandıran tanım yazılır, unknown_layer uyarısıyla. Adres arama ve konumdan adres çizimi değiştirmez; sonuçları cad.entities.create ile yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AddressLocator": {
+            "description": "A project's address data (docs/adr/0229 §2).",
+            "properties": {
+              "areas": {
+                "description": "Bölgeler: at most one area layer of each level.",
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kapı noktaları: a point per door."
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "minScore": {
+                "description": "The least score a match takes, within [`ADDRESS_MIN_SCORES`].",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "reach": {
+                "description": "How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].",
+                "format": "double",
+                "type": "number"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Yollar: the streets' centre lines."
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "AddressesDefineOperation": {
+            "description": "What `cad.addresses.define` does.",
+            "oneOf": [
+              {
+                "const": "set",
+                "description": "The locator replaces the project's of its id, or goes last.",
+                "type": "string"
+              },
+              {
+                "const": "remove",
+                "description": "The locator of `id` goes.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
+            ],
+            "type": "object"
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.addresses.define` v1.\n\n- `set`: `locator`, which replaces the project's locator of its id or\n  goes last;\n- `remove`: `id`.\n\nRefusals (`CommandError.code`), checked in this order: `no_locator` (set\nwithout `locator`), `no_id` (remove without `id`), `invalid_locator` (the\nlocator, or the project's locators with it, by\n`address_locators_problem`); then `invalid_revision`,\n`revision_conflict` (status `conflict`), `unknown_locator` (remove: the\nproject has no locator of the id). A locator naming a layer the drawing\ndoes not have is written, with the warning `unknown_layer`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "locator": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AddressLocator"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/AddressesDefineOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "AddressesDefine",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AddressLocator": {
+            "description": "A project's address data (docs/adr/0229 §2).",
+            "properties": {
+              "areas": {
+                "description": "Bölgeler: at most one area layer of each level.",
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kapı noktaları: a point per door."
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "minScore": {
+                "description": "The least score a match takes, within [`ADDRESS_MIN_SCORES`].",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "reach": {
+                "description": "How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].",
+                "format": "double",
+                "type": "number"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Yollar: the streets' centre lines."
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
+            ],
+            "type": "object"
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.addresses.define` v1, and its plan: the project's locators\nas the write leaves them and the revision after it (a plan: before it).",
+        "properties": {
+          "locators": {
+            "items": {
+              "$ref": "#/$defs/AddressLocator"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locators",
+          "revision"
+        ],
+        "title": "AddressesDefined",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AddressLocator": {
+            "description": "A project's address data (docs/adr/0229 §2).",
+            "properties": {
+              "areas": {
+                "description": "Bölgeler: at most one area layer of each level.",
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Kapı noktaları: a point per door."
+              },
+              "id": {
+                "description": "Lower-case letters, digits and hyphens; one of its kind in the project.",
+                "type": "string"
+              },
+              "minScore": {
+                "description": "The least score a match takes, within [`ADDRESS_MIN_SCORES`].",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Trimmed; one of its kind in the project.",
+                "type": "string"
+              },
+              "reach": {
+                "description": "How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].",
+                "format": "double",
+                "type": "number"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Yollar: the streets' centre lines."
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
+            ],
+            "type": "object"
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.addresses.define` v1, and its plan: the project's locators\nas the write leaves them and the revision after it (a plan: before it).",
+        "properties": {
+          "locators": {
+            "items": {
+              "$ref": "#/$defs/AddressLocator"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locators",
+          "revision"
+        ],
+        "title": "AddressesDefined",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Numarataj: kapı noktaları, yol orta hatları ve mahalle sınırları",
+          "input": {
+            "locator": {
+              "areas": [
+                {
+                  "layer": "mahalle",
+                  "level": "neighbourhood",
+                  "name": "AD"
+                }
+              ],
+              "doors": {
+                "code": "UAVT",
+                "district": "ILCE",
+                "door": "KAPI_NO",
+                "layer": "kapi",
+                "neighbourhood": "MAHALLE",
+                "street": "YOL_ADI"
+              },
+              "id": "adres-1",
+              "minScore": 85,
+              "name": "Numarataj",
+              "reach": 100.0,
+              "streets": {
+                "layer": "yol-ekseni",
+                "name": "YOL_ADI"
+              }
+            },
+            "operation": "set"
+          }
+        },
+        {
+          "title": "Adres verisini sil",
+          "input": {
+            "id": "adres-1",
+            "operation": "remove"
+          },
+          "output": {
+            "locators": [],
+            "revision": "8"
           }
         }
       ]

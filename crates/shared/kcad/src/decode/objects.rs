@@ -36,8 +36,8 @@ use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
-    SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_COMPOSE,
-    SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
+    SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS,
+    SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS,
     SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP,
     SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
@@ -181,6 +181,8 @@ pub(super) struct Features {
     pub(super) attachments: bool,
     /// Schema 41: a layer's `compose` (docs/adr/0226 §3, §4).
     pub(super) compose: bool,
+    /// Schema 42: the settings' `addressLocators` (docs/adr/0229 §2).
+    pub(super) addresses: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -229,6 +231,7 @@ impl Features {
             measures: schema >= SCHEMA_WITH_MEASURES,
             attachments: schema >= SCHEMA_WITH_ATTACHMENTS,
             compose: schema >= SCHEMA_WITH_COMPOSE,
+            addresses: schema >= SCHEMA_WITH_ADDRESSES,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,

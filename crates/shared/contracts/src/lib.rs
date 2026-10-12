@@ -27,12 +27,14 @@
 //! - the style engine's own types (renderers, library items) are opaque JSON
 //!   in v1 and become typed when the style core moves to Rust.
 
+pub mod address;
 pub mod annotation;
 pub mod annotation_scale;
 pub mod api;
 pub mod attachment;
 pub mod blocks;
 pub mod cad;
+pub mod cad_addresses;
 pub mod cad_array;
 pub mod cad_blocks;
 pub mod cad_create;
@@ -75,13 +77,16 @@ pub mod style;
 pub mod table;
 pub mod temporal;
 pub mod topology;
+pub mod ui_catalog;
 pub mod variables;
 
+pub use address::*;
 pub use annotation::*;
 pub use annotation_scale::*;
 pub use api::*;
 pub use attachment::*;
 pub use cad::*;
+pub use cad_addresses::*;
 pub use cad_array::*;
 pub use cad_blocks::*;
 pub use cad_create::*;
@@ -124,6 +129,7 @@ pub use style::*;
 pub use table::*;
 pub use temporal::*;
 pub use topology::*;
+pub use ui_catalog::*;
 pub use variables::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.

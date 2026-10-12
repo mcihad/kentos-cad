@@ -168,6 +168,7 @@ impl App {
             | BottomTab::Statistics
             | BottomTab::Chart
             | BottomTab::Search
+            | BottomTab::Address
             | BottomTab::Topology
             | BottomTab::ServiceInfo
             | BottomTab::Python => None,

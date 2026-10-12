@@ -151,6 +151,13 @@ SCHEMA_WITH_MEASURES = 39
 SCHEMA_WITH_ATTACHMENTS = 40
 # Schema 41: schema 40 and a layer's `compose`: its opacity, blending mode and mask (docs/adr/0226 §3, §4).
 SCHEMA_WITH_COMPOSE = 41
+# Schema 42: schema 41 and the settings' `addressLocators`, the project's address data (docs/adr/0229 §2).
+SCHEMA_WITH_ADDRESSES = 42
+# Address data's bounds and levels (kentos_contracts::address).
+ADDRESS_LOCATOR_LIMIT = 16
+ADDRESS_MIN_SCORES = (50, 100)
+ADDRESS_REACH_LIMIT = 10_000.0
+AREA_LEVELS = ("neighbourhood", "district", "province")
 # A composition's bounds and modes (kentos_contracts::layer_compose); `normal` is never written.
 MAX_MASK_SIZE = 10.0
 MAX_MASK_TARGETS = 64
@@ -298,7 +305,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -757,6 +764,78 @@ def variables_problem(list_):
         if variable_key(name) in seen:
             return f"@{name} adında iki değişken var"
         seen.add(variable_key(name))
+    return None
+
+
+def address_field_problem(name):
+    """A field's name as the address data's rules take one: not blank, trimmed, at most 64 characters, no control ones."""
+    if not name.strip():
+        return "alan boş"
+    if name.strip() != name or len(name) > 64 or any(unicodedata.category(c) == "Cc" for c in name):
+        return "alan kırpılmamış, 64 karakterden uzun ya da denetim karakterli"
+    return None
+
+
+def address_locator_problem(l_):
+    """A locator by the rules of docs/adr/0229 §2 (kentos_contracts::address::AddressLocator::problem)."""
+    lid = l_["id"]
+    if not (1 <= len(lid) <= 40 and all(c in "abcdefghijklmnopqrstuvwxyz0123456789-" for c in lid)):
+        return "Adres verisinin kimliği 1–40 küçük harf, rakam ya da tire olmalı."
+    name = l_["name"]
+    if not name.strip() or name.strip() != name or len(name) > 80:
+        return "Adres verisinin adı boş, kırpılmamış ya da 80 karakterden uzun."
+    doors, streets, areas = l_.get("doors"), l_.get("streets"), l_.get("areas", [])
+    if doors is None and streets is None and not areas:
+        return "Adres verisinin kaynağı yok."
+    if doors is not None:
+        if not doors["layer"]:
+            return "Kapı katmanının kimliği boş."
+        for key in ("street", "door", "neighbourhood", "district", "province", "postcode", "building", "code"):
+            if key in doors and address_field_problem(doors[key]):
+                return f"Kapıların {key} {address_field_problem(doors[key])}."
+    if streets is not None:
+        if not streets["layer"]:
+            return "Yol katmanının kimliği boş."
+        for key in ("name", "neighbourhood", "district"):
+            if key in streets and address_field_problem(streets[key]):
+                return f"Yolların {key} {address_field_problem(streets[key])}."
+    if len(areas) > 3:
+        return "Bölge katmanları en çok üç."
+    levels = []
+    for a in areas:
+        if not a["layer"]:
+            return "Bölge katmanının kimliği boş."
+        if address_field_problem(a["name"]):
+            return f"Bölgenin adı {address_field_problem(a['name'])}."
+        if "district" in a:
+            if a["level"] != "neighbourhood":
+                return "Yalnız mahalle alanlarının ilçesi yazılır."
+            if address_field_problem(a["district"]):
+                return f"Mahalle alanlarının ilçesi {address_field_problem(a['district'])}."
+        if a["level"] in levels:
+            return "Bir bölge düzeyi iki kez var."
+        levels.append(a["level"])
+    if not (ADDRESS_MIN_SCORES[0] <= l_["minScore"] <= ADDRESS_MIN_SCORES[1]):
+        return "En düşük puan 50 ile 100 arasında olmalı."
+    reach = l_["reach"]
+    if not (math.isfinite(reach) and 0.0 < reach <= ADDRESS_REACH_LIMIT):
+        return "Uzaklık 0'dan büyük, en çok 10 000 m olmalı."
+    return None
+
+
+def address_locators_problem(list_):
+    """A project's address data (kentos_contracts::address::address_locators_problem): at most 16, each holding, ids
+    and names once."""
+    if len(list_) > ADDRESS_LOCATOR_LIMIT:
+        return "Projenin en çok 16 adres verisi olur."
+    for i, l_ in enumerate(list_):
+        p = address_locator_problem(l_)
+        if p:
+            return p
+        if any(o["id"] == l_["id"] for o in list_[:i]):
+            return f"“{l_['id']}” kimlikli adres verisi iki kez var."
+        if any(caseless(o["name"]) == caseless(l_["name"]) for o in list_[:i]):
+            return f"“{l_['name']}” adlı adres verisi iki kez var."
     return None
 
 
@@ -1711,6 +1790,7 @@ class _Schema:
         self.measures = version >= SCHEMA_WITH_MEASURES
         self.attachments = version >= SCHEMA_WITH_ATTACHMENTS
         self.compose = version >= SCHEMA_WITH_COMPOSE
+        self.addresses = version >= SCHEMA_WITH_ADDRESSES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -1836,6 +1916,7 @@ class _Schema:
                 **({"connections": (self.connections_, False)} if self.services else {}),
                 **({"networks": (self.networks_, False)} if self.networks else {}),
                 **({"variables": (self.variables_, False)} if self.variables else {}),
+                **({"addressLocators": (self.address_locators_, False)} if self.addresses else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -2419,6 +2500,46 @@ class _Schema:
         if not all_:
             self.fail("bad_value", "boş bağlantı listesi yazılmaz")
         problem = connections_problem(all_)
+        if problem:
+            self.fail("bad_value", problem)
+        return all_
+
+    def address_locators_(self, v):
+        """The project's address data (schema 42, docs/adr/0229 §2): read field by field, an area list and a field's
+        name never empty; then checked whole."""
+
+        def field(v):
+            t = self.text(v)
+            if not t:
+                self.fail("bad_value", "boş alan adı yazılmaz")
+            return t
+
+        optional = ("neighbourhood", "district", "province", "postcode", "building", "code")
+        doors = self.fields({"layer": (self.text, True), "street": (field, True), "door": (field, True), **{k: (field, False) for k in optional}})
+        streets = self.fields({"layer": (self.text, True), "name": (field, True), "neighbourhood": (field, False), "district": (field, False)})
+        area = self.fields({"layer": (self.text, True), "level": (self.enum(AREA_LEVELS), True), "name": (field, True), "district": (field, False)})
+
+        def areas(v):
+            all_ = self.array(area)(v)
+            if not all_:
+                self.fail("bad_value", "boş bölge listesi yazılmaz")
+            return all_
+
+        locator = self.fields(
+            {
+                "id": (self.text, True),
+                "name": (self.text, True),
+                "doors": (doors, False),
+                "streets": (streets, False),
+                "areas": (areas, False),
+                "minScore": (self.uint(32), True),
+                "reach": (self.float, True),
+            }
+        )
+        all_ = self.array(locator)(v)
+        if not all_:
+            self.fail("bad_value", "boş adres verisi listesi yazılmaz")
+        problem = address_locators_problem(all_)
         if problem:
             self.fail("bad_value", problem)
         return all_

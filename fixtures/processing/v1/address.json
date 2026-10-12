@@ -1,0 +1,720 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-09,
+ "documents": {},
+ "files": {
+  "adresler.csv": "adresler.csv"
+ },
+ "cases": [
+  {
+   "id": "geocode-file",
+   "title": "Adresleri eşle: dosyadan tek alan; kapı, belirsiz (yazılır), aradeğer, eşleşmeyen, boş satır ve adres kodu",
+   "document": "address.kcad",
+   "run": {
+    "tool": "address.geocode"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "adresler.csv",
+    "form": "single",
+    "address": "Adres",
+    "via": "locator:adres-1",
+    "tied": true,
+    "layer": {
+     "newName": "Adresler"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 satırdan 3 eşleşti, 1 belirsiz, 2 eşleşmedi, 1 boş; 4 nokta yazıldı.",
+    "undo": "Adresleri eşle",
+    "layers": [
+     {
+      "id": "islem-adresler",
+      "name": "Adresler",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "No": "1",
+       "Adres": "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara",
+       "Durum": "Eşleşti",
+       "Puan": "100",
+       "Eşleşme türü": "Kapı",
+       "Eşleşen adres": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "Mahalle": "Kızılay",
+       "Yol": "ATATÜRK BULVARI",
+       "Kapı no": "4",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06420",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400105.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "No": "2",
+       "Adres": "Atatürk Bulvarı No:2",
+       "Durum": "Belirsiz",
+       "Puan": "100",
+       "Eşleşme türü": "Kapı",
+       "Eşleşen adres": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "Mahalle": "Cumhuriyet",
+       "Yol": "Atatürk Bulvarı",
+       "Kapı no": "2",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06100",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "Atatürk Bulvarı No:2"
+      },
+      "p": {
+       "x": 500210.0,
+       "y": 4400105.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "No": "3",
+       "Adres": "Kızılay Mahallesi Atatürk Bulvarı No:6",
+       "Durum": "Eşleşti",
+       "Puan": "90",
+       "Eşleşme türü": "Kapı (aradeğer)",
+       "Eşleşen adres": "Kızılay Mahallesi Atatürk Bulvarı No:6 Çankaya/Ankara",
+       "Mahalle": "Kızılay",
+       "Yol": "Atatürk Bulvarı",
+       "Kapı no": "6",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "Kızılay Mahallesi Atatürk Bulvarı No:6"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400105.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "No": "6",
+       "Adres": "1000000002",
+       "Durum": "Eşleşti",
+       "Puan": "100",
+       "Eşleşme türü": "Kod",
+       "Eşleşen adres": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "Mahalle": "Cumhuriyet",
+       "Yol": "Atatürk Bulvarı",
+       "Kapı no": "2",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06100",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "1000000002"
+      },
+      "p": {
+       "x": 500210.0,
+       "y": 4400105.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "table": {
+      "columns": [
+       "Satır",
+       "Girdi adresi",
+       "En iyi aday",
+       "Puan",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "5",
+        "İnönü Caddesi No:1",
+        "",
+        "",
+        "Aday yok"
+       ],
+       [
+        "6",
+        "",
+        "",
+        "",
+        "Adres boş"
+       ],
+       [
+        "8",
+        "Kızılay Mah. Atatürk Blv. No:99",
+        "Kızılay Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+        75,
+        "Eşleşmedi"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "geocode-file-strict",
+   "title": "Adresleri eşle: en düşük puan 95, belirsizler yazılmaz; aradeğer (90) eşleşmez",
+   "document": "address.kcad",
+   "run": {
+    "tool": "address.geocode"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "adresler.csv",
+    "form": "single",
+    "address": "Adres",
+    "via": "locator:adres-1",
+    "tied": false,
+    "layer": {
+     "newName": "Adresler"
+    },
+    "minScore": 95
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 satırdan 2 eşleşti, 1 belirsiz, 3 eşleşmedi, 1 boş; 2 nokta yazıldı.",
+    "undo": "Adresleri eşle",
+    "layers": [
+     {
+      "id": "islem-adresler",
+      "name": "Adresler",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "No": "1",
+       "Adres": "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara",
+       "Durum": "Eşleşti",
+       "Puan": "100",
+       "Eşleşme türü": "Kapı",
+       "Eşleşen adres": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "Mahalle": "Kızılay",
+       "Yol": "ATATÜRK BULVARI",
+       "Kapı no": "4",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06420",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400105.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "No": "6",
+       "Adres": "1000000002",
+       "Durum": "Eşleşti",
+       "Puan": "100",
+       "Eşleşme türü": "Kod",
+       "Eşleşen adres": "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+       "Mahalle": "Cumhuriyet",
+       "Yol": "Atatürk Bulvarı",
+       "Kapı no": "2",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06100",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "1000000002"
+      },
+      "p": {
+       "x": 500210.0,
+       "y": 4400105.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Satır",
+       "Girdi adresi",
+       "En iyi aday",
+       "Puan",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "3",
+        "Atatürk Bulvarı No:2",
+        "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara",
+        100,
+        "Belirsiz"
+       ],
+       [
+        "4",
+        "Kızılay Mahallesi Atatürk Bulvarı No:6",
+        "Kızılay Mahallesi Atatürk Bulvarı No:6 Çankaya/Ankara",
+        90,
+        "Eşleşmedi"
+       ],
+       [
+        "5",
+        "İnönü Caddesi No:1",
+        "",
+        "",
+        "Aday yok"
+       ],
+       [
+        "6",
+        "",
+        "",
+        "",
+        "Adres boş"
+       ],
+       [
+        "8",
+        "Kızılay Mah. Atatürk Blv. No:99",
+        "Kızılay Mahallesi Atatürk Bulvarı Çankaya/Ankara",
+        75,
+        "Eşleşmedi"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "geocode-columns",
+   "title": "Adresleri eşle: Başvuru katmanının öznitelikleri, ayrı alanlar (mahalle, yol, kapı no); kapısız yol düzeyi",
+   "document": "address.kcad",
+   "run": {
+    "tool": "address.geocode"
+   },
+   "values": {
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "basvuru"
+    },
+    "form": "columns",
+    "neighbourhood": "Mahalle",
+    "street": "Yol",
+    "door": "Kapı",
+    "via": "locator:adres-1",
+    "tied": true,
+    "layer": {
+     "newName": "Adresler"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 satırdan 4 eşleşti, 0 belirsiz, 0 eşleşmedi; 4 nokta yazıldı.",
+    "undo": "Adresleri eşle",
+    "layers": [
+     {
+      "id": "islem-adresler",
+      "name": "Adresler",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "Mahalle": "Kızılay",
+       "Yol": "Atatürk Blv.",
+       "Kapı": "008",
+       "No": "B1",
+       "Durum": "Eşleşti",
+       "Puan": "100",
+       "Eşleşme türü": "Kapı",
+       "Eşleşen adres": "Kızılay Mahallesi Atatürk Blv. No:8 06420 Çankaya/Ankara",
+       "Kapı no": "8",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06420",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "ATATÜRK BULVARI 008, Kızılay Mahallesi"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400105.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "Mahalle": "Cumhuriyet",
+       "Yol": "1203/1 Sokak",
+       "Kapı": "No: 5",
+       "No": "B2",
+       "Durum": "Eşleşti",
+       "Puan": "100",
+       "Eşleşme türü": "Kapı",
+       "Eşleşen adres": "Cumhuriyet Mahallesi 1203/1 Sokak No:5 06100 Çankaya/Ankara",
+       "Kapı no": "5",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06100",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "1203/1 Sokak No: 5, Cumhuriyet Mahallesi"
+      },
+      "p": {
+       "x": 500295.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "Yol": "Atatürk Bulvarı",
+       "Kapı": "6/A",
+       "No": "B3",
+       "Durum": "Eşleşti",
+       "Puan": "90",
+       "Eşleşme türü": "Kapı (aradeğer)",
+       "Eşleşen adres": "Kızılay Mahallesi Atatürk Bulvarı No:6a Çankaya/Ankara",
+       "Mahalle": "Kızılay",
+       "Kapı no": "6a",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "Atatürk Bulvarı 6/A"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400105.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-adresler",
+      "attrs": {
+       "Mahalle": "Bahçelievler",
+       "Yol": "Gazi Mustafa Kemal Bulvarı",
+       "No": "B4",
+       "Durum": "Eşleşti",
+       "Puan": "85",
+       "Eşleşme türü": "Yol",
+       "Eşleşen adres": "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı",
+       "Kaynak": "Numarataj",
+       "Girdi adresi": "Gazi Mustafa Kemal Blv., Bahçelievler Mahallesi"
+      },
+      "p": {
+       "x": 500100.0,
+       "y": 4400300.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4
+    }
+   }
+  },
+  {
+   "id": "reverse-events",
+   "title": "Konumlara adres yaz: olaylara en yakın kapı, yol ya da içinde kaldıkları bölge (100 m)",
+   "document": "address.kcad",
+   "run": {
+    "tool": "address.reverse"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "olay"
+    },
+    "via": "locator:adres-1"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 5 nesnenin adresi yazıldı; 1 nesnenin adresi bulunamadı.",
+    "undo": "Konumlara adres yaz",
+    "updated": [
+     {
+      "id": 33,
+      "attrs": {
+       "Ad": "O1",
+       "Adres": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "Mahalle": "Kızılay",
+       "Yol": "ATATÜRK BULVARI",
+       "Kapı no": "4",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06420",
+       "Adres uzaklığı": "2.24",
+       "Adres türü": "Kapı",
+       "Adres kaynağı": "Numarataj"
+      }
+     },
+     {
+      "id": 34,
+      "attrs": {
+       "Ad": "O2",
+       "Adres": "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı Çankaya/Ankara",
+       "Mahalle": "Bahçelievler",
+       "Yol": "Gazi Mustafa Kemal Bulvarı",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Adres uzaklığı": "0.00",
+       "Adres türü": "Yol",
+       "Adres kaynağı": "Numarataj"
+      }
+     },
+     {
+      "id": 35,
+      "attrs": {
+       "Ad": "O3",
+       "Adres": "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı Çankaya/Ankara",
+       "Mahalle": "Bahçelievler",
+       "Yol": "Gazi Mustafa Kemal Bulvarı",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Adres uzaklığı": "80.00",
+       "Adres türü": "Yol",
+       "Adres kaynağı": "Numarataj"
+      }
+     },
+     {
+      "id": 36,
+      "attrs": {
+       "Ad": "O4",
+       "Adres": "Ankara Yolu Çankaya/Ankara",
+       "Yol": "Ankara Yolu",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Adres uzaklığı": "2.00",
+       "Adres türü": "Yol",
+       "Adres kaynağı": "Numarataj"
+      }
+     },
+     {
+      "id": 37,
+      "attrs": {
+       "Ad": "O5",
+       "Adres": "Cumhuriyet Mahallesi 1203/1 Sokak No:1 06100 Çankaya/Ankara",
+       "Mahalle": "Cumhuriyet",
+       "Yol": "1203/1 Sokak",
+       "Kapı no": "1",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06100",
+       "Adres uzaklığı": "11.18",
+       "Adres türü": "Kapı",
+       "Adres kaynağı": "Numarataj"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 5,
+     "missing": 1
+    }
+   }
+  },
+  {
+   "id": "reverse-reach",
+   "title": "Konumlara adres yaz, en çok 3 m: kapı ve yol yalnız çok yakında; bölge ya da hiçbiri",
+   "document": "address.kcad",
+   "run": {
+    "tool": "address.reverse"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "olay"
+    },
+    "via": "locator:adres-1",
+    "reach": 3
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 5 nesnenin adresi yazıldı; 1 nesnenin adresi bulunamadı.",
+    "undo": "Konumlara adres yaz",
+    "updated": [
+     {
+      "id": 33,
+      "attrs": {
+       "Ad": "O1",
+       "Adres": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+       "Mahalle": "Kızılay",
+       "Yol": "ATATÜRK BULVARI",
+       "Kapı no": "4",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Posta kodu": "06420",
+       "Adres uzaklığı": "2.24",
+       "Adres türü": "Kapı",
+       "Adres kaynağı": "Numarataj"
+      }
+     },
+     {
+      "id": 34,
+      "attrs": {
+       "Ad": "O2",
+       "Adres": "Bahçelievler Mahallesi Gazi Mustafa Kemal Bulvarı Çankaya/Ankara",
+       "Mahalle": "Bahçelievler",
+       "Yol": "Gazi Mustafa Kemal Bulvarı",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Adres uzaklığı": "0.00",
+       "Adres türü": "Yol",
+       "Adres kaynağı": "Numarataj"
+      }
+     },
+     {
+      "id": 35,
+      "attrs": {
+       "Ad": "O3",
+       "Adres": "Bahçelievler Mahallesi Çankaya/Ankara",
+       "Mahalle": "Bahçelievler",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Adres türü": "Bölge",
+       "Adres kaynağı": "Numarataj"
+      }
+     },
+     {
+      "id": 36,
+      "attrs": {
+       "Ad": "O4",
+       "Adres": "Ankara Yolu Çankaya/Ankara",
+       "Yol": "Ankara Yolu",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Adres uzaklığı": "2.00",
+       "Adres türü": "Yol",
+       "Adres kaynağı": "Numarataj"
+      }
+     },
+     {
+      "id": 37,
+      "attrs": {
+       "Ad": "O5",
+       "Adres": "Cumhuriyet Mahallesi 1203/1 Sokak Çankaya/Ankara",
+       "Mahalle": "Cumhuriyet Mahallesi",
+       "Yol": "1203/1 Sokak",
+       "İlçe": "Çankaya",
+       "İl": "Ankara",
+       "Adres uzaklığı": "0.00",
+       "Adres türü": "Yol",
+       "Adres kaynağı": "Numarataj"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 5,
+     "missing": 1
+    }
+   }
+  },
+  {
+   "id": "geocode-no-source",
+   "title": "Adresleri eşle: kaynak seçilmemiş",
+   "document": "address.kcad",
+   "run": {
+    "tool": "address.geocode"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "adresler.csv",
+    "form": "single",
+    "address": "Adres",
+    "via": "",
+    "tied": true,
+    "layer": {
+     "newName": "Adresler"
+    }
+   },
+   "expect": {
+    "status": "invalid",
+    "issues": [
+     {
+      "param": "via",
+      "message": "“Adres kaynağı”: projenin adres verisini ya da bir sağlayıcıyı seçin."
+     }
+    ]
+   }
+  },
+  {
+   "id": "geocode-online-here",
+   "title": "Adresleri eşle: çevrimiçi sağlayıcı, ağı olmayan ortamda reddedilir",
+   "document": "address.kcad",
+   "run": {
+    "tool": "address.geocode"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "adresler.csv",
+    "form": "single",
+    "address": "Adres",
+    "via": "provider:nominatim-osm",
+    "tied": true,
+    "layer": {
+     "newName": "Adresler"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Bu ortamda çevrimiçi adres sağlayıcısı yok; projenin adres verisini seçin."
+   }
+  },
+  {
+   "id": "geocode-unknown-locator",
+   "title": "Adresleri eşle: projede olmayan adres verisi",
+   "document": "address.kcad",
+   "run": {
+    "tool": "address.geocode"
+   },
+   "values": {
+    "sourceKind": "file",
+    "file": "adresler.csv",
+    "form": "single",
+    "address": "Adres",
+    "via": "locator:adres-9",
+    "tied": true,
+    "layer": {
+     "newName": "Adresler"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "“adres-9” adres verisi projede yok; Adres verisi penceresinden tanımlayın."
+   }
+  }
+ ]
+}

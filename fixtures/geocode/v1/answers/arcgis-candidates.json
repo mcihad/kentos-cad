@@ -1,0 +1,33 @@
+{
+ "spatialReference": {"wkid": 4326, "latestWkid": 4326},
+ "candidates": [
+  {
+   "address": "Atatürk Bulvarı 15, Kızılay, 06420, Çankaya, Ankara",
+   "location": {"x": 32.854612, "y": 39.920471},
+   "score": 100,
+   "attributes": {
+    "Loc_name": "World", "Status": "M", "Score": 100, "Match_addr": "Atatürk Bulvarı 15, Kızılay, 06420, Çankaya, Ankara",
+    "LongLabel": "Atatürk Bulvarı 15, Kızılay, 06420, Çankaya, Ankara, TUR", "ShortLabel": "Atatürk Bulvarı 15",
+    "Addr_type": "PointAddress", "PlaceName": "", "AddNum": "15", "StPreType": "", "StName": "Atatürk", "StType": "Bulvarı",
+    "Nbrhd": "Kızılay Mahallesi", "District": "", "City": "Çankaya", "Subregion": "Ankara", "Region": "Ankara", "Postal": "06420", "Country": "TUR"
+   },
+   "extent": {"xmin": 32.853612, "ymin": 39.919471, "xmax": 32.855612, "ymax": 39.921471}
+  },
+  {
+   "address": "Atatürk Bulvarı, Kızılay, 06420, Çankaya, Ankara",
+   "location": {"x": 32.854101, "y": 39.921003},
+   "score": 98.4,
+   "attributes": {
+    "Status": "M", "Score": 98.4, "Match_addr": "Atatürk Bulvarı, Kızılay, 06420, Çankaya, Ankara",
+    "LongLabel": "Atatürk Bulvarı, Kızılay, 06420, Çankaya, Ankara, TUR", "Addr_type": "StreetName", "PlaceName": "",
+    "AddNum": "", "StPreType": "", "StName": "Atatürk", "StType": "Bulvarı", "Nbrhd": "Kızılay Mahallesi",
+    "City": "Çankaya", "Subregion": "Ankara", "Region": "Ankara", "Postal": "06420"
+   }
+  },
+  {
+   "address": "Bozuk aday",
+   "score": 50,
+   "attributes": {"Addr_type": "Locality"}
+  }
+ ]
+}

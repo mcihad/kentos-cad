@@ -100,6 +100,7 @@ fn opened(n: usize) -> Opened {
         connections: Vec::new(),
         networks: Vec::new(),
         variables: Vec::new(),
+        address_locators: Vec::new(),
     };
     let layers = vec![LayerNode {
         id: "parsel".into(),

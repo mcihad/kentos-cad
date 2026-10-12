@@ -920,6 +920,7 @@ impl Viewport {
             | ViewChange::Network(_)
             | ViewChange::Command(_)
             | ViewChange::InfoCard(_)
+            | ViewChange::AddressAt(_)
             | ViewChange::PlaceTable(..) => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));

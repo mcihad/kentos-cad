@@ -3,18 +3,18 @@
 //! JSON (the catalog's wire form, `status`-tagged).
 
 use kentos_contracts::{
-    ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, EntitiesArray, EntitiesCreate,
-    EntitiesDelete, EntitiesEdit, EntitiesSetProperties, EntitiesTransform, LabelsPin,
-    LayersCompose, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService,
-    LayersTime, LineCreate, NetworkDefine, PointCreate, PolygonCreate, PolylineCreate,
-    ScenariosEdit,
+    AddressesDefine, ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, EntitiesArray,
+    EntitiesCreate, EntitiesDelete, EntitiesEdit, EntitiesSetProperties, EntitiesTransform,
+    LabelsPin, LayersCompose, LayersFilter, LayersInfo, LayersLabels, LayersRenderer,
+    LayersService, LayersTime, LineCreate, NetworkDefine, PointCreate, PolygonCreate,
+    PolylineCreate, ScenariosEdit,
 };
 use kentos_domain::Document;
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, create,
-    delete, edit, labels_pin, layers_compose, layers_filter, layers_info, layers_labels,
-    layers_renderer, layers_service, layers_time, line, network_define, point, polygon, polyline,
-    scenarios_edit, set, transform,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
+    circle, create, delete, edit, labels_pin, layers_compose, layers_filter, layers_info,
+    layers_labels, layers_renderer, layers_service, layers_time, line, network_define, point,
+    polygon, polyline, scenarios_edit, set, transform,
 };
 use serde_json::Value;
 
@@ -103,6 +103,7 @@ pub fn run(
         kentos_contracts::CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
         kentos_contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
+        kentos_contracts::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
         kentos_contracts::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
         kentos_contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         kentos_contracts::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),

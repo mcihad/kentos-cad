@@ -73,6 +73,7 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "cad.entities.set",
         "cad.layers.service",
         "cad.network.define",
+        "cad.addresses.define",
         "cad.layers.time",
         "cad.scenarios.edit",
         "cad.layers.labels",
@@ -83,10 +84,11 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
     }
     // A map service layer's command removes a layer too (docs/adr/0208 §15), a network's its definition (0209 §11),
     // a layer's time its time and a scenario's apply its layers (0210 §11), a labelling or a pin with null (0212 §5),
-    // a renderer with null (0213 §5).
+    // a renderer with null (0213 §5), address data's definition (0229 §14).
     for name in [
         "cad.layers.service",
         "cad.network.define",
+        "cad.addresses.define",
         "cad.layers.time",
         "cad.scenarios.edit",
         "cad.layers.labels",

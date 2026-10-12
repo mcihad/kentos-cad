@@ -20,6 +20,10 @@ use crate::icons;
 /// The web inventory, embedded when the desktop is built.
 const INVENTORY: &str = include_str!("../../../docs/inventory/web.json");
 
+/// The commands added while the web is paused (docs/adr/0228 §4): their
+/// titles, icons and ribbon places, beside the frozen inventory's.
+const ADDITIONS: &str = include_str!("../../../catalog/v1/additions.json");
+
 /// Web command ids the desktop runs. Keep in the order they were ported.
 pub const PORTED: &[&str] = &[
     "file.open",
@@ -1117,16 +1121,19 @@ impl Catalog {
         &self.modes
     }
 
-    /// Reads the embedded inventory. The strings live as long as the program
-    /// (the catalog is built once), which the command line's borrowed
-    /// suggestions need.
-    fn load(text: &str) -> Result<Self, String> {
+    /// Reads the embedded inventory and its additions. The strings live as
+    /// long as the program (the catalog is built once), which the command
+    /// line's borrowed suggestions need.
+    fn load(text: &str, additions: &str) -> Result<Self, String> {
         let mut raw: RawInventory =
             serde_json::from_str(text).map_err(|e| format!("web envanteri okunamadı: {e}"))?;
-        // Before the commands and panels take their icons.
+        let added: kentos_contracts::CatalogAdditions = serde_json::from_str(additions)
+            .map_err(|e| format!("katalog ekleri okunamadı: {e}"))?;
+        // Before the commands and panels take their icons; the additions' icons are new names.
         icons::keep_web_set(
             std::mem::take(&mut raw.icons)
                 .into_iter()
+                .chain(added.icons.clone())
                 .map(|(name, markup)| (leak(name), leak(markup)))
                 .collect(),
         );
@@ -1177,6 +1184,7 @@ impl Catalog {
                 }
             })
             .chain(desktop_commands())
+            .chain(added.commands.iter().map(added_command))
             .collect();
         let by_id = commands
             .iter()
@@ -1186,14 +1194,17 @@ impl Catalog {
 
         let mut tabs: Vec<Tab> = raw.layout.ribbon.into_iter().map(tab).collect();
         place_desktop_commands(&mut tabs);
+        // The ribbon a project not asked its type shows is CBS's.
+        place_additions("gis", &mut tabs, &added.ribbon);
         let mode_tabs = raw
             .layout
             .ribbon_by_mode
             .into_iter()
-            .filter_map(|(mode, tabs)| {
-                let mode = serde_json::from_value(serde_json::Value::String(mode)).ok()?;
+            .filter_map(|(name, tabs)| {
+                let mode = serde_json::from_value(serde_json::Value::String(name.clone())).ok()?;
                 let mut tabs: Vec<Tab> = tabs.into_iter().map(tab).collect();
                 place_desktop_commands(&mut tabs);
+                place_additions(&name, &mut tabs, &added.ribbon);
                 Some((mode, tabs))
             })
             .collect();
@@ -1270,12 +1281,85 @@ impl Catalog {
 pub fn catalog() -> &'static Catalog {
     static CATALOG: OnceLock<Catalog> = OnceLock::new();
     CATALOG.get_or_init(|| {
-        Catalog::load(INVENTORY).unwrap_or_else(|error| {
+        Catalog::load(INVENTORY, ADDITIONS).unwrap_or_else(|error| {
             // The embedded file is checked by a test; a broken build still opens.
             eprintln!("{error}");
             Catalog::default()
         })
     })
+}
+
+/// A command of the additions (docs/adr/0228 §4): it runs on the desktop unless it waits.
+fn added_command(c: &kentos_contracts::AddedCommand) -> Command {
+    let standing = match c.status {
+        kentos_contracts::AddedStatus::Implemented => Standing::Ported,
+        kentos_contracts::AddedStatus::Pending => Standing::Pending,
+    };
+    let title = leak(c.title.clone());
+    let description = leak(c.description.clone());
+    let pending_note = c.pending_note.clone().map(leak);
+    Command {
+        id: leak(c.id.clone()),
+        title,
+        short: c.short.clone().map_or(title, leak),
+        description,
+        line_note: line_note(standing, pending_note, description),
+        aliases: leak_list(c.aliases.clone()),
+        shortcuts: leak_list(c.shortcuts.clone()),
+        shortcuts_in_input: &[],
+        icon: icons::from_web(c.icon.as_deref()),
+        standing,
+        pending_note,
+        category: leak(c.category.clone()),
+    }
+}
+
+/// Puts the additions' ribbon places of a project type (`cad`, `gis`) in its tabs: a new panel after
+/// the one it names (else last), or buttons at the end of a panel the tab has.
+fn place_additions(mode: &str, tabs: &mut [Tab], places: &[kentos_contracts::RibbonAddition]) {
+    let size = |size: &str| match size {
+        "large" => Size::Large,
+        "lead" => Size::Lead,
+        _ => Size::Small,
+    };
+    for r in places.iter().filter(|r| r.modes.iter().any(|m| m == mode)) {
+        let Some(tab) = tabs.iter_mut().find(|t| t.id == r.tab) else {
+            continue;
+        };
+        let items = r.items.iter().map(|i| Item::Command {
+            id: leak(i.command.clone()),
+            size: size(&i.size),
+        });
+        match (&r.label, &r.into) {
+            (Some(label), _) => {
+                let at = r
+                    .after
+                    .as_deref()
+                    .and_then(|a| tab.panels.iter().position(|p| p.label == a))
+                    .map_or(tab.panels.len(), |i| i + 1);
+                tab.panels.insert(
+                    at,
+                    Panel {
+                        label: leak(label.clone()),
+                        icon: icons::from_web(r.icon.as_deref()),
+                        items: items.collect(),
+                        overflow: r.overflow.iter().map(|c| leak(c.clone())).collect(),
+                        keep: false,
+                        launcher: None,
+                    },
+                );
+            }
+            (None, Some(into)) => {
+                if let Some(panel) = tab.panels.iter_mut().find(|p| p.label == into.as_str()) {
+                    panel.items.extend(items);
+                    panel
+                        .overflow
+                        .extend(r.overflow.iter().map(|c| leak(c.clone())));
+                }
+            }
+            (None, None) => {}
+        }
+    }
 }
 
 fn item(raw: RawItem) -> Item {
@@ -1542,7 +1626,7 @@ mod tests {
 
     #[test]
     fn the_embedded_inventory_reads_and_every_ribbon_command_is_known() {
-        let catalog = Catalog::load(INVENTORY).expect("the web inventory parses");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the web inventory parses");
         assert!(
             catalog.commands().len() > 100,
             "the web has more commands than this"
@@ -1574,7 +1658,7 @@ mod tests {
     /// the circle tool, then 2N), a family's tools their titles (docs/adr/0032).
     #[test]
     fn split_entries_keep_their_methods() {
-        let catalog = Catalog::load(INVENTORY).expect("the web inventory parses");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the web inventory parses");
         // Whichever project type's ribbon shows them (CBS has no Dikdörtgen).
         let splits: Vec<&Vec<Entry>> = catalog
             .every_tab()
@@ -1625,9 +1709,123 @@ mod tests {
         );
     }
 
+    /// The catalog's additions (catalog/v1/additions.json, docs/adr/0228 §4,
+    /// docs/adr/0229 §15) hold against the web's inventory by the contract's
+    /// rules; every element of their icons is drawn here; their commands and
+    /// places are in the catalog of each project type.
+    #[test]
+    fn the_additions_hold_against_the_inventory() {
+        use std::collections::HashSet;
+        let raw: serde_json::Value = serde_json::from_str(INVENTORY).expect("the inventory parses");
+        let added: kentos_contracts::CatalogAdditions =
+            serde_json::from_str(ADDITIONS).expect("the additions parse");
+        let commands: HashSet<&str> = raw["commands"]
+            .as_array()
+            .expect("commands")
+            .iter()
+            .filter_map(|c| c["id"].as_str())
+            .collect();
+        let icon_names: HashSet<&str> = raw["icons"]
+            .as_object()
+            .expect("icons")
+            .keys()
+            .map(String::as_str)
+            .collect();
+        let panels = |mode: &str, tab: &str| -> Option<Vec<String>> {
+            raw["layout"]["ribbonByMode"][mode]
+                .as_array()?
+                .iter()
+                .find(|t| t["id"] == tab)
+                .map(|t| {
+                    t["panels"]
+                        .as_array()
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|p| p["label"].as_str().map(str::to_owned))
+                        .collect()
+                })
+        };
+        let command = |id: &str| commands.contains(id);
+        let icon = |name: &str| icon_names.contains(name);
+        assert_eq!(
+            added.problem(&kentos_contracts::KnownCatalog {
+                command: &command,
+                icon: &icon,
+                panels: &panels,
+            }),
+            None
+        );
+        for (name, markup) in &added.icons {
+            assert!(
+                !markup.contains("<g"),
+                "{name}: the icon reader here has no groups"
+            );
+            let tags: usize = ["<path", "<circle", "<rect", "<ellipse"]
+                .iter()
+                .map(|t| markup.matches(t).count())
+                .sum();
+            assert_eq!(
+                kentos_ui::icon::svg_elements(markup),
+                tags,
+                "{name}: every element is drawn"
+            );
+        }
+        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the catalog loads");
+        for c in &added.commands {
+            let got = catalog
+                .get(&c.id)
+                .unwrap_or_else(|| panic!("{} is in the catalog", c.id));
+            assert!(matches!(got.icon, Icon::Svg(_)), "{} takes its icon", c.id);
+            assert_eq!(
+                got.standing == Standing::Ported,
+                c.status == kentos_contracts::AddedStatus::Implemented
+            );
+        }
+        // Adres: after Altlık in CBS's Harita, last in CAD's Ekle; Adres ara in both types' Paneller.
+        use kentos_contracts::Workspace;
+        let labels = |mode: Workspace, tab: &str| -> Vec<&str> {
+            catalog
+                .tabs_in(mode)
+                .find(|t| t.id == tab)
+                .map(|t| t.panels.iter().map(|p| p.label).collect())
+                .unwrap_or_default()
+        };
+        let map = labels(Workspace::Gis, "map");
+        let at = map
+            .iter()
+            .position(|l| *l == "Adres")
+            .expect("CBS › Harita › Adres");
+        assert_eq!(map[at - 1], "Altlık");
+        assert_eq!(labels(Workspace::Cad, "insert").last(), Some(&"Adres"));
+        for mode in [Workspace::Cad, Workspace::Gis] {
+            let view = catalog
+                .tabs_in(mode)
+                .find(|t| t.id == "view")
+                .expect("Görünüm");
+            let paneller = view
+                .panels
+                .iter()
+                .find(|p| p.label == "Paneller")
+                .expect("Paneller");
+            assert!(paneller.items.iter().any(|i| matches!(
+                i,
+                Item::Command {
+                    id: "address.search",
+                    ..
+                }
+            )));
+        }
+        // A project not asked its type shows CBS's ribbon, the additions too.
+        assert!(
+            catalog
+                .tabs()
+                .any(|t| t.id == "map" && t.panels.iter().any(|p| p.label == "Adres"))
+        );
+    }
+
     #[test]
     fn every_ported_command_is_a_web_command() {
-        let catalog = Catalog::load(INVENTORY).expect("the web inventory parses");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the web inventory parses");
         for id in PORTED {
             assert!(
                 catalog.get(id).is_some(),
@@ -1641,7 +1839,7 @@ mod tests {
     /// (the text field's own), each also a shortcut of its command.
     #[test]
     fn chords_that_work_in_text_fields_come_from_the_web() {
-        let catalog = Catalog::load(INVENTORY).expect("the web inventory parses");
+        let catalog = Catalog::load(INVENTORY, ADDITIONS).expect("the web inventory parses");
         let in_input: Vec<&str> = catalog
             .commands()
             .iter()

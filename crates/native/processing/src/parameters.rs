@@ -55,6 +55,11 @@ pub fn default_value(def: &ParamDef, d: &Defaults) -> Value {
         ParamKind::RasterPairs { .. } | ParamKind::FieldMap { .. } | ParamKind::Layers { .. } => {
             json!([])
         }
+        ParamKind::AddressSource => d
+            .address_sources
+            .iter()
+            .find(|o| o.why.is_none())
+            .map_or(Value::Null, |o| json!(o.id)),
         ParamKind::Network { prefers } => d
             .networks
             .iter()
@@ -226,6 +231,7 @@ pub fn fits(def: &ParamDef, v: &Value) -> bool {
             v.get("network").is_some_and(Value::is_string)
                 && v.get("cost").is_some_and(Value::is_string)
         }
+        ParamKind::AddressSource => v.is_string(),
         ParamKind::RasterValues { number, .. } => v.as_object().is_some_and(|o| {
             o.values().all(|x| {
                 if *number {
@@ -330,6 +336,9 @@ fn check_param(
             ParamKind::File { .. } => format!("{name}: bir dosya seçin."),
             ParamKind::Network { .. } => format!(
                 "{name}: projede ağ yok; Ağlar penceresinden yol ya da şebeke ağı tanımlayın."
+            ),
+            ParamKind::AddressSource => format!(
+                "{name}: adres kaynağı yok; Adres verisi penceresinden projenin verisini tanımlayın ya da Adres sağlayıcıları'ndan bir sağlayıcıyı açın."
             ),
             _ => format!("{name} boş bırakılamaz."),
         });
@@ -473,6 +482,11 @@ fn check_param(
                 )
             })
         }),
+        ParamKind::AddressSource => {
+            let id = v.as_str().unwrap_or("");
+            (!(id.starts_with(crate::address::LOCATOR) || id.starts_with(crate::address::PROVIDER)))
+                .then(|| format!("{name}: projenin adres verisini ya da bir sağlayıcıyı seçin."))
+        }
         ParamKind::Network { .. } => {
             let id = v.get("network").and_then(Value::as_str).unwrap_or("");
             let cost = v.get("cost").and_then(Value::as_str).unwrap_or("");

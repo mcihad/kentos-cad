@@ -1,0 +1,21 @@
+{
+ "geocoding": {"version": "0.2", "query": {"text": "Atatürk Bulvarı 15 Ankara"}},
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {"type": "Point", "coordinates": [32.8546, 39.92048]},
+   "properties": {
+    "id": "ornek-1", "layer": "address", "source": "openaddresses", "name": "Atatürk Bulvarı 15",
+    "housenumber": "15", "street": "Atatürk Bulvarı", "postalcode": "06420", "confidence": 1,
+    "match_type": "exact", "country": "Türkiye", "region": "Ankara", "county": "Çankaya",
+    "locality": "Ankara", "neighbourhood": "Kızılay", "label": "Atatürk Bulvarı 15, Çankaya, Ankara, Türkiye"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {"type": "Point", "coordinates": [32.85, 39.93]},
+   "properties": {"id": "ornek-2", "layer": "locality", "name": "Ankara", "confidence": 0.6, "region": "Ankara", "label": "Ankara, Türkiye"}
+  }
+ ]
+}

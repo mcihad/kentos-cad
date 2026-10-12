@@ -1,0 +1,177 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "address-search",
+ "title": "Adres ara (ADR 0229 §13): alt panelin Adres sekmesi projenin adres verisinde arar; adres tek satırda, kısaltmalarıyla okunur, adaylar puanlarıyla; satıra basmak görünümü getirir ve işaretler; Nokta ekle eşleşmenin öznitelikleriyle tek adımda yazar, geri alınır; mahallesiz adres iki mahallede Belirsiz; olmayan yol aday vermez; adres kodu kapının kendisini bulur",
+ "source": "Masaüstünün address/ modülü, çekirdeğin ops::geocode'u, kentos_processing::address; beklenenler scripts/fixtures/geocode_cases.py'nin başvurusundan (scripts/fixtures/address_scene.py), ADR 0229",
+ "covers": [
+  "GIS-40"
+ ],
+ "document": "addresses.kcad",
+ "view": {
+  "center": [
+   500200.0,
+   4400200.0
+  ],
+  "metresPerPixel": 0.5
+ },
+ "clickTolerance": 1.0,
+ "steps": [
+  {
+   "run": "address.search",
+   "note": "Adres ara: alt panelin Adres sekmesi açılır, kutu klavyeyi alır; kaynak projenin adres verisi (Numarataj)",
+   "expect": {
+    "panel": "Adres",
+    "address": {
+     "count": "",
+     "rows": []
+    },
+    "mark": null
+   }
+  },
+  {
+   "panel": "Adres",
+   "fill": {
+    "Adres ara": "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara"
+   },
+   "key": "Enter",
+   "note": "Adres tek satırda, kısaltmalarıyla: 4 numaralı kapı eşleşir (100); aynı yolun öbür kapıları ve yol düzeyi adaylar daha düşük",
+   "expect": {
+    "address": {
+     "count": "3 aday · En iyisi: Eşleşti (100)",
+     "rows": [
+      "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara | Kapı | 100 | Kızılay | Çankaya",
+      "Cumhuriyet Mahallesi Atatürk Bulvarı No:4 06100 Çankaya/Ankara | Kapı | 70 | Cumhuriyet | Çankaya",
+      "Kızılay Mahallesi Çankaya | Mahalle | 60 | Kızılay Mahallesi | Çankaya"
+     ]
+    }
+   }
+  },
+  {
+   "shot": "adres-ara",
+   "note": "Adres sekmesi: kaynak, adres, adaylar puanlarıyla, durum satırı"
+  },
+  {
+   "panel": "Adres",
+   "row": 1,
+   "note": "Satıra basmak görünümü adaya getirir ve çizimde işaretler (kaydedilmez)",
+   "expect": {
+    "viewCenter": [
+     -170.0,
+     -95.0
+    ],
+    "mark": [
+     -170.0,
+     -95.0
+    ]
+   }
+  },
+  {
+   "panel": "Adres",
+   "press": "Nokta ekle",
+   "note": "Nokta ekle: adayın yerine etkin katmana (Adres noktaları) eşleşmenin öznitelikleriyle bir nokta, tek adım",
+   "expect": {
+    "newest": {
+     "kind": "point",
+     "points": [
+      [
+       -170.0,
+       -95.0
+      ]
+     ],
+     "layer": "Adres noktaları",
+     "attrs": {
+      "Durum": "Eşleşti",
+      "Puan": "100",
+      "Eşleşme türü": "Kapı",
+      "Eşleşen adres": "Kızılay Mahallesi ATATÜRK BULVARI No:4 06420 Çankaya/Ankara",
+      "Mahalle": "Kızılay",
+      "Yol": "ATATÜRK BULVARI",
+      "Kapı no": "4",
+      "İlçe": "Çankaya",
+      "İl": "Ankara",
+      "Posta kodu": "06420",
+      "Kaynak": "Numarataj",
+      "Girdi adresi": "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara"
+     }
+    },
+    "entities": 33,
+    "canUndo": true
+   }
+  },
+  {
+   "run": "edit.undo",
+   "note": "Geri al noktayı kaldırır",
+   "expect": {
+    "entities": 32,
+    "canUndo": false
+   }
+  },
+  {
+   "panel": "Adres",
+   "fill": {
+    "Adres ara": "Atatürk Bulvarı No:2"
+   },
+   "key": "Enter",
+   "note": "Mahallesiz: iki mahallede de 2 numaralı kapı var, eşit puan: Belirsiz",
+   "expect": {
+    "address": {
+     "count": "2 aday · En iyisi: Belirsiz (100)",
+     "rows": [
+      "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara | Kapı | 100 | Cumhuriyet | Çankaya",
+      "Kızılay Mahallesi Atatürk Bulvarı No:2 06420 Çankaya/Ankara | Kapı | 100 | Kızılay | Çankaya"
+     ]
+    }
+   }
+  },
+  {
+   "panel": "Adres",
+   "row": 2,
+   "note": "İkinci aday: görünüm ona gelir, işaret onun yerinde",
+   "expect": {
+    "viewCenter": [
+     -190.0,
+     -95.0
+    ],
+    "mark": [
+     -190.0,
+     -95.0
+    ]
+   }
+  },
+  {
+   "shot": "adres-belirsiz",
+   "note": "Belirsiz: iki mahallenin aynı numaralı kapıları; ikincisi seçili ve işaretli"
+  },
+  {
+   "panel": "Adres",
+   "fill": {
+    "Adres ara": "İnönü Caddesi No:1"
+   },
+   "key": "Enter",
+   "note": "Adres verisinde olmayan yol: aday yok",
+   "expect": {
+    "address": {
+     "count": "Aday yok: yazımı, kaynağı ve adres verisinin alanlarını denetleyin.",
+     "rows": []
+    }
+   }
+  },
+  {
+   "panel": "Adres",
+   "fill": {
+    "Adres ara": "1000000002"
+   },
+   "key": "Enter",
+   "note": "Adres kodu (UAVT): kapının kendisi, Kod 100",
+   "expect": {
+    "address": {
+     "count": "1 aday · En iyisi: Eşleşti (100)",
+     "rows": [
+      "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara | Kod | 100 | Cumhuriyet | Çankaya"
+     ]
+    }
+   }
+  }
+ ]
+}

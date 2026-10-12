@@ -182,6 +182,10 @@ pub enum Dialog {
     TopologyRules,
     /// Ağlar (networks/window.rs, docs/adr/0209 §10); the window is `App::networks.window`.
     Networks,
+    /// Adres verisi (address/data.rs, docs/adr/0229 §13); the window is `App::address.data`.
+    AddressData,
+    /// Adres sağlayıcıları (address/providers.rs, docs/adr/0229 §13); the window is `App::address.providers`.
+    AddressProviders,
     /// Zaman ayarları (temporal/layer.rs, docs/adr/0210 §10); the window is `App::time.layer`.
     TimeLayer,
     /// Senaryo oluştur and Senaryoyu uygula's question (temporal/scenario.rs); the window is `App::time.scenario`.
@@ -351,6 +355,8 @@ pub enum Message {
     TopologyRules(crate::topology::rules::Event),
     /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
     Networks(crate::networks::Event),
+    /// Adres arama: the Adres tab, Konumdan adres's answers and the address windows (address/, docs/adr/0229).
+    Address(crate::address::Event),
     /// Zaman sürgüsü, Zaman ayarları and the scenarios (temporal/, docs/adr/0210).
     Time(crate::temporal::Event),
     /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
@@ -623,6 +629,8 @@ pub struct App {
     pub(crate) network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
     /// The project's networks as built on the network thread, and Ağlar's window.
     pub(crate) networks: crate::networks::State,
+    /// Adres arama: the Adres tab, its locators on the address thread and the address windows (address/).
+    pub(crate) address: crate::address::State,
     /// Zaman sürgüsü and the windows of Zaman and Senaryo (temporal/, docs/adr/0210).
     pub(crate) time: crate::temporal::State,
     /// Commands a tool asked the host to run (Ağlar from the network tools).
@@ -982,6 +990,7 @@ impl App {
             cloud_query_wanted: Vec::new(),
             network_wanted: Vec::new(),
             networks: crate::networks::State::default(),
+            address: crate::address::State::default(),
             time: crate::temporal::State::default(),
             command_wanted: Vec::new(),
             clouds: crate::pointclouds::Windows::default(),
@@ -1326,6 +1335,8 @@ impl App {
             self.service_info_tasks(),
             self.cloud_query_tasks(),
             self.network_tasks(),
+            // Konumdan adres's places, asked on the address thread or of a provider (address/).
+            self.address_tasks(),
             self.command_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
@@ -1341,6 +1352,8 @@ impl App {
         self.follow_charts();
         // Bilgi's card goes with its tool and its object (info_card.rs).
         self.follow_info_card();
+        // Google's geocoding answers only beside a shown Google basemap (address/online.rs).
+        self.follow_address();
         self.cloud_after(Instant::now());
         // A window that opens over the drawing has the keyboard: a text box under
         // it (the command line that opened it) lets go first, before the window's
@@ -1492,6 +1505,7 @@ impl App {
             Message::Topology(event) => return self.topology_event(event),
             Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Networks(event) => return self.networks_event(event),
+            Message::Address(event) => return self.address_event(event),
             Message::Time(event) => return self.time_event(event),
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
@@ -1962,6 +1976,7 @@ impl App {
         self.photos.clear();
         self.info_card = None;
         self.networks_reset();
+        self.address_reset();
         self.spatial.reload(&doc.model);
         self.viewport.opened(&doc, self.spatial.extent());
         // The views left belong to the drawing they were left on (docs/adr/0141).
@@ -2225,12 +2240,20 @@ impl App {
             }
             // Veride ara: the bottom panel's Arama tab, its box taking the keyboard (search/, docs/adr/0178).
             "data.search" => return self.open_data_search(),
-            "data.unmark" => return self.data_event(crate::search::Event::Unmark),
+            "data.unmark" => {
+                self.address_unmark();
+                return self.data_event(crate::search::Event::Unmark);
+            }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
             "topology.check" => return self.open_topology_check(),
             "topology.rules" => return self.open_topology_rules(),
             // Ağlar (networks/, docs/adr/0209 §10).
             "network.manage" => return self.open_networks(),
+            // Adres arama (address/, docs/adr/0229 §13).
+            "address.search" => return self.open_address_search(),
+            "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
+            "address.data" => return self.open_address_data(),
+            "address.providers" => return self.open_address_providers(),
             // Zaman and Senaryo (temporal/, docs/adr/0210 §10).
             "time.slider" => self.time_toggle(),
             "time.layer" => self.open_time_layer(None),

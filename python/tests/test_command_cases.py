@@ -217,6 +217,10 @@ class Case:
                 # The project's networks (docs/adr/0209 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]
                 same(settings.get("networks", []), want, f"{at}: networks")
+            elif key == "addressLocators":
+                # The project's address data (docs/adr/0229 §2).
+                settings = json.loads(self.doc._session.summary())["settings"]
+                same(settings.get("addressLocators", []), want, f"{at}: addressLocators")
             else:
                 raise AssertionError(f"{at}: unknown expectation {key}")
 
