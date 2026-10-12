@@ -8,20 +8,23 @@
 
 use std::f32::consts::PI;
 
-use iced::widget::canvas::{self, Frame, LineCap, LineJoin, Path, Stroke, Style, path};
+use iced::widget::canvas::{self, LineCap, LineJoin, Path, Stroke, Style, path};
 use iced::{Color, Point, Radians, Size, Vector};
 
 use super::Icon;
+use super::surface::{Recording, Surface};
 
-/// İkonu çerçeveye, çerçevenin boyutunu dolduracak şekilde çizer.
-pub(super) fn icon(frame: &mut Frame, icon: Icon, color: Color, weight: Option<f32>) {
-    let size = frame.size();
-    icon_sized(frame, icon, color, weight, size);
+/// The icon as an SVG document of `size` pixels, opaque black: the glyph
+/// tints it (`Svg::color`) and fades it (`Svg::opacity`) with its tone.
+pub(super) fn document(icon: Icon, weight: Option<f32>, size: Size) -> String {
+    let mut recording = Recording::new(size);
+    icon_sized(&mut recording, icon, Color::BLACK, weight, size);
+    recording.document()
 }
 
 /// Draws `icon` in a `size` box at the frame's origin (the frame may be larger).
 pub(super) fn icon_sized(
-    frame: &mut Frame,
+    frame: &mut impl Surface,
     icon: Icon,
     color: Color,
     weight: Option<f32>,
@@ -63,7 +66,7 @@ impl Pen {
         }
     }
 
-    fn polyline(&self, frame: &mut Frame, points: &[(f32, f32)], closed: bool) {
+    fn polyline(&self, frame: &mut impl Surface, points: &[(f32, f32)], closed: bool) {
         let path = Path::new(|builder| {
             let Some(((x, y), rest)) = points.split_first() else {
                 return;
@@ -83,18 +86,18 @@ impl Pen {
         frame.stroke(&path, self.stroke());
     }
 
-    fn line(&self, frame: &mut Frame, from: (f32, f32), to: (f32, f32)) {
+    fn line(&self, frame: &mut impl Surface, from: (f32, f32), to: (f32, f32)) {
         self.polyline(frame, &[from, to], false);
     }
 
-    fn circle(&self, frame: &mut Frame, center: (f32, f32), radius: f32) {
+    fn circle(&self, frame: &mut impl Surface, center: (f32, f32), radius: f32) {
         frame.stroke(
             &Path::circle(self.p(center.0, center.1), radius * self.unit),
             self.stroke(),
         );
     }
 
-    fn dot(&self, frame: &mut Frame, center: (f32, f32), radius: f32) {
+    fn dot(&self, frame: &mut impl Surface, center: (f32, f32), radius: f32) {
         frame.fill(
             &Path::circle(self.p(center.0, center.1), radius * self.unit),
             self.color,
@@ -118,7 +121,7 @@ impl Pen {
     }
 
     /// Dolu, köşeleri yuvarlatılmış üçgen.
-    fn triangle(&self, frame: &mut Frame, a: (f32, f32), b: (f32, f32), c: (f32, f32)) {
+    fn triangle(&self, frame: &mut impl Surface, a: (f32, f32), b: (f32, f32), c: (f32, f32)) {
         let path = Path::new(|builder| {
             builder.move_to(self.p(a.0, a.1));
             builder.line_to(self.p(b.0, b.1));
@@ -136,12 +139,12 @@ impl Pen {
         );
     }
 
-    fn magnifier(&self, frame: &mut Frame) {
+    fn magnifier(&self, frame: &mut impl Surface) {
         self.circle(frame, (6.75, 6.75), 4.75);
         self.line(frame, (10.25, 10.25), (14.0, 14.0));
     }
 
-    fn undo(&self, frame: &mut Frame) {
+    fn undo(&self, frame: &mut impl Surface) {
         let arc = Path::new(|builder| {
             builder.move_to(self.p(3.5, 7.5));
             self.arc(builder, (8.5, 8.75), 5.0, PI * 1.08, PI * 2.5);
@@ -150,7 +153,7 @@ impl Pen {
         self.polyline(frame, &[(2.75, 3.75), (3.25, 7.75), (7.0, 6.75)], false);
     }
 
-    fn arrow_head(&self, frame: &mut Frame, tip: (f32, f32), direction: Vector) {
+    fn arrow_head(&self, frame: &mut impl Surface, tip: (f32, f32), direction: Vector) {
         let size = 2.25;
         let normal = Vector::new(-direction.y, direction.x);
         let back = (tip.0 - direction.x * size, tip.1 - direction.y * size);
@@ -166,7 +169,7 @@ impl Pen {
         );
     }
 
-    fn document(&self, frame: &mut Frame) {
+    fn document(&self, frame: &mut impl Surface) {
         self.polyline(
             frame,
             &[
@@ -182,7 +185,7 @@ impl Pen {
     }
 
     /// Seçim ikonlarının kesik çizgili çerçevesi.
-    fn dashed_square(&self, frame: &mut Frame) {
+    fn dashed_square(&self, frame: &mut impl Surface) {
         let dashed = Stroke {
             line_dash: canvas::LineDash {
                 segments: &[2.0, 2.0],
@@ -201,7 +204,7 @@ impl Pen {
         );
     }
 
-    fn draw(&self, frame: &mut Frame, icon: Icon) {
+    fn draw(&self, frame: &mut impl Surface, icon: Icon) {
         match icon {
             Icon::ZoomIn => {
                 self.magnifier(frame);

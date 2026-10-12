@@ -15,16 +15,18 @@
 //! renkleri ikona da kendiliğinden yansır.
 
 mod draw;
+mod surface;
 mod svg;
 
-use std::cell::Cell;
+use std::cell::RefCell;
+use std::collections::HashMap;
 
-use iced::advanced::graphics::geometry::Renderer as _;
 use iced::advanced::layout::{self, Layout};
-use iced::advanced::renderer::{self, Renderer as _};
+use iced::advanced::renderer;
+use iced::advanced::svg::{Handle as SvgHandle, Renderer as _, Svg as SvgImage};
 use iced::advanced::widget::{Tree, Widget, tree};
 use iced::widget::canvas;
-use iced::{Color, Element, Length, Rectangle, Renderer, Size, Theme, Vector, mouse};
+use iced::{Color, Element, Length, Rectangle, Renderer, Size, Theme, mouse};
 
 use crate::theme::Tokens;
 
@@ -312,7 +314,10 @@ pub fn icon(icon: Icon) -> Glyph {
 
 /// Ekrana çizilen ikon.
 ///
-/// Çizim, ikon, boyut ya da renk değişene kadar önbellekte tutulur.
+/// İkon, piksellerinde bir SVG belgesi olarak çizilir ve Iced'in SVG hattı onu
+/// ekranın piksel yoğunluğunda, tam kenar yumuşatmayla rasterleştirir (resvg;
+/// web'de tarayıcının çizdiği gibi). Belge ikon, boyut ya da kalınlık değişene
+/// kadar tutulur; renk ve saydamlık çizilirken verilir.
 #[derive(Debug, Clone, Copy)]
 pub struct Glyph {
     icon: Icon,
@@ -356,10 +361,35 @@ impl Glyph {
     }
 }
 
+/// What a glyph's SVG document depends on: the icon, its weight and its size (bits).
+type Key = (Icon, Option<u32>, u32, u32);
+
 #[derive(Default)]
 struct State {
-    cache: canvas::Cache,
-    drawn: Cell<Option<(Icon, Color, Option<u32>)>>,
+    /// The document drawn last, by its key.
+    drawn: RefCell<Option<(Key, SvgHandle)>>,
+}
+
+thread_local! {
+    /// The documents made, shared by every glyph of the same icon, weight and size.
+    static DOCUMENTS: RefCell<HashMap<Key, SvgHandle>> = RefCell::new(HashMap::new());
+}
+
+/// The SVG document of `key`: made once a thread, kept while few enough.
+fn document_of(key: Key, icon: Icon, weight: Option<f32>, size: Size) -> SvgHandle {
+    DOCUMENTS.with(|documents| {
+        let mut documents = documents.borrow_mut();
+        if let Some(handle) = documents.get(&key) {
+            return handle.clone();
+        }
+        // A bound on what a long session keeps (sizes animated, icons of every command).
+        if documents.len() >= 4096 {
+            documents.clear();
+        }
+        let handle = SvgHandle::from_memory(draw::document(icon, weight, size).into_bytes());
+        documents.insert(key, handle.clone());
+        handle
+    })
 }
 
 impl<Message> Widget<Message, Theme, Renderer> for Glyph {
@@ -398,22 +428,36 @@ impl<Message> Widget<Message, Theme, Renderer> for Glyph {
         _viewport: &Rectangle,
     ) {
         let bounds = layout.bounds();
+        if bounds.width <= 0.0 || bounds.height <= 0.0 {
+            return;
+        }
         let color = self.tone.resolve(theme, style.text_color);
         let state = tree.state.downcast_ref::<State>();
-
-        let drawn = (self.icon, color, self.weight.map(f32::to_bits));
-        if state.drawn.get() != Some(drawn) {
-            state.cache.clear();
-            state.drawn.set(Some(drawn));
-        }
-
-        let geometry = state.cache.draw(renderer, bounds.size(), |frame| {
-            draw::icon(frame, self.icon, color, self.weight);
-        });
-
-        renderer.with_translation(Vector::new(bounds.x, bounds.y), |renderer| {
-            renderer.draw_geometry(geometry);
-        });
+        let key = (
+            self.icon,
+            self.weight.map(f32::to_bits),
+            bounds.width.to_bits(),
+            bounds.height.to_bits(),
+        );
+        let handle = {
+            let mut drawn = state.drawn.borrow_mut();
+            match &*drawn {
+                Some((k, handle)) if *k == key => handle.clone(),
+                _ => {
+                    let handle = document_of(key, self.icon, self.weight, bounds.size());
+                    *drawn = Some((key, handle.clone()));
+                    handle
+                }
+            }
+        };
+        // The document is black: the tone's colour replaces it, its alpha fades the whole.
+        renderer.draw_svg(
+            SvgImage::new(handle)
+                .color(Color { a: 1.0, ..color })
+                .opacity(color.a),
+            bounds,
+            bounds,
+        );
     }
 }
 

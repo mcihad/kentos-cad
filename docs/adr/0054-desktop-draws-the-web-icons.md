@@ -58,3 +58,23 @@
   - `serit-*`: şerit, web ikonlarıyla, koyu ve açık, 1440 ve 1100 px;
   - `serit-ipucu-*`: üzerine gelince hemen ipucu yok, 450 ms sonra var; Dizi ▾ menüsü ipucusuz açılır (`ribbon_tests::tip_screens`).
 - `pnpm rust:test:desktop` (450), `pnpm typecheck`, `pnpm test` (1500), `pnpm inventory:check` geçti.
+
+## Ek (12 Ekim 2026): ikonların kenarları
+
+Sahibin bildirimi: web'de ikonlar, özellikle küçükleri, pürüzsüz; masaüstünde kenarlarında ciddi pürüz var. Neden: KentOS UI ikonu
+Iced'in tuvalinde yol olarak çiziyordu; yol üçgenlere bölünür ve kenarı yalnız pencerenin 4× çoklu örneklemesiyle yumuşar. Bir pikselde en
+çok beş kaplama düzeyi kalır; 14–20 piksellik ikonun ince, eğik ve eğri çizgilerinde basamaklar görünür. Tarayıcı aynı SVG'yi pikselin
+kaplamasıyla çizer.
+
+- İkon (`Glyph`) artık kendi piksellerinde bir SVG belgesi olarak çizilir ve Iced'in SVG hattı onu ekranın piksel yoğunluğunda resvg ile,
+  analitik kenar yumuşatmayla rasterleştirir (`iced` `svg` özelliği; masaüstü zaten açıyordu, yeni bağımlılık yok).
+- Belge ikonun bugünkü çiziminden kaydedilir (`crates/ui/src/icon/surface.rs`: tuval çerçevesinin kullanılan yöntemleriyle bir kayıt; yollar
+  piksellerde, Iced'in kuralıyla dönüşüm yolları taşır, çizgi kalınlığını taşımaz): geometri, 1,4 birimlik çizgi, en az 1,1 piksel,
+  şeridin sabit kalınlığı ve KentOS UI'nin kendi ikonları değişmedi. Belge siyahtır; ikonun tonu Iced'in renk süzgeciyle (`Svg::color`),
+  alfası saydamlıkla (`Svg::opacity`) verilir. Belge ikon, kalınlık ve boyutla bir kez yapılır, iş parçacığında paylaşılır; raster Iced'in
+  atlasındadır.
+- Kendi tuvaline ikon çizen bileşen (`icon::draw`: Model tasarımcısının kutuları) tuval yolunda kalır.
+- Doğrulama: `KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-desktop icons::screens -- --ignored --nocapture` (`.run/shots/ikon-kenarlari.png`:
+  web setinden ve KentOS UI'den ikonlar 14, 16 ve 20 px, iki temada; ekransız wgpu da pencere gibi 4× çoklu örnekler); değişiklikten
+  önceki ve sonraki resim aynı ikonların tarayıcıdaki çizimiyle yan yana: önce basamaklı, sonra tarayıcınınkine denk. `pnpm rust:test:desktop`
+  ve `kentos-sheet-ui`'nin testleri ve clippy geçti.

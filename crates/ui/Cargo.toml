@@ -18,7 +18,7 @@ spatial = ["dep:glam", "dep:bytemuck"]
 snapshot = ["dep:iced_runtime", "dep:png"]
 
 [dependencies]
-iced = { workspace = true, features = ["canvas", "advanced"] }
+iced = { workspace = true, features = ["canvas", "advanced", "svg"] }
 glam = { workspace = true, optional = true }
 bytemuck = { workspace = true, features = ["derive"], optional = true }
 iced_runtime = { workspace = true, optional = true }

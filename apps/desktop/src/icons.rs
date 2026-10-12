@@ -207,3 +207,89 @@ mod tests {
         out
     }
 }
+
+/// Small icons as the app draws them, for the owner's eye (their edges at 14, 16 and 20 px): a few of the web's set
+/// beside KentOS UI's own, dark on white and light on dark. Not a test of correctness and not run by default:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-desktop icons::screens -- --ignored --nocapture
+/// ```
+///
+/// The picture goes to `.run/shots/ikon-kenarlari.png`.
+#[cfg(test)]
+mod screens {
+    use iced::widget::{Column, Row, container};
+    use iced::{Color, Element, Size, Theme};
+    use kentos_ui::icon::{Icon, icon};
+    use kentos_ui::snapshot::Snapshot;
+
+    const WEB: [&str; 12] = [
+        "sector",
+        "geoBuffer",
+        "regularPolygon",
+        "snapCentroid",
+        "rotate",
+        "polygonToLine",
+        "concaveHull",
+        "boundingGeometry",
+        "circle",
+        "move",
+        "extend",
+        "offset",
+    ];
+    const OWN: [Icon; 10] = [
+        Icon::ZoomIn,
+        Icon::Search,
+        Icon::Globe,
+        Icon::Calendar,
+        Icon::Clock,
+        Icon::Magnet,
+        Icon::Layers,
+        Icon::Undo,
+        Icon::Crosshair,
+        Icon::ChevronDown,
+    ];
+
+    fn grid<'a>(background: Color, ink: Color) -> Element<'a, ()> {
+        let mut rows = Column::new().spacing(10).padding(10);
+        for size in [14.0, 16.0, 20.0] {
+            let mut row = Row::new().spacing(10);
+            for name in WEB {
+                row = row.push(icon(super::from_web(Some(name))).size(size));
+            }
+            for own in OWN {
+                row = row.push(icon(own).size(size));
+            }
+            rows = rows.push(row);
+        }
+        container(rows)
+            .style(move |_| container::Style {
+                background: Some(background.into()),
+                text_color: Some(ink),
+                ..container::Style::default()
+            })
+            .into()
+    }
+
+    #[test]
+    #[ignore = "a picture for the owner, run by hand"]
+    fn icon_edges() {
+        // The catalog keeps the web's set (the inventory's icons).
+        let _ = crate::catalog::catalog();
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+        std::fs::create_dir_all(&out).expect("a folder for the pictures");
+        let mut snapshot = Snapshot::new(Size::new(700.0, 260.0)).expect("a renderer");
+        let view = Column::new()
+            .push(grid(Color::WHITE, Color::from_rgb8(0x1f, 0x29, 0x37)))
+            .push(grid(
+                Color::from_rgb8(0x1b, 0x1f, 0x26),
+                Color::from_rgb8(0xe6, 0xe6, 0xe6),
+            ));
+        let file = out.join("ikon-kenarlari.png");
+        snapshot
+            .render(view.into(), &Theme::Light)
+            .save(&file)
+            .expect("writes the picture");
+        println!("{} ({})", file.display(), snapshot.renderer_name());
+    }
+}

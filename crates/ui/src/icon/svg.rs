@@ -10,7 +10,9 @@
 use std::f32::consts::{FRAC_PI_2, PI, TAU};
 
 use iced::widget::canvas::fill::Rule;
-use iced::widget::canvas::{Fill, Frame, LineCap, LineDash, LineJoin, Path, Stroke, Style};
+use iced::widget::canvas::{Fill, LineCap, LineDash, LineJoin, Path, Stroke, Style};
+
+use super::surface::Surface;
 use iced::{Color, Point, Size};
 
 /// The web set's grid and stroke (`viewBox="0 0 20 20"`, `stroke-width="1.4"`).
@@ -57,7 +59,13 @@ pub(super) struct Shape {
 
 /// Draws `markup` filling the frame. `weight` fixes the stroke in pixels
 /// (the web's large ribbon icons: `vector-effect: non-scaling-stroke`).
-pub(super) fn draw(frame: &mut Frame, markup: &str, color: Color, weight: Option<f32>, size: Size) {
+pub(super) fn draw(
+    frame: &mut impl Surface,
+    markup: &str,
+    color: Color,
+    weight: Option<f32>,
+    size: Size,
+) {
     let unit = size.width.min(size.height) / GRID;
     for shape in parse(markup) {
         let path = Path::new(|b| {
