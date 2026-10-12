@@ -18,7 +18,7 @@ use kentos_ui::widget::rulers;
 use kentos_ui::widget::tree_view::Place;
 use serde_json::json;
 
-use crate::designer::{Designer, Dialog, Effect};
+use crate::designer::{Designer, Dialog, Effect, Renaming};
 use crate::message::{ExportKind, FrameField, InspectorTab, Message, Side, Tool};
 use crate::view_math::View;
 
@@ -105,6 +105,32 @@ impl Designer {
                     return vec![Effect::ShowModel];
                 }
             }
+            Message::StartRenameSheet(id) => {
+                if let Some(s) = self.book.sheets.iter().find(|s| s.id == id) {
+                    self.renaming = Some(Renaming::Sheet(id, s.name.clone()));
+                    return vec![Effect::FocusRename];
+                }
+            }
+            Message::StartRenameItem(id) => {
+                if let Some(i) = self.items().iter().find(|i| i.id == id) {
+                    self.renaming = Some(Renaming::Item(id, i.name.clone()));
+                    return vec![Effect::FocusRename];
+                }
+            }
+            Message::RenameText(text) => match &mut self.renaming {
+                Some(Renaming::Sheet(_, name) | Renaming::Item(_, name)) => *name = text,
+                None => {}
+            },
+            Message::RenameSubmit => match self.renaming.take() {
+                Some(Renaming::Sheet(id, name)) => {
+                    return self.update(Message::RenameSheet(id, name));
+                }
+                Some(Renaming::Item(id, name)) => {
+                    return self.update(Message::RenameItem(id, name));
+                }
+                None => {}
+            },
+            Message::RenameCancel => self.renaming = None,
             Message::RenameSheet(id, name) => {
                 let name = name.trim().to_owned();
                 if !name.is_empty() {
@@ -1046,8 +1072,15 @@ impl Designer {
             Key::Named(Named::ArrowUp) => Message::Nudge(0, -step),
             Key::Named(Named::ArrowDown) => Message::Nudge(0, step),
             Key::Named(Named::Delete) | Key::Named(Named::Backspace) => Message::Delete,
+            // F2: the one chosen item's name in place, as the layers' tree does.
+            Key::Named(Named::F2) => match self.selection.as_slice() {
+                [one] => Message::StartRenameItem(one.clone()),
+                _ => return None,
+            },
             Key::Named(Named::Escape) => {
-                if self.dialog.is_some() {
+                if self.renaming.is_some() {
+                    Message::RenameCancel
+                } else if self.dialog.is_some() {
                     Message::CloseDialog
                 } else if self.gallery.is_some() {
                     Message::Gallery(crate::gallery::GalleryMessage::Close)

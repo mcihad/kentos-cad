@@ -634,10 +634,10 @@ fn duplicate_delete_align_and_keys() {
         item(&d, "Başlık").frame.right(),
         item(&d, "Alt başlık").frame.right()
     );
-    // The keys of the mode.
+    // The keys of the mode; Ctrl's are the platform's command key (⌘ on macOS).
     use iced::keyboard::{Key, Modifiers, key::Named};
     assert!(matches!(
-        d.key(&Key::Character("z".into()), Modifiers::CTRL),
+        d.key(&Key::Character("z".into()), Modifiers::COMMAND),
         Some(Message::Undo)
     ));
     assert!(matches!(
@@ -649,7 +649,7 @@ fn duplicate_delete_align_and_keys() {
         Some(Message::Tool(Tool::Add { .. }))
     ));
     assert!(matches!(
-        d.key(&Key::Character("0".into()), Modifiers::CTRL),
+        d.key(&Key::Character("0".into()), Modifiers::COMMAND),
         Some(Message::ZoomPage)
     ));
     assert!(
@@ -1519,4 +1519,58 @@ fn a_coordinate_list_takes_its_objects_and_headings() {
         Some("Sağa (Y)"),
         "one step"
     );
+}
+
+/// Ad ver (plan/cad.md §24.1 madde 2, docs/adr/0247): a sheet's and an item's name typed in place, one undo step each;
+/// Esc leaves the name, an empty name is not kept; F2 names the one chosen item.
+#[test]
+fn a_sheet_and_an_item_are_renamed_in_place() {
+    use iced::keyboard::{Key, Modifiers, key::Named};
+
+    let mut d = designer();
+    let sheet = d.open_sheet().unwrap().id.clone();
+    assert_eq!(
+        d.update(Message::StartRenameSheet(sheet.clone())),
+        [Effect::FocusRename]
+    );
+    d.update(Message::RenameText("Vaziyet planı".into()));
+    d.update(Message::RenameSubmit);
+    assert_eq!(d.open_sheet().unwrap().name, "Vaziyet planı");
+    assert!(d.undo_label().is_some());
+    // Esc: as it was.
+    d.update(Message::StartRenameSheet(sheet.clone()));
+    d.update(Message::RenameText("Başka".into()));
+    d.update(Message::RenameCancel);
+    assert_eq!(d.open_sheet().unwrap().name, "Vaziyet planı");
+    // An empty name is not kept.
+    d.update(Message::StartRenameSheet(sheet));
+    d.update(Message::RenameText("  ".into()));
+    d.update(Message::RenameSubmit);
+    assert_eq!(d.open_sheet().unwrap().name, "Vaziyet planı");
+
+    // F2 with one item chosen: its name in the tree.
+    let first = d.open_sheet().unwrap().items[0].id.clone();
+    d.update(Message::Select(vec![first.clone()]));
+    let f2 = d
+        .key(&Key::Named(Named::F2), Modifiers::empty())
+        .expect("F2 names the chosen item");
+    assert_eq!(d.update(f2), [Effect::FocusRename]);
+    d.update(Message::RenameText("Antet 1".into()));
+    d.update(Message::RenameSubmit);
+    let named = d
+        .open_sheet()
+        .unwrap()
+        .items
+        .iter()
+        .find(|i| i.id == first)
+        .unwrap();
+    assert_eq!(named.name, "Antet 1");
+    // Esc while typing goes to the box, not the choice.
+    d.update(Message::StartRenameItem(first.clone()));
+    let esc = d
+        .key(&Key::Named(Named::Escape), Modifiers::empty())
+        .unwrap();
+    assert!(matches!(esc, Message::RenameCancel));
+    d.update(esc);
+    assert_eq!(d.selection(), [first]);
 }

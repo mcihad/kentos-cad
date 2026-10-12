@@ -983,8 +983,11 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   eşleme `catalog/v1/operations.json` (düzeyler: semantic, geometry, processing, none, query, session, host), üreteç
   `scripts/cad/manifest.py` (`--check` sapmayı ve eşlenmemiş öğeyi düşürür), çıktı `docs/cad/manifest.{json,md}`: 654 satır;
   CBS'ye özgü olmayan 449 satırın 243'ünü Python ve AI arayüz gibi yapamıyor (geometry 115, none 98, processing 13, query 17).
-- [ ] `CADP-02` Pafta kaynakları ile envanter farkı: masaüstünün pafta tasarımcısının gerçekte yaptıkları (`sheet.*` 59 komutun
-  58'i `ported.json`'da yok) kaynağa göre işaretlenir (plan `CAD-AUD-08`).
+- [x] `CADP-02` Pafta kaynakları ile envanter farkı: masaüstünün pafta tasarımcısının gerçekte yaptıkları (`sheet.*` 59 komutun
+  58'i `ported.json`'da yok) kaynağa göre işaretlenir (plan `CAD-AUD-08`). — **12 Ekim, [ADR 0247](docs/adr/0247-sheet-commands-on-the-desktop.md):**
+  58 komut yerleriyle `apps/desktop/equivalents.json`'da (54 var, Atlas ve Karelaj bekliyor, Yakınlaştır ve Uzaklaştır yalnız
+  tekerlekle); eksik çıkan Ad ver eklendi (paftalar listesinde ve öğe ağacında yerinde, F2); masaüstünde olmayan CAD tarafı öğeleri
+  62'den 8'e; `kentos-sheet-ui`'ın testleri `pnpm rust:test:desktop`'ta (macOS'ta düşen bir tuş testi düzeldi).
 - [ ] `CADP-03` Yeni çizimin birimi ve sihirbazın parametreleri Python'da ve MCP'de; API'lerin birim açıklamaları (plan `CAD-AUD-09`,
   `CAD-DATA-01`–`03`, `05`, `06`). Paralel ajan, dal `cad-units`, ADR 0245.
 - [ ] `CADP-04` Anlamsal Ötele: `cad.entities.offset` arayüzde, masaüstünde, başsız sunucuda, Python'da ve MCP'de (plan `CAD-CMD-01`,

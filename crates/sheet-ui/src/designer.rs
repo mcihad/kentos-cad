@@ -58,6 +58,18 @@ pub enum Effect {
     Say(Say, String),
     /// What the gallery and the share window ask of the host's cloud library.
     Library(crate::library::LibraryRequest),
+    /// A name is typed in place now: the host gives the keyboard to the box
+    /// (`kentos_ui::widget::tree_view::RENAME`).
+    FocusRename,
+}
+
+/// A name typed in place (the web's sheet list and item tree): a sheet's in
+/// the sheets' list, an item's in the item tree; Enter or a click outside
+/// keeps it, Esc leaves the name as it was.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum Renaming {
+    Sheet(SheetId, String),
+    Item(ItemId, String),
 }
 
 /// Which sheets a PDF writes and how (the export window's PDF part).
@@ -246,6 +258,8 @@ pub struct Designer {
     pub(crate) chosen_constraints: Vec<kentos_sheet::model::Constraints>,
     pub(crate) closed_sections: BTreeSet<&'static str>,
     pub(crate) expanded: BTreeSet<ItemId>,
+    /// The name typed in place, if any.
+    pub(crate) renaming: Option<Renaming>,
 
     pub(crate) gallery: Option<Gallery>,
     pub(crate) dialog: Option<Dialog>,
@@ -322,6 +336,7 @@ impl Designer {
             chosen_constraints: Vec::new(),
             closed_sections: BTreeSet::new(),
             expanded: BTreeSet::new(),
+            renaming: None,
             gallery: None,
             dialog: None,
             export_dpi: 150,

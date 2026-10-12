@@ -345,3 +345,32 @@ fn adr_0206_screens() {
         );
     }
 }
+
+/// Ad ver (docs/adr/0247): a sheet's name in the sheets' list and an item's in the tree, typed in place;
+/// `cargo test -p kentos-sheet-ui --test screens rename_screens -- --ignored --nocapture`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn rename_screens() {
+    let fonts =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../apps/desktop/assets/fonts/drawing");
+    assert!(kentos_sheet_ui::fonts::load_dir(&fonts) > 0);
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = out_dir();
+    for (mode, tag) in [(Mode::Light, "pafta"), (Mode::Dark, "grafit")] {
+        for (w, h) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            let size = Size::new(w, h);
+            let mut d = with("sys:genel-a3-yatay", None, None);
+            let sheet = d.open_sheet().unwrap().id.clone();
+            d.update(Message::StartRenameSheet(sheet));
+            d.update(Message::RenameText("Vaziyet planı 1:500".into()));
+            let mut win = Window { d, mode };
+            shot(&mut win, size, &out, &format!("{tag}-ad-ver-pafta-{w}"));
+            let mut d = with("sys:genel-a3-yatay", None, Some("Harita"));
+            let map = d.selection()[0].clone();
+            d.update(Message::StartRenameItem(map));
+            d.update(Message::RenameText("Vaziyet haritası".into()));
+            let mut win = Window { d, mode };
+            shot(&mut win, size, &out, &format!("{tag}-ad-ver-oge-{w}"));
+        }
+    }
+}

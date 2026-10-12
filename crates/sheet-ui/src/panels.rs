@@ -13,9 +13,9 @@ use kentos_ui::style;
 use kentos_ui::widget::ContextMenu;
 use kentos_ui::widget::Menu;
 use kentos_ui::widget::table::Column as TreeColumn;
-use kentos_ui::widget::tree_view::{Node, Toggle, TreeView};
+use kentos_ui::widget::tree_view::{Node, Toggle, TreeView, rename};
 
-use crate::designer::Designer;
+use crate::designer::{Designer, Renaming};
 use crate::icons;
 use crate::message::Message;
 
@@ -72,7 +72,18 @@ impl Designer {
             .position(|r| *r == item.id)
             .unwrap_or(usize::MAX);
         let selected = self.selection.contains(&item.id);
-        let mut node = Node::new(item.name.as_str())
+        let mut node = Node::new(item.name.as_str());
+        if let Some(Renaming::Item(id, name)) = &self.renaming
+            && *id == item.id
+        {
+            node = node.editor(rename(
+                name,
+                Message::RenameText,
+                Message::RenameSubmit,
+                Message::RenameCancel,
+            ));
+        }
+        let mut node = node
             .icon(icon(kind_icon(item)).size(16.0))
             .id(id)
             .selected(selected)
@@ -105,6 +116,8 @@ impl Designer {
                 )
                 .icon(icons::BACK)
                 .separator()
+                .item("Ad ver", Message::StartRenameItem(iid.clone()))
+                .icon(icons::EDIT)
                 .item("Çoğalt", Message::Duplicate)
                 .icon(icons::COPY)
                 .item("Sil", Message::Delete)
@@ -162,6 +175,28 @@ impl Designer {
             if self.template_newer(s) {
                 line = line.push(label::caption("Yeni sürüm var").style(style::text::info));
             }
+            // “Ad ver”: the name is a box in place, as in the web's list.
+            if let Some(Renaming::Sheet(id, name)) = &self.renaming
+                && *id == s.id
+            {
+                sheets = sheets.push(
+                    container(
+                        row![
+                            icon(icons::LAYOUT).size(16.0),
+                            rename(
+                                name,
+                                Message::RenameText,
+                                Message::RenameSubmit,
+                                Message::RenameCancel
+                            ),
+                        ]
+                        .spacing(8)
+                        .align_y(Center),
+                    )
+                    .padding([4, 8]),
+                );
+                continue;
+            }
             let face = button(line.push(label::caption(page).style(style::text::muted)))
                 .on_press(Message::Tab(i + 1))
                 .width(Fill)
@@ -172,6 +207,8 @@ impl Designer {
                 Menu::new()
                     .item("Aç", Message::Tab(i + 1))
                     .icon(icons::LAYOUT)
+                    .item("Ad ver", Message::StartRenameSheet(id.clone()))
+                    .icon(icons::EDIT)
                     .item("Çoğalt", Message::DuplicateSheet(id.clone()))
                     .icon(icons::COPY)
                     .separator()

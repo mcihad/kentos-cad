@@ -174,6 +174,16 @@ pub enum Message {
     DuplicateSheet(SheetId),
     RemoveSheet(SheetId),
     RenameSheet(SheetId, String),
+    /// “Ad ver”: the sheet's name becomes a box in the sheets' list.
+    StartRenameSheet(SheetId),
+    /// “Ad ver” or F2: the item's name becomes a box in the item tree.
+    StartRenameItem(ItemId),
+    /// The box's text.
+    RenameText(String),
+    /// Enter or a click outside: the typed name is kept (an empty one is not).
+    RenameSubmit,
+    /// Esc: the name stays as it was.
+    RenameCancel,
 
     // ── Tools and the paper ──
     Tool(Tool),

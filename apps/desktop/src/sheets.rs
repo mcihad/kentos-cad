@@ -1243,6 +1243,9 @@ impl App {
                     text,
                 ),
                 Effect::Library(request) => task = self.library_request(request),
+                Effect::FocusRename => {
+                    task = iced::widget::operation::focus(kentos_ui::widget::tree_view::RENAME);
+                }
             }
             tasks.push(task);
         }
