@@ -134,6 +134,29 @@ AuthKindName = Literal["none", "query", "header", "basic", "bearer", "arcgis", "
 """The names of :class:`AuthKind`, for a plain string."""
 
 
+class BlendMode(_StrEnum):
+    """How a layer's picture meets what is under it (docs/adr/0226 §4: the W3C's
+    separable blending modes, and addition).
+    """
+    NORMAL = "normal"
+    MULTIPLY = "multiply"
+    SCREEN = "screen"
+    OVERLAY = "overlay"
+    DARKEN = "darken"
+    LIGHTEN = "lighten"
+    COLOR_DODGE = "colorDodge"
+    COLOR_BURN = "colorBurn"
+    HARD_LIGHT = "hardLight"
+    SOFT_LIGHT = "softLight"
+    DIFFERENCE = "difference"
+    EXCLUSION = "exclusion"
+    ADDITION = "addition"
+
+
+BlendModeName = Literal["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "addition"]
+"""The names of :class:`BlendMode`, for a plain string."""
+
+
 class BlockEditOperation(_StrEnum):
     """What `cad.blocks.edit` does; it names the undo step.
 
@@ -5835,6 +5858,37 @@ class LayerAction(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerCompose(_Model):
+    """How a layer is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
+    §4); absent, as it always was: opaque, normal, no mask.
+    Attributes:
+        blend: Absent, normal.
+        opacity: 0–1; absent, 1.
+    """
+    blend: BlendMode | BlendModeName | None | Unset = UNSET
+    mask: LayerMask | None | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.blend is not UNSET:
+            out["blend"] = None if self.blend is None else _enum_out(self.blend)
+        if self.mask is not UNSET:
+            out["mask"] = None if self.mask is None else self.mask.to_json()
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerCompose:
+        return cls(
+            blend=UNSET if "blend" not in data else None if data["blend"] is None else _enum_in(BlendMode, data["blend"]),
+            mask=UNSET if "mask" not in data else None if data["mask"] is None else LayerMask.from_json(data["mask"]),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerField(_Model):
     """A field of a layer (docs/adr/0199 §1): its name is the attribute's key.
     Attributes:
@@ -5954,6 +6008,40 @@ class LayerLabels(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerMask(_Model):
+    """The mask a layer's labels and markers cut into other layers (docs/adr/0226 §3).
+    Attributes:
+        size: How far the shapes grow, paper mm (0–10); their corners round as far.
+        targets: The layers it cuts into, by their ids.
+        labels: Its placed labels' boxes.
+        markers: Its markers' boxes.
+    """
+    size: float
+    targets: list[str]
+    labels: bool | Unset = UNSET
+    markers: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["size"] = float(self.size)
+        out["targets"] = list(self.targets)
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        if self.markers is not UNSET:
+            out["markers"] = self.markers
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerMask:
+        return cls(
+            size=float(data["size"]),
+            targets=list(data["targets"]),
+            labels=data.get("labels", UNSET),
+            markers=data.get("markers", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerNode(_Model):
     """A node of the layer tree: a group or a layer.
     Attributes:
@@ -5962,6 +6050,9 @@ class LayerNode(_Model):
             service.
         card: What the Bilgi tool shows of its objects (docs/adr/0225 §5); absent:
             the default card. Only on a layer holding objects.
+        compose: How it is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
+            §4): opacity, blending mode, the mask it cuts into other layers;
+            absent, opaque and normal. Only a layer has it, never a group.
         feed: Where the layer's objects were taken from, to take them again
             (docs/adr/0208 §10). Only a layer has it, never a group.
         fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
@@ -5989,6 +6080,7 @@ class LayerNode(_Model):
     children: list[LayerNode]
     actions: list[LayerAction] | Unset = UNSET
     card: InfoCard | None | Unset = UNSET
+    compose: LayerCompose | None | Unset = UNSET
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
     filter: LayerFilter | None | Unset = UNSET
@@ -6012,6 +6104,8 @@ class LayerNode(_Model):
             out["actions"] = [e0.to_json() for e0 in self.actions]
         if self.card is not UNSET:
             out["card"] = None if self.card is None else self.card.to_json()
+        if self.compose is not UNSET:
+            out["compose"] = None if self.compose is None else self.compose.to_json()
         if self.feed is not UNSET:
             out["feed"] = None if self.feed is None else self.feed.to_json()
         if self.fields is not UNSET:
@@ -6043,6 +6137,7 @@ class LayerNode(_Model):
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
             actions=[LayerAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
             card=UNSET if "card" not in data else None if data["card"] is None else InfoCard.from_json(data["card"]),
+            compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
@@ -6234,6 +6329,115 @@ class LayerTime(_Model):
             cumulative=data.get("cumulative", UNSET),
             end=data.get("end", UNSET),
             key=data.get("key", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersCompose(_Model):
+    """Input of `cad.layers.compose` v1: a layer's opacity, blending mode and
+    mask written as one undo step “Katman çizimi”; the layer's composition
+    becomes exactly what is given (absent: opaque, normal, no mask; nothing
+    given takes it away). A layer that already has it as given is left as it
+    is (`changed` false, no step). It is how the layer is drawn: a locked
+    layer, a service layer and a raster's take it too.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_compose`
+    (an opacity outside 0–1, path `opacity`; the mask's rule,
+    `LayerMask::problem`, path `mask`); then `invalid_revision`,
+    `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`
+    (a group); then each of the mask's targets in order (path
+    `mask/targets/<i>`): `mask_target_self` (the layer itself),
+    `mask_target_not_found` (a layer the drawing does not have),
+    `mask_target_not_a_layer` (a group). A target deleted later is skipped
+    when the mask is drawn.
+    Attributes:
+        layer: The layer's id.
+        blend: Absent, normal.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        mask: The mask its labels and markers cut into other layers; absent, none.
+        opacity: 0–1; absent, 1 (opaque).
+    """
+    layer: str
+    blend: BlendMode | BlendModeName | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    mask: LayerMask | None | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.blend is not UNSET:
+            out["blend"] = None if self.blend is None else _enum_out(self.blend)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.mask is not UNSET:
+            out["mask"] = None if self.mask is None else self.mask.to_json()
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCompose:
+        return cls(
+            layer=data["layer"],
+            blend=UNSET if "blend" not in data else None if data["blend"] is None else _enum_in(BlendMode, data["blend"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            mask=UNSET if "mask" not in data else None if data["mask"] is None else LayerMask.from_json(data["mask"]),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersComposePlan(_Model):
+    """What `cad.layers.compose` would write (plan mode); nothing is written.
+    Attributes:
+        node: The layer as execute would leave it.
+        revision: The document revision the plan was made against.
+    """
+    node: LayerNode
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersComposePlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersComposed(_Model):
+    """Output of `cad.layers.compose` v1.
+    Attributes:
+        changed: Whether it differed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersComposed:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            revision=data["revision"],
         )
 
 
@@ -12635,6 +12839,8 @@ __all__ = [
     "AttributesTableSource",
     "AuthKind",
     "AuthKindName",
+    "BlendMode",
+    "BlendModeName",
     "BlockChange",
     "BlockDefined",
     "BlockDefinition",
@@ -12795,11 +13001,13 @@ __all__ = [
     "LabelsPinPlan",
     "LabelsPinned",
     "LayerAction",
+    "LayerCompose",
     "LayerField",
     "LayerFieldKind",
     "LayerFieldKindName",
     "LayerFilter",
     "LayerLabels",
+    "LayerMask",
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
@@ -12810,6 +13018,9 @@ __all__ = [
     "LayerStateNode",
     "LayerStyle",
     "LayerTime",
+    "LayersCompose",
+    "LayersComposePlan",
+    "LayersComposed",
     "LayersFilter",
     "LayersFilterPlan",
     "LayersFiltered",

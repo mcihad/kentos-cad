@@ -122,6 +122,9 @@ pub struct StyledCache {
     /// Layers already said to have dots left out, and those to say (docs/adr/0213 §2.4).
     dropped_said: HashSet<String>,
     dropped: Vec<(String, u64)>,
+    /// The masks that cut with their source's placed labels (docs/adr/0226 §3): the
+    /// composition's place in the scene, the mask's place in it and the source layer's id.
+    label_masks: Vec<(usize, usize, String)>,
 }
 
 /// What a view-dependent layer was built for.
@@ -229,6 +232,77 @@ pub(crate) fn shown_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
     out
 }
 
+/// CSS pixels per paper millimetre at 96 dpi: a mask's growth (docs/adr/0226 §3).
+const PX_PER_MM: f32 = 96.0 / 25.4;
+
+/// The scene's compositions (docs/adr/0226 §3, §4): each shown layer with its own
+/// opacity or mode, or that a shown layer's mask cuts into, with its scene layers;
+/// and the masks to be given their source's placed labels. Saydamlık off
+/// (`opaque`, docs/adr/0195) draws every layer opaque.
+#[allow(clippy::type_complexity)]
+fn compositions(
+    shown: &[&LayerNode],
+    ranges: &HashMap<&str, std::ops::Range<u32>>,
+    opaque: bool,
+) -> (
+    Vec<(
+        std::ops::Range<u32>,
+        Arc<kentos_render_wgpu::compose::LayerComposeDraw>,
+    )>,
+    Vec<(usize, usize, String)>,
+) {
+    use kentos_render_wgpu::compose::{LayerComposeDraw, MaskSource};
+    let mut out = Vec::new();
+    let mut labels = Vec::new();
+    for node in shown {
+        let Some(range) = ranges.get(node.id.as_str()) else {
+            continue;
+        };
+        let own = node.compose.as_ref();
+        let opacity = if opaque {
+            1.0
+        } else {
+            own.and_then(|c| c.opacity).unwrap_or(1.0).clamp(0.0, 1.0) as f32
+        };
+        let blend = own.and_then(|c| c.blend).map_or(0, |b| b.index());
+        let mut masks = Vec::new();
+        let mut asks = Vec::new();
+        for source in shown {
+            let Some(mask) = source.compose.as_ref().and_then(|c| c.mask.as_ref()) else {
+                continue;
+            };
+            if source.id == node.id || !mask.targets.contains(&node.id) {
+                continue;
+            }
+            if mask.labels {
+                asks.push((masks.len(), source.id.clone()));
+            }
+            masks.push(MaskSource {
+                markers: mask
+                    .markers
+                    .then(|| ranges.get(source.id.as_str()).cloned())
+                    .flatten(),
+                labels: Arc::new(Vec::new()),
+                grow: mask.size as f32 * PX_PER_MM,
+            });
+        }
+        if opacity >= 1.0 && blend == 0 && masks.is_empty() {
+            continue;
+        }
+        let at = out.len();
+        labels.extend(asks.into_iter().map(|(m, id)| (at, m, id)));
+        out.push((
+            range.clone(),
+            Arc::new(LayerComposeDraw {
+                opacity,
+                blend,
+                masks,
+            }),
+        ));
+    }
+    (out, labels)
+}
+
 /// The services of the layers drawn now (shown, with their groups), bottom first.
 pub(crate) fn shown_service_layers(nodes: &[LayerNode]) -> Vec<&kentos_contracts::ServiceLayer> {
     shown_layers(nodes)
@@ -314,6 +388,12 @@ impl StyledCache {
     }
 
     /// The layers whose dots were left out since last asked, each once (docs/adr/0213 §2.4): name and count.
+    /// The masks that cut with their source's placed labels (docs/adr/0226 §3): the
+    /// composition's place in the scene, the mask's and the source layer's id.
+    pub fn label_masks(&self) -> &[(usize, usize, String)] {
+        &self.label_masks
+    }
+
     pub fn take_dropped(&mut self) -> Vec<(String, u64)> {
         std::mem::take(&mut self.dropped)
     }
@@ -786,6 +866,8 @@ impl StyledCache {
         let mut order: Vec<(u32, u32)> = Vec::new();
         let mut split_any = false;
         let mut served = HashSet::new();
+        // Each shown layer's scene layers (docs/adr/0226: a composed layer draws them into a picture of its own).
+        let mut ranges: HashMap<&str, std::ops::Range<u32>> = HashMap::new();
         for node in &shown {
             if let Some(service) = &node.service {
                 let base = parts.len();
@@ -793,6 +875,7 @@ impl StyledCache {
                 served.insert(node.id.clone());
                 order.push((base as u32, 0));
                 parts.push(part);
+                ranges.insert(node.id.as_str(), base as u32..parts.len() as u32);
                 continue;
             }
             let Some(layer) = self.layers.get(&node.id) else {
@@ -814,8 +897,11 @@ impl StyledCache {
                 }
             }
             parts.extend(list.into_iter().cloned());
+            ranges.insert(node.id.as_str(), base as u32..parts.len() as u32);
         }
         self.services.retain(|id, _| served.contains(id));
+        let (compose, label_masks) = compositions(&shown, &ranges, look.view_colors.opaque);
+        self.label_masks = label_masks;
         let same = self.scene.under == under
             && self.scene.layers.len() == parts.len()
             && self
@@ -829,8 +915,11 @@ impl StyledCache {
                 layers: parts,
                 under,
                 order: split_any.then(|| Arc::new(order)),
+                compose: Vec::new(),
             };
         }
+        // A composition changes with the layer tree alone: the same parts, a new opacity.
+        self.scene.compose = compose;
         self.mark = Some(doc.change_mark());
         self.generation = Some(generation);
         self.look = Some(look.clone());
@@ -891,6 +980,8 @@ impl StyledCache {
                     reach_unit: Unit::World,
                     min_scale: None,
                     max_scale: None,
+                    group: 0,
+                    effect: None,
                 }],
                 ..StyledLayer::default()
             },

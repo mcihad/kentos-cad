@@ -10,6 +10,7 @@ import { entitiesEdit } from './entitiesEdit';
 import { entitiesSet } from './entitiesSet';
 import { entitiesTransform } from './entitiesTransform';
 import { labelsPin } from './labelsPin';
+import { layersCompose } from './layersCompose';
 import { layersFilter } from './layersFilter';
 import { layersInfo } from './layersInfo';
 import { layersLabels } from './layersLabels';
@@ -57,6 +58,8 @@ export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = 
   layersFilter,
   // Bilgi kartı ve eylemler (docs/adr/0225 §4, §5).
   layersInfo,
+  // Katman çizimi (docs/adr/0226 §3, §4).
+  layersCompose,
   // Etiketler and the label tools (docs/adr/0212 §5).
   layersLabels,
   layersRenderer,

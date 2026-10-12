@@ -1,5 +1,6 @@
 import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
 import type { InfoCard } from '../contracts/generated/InfoCard';
+import type { LayerCompose } from '../contracts/generated/LayerCompose';
 import type { LayerAction } from '../contracts/generated/LayerAction';
 import type { LayerField } from '../contracts/generated/LayerField';
 import type { LabelStyle } from '../contracts/generated/LabelStyle';
@@ -12,6 +13,7 @@ import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import type { LayerRenderer } from './style';
 import { actionsOf, cardOf } from './layerInfoRules';
+import { composeOf } from './layerComposeRules';
 
 export type LineType = 'continuous' | 'dashed' | 'dashdot' | 'dotted';
 /** Every line type, in the contract's order (`LineType::ALL`). */
@@ -80,6 +82,8 @@ export interface LayerNode {
   actions?: LayerAction[];
   /** What the Bilgi tool shows of a layer's objects (docs/adr/0225 §5); absent, the default card. Never a group's. */
   card?: InfoCard;
+  /** How a layer is composed into the drawing (docs/adr/0226 §3, §4): opacity, blending mode, mask; absent, as it always was. Never a group's. */
+  compose?: LayerCompose;
 }
 
 /** A layer's actions and card (docs/adr/0225 §4, §5), as the document's undoable `setLayerInfo` gives them. */
@@ -92,6 +96,12 @@ export interface LayerInfo {
 export function infoOf(n: { actions?: LayerAction[]; card?: InfoCard }, type: 'group' | 'layer'): LayerInfo {
   if (type !== 'layer') return {};
   return { ...(n.actions?.length && { actions: actionsOf(n.actions) }), ...(n.card && { card: cardOf(n.card) }) };
+}
+
+/** A node's composition as a copy, without what says nothing; never a group's. */
+function composedOf(c: LayerCompose | null | undefined, type: 'group' | 'layer'): { compose?: LayerCompose } {
+  const kept = type === 'layer' ? composeOf(c) : null;
+  return kept ? { compose: kept } : {};
 }
 
 /** A filter as a layer keeps it: a copy, the list only when it names an object. */
@@ -223,6 +233,8 @@ export class LayerStore {
       ...(n.filter && (n.type ?? (n.children ? 'group' : 'layer')) === 'layer' && { filter: filterOf(n.filter) }),
       // A layer's actions and card (docs/adr/0225 §4, §5); a group keeps neither.
       ...infoOf(n, n.type ?? (n.children ? 'group' : 'layer')),
+      // A layer's composition (docs/adr/0226 §3, §4), without what says nothing; a group keeps none.
+      ...composedOf(n.compose, n.type ?? (n.children ? 'group' : 'layer')),
     };
     node.children = (n.children ?? []).map((c) => this.make(c));
     return node;
@@ -464,6 +476,15 @@ export class LayerStore {
     delete n.actions;
     delete n.card;
     Object.assign(n, infoOf(next, n.type));
+    this.changedState(id);
+  }
+
+  /** A layer's composition (docs/adr/0226 §3, §4), as the document's undoable `setLayerCompose` puts it. */
+  replaceCompose(id: string, next: LayerCompose | null): void {
+    const n = this.get(id);
+    if (!n) return;
+    delete n.compose;
+    Object.assign(n, composedOf(next, n.type));
     this.changedState(id);
   }
 

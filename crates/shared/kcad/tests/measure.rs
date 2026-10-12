@@ -123,6 +123,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             replaces: None,
             actions: Vec::new(),
             card: None,
+            compose: None,
             filter: None,
         }],
         active_layer: "parsel".into(),

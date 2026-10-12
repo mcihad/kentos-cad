@@ -84,6 +84,10 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
     if let Some(problem) = kentos_contracts::infos_problem(tree) {
         return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
     }
+    // The layers' compositions (docs/adr/0226 §3, §4): on a layer, a mask into the tree's other layers.
+    if let Some(problem) = kentos_contracts::composes_problem(tree) {
+        return Err(AppError::invalid(format!("Katman ağacı: {problem}.")));
+    }
     match find_layer(tree, active) {
         Some((n, _)) if n.kind == LayerNodeType::Layer => Ok(()),
         _ => Err(AppError::invalid(format!(
@@ -681,6 +685,7 @@ mod tests {
             replaces: None,
             actions: Vec::new(),
             card: None,
+            compose: None,
             filter: None,
         }
     }

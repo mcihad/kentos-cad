@@ -7,6 +7,8 @@ mod catalog_tests;
 pub mod checkpoints;
 #[cfg(test)]
 mod checkpoints_tests;
+#[cfg(test)]
+mod compose_tests;
 pub mod error;
 pub mod files;
 #[cfg(test)]

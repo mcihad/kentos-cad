@@ -2,6 +2,7 @@
 import type { FeatureFeed } from "./FeatureFeed";
 import type { InfoCard } from "./InfoCard";
 import type { LayerAction } from "./LayerAction";
+import type { LayerCompose } from "./LayerCompose";
 import type { LayerField } from "./LayerField";
 import type { LayerFilter } from "./LayerFilter";
 import type { LayerNodeType } from "./LayerNodeType";
@@ -65,4 +66,10 @@ actions?: Array<LayerAction>,
  * What the Bilgi tool shows of its objects (docs/adr/0225 §5); absent:
  * the default card. Only on a layer holding objects.
  */
-card?: InfoCard, };
+card?: InfoCard, 
+/**
+ * How it is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
+ * §4): opacity, blending mode, the mask it cuts into other layers;
+ * absent, opaque and normal. Only a layer has it, never a group.
+ */
+compose?: LayerCompose, };

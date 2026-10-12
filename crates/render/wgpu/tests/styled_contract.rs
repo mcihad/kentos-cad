@@ -328,3 +328,81 @@ fn the_points_module_validates_and_is_the_contract_s() {
         .expect("Draw");
     assert_eq!(draw, 48);
 }
+
+/// The composition module (`shaders/wgsl/compose`, `compose.layout.json`, docs/adr/0226
+/// §2–§4): naga validates it within core WebGPU, its entry points are the contract's and
+/// of their stages, its bindings are the contract's, its Params block is the 64 bytes the
+/// desktop writes at each dynamic offset and its box instance the 24 the layout names.
+#[test]
+fn the_composition_module_validates_and_is_the_contract_s() {
+    use kentos_render_wgpu::compose::{COMPOSE_LAYOUT_JSON, COMPOSE_WGSL};
+    let module = validate(COMPOSE_WGSL);
+    let layout: serde_json::Value =
+        serde_json::from_str(COMPOSE_LAYOUT_JSON).expect("compose.layout.json reads");
+    assert_eq!(layout["module"], "compose");
+    for p in layout["pipelines"].as_array().expect("pipelines") {
+        for (key, stage) in [
+            ("vertex", naga::ShaderStage::Vertex),
+            ("fragment", naga::ShaderStage::Fragment),
+        ] {
+            let name = p[key].as_str().expect("entry point");
+            assert!(
+                module
+                    .entry_points
+                    .iter()
+                    .any(|e| e.name == name && e.stage == stage),
+                "{name} ({stage:?})"
+            );
+        }
+    }
+    // Every entry point is one a pipeline names.
+    for e in &module.entry_points {
+        assert!(
+            layout["pipelines"]
+                .as_array()
+                .expect("pipelines")
+                .iter()
+                .any(|p| p["vertex"] == e.name.as_str() || p["fragment"] == e.name.as_str()),
+            "{} is in no pipeline of the contract",
+            e.name
+        );
+    }
+    for b in layout["bindGroups"][0]["bindings"]
+        .as_array()
+        .expect("bindings")
+    {
+        let name = b["name"].as_str().expect("name");
+        let at = binding(&module, name).unwrap_or_else(|| panic!("{name} is bound"));
+        assert_eq!(at.group, 0, "{name}");
+        assert_eq!(
+            u64::from(at.binding),
+            b["binding"].as_u64().expect("binding"),
+            "{name}"
+        );
+    }
+    let params = module
+        .types
+        .iter()
+        .find(|(_, t)| t.name.as_deref() == Some("Params"))
+        .map(|(_, t)| t.inner.size(module.to_ctx()))
+        .expect("Params");
+    assert_eq!(
+        u64::from(params),
+        layout["structs"]["Params"]["size"].as_u64().expect("size")
+    );
+    assert_eq!(params, 128);
+    let stride: u64 = layout["boxInstance"]["attributes"]
+        .as_array()
+        .expect("attributes")
+        .iter()
+        .map(|a| match a["format"].as_str() {
+            Some("float32x2") => 8,
+            Some("float32") => 4,
+            other => panic!("an attribute format: {other:?}"),
+        })
+        .sum();
+    assert_eq!(
+        stride,
+        layout["boxInstance"]["stride"].as_u64().expect("stride")
+    );
+}

@@ -15,6 +15,7 @@
 //! nothing. The counts follow the drawing (`kentos_native_style::tally`):
 //! what each category, class and rule will draw.
 
+mod compose;
 mod panels;
 mod rules;
 #[cfg(test)]
@@ -270,6 +271,8 @@ pub enum Event {
     Design(SetAt, GeometryClass, String, Value),
     /// An edit of a thematic kind's panel (docs/adr/0213 §4).
     Thematic(thematic::Edit),
+    /// An edit of Katman çizimi (docs/adr/0226 §3, §4).
+    Compose(compose::Edit),
 }
 
 /// What each rule takes, by its path.
@@ -365,6 +368,9 @@ pub struct LayerStyleWindow {
     pub ramp: &'static str,
     /// The renderer the layer has now (None: its simple look).
     applied: Option<Value>,
+    /// Katman çizimi's draft (docs/adr/0226 §3, §4) and what the layer has.
+    pub compose: Option<kentos_contracts::LayerCompose>,
+    applied_compose: Option<kentos_contracts::LayerCompose>,
     /// The last thing the window said, and whether it warns.
     said: Option<(String, bool)>,
     /// Closing asked about the changes not applied (the web's `askUnsaved`).
@@ -386,6 +392,7 @@ impl LayerStyleWindow {
         let present = classes_present(&entities);
         let classes = present.classes();
         let current = node.style.renderer.clone();
+        let compose = node.compose.clone();
         let simple = SymbolSet::from_value(&symbols_of_layer_style(
             &node.style,
             &node.style.color,
@@ -434,6 +441,8 @@ impl LayerStyleWindow {
             count: CLASS_COUNT_DEFAULT.to_string(),
             ramp: DEFAULT_RAMP,
             applied: current,
+            compose: compose.clone(),
+            applied_compose: compose,
             said: None,
             asking: false,
             typed: HashMap::new(),
@@ -540,7 +549,7 @@ impl LayerStyleWindow {
 
     /// Whether the window holds changes Uygula has not written.
     pub fn unapplied(&self) -> bool {
-        !same_renderer(&self.renderer(), &self.applied)
+        !same_renderer(&self.renderer(), &self.applied) || self.compose != self.applied_compose
     }
 
     /// What the footer says: that edits wait for Uygula, else the last word.
@@ -564,7 +573,7 @@ impl LayerStyleWindow {
         let r = self.renderer();
         // What the layer has (a renderer this version cannot read, kept): nothing to write.
         if same_renderer(&r, &self.applied) {
-            return true;
+            return self.apply_compose(doc);
         }
         let input = LayersRenderer {
             layer: self.layer.clone(),
@@ -582,7 +591,7 @@ impl LayerStyleWindow {
                     false,
                 );
                 self.applied = r;
-                true
+                self.apply_compose(doc)
             }
             CommandResult::Failed { error } => {
                 self.say(format!("Uygulanmadı: {}", error.message), true);
@@ -590,6 +599,41 @@ impl LayerStyleWindow {
             }
             _ => {
                 self.say("Uygulanmadı: çizim değişti.", true);
+                false
+            }
+        }
+    }
+
+    /// Writes Katman çizimi with `cad.layers.compose` when it changed, one undo step of its own
+    /// (docs/adr/0226 §3, §4).
+    fn apply_compose(&mut self, doc: &mut kentos_domain::Document) -> bool {
+        use kentos_contracts::{CommandResult, LayersCompose};
+        use kentos_native_application::{ExecutionContext, layers_compose};
+        if self.compose == self.applied_compose {
+            return true;
+        }
+        let c = self.compose.clone().unwrap_or_default();
+        let input = LayersCompose {
+            layer: self.layer.clone(),
+            opacity: c.opacity,
+            blend: c.blend,
+            mask: c.mask,
+            expected_revision: None,
+        };
+        match layers_compose::execute(&mut ExecutionContext::new(doc), input) {
+            CommandResult::Completed { .. } => {
+                self.applied_compose = self.compose.clone();
+                if self.said.is_none() {
+                    self.say("Katman çizimi uygulandı.", false);
+                }
+                true
+            }
+            CommandResult::Failed { error } => {
+                self.say(format!("Katman çizimi uygulanmadı: {}", error.message), true);
+                false
+            }
+            _ => {
+                self.say("Katman çizimi uygulanmadı: çizim değişti.", true);
                 false
             }
         }
@@ -703,6 +747,7 @@ impl LayerStyleWindow {
     /// An edit of the form; the drawing is read for Değerlerden sınıfla and Sınıfla.
     pub fn edit(&mut self, e: Event, src: &Source<'_>) {
         match e {
+            Event::Compose(c) => self.compose_edit(c),
             Event::Kind(k) => self.kind = k,
             Event::Step(next) => {
                 if let Some(i) = KINDS.iter().position(|k| *k == self.kind) {

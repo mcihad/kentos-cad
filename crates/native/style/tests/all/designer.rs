@@ -262,6 +262,13 @@ fn zoom_and_words() {
         ("pickLayer", texts::PICK_LAYER),
         ("inline", texts::INLINE),
         ("cannotEdit", texts::CANNOT_EDIT),
+        ("drawsWith", texts::DRAWS_WITH),
+        ("steps", texts::STEPS),
+        ("addStep", texts::ADD_STEP),
+        ("noSteps", texts::NO_STEPS),
+        ("nothingLeft", texts::NOTHING_LEFT),
+        ("effects", texts::EFFECTS),
+        ("effectsInside", texts::EFFECTS_INSIDE),
     ] {
         assert_eq!(s(&t[key]), text, "{key}");
     }
@@ -280,6 +287,14 @@ fn zoom_and_words() {
         );
     }
     assert_eq!(texts::saved(s(&t["saved"]["name"])), s(&t["saved"]["text"]));
+    assert_eq!(
+        texts::into_generator(s(&t["intoGenerator"]["parent"])),
+        s(&t["intoGenerator"]["text"])
+    );
+    assert_eq!(
+        texts::in_generator(s(&t["inGenerator"]["parent"])),
+        s(&t["inGenerator"]["text"])
+    );
     // Every string the web's texts hold is checked above.
     let strings = t
         .as_object()
@@ -287,6 +302,98 @@ fn zoom_and_words() {
         .values()
         .filter(|v| v.is_string())
         .count();
-    assert_eq!(strings, 9);
+    assert_eq!(strings, 16);
     let _ = designer::KINDS;
+}
+
+/// A parent's child types and a geometry generator's steps (docs/adr/0226 §1).
+#[test]
+fn child_types_and_steps() {
+    use kentos_native_style::designer::child_types;
+    use kentos_native_style::designer::steps::{
+        BUFFER_SIDES, STEP_KINDS, VERTEX_CHOICES, add_step, class_of, move_step, new_step,
+        put_step, remove_step, set_generator_kind, step_label, step_output, step_summary,
+    };
+    let f = fixture();
+    for c in f["childTypes"].as_array().expect("a list") {
+        let want: Vec<&str> = c["types"].as_array().expect("types").iter().map(s).collect();
+        assert_eq!(child_types(&c["parent"]), want, "{}", c["parent"]);
+    }
+    let st = &f["steps"];
+    for (k, name) in st["labels"].as_object().expect("labels") {
+        assert_eq!(step_label(k), Some(s(name)), "{k}");
+    }
+    assert_eq!(json!(STEP_KINDS), st["kinds"]);
+    assert_eq!(choices(&VERTEX_CHOICES), st["vertexChoices"]);
+    assert_eq!(choices(&BUFFER_SIDES), st["bufferSides"]);
+    for (kind, class) in st["classOf"].as_object().expect("classes") {
+        assert_eq!(class_of(kind), s(class), "{kind}");
+    }
+    for c in st["newSteps"].as_array().expect("a list") {
+        assert_eq!(new_step(s(&c["kind"])), c["step"], "{}", c["kind"]);
+    }
+    for c in st["lines"].as_array().expect("a list") {
+        assert_eq!(step_summary(&c["step"], s(&c["unit"])), s(&c["line"]), "{}", c["step"]);
+    }
+    for c in st["outputs"].as_array().expect("a list") {
+        let steps = c["steps"].as_array().expect("steps");
+        let input = match s(&c["input"]) {
+            "point" => "point",
+            "line" => "line",
+            _ => "area",
+        };
+        assert_eq!(
+            step_output(steps, input).map_or(Value::Null, |o| json!(o)),
+            c["output"],
+            "{} on {input}",
+            c["steps"]
+        );
+    }
+    for e in st["edits"].as_array().expect("a list") {
+        let (name, layer, op) = (s(&e["name"]), &e["layer"], &e["op"]);
+        let at = || op["at"].as_u64().expect("at") as usize;
+        let got = match s(&op["op"]) {
+            "add" => add_step(layer, s(&op["kind"])),
+            "move" => move_step(layer, at(), op["delta"].as_i64().expect("delta")).unwrap_or(Value::Null),
+            "remove" => remove_step(layer, at()),
+            "put" => put_step(layer, at(), op["step"].clone()),
+            "kind" => set_generator_kind(layer, s(&op["kind"])),
+            other => panic!("{name}: unknown edit {other}"),
+        };
+        assert_eq!(got, e["result"], "{name}");
+    }
+}
+
+/// Draw effects: names, new ones, switching, replacing, which layers take them, lines (docs/adr/0226 §2).
+#[test]
+fn effects() {
+    use kentos_native_style::designer::effects::{
+        EFFECT_TYPES, effect_label, effects_summary, new_effect, put_effect, set_effect,
+        takes_effects,
+    };
+    let f = fixture();
+    let e = &f["effects"];
+    for (k, name) in e["labels"].as_object().expect("labels") {
+        assert_eq!(effect_label(k), s(name), "{k}");
+    }
+    assert_eq!(json!(EFFECT_TYPES), e["types"]);
+    for c in e["newEffects"].as_array().expect("a list") {
+        assert_eq!(new_effect(s(&c["type"])), c["effect"], "{}", c["type"]);
+    }
+    for c in e["takes"].as_array().expect("a list") {
+        let p = LayerPath::from_value(&c["path"]).expect("a path");
+        assert_eq!(takes_effects(p), c["takes"] == true, "{}", c["path"]);
+    }
+    for c in e["edits"].as_array().expect("a list") {
+        let (name, layer, op) = (s(&c["name"]), &c["layer"], &c["op"]);
+        let got = match s(&op["op"]) {
+            "set" => set_effect(layer, s(&op["type"]), op["on"] == true),
+            "put" => put_effect(layer, op["effect"].clone()),
+            other => panic!("{name}: unknown edit {other}"),
+        };
+        assert_eq!(got, c["result"], "{name}");
+    }
+    for c in e["lines"].as_array().expect("a list") {
+        assert_eq!(effects_summary(&c["layer"]), s(&c["line"]), "{}", c["layer"]);
+    }
 }

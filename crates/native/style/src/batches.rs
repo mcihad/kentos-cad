@@ -381,6 +381,40 @@ pub struct StyledBatch {
     pub reach_unit: Unit,
     pub min_scale: Option<f64>,
     pub max_scale: Option<f64>,
+    /// Its effect group (from 1; 0 none) and the group's effects (docs/adr/0226 §2):
+    /// a group's batches are drawn into a picture of their own, then composed.
+    pub group: u32,
+    pub effect: Option<std::sync::Arc<Effect>>,
+}
+
+/// A shadow as the page draws it (docs/adr/0226 §2): its offset (x right,
+/// y up) and blur in the effect's unit, its colour with its opacity.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShadowFx {
+    pub dx: f64,
+    pub dy: f64,
+    pub blur: f64,
+    pub color: [f64; 4],
+}
+
+/// A glow as the page draws it: its spread and blur in the effect's unit, its colour with its opacity.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GlowFx {
+    pub spread: f64,
+    pub blur: f64,
+    pub color: [f64; 4],
+}
+
+/// A symbol layer's draw effects as the page draws them (docs/adr/0226 §2):
+/// lengths in `unit` (metres, or CSS px), colours as the view shows them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Effect {
+    pub unit: Unit,
+    pub shadow: Option<ShadowFx>,
+    pub glow: Option<GlowFx>,
+    pub inner_shadow: Option<ShadowFx>,
+    pub inner_glow: Option<GlowFx>,
+    pub blur: f64,
 }
 
 /// A layer's batches in draw order and their numbers, one after another.
@@ -570,6 +604,29 @@ impl Looks<'_> {
             self.o.view.mode,
             self.o.palette,
         )
+    }
+
+    /// A batch's effects as the style core wrote them (`EffectSpec::write_json`), colours as the view shows them.
+    fn effect(&self, e: &Value) -> Effect {
+        let shadow = |v: &Value| ShadowFx {
+            dx: n(v, "dx"),
+            dy: n(v, "dy"),
+            blur: n(v, "blur").max(0.0),
+            color: self.rgba(s(v, "color"), n(v, "opacity")),
+        };
+        let glow = |v: &Value| GlowFx {
+            spread: n(v, "spread").max(0.0),
+            blur: n(v, "blur").max(0.0),
+            color: self.rgba(s(v, "color"), n(v, "opacity")),
+        };
+        Effect {
+            unit: Unit::read(e.get("unit")),
+            shadow: e.get("shadow").map(shadow),
+            glow: e.get("glow").map(glow),
+            inner_shadow: e.get("innerShadow").map(shadow),
+            inner_glow: e.get("innerGlow").map(glow),
+            blur: n(e, "blur").max(0.0),
+        }
     }
 
     /// A fill's colour: its mode, and opaque when Saydamlık is off.
@@ -1094,6 +1151,10 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         let min_scale = d.get("minScale").and_then(Value::as_f64);
         let max_scale = d.get("maxScale").and_then(Value::as_f64);
         let (level, key) = order_of(d, style);
+        let group = d.get("group").and_then(Value::as_u64).unwrap_or(0) as u32;
+        let effect = (group > 0)
+            .then(|| d.get("effect").map(|e| std::sync::Arc::new(looks.effect(e))))
+            .flatten();
         let batch = match s(d, "kind") {
             "stroke" => {
                 let unit = Unit::read(style.get("unit"));
@@ -1116,6 +1177,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     reach_unit: unit,
                     min_scale,
                     max_scale,
+                    group,
+                    effect: effect.clone(),
                 }
             }
             "fill" => StyledBatch {
@@ -1131,6 +1194,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                 reach_unit: Unit::World,
                 min_scale,
                 max_scale,
+                group,
+                effect: effect.clone(),
             },
             _ => {
                 let common = style.get("common").unwrap_or(&Value::Null);
@@ -1170,6 +1235,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     reach_unit: unit,
                     min_scale,
                     max_scale,
+                    group,
+                    effect: effect.clone(),
                 }
             }
         };
@@ -1215,6 +1282,10 @@ fn order_of(d: &Value, style: &Value) -> (f64, u64) {
     // tile says none, and its keys stay as they were.
     if let Some(origin) = d.get("origin") {
         origin.to_string().hash(&mut hasher);
+    }
+    // An effect group's batches are its own (docs/adr/0226 §2); without one the key stays.
+    if let Some(group) = d.get("group") {
+        group.to_string().hash(&mut hasher);
     }
     (level, hasher.finish())
 }
@@ -1451,6 +1522,7 @@ pub fn merged_order(parts: &[&StyledLayer]) -> Vec<(usize, usize)> {
         let (a, b) = (&parts[pa].batches[ba], &parts[pb].batches[bb]);
         a.level
             .total_cmp(&b.level)
+            .then(a.group.cmp(&b.group))
             .then(kind_rank(&a.kind).cmp(&kind_rank(&b.kind)))
             .then(first[&a.key].cmp(&first[&b.key]))
             .then(pa.cmp(&pb))
@@ -1607,9 +1679,38 @@ impl StyledLayer {
             if let Some(m) = b.max_scale {
                 o.insert("maxScale".into(), json!(m));
             }
+            // Its effect group (docs/adr/0226 §2).
+            if let Some(e) = &b.effect {
+                o.insert("group".into(), json!(b.group));
+                o.insert("effect".into(), effect_json(e));
+            }
         }
         v
     }
+}
+
+fn effect_json(e: &Effect) -> Value {
+    let shadow = |s: &ShadowFx| json!({ "dx": s.dx, "dy": s.dy, "blur": s.blur, "color": s.color });
+    let glow = |g: &GlowFx| json!({ "spread": g.spread, "blur": g.blur, "color": g.color });
+    let mut v = json!({ "unit": e.unit.name() });
+    if let Value::Object(o) = &mut v {
+        if let Some(s) = &e.shadow {
+            o.insert("shadow".into(), shadow(s));
+        }
+        if let Some(g) = &e.glow {
+            o.insert("glow".into(), glow(g));
+        }
+        if let Some(s) = &e.inner_shadow {
+            o.insert("innerShadow".into(), shadow(s));
+        }
+        if let Some(g) = &e.inner_glow {
+            o.insert("innerGlow".into(), glow(g));
+        }
+        if e.blur > 0.0 {
+            o.insert("blur".into(), json!(e.blur));
+        }
+    }
+    v
 }
 
 fn paint_json(p: &FillPaintBatch) -> Value {

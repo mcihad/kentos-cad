@@ -348,8 +348,14 @@ pub const SCHEMA_WITH_MEASURES: u32 = 39;
 /// objects have no attachments.
 pub const SCHEMA_WITH_ATTACHMENTS: u32 = 40;
 
+/// Schema 41 (docs/adr/0226 §3, §4): a layer's `compose` (its opacity, its
+/// blending mode and the mask its labels and markers cut into other layers),
+/// written only when a layer has one; older readers refuse such a file
+/// instead of drawing it as it was not meant.
+pub const SCHEMA_WITH_COMPOSE: u32 = 41;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 39] = [
+pub const SCHEMAS: [u32; 40] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -389,6 +395,7 @@ pub const SCHEMAS: [u32; 39] = [
     SCHEMA_WITH_MULTIDIM,
     SCHEMA_WITH_MEASURES,
     SCHEMA_WITH_ATTACHMENTS,
+    SCHEMA_WITH_COMPOSE,
 ];
 
 /// The file a drawing is saved as.

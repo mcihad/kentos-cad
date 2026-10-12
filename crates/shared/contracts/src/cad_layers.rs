@@ -338,6 +338,95 @@ pub struct LayersRendererPlan {
     pub revision: String,
 }
 
+/// Writes how a layer is composed into the drawing (docs/adr/0226 §3, §4).
+pub const CAD_LAYERS_COMPOSE: &str = "cad.layers.compose";
+pub const CAD_LAYERS_COMPOSE_VERSION: u32 = 1;
+
+/// Input of `cad.layers.compose` v1: a layer's opacity, blending mode and
+/// mask written as one undo step “Katman çizimi”; the layer's composition
+/// becomes exactly what is given (absent: opaque, normal, no mask; nothing
+/// given takes it away). A layer that already has it as given is left as it
+/// is (`changed` false, no step). It is how the layer is drawn: a locked
+/// layer, a service layer and a raster's take it too.
+///
+/// Refusals (`CommandError.code`), checked in this order: `invalid_compose`
+/// (an opacity outside 0–1, path `opacity`; the mask's rule,
+/// `LayerMask::problem`, path `mask`); then `invalid_revision`,
+/// `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`
+/// (a group); then each of the mask's targets in order (path
+/// `mask/targets/<i>`): `mask_target_self` (the layer itself),
+/// `mask_target_not_found` (a layer the drawing does not have),
+/// `mask_target_not_a_layer` (a group). A target deleted later is skipped
+/// when the mask is drawn.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersCompose {
+    /// The layer's id.
+    pub layer: String,
+    /// 0–1; absent, 1 (opaque).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub opacity: Option<f64>,
+    /// Absent, normal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub blend: Option<crate::layer_compose::BlendMode>,
+    /// The mask its labels and markers cut into other layers; absent, none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mask: Option<crate::layer_compose::LayerMask>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+impl LayersCompose {
+    /// The composition as the layer keeps it: without what says nothing; None when nothing is left.
+    pub fn composition(&self) -> Option<crate::layer_compose::LayerCompose> {
+        crate::layer_compose::LayerCompose {
+            opacity: self.opacity,
+            blend: self.blend,
+            mask: self.mask.clone(),
+        }
+        .normalized()
+    }
+}
+
+/// Output of `cad.layers.compose` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersComposed {
+    pub layer: String,
+    /// Whether it differed (an undo step was written).
+    pub changed: bool,
+    /// The document's revision after the write, as decimal text.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.layers.compose` would write (plan mode); nothing is written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersComposePlan {
+    /// The layer as execute would leave it.
+    pub node: LayerNode,
+    pub changed: bool,
+    /// The document revision the plan was made against.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
 /// Writes a layer's actions and information card (docs/adr/0225 §4, §5).
 pub const CAD_LAYERS_INFO: &str = "cad.layers.info";
 pub const CAD_LAYERS_INFO_VERSION: u32 = 1;

@@ -901,6 +901,8 @@ const observe = (mark) =>
       lockedLayers: k.doc.layers.all().filter((n) => n.locked).map((n) => k.doc.layers.path(n.id)),
       // Every layer and group by its path, in tree order (docs/adr/0177 §5).
       layers: k.doc.layers.all().map((n) => k.doc.layers.path(n.id)),
+      // The layers' Katman çizimi by path, where they have one (docs/adr/0226 §3, §4).
+      layerCompose: Object.fromEntries(k.doc.layers.all().filter((n) => n.compose).map((n) => [k.doc.layers.path(n.id), n.compose])),
       // The layer tree's counts as its rows show them, by path: “geçen / bütün” where a filter leaves objects out
       // (docs/adr/0211 §4). The rows in view (the trace's trees are short).
       layerCounts: Object.fromEntries(
@@ -1097,6 +1099,11 @@ function compare(expect, got, t) {
           ? have === want
           : Object.entries(want).every(([f, w]) => (Array.isArray(w) ? same(have[f] ?? [], w) : have[f] === w));
       if (!ok) bad.push(`infoCard: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);
+    } else if (key === 'layerCompose') {
+      // Only the layers the step names, each exactly; null where it has none (docs/adr/0226 §3, §4).
+      const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v);
+      for (const [path, w] of Object.entries(want))
+        if (JSON.stringify(canon(have[path] ?? null)) !== JSON.stringify(canon(w))) bad.push(`layerCompose[${path}]: ${JSON.stringify(have[path] ?? null)}, beklenen ${JSON.stringify(w)}`);
     } else if (key === 'layerCounts') {
       // Only the rows the step names, each exactly (docs/adr/0211 §4).
       for (const [path, count] of Object.entries(want))

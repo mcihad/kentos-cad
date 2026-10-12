@@ -219,6 +219,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kartında ilk fotoğraf; Konumlu fotoğraflar (kendi EXIF okuyucumuz, WGS 84'ten Koordinat dönüştür'ün yoluyla, nokta ve eki); katmanın
   eylemleri ve bilgi kartı (şablon `{ifade}`, `{$enlem}`, `{$boylam}`, adreste yüzde kodlama; `cad.layers.info`), Bilgi aracı ve Bilgi
   kartı ve eylemler penceresi, çizimin sağ tıkında Eylemler ▸; masaüstünde fotoğraflar kabuğun wgpu boru hattında (ADR 0225);
+  sembol katmanı ekleri: Geometri üretici (15 adım: merkezler, köşeler, sınır, paralel, uzat, tampon, sınırlayıcı kutu, dışbükey örtü,
+  daire, daire dilimi, düzgün çokgen, öteleme, döndür, ölçekle; değerleri veriyle), sembol katmanlarının çizim efektleri (gölge, dış parıltı,
+  bulanıklaştır, iç gölge, iç parıltı), katmanın Katman çizimi (saydamlık, 13 karışım kipi, etiketlerin ve işaretlerin maskesi; `.kcad` şema
+  41, `cad.layers.compose`); çizim alanında üç çizim hattında aynı planla (paketli haritalar, bir grubun efektleri tek geçişte); Sembol
+  tasarımcısında adımlar (Adım ekle ikonlu) ve Efektler, Katman stili'nde Katman çizimi (ADR 0226);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -667,6 +672,11 @@ python3 scripts/fixtures/template_cases.py --check   # bilgi kartı ve eylem şa
 python3 scripts/fixtures/exif_cases.py --check; python3 scripts/fixtures/photo_import_cases.py --check   # EXIF okuyucusunu (KentOS kodu olmadan yazılmış JPEG ve TIFF başlıkları, kesirler, bozuk ve eksik konumlar; fixtures/exif/v1) ve konumlu fotoğrafların noktalarını PROJ'la denetle (fixtures/photos/v1/import.json; ADR 0225 §3)
 python3 scripts/fixtures/layer_info_command_cases.py --check; python3 scripts/fixtures/attachments_scene.py --check   # cad.layers.info durumlarını sözleşmenin kurallarından ve eklerin sahnesini (fixtures/interaction/v1/attachments.kcad, gömülü PNG fotoğraflar, belgeler/tapu-101-5.pdf) denetle (ADR 0225)
 KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_SHOTS_ONLY=ekler-oznitelikler,ekler-uzerine,ekler-kart,ekler-kart-foto,ekler-goruntuleyici,ekler-adres,ekler-bilgi-karti,ekler-konumlu,ekler-eylemler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # nesne eklerinin masaüstü resimleri (fotoğraflar wgpu ister), .run/shots/arac-ekler-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs attachments); ADR 0225)
+python3 scripts/fixtures/geometry_generator_cases.py --check   # Geometri üretici'nin adımlarını (merkezler, köşeler, paralel, uzat, tampon uzaklık ve alan sınırlarıyla, kutu, örtü, daire, dilim, çokgen, öteleme, döndür, ölçekle, ifadeli değerler) ADR'den, KentOS kodu olmadan denetle; durumlar fixtures/style/v1/generator.json (ADR 0226 §1)
+python3 scripts/fixtures/effects_cases.py --check; python3 scripts/fixtures/layer_compose_command_cases.py --check; python3 scripts/fixtures/symbol_extras_scene.py --check   # çizim efektlerinin, karışım kiplerinin ve maskelerin resimlerini numpy'la (fixtures/compose/v1/cases.json), cad.layers.compose durumlarını ve izin sahnesini (fixtures/interaction/v1/symbol-extras.kcad) KentOS kodu olmadan denetle (ADR 0226)
+KENTOS_GPU_TESTS=1 cargo test -p kentos-render-wgpu --test gpu; (cd apps/web && node scripts/e2e/compose.mjs)   # efektler, kipler ve maskeler gerçek GPU'da ve tarayıcının WebGPU ve WebGL2'sinde, 1× ve 4×, başvurunun resimleriyle (ADR 0226)
+cargo test --release -p kentos-render-wgpu --test gpu composition_timing -- --ignored --nocapture; (cd apps/web && node scripts/e2e/compose.mjs --time); cargo test --release -p kentos-native-style --test all generator_timing -- --ignored --nocapture   # Katman çiziminin kareye eklediği masaüstünde ve web'de (makinenin GPU'sunda), Geometri üretici'nin kuruluma eklediği, bütçeleriyle (ADR 0226 §7)
+KENTOS_SHOTS_ONLY=uretici,efekt,uretici-katman-ekle,uretici-adim-ekle cargo test -p kentos-desktop style::designer::screens -- --ignored --nocapture   # Sembol tasarımcısında Geometri üretici ve Efektler, .run/shots/sdes-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs symboldesigner --only generator,effects,add-step-menu,add-layer-menu-into-generator; ADR 0226)
 cargo test --release -p kentos-formats --test all exif::timing -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all info_templates -- --ignored --nocapture; cargo test --release -p kentos-desktop a_card_opens_in_a_frame -- --ignored --nocapture   # 1 000 fotoğrafın EXIF'i, 10 000 nesnenin kart metni ve bir kartın açılması bütçeleriyle (ADR 0225 §7); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; ATTACH_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/attachments.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp apps/web/src/io/pkg/.stamp
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
 python3 scripts/fixtures/closing_cases.py --check   # dönük binaların 45 bloğunun kapanışını (dışa tampon GEOS'un, içe aşındırma kesin; kesişim çekirdeğinin bir kez yüz yitirdiği bloklar dahil) KentOS kodu olmadan denetle; --stress FILE çekirdeğin rastgele blokların kapanışlarını (KENTOS_CLOSINGS_OUT=FILE cargo test -p kentos-geometry-core --test all closings_of_random_blocks -- --ignored) karşılaştırır; durumlar fixtures/geoprocess/v1/closings.json (ADR 0221 §10)
@@ -1671,7 +1681,16 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   `exchange/photo_import.rs`, `properties/rows/attachments.rs`; web'de `app/attachments.ts`, `app/objectActions.ts`, `ui/attachments/`,
   `ui/shell/InfoCard.ts`, `ui/layers/LayerInfoDialog.ts`, `ui/io/PhotoImportDialog.ts`; ortak iz `identify.json` (yeni beklenti
   `infoCard`, sahne `attachments_scene.py`); masaüstü testleri `attachments_tests`; süreler `exif::timing`, `info_templates`,
-  `a_card_opens_in_a_frame`, `scripts/perf/attachments.test.ts`. Sıradaki `GIS-30`.
+  `a_card_opens_in_a_frame`, `scripts/perf/attachments.test.ts`. `GIS-30` sembol katmanı ekleri
+  ([ADR 0226](docs/adr/0226-symbol-layer-extras.md); kapsamı ben belirledim) tek parçada bitti (12 Ekim): sözleşmenin `layer_compose`'u
+  (`LayerNode.compose`), `cad.layers.compose`, `.kcad` şema 41 (`FORMATS_VERSION` 53); stil çekirdeğinde `style/generate.rs` ve efekt grupları
+  (`compile.rs`); çizim alanı `shaders/wgsl/compose` (sözleşmenin 2. sürümü), masaüstü `crates/render/wgpu/src/compose.rs`, web
+  `render/composePlan.ts` ve iki arka ucun `composer.ts`'i (WebGL2'nin ikizi `composeShaders.ts`): paketli haritalar, x boyunca sütunlara
+  ve y boyunca satırlara, bulanıklığın dokunuşları ikişer, grubun efektleri tek geçişte, çizim resminin geçişleri tek render geçişinde; ilk
+  uygulama 19 ms'ydi, zaman damgalarıyla geçiş geçiş ölçülerek 6 ms'ye indi; tasarımcıda `generator.rs`, `layerForms.ts` (Adım ekle'de
+  ikonlar, sahibin isteği), Katman stili'nde `layer_style/compose.rs`, `composeSection`; bağımsız başvurular `geometry_generator_cases.py`,
+  `effects_cases.py` (gerçek GPU ve tarayıcıyla), `layer_compose_command_cases.py`; ortak iz `symbol-extras.json`; süreler ADR'nin
+  Doğrulama'sında. Sıradaki `GIS-39` ve `GIS-40`.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek
   parçada bitti (10 Ekim): raster çekirdeğinde `suitability` (`pairwise`, `roc`), `ops`'un altı türü, `reclass::parse_with`; WASM

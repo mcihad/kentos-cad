@@ -1,0 +1,198 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Katman çizimi",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0
+ },
+ "origin": {
+  "x": 487000.0,
+  "y": 4420000.0
+ },
+ "layers": [
+  {
+   "id": "altlik",
+   "name": "Altlık",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8FB573",
+    "lineType": "continuous",
+    "lineWeight": 0.25,
+    "fill": "#CFE3BC"
+   },
+   "children": [],
+   "compose": {
+    "opacity": 0.6,
+    "blend": "multiply"
+   }
+  },
+  {
+   "id": "hat",
+   "name": "Hatlar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3B6FB6",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "direk",
+   "name": "Direkler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C2410C",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "compose": {
+    "mask": {
+     "markers": true,
+     "size": 1.0,
+     "targets": [
+      "hat"
+     ]
+    }
+   }
+  },
+  {
+   "id": "parsel",
+   "name": "Parseller",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "compose": {
+    "opacity": 0.9,
+    "mask": {
+     "labels": true,
+     "markers": true,
+     "size": 0.5,
+     "targets": [
+      "altlik",
+      "hat"
+     ]
+    }
+   }
+  }
+ ],
+ "activeLayer": "parsel",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "altlik",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487080.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487080.0,
+     "y": 4420050.0
+    },
+    {
+     "x": 487000.0,
+     "y": 4420050.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 2,
+   "layerId": "hat",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487005.0,
+     "y": 4420010.0
+    },
+    {
+     "x": 487075.0,
+     "y": 4420010.0
+    },
+    {
+     "x": 487075.0,
+     "y": 4420040.0
+    }
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "direk",
+   "attrs": {
+    "No": "D-7"
+   },
+   "p": {
+    "x": 487040.0,
+    "y": 4420010.0
+   }
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "7"
+   },
+   "label": "101/7",
+   "pts": [
+    {
+     "x": 487020.0,
+     "y": 4420015.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4420015.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4420045.0
+    },
+    {
+     "x": 487020.0,
+     "y": 4420045.0
+    }
+   ]
+  }
+ ],
+ "uids": [
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4201",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4202",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4203",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4204"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

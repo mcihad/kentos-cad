@@ -48,6 +48,7 @@ pub mod info_templates;
 pub mod label_texts;
 pub mod labels_pin;
 pub mod layer_filter;
+pub mod layers_compose;
 pub mod layers_filter;
 pub mod layers_info;
 pub mod layers_labels;
@@ -131,6 +132,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LAYERS_FILTER,
         kentos_contracts::CAD_LAYERS_FILTER_VERSION,
+    ),
+    // Katman çizimi ([`layers_compose`], docs/adr/0226 §3, §4).
+    (
+        kentos_contracts::CAD_LAYERS_COMPOSE,
+        kentos_contracts::CAD_LAYERS_COMPOSE_VERSION,
     ),
     // Bilgi kartı ve eylemler ([`layers_info`], docs/adr/0225 §4, §5).
     (

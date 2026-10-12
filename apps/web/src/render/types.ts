@@ -54,6 +54,37 @@ export interface BatchExtent extends ScaleRange {
   /** How far drawing reaches past the geometry (half a stroke, a marker's size), in `reachUnit`. */
   reach: number;
   reachUnit: StyleUnit;
+  /**
+   * Its effect group (from 1) and the group's effects (docs/adr/0226 §2): the batches of a group, one after another,
+   * are drawn into a picture of their own and composed with their effects. Absent: none.
+   */
+  group?: number;
+  effect?: BatchEffect;
+}
+
+/** A shadow as the page draws it (docs/adr/0226 §2): its offset (x right, y up) and blur in the effect's unit, its colour with its opacity. */
+export interface ShadowFx {
+  dx: number;
+  dy: number;
+  blur: number;
+  color: RGBA;
+}
+
+/** A glow as the page draws it: its spread and blur in the effect's unit, its colour with its opacity. */
+export interface GlowFx {
+  spread: number;
+  blur: number;
+  color: RGBA;
+}
+
+/** A symbol layer's effects as the page draws them: lengths in `unit` (metres, or CSS px), colours as the view shows them. */
+export interface BatchEffect {
+  unit: StyleUnit;
+  shadow?: ShadowFx;
+  glow?: GlowFx;
+  innerShadow?: ShadowFx;
+  innerGlow?: GlowFx;
+  blur?: number;
 }
 
 /** Sizes in metres ("world", from paper mm at the plot scale) or screen pixels. */
@@ -248,6 +279,30 @@ export interface FrameState {
   keepBase?: boolean;
   /** The magnifier's picture over the frame, drawn last (docs/adr/0181); none without it. */
   lens?: LensFrame | null;
+  /**
+   * The persistent layers drawn into a picture of their own and composed (docs/adr/0226 §3, §4), by id; the others
+   * draw straight into the drawing. The magnifier draws them plainly.
+   */
+  compositions?: ReadonlyMap<string, LayerComposeFrame>;
+}
+
+/**
+ * How a layer meets the drawing (docs/adr/0226 §3, §4): its opacity, its blending mode (`BlendMode`'s place in its
+ * list: 0 normal … 12 addition) and the masks cutting into it.
+ */
+export interface LayerComposeFrame {
+  opacity: number;
+  blend: number;
+  masks: readonly MaskFrame[];
+}
+
+/** One source of a layer's mask: another layer's drawn markers and its placed labels, grown by `grow` CSS px. */
+export interface MaskFrame {
+  /** The layer whose drawn markers cut, or null. */
+  markers: string | null;
+  /** Placed labels, five numbers each: middle x, y (metres from the document's origin), width, height (CSS px), turn (degrees, counter-clockwise). */
+  labels: ArrayLike<number>;
+  grow: number;
 }
 
 export type BackendKind = 'webgl2' | 'webgpu';

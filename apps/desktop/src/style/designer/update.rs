@@ -163,8 +163,25 @@ impl App {
             Event::Select(p) => {
                 if d.selected != p {
                     d.selected = p;
+                    d.step = 0;
                     d.typed.clear();
                 }
+            }
+            Event::ChooseStep(i) => {
+                d.step = i;
+                d.typed.clear();
+            }
+            Event::Steps { steps, choose } => {
+                let at = d.selected;
+                d.edit(Edit {
+                    at,
+                    key: "steps".to_owned(),
+                    text: None,
+                    patch: Some(kentos_native_style::designer::set("steps", steps)),
+                    focus: None,
+                });
+                d.step = choose;
+                d.typed.clear();
             }
             Event::Step(up) => {
                 let rows = list::rows(&d.draft.symbol);

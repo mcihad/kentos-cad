@@ -264,6 +264,21 @@ def selection(doc, uids):
 
     tree = prune(doc["layers"])
     kept_nodes = all_ids(tree)
+
+    # A mask keeps the targets the new drawing has; with none left it goes, and the composition with nothing left
+    # (docs/adr/0226 §3).
+    def keep_masks(nodes):
+        for n in nodes:
+            c = n.get("compose")
+            if c is not None and "mask" in c:
+                c = n["compose"] = {**c, "mask": {**c["mask"], "targets": [t for t in c["mask"]["targets"] if t in kept_nodes]}}
+                if not c["mask"]["targets"]:
+                    c.pop("mask")
+                if not c:
+                    n.pop("compose")
+            keep_masks(n["children"])
+
+    keep_masks(tree)
     leaves = [n["id"] for n, _ in walk(tree) if n["type"] == "layer"]
     active = doc["activeLayer"] if doc["activeLayer"] in leaves else leaves[0]
     out = []
@@ -363,6 +378,12 @@ def take_layers(ours, theirs, paths, same, taken):
                         made["filter"] = {"expression": made["filter"]["expression"]}
                     else:
                         made.pop("filter")
+                # A mask's targets name the other drawing's layers too: the mask does not come; the opacity and the
+                # mode do (docs/adr/0226 §3).
+                if "compose" in made:
+                    made["compose"].pop("mask", None)
+                    if not made["compose"]:
+                        made.pop("compose")
                 parent_list.append(made)
                 parent_list = made["children"]
                 continue
@@ -702,6 +723,14 @@ THEIRS_FILTER["name"] = "Kaynak (süzgeç)"
 THEIRS_FILTER["layers"][1]["children"][1]["filter"] = {"expression": "Kat >= 3", "objects": [U(0x2001)]}
 THEIRS_FILTER["layers"][2]["filter"] = {"objects": [U(0x2003)]}
 
+# The source drawing with layer compositions (docs/adr/0226 §3, §4): Parsel faded, its labels masking Bina and Yol; Yol
+# multiplied.
+THEIRS_COMPOSE = copy.deepcopy(THEIRS)
+THEIRS_COMPOSE["name"] = "Kaynak (katman çizimi)"
+THEIRS_COMPOSE["layers"][1]["children"][0]["compose"] = {"opacity": 0.7, "mask": {"labels": True, "size": 1.0, "targets": ["k-bina", "k-yol"]}}
+THEIRS_COMPOSE["layers"][1]["children"][1]["compose"] = {"mask": {"markers": True, "size": 0.5, "targets": ["k-yol"]}}
+THEIRS_COMPOSE["layers"][2]["compose"] = {"blend": "multiply"}
+
 
 # ── The cases ─────────────────────────────────────────────────────────
 
@@ -720,13 +749,15 @@ def build():
         "version": 1,
         "source": SOURCE,
         "drawings": {"ours": OURS, "theirs": THEIRS, "theirsLook": THEIRS_LOOK, "theirsScenario": THEIRS_SCENARIO,
-                     "theirsFilter": THEIRS_FILTER},
+                     "theirsFilter": THEIRS_FILTER, "theirsCompose": THEIRS_COMPOSE},
         "selections": [
             {"name": "parsel, bağlı yazısı, lamba (iç içe Direk), ilişkisi kaydedilmeyen nesneye taramanın, tablo ve resim",
              "from": "theirs", "uids": [U(0x2001), U(0x2004), U(0x2005), U(0x2006), U(0x2007), U(0x2008)],
              "expect": selection(THEIRS, [U(0x2001), U(0x2004), U(0x2005), U(0x2006), U(0x2007), U(0x2008)])},
             {"name": "yalnız yol çizgisi: tek katman, etkin katman o",
              "from": "theirs", "uids": [U(0x2003)], "expect": selection(THEIRS, [U(0x2003)])},
+            {"name": "maske yeni çizimin katmanlarını tutar: Yol gelmez, Parsel'in maskesi Bina'yı, Bina'nınki hiçbir şeyi tutmaz",
+             "from": "theirsCompose", "uids": [U(0x2001), U(0x2002)], "expect": selection(THEIRS_COMPOSE, [U(0x2001), U(0x2002)])},
             {"name": "bağlı yazı nesnesiyle, ilişkili tarama nesnesiyle: bağlar kalır",
              "from": "theirs", "uids": [U(0x2002), U(0x2006), U(0x2001), U(0x2004)],
              "expect": selection(THEIRS, [U(0x2002), U(0x2006), U(0x2001), U(0x2004)])},
@@ -739,6 +770,9 @@ def build():
             {"name": "senaryo grubu sıradan grup olarak, yerine geçen katman bağsız gelir; zaman ayarları gelir",
              "into": "ours", "from": "theirsScenario", "picks": {"layers": ["Öneri / Yol", "Yol"]}, "same": "skip",
              "expect": take(OURS, THEIRS_SCENARIO, {"layers": ["Öneri / Yol", "Yol"]}, "skip")},
+            {"name": "katmanın saydamlığı ve karışım kipi gelir, maskesi gelmez (öbür çizimin katmanları)",
+             "into": "ours", "from": "theirsCompose", "picks": {"layers": ["Kadastro / Bina", "Yol"]}, "same": "skip",
+             "expect": take(OURS, THEIRS_COMPOSE, {"layers": ["Kadastro / Bina", "Yol"]}, "skip")},
             {"name": "süzgecin koşulu gelir, nesne listesi gelmez (öbür çizimin nesneleri); yalnız listesi olan süzgeç hiç gelmez",
              "into": "ours", "from": "theirsFilter", "picks": {"layers": ["Kadastro / Bina", "Yol"]}, "same": "skip",
              "expect": take(OURS, THEIRS_FILTER, {"layers": ["Kadastro / Bina", "Yol"]}, "skip")},

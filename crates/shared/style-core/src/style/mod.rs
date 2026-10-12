@@ -9,6 +9,7 @@ pub mod build;
 pub mod charts;
 pub mod compile;
 pub mod dots;
+pub mod generate;
 pub mod groups;
 pub mod heat;
 pub mod inverted;

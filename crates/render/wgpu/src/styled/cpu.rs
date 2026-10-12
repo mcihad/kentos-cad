@@ -1127,6 +1127,8 @@ mod tests {
             reach_unit: Unit::World,
             min_scale: None,
             max_scale: None,
+            group: 0,
+            effect: None,
         }
     }
 

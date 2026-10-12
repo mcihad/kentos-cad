@@ -14,6 +14,7 @@
 
 mod foot;
 mod form;
+mod generator;
 mod list;
 pub(crate) mod numbers;
 mod parts;
@@ -102,6 +103,10 @@ pub enum Event {
     Redo,
     /// A row of the list pressed.
     Select(LayerPath),
+    /// A geometry generator's step chosen (docs/adr/0226 §1).
+    ChooseStep(usize),
+    /// A geometry generator's steps changed (one added, moved or gone), the step chosen after it.
+    Steps { steps: Value, choose: usize },
     /// ↑ or ↓ with no field holding the keyboard: the row above or below.
     Step(bool),
     /// Katman ekle: a layer type, into the symbol or into the marker of a layer.
@@ -149,6 +154,8 @@ pub struct Designer {
     /// The draft as saved, or as opened: what the title's • compares with.
     saved: Draft,
     pub selected: LayerPath,
+    /// A geometry generator's chosen step (docs/adr/0226 §1).
+    pub step: usize,
     pub sample: Geometry,
     pub px_per_mm: f64,
     past: Vec<Draft>,
@@ -178,6 +185,7 @@ impl Designer {
             saved: draft.clone(),
             draft,
             selected: LayerPath::Top(0),
+            step: 0,
             sample,
             px_per_mm: model::zoom::START,
             past: Vec::new(),
@@ -320,24 +328,24 @@ impl Designer {
         let Some(layer) = self.layer().cloned() else {
             return;
         };
-        let Some((key, spec)) = numbers::KEYS.iter().find_map(|k| {
-            (field_id(k) == *id)
-                .then(|| numbers::spec_of(&layer, k).map(|s| (*k, s)))
+        let Some((key, spec)) = numbers::keys_of(&layer).into_iter().find_map(|k| {
+            (field_id(&k) == *id)
+                .then(|| numbers::spec_of(&layer, &k).map(|s| (k.clone(), s)))
                 .flatten()
         }) else {
             return;
         };
         let text = self
             .typed
-            .get(key)
+            .get(&key)
             .cloned()
-            .unwrap_or_else(|| numbers::text_of(numbers::shown(&layer, key)));
+            .unwrap_or_else(|| numbers::text_of(numbers::shown(&layer, &key)));
         let v = numbers::stepped(&spec, &text, up, shift);
         self.edit(Edit {
             at: self.selected,
-            key: key.to_owned(),
+            key: key.clone(),
             text: Some(numbers::text_of(v)),
-            patch: Some(numbers::write(&layer, key, v)),
+            patch: Some(numbers::write(&layer, &key, v)),
             focus: None,
         });
     }

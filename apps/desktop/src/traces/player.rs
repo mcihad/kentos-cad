@@ -423,6 +423,8 @@ pub struct Observation {
     pub layers: Vec<String>,
     /// The layer tree's counts by path, as its rows show them (docs/adr/0211 §4).
     pub layer_counts: std::collections::BTreeMap<String, String>,
+    /// The layers' Katman çizimi by path, where they have one (docs/adr/0226 §3, §4).
+    pub layer_compose: std::collections::BTreeMap<String, serde_json::Value>,
     /// Every object's label pins, by its id, where it has any (docs/adr/0212 §2).
     pub label_pins: BTreeMap<u32, Vec<kentos_contracts::LabelPin>>,
     /// The colour and line weight new objects take now.
@@ -1253,6 +1255,13 @@ impl<'a> Player<'a> {
                 .map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |n| n.locked)),
             layers: doc.map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |_| true)),
             layer_counts: doc.map_or_else(Default::default, |d| layer_counts(app, d)),
+            layer_compose: doc.map_or_else(Default::default, |d| {
+                let layers = d.model.layers();
+                layer_paths(layers, |n| n.compose.is_some())
+                    .into_iter()
+                    .zip(composed(layers.nodes()))
+                    .collect()
+            }),
             label_pins: doc.map_or_else(BTreeMap::new, |d| {
                 d.model
                     .entities()
@@ -1312,6 +1321,18 @@ fn layer_counts(
 }
 
 /// The paths of the tree's nodes that `which` takes, in tree order.
+/// The layers' compositions in tree order, as `layer_paths` lists the layers that have one.
+fn composed(nodes: &[kentos_contracts::LayerNode]) -> Vec<serde_json::Value> {
+    let mut out = Vec::new();
+    for node in nodes {
+        if let Some(c) = &node.compose {
+            out.push(serde_json::to_value(c).unwrap_or(serde_json::Value::Null));
+        }
+        out.extend(composed(&node.children));
+    }
+    out
+}
+
 fn layer_paths(
     layers: &kentos_domain::LayerTree,
     which: impl Fn(&kentos_contracts::LayerNode) -> bool,

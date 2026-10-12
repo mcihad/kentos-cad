@@ -212,6 +212,62 @@ fn screens() {
             },
             click: None,
         },
+        // Sembol katmanı ekleri (docs/adr/0226): a generator's steps, the effects, Katman ekle into its symbol.
+        Scene {
+            name: "uretici",
+            setup: |app| {
+                new(app, "marker", &["geometryGenerator"]);
+                de(
+                    app,
+                    Event::Steps {
+                        steps: json!([
+                            { "kind": "wedge", "direction": { "expr": "[Yön]", "fallback": 0 }, "width": 60, "radius": 12 },
+                            { "kind": "rotate", "angle": 15 }
+                        ]),
+                        choose: 0,
+                    },
+                );
+            },
+            click: None,
+        },
+        Scene {
+            name: "efekt",
+            setup: |app| {
+                new(app, "fill", &[]);
+                let at = app
+                    .styles
+                    .designer
+                    .as_ref()
+                    .map_or(LayerPath::Top(0), |d| d.selected);
+                de(
+                    app,
+                    Event::Edit(Edit {
+                        at,
+                        key: "effects".into(),
+                        text: None,
+                        patch: Some(set(
+                            "effects",
+                            json!([
+                                { "type": "dropShadow", "distance": 1, "angle": 135, "blur": 1.5, "color": "#000000", "opacity": 0.5 },
+                                { "type": "outerGlow", "spread": 0.5, "blur": 1.5, "color": "#FFD000", "opacity": 0.6 }
+                            ]),
+                        )),
+                        focus: None,
+                    }),
+                );
+            },
+            click: None,
+        },
+        Scene {
+            name: "uretici-katman-ekle",
+            setup: |app| new(app, "marker", &["geometryGenerator"]),
+            click: Some("Katman ekle"),
+        },
+        Scene {
+            name: "uretici-adim-ekle",
+            setup: |app| new(app, "marker", &["geometryGenerator"]),
+            click: Some("Adım ekle"),
+        },
         Scene {
             name: "soru",
             setup: |app| {

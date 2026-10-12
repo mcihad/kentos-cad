@@ -229,7 +229,10 @@ pub struct Targets {
     /// Scaled up when composed (the picture is smaller than the area).
     pub scaled: bool,
     msaa: Option<wgpu::TextureView>,
-    resolve: wgpu::TextureView,
+    /// The resolved picture: composed into the host's frame, read by a layer's mix
+    /// (docs/adr/0226 §4, copied from).
+    pub(crate) resolve_texture: wgpu::Texture,
+    pub(crate) resolve: wgpu::TextureView,
     bind_group: wgpu::BindGroup,
     /// Bytes of the textures, for the frame's statistics and the settings window.
     pub bytes: u64,
@@ -260,15 +263,16 @@ impl Targets {
                 ))
                 .create_view(&wgpu::TextureViewDescriptor::default())
         });
-        let resolve = device
-            .create_texture(&texture_descriptor(
-                "kentos.cad2d.picture",
-                size,
-                1,
-                format,
-                wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
-            ))
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        let resolve_texture = device.create_texture(&texture_descriptor(
+            "kentos.cad2d.picture",
+            size,
+            1,
+            format,
+            wgpu::TextureUsages::RENDER_ATTACHMENT
+                | wgpu::TextureUsages::TEXTURE_BINDING
+                | wgpu::TextureUsages::COPY_SRC,
+        ));
+        let resolve = resolve_texture.create_view(&wgpu::TextureViewDescriptor::default());
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("kentos.cad2d.compose"),
             layout: &compose.layout,
@@ -294,6 +298,7 @@ impl Targets {
             samples,
             scaled,
             msaa,
+            resolve_texture,
             resolve,
             bind_group,
             bytes: pixels * texel * (u64::from(samples.max(1)) + u64::from(samples > 1)),
@@ -309,6 +314,38 @@ impl Targets {
     /// The resolved texture now holds the picture of `key` (drawn this frame).
     pub fn keep(&self, key: u64) {
         *self.kept.lock().unwrap_or_else(PoisonError::into_inner) = Some(key);
+    }
+
+    /// The attachment of one of a composed frame's passes into the picture
+    /// (docs/adr/0226): cleared to `clear` or loaded, the multisampled texture
+    /// kept for the next pass, the picture resolved at its end when `resolve`.
+    pub fn attachment_kept(
+        &self,
+        clear: Option<wgpu::Color>,
+        resolve: bool,
+    ) -> wgpu::RenderPassColorAttachment<'_> {
+        let load = clear.map_or(wgpu::LoadOp::Load, wgpu::LoadOp::Clear);
+        match &self.msaa {
+            Some(msaa) => wgpu::RenderPassColorAttachment {
+                view: msaa,
+                depth_slice: None,
+                // Resolved only when the picture is read: a pass between others keeps its samples alone.
+                resolve_target: resolve.then_some(&self.resolve),
+                ops: wgpu::Operations {
+                    load,
+                    store: wgpu::StoreOp::Store,
+                },
+            },
+            None => wgpu::RenderPassColorAttachment {
+                view: &self.resolve,
+                depth_slice: None,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load,
+                    store: wgpu::StoreOp::Store,
+                },
+            },
+        }
     }
 
     /// The colour attachment the view's own pass draws into: the multisampled

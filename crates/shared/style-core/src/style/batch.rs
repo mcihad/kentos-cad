@@ -21,7 +21,7 @@ use kentos_geometry_core::geometry::signed_area;
 use kentos_geometry_core::jsmath::{cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort};
 use kentos_geometry_core::triangulate::triangulate_many;
 
-use super::prim::{FillPaint, Look, MarkerStyle, Sink, StrokeStyle, num};
+use super::prim::{EffectSpec, FillPaint, Look, MarkerStyle, Sink, StrokeStyle, group_key, num};
 use super::resolve::Scale;
 use crate::js::number;
 
@@ -65,6 +65,9 @@ struct Entry {
     /// Largest marker width and height (markers), or half the stroke width (strokes).
     w: f64,
     h: f64,
+    /// Its effect group (from 1; 0 none) and the group's effects (docs/adr/0226 §2).
+    group: u32,
+    effect: Option<String>,
 }
 
 impl Entry {
@@ -105,15 +108,20 @@ pub struct BatchSink {
     hide_strokes: bool,
     pictures: Vec<Picture>,
     dropped: u64,
+    /// The effect group what follows belongs to (0 none) and its effects;
+    /// the groups made, by their key (docs/adr/0226 §2).
+    group: u32,
+    group_json: String,
+    groups: HashMap<String, u32>,
 }
 
 /// How many styles of a kind are remembered.
 const RECENT: usize = 16;
 
-/// The latest styles seen (with their scale range and tile) and their
-/// batches, newest replacing the oldest.
+/// The latest styles seen (with their scale range, tile and effect group)
+/// and their batches, newest replacing the oldest.
 struct Recent<T> {
-    list: Vec<(T, Scale, [f64; 2], usize)>,
+    list: Vec<(T, Scale, [f64; 2], u32, usize)>,
     next: usize,
 }
 
@@ -125,15 +133,15 @@ impl<T: PartialEq + Clone> Recent<T> {
         }
     }
 
-    fn find(&self, style: &T, scale: Scale, tile: [f64; 2]) -> Option<usize> {
+    fn find(&self, style: &T, scale: Scale, tile: [f64; 2], group: u32) -> Option<usize> {
         self.list
             .iter()
-            .find(|(s, sc, t, _)| *sc == scale && *t == tile && s == style)
-            .map(|&(_, _, _, e)| e)
+            .find(|(s, sc, t, g, _)| *sc == scale && *t == tile && *g == group && s == style)
+            .map(|&(_, _, _, _, e)| e)
     }
 
-    fn remember(&mut self, style: &T, scale: Scale, tile: [f64; 2], e: usize) {
-        let item = (style.clone(), scale, tile, e);
+    fn remember(&mut self, style: &T, scale: Scale, tile: [f64; 2], group: u32, e: usize) {
+        let item = (style.clone(), scale, tile, group, e);
         if self.list.len() < RECENT {
             self.list.push(item);
         } else {
@@ -183,6 +191,9 @@ impl BatchSink {
             hide_strokes: false,
             pictures: Vec::new(),
             dropped: 0,
+            group: 0,
+            group_json: String::new(),
+            groups: HashMap::new(),
         }
     }
 
@@ -228,11 +239,12 @@ impl BatchSink {
         style: impl FnOnce() -> String,
     ) -> usize {
         let k = format!(
-            "{key}|{}|{}|{}|{}",
+            "{key}|{}|{}|{}|{}|{}",
             scale_key(self.scale.min),
             scale_key(self.scale.max),
             number::to_string(tile[0]),
-            number::to_string(tile[1])
+            number::to_string(tile[1]),
+            self.group
         );
         if let Some(&i) = self.index.get(&k) {
             return i;
@@ -257,6 +269,8 @@ impl BatchSink {
             ],
             w: 0.0,
             h: 0.0,
+            group: self.group,
+            effect: (self.group > 0).then(|| self.group_json.clone()),
         });
         self.index.insert(k, self.entries.len() - 1);
         self.entries.len() - 1
@@ -339,7 +353,9 @@ impl BatchSink {
         let mut order: Vec<usize> = (0..self.entries.len()).collect();
         stable_sort(&mut order, &mut |&a, &b| {
             let (a, b) = (&self.entries[a], &self.entries[b]);
+            // An effect group's batches stay together (docs/adr/0226 §2); 0 is none.
             js_cmp(a.level, b.level)
+                .then(a.group.cmp(&b.group))
                 .then(a.kind.cmp(&b.kind))
                 .then(a.order.cmp(&b.order))
         });
@@ -392,6 +408,13 @@ impl BatchSink {
             num(&mut json, e.w);
             json.push_str(",\"h\":");
             num(&mut json, e.h);
+            // Its effect group and effects (docs/adr/0226 §2).
+            if let Some(effect) = &e.effect {
+                json.push_str(",\"group\":");
+                num(&mut json, f64::from(e.group));
+                json.push_str(",\"effect\":");
+                json.push_str(effect);
+            }
             json.push('}');
             data.extend(e.data.iter().map(|&x| x as f32));
         }
@@ -412,7 +435,10 @@ impl Sink for BatchSink {
         }
         // An empty path still makes its batch, as before tiles (the batches' order).
         let tile = path.first().map_or([0.0, 0.0], |&p| self.tile_of(p));
-        let e = match self.recent_strokes.find(style, self.scale, tile) {
+        let e = match self
+            .recent_strokes
+            .find(style, self.scale, tile, self.group)
+        {
             Some(e) => e,
             None => {
                 let mut key = String::from("s|");
@@ -420,7 +446,8 @@ impl Sink for BatchSink {
                 let e = self.entry(&key, Kind::Stroke, style.level, tile, || {
                     key[2..].to_string()
                 });
-                self.recent_strokes.remember(style, self.scale, tile, e);
+                self.recent_strokes
+                    .remember(style, self.scale, tile, self.group, e);
                 e
             }
         };
@@ -461,6 +488,17 @@ impl Sink for BatchSink {
 
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
         self.place_marker(style, at, angle);
+    }
+
+    fn effects(&mut self, spec: Option<&EffectSpec>, level: f64) {
+        let Some(spec) = spec else {
+            self.group = 0;
+            return;
+        };
+        let json = spec.json();
+        let next = self.groups.len() as u32 + 1;
+        self.group = *self.groups.entry(group_key(&json, level)).or_insert(next);
+        self.group_json = json;
     }
 }
 
@@ -565,7 +603,7 @@ impl BatchSink {
             _ => paint,
         };
         let tile = self.tile_of(outer[0]);
-        let e = match self.recent_fills.find(paint, self.scale, tile) {
+        let e = match self.recent_fills.find(paint, self.scale, tile, self.group) {
             Some(e) => e,
             None => {
                 let mut key = String::from("f|");
@@ -573,7 +611,8 @@ impl BatchSink {
                 let e = self.entry(&key, Kind::Fill, paint.level(), tile, || {
                     key[2..].to_string()
                 });
-                self.recent_fills.remember(paint, self.scale, tile, e);
+                self.recent_fills
+                    .remember(paint, self.scale, tile, self.group, e);
                 e
             }
         };
@@ -586,7 +625,10 @@ impl BatchSink {
 
     fn place_marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
         let tile = self.tile_of(at);
-        let e = match self.recent_markers.find(style, self.scale, tile) {
+        let e = match self
+            .recent_markers
+            .find(style, self.scale, tile, self.group)
+        {
             Some(e) => e,
             None => {
                 let key = style.key();
@@ -595,7 +637,8 @@ impl BatchSink {
                     style.write_json(&mut s);
                     s
                 });
-                self.recent_markers.remember(style, self.scale, tile, e);
+                self.recent_markers
+                    .remember(style, self.scale, tile, self.group, e);
                 e
             }
         };

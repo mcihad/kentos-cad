@@ -37,8 +37,13 @@ import {
 import { symbolsOfLayerStyle } from '../../style/fromLayer';
 import type { GeometryClass } from '../../style/geometry';
 import { BIVARIATE_SCHEMES, bivariateColors, HEAT_RAMPS } from '../../style/thematic';
+import type { BlendMode } from '../../contracts/generated/BlendMode';
+import type { LayerCompose } from '../../contracts/generated/LayerCompose';
+import { BLEND_LABELS, BLEND_MODES, composeOf, MAX_MASK_SIZE } from '../../model/layerComposeRules';
+import { layersCompose } from '../../product/layersCompose';
 import { layersRenderer } from '../../product/layersRenderer';
 import { rendererProblem } from '../../wasm/core';
+import { checkbox, numberInput, select } from './designerFields';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { fieldToken } from '../processing/fieldPlan';
@@ -145,6 +150,9 @@ class LayerStyleDialog {
   /** What a cluster's or a displacement's single points draw with: another tab's draft. */
   private inner: InnerKind = 'simple';
   private applied: string;
+  /** Katman çizimi's draft (docs/adr/0226 §3, §4): opacity, blending mode, mask; applied with the renderer. */
+  private compose: LayerCompose | null;
+  private appliedCompose: string;
 
   constructor(ctx: AppContext, layerId: string) {
     this.ctx = ctx;
@@ -204,6 +212,8 @@ class LayerStyleDialog {
       else if (wrapped.type === 'bivariate') this.bivariate = wrapped;
     }
     this.applied = JSON.stringify(current ?? null);
+    this.compose = node.compose ? structuredClone(node.compose) : null;
+    this.appliedCompose = JSON.stringify(this.compose);
 
     this.body = h('div', { class: 'lsty__body' });
     this.status = h('div', { class: 'lsty__status', role: 'status' });
@@ -227,7 +237,7 @@ class LayerStyleDialog {
   /** Changes not applied are asked about in a window over this one (DESIGN.md §7.9.1), as the symbol designer asks. */
   private asking = false;
   private confirmClose(name: string): boolean {
-    if (JSON.stringify(this.renderer()) === this.applied) return true;
+    if (!this.changed()) return true;
     if (!this.asking) {
       this.asking = true;
       void askUnsaved({ name: `${name} katman stili`, after: 'Pencere kapanırsa bu değişiklikler kaybolur.', verb: 'kapat', apply: true }).then((a) => {
@@ -292,6 +302,11 @@ class LayerStyleDialog {
     }
   }
 
+  /** Whether the renderer or Katman çizimi differs from what the map has. */
+  private changed(): boolean {
+    return JSON.stringify(this.renderer()) !== this.applied || JSON.stringify(this.compose) !== this.appliedCompose;
+  }
+
   private apply(): boolean {
     const r = this.renderer();
     const why = r ? rendererProblem(r) : null;
@@ -299,14 +314,83 @@ class LayerStyleDialog {
       this.say(`Uygulanmadı: ${why}`, 'warn');
       return false;
     }
-    const done = layersRenderer.execute({ doc: this.ctx.doc }, { layer: this.layerId, renderer: r });
-    if (done.status !== 'completed') {
-      this.say(`Uygulanmadı: ${'error' in done ? done.error.message : 'çizim değişti'}`, 'warn');
-      return false;
+    if (JSON.stringify(r) !== this.applied) {
+      const done = layersRenderer.execute({ doc: this.ctx.doc }, { layer: this.layerId, renderer: r });
+      if (done.status !== 'completed') {
+        this.say(`Uygulanmadı: ${'error' in done ? done.error.message : 'çizim değişti'}`, 'warn');
+        return false;
+      }
+      this.applied = JSON.stringify(r);
     }
-    this.applied = JSON.stringify(r);
+    // Katman çizimi (docs/adr/0226 §3, §4): its own command and undo step.
+    if (JSON.stringify(this.compose) !== this.appliedCompose) {
+      const c = this.compose;
+      const done = layersCompose.execute({ doc: this.ctx.doc }, { layer: this.layerId, ...(c?.opacity != null && { opacity: c.opacity }), ...(c?.blend && { blend: c.blend }), ...(c?.mask && { mask: c.mask }) });
+      if (done.status !== 'completed') {
+        this.say(`Katman çizimi uygulanmadı: ${'error' in done ? done.error.message : 'çizim değişti'}`, 'warn');
+        return false;
+      }
+      this.appliedCompose = JSON.stringify(this.compose);
+    }
     this.say(r ? 'Stil haritaya uygulandı.' : 'Katman basit görünüşüne döndü.');
     return true;
+  }
+
+  /**
+   * Katman çizimi (docs/adr/0226 §3, §4): the layer's opacity and blending mode as it meets the drawing, and the mask
+   * its labels and markers cut into other layers with. Applied with Uygula and Tamam, a step of its own.
+   */
+  private composeSection(): HTMLElement {
+    const c = this.compose ?? {};
+    const keep = (next: LayerCompose, render = false) => {
+      this.compose = composeOf(next);
+      if (render) this.render();
+      else this.say(this.changed() ? 'Değişiklikler henüz uygulanmadı.' : '', 'warn');
+    };
+    const mask = c.mask;
+    const sources = !!mask && (mask.labels || mask.markers);
+    const setMask = (patch: Partial<NonNullable<LayerCompose['mask']>>, render: boolean) => {
+      const m = { labels: false, markers: false, size: 1, targets: [] as string[], ...mask, ...patch };
+      keep({ ...c, ...(m.labels || m.markers ? { mask: m } : { mask: undefined }) }, render);
+    };
+    const field = (label: string, control: Child, hint?: string) =>
+      h('div', { class: 'lsty__crow' }, h('label', { class: 'lsty__clabel' }, label), h('div', { class: 'lsty__ccontrol' }, control), hint ? h('div', { class: 'lsty__chint' }, hint) : null);
+    const others = this.ctx.doc.layers.leaves().filter((l) => l.id !== this.layerId);
+    const targets = new Set(mask?.targets ?? []);
+    const list = h(
+      'div',
+      { class: 'lsty__targets', role: 'group', 'aria-label': 'Maskelenen katmanlar' },
+      others.length
+        ? others.map((l) =>
+            checkbox(targets.has(l.id), (on) => {
+              const next = on ? [...(mask?.targets ?? []), l.id] : (mask?.targets ?? []).filter((t) => t !== l.id);
+              setMask({ targets: next }, false);
+            }, this.layerName(l.id)),
+          )
+        : h('span', { class: 'lsty__chint' }, 'Maskelenecek başka katman yok.'),
+    );
+    return h(
+      'section',
+      { class: 'lsty__compose', 'aria-label': 'Katman çizimi' },
+      h('div', { class: 'lsty__ctitle' }, icon('layerCompose', 16), 'Katman çizimi'),
+      h(
+        'div',
+        { class: 'lsty__cgrid' },
+        field('Saydamlık', numberInput(Math.round((1 - (c.opacity ?? 1)) * 100), (v) => keep({ ...c, opacity: 1 - Math.min(100, Math.max(0, v)) / 100 }), { label: 'Katman saydamlığı', unit: '%', step: 5, min: 0, max: 100 })),
+        field(
+          'Karışım kipi',
+          select<BlendMode>(c.blend ?? 'normal', BLEND_MODES.map((m) => ({ value: m, label: BLEND_LABELS[m] })), (v) => keep({ ...c, blend: v === 'normal' ? undefined : v }, true), 'Karışım kipi'),
+          'Katmanın renkleri alttaki çizimle bu kurala göre karışır (Çoğalt: gölgeli kabartma renklerin üstünde).',
+        ),
+        field(
+          'Maske',
+          h('div', { class: 'lsty__cchecks' }, checkbox(!!mask?.labels, (v) => setMask({ labels: v }, true), 'Etiketler'), checkbox(!!mask?.markers, (v) => setMask({ markers: v }, true), 'İşaretler')),
+          'Bu katmanın etiketlerinin ve işaretlerinin altında seçilen katmanlar boşalır.',
+        ),
+        sources ? field('Boy', numberInput(mask?.size ?? 1, (v) => setMask({ size: Math.min(MAX_MASK_SIZE, Math.max(0, v)) }, false), { label: 'Maskenin boyu', unit: 'mm', step: 0.5, min: 0, max: MAX_MASK_SIZE }), 'Ekranda; köşeler bu yarıçapla yuvarlanır.') : null,
+        sources ? field('Maskelenen katmanlar', list) : null,
+      ),
+    );
   }
 
   /** What the thematic panels take from the window. */
@@ -409,8 +493,8 @@ class LayerStyleDialog {
         panel = invertedPanel(this.host(), this.inverted, (r) => ((this.inverted = r), this.render()));
         break;
     }
-    replaceChildren(this.body, top, panel);
-    if (JSON.stringify(this.renderer()) !== this.applied) this.say('Değişiklikler henüz uygulanmadı.', 'warn');
+    replaceChildren(this.body, top, panel, this.composeSection());
+    if (this.changed()) this.say('Değişiklikler henüz uygulanmadı.', 'warn');
   }
 
   /** The pictures of the layer's simple look, one per geometry class it has. */

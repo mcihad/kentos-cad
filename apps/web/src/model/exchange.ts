@@ -137,6 +137,19 @@ export function selectionDrawing(doc: Json, uids: readonly string[], name: strin
   };
   const tree = prune(list(doc, 'layers'));
   const keptNodes = allIds(tree);
+  // A mask keeps the targets the new drawing has; with none left it goes, and the composition with nothing left
+  // (docs/adr/0226 §3).
+  const keepMasks = (nodes: Json[]): void => {
+    for (const n of nodes) {
+      if (n.compose?.mask) {
+        n.compose.mask.targets = list(n.compose.mask, 'targets').filter((t: string) => keptNodes.has(t));
+        if (!n.compose.mask.targets.length) delete n.compose.mask;
+        if (!Object.keys(n.compose).length) delete n.compose;
+      }
+      keepMasks(list(n, 'children'));
+    }
+  };
+  keepMasks(tree);
   const leaves = walk(tree)
     .filter(([n]) => n.type === 'layer')
     .map(([n]) => n.id as string);
@@ -236,6 +249,12 @@ function takeLayers(ours: Json, theirs: Json, paths: ReadonlySet<string>, same: 
         if (made.filter) {
           if (made.filter.expression != null) made.filter = { expression: made.filter.expression };
           else delete made.filter;
+        }
+        // A mask's targets name the other drawing's layers too: the mask does not come; the opacity and the mode do
+        // (docs/adr/0226 §3).
+        if (made.compose) {
+          delete made.compose.mask;
+          if (!Object.keys(made.compose).length) delete made.compose;
         }
         nodes.push(made);
         nodes = made.children;

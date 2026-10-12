@@ -259,6 +259,7 @@ mod tests {
             replaces: None,
             actions: Vec::new(),
             card: None,
+            compose: None,
             filter: None,
         }
     }

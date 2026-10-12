@@ -1,4 +1,4 @@
-import type { Color, MarkerLayer, Symbol, SymbolLayer } from '../model/style';
+import type { Color, MarkerLayer, MarkerSymbolLayer, Symbol, SymbolLayer } from '../model/style';
 
 /**
  * The thematic renderers' value rules on the page (docs/adr/0213 §2), the
@@ -77,7 +77,8 @@ function recolorMarker(m: MarkerLayer, c: string): MarkerLayer {
   }
 }
 
-const recolorMarkers = (layers: readonly MarkerLayer[], c: string) => layers.map((m) => recolorMarker(m, c));
+/** A marker symbol's markers recoloured; a geometry generator keeps its own symbol (the core's `recolor_markers`). */
+const recolorMarkers = (layers: readonly MarkerSymbolLayer[], c: string) => layers.map((m) => (m.type === 'geometryGenerator' ? m : recolorMarker(m, c)));
 
 /** The symbol with its main colour `c` (docs/adr/0213 §2.10): fills (not edges), lines, marks. */
 export function withColor(symbol: Symbol, c: string): Symbol {
@@ -142,7 +143,7 @@ export function withSize(symbol: Symbol, size: number, unit: 'mm' | 'px'): Symbo
       ...symbol,
       layers: symbol.layers.map((l) => {
         if (l.type === 'simpleLine') return { ...l, width: fixedOr(l.width, 0) * k, ...(typeof l.offset === 'number' && { offset: l.offset * k }) };
-        if (l.type === 'markerLine') return { ...l, marker: { ...l.marker, layers: l.marker.layers.map((m) => scaleMarker(m, k)) } };
+        if (l.type === 'markerLine') return { ...l, marker: { ...l.marker, layers: l.marker.layers.map((m) => (m.type === 'geometryGenerator' ? m : scaleMarker(m, k))) } };
         return l;
       }),
     } as Symbol;

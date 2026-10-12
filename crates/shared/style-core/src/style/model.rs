@@ -94,6 +94,56 @@ fn numbers(v: &Json) -> Option<Vec<f64>> {
     }
 }
 
+/// A symbol layer's effects (docs/adr/0226 §2): the switched-on ones, the
+/// first of each type; a missing value takes its default.
+fn effects(v: &Json) -> Option<Effects> {
+    let Json::Arr(items) = v else {
+        return None;
+    };
+    let mut out = Effects::default();
+    for e in items {
+        if opt_bool(e.get("enabled")) == Some(false) {
+            continue;
+        }
+        let n = |key: &str, default: f64| {
+            opt_num(e.get(key))
+                .filter(|x| x.is_finite())
+                .unwrap_or(default)
+        };
+        let color = |default: &str| opt_str(e.get("color")).unwrap_or_else(|| default.to_owned());
+        let shadow = |distance: f64, blur: f64| Shadow {
+            distance: n("distance", distance),
+            angle: n("angle", 135.0),
+            blur: n("blur", blur),
+            color: color("#000000"),
+            opacity: n("opacity", 0.5),
+        };
+        let glow = |spread: f64, blur: f64, c: &str| Glow {
+            spread: n("spread", spread),
+            blur: n("blur", blur),
+            color: color(c),
+            opacity: n("opacity", 0.5),
+        };
+        match e.get("type") {
+            Json::Str(t) if t == "dropShadow" && out.drop_shadow.is_none() => {
+                out.drop_shadow = Some(shadow(1.0, 1.5));
+            }
+            Json::Str(t) if t == "outerGlow" && out.outer_glow.is_none() => {
+                out.outer_glow = Some(glow(0.5, 1.5, "#FFFFFF"));
+            }
+            Json::Str(t) if t == "innerShadow" && out.inner_shadow.is_none() => {
+                out.inner_shadow = Some(shadow(0.5, 1.0));
+            }
+            Json::Str(t) if t == "innerGlow" && out.inner_glow.is_none() => {
+                out.inner_glow = Some(glow(0.5, 1.0, "#FFFFFF"));
+            }
+            Json::Str(t) if t == "blur" && out.blur.is_none() => out.blur = Some(n("blur", 1.0)),
+            _ => {}
+        }
+    }
+    (!out.is_empty()).then_some(out)
+}
+
 impl Exprs {
     /// A data-defined value: absent (None), fixed (`fixed` reads it) or an expression object.
     fn dd<T>(&mut self, v: &Json, fixed: impl Fn(&Json) -> Option<T>) -> Option<Dd<T>> {
@@ -134,6 +184,112 @@ pub struct Base {
     pub enabled: Option<Dd<bool>>,
     pub opacity: Option<f64>,
     pub unit: Unit,
+    /// Its draw effects (docs/adr/0226 §2); None when it has none switched on.
+    pub effects: Option<Effects>,
+}
+
+/// A shadow (Gölge, İç gölge; docs/adr/0226 §2): its distance and angle
+/// (degrees, clockwise from north), blur, colour and opacity, in the
+/// layer's unit.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Shadow {
+    pub distance: f64,
+    pub angle: f64,
+    pub blur: f64,
+    pub color: String,
+    pub opacity: f64,
+}
+
+/// A glow (Dış parıltı, İç parıltı): its spread, blur, colour and opacity.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Glow {
+    pub spread: f64,
+    pub blur: f64,
+    pub color: String,
+    pub opacity: f64,
+}
+
+/// A symbol layer's draw effects, each at most once; their order is fixed
+/// (docs/adr/0226 §2): shadow, outer glow, the layer (blurred by `blur`),
+/// inner shadow, inner glow.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Effects {
+    pub drop_shadow: Option<Shadow>,
+    pub outer_glow: Option<Glow>,
+    pub inner_shadow: Option<Shadow>,
+    pub inner_glow: Option<Glow>,
+    pub blur: Option<f64>,
+}
+
+impl Effects {
+    fn is_empty(&self) -> bool {
+        self.drop_shadow.is_none()
+            && self.outer_glow.is_none()
+            && self.inner_shadow.is_none()
+            && self.inner_glow.is_none()
+            && self.blur.is_none()
+    }
+}
+
+/// A step of a geometry generator (docs/adr/0226 §1); its numbers may come
+/// from an expression per object.
+#[derive(Clone, Debug)]
+pub enum Step {
+    Centroid,
+    PointOnSurface,
+    /// `all`, `inner`, `first`, `last`, `ends`.
+    Vertices(String),
+    Boundary,
+    Offset {
+        distance: Option<Dd<f64>>,
+    },
+    Extend {
+        start: Option<Dd<f64>>,
+        end: Option<Dd<f64>>,
+    },
+    /// `side`: `both`, `left`, `right`.
+    Buffer {
+        distance: Option<Dd<f64>>,
+        side: String,
+    },
+    Envelope,
+    Hull,
+    Circle {
+        radius: Option<Dd<f64>>,
+    },
+    Wedge {
+        direction: Option<Dd<f64>>,
+        width: Option<Dd<f64>>,
+        radius: Option<Dd<f64>>,
+        inner: Option<Dd<f64>>,
+    },
+    Polygon {
+        sides: Option<Dd<f64>>,
+        radius: Option<Dd<f64>>,
+        rotation: Option<Dd<f64>>,
+    },
+    Translate {
+        dx: Option<Dd<f64>>,
+        dy: Option<Dd<f64>>,
+    },
+    Rotate {
+        angle: Option<Dd<f64>>,
+    },
+    Scale {
+        x: Option<Dd<f64>>,
+        y: Option<Dd<f64>>,
+    },
+    /// A step the engine does not know: its result is empty.
+    Unknown,
+}
+
+/// Geometri üretici (docs/adr/0226 §1): the object's geometry through its
+/// steps, drawn with its own symbol.
+#[derive(Clone, Debug)]
+pub struct GeometryGenerator {
+    pub base: Base,
+    pub steps: Vec<Step>,
+    pub symbol: Option<Symbol>,
 }
 
 #[derive(Clone, Debug)]
@@ -287,6 +443,7 @@ pub enum Layer {
         marker: Vec<Option<MarkerLayer>>,
         position: Option<String>,
     },
+    GeometryGenerator(GeometryGenerator),
     /// A layer type the engine does not know.
     Unknown,
 }
@@ -314,6 +471,68 @@ impl Exprs {
                 Json::Str(s) if s == "m" => Unit::M,
                 _ => Unit::Mm,
             },
+            effects: effects(v.get("effects")),
+        }
+    }
+
+    /// A geometry generator's steps (docs/adr/0226 §1), their expressions interned here.
+    pub fn steps(&mut self, v: &Json) -> Vec<Step> {
+        match v {
+            Json::Arr(items) => items.iter().map(|s| self.step(s)).collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// A geometry generator's step.
+    fn step(&mut self, v: &Json) -> Step {
+        let mut n = |key: &str| self.dd_num(v.get(key));
+        match v.get("kind") {
+            Json::Str(k) => match k.as_str() {
+                "centroid" => Step::Centroid,
+                "pointOnSurface" => Step::PointOnSurface,
+                "vertices" => {
+                    Step::Vertices(opt_str(v.get("which")).unwrap_or_else(|| "all".to_owned()))
+                }
+                "boundary" => Step::Boundary,
+                "offset" => Step::Offset {
+                    distance: n("distance"),
+                },
+                "extend" => Step::Extend {
+                    start: n("start"),
+                    end: n("end"),
+                },
+                "buffer" => Step::Buffer {
+                    distance: n("distance"),
+                    side: opt_str(v.get("side")).unwrap_or_else(|| "both".to_owned()),
+                },
+                "envelope" => Step::Envelope,
+                "hull" => Step::Hull,
+                "circle" => Step::Circle {
+                    radius: n("radius"),
+                },
+                "wedge" => Step::Wedge {
+                    direction: n("direction"),
+                    width: n("width"),
+                    radius: n("radius"),
+                    inner: n("inner"),
+                },
+                "polygon" => Step::Polygon {
+                    sides: n("sides"),
+                    radius: n("radius"),
+                    rotation: n("rotation"),
+                },
+                "translate" => Step::Translate {
+                    dx: n("dx"),
+                    dy: n("dy"),
+                },
+                "rotate" => Step::Rotate { angle: n("angle") },
+                "scale" => Step::Scale {
+                    x: n("x"),
+                    y: n("y"),
+                },
+                _ => Step::Unknown,
+            },
+            _ => Step::Unknown,
         }
     }
 
@@ -463,6 +682,11 @@ impl Exprs {
                     marker: self.marker_symbol(v.get("marker")),
                     position: opt_str(v.get("position")),
                 },
+                "geometryGenerator" => Layer::GeometryGenerator(GeometryGenerator {
+                    base,
+                    steps: self.steps(v.get("steps")),
+                    symbol: self.symbol(v.get("symbol")),
+                }),
                 _ => Layer::Unknown,
             },
             _ => Layer::Unknown,

@@ -369,6 +369,7 @@ fn put_nodes(
                     // Its actions and card name only its own objects' values (docs/adr/0225 §4).
                     actions: n.actions.clone(),
                     card: n.card.clone(),
+                    compose: n.compose.clone(),
                     filter: None,
                 };
                 model.add_layer(new, parent, false).map_err(|r| r.0)?;

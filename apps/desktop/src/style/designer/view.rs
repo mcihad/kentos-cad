@@ -242,15 +242,17 @@ impl App {
                 .style(style::text::muted)
                 .into();
         };
-        let parent = match d.selected {
-            LayerPath::Child(i, _) => d
-                .draft
-                .symbol
-                .get("layers")
-                .and_then(|l| l.get(i))
-                .map(|p| texts::in_marker(layer_label(type_of(p)))),
+        let owner = match d.selected {
+            LayerPath::Child(i, _) => d.draft.symbol.get("layers").and_then(|l| l.get(i)),
             LayerPath::Top(_) => None,
         };
+        let parent = owner.map(|p| {
+            if type_of(p) == "geometryGenerator" {
+                texts::in_generator(layer_label(type_of(p)))
+            } else {
+                texts::in_marker(layer_label(type_of(p)))
+            }
+        });
         let mut title =
             row![label::body(layer_label(type_of(layer))).font(typography::ui_strong())]
                 .spacing(8)
@@ -258,9 +260,15 @@ impl App {
         if let Some(p) = parent {
             title = title.push(label::caption(p).style(style::text::muted));
         }
-        let context = match d.selected {
-            LayerPath::Child(..) => "marker",
-            LayerPath::Top(_) => d.kind(),
+        // A marker's layers are markers; a generator's symbol's layers its class (docs/adr/0226 §1).
+        let context = match owner {
+            Some(p) if type_of(p) == "geometryGenerator" => p
+                .get("symbol")
+                .and_then(|s| s.get("type"))
+                .and_then(Value::as_str)
+                .unwrap_or("marker"),
+            Some(_) => "marker",
+            None => d.kind(),
         };
         let lib = &self.styles.library;
         let assets: Vec<(String, String, bool)> = lib
@@ -291,11 +299,16 @@ impl App {
                 recent: symbol_colors(&d.draft.symbol, &palette),
             },
             assets: &assets,
+            step: d.step,
+            effects: kentos_native_style::designer::effects::takes_effects(d.selected),
         };
-        column![title, horizontal_divider(), form::form(&env)]
+        let mut body = column![title, horizontal_divider(), form::form(&env)]
             .spacing(10)
-            .width(Fill)
-            .into()
+            .width(Fill);
+        if owner.is_some() {
+            body = body.push(fields::hint(texts::EFFECTS_INSIDE));
+        }
+        body.into()
     }
 }
 

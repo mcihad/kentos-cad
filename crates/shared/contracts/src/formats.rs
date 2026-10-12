@@ -119,7 +119,9 @@ use crate::layer::LineType;
 /// 52: object attachments, layer actions and information cards (docs/adr/0225): `.kcad` document
 ///    schema 40, an object's `attachments` (the typed columns' `ATTACHMENTS` flag), a layer's
 ///    `actions` and `card`; `readExif` reads a photo's position, time and direction.
-pub const FORMATS_VERSION: u32 = 52;
+/// 53: layer compositions (docs/adr/0226 §3, §4): `.kcad` document schema 41, a layer's `compose`
+///    (opacity, blending mode, the mask of its labels and markers).
+pub const FORMATS_VERSION: u32 = 53;
 
 // ── Every import ────────────────────────────────────────────────────────
 

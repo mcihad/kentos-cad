@@ -21,6 +21,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.set": entities.set,
     "cad.entities.transform": entities.transform,
     "cad.labels.pin": labels.pin,
+    "cad.layers.compose": layers.compose,
     "cad.layers.filter": layers.filter,
     "cad.layers.info": layers.info,
     "cad.layers.labels": layers.labels,

@@ -1875,6 +1875,45 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Katman çizimi (docs/adr/0226 §3, §4), held together by fixtures/commands/v1/cad.layers.compose.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_COMPOSE.into(),
+            version: crate::CAD_LAYERS_COMPOSE_VERSION,
+            title: "Katman çizimi".into(),
+            summary: "Katmanın çizime nasıl katıldığını yazar: saydamlığı (opacity, 0–1), karışım kipi (blend: normal, multiply, screen, overlay, darken, lighten, colorDodge, colorBurn, hardLight, softLight, difference, exclusion, addition) ve maskesi (mask: katmanın yerleşen etiketleri labels ve işaretleri markers, size mm kadar büyütülüp köşeleri yuvarlanarak targets'taki katmanlarda boşaltılır). \
+                      Katmanın çizimi verilen olur: verilmeyen alan varsayılandır (opak, normal, maskesiz); hiçbiri verilmezse katman çizimi kalkar. Saydamlığı 1'den küçük, kipi normal olmayan ya da maskelenen katman ayrı bir resme çizilip çizimin o ana kadarki resmine bu kurallarla birleştirilir. \
+                      Katman ağacının değişikliğidir: tek geri alma adımı “Katman çizimi”; aynıysa hiçbir şey yazılmaz. Kilitli katman da alır. Maskelenen katman çizimin başka bir katmanı olmalıdır (kendisi ya da grup değil); sonradan silinen maskelenen katman atlanır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersCompose>(),
+            output: schema::<crate::LayersComposed>(),
+            plan: Some(schema::<crate::LayersComposePlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Gölgeli kabartma çoğaltarak, yarı saydam".into(),
+                    input: json!({ "layer": "kabartma", "opacity": 0.6, "blend": "multiply" }),
+                    output: Some(json!({ "layer": "kabartma", "changed": true, "revision": "18" })),
+                },
+                CommandExample {
+                    title: "Yol adları alttaki çizgileri boşaltır".into(),
+                    input: json!({ "layer": "yol-adi", "mask": { "labels": true, "size": 1.0, "targets": ["yol", "parsel"] } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Katman çizimini kaldır".into(),
+                    input: json!({ "layer": "kabartma" }),
+                    output: None,
+                },
+            ],
+        },
         // Bilgi kartı ve eylemler (docs/adr/0225 §4, §5), held together by fixtures/commands/v1/cad.layers.info.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_INFO.into(),
@@ -2261,6 +2300,9 @@ mod tests {
                     crate::CAD_LAYERS_FILTER => {
                         serde_json::from_value::<crate::LayersFilter>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_COMPOSE => {
+                        serde_json::from_value::<crate::LayersCompose>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_INFO => {
                         serde_json::from_value::<crate::LayersInfo>(e.input.clone()).map(|_| ())
                     }
@@ -2347,6 +2389,10 @@ mod tests {
                         }
                         crate::CAD_LAYERS_FILTER => {
                             serde_json::from_value::<crate::LayersFiltered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_COMPOSE => {
+                            serde_json::from_value::<crate::LayersComposed>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_INFO => {

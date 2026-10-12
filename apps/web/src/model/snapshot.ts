@@ -45,9 +45,12 @@ import type { LayerInit, LayerNode, LayerSnap } from './layers';
 import { filtersProblem } from './layerFilterRules';
 import { attachmentsProblem } from './attachmentRules';
 import { actionsProblem, cardProblem, infosProblem } from './layerInfoRules';
+import { BLEND_MODES, composeProblem, composesProblem } from './layerComposeRules';
 import type { Attachment } from '../contracts/generated/Attachment';
 import type { InfoCard } from '../contracts/generated/InfoCard';
 import type { LayerAction } from '../contracts/generated/LayerAction';
+import type { LayerCompose } from '../contracts/generated/LayerCompose';
+import type { LayerMask } from '../contracts/generated/LayerMask';
 import { scenariosProblem } from './temporalRules';
 import type { LayerFilter } from '../contracts/generated/LayerFilter';
 import type { LayerTime } from '../contracts/generated/LayerTime';
@@ -433,6 +436,9 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
   // Schema 40's tree rule (docs/adr/0225 §4, §5): actions and cards on layers that hold objects, each by its rule.
   const infoFault = infosProblem(layers as unknown as LayerNode[]);
   if (infoFault) fail('Katmanlar', infoFault);
+  // Schema 41's tree rule (docs/adr/0226 §3, §4): compositions on layers, each by its rule.
+  const composeFault = composesProblem(layers as unknown as LayerNode[]);
+  if (composeFault) fail('Katmanlar', composeFault);
   // The project's connections (docs/adr/0208 §2), and the links of its layers' services: a connection named is one of
   // them, no layer has both; an object on a service layer is refused as it is read (`entity`).
   const connections = settings.connections === undefined ? undefined : readConnections(settings.connections, 'Proje ayarları › bağlantılar', fail);
@@ -616,6 +622,39 @@ function layer(v: unknown, where: string): LayerInit {
     // A layer's actions and card (docs/adr/0225 §4, §5): their fields here, the tree's rule whole in `head` (`infosProblem`).
     ...(v.actions !== undefined && { actions: layerActionsAt(v.actions, type, `${w} › eylemler`) }),
     ...(v.card !== undefined && { card: infoCardAt(v.card, type, `${w} › bilgi kartı`) }),
+    // A layer's composition (docs/adr/0226 §3, §4): its fields here, the tree's rule whole in `head` (`composesProblem`).
+    ...(v.compose !== undefined && { compose: layerComposeAt(v.compose, type, `${w} › katman çizimi`) }),
+  };
+}
+
+/** A layer's composition (docs/adr/0226 §3, §4) as the KCAD readers read it: what says nothing is not written. */
+function layerComposeAt(v: unknown, type: 'group' | 'layer', where: string): LayerCompose {
+  if (type === 'group') return fail(where, 'grubun katman çizimi olmaz; katman çizimi yalnız katmanındır');
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  const unknown = Object.keys(v).find((k) => !['opacity', 'blend', 'mask'].includes(k));
+  if (unknown) return fail(`${where} › ${unknown}`, 'bilinmeyen alan');
+  if (v.opacity === 1) return fail(`${where} › saydamlık`, '1 saydamlığı yazılmaz; katman opaksa alan boş bırakılır');
+  if (v.blend === 'normal') return fail(`${where} › karışım kipi`, 'normal karışım kipi yazılmaz; kip normalse alan boş bırakılır');
+  const out: LayerCompose = {
+    ...(v.opacity !== undefined && { opacity: num(v.opacity, `${where} › saydamlık`) }),
+    ...(v.blend !== undefined && { blend: oneOf(v.blend, BLEND_MODES, `${where} › karışım kipi`) }),
+    ...(v.mask !== undefined && { mask: layerMaskAt(v.mask, `${where} › maske`) }),
+  };
+  const problem = composeProblem(out);
+  return problem ? fail(where, problem) : out;
+}
+
+function layerMaskAt(v: unknown, where: string): LayerMask {
+  if (!isObj(v)) return fail(where, 'nesne olmalı');
+  const unknown = Object.keys(v).find((k) => !['labels', 'markers', 'size', 'targets'].includes(k));
+  if (unknown) return fail(`${where} › ${unknown}`, 'bilinmeyen alan');
+  for (const k of ['labels', 'markers'] as const) if (v[k] !== undefined && v[k] !== true) return fail(`${where} › ${k}`, 'yalnız true olabilir');
+  if (!Array.isArray(v.targets)) return fail(`${where} › maskelenenler`, 'liste olmalı');
+  return {
+    ...(v.labels === true && { labels: true }),
+    ...(v.markers === true && { markers: true }),
+    size: num(v.size, `${where} › boy`),
+    targets: v.targets.map((t, i) => str(t, `${where} › maskelenenler › ${i + 1}`)),
   };
 }
 

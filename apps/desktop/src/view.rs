@@ -779,6 +779,8 @@ impl App {
                     lift,
                     self.label_engine(),
                 );
+                // This frame's placed labels: the masks' shapes (docs/adr/0226 §3).
+                let spots = self.label_spots.last();
                 let area = self.viewport.view(
                     doc,
                     self.canvas(),
@@ -786,7 +788,10 @@ impl App {
                     &self.selection,
                     accent,
                     self.session.cursor(),
-                    Some(self.styles.styling(&self.spatial, &self.settings)),
+                    Some(crate::viewport::Styling {
+                        labels: spots.as_deref().map(Vec::as_slice),
+                        ..self.styles.styling(&self.spatial, &self.settings)
+                    }),
                 );
                 // The running command's strip on top (command_bar.rs); the right
                 // button's menus over it all (drawing_menus.rs).

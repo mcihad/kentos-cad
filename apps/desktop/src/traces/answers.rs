@@ -71,6 +71,7 @@ impl App {
             Dialog::TableEditor => crate::tables::editor::EDITOR_TITLE.to_owned(),
             Dialog::Cogo => crate::cogo::COGO_TITLE.to_owned(),
             Dialog::Project if self.asking_type() => crate::project::TYPE_TITLE.to_owned(),
+            Dialog::LayerStyle => self.layer_style_title(),
             other => format!("{other:?}"),
         })
     }
@@ -102,6 +103,7 @@ impl App {
             Some(Dialog::TableInsert) => self.table_insert_control(control),
             Some(Dialog::TableEditor) => self.table_editor_control(control),
             Some(Dialog::Project) if self.asking_type() => self.project_type_control(control),
+            Some(Dialog::LayerStyle) => self.layer_style_control(control),
             Some(other) => Err(format!("{other:?} penceresi izden yanıtlanamıyor")),
             None => Err("açık pencere yok".to_owned()),
         }

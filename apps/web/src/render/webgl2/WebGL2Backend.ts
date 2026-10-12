@@ -1,6 +1,8 @@
 import { supportedSamples, type AtlasSource, type FrameState, type LineBatch, type RenderBackend, type RGBA, type SceneLayer } from '../types';
+import { composeKey, markerBoxes, planCompose, type ComposePlan, type PlanView } from '../composePlan';
 import { madeCanvas } from '../pictures';
 import type { ServiceSource } from '../servicePass';
+import { WebGL2Composer } from './composer';
 import { FILL_FS, FILL_VS, LINE_FS, LINE_VS, POINT_FS, POINT_VS } from './shaders';
 import { StyledRenderer, type GpuStyled } from './styledRenderer';
 
@@ -91,6 +93,8 @@ export class WebGL2Backend implements RenderBackend {
   private baseKey = '';
   /** The overlays of the last frame: uploading them leaves the base as it is. */
   private overlayIds: ReadonlySet<string> = new Set();
+  /** Katman çizimi and draw effects (docs/adr/0226), made with the first frame that composes. */
+  private composer: WebGL2Composer | null = null;
 
   async init(canvas: HTMLCanvasElement, opts: { samples?: number } = {}): Promise<void> {
     const gl = canvas.getContext('webgl2', { antialias: false, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
@@ -195,7 +199,7 @@ export class WebGL2Backend implements RenderBackend {
     // Not even a single-sampled target fits in memory: nothing to draw into (onSamplesFailed said why).
     if (!this.draw || !this.base || !this.out) return;
     this.overlayIds = new Set(frame.overlays);
-    const key = `${view.center.x},${view.center.y},${view.scale},${w}x${h},${frame.scaleDenominator},${frame.clearColor.join()},${frame.underlays.join()}|${frame.order.join()}`;
+    const key = `${view.center.x},${view.center.y},${view.scale},${w}x${h},${frame.scaleDenominator},${frame.clearColor.join()},${frame.underlays.join()}|${frame.order.join()}|${composeKey(frame.compositions)}`;
     const drawBase = !frame.keepBase || key !== this.baseKey;
     gl.viewport(0, 0, w, h);
 
@@ -255,6 +259,42 @@ export class WebGL2Backend implements RenderBackend {
         }
     };
 
+    /** A layer's batches `from` … `to`: its plain fills when it starts at the first, its plain lines and points when it ends at the last. */
+    const drawRange = (l: GpuLayer, from: number, to: number, c = main) => {
+      if (from === 0 && l.fills.length) {
+        setCommon(this.fill, c);
+        for (const f of l.fills) {
+          gl.uniform4fv(this.fill.uniforms.u_color, f.color);
+          gl.bindVertexArray(f.vao);
+          gl.drawArrays(gl.TRIANGLES, 0, f.count);
+        }
+      }
+      if (to > from) this.styled.draw(l.styled.slice(from, to), c.styled, c.cull);
+      if (to < l.styled.length) return;
+      if (l.lines.length) {
+        setCommon(this.line, c);
+        gl.uniform1f(this.line.uniforms.u_pxPerUnit, c.pxPerUnit);
+      }
+      for (const ln of l.lines) {
+        gl.uniform4fv(this.line.uniforms.u_color, ln.color);
+        const d = ln.dash ?? [];
+        gl.uniform4f(this.line.uniforms.u_dash, (d[0] ?? 0) * this.dpr, (d[1] ?? 0) * this.dpr, (d[2] ?? 0) * this.dpr, (d[3] ?? 0) * this.dpr);
+        gl.bindVertexArray(ln.vao);
+        gl.drawArrays(gl.LINES, 0, ln.count);
+      }
+      if (l.points.length) {
+        setCommon(this.point, c);
+        gl.uniform1f(this.point.uniforms.u_dpr, this.dpr);
+      }
+      for (const pt of l.points) {
+        gl.uniform4fv(this.point.uniforms.u_color, pt.color);
+        gl.uniform1f(this.point.uniforms.u_size, (pt.size ?? 7) * this.dpr);
+        gl.uniform1i(this.point.uniforms.u_shape, pt.shape ?? 0);
+        gl.bindVertexArray(pt.vao);
+        gl.drawArrays(gl.POINTS, 0, pt.count);
+      }
+    };
+
     const draw = this.draw!;
     const base = this.base!;
     gl.bindFramebuffer(gl.FRAMEBUFFER, draw.fbo);
@@ -263,7 +303,24 @@ export class WebGL2Backend implements RenderBackend {
       gl.clearColor(r, g, b, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
       pass(frame.underlays);
-      pass(frame.order);
+      const plan = this.composePlan(frame, w, h);
+      if (plan) {
+        // A composed frame (docs/adr/0226): the plan's passes over the ground and the underlays.
+        const order = frame.order.map((id) => this.layers.get(id));
+        this.composer ??= new WebGL2Composer(gl, (vs, fs, a, u) => {
+          const made = this.createProgram(vs, fs, a, u);
+          return { program: made.program, a: made.attribs, u: made.uniforms };
+        });
+        this.composer.record(plan, [w, h], this.samples, {
+          picture: () => gl.bindFramebuffer(gl.FRAMEBUFFER, draw.fbo),
+          copyPicture: (into) => this.copy(draw.fbo, into, w, h),
+          draw: (li, from, to) => {
+            const l = order[li];
+            if (l) drawRange(l, from, to);
+          },
+        });
+        gl.bindVertexArray(null);
+      } else pass(frame.order);
       this.copy(draw.fbo, base.fbo, w, h);
       this.baseKey = key;
     } else {
@@ -296,6 +353,29 @@ export class WebGL2Backend implements RenderBackend {
     gl.bindVertexArray(null);
     this.copy(draw.fbo, this.out!.fbo, w, h);
     this.drawTexture(this.out!.tex!, null);
+  }
+
+  /**
+   * The composed frame's plan (docs/adr/0226), from the persistent layers as prepare left them; null when no layer is
+   * composed and no effect group draws.
+   */
+  private composePlan(frame: FrameState, w: number, h: number): ComposePlan | null {
+    const { view } = frame;
+    const pv: PlanView = { size: [w, h], cam: [view.center.x, view.center.y], pxPerM: view.scale * this.dpr, dpr: this.dpr };
+    const layers = frame.order.map((id) => {
+      const l = this.layers.get(id);
+      const list = l?.styled ?? [];
+      return {
+        id,
+        batches: list.map((s) => s.batch),
+        drawn: (i: number) => list[i]?.visible ?? false,
+        plain: !!l && (l.fills.length > 0 || l.lines.length > 0 || l.points.length > 0),
+        compose: frame.compositions?.get(id),
+      };
+    });
+    return planCompose(layers, pv, (id, grow, out) => {
+      for (const s of this.layers.get(id)?.styled ?? []) if (s.visible && s.batch.kind === 'marker') markerBoxes(s.batch, s.hit?.aspect ?? 1, pv, grow, out);
+    });
   }
 
   /** Draws a target-sized texture over a framebuffer, pixel for pixel. */
@@ -397,6 +477,7 @@ export class WebGL2Backend implements RenderBackend {
 
   dispose(): void {
     for (const id of [...this.layers.keys()]) this.remove(id);
+    this.composer?.dispose();
     this.releaseTargets();
     for (const p of [this.line, this.fill, this.point, this.copyProgram]) if (p) this.gl.deleteProgram(p.program);
     this.styled?.dispose();

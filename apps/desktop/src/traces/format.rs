@@ -229,6 +229,9 @@ pub struct Expect {
     /// The layer tree's counts as its rows show them, by path (“Kadastro / Parsel”): “geçen / bütün” where a
     /// filter leaves objects out (docs/adr/0211 §4); only the rows named, each exactly.
     pub(super) layer_counts: Option<std::collections::BTreeMap<String, String>>,
+    /// The layers' Katman çizimi by path (docs/adr/0226 §3, §4): only the layers named, each exactly
+    /// (numbers as numbers); `null` none.
+    pub(super) layer_compose: Option<std::collections::BTreeMap<String, serde_json::Value>>,
     /// The colour and line weight new objects take now (the ribbon's
     /// Renk and Kalınlık); `null` the layer's, and absent differ.
     #[serde(default, deserialize_with = "present")]

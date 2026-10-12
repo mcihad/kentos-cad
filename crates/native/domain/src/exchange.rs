@@ -299,8 +299,9 @@ pub fn selection_json(doc: &Value, uids: &[Value], name: &str) -> Value {
         }
         out
     }
-    let tree = prune(arr(doc, "layers"), &used_layers);
+    let mut tree = prune(arr(doc, "layers"), &used_layers);
     let kept_nodes = all_ids(&tree);
+    keep_masks(&mut tree, &kept_nodes);
     let leaves: Vec<String> = walked(&tree)
         .into_iter()
         .filter(|(n, _)| str_of(n, "type") == "layer")
@@ -464,6 +465,39 @@ fn path_of(tree: &[Value]) -> HashMap<String, Vec<String>> {
 }
 
 /// Our node at the path their node has: a layer only, unless `any` (a state names groups too).
+/// A mask keeps the targets `kept` has; with none left it goes, and the
+/// composition with nothing left (docs/adr/0226 §3).
+fn keep_masks(nodes: &mut [Value], kept: &HashSet<String>) {
+    for n in nodes.iter_mut() {
+        if let Some(o) = n.as_object_mut() {
+            let empty = match o.get_mut("compose").and_then(Value::as_object_mut) {
+                Some(c) => {
+                    let gone = match c
+                        .get_mut("mask")
+                        .and_then(|m| m.get_mut("targets"))
+                        .and_then(Value::as_array_mut)
+                    {
+                        Some(ts) => {
+                            ts.retain(|t| t.as_str().is_some_and(|t| kept.contains(t)));
+                            ts.is_empty()
+                        }
+                        None => false,
+                    };
+                    if gone {
+                        c.remove("mask");
+                    }
+                    c.is_empty()
+                }
+                None => false,
+            };
+            if empty {
+                o.remove("compose");
+            }
+        }
+        keep_masks(arr_mut(n, "children"), kept);
+    }
+}
+
 fn our_node_for(
     ours: &Value,
     their_paths: &HashMap<String, Vec<String>>,
@@ -516,6 +550,18 @@ fn take_layers(
                         _ => {
                             o.remove("filter");
                         }
+                    }
+                    // A mask's targets name the other drawing's layers too: the mask does not
+                    // come; the opacity and the mode do (docs/adr/0226 §3).
+                    let empty = match o.get_mut("compose").and_then(Value::as_object_mut) {
+                        Some(c) => {
+                            c.remove("mask");
+                            c.is_empty()
+                        }
+                        None => false,
+                    };
+                    if empty {
+                        o.remove("compose");
                     }
                 }
                 list.push(made);

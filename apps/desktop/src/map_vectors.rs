@@ -862,6 +862,8 @@ mod tests {
             reach_unit: Unit::World,
             min_scale: None,
             max_scale: None,
+            group: 0,
+            effect: None,
         };
         let around = |x: f64, y: f64| Some([x - 50.0, y - 50.0, x + 50.0, y + 50.0]);
         assert!(batch_reaches(&batch, &o, around(583_670.0, 4_400_020.0)));

@@ -426,6 +426,12 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub card: Option<crate::layer_info::InfoCard>,
+    /// How it is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
+    /// §4): opacity, blending mode, the mask it cuts into other layers;
+    /// absent, opaque and normal. Only a layer has it, never a group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub compose: Option<crate::layer_compose::LayerCompose>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

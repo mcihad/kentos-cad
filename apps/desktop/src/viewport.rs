@@ -166,6 +166,87 @@ pub struct Styling<'a> {
     /// Görünüm kipleri (docs/adr/0195): what the layers leave out, and their colours.
     pub view_build: kentos_native_style::View,
     pub view_colors: kentos_native_style::color::ViewColors,
+    /// The labels placed this frame: the masks cutting with a layer's labels take
+    /// their boxes (docs/adr/0226 §3).
+    pub labels: Option<&'a [(kentos_interaction::LabelSpot, kentos_interaction::spatial::Grow)]>,
+}
+
+/// The scene with its masks' label boxes (docs/adr/0226 §3): each source layer's
+/// placed labels (a curved one's letters), as grown on screen, from the layers'
+/// origin; hidden and unplaced labels are no shapes.
+fn with_mask_labels(
+    mut scene: StyledScene,
+    asks: &[(usize, usize, String)],
+    spots: Option<&[(kentos_interaction::LabelSpot, kentos_interaction::spatial::Grow)]>,
+    doc: &kentos_domain::Document,
+    origin: kentos_render_wgpu::Vec2,
+) -> StyledScene {
+    use kentos_geometry_core::labels::engine::{CURVED, HIDDEN, UNPLACED};
+    use kentos_interaction::LabelSpot;
+    use kentos_render_wgpu::compose::LabelBox;
+    let Some(spots) = spots.filter(|_| !asks.is_empty()) else {
+        return scene;
+    };
+    let wanted: std::collections::HashSet<&str> = asks.iter().map(|(_, _, id)| id.as_str()).collect();
+    let mut boxes: std::collections::HashMap<String, Vec<LabelBox>> = std::collections::HashMap::new();
+    // A curved label is its letters; a hidden or unplaced one, and its letters, is none.
+    let mut skip = false;
+    for (spot, grow) in spots {
+        let (slot, at, turn, size) = match spot {
+            LabelSpot::Placed {
+                slot,
+                at,
+                angle,
+                width,
+                height,
+                state,
+                ..
+            } => {
+                skip = state & (HIDDEN | UNPLACED) != 0;
+                if skip || state & CURVED != 0 {
+                    continue;
+                }
+                (*slot, *at, *angle, [*width, *height])
+            }
+            LabelSpot::PlacedLetter {
+                slot,
+                at,
+                angle,
+                size,
+                advance,
+                ..
+            } if !skip => (*slot, *at, *angle, [*advance, *size]),
+            _ => continue,
+        };
+        let Some(e) = doc.get(slot) else {
+            continue;
+        };
+        let layer = e.base().layer_id.as_str();
+        if !wanted.contains(layer) {
+            continue;
+        }
+        let k = grow.k;
+        let c = kentos_render_wgpu::Vec2::new(
+            grow.anchor.x + (at.x - grow.anchor.x) * k,
+            grow.anchor.y + (at.y - grow.anchor.y) * k,
+        );
+        boxes.entry(layer.to_owned()).or_default().push(LabelBox {
+            centre: [c.x - origin.x, c.y - origin.y],
+            size: [(size[0] * k) as f32, (size[1] * k) as f32],
+            turn: turn as f32,
+        });
+    }
+    for (c, m, id) in asks {
+        let (Some(found), Some((_, draw))) = (boxes.get(id), scene.compose.get_mut(*c)) else {
+            continue;
+        };
+        let mut d = (**draw).clone();
+        if let Some(mask) = d.masks.get_mut(*m) {
+            mask.labels = Arc::new(found.clone());
+        }
+        *draw = Arc::new(d);
+    }
+    scene
 }
 
 /// How the area draws: the settings' effective `graphics.msaa` and `graphics.hiDpi` (docs/adr/0023),
@@ -555,6 +636,9 @@ impl Viewport {
             // Over the grid, under the highlights.
             1,
         );
+        // The masks cutting with a layer's placed labels (docs/adr/0226 §3).
+        let asks = self.styled.borrow().label_masks().to_vec();
+        let scene = with_mask_labels(scene, &asks, s.labels, &doc.model, look.origin);
         // The pictures the style engine made (heat maps, docs/adr/0213 §2.6): handed to the atlas by
         // key, the ones no longer drawn let go.
         let mut made = std::collections::HashSet::new();

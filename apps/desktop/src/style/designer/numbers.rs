@@ -4,6 +4,8 @@
 //! ↓ step the one holding the keyboard by the same table.
 
 use kentos_native_style::classify::{js_number, js_round, rounded};
+use kentos_native_style::designer::effects::{EFFECT_TYPES, effect_of, new_effect, put_effect};
+use kentos_native_style::designer::steps::{new_step, put_step};
 use kentos_native_style::designer::{Patch, js_value, set, type_of};
 use serde_json::{Value, json};
 
@@ -62,8 +64,62 @@ const fn degrees(label: &'static str, default: f64) -> Spec {
     spec(label, Unit::Fixed("°"), 5.0, -INF, INF, default)
 }
 
+/// A geometry generator's step field (`step.<i>.<field>`, docs/adr/0226 §1): the step and the field.
+fn step_key(key: &str) -> Option<(usize, &str)> {
+    let rest = key.strip_prefix("step.")?;
+    let (i, field) = rest.split_once('.')?;
+    Some((i.parse().ok()?, field))
+}
+
+/// An effect's field (`fx.<type>.<field>`, docs/adr/0226 §2): the type and the field.
+fn effect_key(key: &str) -> Option<(&str, &str)> {
+    key.strip_prefix("fx.")?.split_once('.')
+}
+
+fn step_spec(layer: &Value, i: usize, field: &str) -> Option<Spec> {
+    let step = layer.get("steps")?.get(i)?;
+    let kind = step.get("kind").and_then(Value::as_str).unwrap_or("");
+    // A new step's own number is what an empty field shows.
+    let start = new_step(kind).get(field).and_then(Value::as_f64).unwrap_or(0.0);
+    Some(match field {
+        "distance" => length("Uzaklık", start),
+        "start" => size("Baştan", 0.0, start),
+        "end" => size("Sondan", 0.0, start),
+        "radius" => size("Yarıçap", 0.0, start),
+        "inner" => size("İç yarıçap", 0.0, 0.0),
+        "direction" => degrees("Yön", start),
+        "width" => spec("Genişlik", Unit::Fixed("°"), 5.0, 0.0, 360.0, start),
+        "sides" => spec("Köşe sayısı", Unit::Fixed("adet"), 1.0, 3.0, 720.0, start),
+        "rotation" => degrees("Döndürme", 0.0),
+        "dx" => length("Y (sağa)", start),
+        "dy" => length("X (yukarı)", start),
+        "angle" => degrees("Açı", start),
+        "x" => spec("Yatay", Unit::None, 0.1, -INF, INF, 1.0),
+        "y" => spec("Düşey", Unit::None, 0.1, -INF, INF, 1.0),
+        _ => return None,
+    })
+}
+
+fn effect_spec(kind: &str, field: &str) -> Option<Spec> {
+    let start = new_effect(kind).get(field).and_then(Value::as_f64).unwrap_or(0.0);
+    Some(match field {
+        "distance" => size("Uzaklık", 0.0, start),
+        "angle" => degrees("Açı", start),
+        "blur" => size("Bulanıklık", 0.0, start),
+        "spread" => size("Yayılma", 0.0, start),
+        "transparency" => spec("Saydamlık", Unit::Fixed("%"), 5.0, 0.0, 100.0, 50.0),
+        _ => return None,
+    })
+}
+
 /// The number field `key` of a layer, as its form shows it.
 pub fn spec_of(layer: &Value, key: &str) -> Option<Spec> {
+    if let Some((i, field)) = step_key(key) {
+        return step_spec(layer, i, field);
+    }
+    if let Some((kind, field)) = effect_key(key) {
+        return effect_spec(kind, field);
+    }
     let t = type_of(layer);
     let marker = matches!(t, "shape" | "svg" | "raster" | "text");
     Some(match (t, key) {
@@ -153,6 +209,33 @@ pub const KEYS: [&str; 34] = [
     "rotation",
 ];
 
+/// The number fields of a layer's form: the fixed ones, its generator's steps' and its effects'.
+pub fn keys_of(layer: &Value) -> Vec<String> {
+    let mut out: Vec<String> = KEYS.iter().map(|k| (*k).to_owned()).collect();
+    for (i, step) in layer
+        .get("steps")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .enumerate()
+    {
+        if let Some(o) = new_step(step.get("kind").and_then(Value::as_str).unwrap_or("")).as_object() {
+            out.extend(o.keys().filter(|k| *k != "kind").map(|k| format!("step.{i}.{k}")));
+        }
+        for extra in ["inner", "rotation", "x", "y"] {
+            out.push(format!("step.{i}.{extra}"));
+        }
+    }
+    for kind in EFFECT_TYPES {
+        if effect_of(layer, kind).is_some() {
+            for field in ["distance", "angle", "blur", "spread", "transparency"] {
+                out.push(format!("fx.{kind}.{field}"));
+            }
+        }
+    }
+    out
+}
+
 fn number(v: Option<&Value>) -> Option<f64> {
     v.and_then(Value::as_f64)
 }
@@ -166,6 +249,17 @@ fn element(v: Option<&Value>, i: usize) -> Option<f64> {
 /// The value a field shows; None when the layer gives none (its default is shown)
 /// or when it comes from an expression.
 pub fn read(layer: &Value, key: &str) -> Option<f64> {
+    if let Some((i, field)) = step_key(key) {
+        return number(layer.get("steps")?.get(i)?.get(field));
+    }
+    if let Some((kind, field)) = effect_key(key) {
+        let e = effect_of(layer, kind)?;
+        return if field == "transparency" {
+            Some(js_round((1.0 - number(e.get("opacity")).unwrap_or(0.5)) * 100.0))
+        } else {
+            number(e.get(field))
+        };
+    }
     let g = |k: &str| layer.get(k);
     match key {
         "transparency" => Some(js_round(
@@ -223,6 +317,29 @@ pub fn clamp(spec: &Spec, v: f64) -> f64 {
 
 /// The patch a field writes with value `v` (already inside its bounds).
 pub fn write(layer: &Value, key: &str, v: f64) -> Patch {
+    if let Some((i, field)) = step_key(key) {
+        let mut step = layer
+            .get("steps")
+            .and_then(|s| s.get(i))
+            .cloned()
+            .unwrap_or_else(|| json!({}));
+        if let Some(o) = step.as_object_mut() {
+            o.insert(field.to_owned(), js_value(v));
+        }
+        let next = put_step(layer, i, step);
+        return set("steps", next.get("steps").cloned().unwrap_or(Value::Null));
+    }
+    if let Some((kind, field)) = effect_key(key) {
+        let mut e = effect_of(layer, kind).cloned().unwrap_or_else(|| new_effect(kind));
+        if let Some(o) = e.as_object_mut() {
+            if field == "transparency" {
+                o.insert("opacity".into(), js_value(1.0 - v.clamp(0.0, 100.0) / 100.0));
+            } else {
+                o.insert(field.to_owned(), js_value(v));
+            }
+        }
+        return effects_patch(&put_effect(layer, e));
+    }
     match key {
         "transparency" => set("opacity", js_value(1.0 - v.clamp(0.0, 100.0) / 100.0)),
         k if k.starts_with("wave.") => {
@@ -234,6 +351,11 @@ pub fn write(layer: &Value, key: &str, v: f64) -> Patch {
         }
         k => set(k, js_value(v)),
     }
+}
+
+/// The patch that gives a layer the effects `changed` has (none: the list goes).
+pub fn effects_patch(changed: &Value) -> Patch {
+    vec![("effects".to_owned(), changed.get("effects").cloned())]
 }
 
 /// ↑ or ↓ on a field whose text is `text` (`numberInput`'s keys): a step up

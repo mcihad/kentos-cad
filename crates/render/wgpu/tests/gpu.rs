@@ -1,8 +1,10 @@
 //! The drawing pipeline on a real GPU (TODOS.md REN-02, REN-07, AA-01,
 //! AA-02): the shared WGSL built into pipelines by the device's own driver, a
 //! frame drawn and read back; the sample counts the device takes, a live
-//! change of multisampling, the fallback when a count is refused, and HiDPI
-//! off. Test only: the renderer itself never reads the GPU back.
+//! change of multisampling, the fallback when a count is refused, HiDPI
+//! off, and the layer composition and draw effects against their reference
+//! (docs/adr/0226, `gpu/compose.rs`). Test only: the renderer itself never
+//! reads the GPU back.
 //!
 //! Needs a GPU, so it runs only with `KENTOS_GPU_TESTS=1`; otherwise it says
 //! it was skipped, which is not a pass. One device, one test function: several
@@ -17,6 +19,11 @@ use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::{
     Camera, FrameInput, Palette, RenderSettings, Renderer, Rgba8, ScenePart, Vec2,
 };
+
+#[path = "gpu/compose.rs"]
+mod compose;
+#[path = "gpu/compose_timing.rs"]
+mod compose_timing;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -254,6 +261,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         replaces: None,
         actions: Vec::new(),
         card: None,
+        compose: None,
         filter: None,
     }];
     doc.entities = vec![Entity::Line(LineEntity {
@@ -361,6 +369,8 @@ fn a_raster_draws_its_tiles(gpu: &mut Gpu) {
             reach_unit: Unit::Px,
             min_scale: None,
             max_scale: None,
+            group: 0,
+            effect: None,
         }],
         ..StyledLayer::default()
     };
@@ -368,6 +378,7 @@ fn a_raster_draws_its_tiles(gpu: &mut Gpu) {
         layers: vec![std::sync::Arc::new(StyledLayerPart { id: 7, layer })],
         under: 0,
         order: None,
+        compose: Vec::new(),
     });
     let mut camera = Camera {
         width: f64::from(width),
@@ -427,6 +438,16 @@ fn on_a_real_gpu() {
     a_count_the_device_refuses_falls_back_to_the_last_working_one(&mut gpu);
     hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(&mut gpu);
     a_kept_picture_is_composed_again_with_the_hover_over_it(&mut gpu);
+    compose::layer_composition_and_effects_match_the_reference(&mut gpu);
+}
+
+/// Katman çizimi's cost in a frame (docs/adr/0226 §7, `gpu/compose_timing.rs`): a measurement, run
+/// alone and by hand (a device of its own).
+#[test]
+#[ignore = "a measurement on a real GPU, run by hand in release"]
+fn composition_timing() {
+    let mut gpu = Gpu::open();
+    compose_timing::composition_timing(&mut gpu);
 }
 
 /// The kept picture (the desktop's drawing area): the same frame again
@@ -546,10 +567,9 @@ fn multisampling_changes_live_and_smooths_fill_edges(gpu: &mut Gpu) {
     let four = gpu.draw(&[&fixed], &camera, &settings, 64, 64);
     let stats = gpu.renderer.stats(1).expect("stats");
     assert_eq!(stats.samples, 4);
-    assert_eq!(
-        stats.uploaded_bytes, 64,
-        "only the uniform: the scene stays"
-    );
+    // Only the uniforms, the picture's and the highlights' (docs/adr/0195): the scene stays.
+    let uniform = std::mem::size_of::<kentos_render_wgpu::layout::FrameUniform>() as u64;
+    assert_eq!(stats.uploaded_bytes, 2 * uniform, "the scene stays");
     assert!(stats.target_bytes >= 64 * 64 * 4 * 5, "{stats:?}");
     // The area is covered: nothing of the red frame is left.
     assert!(
@@ -722,11 +742,13 @@ fn the_sample_draws_with_every_pipeline_and_the_cache_uploads_once(gpu: &mut Gpu
         .any(|p| p[0] > 0xc0 && p[1] < 0x90 && p[2] < 0x90);
     assert!(red, "the parcel outline is drawn");
 
-    // Another frame of the same parts, the view moved: only the uniform goes up.
+    // Another frame of the same parts, the view moved: only the uniforms go up, the
+    // picture's and the highlights' (their width, docs/adr/0195).
     camera.pan_by(3.0, -2.0);
     let _ = gpu.draw(&[&fixed, &curves], &camera, &settings, width, height);
     let again = gpu.renderer.stats(1).expect("stats");
-    assert_eq!(again.uploaded_bytes, 64, "{again:?}");
+    let uniform = std::mem::size_of::<kentos_render_wgpu::layout::FrameUniform>() as u64;
+    assert_eq!(again.uploaded_bytes, 2 * uniform, "{again:?}");
     assert_eq!(again.resident_bytes, stats.resident_bytes);
 
     // A view left undrawn is released with its buffers.

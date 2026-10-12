@@ -1,5 +1,6 @@
 import type { FeatureFeed } from '../contracts/generated/FeatureFeed';
 import type { LayerFilter } from '../contracts/generated/LayerFilter';
+import type { LayerCompose } from '../contracts/generated/LayerCompose';
 import type { LayerTime } from '../contracts/generated/LayerTime';
 import type { MigrationSource } from '../contracts/generated/MigrationSource';
 import type { ServiceLayer } from '../contracts/generated/ServiceLayer';
@@ -16,6 +17,7 @@ import { fieldsProblem, type LayerField } from './layerFields';
 import { filterOf, infoOf, LayerStore, temporalOf } from './layers';
 import { layerFilterProblem } from './layerFilterRules';
 import { actionsProblem, cardProblem } from './layerInfoRules';
+import { composeOf, composeProblem } from './layerComposeRules';
 import { followHatches, tiesOf } from './hatchTies';
 import { followLinks } from './linkedTexts';
 import { sameJson } from './sameJson';
@@ -38,6 +40,8 @@ type Op =
   | { type: 'layerFilter'; layerId: string; before: LayerFilter | null; after: LayerFilter | null }
   /** A layer's actions and card (docs/adr/0225 §4, §5): undoable like its look. */
   | { type: 'layerInfo'; layerId: string; before: LayerInfo; after: LayerInfo }
+  /** A layer's composition (docs/adr/0226 §3, §4): undoable like its look. */
+  | { type: 'layerCompose'; layerId: string; before: LayerCompose | null; after: LayerCompose | null }
   /**
    * A layer or a group taken out of the tree with everything under it
    * (`removeLayer`), and its inverse: `node` is a copy as it was (children,
@@ -79,9 +83,10 @@ interface LayerPlace {
 const isLayerTreeOp = (o: Op): o is Extract<Op, { type: 'layerRemove' | 'layerAdd' }> => o.type === 'layerRemove' || o.type === 'layerAdd';
 
 /** Whether an op is about layers (their tree, style or the active one) rather than an object. */
-const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerService' | 'layerTemporal' | 'layerFilter' | 'layerInfo' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
+const isLayerOp = (o: Op): o is Extract<Op, { type: 'layerStyle' | 'layerFields' | 'layerService' | 'layerTemporal' | 'layerFilter' | 'layerInfo' | 'layerCompose' | 'layerRemove' | 'layerAdd' | 'layerActive' }> =>
   o.type === 'layerStyle' ||
   o.type === 'layerInfo' ||
+  o.type === 'layerCompose' ||
   o.type === 'layerFields' ||
   o.type === 'layerService' ||
   o.type === 'layerTemporal' ||
@@ -648,6 +653,26 @@ export class CadDocument {
     const after = infoOf(next, node.type);
     if (sameJson(before, after)) return false;
     this.record({ type: 'layerInfo', layerId, before, after }, label);
+    return true;
+  }
+
+  /**
+   * A layer's composition (docs/adr/0226 §3, §4) as one undo step `label`; null, or one that says nothing (opaque,
+   * normal, no mask), takes it away. Refused (`Refusal`) on a group or broken by the contract's rule; whether its mask's
+   * targets are the tree's other layers is the command's. An unknown id changes nothing; returns whether it changed.
+   */
+  setLayerCompose(layerId: string, next: LayerCompose | null, label: string): boolean {
+    const node = this.layers.get(layerId);
+    if (!node) return false;
+    const after = composeOf(next);
+    if (after) {
+      if (node.type === 'group') throw new Refusal(`“${node.name}” bir grup; katman çizimi yalnız katmanın olur.`);
+      const problem = composeProblem(after);
+      if (problem) throw new Refusal(`Katman çizimi: ${problem}.`);
+    }
+    const before = node.compose ? composeOf(node.compose) : null;
+    if (sameJson(before, after)) return false;
+    this.record({ type: 'layerCompose', layerId, before, after }, label);
     return true;
   }
 
@@ -1231,6 +1256,7 @@ export class CadDocument {
           else if (op.type === 'layerTemporal') this.layers.replaceTemporal(op.layerId, op.after);
           else if (op.type === 'layerFilter') this.layers.replaceFilter(op.layerId, op.after);
           else if (op.type === 'layerInfo') this.layers.replaceInfo(op.layerId, op.after);
+          else if (op.type === 'layerCompose') this.layers.replaceCompose(op.layerId, op.after);
           else if (op.type === 'layerActive') {
             if (this.layers.active.value === op.before) this.layers.setActive(op.after);
           }
@@ -1392,6 +1418,7 @@ function invert(op: Op): Op {
   if (op.type === 'layerTemporal') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerFilter') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerInfo') return { ...op, before: op.after, after: op.before };
+  if (op.type === 'layerCompose') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerActive') return { ...op, before: op.after, after: op.before };
   if (op.type === 'layerRemove') return { ...op, type: 'layerAdd' };
   if (op.type === 'layerAdd') return { ...op, type: 'layerRemove' };

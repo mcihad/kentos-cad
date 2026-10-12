@@ -1,7 +1,7 @@
 import type { LibraryAsset } from '../model/style';
 import { MM_PER_PX, type FillPaint, type MarkerStyle, type PrimUnit, type ShapeMarkStyle, type StrokeStyle, type TileSource } from '../style/primitives';
 import { parseHex, resolveColor, viewAlpha, viewHex, viewRgba, type CanvasPalette, type ViewColors } from './color';
-import { TEXT_BOX, type AtlasImage, type FillPaintBatch, type MarkerLook, type RGBA, type ShapeId, type StyledBatch, type TileMark } from './types';
+import { TEXT_BOX, type AtlasImage, type BatchEffect, type FillPaintBatch, type GlowFx, type MarkerLook, type RGBA, type ShadowFx, type ShapeId, type StyledBatch, type TileMark } from './types';
 
 /**
  * The page's half of a styled layer (docs/STYLE.md §6): the style core
@@ -25,7 +25,12 @@ type Described = (
   | { kind: 'stroke'; style: StrokeStyle }
   | { kind: 'fill'; style: FillPaint }
   | { kind: 'marker'; style: MarkerStyle }
-) & { minScale?: number; maxScale?: number; from: number; len: number; bounds: [number, number, number, number]; origin?: [number, number]; w: number; h: number };
+) & { minScale?: number; maxScale?: number; from: number; len: number; bounds: [number, number, number, number]; origin?: [number, number]; w: number; h: number; group?: number; effect?: EffectJson };
+
+/** A shadow and a glow as the core writes them (`EffectSpec::write_json`): colours as the symbol wrote them. */
+type ShadowJson = { dx: number; dy: number; blur: number; color: string; opacity: number };
+type GlowJson = { spread: number; blur: number; color: string; opacity: number };
+type EffectJson = { unit: PrimUnit; shadow?: ShadowJson; glow?: GlowJson; innerShadow?: ShadowJson; innerGlow?: GlowJson; blur?: number };
 
 const ANCHOR: Record<string, readonly [number, number]> = {
   center: [0, 0],
@@ -224,6 +229,23 @@ const scaleOf = (d: Described) => ({
   ...(d.origin ? { origin: d.origin } : {}),
 });
 
+/** A batch's effect group and its effects (docs/adr/0226 §2), colours as the view shows them; only for a group. */
+function groupOf(d: Described, looks: Looks): { group?: number; effect?: BatchEffect } {
+  if (!d.group || !d.effect) return {};
+  const e = d.effect;
+  const shadow = (v: ShadowJson): ShadowFx => ({ dx: v.dx, dy: v.dy, blur: Math.max(0, v.blur), color: looks.rgba(v.color, v.opacity) });
+  const glow = (v: GlowJson): GlowFx => ({ spread: Math.max(0, v.spread), blur: Math.max(0, v.blur), color: looks.rgba(v.color, v.opacity) });
+  const effect: BatchEffect = {
+    unit: e.unit,
+    ...(e.shadow && { shadow: shadow(e.shadow) }),
+    ...(e.glow && { glow: glow(e.glow) }),
+    ...(e.innerShadow && { innerShadow: shadow(e.innerShadow) }),
+    ...(e.innerGlow && { innerGlow: glow(e.innerGlow) }),
+    ...(e.blur && e.blur > 0 && { blur: e.blur }),
+  };
+  return { group: d.group, effect };
+}
+
 /** The rest of `v` over `period`, never below zero (Rust's `rem_euclid`); 0 for no period. */
 function rest(v: number, period: number): number {
   if (!(period > 0)) return 0;
@@ -280,10 +302,10 @@ export function styledBatches(json: string, data: Float32Array, opts: BatchOptio
     switch (d.kind) {
       case 'stroke': {
         const s = d.style;
-        return { kind: 'stroke', segments: nums, color: looks.rgba(s.color, s.opacity), width: s.width, unit: s.unit, dash: s.dash ? s.dash.slice(0, 8) : null, dashOffset: s.dashOffset, cap: s.cap, blur: s.blur, bounds: d.bounds, reach: d.w + 1, reachUnit: s.unit, ...scaleOf(d) };
+        return { kind: 'stroke', segments: nums, color: looks.rgba(s.color, s.opacity), width: s.width, unit: s.unit, dash: s.dash ? s.dash.slice(0, 8) : null, dashOffset: s.dashOffset, cap: s.cap, blur: s.blur, bounds: d.bounds, reach: d.w + 1, reachUnit: s.unit, ...scaleOf(d), ...groupOf(d, looks) };
       }
       case 'fill':
-        return { kind: 'fill', positions: nums, paint: fold(looks.paint(d.style), d.origin), bounds: d.bounds, reach: 0, reachUnit: 'world', ...scaleOf(d) };
+        return { kind: 'fill', positions: nums, paint: fold(looks.paint(d.style), d.origin), bounds: d.bounds, reach: 0, reachUnit: 'world', ...scaleOf(d), ...groupOf(d, looks) };
       case 'marker': {
         const s = d.style;
         const look = looks.look(s);
@@ -308,6 +330,7 @@ export function styledBatches(json: string, data: Float32Array, opts: BatchOptio
           reach,
           reachUnit: s.common.unit,
           ...scaleOf(d),
+          ...groupOf(d, looks),
         };
       }
     }

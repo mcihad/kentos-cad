@@ -183,9 +183,39 @@ export interface MarkerCommon {
   readonly level: number;
 }
 
-/** A symbol's primitives on one object, in the order compiled (`compileSymbol`). */
+/** A shadow and a glow as the core writes an effect group's effects (`EffectSpec::write_json`): colours as the symbol wrote them. */
+export interface ShadowSpec {
+  readonly dx: number;
+  readonly dy: number;
+  readonly blur: number;
+  readonly color: string;
+  readonly opacity: number;
+}
+
+export interface GlowSpec {
+  readonly spread: number;
+  readonly blur: number;
+  readonly color: string;
+  readonly opacity: number;
+}
+
+/** A symbol layer's draw effects (docs/adr/0226 §2): lengths in `unit` (a shadow's offset x right, y up). */
+export interface EffectSpec {
+  readonly unit: PrimUnit;
+  readonly shadow?: ShadowSpec;
+  readonly glow?: GlowSpec;
+  readonly innerShadow?: ShadowSpec;
+  readonly innerGlow?: GlowSpec;
+  readonly blur?: number;
+}
+
+/**
+ * A symbol's primitives on one object, in the order compiled (`compileSymbol`). A primitive of an effect group says
+ * its group (from 1); the groups' effects follow, the group's at its number − 1 (docs/adr/0226 §2).
+ */
 export interface Primitives {
-  readonly strokes: readonly { readonly style: StrokeStyle; readonly path: readonly Vec2[]; readonly closed: boolean }[];
-  readonly fills: readonly { readonly paint: FillPaint; readonly rings: readonly (readonly Vec2[])[] }[];
-  readonly markers: readonly { readonly style: MarkerStyle; readonly at: Vec2; readonly angle: number }[];
+  readonly strokes: readonly { readonly style: StrokeStyle; readonly path: readonly Vec2[]; readonly closed: boolean; readonly group?: number }[];
+  readonly fills: readonly { readonly paint: FillPaint; readonly rings: readonly (readonly Vec2[])[]; readonly group?: number }[];
+  readonly markers: readonly { readonly style: MarkerStyle; readonly at: Vec2; readonly angle: number; readonly group?: number }[];
+  readonly effects?: readonly EffectSpec[];
 }

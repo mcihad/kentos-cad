@@ -1,0 +1,61 @@
+{
+  "format": "kentos.wgsl-layout",
+  "version": 2,
+  "module": "compose",
+  "description": "KentOS layer composition and draw effects (docs/adr/0226 §2–§4): a full-target triangle per pass. One bind group: the pass's Params at a dynamic offset (128 bytes in 256-byte slots), six pictures and a linear clamping sampler. overFs lays a layer over the drawing (premultiplied source-over by the pipeline, the target's sample count), blendFs replaces the drawing with a mode's mix (no blending), effectFs lays an effect group's shadow, glow, picture, inner shadow and inner glow over its target in one pass (premultiplied), boxVs/boxFs draw mask boxes into an r8unorm picture (blending by max). The effects' maps of the group's alpha are packed, four pixels a texel (rgba8unorm, one sample): packFs packs the alpha by columns, rowsFs and columnsFs turn a map from columns to rows and back, hFs filters a column-packed map along x and vFs a row-packed one along y (a Gaussian blur, its taps in pairs through the linear sampler away from the edge; the largest; the smallest), downFs halves a row-packed map; downWideFs and blurWideFs halve and blur a blurred picture, a pixel a texel. The web's WebGPU backend builds the same pipelines (apps/web/src/render/webgpu/composer.ts); the WebGL2 twin is apps/web/src/render/webgl2/composer.ts. Any change to a struct, attribute, binding or packing raises the version.",
+  "sources": ["compose/compose.wgsl"],
+  "bindGroups": [
+    {
+      "group": 0,
+      "bindings": [
+        { "binding": 0, "name": "p", "type": "uniform", "struct": "Params", "dynamicOffset": true, "visibility": ["vertex", "fragment"] },
+        { "binding": 1, "name": "srcA", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
+        { "binding": 2, "name": "srcB", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
+        { "binding": 3, "name": "srcC", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
+        { "binding": 4, "name": "srcD", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
+        { "binding": 5, "name": "srcE", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
+        { "binding": 6, "name": "srcF", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
+        { "binding": 7, "name": "smp", "type": "sampler", "samplerType": "filtering", "visibility": ["fragment"] }
+      ]
+    }
+  ],
+  "structs": {
+    "Params": {
+      "size": 128,
+      "align": 16,
+      "fields": [
+        { "name": "a", "type": "vec4<f32>", "offset": 0 },
+        { "name": "b", "type": "vec4<f32>", "offset": 16 },
+        { "name": "c", "type": "vec4<f32>", "offset": 32 },
+        { "name": "d", "type": "vec4<f32>", "offset": 48 },
+        { "name": "e", "type": "vec4<f32>", "offset": 64 },
+        { "name": "f", "type": "vec4<f32>", "offset": 80 },
+        { "name": "g", "type": "vec4<f32>", "offset": 96 },
+        { "name": "h", "type": "vec4<f32>", "offset": 112 }
+      ]
+    }
+  },
+  "boxInstance": {
+    "stride": 28,
+    "attributes": [
+      { "location": 0, "name": "centre", "format": "float32x2", "offset": 0 },
+      { "location": 1, "name": "half", "format": "float32x2", "offset": 8 },
+      { "location": 2, "name": "dir", "format": "float32x2", "offset": 16 },
+      { "location": 3, "name": "grow", "format": "float32", "offset": 24 }
+    ]
+  },
+  "pipelines": [
+    { "name": "over", "vertex": "fullVs", "fragment": "overFs", "target": "picture", "blend": "premultiplied" },
+    { "name": "blend", "vertex": "fullVs", "fragment": "blendFs", "target": "picture", "blend": "none" },
+    { "name": "effect", "vertex": "fullVs", "fragment": "effectFs", "target": "picture", "blend": "premultiplied" },
+    { "name": "box", "vertex": "boxVs", "fragment": "boxFs", "target": "r8unorm", "blend": "max", "vertexCount": 6, "instanced": true },
+    { "name": "pack", "vertex": "fullVs", "fragment": "packFs", "target": "rgba8unorm", "blend": "none" },
+    { "name": "rows", "vertex": "fullVs", "fragment": "rowsFs", "target": "rgba8unorm", "blend": "none" },
+    { "name": "columns", "vertex": "fullVs", "fragment": "columnsFs", "target": "rgba8unorm", "blend": "none" },
+    { "name": "h", "vertex": "fullVs", "fragment": "hFs", "target": "rgba8unorm", "blend": "none" },
+    { "name": "v", "vertex": "fullVs", "fragment": "vFs", "target": "rgba8unorm", "blend": "none" },
+    { "name": "down", "vertex": "fullVs", "fragment": "downFs", "target": "rgba8unorm", "blend": "none" },
+    { "name": "downWide", "vertex": "fullVs", "fragment": "downWideFs", "target": "rgba8unorm", "blend": "none" },
+    { "name": "blurWide", "vertex": "fullVs", "fragment": "blurWideFs", "target": "rgba8unorm", "blend": "none" }
+  ]
+}

@@ -33,6 +33,7 @@ import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
 import type { ExprColumnData, ExprWorldTable } from '../wasm/core';
 import { extensionAlong, extensionAt, LABELS_HIDDEN, LABELS_KEEP, LABELS_UNPLACED, PickIndex, type Extension, type LabelHit, type PolygonMode, type SnapHit, type SnapKind } from './picking';
 import { LABEL_SHOWN_STRIDE } from './storeRecords';
+import { frameCompositions, labelMaskBoxes } from './compositions';
 import { screenScale, snapInRange } from './snapRange';
 
 /** Right-button menus the UI draws: idle selection, a running command, or snap overrides. */
@@ -218,6 +219,10 @@ export class ViewportController {
   /** Dev builds only, set by the interaction harness (see ViewportProbe); `declare` emits no field. */
   declare probe?: ViewportProbe;
   private glQueued = false;
+  /** The labels as last placed (the store's `labelsShown` records): Katman çizimi's label masks take them (docs/adr/0226 §3). */
+  private placedRecords: Float64Array = new Float64Array(0);
+  /** Whether the last frame's compositions asked for label boxes: a new placement draws the layers again then. */
+  private labelMasks = false;
   /** Something besides the highlight changed since the last GPU frame: the backend draws every layer again. */
   private baseDirty = true;
 
@@ -1634,6 +1639,14 @@ export class ViewportController {
     this.nav?.order(order.join());
     // The magnifier keeps looking under the pointer when the view moves beneath it (a wheel zoom).
     if (this.screenCursor) this.nav?.pointer(null, cam.screenToWorld(this.screenCursor));
+    // Katman çizimi (docs/adr/0226 §3, §4): the layers drawn into a picture of their own, their masks' label boxes
+    // as the labels were last placed.
+    let asked = false;
+    const compositions = frameCompositions((id) => doc.layers.get(id), order, !this.ctx.prefs.transparency.value, (wanted) => {
+      asked = true;
+      return labelMaskBoxes(this.placedRecords, LABEL_SHOWN_STRIDE, (id) => doc.get(id)?.layerId, wanted, origin);
+    });
+    this.labelMasks = asked;
     this.backend!.render({
       view,
       // 1:N on a 96 dpi screen (as in the status bar); rule scale ranges use it.
@@ -1644,6 +1657,7 @@ export class ViewportController {
       overlays: ['__hover', '__sel'],
       keepBase: !this.baseDirty,
       lens: this.nav?.lens(origin) ?? null,
+      ...(compositions && { compositions }),
     });
     this.baseDirty = false;
   }
@@ -1690,12 +1704,19 @@ export class ViewportController {
       const lg = cache.canvas.getContext('2d')!;
       lg.setTransform(dpr, 0, 0, dpr, 0, 0);
       lg.clearRect(0, 0, view.width, view.height);
+      const shown = this.picker.labelsShown(view.visibleBounds(), view.scale, this.editingId, size, plot, flags);
+      // Katman çizimi's label masks (docs/adr/0226 §3) take the labels as they are placed now: the drawing again.
+      this.placedRecords = shown.records;
+      if (this.labelMasks) {
+        this.glQueued = true;
+        this.schedule();
+      }
       drawLabels(
         lg,
         this.ctx.doc,
         view,
         modedPalette(this.palette, mode),
-        this.picker.labelsShown(view.visibleBounds(), view.scale, this.editingId, size, plot, flags),
+        shown,
         (l, look) => this.dimensionText(l, look),
         (b) => this.picker.blockPieces(b),
         LABEL_SHOWN_STRIDE,

@@ -418,6 +418,29 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             );
         }
     }
+    // Katman çizimi (docs/adr/0226 §3, §4): only the layers the step names, numbers as numbers.
+    if let Some(want) = &expect.layer_compose {
+        fn same(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+            use serde_json::Value;
+            match (a, b) {
+                (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
+                (Value::Array(x), Value::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same(p, q)),
+                (Value::Object(x), Value::Object(y)) => {
+                    x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| same(v, w)))
+                }
+                _ => a == b,
+            }
+        }
+        for (path, want) in want {
+            let have = got.layer_compose.get(path).cloned().unwrap_or(serde_json::Value::Null);
+            check(
+                &format!("layerCompose[{path}]"),
+                same(&have, want),
+                format!("{have}"),
+                format!("{want}"),
+            );
+        }
+    }
     // Every layer and group (docs/adr/0177 §5), exact.
     if let Some(want) = &expect.layers {
         check(

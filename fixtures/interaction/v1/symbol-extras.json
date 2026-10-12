@@ -1,0 +1,100 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "symbol-extras",
+  "title": "Sembol katmanı ekleri (ADR 0226), symbol-extras.kcad üzerinde: arazinin üstünde Çoğalt ve %70 saydamlıkla kabartma, iç parıltılı gölet, gölgeli binalar ve Yön'lerinden geometri üreticinin daire dilimleriyle fotoğraf noktaları (biri Yön'süz, yedeğiyle kuzeye); Katman stili'nde (etkin katman Eş yükselti) Katman çizimi'nin Maske'si Etiketler ve Yol'la açılır, Tamam `cad.layers.compose` ile tek adımda yazar: eş yükseltilerin etiketleri yolları boşaltır; Ctrl+Z geri alır; `shot` adımlarıyla iki platformda resimlenir",
+  "source": "docs/adr/0226",
+  "covers": [
+    "GIS-30"
+  ],
+  "document": "symbol-extras.kcad",
+  "view": {
+    "center": [
+      487120,
+      4420075
+    ],
+    "metresPerPixel": 0.3
+  },
+  "clickTolerance": 0.3,
+  "steps": [
+    {
+      "shot": "sahne",
+      "note": "Kabartma Çoğalt ile arazinin renklerinin üstünde; gölet iç parıltılı; binalar gölgeli; fotoğraf noktaları bakış dilimleriyle",
+      "expect": {
+        "layerCompose": {
+          "Kabartma": {
+            "opacity": 0.7,
+            "blend": "multiply"
+          },
+          "Eş yükselti": null
+        }
+      }
+    },
+    {
+      "run": "style.layerStyle",
+      "note": "etkin katman Eş yükselti: Basit görünüş, altında Katman çizimi",
+      "expect": {
+        "dialog": "Katman stili: Eş yükselti"
+      }
+    },
+    {
+      "dialog": "Katman stili: Eş yükselti",
+      "check": {
+        "Etiketler": true
+      },
+      "note": "Maske: etiketlerden; Boy 1 mm ve Maskelenen katmanlar görünür",
+      "expect": {
+        "dialog": "Katman stili: Eş yükselti"
+      }
+    },
+    {
+      "dialog": "Katman stili: Eş yükselti",
+      "check": {
+        "Yol": true
+      },
+      "expect": {
+        "dialog": "Katman stili: Eş yükselti"
+      }
+    },
+    {
+      "shot": "katman-cizimi",
+      "note": "Katman stili penceresinde Katman çizimi: Saydamlık, Karışım kipi, Maske (Etiketler, Boy, Maskelenen katmanlar: Yol)"
+    },
+    {
+      "dialog": "Katman stili: Eş yükselti",
+      "press": "Tamam",
+      "note": "cad.layers.compose, adım “Katman çizimi”",
+      "expect": {
+        "dialog": null,
+        "canUndo": true,
+        "layerCompose": {
+          "Eş yükselti": {
+            "mask": {
+              "labels": true,
+              "size": 1,
+              "targets": [
+                "yol"
+              ]
+            }
+          },
+          "Kabartma": {
+            "opacity": 0.7,
+            "blend": "multiply"
+          }
+        }
+      }
+    },
+    {
+      "shot": "maske",
+      "note": "eş yükseltilerin etiketlerinin altında yollar boşalır"
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "layerCompose": {
+          "Eş yükselti": null
+        }
+      }
+    }
+  ]
+}

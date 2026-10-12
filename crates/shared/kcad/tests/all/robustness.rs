@@ -343,6 +343,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         replaces: None,
         actions: Vec::new(),
         card: None,
+        compose: None,
         filter: None,
     }
 }
@@ -382,6 +383,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             replaces: None,
             actions: Vec::new(),
             card: None,
+            compose: None,
             filter: None,
         });
     }

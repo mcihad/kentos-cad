@@ -9,14 +9,19 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::offset::offset_path;
 use kentos_geometry_core::jsmath::{PI, cos, js_hypot, js_max, js_min, js_round, sin};
 
+use super::generate::{self, Gen};
 use super::model::{
-    Base, Dd, Layer, MarkerKind, MarkerLayer, MarkerLine, SimpleLine, Symbol, SymbolType, Unit,
+    Base, Dd, GeometryGenerator, Glow, Layer, MarkerKind, MarkerLayer, MarkerLine, Shadow,
+    SimpleLine, Symbol, SymbolType, Unit,
 };
 use super::place::{
     PlaceGroup, WaveSpec, centroid_of, interior_point, line_middle, place_along, positive,
     wave_paths,
 };
-use super::prim::{Common, FillPaint, Look, MarkerStyle, PrimUnit, Sink, StrokeStyle, Tile};
+use super::prim::{
+    Common, EffectSpec, FillPaint, GlowSpec, Look, MarkerStyle, PrimUnit, ShadowSpec, Sink,
+    StrokeStyle, Tile,
+};
 use crate::expr::Value;
 use crate::expr::value::{into_text, to_number, truthy};
 use crate::js::text::{trim, utf16_len};
@@ -83,7 +88,7 @@ pub struct Env<'a> {
 
 // ── Data-defined values ────────────────────────────────────────────────
 
-fn dd_number(v: &Option<Dd<f64>>, t: &dyn Values, fallback: f64) -> f64 {
+pub(super) fn dd_number(v: &Option<Dd<f64>>, t: &dyn Values, fallback: f64) -> f64 {
     match v {
         None => fallback,
         Some(Dd::Fixed(x)) => *x,
@@ -547,9 +552,117 @@ fn base_of(layer: &Layer) -> Option<&Base> {
         Layer::HatchFill(h) => Some(&h.base),
         Layer::GradientFill(g) => Some(&g.base),
         Layer::PatternFill(p) => Some(&p.base),
+        Layer::GeometryGenerator(g) => Some(&g.base),
         Layer::Unknown => None,
     }
 }
+
+// ── Effects and generators (docs/adr/0226) ─────────────────────────────
+
+/// A layer's effects as the page draws them: lengths in the layer's drawn
+/// unit (px, or metres in the world), the shadows' angle as a shift east
+/// and north.
+fn effect_spec(base: &Base, env: &Env) -> Option<EffectSpec> {
+    let e = base.effects.as_ref()?;
+    let px = drawn_in_px(base.unit, env);
+    let len = |v: f64| {
+        let x = if px {
+            to_px(v, base.unit)
+        } else {
+            to_world(v, base.unit, env)
+        };
+        if x.is_finite() { x } else { 0.0 }
+    };
+    let unit_opacity = |o: f64| {
+        if o.is_finite() {
+            o.clamp(0.0, 1.0)
+        } else {
+            0.5
+        }
+    };
+    let shadow = |s: &Shadow| {
+        let d = len(s.distance);
+        ShadowSpec {
+            dx: d * sin(s.angle * DEG),
+            dy: d * cos(s.angle * DEG),
+            blur: js_max(len(s.blur), 0.0),
+            color: s.color.clone(),
+            opacity: unit_opacity(s.opacity),
+        }
+    };
+    let glow = |g: &Glow| GlowSpec {
+        spread: js_max(len(g.spread), 0.0),
+        blur: js_max(len(g.blur), 0.0),
+        color: g.color.clone(),
+        opacity: unit_opacity(g.opacity),
+    };
+    Some(EffectSpec {
+        unit: if px { PrimUnit::Px } else { PrimUnit::World },
+        shadow: e.drop_shadow.as_ref().map(shadow),
+        glow: e.outer_glow.as_ref().map(glow),
+        inner_shadow: e.inner_shadow.as_ref().map(shadow),
+        inner_glow: e.inner_glow.as_ref().map(glow),
+        blur: e.blur.map_or(0.0, |b| js_max(len(b), 0.0)),
+    })
+}
+
+/// A geometry generator's result drawn with its symbol, its layers at
+/// sub-levels of `level`.
+fn emit_generator(
+    g: &GeometryGenerator,
+    geom: &Geom,
+    level: f64,
+    t: &dyn Values,
+    env: &Env,
+    sink: &mut dyn Sink,
+) {
+    if !dd_bool(&g.base.enabled, t) {
+        return;
+    }
+    let Some(symbol) = &g.symbol else {
+        return;
+    };
+    match generate::run(&g.steps, Gen::of(geom), t, env, g.base.unit) {
+        Gen::Points(points) => {
+            for p in points {
+                compile_layers(
+                    symbol,
+                    &Geom::Marker(p),
+                    t,
+                    env,
+                    sink,
+                    level,
+                    SUB_LEVEL,
+                    false,
+                );
+            }
+        }
+        Gen::Lines(paths) if !paths.is_empty() => {
+            compile_layers(
+                symbol,
+                &Geom::Line(paths),
+                t,
+                env,
+                sink,
+                level,
+                SUB_LEVEL,
+                false,
+            );
+        }
+        Gen::Areas(mut parts) => {
+            let g = match parts.len() {
+                0 => return,
+                1 => Geom::Fill(parts.remove(0)),
+                _ => Geom::Fills(parts),
+            };
+            compile_layers(symbol, &g, t, env, sink, level, SUB_LEVEL, false);
+        }
+        Gen::Lines(_) => {}
+    }
+}
+
+/// The level between the layers of a symbol inside a generator (as inside a marker line).
+const SUB_LEVEL: f64 = 1.0 / 256.0;
 
 fn emit_fill_layer(
     layer: &Layer,
@@ -833,29 +946,84 @@ pub fn compile_symbol(
     sink: &mut dyn Sink,
     level_base: f64,
 ) {
-    // A multi-part area: every part as one area (docs/adr/0143).
-    if let Geom::Fills(parts) = geom {
-        for rings in parts {
-            compile_symbol(symbol, &Geom::Fill(rings.clone()), t, env, sink, level_base);
+    compile_layers(symbol, geom, t, env, sink, level_base, 1.0, true);
+}
+
+/// A symbol's layers on a geometry, layer `i` at `level_base + i · step`;
+/// at the top (`top`) a layer with effects is an effect group of its own
+/// (docs/adr/0226 §2), inside a generator its effects are the generator's.
+/// A geometry generator sees the whole object (a multi-part area's parts
+/// together); the other layers draw a multi-part area part by part
+/// (docs/adr/0143).
+#[allow(clippy::too_many_arguments)]
+fn compile_layers(
+    symbol: &Symbol,
+    geom: &Geom,
+    t: &dyn Values,
+    env: &Env,
+    sink: &mut dyn Sink,
+    level_base: f64,
+    step: f64,
+    top: bool,
+) {
+    for (i, l) in symbol.layers.iter().enumerate() {
+        let level = if step == 1.0 {
+            level_base + i as f64
+        } else {
+            level_base + (i.min(255) as f64) * step
+        };
+        // A layer's effect group, around what it draws.
+        let grouped = top
+            && match base_of(l).and_then(|b| effect_spec(b, env)) {
+                Some(spec) => {
+                    sink.effects(Some(&spec), level);
+                    true
+                }
+                None => false,
+            };
+        match (l, geom) {
+            (Layer::GeometryGenerator(g), _) => emit_generator(g, geom, level, t, env, sink),
+            (_, Geom::Fills(parts)) => {
+                for rings in parts {
+                    layer_on(
+                        symbol.kind,
+                        l,
+                        &Geom::Fill(rings.clone()),
+                        level,
+                        t,
+                        env,
+                        sink,
+                    );
+                }
+            }
+            _ => layer_on(symbol.kind, l, geom, level, t, env, sink),
         }
-        return;
+        if grouped {
+            sink.effects(None, level);
+        }
     }
-    match symbol.kind {
+}
+
+/// One layer of a symbol of class `kind` on a geometry of one part.
+fn layer_on(
+    kind: SymbolType,
+    l: &Layer,
+    geom: &Geom,
+    level: f64,
+    t: &dyn Values,
+    env: &Env,
+    sink: &mut dyn Sink,
+) {
+    match kind {
         SymbolType::Marker => {
             let at = match geom {
                 Geom::Marker(p) => Some(*p),
                 Geom::Fill(rings) => interior_point(rings),
                 Geom::Line(paths) => line_middle(paths),
-                // Taken part by part above.
                 Geom::Fills(_) => None,
             };
-            let Some(at) = at else {
-                return;
-            };
-            for (i, l) in symbol.layers.iter().enumerate() {
-                if let Layer::Marker(m) = l {
-                    emit_marker(m, at, 0.0, level_base + i as f64, t, env, sink);
-                }
+            if let (Some(at), Layer::Marker(m)) = (at, l) {
+                emit_marker(m, at, 0.0, level, t, env, sink);
             }
         }
         SymbolType::Line => {
@@ -868,10 +1036,8 @@ pub fn compile_symbol(
                 }
                 Geom::Marker(_) | Geom::Fills(_) => &[],
             };
-            for (i, l) in symbol.layers.iter().enumerate() {
-                for (pts, closed) in paths {
-                    emit_line_layer(l, pts, *closed, level_base + i as f64, t, env, sink);
-                }
+            for (pts, closed) in paths {
+                emit_line_layer(l, pts, *closed, level, t, env, sink);
             }
         }
         SymbolType::Fill => {
@@ -888,11 +1054,8 @@ pub fn compile_symbol(
                 }
                 Geom::Marker(_) | Geom::Fills(_) => &[],
             };
-            if rings.is_empty() {
-                return;
-            }
-            for (i, l) in symbol.layers.iter().enumerate() {
-                emit_fill_layer(l, rings, level_base + i as f64, t, env, sink);
+            if !rings.is_empty() {
+                emit_fill_layer(l, rings, level, t, env, sink);
             }
         }
     }

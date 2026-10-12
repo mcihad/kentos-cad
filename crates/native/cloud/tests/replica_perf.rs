@@ -129,6 +129,7 @@ fn opened(n: usize) -> Opened {
         replaces: None,
         actions: Vec::new(),
         card: None,
+        compose: None,
         filter: None,
     }];
     let project = Uuid::now_v7();

@@ -40,6 +40,10 @@ pub struct StyledScene {
     /// order of the layer built whole: `batches::merged_order`); none draws
     /// every layer's batches in turn.
     pub order: Option<Arc<Vec<(u32, u32)>>>,
+    /// The document layers drawn into a picture of their own and composed
+    /// (docs/adr/0226 §3, §4): each one's scene layers, in order, and how it
+    /// meets the drawing. Layers not listed draw straight into it.
+    pub compose: Vec<(Range<u32>, Arc<crate::compose::LayerComposeDraw>)>,
 }
 
 /// What a frame of styled layers needs.
@@ -627,6 +631,17 @@ impl StyledGpu {
         }
         view.under = scene.under;
         view.order = scene.order.clone();
+        view.compose = scene.compose.clone();
+        // The draw order as pairs, whether the scene gave one or not (the composer splits it into runs).
+        view.seq = match &view.order {
+            Some(order) => order.as_ref().clone(),
+            None => view
+                .layers
+                .iter()
+                .enumerate()
+                .flat_map(|(l, layer)| (0..layer.batches.len()).map(move |b| (l as u32, b as u32)))
+                .collect(),
+        };
         let px_per_m = frame.scale * frame.dpr;
         let uniform = frame_uniform(frame);
         queue.write_buffer(&view.frame, 0, bytemuck::bytes_of(&uniform));
@@ -1097,6 +1112,19 @@ impl StyledGpu {
 
     /// Draws a view's visible batches, layer by layer in their order.
     pub fn draw(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled, samples: u32) {
+        self.draw_seq(pass, view, samples, 0..view.seq.len());
+    }
+
+    /// Draws the batches of a stretch of the view's draw order (`ViewStyled::seq`):
+    /// the composer's runs (docs/adr/0226).
+    pub fn draw_seq(
+        &self,
+        pass: &mut wgpu::RenderPass<'_>,
+        view: &ViewStyled,
+        samples: u32,
+        range: Range<usize>,
+    ) {
+        let pairs = view.seq.get(range).unwrap_or(&[]);
         self.draw_through(
             pass,
             view,
@@ -1105,6 +1133,7 @@ impl StyledGpu {
             &view.pictures,
             view.raster_binds.as_ref(),
             None,
+            pairs,
         );
     }
 
@@ -1120,6 +1149,7 @@ impl StyledGpu {
                 &view.lens_pictures,
                 view.lens_raster_binds.as_ref(),
                 Some(seen),
+                &view.seq,
             );
         }
     }
@@ -1134,11 +1164,12 @@ impl StyledGpu {
         pictures: &HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
         rasters: Option<&super::raster_tiles::RasterBinds>,
         seen: Option<([f64; 4], f64, f64)>,
+        pairs: &[(u32, u32)],
     ) {
         let Some(pipes) = self.pipelines.get(&samples) else {
             return;
         };
-        if view.layers.is_empty() {
+        if view.layers.is_empty() || pairs.is_empty() {
             return;
         }
         pass.set_bind_group(0, frame_bind, &[]);
@@ -1268,20 +1299,9 @@ impl StyledGpu {
             }
             _ => batch(layer, i),
         };
-        match &view.order {
-            Some(order) => {
-                for &(l, b) in order.iter() {
-                    if let Some(layer) = view.layers.get(l as usize) {
-                        draw(layer, b as usize);
-                    }
-                }
-            }
-            None => {
-                for layer in &view.layers {
-                    for i in 0..layer.batches.len() {
-                        draw(layer, i);
-                    }
-                }
+        for &(l, b) in pairs {
+            if let Some(layer) = view.layers.get(l as usize) {
+                draw(layer, b as usize);
             }
         }
     }
@@ -1401,6 +1421,10 @@ pub struct ViewStyled {
     pub under: usize,
     /// The scene's draw order, when it has one (`StyledScene::order`).
     order: Option<Arc<Vec<(u32, u32)>>>,
+    /// The draw order as `(layer, batch)` pairs, made each frame.
+    pub(crate) seq: Vec<(u32, u32)>,
+    /// The scene's compositions (`StyledScene::compose`).
+    pub(crate) compose: Vec<(Range<u32>, Arc<crate::compose::LayerComposeDraw>)>,
     /// Büyüteç's frame uniform and what it sees: its box, device pixels per
     /// metre and pixel ratio (docs/adr/0181 §5).
     lens: Option<(wgpu::Buffer, wgpu::BindGroup)>,
@@ -1435,6 +1459,8 @@ impl ViewStyled {
             layers: Vec::new(),
             under: 0,
             order: None,
+            seq: Vec::new(),
+            compose: Vec::new(),
             lens: None,
             lens_view: None,
             pictures: HashMap::new(),
@@ -1457,6 +1483,11 @@ impl ViewStyled {
     pub(crate) fn key(&self, hasher: &mut impl Hasher) {
         self.under.hash(hasher);
         self.order.as_deref().hash(hasher);
+        // The compositions and their masks' labels (docs/adr/0226 §3, §4).
+        for (range, c) in &self.compose {
+            range.hash(hasher);
+            c.hash_into(hasher);
+        }
         bytemuck::bytes_of(&self.uniform).hash(hasher);
         // The rasters' tiles drawn and where they sit in the atlas (docs/adr/0204 §5).
         for f in &self.quads.data {
@@ -1489,6 +1520,114 @@ impl ViewStyled {
                 }
             }
         }
+    }
+
+    /// What the composer needs of a batch of the draw order (docs/adr/0226 §2): whether
+    /// it draws this frame, its symbol level, and its effect group's effects (none: no group).
+    pub(crate) fn batch_facts(
+        &self,
+        l: u32,
+        b: u32,
+    ) -> Option<(bool, f64, Option<&Arc<kentos_native_style::batches::Effect>>)> {
+        let layer = self.layers.get(l as usize)?;
+        let g = layer.batches.get(b as usize)?;
+        let source = layer.source.layer.batches.get(b as usize)?;
+        let drawn = g.visible && (g.count > 0 || !g.quads.is_empty() || !g.vector.is_empty());
+        let effect = if source.group > 0 {
+            source.effect.as_ref()
+        } else {
+            None
+        };
+        Some((drawn, source.level, effect))
+    }
+
+    /// The boxes of the markers the scene layers `layers` draw this frame, as the
+    /// marker shader places them (`markerVs`), grown by `grow` device pixels: a mask's
+    /// shapes (docs/adr/0226 §3). Each box: its middle and half size in the target's
+    /// pixels from its top left, the cosine and sine of its turn as the screen turns
+    /// and its growth.
+    pub(crate) fn marker_boxes(&self, layers: Range<u32>, grow: f32, out: &mut Vec<[f32; 7]>) {
+        use kentos_native_style::batches::{BatchKind, MarkerLook, Unit};
+        let u = &self.uniform;
+        let (px_per_m, dpr) = (f64::from(u.px_per_m), f64::from(u.dpr));
+        let centre = [
+            f64::from(u.offset[0]) + f64::from(u.offset_lo[0]),
+            f64::from(u.offset[1]) + f64::from(u.offset_lo[1]),
+        ];
+        let (vw, vh) = (f64::from(u.viewport[0]), f64::from(u.viewport[1]));
+        for layer in self.layers.get(layers.start as usize..layers.end as usize).unwrap_or(&[]) {
+            let data = &layer.source.layer.data;
+            for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
+                let BatchKind::Marker {
+                    unit,
+                    look,
+                    offset,
+                    anchor,
+                    ..
+                } = &b.kind
+                else {
+                    continue;
+                };
+                if !g.visible || g.count == 0 {
+                    continue;
+                }
+                let k = if *unit == Unit::World { px_per_m } else { dpr };
+                // An image's proportions come from the atlas (`set_aspect`); a text gives its height.
+                let (fit, aspect) = match look {
+                    MarkerLook::Image { fit_height, .. } => {
+                        (if *fit_height { 2 } else { 1 }, f64::from(g.block.f[24]).max(1e-6))
+                    }
+                    MarkerLook::Shape { .. } => (0, 1.0),
+                };
+                let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
+                for m in data.get(b.range.clone()).unwrap_or(&[]).chunks_exact(5) {
+                    let mut w = f64::from(m[3]) * k;
+                    let mut h = f64::from(m[4]) * k;
+                    match fit {
+                        1 => h = w * aspect,
+                        2 => w = h / aspect,
+                        _ if h <= 0.0 => h = w,
+                        _ => {}
+                    }
+                    let q = [
+                        -anchor[0] * w + offset[0] * k,
+                        -anchor[1] * h + offset[1] * k,
+                    ];
+                    let (sa, ca) = f64::from(m[2]).sin_cos();
+                    let turned = [ca * q[0] - sa * q[1], sa * q[0] + ca * q[1]];
+                    let x = vw / 2.0 + (f64::from(m[0]) - tile[0]) * px_per_m + turned[0];
+                    let y = vh / 2.0 - (f64::from(m[1]) - tile[1]) * px_per_m - turned[1];
+                    let reach = w.max(h) + f64::from(grow) + 2.0;
+                    if x < -reach || y < -reach || x > vw + reach || y > vh + reach {
+                        continue;
+                    }
+                    out.push([
+                        x as f32,
+                        y as f32,
+                        (w / 2.0) as f32,
+                        (h / 2.0) as f32,
+                        ca as f32,
+                        -sa as f32,
+                        grow,
+                    ]);
+                }
+            }
+        }
+    }
+
+    /// The camera centre from the layers' origin, device pixels per metre, the pixel
+    /// ratio and the target's size, as the last prepared frame has them.
+    pub(crate) fn frame_facts(&self) -> ([f64; 2], f64, f64, [f32; 2]) {
+        let u = &self.uniform;
+        (
+            [
+                f64::from(u.offset[0]) + f64::from(u.offset_lo[0]),
+                f64::from(u.offset[1]) + f64::from(u.offset_lo[1]),
+            ],
+            f64::from(u.px_per_m),
+            f64::from(u.dpr),
+            u.viewport,
+        )
     }
 
     /// Batches drawn in the last frame, and the bytes the layers hold on the GPU.

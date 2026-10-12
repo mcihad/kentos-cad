@@ -650,6 +650,29 @@ def info_card(c):
                            "attachments": (boolean, False), "actions": (boolean, False)}, "card"))
 
 
+BLEND_MODES = ("multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "addition")
+
+
+def layer_mask(m):
+    """A layer's mask (schema 41, docs/adr/0226 §3): which of its labels and markers cut (each written only when on, one
+    at least), how far they grow (0–10 paper mm) and the 1–64 layers they cut into, each once."""
+    assert m.get("labels") is True or m.get("markers") is True, "maskenin kaynağı yok"
+    assert all(m.get(k, True) is True for k in ("labels", "markers")), "maskenin kaynağı yalnız açıkken yazılır"
+    assert 0 <= m["size"] <= 10, "maskenin boyu 0–10 mm"
+    ts = m["targets"]
+    assert 1 <= len(ts) <= 64 and len(set(ts)) == len(ts) and all(t.strip() for t in ts), f"maskelenenler: {ts}"
+    return cmap(fields(m, {"size": (f64, True), "labels": (boolean, False), "markers": (boolean, False), "targets": (lambda xs: array([text(x) for x in xs]), True)}, "mask"))
+
+
+def layer_compose(c):
+    """A layer's composition (schema 41, docs/adr/0226 §3, §4): its opacity when not 1 (0–1), its blending mode when not
+    normal, its mask; one of them at least."""
+    assert c, "katman çizimi boş"
+    assert "opacity" not in c or 0 <= c["opacity"] < 1, "saydamlık 0 ile 1 arasında; 1 yazılmaz"
+    assert "blend" not in c or c["blend"] in BLEND_MODES, "normal kip yazılmaz"
+    return cmap(fields(c, {"opacity": (f64, False), "blend": (enum(BLEND_MODES), False), "mask": (layer_mask, False)}, "compose"))
+
+
 def not_null(v):
     assert v is not None
     return opaque(v)
@@ -936,6 +959,7 @@ def layer(n):
     assert not {"service", "feed"} <= set(n), f"layer {n.get('id')}: servis ve kaynak birlikte olmaz"
     assert "filter" not in n or (n["type"] == "layer" and "service" not in n), f"layer {n.get('id')}: süzgeç yalnız nesnesi olan katmanın"
     assert not ({"actions", "card"} & set(n)) or (n["type"] == "layer" and "service" not in n), f"layer {n.get('id')}: eylemler ve kart yalnız nesnesi olan katmanın"
+    assert "compose" not in n or n["type"] == "layer", f"layer {n.get('id')}: katman çizimi yalnız katmanın"
     return cmap(
         fields(
             n,
@@ -957,6 +981,8 @@ def layer(n):
                 # Schema 40 (docs/adr/0225 §4, §5): a layer's actions and information card.
                 "actions": (layer_actions, False),
                 "card": (info_card, False),
+                # Schema 41 (docs/adr/0226 §3, §4): a layer's opacity, blending mode and mask.
+                "compose": (layer_compose, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1406,7 +1432,10 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 36 with the label engine's fields, a layer's labelling or an object's
+    """The oldest schema that holds the drawing: 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
+    attachments or a layer's actions or card (docs/adr/0225), 39 with vertex measures (docs/adr/0224), 38 with a raster's
+    dataset or its look's edges (docs/adr/0243 §6), 37 with the settings' variables (docs/adr/0214 §2.3), 36 with the
+    label engine's fields, a layer's labelling or an object's
     labels pinned by hand (docs/adr/0212 §2), 35 with a layer's filter (docs/adr/0211 §2), 34 with a layer's time
     setting, a scenario or a scenario layer's base
     layer (docs/adr/0210 §2), 33 with the project's networks (docs/adr/0209 §2), 32 with a layer drawn
@@ -1489,6 +1518,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def informed(nodes):
         return any("actions" in n or "card" in n or informed(n["children"]) for n in nodes)
 
+    def composed(nodes):
+        return any("compose" in n or composed(n["children"]) for n in nodes)
+
+    if composed(layers):
+        return 41
     if any("attachments" in e for e in entities) or informed(layers):
         return 40
     if measured(entities) or any(measured(b["entities"]) for b in blocks or []):
@@ -1763,7 +1797,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-41.kcad"] = container(root(cmap(parts), version=uint(41)))
+    files["schema-version-42.kcad"] = container(root(cmap(parts), version=uint(42)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2468,6 +2502,35 @@ def broken(minimal_content, minimal_file):
     files["card-fields-twice.kcad"] = on_layer({"card": cmap({"fields": array([text("Malik"), text("Malik")])})}, schema=40)
     files["card-title-line-break.kcad"] = on_layer({"card": cmap({"title": text("Parsel\n{Ada}")})}, schema=40)
     files["card-unknown-field.kcad"] = on_layer({"card": cmap({"color": text("#E5484D")})}, schema=40)
+    # A layer's composition is schema 41's (docs/adr/0226 §3, §4): in schema 40 an unknown field; on a layer only; what
+    # says nothing is not written (an opacity of 1, the normal mode, a mask's switch off); the contract's rules one at a
+    # time. A target the tree lacks is skipped when drawn, not refused (the reader's tests read one).
+    def composed_(compose, node_type="layer", schema=41):
+        node = lambda nid, name, t, extra: cmap({
+            "id": text(nid), "name": text(name), **extra, "type": text(t), "visible": boolean(True), "locked": boolean(False),
+            "expanded": boolean(True), "style": cmap(layer_style_parts(top["style"])), "children": array([]),
+        })
+        tree = [node(top["id"], top["name"], node_type, {"compose": compose}), node("hat", "Hatlar", "layer", {})]
+        return container(root(cmap({**parts, "layers": array(tree), "entities": array([])}), version=uint(schema)))
+
+    def mask_(**f):
+        base = {"labels": boolean(True), "size": f64(1.0), "targets": array([text("hat")]), **f}
+        return cmap({k: v for k, v in base.items() if v is not None})
+
+    files["compose-in-schema-40.kcad"] = composed_(cmap({"opacity": f64(0.5)}), schema=40)
+    files["compose-on-group.kcad"] = composed_(cmap({"opacity": f64(0.5)}), node_type="group")
+    files["compose-empty.kcad"] = composed_(cmap({}))
+    files["compose-opacity-one.kcad"] = composed_(cmap({"opacity": f64(1.0)}))
+    files["compose-opacity-above-one.kcad"] = composed_(cmap({"opacity": f64(1.5)}))
+    files["compose-blend-normal.kcad"] = composed_(cmap({"blend": text("normal")}))
+    files["compose-blend-unknown.kcad"] = composed_(cmap({"blend": text("dissolve")}))
+    files["compose-unknown-field.kcad"] = composed_(cmap({"opacity": f64(0.5), "shadow": boolean(True)}))
+    files["mask-without-source.kcad"] = composed_(cmap({"mask": mask_(labels=None)}))
+    files["mask-switch-off.kcad"] = composed_(cmap({"mask": mask_(markers=boolean(False))}))
+    files["mask-size-above-ten.kcad"] = composed_(cmap({"mask": mask_(size=f64(10.5))}))
+    files["mask-without-targets.kcad"] = composed_(cmap({"mask": mask_(targets=None)}))
+    files["mask-targets-empty.kcad"] = composed_(cmap({"mask": mask_(targets=array([]))}))
+    files["mask-target-twice.kcad"] = composed_(cmap({"mask": mask_(targets=array([text("hat"), text("hat")]))}))
     files["filter-on-group.kcad"] = on_layer({"filter": filtered_()}, node_type="group", schema=35)
     files["filter-on-service-layer.kcad"] = on_layer({"filter": filtered_(), "service": cmap(osm)}, schema=35)
     files["filter-empty.kcad"] = on_layer({"filter": cmap({})}, schema=35)
@@ -2768,6 +2831,7 @@ def build():
     out["multidim.kcad"] = container(document(load("multidim.json")))
     out["measures.kcad"] = container(document(load("measures.json")))
     out["attachments.kcad"] = container(document(load("attachments.json")))
+    out["compose.kcad"] = container(document(load("compose.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

@@ -304,6 +304,7 @@ fn create(
                 // The base layer's actions and card stand for it too (docs/adr/0225 §4).
                 actions: src.actions.clone(),
                 card: src.card.clone(),
+                compose: src.compose.clone(),
                 ..NewLayer::layer(src.name.clone())
             },
             Some(&group),

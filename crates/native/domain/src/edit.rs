@@ -471,6 +471,45 @@ impl Document {
         Ok(true)
     }
 
+    /// A layer's composition (docs/adr/0226 §3, §4) as one undo step `label`;
+    /// None, or one that says nothing (opaque, normal, no mask), takes it
+    /// away. Refused with nothing changed (the web's `setLayerCompose`) on a
+    /// group or when broken by the contract's rule; whether its mask's
+    /// targets are the tree's other layers is the command's. An unknown id
+    /// changes nothing; returns whether it changed.
+    pub fn set_layer_compose(
+        &mut self,
+        id: &str,
+        next: Option<kentos_contracts::LayerCompose>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        let next = next.and_then(|c| c.normalized());
+        if let Some(c) = &next {
+            if node.kind == LayerNodeType::Group {
+                return Err(Refusal(format!(
+                    "“{}” bir grup; katman çizimi yalnız katmanın olur.",
+                    node.name
+                )));
+            }
+            if let Some(problem) = c.problem() {
+                return Err(Refusal(format!("Katman çizimi: {problem}.")));
+            }
+        }
+        if node.compose == next {
+            return Ok(false);
+        }
+        let op = Op::LayerCompose {
+            layer: id.to_owned(),
+            before: node.compose.clone().map(Box::new),
+            after: next.map(Box::new),
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
     /// A layer's time setting (docs/adr/0210 §2) as one undo step `label`,
     /// its scenario fields as they are: [`Document::set_layer_temporal`].
     pub fn set_layer_time(

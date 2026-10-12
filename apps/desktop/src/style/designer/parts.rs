@@ -33,6 +33,10 @@ pub(super) struct Env<'a> {
     pub colors: ColorEnv<'a>,
     /// The library's drawings and pictures: id, name as listed, whether it is an SVG drawing.
     pub assets: &'a [(String, String, bool)],
+    /// A geometry generator's chosen step (docs/adr/0226 §1).
+    pub step: usize,
+    /// Whether the layer takes draw effects: a symbol's own layers (docs/adr/0226 §2).
+    pub effects: bool,
 }
 
 /// A change of the chosen layer.
@@ -69,14 +73,15 @@ fn expr_of(v: Option<&Value>) -> Option<(&str, Option<&Value>)> {
 // ── Numbers ────────────────────────────────────────────────────────────
 
 /// A number field of the layer (`numberInput`), without its label.
-pub(super) fn number_control<'a>(env: &Env<'_>, key: &'static str) -> Element<'a, Message> {
+pub(super) fn number_control<'a>(env: &Env<'_>, key: &str) -> Element<'a, Message> {
     let Some(spec) = numbers::spec_of(env.layer, key) else {
         return iced::widget::space().into();
     };
-    let typed = env.typed.get(key);
+    let key = key.to_owned();
+    let typed = env.typed.get(&key);
     let text = typed
         .cloned()
-        .unwrap_or_else(|| numbers::text_of(numbers::shown(env.layer, key)));
+        .unwrap_or_else(|| numbers::text_of(numbers::shown(env.layer, &key)));
     let invalid =
         typed.is_some_and(|t| numbers::parse(t).is_none_or(|v| v < spec.min || v > spec.max));
     let unit = match spec.unit {
@@ -85,22 +90,23 @@ pub(super) fn number_control<'a>(env: &Env<'_>, key: &'static str) -> Element<'a
         Unit::None => None,
     };
     let (at, layer) = (env.at, env.layer.clone());
+    let settle = ev(Event::Settle(key.clone()));
     fields::number(
-        field_id(key),
+        field_id(&key),
         &text,
         unit,
         invalid,
         move |t| {
             let patch =
-                numbers::parse(&t).map(|v| numbers::write(&layer, key, numbers::clamp(&spec, v)));
-            edit(at, key, Some(t), patch)
+                numbers::parse(&t).map(|v| numbers::write(&layer, &key, numbers::clamp(&spec, v)));
+            edit(at, &key, Some(t), patch)
         },
-        ev(Event::Settle(key.to_owned())),
+        settle,
     )
 }
 
 /// A labelled number field (`n`).
-pub(super) fn number_row<'a>(env: &Env<'_>, key: &'static str) -> Element<'a, Message> {
+pub(super) fn number_row<'a>(env: &Env<'_>, key: &str) -> Element<'a, Message> {
     let label = numbers::spec_of(env.layer, key).map_or("", |s| s.label);
     fields::labelled(label, number_control(env, key), None)
 }
@@ -199,13 +205,14 @@ fn color_patch(key: &str, text: &str, none: bool) -> Option<Patch> {
 /// A colour field of the layer.
 fn color_control<'a>(
     env: &Env<'_>,
-    key: &'static str,
+    key: &str,
     label: &str,
     none: bool,
     patch: impl Fn(&str) -> Option<Patch> + 'a,
     value: Option<&str>,
 ) -> Element<'a, Message> {
     let at = env.at;
+    let owned = key.to_owned();
     fields::color(
         field_id(key),
         label,
@@ -215,7 +222,7 @@ fn color_control<'a>(
         &env.colors,
         move |t| {
             let p = patch(&t);
-            edit(at, key, Some(t), p)
+            edit(at, &owned, Some(t), p)
         },
     )
 }
@@ -484,10 +491,10 @@ pub(super) fn placement_rows<'a>(env: &Env<'_>) -> Vec<Element<'a, Message>> {
     ]
 }
 
-/// A colour of a layer's own (the halo's), written by `patch`.
+/// A colour of a layer's own (the halo's, an effect's), written by `patch`.
 pub(super) fn plain_color<'a>(
     env: &Env<'_>,
-    key: &'static str,
+    key: &str,
     label: &str,
     value: Option<&str>,
     patch: impl Fn(Option<String>) -> Patch + 'a,

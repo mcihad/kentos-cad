@@ -37,7 +37,47 @@ interface LayerBase {
   readonly opacity?: number;
   /** Unit of this layer's sizes and distances (default "mm"). */
   readonly unit?: SizeUnit;
+  /** Its draw effects (docs/adr/0226 §2): at most five, each type once; their order is fixed, not the list's. */
+  readonly effects?: readonly Effect[];
 }
+
+// ── Draw effects (docs/adr/0226 §2) ────────────────────────────────────
+
+/**
+ * Gölge and İç gölge: `distance` and `blur` in the layer unit, `angle` degrees clockwise from north (135: right and
+ * down), `opacity` 0–1. Defaults: a shadow 1 away, blur 1.5, black at 0.5; an inner shadow 0.5 away, blur 1.
+ */
+export interface ShadowEffect {
+  readonly type: 'dropShadow' | 'innerShadow';
+  readonly enabled?: boolean;
+  readonly distance?: number;
+  readonly angle?: number;
+  readonly blur?: number;
+  readonly color?: Color;
+  readonly opacity?: number;
+}
+
+/** Dış parıltı and İç parıltı: `spread` and `blur` in the layer unit. Defaults: spread 0.5, blur 1.5 (inner 1), white at 0.5. */
+export interface GlowEffect {
+  readonly type: 'outerGlow' | 'innerGlow';
+  readonly enabled?: boolean;
+  readonly spread?: number;
+  readonly blur?: number;
+  readonly color?: Color;
+  readonly opacity?: number;
+}
+
+/** Bulanıklaştır: the layer itself blurred by `blur` in the layer unit (default 1). */
+export interface BlurEffect {
+  readonly type: 'blur';
+  readonly enabled?: boolean;
+  readonly blur?: number;
+}
+
+export type Effect = ShadowEffect | GlowEffect | BlurEffect;
+export type EffectType = Effect['type'];
+/** The effects in the order they are drawn (docs/adr/0226 §2). */
+export const EFFECT_TYPES: readonly EffectType[] = ['dropShadow', 'outerGlow', 'blur', 'innerShadow', 'innerGlow'];
 
 export type ShapeName =
   | 'circle'
@@ -120,6 +160,46 @@ export interface RasterMarker extends MarkerBase {
 
 export type MarkerLayer = ShapeMarker | SvgMarker | TextMarker | RasterMarker;
 
+// ── Geometri üretici (docs/adr/0226 §1) ────────────────────────────────
+
+/** Which vertices: every one, all but the ends, the first, the last or both ends. */
+export type VertexChoice = 'all' | 'inner' | 'first' | 'last' | 'ends';
+
+/** A geometry generator's step; lengths in the layer unit, angles in degrees. */
+export type GeneratorStep =
+  | { readonly kind: 'centroid' }
+  | { readonly kind: 'pointOnSurface' }
+  | { readonly kind: 'vertices'; readonly which?: VertexChoice }
+  | { readonly kind: 'boundary' }
+  /** Positive to the left of a line, into an area. */
+  | { readonly kind: 'offset'; readonly distance: DataDefined<number> }
+  | { readonly kind: 'extend'; readonly start?: DataDefined<number>; readonly end?: DataDefined<number> }
+  /** Negative into an area; a line's left or right side only. */
+  | { readonly kind: 'buffer'; readonly distance: DataDefined<number>; readonly side?: 'both' | 'left' | 'right' }
+  | { readonly kind: 'envelope' }
+  | { readonly kind: 'hull' }
+  | { readonly kind: 'circle'; readonly radius: DataDefined<number> }
+  /** `direction` clockwise from north, `width` 0–360. */
+  | { readonly kind: 'wedge'; readonly direction: DataDefined<number>; readonly width: DataDefined<number>; readonly radius: DataDefined<number>; readonly inner?: DataDefined<number> }
+  /** The first corner north, turned by `rotation` counter-clockwise. */
+  | { readonly kind: 'polygon'; readonly sides: DataDefined<number>; readonly radius: DataDefined<number>; readonly rotation?: DataDefined<number> }
+  | { readonly kind: 'translate'; readonly dx?: DataDefined<number>; readonly dy?: DataDefined<number> }
+  /** Counter-clockwise, about the centroid. */
+  | { readonly kind: 'rotate'; readonly angle: DataDefined<number> }
+  | { readonly kind: 'scale'; readonly x?: DataDefined<number>; readonly y?: DataDefined<number> };
+
+export type GeneratorStepKind = GeneratorStep['kind'];
+
+/** The object's geometry through `steps`, drawn with `symbol` (any class; it adapts as a symbol does). */
+export interface GeometryGenerator extends LayerBase {
+  readonly type: 'geometryGenerator';
+  readonly steps: readonly GeneratorStep[];
+  readonly symbol: Symbol;
+}
+
+/** What a marker symbol holds: markers and geometry generators. */
+export type MarkerSymbolLayer = MarkerLayer | GeometryGenerator;
+
 export interface SimpleLine extends LayerBase {
   readonly type: 'simpleLine';
   readonly color: DataDefined<Color>;
@@ -184,7 +264,7 @@ export interface MarkerLine extends LayerBase {
   readonly group?: { readonly count: number; readonly spacing: number };
 }
 
-export type LineLayer = SimpleLine | MarkerLine;
+export type LineLayer = SimpleLine | MarkerLine | GeometryGenerator;
 
 export interface SimpleFill extends LayerBase {
   readonly type: 'simpleFill';
@@ -256,13 +336,13 @@ export interface CentroidMarker extends LayerBase {
   readonly position?: 'pointOnSurface' | 'centroid';
 }
 
-export type FillLayer = SimpleFill | HatchFill | GradientFill | PatternFill | ImageFill | CentroidMarker | SimpleLine | MarkerLine;
+export type FillLayer = SimpleFill | HatchFill | GradientFill | PatternFill | ImageFill | CentroidMarker | SimpleLine | MarkerLine | GeometryGenerator;
 
 // ── Symbols ────────────────────────────────────────────────────────────
 
 export interface MarkerSymbol {
   readonly type: 'marker';
-  readonly layers: readonly MarkerLayer[];
+  readonly layers: readonly MarkerSymbolLayer[];
 }
 
 export interface LineSymbol {
@@ -277,7 +357,7 @@ export interface FillSymbol {
 
 export type Symbol = MarkerSymbol | LineSymbol | FillSymbol;
 export type SymbolType = Symbol['type'];
-export type SymbolLayer = MarkerLayer | LineLayer | FillLayer;
+export type SymbolLayer = MarkerSymbolLayer | LineLayer | FillLayer;
 
 /** A symbol from the library (by id) or written in place. */
 export type SymbolRef = { readonly ref: string } | Symbol;

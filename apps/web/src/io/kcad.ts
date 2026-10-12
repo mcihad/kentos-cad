@@ -311,8 +311,9 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
       v,
       // A layer's fields are schema 26's (docs/adr/0199 §1); its map service and source schema 32's (docs/adr/0208 §2);
       // its time setting, a group's scenario and a scenario layer's base layer schema 34's (docs/adr/0210 §2).
-      // Its filter is schema 35's (docs/adr/0211 §2); its actions and card schema 40's (docs/adr/0225 §4, §5).
-      { id: same, name: same, type: same, visible: same, locked: same, expanded: same, style, children: (c, w) => p.list(layer)(c, w), snap: same, fields: same, service: same, feed: same, time: same, scenario: same, replaces: same, filter: same, actions: same, card: same },
+      // Its filter is schema 35's (docs/adr/0211 §2); its actions and card schema 40's (docs/adr/0225 §4, §5); its
+      // composition schema 41's (docs/adr/0226 §3, §4).
+      { id: same, name: same, type: same, visible: same, locked: same, expanded: same, style, children: (c, w) => p.list(layer)(c, w), snap: same, fields: same, service: same, feed: same, time: same, scenario: same, replaces: same, filter: same, actions: same, card: same, compose: same },
       where,
     );
   const out = p.fields(

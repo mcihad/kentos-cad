@@ -55,6 +55,9 @@ use wgpu::util::DeviceExt;
 
 use crate::Vec2;
 use crate::camera::Camera;
+use crate::compose::{
+    ComposeFrame, ComposeTargets, Composer, DrawBatches, Into as ComposeInto, PicturePass, Planner,
+};
 use crate::layout::{self, FrameUniform, PipelineSpec};
 use crate::scene::{LayerRanges, ScenePart};
 use crate::settings::RenderSettings;
@@ -155,6 +158,8 @@ pub struct Renderer {
     chunk_bytes: u64,
     /// The styled layers' pipelines and atlas, made with the first styled frame (docs/adr/0090).
     styled: Option<StyledGpu>,
+    /// The composing pipelines, made with the first composed frame (docs/adr/0226).
+    composer: Option<Composer>,
 }
 
 impl fmt::Debug for Renderer {
@@ -213,6 +218,7 @@ impl Renderer {
             views: HashMap::new(),
             chunk_bytes: device.limits().max_buffer_size.min(MAX_CHUNK_BYTES),
             styled: None,
+            composer: None,
         })
     }
 
@@ -488,6 +494,31 @@ impl Renderer {
         state.want_styled = Some(key.finish());
         state.stats.draw_calls += drawn;
         state.stats.resident_bytes += bytes;
+        // Composed layers and effect groups (docs/adr/0226): planned now, recorded in render.
+        state.compose = None;
+        if let Some(targets) = &state.targets
+            && needs_compose(styled)
+        {
+            let composer = self
+                .composer
+                .get_or_insert_with(|| Composer::new(device, format));
+            composer.ensure(device, targets.samples);
+            let fresh = state
+                .compose_targets
+                .as_ref()
+                .is_some_and(|c| c.size == targets.size && c.samples == targets.samples);
+            if !fresh {
+                state.compose_targets =
+                    Some(ComposeTargets::new(format, targets.size, targets.samples));
+            }
+            if let Some(ct) = state.compose_targets.as_mut() {
+                let (_, px_per_m, dpr, _) = styled.frame_facts();
+                let mut planner = Planner::new(composer, ct, device, px_per_m, dpr);
+                plan_composed(&mut planner, styled);
+                state.compose = Some(planner.finish(queue));
+                state.stats.target_bytes += ct.bytes;
+            }
+        }
         state.stats.picture_kept = state.picture_kept();
         pending
     }
@@ -536,7 +567,76 @@ impl Renderer {
         let [r, g, b, a] = state.clear.map(f64::from);
         // A kept picture that is still the one this frame shows is composed as it is.
         let key = state.picture_key();
-        if !(state.keep && targets.holds(key)) {
+        if !(state.keep && targets.holds(key))
+            && let (Some(frame), Some(ct), Some(composer), Some(gpu), Some(styled)) = (
+                &state.compose,
+                &state.compose_targets,
+                &self.composer,
+                &self.styled,
+                &state.styled,
+            )
+        {
+            // A composed frame (docs/adr/0226): the ground first, the passes, the highlights last; the
+            // passes into the picture run on in one render pass where nothing else comes between.
+            let drawer = Batches {
+                gpu,
+                view: styled,
+                samples: targets.samples,
+            };
+            let under = styled.under.min(state.parts.len());
+            let picture =
+                |enc: &mut wgpu::CommandEncoder,
+                 at: PicturePass,
+                 draw: &mut dyn FnMut(&mut wgpu::RenderPass<'_>)| {
+                    let clear = at.first.then_some(wgpu::Color { r, g, b, a });
+                    let mut pass = enc.begin_render_pass(&wgpu::RenderPassDescriptor {
+                        label: Some("kentos.cad2d.picture"),
+                        color_attachments: &[Some(targets.attachment_kept(clear, at.resolve))],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
+                    if at.first {
+                        pass.set_bind_group(0, &state.bind_group, &[]);
+                        pass.set_pipeline(&pipes.background);
+                        pass.draw(0..layout::BACKGROUND.vertex_count.unwrap_or(3), 0..1);
+                        state.draw_parts(&mut pass, pipes, 0..under);
+                    }
+                    draw(&mut pass);
+                    if at.last {
+                        // The highlights, at their width.
+                        pass.set_bind_group(0, &state.highlight.1, &[]);
+                        state.draw_parts(
+                            &mut pass,
+                            pipes,
+                            under..state.parts.len() - state.overlays,
+                        );
+                    }
+                };
+            let copy = |enc: &mut wgpu::CommandEncoder, to: &wgpu::Texture| {
+                enc.copy_texture_to_texture(
+                    targets.resolve_texture.as_image_copy(),
+                    to.as_image_copy(),
+                    wgpu::Extent3d {
+                        width: targets.size[0],
+                        height: targets.size[1],
+                        depth_or_array_layers: 1,
+                    },
+                );
+            };
+            composer.record(
+                encoder,
+                ct,
+                frame,
+                targets.samples,
+                &drawer,
+                &picture,
+                &copy,
+            );
+            if state.keep {
+                targets.keep(key);
+            }
+        } else if !(state.keep && targets.holds(key)) {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("kentos.cad2d.picture"),
                 color_attachments: &[Some(targets.attachment(wgpu::Color { r, g, b, a }))],
@@ -686,6 +786,112 @@ impl Renderer {
     }
 }
 
+/// Draws a stretch of the styled draw order into a composed frame's pass.
+struct Batches<'a> {
+    gpu: &'a StyledGpu,
+    view: &'a ViewStyled,
+    samples: u32,
+}
+
+impl DrawBatches for Batches<'_> {
+    fn draw_batches(&self, pass: &mut wgpu::RenderPass<'_>, seq: Range<usize>) {
+        self.gpu.draw_seq(pass, self.view, self.samples, seq);
+    }
+}
+
+/// Whether a frame composes (docs/adr/0226): a composed layer, or an effect group drawn.
+fn needs_compose(view: &ViewStyled) -> bool {
+    !view.compose.is_empty()
+        || view.seq.iter().any(|&(l, b)| {
+            view.batch_facts(l, b)
+                .is_some_and(|(drawn, _, e)| drawn && e.is_some())
+        })
+}
+
+/// The composed frame's passes from the view's draw order (docs/adr/0226): the
+/// plain stretches straight into the picture, each composed layer's stretch
+/// into its own picture and laid over or mixed in, each effect group's into
+/// its own with its effects.
+fn plan_composed(planner: &mut Planner<'_>, view: &ViewStyled) {
+    let seq = &view.seq;
+    let composed_of = |l: u32| view.compose.iter().position(|(r, _)| r.contains(&l));
+    let mut i = 0;
+    while i < seq.len() {
+        let c = composed_of(seq[i].0);
+        let start = i;
+        while i < seq.len() && composed_of(seq[i].0) == c {
+            i += 1;
+        }
+        let Some(c) = c else {
+            runs(planner, view, start..i, ComposeInto::Picture);
+            continue;
+        };
+        let drawn = (start..i).any(|k| {
+            view.batch_facts(seq[k].0, seq[k].1)
+                .is_some_and(|(d, _, _)| d)
+        });
+        if !drawn {
+            continue;
+        }
+        planner.layer_clear();
+        runs(planner, view, start..i, ComposeInto::Layer);
+        let draw = &view.compose[c].1;
+        let (centre, px_per_m, dpr, size) = view.frame_facts();
+        let mut boxes: Vec<[f32; 7]> = Vec::new();
+        for m in &draw.masks {
+            let grow = m.grow * dpr as f32;
+            for b in m.labels.iter() {
+                // The turn as the screen turns (y down), its sine and cosine made here in double precision.
+                let (sin, cos) = (-f64::from(b.turn).to_radians()).sin_cos();
+                boxes.push([
+                    (f64::from(size[0]) / 2.0 + (b.centre[0] - centre[0]) * px_per_m) as f32,
+                    (f64::from(size[1]) / 2.0 - (b.centre[1] - centre[1]) * px_per_m) as f32,
+                    b.size[0] * dpr as f32 / 2.0,
+                    b.size[1] * dpr as f32 / 2.0,
+                    cos as f32,
+                    sin as f32,
+                    grow,
+                ]);
+            }
+            if let Some(r) = &m.markers {
+                view.marker_boxes(r.clone(), grow, &mut boxes);
+            }
+        }
+        let mask = (!draw.masks.is_empty()).then(|| planner.boxes(&boxes));
+        planner.layer(draw.opacity, draw.blend, mask);
+    }
+}
+
+/// A stretch split into its plain runs and its effect groups' runs.
+fn runs(planner: &mut Planner<'_>, view: &ViewStyled, range: Range<usize>, into: ComposeInto) {
+    let seq = &view.seq;
+    let facts = |k: usize| view.batch_facts(seq[k].0, seq[k].1);
+    let mut k = range.start;
+    while k < range.end {
+        let start = k;
+        match facts(k).and_then(|(_, level, e)| e.map(|e| (level, e.clone()))) {
+            None => {
+                while k < range.end && facts(k).is_none_or(|(_, _, e)| e.is_none()) {
+                    k += 1;
+                }
+                planner.batches(start..k, into);
+            }
+            Some((level, effect)) => {
+                // One symbol layer's group: the same level and the same effects, part after part.
+                while k < range.end
+                    && facts(k)
+                        .is_some_and(|(_, l, e)| l == level && e.is_some_and(|e| **e == *effect))
+                {
+                    k += 1;
+                }
+                if (start..k).any(|j| facts(j).is_some_and(|(d, _, _)| d)) {
+                    planner.group(start..k, &effect, into);
+                }
+            }
+        }
+    }
+}
+
 /// The pipelines of the shared WGSL for targets of `format` and `samples` per pixel.
 fn build_pipelines(
     device: &wgpu::Device,
@@ -806,6 +1012,9 @@ struct View {
     overlay: Option<(wgpu::Buffer, wgpu::BindGroup)>,
     /// Büyüteç's frame uniform (docs/adr/0181 §5), once it is open.
     lens: Option<(wgpu::Buffer, wgpu::BindGroup)>,
+    /// The composing pictures and this frame's composed passes (docs/adr/0226).
+    compose_targets: Option<ComposeTargets>,
+    compose: Option<ComposeFrame>,
 }
 
 /// The target and camera a frame is drawn at.
@@ -872,6 +1081,8 @@ impl View {
             overlays: 0,
             overlay: None,
             lens: None,
+            compose_targets: None,
+            compose: None,
         }
     }
 

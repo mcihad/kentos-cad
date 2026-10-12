@@ -1,7 +1,41 @@
-import type { LineWave, MarkerLayer, TextMarker } from '../../model/style';
+import type { DataDefined, Effect, EffectType, GeneratorStep, GeneratorStepKind, GeometryGenerator, LineWave, MarkerLayer, TextMarker } from '../../model/style';
+import { EFFECT_TYPES } from '../../model/style';
 import { h, type Child } from '../dom';
+import { icon } from '../icons';
+import { PopupMenu } from '../widgets/PopupMenu';
 import { checkbox, colorInput, dashInput, dataDefined, numberInput, pair, row, select, textInput, type FieldEnv } from './designerFields';
-import { ANCHORS, CAPS, FONTS, OPEN_SHAPES, PLACEMENTS, POSITIONS, RINGS, SHAPES, UNITS, WAVES, WEIGHTS, type AnyLayer, type Patch } from './designerModel';
+import {
+  addStep,
+  ANCHORS,
+  BUFFER_SIDES,
+  CAPS,
+  CLASS_OF,
+  DESIGNER_TEXTS as T,
+  EFFECT_LABEL,
+  effectOf,
+  FONTS,
+  moveStep,
+  OPEN_SHAPES,
+  PLACEMENTS,
+  POSITIONS,
+  putEffect,
+  putStep,
+  removeStep,
+  RINGS,
+  setEffect,
+  setGeneratorKind,
+  SHAPES,
+  STEP_KINDS,
+  STEP_LABEL,
+  stepOutput,
+  stepSummary,
+  UNITS,
+  VERTEX_CHOICES,
+  WAVES,
+  WEIGHTS,
+  type AnyLayer,
+  type Patch,
+} from './designerModel';
 
 /**
  * Each symbol layer type's property form (docs/adr/0094). What the types are
@@ -23,6 +57,11 @@ export interface FormEnv extends FieldEnv {
   drawSvg(id?: string): Promise<string | null>;
   /** Where the layer sits: an area symbol's line layers may choose rings. */
   context: 'fill' | 'line' | 'marker';
+  /** A geometry generator's chosen step (docs/adr/0226 §1), and choosing another. */
+  step: number;
+  chooseStep(i: number): void;
+  /** Whether the layer takes draw effects: a symbol's own layers (docs/adr/0226 §2). */
+  effects: boolean;
 }
 
 export function layerForm(l: AnyLayer, set: (patch: Patch) => void, env: FormEnv): HTMLElement {
@@ -146,6 +185,9 @@ export function layerForm(l: AnyLayer, set: (patch: Patch) => void, env: FormEnv
     case 'raster':
       specific.push(assetPick(l.asset, 'asset'), ddNum('Genişlik', l.size, 'size', 5, { min: 0 }), ...placementRows(l, set, u));
       break;
+    case 'geometryGenerator':
+      specific.push(...generatorForm(l, set, env, u));
+      break;
     case 'text':
       specific.push(
         row('Metin', dataDefined(l.text, '', (v) => set({ text: v }), (v, s) => textInput(v, s, { label: 'Metin' }), 'Metin'), 'ƒ ile öznitelikten: ör. \'E=\' || [Emsal]'),
@@ -159,7 +201,175 @@ export function layerForm(l: AnyLayer, set: (patch: Patch) => void, env: FormEnv
       );
       break;
   }
-  return h('div', { class: 'sdf__form' }, h('div', { class: 'sdf__group' }, specific), h('div', { class: 'sdf__group sdf__group--common' }, h('div', { class: 'sdf__grouptitle' }, 'Genel'), common));
+  return h(
+    'div',
+    { class: 'sdf__form' },
+    h('div', { class: 'sdf__group' }, specific),
+    env.effects ? effectsForm(l, set, env, u) : null,
+    h('div', { class: 'sdf__group sdf__group--common' }, h('div', { class: 'sdf__grouptitle' }, 'Genel'), common),
+  );
+}
+
+/** The symbol classes a generator may draw with. */
+const DRAW_KINDS: { value: 'fill' | 'line' | 'marker'; label: string }[] = [
+  { value: 'fill', label: 'Alan' },
+  { value: 'line', label: 'Çizgi' },
+  { value: 'marker', label: 'İşaret' },
+];
+
+/** A step's icon in Adım ekle's menu (the desktop's `step_icon`): the app's icon of the same operation. */
+const STEP_ICON: Record<GeneratorStepKind, string> = {
+  centroid: 'snapCentroid',
+  pointOnSurface: 'featureToPoint',
+  vertices: 'verticesToPoints',
+  boundary: 'polygonToLine',
+  offset: 'offset',
+  extend: 'extend',
+  buffer: 'geoBuffer',
+  envelope: 'stepEnvelope',
+  hull: 'boundingGeometry',
+  circle: 'circle',
+  wedge: 'sector',
+  polygon: 'regularPolygon',
+  translate: 'move',
+  rotate: 'rotate',
+  scale: 'scale',
+};
+
+/**
+ * Geometri üretici's form (docs/adr/0226 §1): the class of its symbol (whose layers are its child rows), its steps
+ * in order with ↑, ↓ and ✕, Adım ekle, and the chosen step's values (ƒ: from each object's data).
+ */
+function generatorForm(l: GeometryGenerator, set: (patch: Patch) => void, env: FormEnv, u: string): Child[] {
+  const steps = (next: GeometryGenerator | null) => next && set({ steps: next.steps });
+  const btn = (name: string, label: string, run: () => void, enabled = true) => {
+    const b = h('button', { class: 'ibtn ibtn--small', type: 'button', 'aria-label': label, title: label, disabled: !enabled }, icon(name, 14));
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      run();
+    });
+    return b;
+  };
+  const chosen = Math.min(env.step, l.steps.length - 1);
+  const list = l.steps.length
+    ? h(
+        'div',
+        { class: 'sdf__steps', role: 'listbox', 'aria-label': T.steps },
+        l.steps.map((st, i) => {
+          const r = h(
+            'div',
+            { class: 'sdf__step', role: 'option', 'aria-selected': String(i === chosen), tabindex: i === chosen ? '0' : '-1' },
+            h('span', { class: 'sdf__stepnum' }, `${i + 1}.`),
+            h('span', { class: 'sdf__steptext' }, stepSummary(st, u)),
+            btn('chevronUp', 'Yukarı', () => (steps(moveStep(l, i, -1)), env.chooseStep(i - 1)), i > 0),
+            btn('chevronDown', 'Aşağı', () => (steps(moveStep(l, i, 1)), env.chooseStep(i + 1)), i < l.steps.length - 1),
+            btn('trash', 'Adımı sil', () => (steps(removeStep(l, i)), env.chooseStep(Math.max(0, Math.min(i, l.steps.length - 2))))),
+          );
+          r.addEventListener('click', () => env.chooseStep(i));
+          return r;
+        }),
+      )
+    : h('p', { class: 'sdf__hint' }, T.noSteps);
+  const add = h('button', { class: 'btn btn--small sdf__addstep', type: 'button', 'aria-haspopup': 'menu' }, icon('plus', 14), T.addStep, icon('chevronDown', 12));
+  add.addEventListener('click', () => {
+    const r = add.getBoundingClientRect();
+    PopupMenu.open(
+      STEP_KINDS.map((k) => ({ label: STEP_LABEL[k], icon: STEP_ICON[k], run: () => (steps(addStep(l, k)), env.chooseStep(l.steps.length)) })),
+      { x: r.left, y: r.bottom + 4 },
+    );
+  });
+  const left = stepOutput(l.steps, CLASS_OF[env.context]);
+  const st = l.steps[chosen];
+  return [
+    row(T.drawsWith, select(l.symbol.type, DRAW_KINDS, (v) => set({ symbol: setGeneratorKind(l, v).symbol }), T.drawsWith), 'Üretilen geometriyi çizen sembol; katmanları listede bu katmanın altındadır.'),
+    h('div', { class: 'sdf__grouptitle' }, T.steps),
+    list,
+    add,
+    left === null ? h('div', { class: 'sdf__warn', role: 'status' }, T.nothingLeft) : null,
+    st ? h('div', { class: 'sdf__stepform' }, h('div', { class: 'sdf__grouptitle' }, `${chosen + 1}. ${STEP_LABEL[st.kind]}`), ...stepFields(st, (next) => set({ steps: putStep(l, chosen, next).steps }), u)) : null,
+  ];
+}
+
+/** A step's own values. */
+function stepFields(st: GeneratorStep, put: (next: GeneratorStep) => void, u: string): Child[] {
+  const dd = (label: string, key: string, fallback: number, unit: string | undefined, opts: { min?: number; step?: number } = {}) =>
+    row(
+      label,
+      dataDefined(
+        (st as unknown as Record<string, DataDefined<number> | undefined>)[key],
+        fallback,
+        (v) => put({ ...st, [key]: v } as GeneratorStep),
+        (v, s) => numberInput(v, s, { label, unit, min: opts.min, step: opts.step }),
+        label,
+      ),
+    );
+  switch (st.kind) {
+    case 'vertices':
+      return [row('Köşeler', select(st.which ?? 'all', VERTEX_CHOICES, (v) => put({ ...st, which: v }), 'Köşeler'))];
+    case 'offset':
+      return [dd('Uzaklık', 'distance', 1, u), h('div', { class: 'sdf__hint' }, 'Artı çizginin soluna, alanın içine.')];
+    case 'extend':
+      return [pair(dd('Baştan', 'start', 0, u, { min: 0 }), dd('Sondan', 'end', 0, u, { min: 0 }))];
+    case 'buffer':
+      return [
+        dd('Uzaklık', 'distance', 2, u),
+        row('Yan', select(st.side ?? 'both', BUFFER_SIDES, (v) => put({ ...st, side: v }), 'Yan'), 'Eksi uzaklık alanı içe küçültür; yan yalnız çizgilerde.'),
+      ];
+    case 'circle':
+      return [dd('Yarıçap', 'radius', 2, u, { min: 0 })];
+    case 'wedge':
+      return [
+        pair(dd('Yön', 'direction', 0, '°', { step: 5 }), dd('Genişlik', 'width', 60, '°', { min: 0, step: 5 })),
+        pair(dd('Yarıçap', 'radius', 5, u, { min: 0 }), dd('İç yarıçap', 'inner', 0, u, { min: 0 })),
+        h('div', { class: 'sdf__hint' }, 'Yön kuzeyden saat yönünde (ör. fotoğrafın Yön özniteliği: ƒ ile [Yön]).'),
+      ];
+    case 'polygon':
+      return [
+        pair(dd('Köşe sayısı', 'sides', 6, 'adet', { min: 3, step: 1 }), dd('Yarıçap', 'radius', 2, u, { min: 0 })),
+        dd('Döndürme', 'rotation', 0, '°', { step: 5 }),
+        h('div', { class: 'sdf__hint' }, 'İlk köşe kuzeyde; döndürme saat yönünün tersine.'),
+      ];
+    case 'translate':
+      return [pair(dd('Y (sağa)', 'dx', 0, u), dd('X (yukarı)', 'dy', 0, u))];
+    case 'rotate':
+      return [dd('Açı', 'angle', 45, '°', { step: 5 }), h('div', { class: 'sdf__hint' }, 'Saat yönünün tersine, ağırlık merkezinde.')];
+    case 'scale':
+      return [pair(dd('Yatay', 'x', 1, undefined, { step: 0.1 }), dd('Düşey', 'y', 1, undefined, { step: 0.1 })), h('div', { class: 'sdf__hint' }, 'Ağırlık merkezinde; biri boşsa öbürü.')];
+    default:
+      return [h('p', { class: 'sdf__hint' }, 'Bu adımın değeri yok.')];
+  }
+}
+
+/** A layer's draw effects (docs/adr/0226 §2): each type's switch, its values when it is on. */
+function effectsForm(l: AnyLayer, set: (patch: Patch) => void, env: FormEnv, u: string): HTMLElement {
+  const put = (e: Effect) => set({ effects: putEffect(l, e).effects });
+  const rows: Child[] = [h('div', { class: 'sdf__grouptitle' }, T.effects)];
+  for (const type of EFFECT_TYPES) {
+    const e = effectOf(l, type);
+    const on = !!e && e.enabled !== false;
+    rows.push(checkbox(on, (v) => set({ effects: setEffect(l, type, v).effects }), EFFECT_LABEL[type]));
+    if (!on || !e) continue;
+    rows.push(h('div', { class: 'sdf__effect' }, effectFields(type, e, put, env, u)));
+  }
+  return h('div', { class: 'sdf__group' }, rows);
+}
+
+function effectFields(type: EffectType, e: Effect, put: (e: Effect) => void, env: FormEnv, u: string): Child[] {
+  const label = EFFECT_LABEL[type];
+  const n = (name: string, key: string, value: number, unit: string, opts: { min?: number; max?: number; step?: number } = {}) =>
+    row(name, numberInput(value, (v) => put({ ...e, [key]: v } as Effect), { label: `${label}: ${name}`, unit, ...opts }));
+  const transparency = (opacity: number) =>
+    row('Saydamlık', numberInput(Math.round((1 - opacity) * 100), (v) => put({ ...e, opacity: 1 - Math.min(100, Math.max(0, v)) / 100 } as Effect), { label: `${label}: Saydamlık`, unit: '%', step: 5, min: 0, max: 100 }));
+  const color = (value: string) => row('Renk', colorInput(value, (c) => c && put({ ...e, color: c } as Effect), env, { label: `${label}: Renk` }));
+  if (e.type === 'dropShadow' || e.type === 'innerShadow')
+    return [
+      pair(n('Uzaklık', 'distance', e.distance ?? (e.type === 'dropShadow' ? 1 : 0.5), u, { min: 0 }), n('Açı', 'angle', e.angle ?? 135, '°', { step: 5 })),
+      n('Bulanıklık', 'blur', e.blur ?? (e.type === 'dropShadow' ? 1.5 : 1), u, { min: 0 }),
+      pair(color(e.color ?? '#000000'), transparency(e.opacity ?? 0.5)),
+    ];
+  if (e.type === 'outerGlow' || e.type === 'innerGlow')
+    return [pair(n('Yayılma', 'spread', e.spread ?? 0.5, u, { min: 0 }), n('Bulanıklık', 'blur', e.blur ?? (e.type === 'outerGlow' ? 1.5 : 1), u, { min: 0 })), pair(color(e.color ?? '#FFFFFF'), transparency(e.opacity ?? 0.5))];
+  return [n('Bulanıklık', 'blur', e.blur ?? 1, u, { min: 0 })];
 }
 
 function placementRows(l: MarkerLayer, set: (p: Patch) => void, u: string): Child[] {

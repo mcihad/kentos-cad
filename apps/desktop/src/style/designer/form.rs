@@ -124,6 +124,7 @@ pub(super) fn form<'a>(env: &Env<'_>) -> Element<'a, Message> {
             own.extend(placement_rows(env));
         }
         "text" => text(env, &mut own),
+        "geometryGenerator" => own.extend(super::generator::rows(env)),
         _ => own.push(fields::hint(
             "Bu katman türü bu sürümde düzenlenemez; sembolde olduğu gibi kalır.",
         )),
@@ -141,14 +142,17 @@ pub(super) fn form<'a>(env: &Env<'_>) -> Element<'a, Message> {
         number_row(env, "transparency"),
         dd_enabled(env),
     ];
-    column![
-        Column::with_children(own).spacing(10),
-        rule::horizontal(1).style(style::field::hairline),
-        Column::with_children(common).spacing(10),
-    ]
-    .spacing(14)
-    .width(Fill)
-    .into()
+    let mut parts = column![Column::with_children(own).spacing(10)].spacing(14).width(Fill);
+    // Draw effects (docs/adr/0226 §2): a symbol's own layers take them.
+    if env.effects {
+        parts = parts
+            .push(rule::horizontal(1).style(style::field::hairline))
+            .push(super::generator::effects(env));
+    }
+    parts
+        .push(rule::horizontal(1).style(style::field::hairline))
+        .push(Column::with_children(common).spacing(10))
+        .into()
 }
 
 fn dashed(l: &Value) -> bool {

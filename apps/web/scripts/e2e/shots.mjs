@@ -653,6 +653,55 @@ SCENES.symboldesigner = [
     open: async (ui) => (await openDesigner(ui, 'fill'), await ui.clickText('.dialog--sdesign .seg__opt', 'Adalı alan'), await ui.sleep(500)),
     close: closeDesigner,
   },
+  // Sembol katmanı ekleri (docs/adr/0226): a generator's steps, the effects, Katman ekle into its symbol.
+  {
+    id: 'generator',
+    open: async (ui) => {
+      await openDesigner(ui, 'marker');
+      await ui.clickText('.dialog--sdesign .btn', 'Katman ekle');
+      await ui.clickText('.menu .menu__item', 'Geometri üretici');
+      await ui.sleep(400);
+      await ui.clickSel('.dialog--sdesign .sdf__addstep');
+      await ui.clickText('.menu .menu__item', 'Daire dilimi');
+      await ui.sleep(500);
+    },
+    close: closeDesigner,
+  },
+  {
+    id: 'effects',
+    open: async (ui) => {
+      await openDesigner(ui, 'fill');
+      await ui.clickText('.dialog--sdesign .sdf__check', 'Gölge');
+      await ui.sleep(300);
+      await ui.clickText('.dialog--sdesign .sdf__check', 'Dış parıltı');
+      await ui.sleep(600);
+    },
+    close: closeDesigner,
+  },
+  {
+    id: 'add-step-menu',
+    open: async (ui) => {
+      await openDesigner(ui, 'marker');
+      await ui.clickText('.dialog--sdesign .btn', 'Katman ekle');
+      await ui.clickText('.menu .menu__item', 'Geometri üretici');
+      await ui.sleep(400);
+      await ui.clickSel('.dialog--sdesign .sdf__addstep');
+      await ui.sleep(300);
+    },
+    close: closeDesigner,
+  },
+  {
+    id: 'add-layer-menu-into-generator',
+    open: async (ui) => {
+      await openDesigner(ui, 'marker');
+      await ui.clickText('.dialog--sdesign .btn', 'Katman ekle');
+      await ui.clickText('.menu .menu__item', 'Geometri üretici');
+      await ui.sleep(400);
+      await ui.clickText('.dialog--sdesign .btn', 'Katman ekle');
+      await ui.sleep(300);
+    },
+    close: closeDesigner,
+  },
   {
     id: 'unsaved-close-question',
     open: async (ui) => {

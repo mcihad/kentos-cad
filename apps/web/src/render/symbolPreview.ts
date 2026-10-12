@@ -2,9 +2,10 @@ import type { Entity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import type { Symbol } from '../model/style';
 import { compileSymbol } from '../style/compile';
-import type { FillPaint, MarkerStyle, Primitives, PrimUnit, StrokeStyle, TileSource } from '../style/primitives';
+import type { EffectSpec, FillPaint, MarkerStyle, Primitives, PrimUnit, StrokeStyle, TileSource } from '../style/primitives';
 import { drawShape } from './canvasShapes';
 import { parseHex, resolveColor, type CanvasPalette } from './color';
+import { composeEffects, type EffectPx } from './effectsCanvas';
 import { assetSizes, type StyleSources } from './styledLayer';
 import { applySvgParams } from './styledBatches';
 import { TEXT_BOX, type RGBA, type ShapeId } from './types';
@@ -16,7 +17,9 @@ import { TEXT_BOX, type RGBA, type ShapeId } from './types';
  * scale 1:1000, so 1 world unit = 1 mm) and drawn at `pxPerMm`. Hatches,
  * shape patterns (with the shader's random scatter), tiles, strokes with
  * dashes and caps, and shape/SVG/text markers follow the GPU's rules and
- * draw order (by symbol level, then fills, strokes, markers).
+ * draw order (by symbol level, then effect group, then fills, strokes,
+ * markers); an effect group is drawn into a picture of its own and laid over
+ * with its effects (docs/adr/0226 §2, ./effectsCanvas.ts).
  */
 
 export type PreviewGeometry = 'point' | 'line' | 'bent' | 'area' | 'hole';
@@ -181,19 +184,57 @@ export function drawSymbolPreview(canvas: HTMLCanvasElement, symbol: Symbol, opt
 
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   const view: View = { g, k, cx: cssW / 2, cy: cssH / 2, pal, opts };
-  type Op = { level: number; kind: number; seq: number; draw: () => void };
+  type Op = { level: number; group: number; kind: number; seq: number; draw: (v: View) => void };
   const ops: Op[] = [];
   let seq = 0;
-  for (const f of out.fills) ops.push({ level: f.paint.level, kind: KIND_ORDER.fill, seq: seq++, draw: () => drawFill(view, f.paint, f.rings) });
-  for (const s of out.strokes) ops.push({ level: s.style.level, kind: KIND_ORDER.stroke, seq: seq++, draw: () => drawStroke(view, s.style, s.path, s.closed) });
-  for (const m of out.markers) ops.push({ level: m.style.common.level, kind: KIND_ORDER.marker, seq: seq++, draw: () => drawMarker(view, m.style, m.at, m.angle) });
-  ops.sort((a, b) => a.level - b.level || a.kind - b.kind || a.seq - b.seq);
-  for (const op of ops) {
-    g.save();
-    op.draw();
-    g.restore();
+  for (const f of out.fills) ops.push({ level: f.paint.level, group: f.group ?? 0, kind: KIND_ORDER.fill, seq: seq++, draw: (v) => drawFill(v, f.paint, f.rings) });
+  for (const s of out.strokes) ops.push({ level: s.style.level, group: s.group ?? 0, kind: KIND_ORDER.stroke, seq: seq++, draw: (v) => drawStroke(v, s.style, s.path, s.closed) });
+  for (const m of out.markers) ops.push({ level: m.style.common.level, group: m.group ?? 0, kind: KIND_ORDER.marker, seq: seq++, draw: (v) => drawMarker(v, m.style, m.at, m.angle) });
+  // The GPU's order (docs/adr/0226 §2): by level, an effect group's primitives together.
+  ops.sort((a, b) => a.level - b.level || a.group - b.group || a.kind - b.kind || a.seq - b.seq);
+  for (let i = 0; i < ops.length; ) {
+    const op = ops[i];
+    const spec = op.group > 0 ? out.effects?.[op.group - 1] : undefined;
+    if (!spec) {
+      g.save();
+      op.draw(view);
+      g.restore();
+      i++;
+      continue;
+    }
+    // The group's run into a picture of its own, laid over with its effects.
+    const pictured = document.createElement('canvas');
+    pictured.width = canvas.width;
+    pictured.height = canvas.height;
+    const pg = pictured.getContext('2d', { willReadFrequently: true })!;
+    pg.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const inGroup: View = { ...view, g: pg };
+    for (; i < ops.length && ops[i].group === op.group && ops[i].level === op.level; i++) {
+      pg.save();
+      ops[i].draw(inGroup);
+      pg.restore();
+    }
+    composeEffects(g, pg, effectPx(spec, view, dpr));
   }
   return true;
+}
+
+/** A group's effects in device pixels: lengths in mm (the preview's world) or px, a shadow's y down, colours resolved. */
+function effectPx(spec: EffectSpec, view: View, dpr: number): EffectPx {
+  const k = (spec.unit === 'px' ? 1 : view.k) * dpr;
+  const color = (c: string, o: number): RGBA => {
+    const p = parseHex(resolveColor(c, view.pal));
+    return [p[0], p[1], p[2], p[3] * o];
+  };
+  const shadow = (s: NonNullable<EffectSpec['shadow']>) => ({ dx: s.dx * k, dy: -s.dy * k, blur: Math.max(0, s.blur) * k, color: color(s.color, s.opacity) });
+  const glow = (s: NonNullable<EffectSpec['glow']>) => ({ spread: Math.max(0, s.spread) * k, blur: Math.max(0, s.blur) * k, color: color(s.color, s.opacity) });
+  return {
+    ...(spec.shadow && { shadow: shadow(spec.shadow) }),
+    ...(spec.glow && { glow: glow(spec.glow) }),
+    ...(spec.innerShadow && { innerShadow: shadow(spec.innerShadow) }),
+    ...(spec.innerGlow && { innerGlow: glow(spec.innerGlow) }),
+    blur: Math.max(0, spec.blur ?? 0) * k,
+  };
 }
 
 /** How far a point symbol reaches from its point, in mm (markers, their offsets, a text's rough width). */

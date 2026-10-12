@@ -10,10 +10,32 @@
 // Outside src/ so the app's type check does not need Node's types.
 import { writeFileSync } from 'node:fs';
 import { it } from 'vitest';
-import type { MarkerLayer, Symbol } from '../../src/model/style';
+import type { GeneratorStep, GeometryGenerator, MarkerLayer, Symbol } from '../../src/model/style';
+import { EFFECT_TYPES } from '../../src/model/style';
 import {
   addLayer,
   addParent,
+  addStep,
+  BUFFER_SIDES,
+  childTypes,
+  CLASS_OF,
+  EFFECT_LABEL,
+  effectsSummary,
+  moveStep,
+  newEffect,
+  newStep,
+  putEffect,
+  putStep,
+  removeStep,
+  setEffect,
+  setGeneratorKind,
+  STEP_KINDS,
+  STEP_LABEL,
+  stepOutput,
+  stepSummary,
+  takesEffects,
+  VERTEX_CHOICES,
+  type GenClass,
   ANCHORS,
   applyPatch,
   canMove,
@@ -99,6 +121,10 @@ const SUMMARIES: AnyLayer[] = [
   { id: '0', type: 'raster', asset: 'a-2', size: 12, unit: 'm' },
   { id: '0', type: 'text', text: 'A', size: 3 },
   { id: '0', type: 'text', text: { expr: 'etiket', fallback: 'A' }, size: 3 },
+  // Geometri üretici (docs/adr/0226 §1): its steps and the class it draws with.
+  { id: '0', type: 'geometryGenerator', steps: [], symbol: { type: 'line', layers: [] } },
+  { id: '0', type: 'geometryGenerator', steps: [{ kind: 'circle', radius: 3 }], symbol: { type: 'fill', layers: [] } },
+  { id: '0', type: 'geometryGenerator', steps: [{ kind: 'centroid' }, { kind: 'wedge', direction: { expr: 'Yön', fallback: 0 }, width: 60, radius: 5 }, { kind: 'scale', x: 2 }], symbol: { type: 'fill', layers: [] } },
 ];
 
 /** Form patches and the layers they are made on: every helper key, and the values that remove a field. */
@@ -148,6 +174,19 @@ const AREA: Symbol = {
 const ONE: Symbol = { type: 'line', layers: [{ id: '0', type: 'simpleLine', color: 'ink', width: 0.35 }] };
 const GAPS: Symbol = { type: 'marker', layers: [dotMarker('0'), { id: '2', type: 'text', text: 'B', size: 2 }] };
 const LONELY: Symbol = { type: 'line', layers: [{ id: '0', type: 'markerLine', placement: 'first', marker: { type: 'marker', layers: [dotMarker('7')] } }] };
+/** A point with a generator's circle around it: its symbol's layers are child rows (docs/adr/0226 §1). */
+const GEN: Symbol = {
+  type: 'marker',
+  layers: [
+    { id: '0', type: 'shape', shape: 'circle', size: 2, fill: 'ink' },
+    {
+      id: '1',
+      type: 'geometryGenerator',
+      steps: [{ kind: 'circle', radius: 3 }],
+      symbol: { type: 'fill', layers: [{ id: '0', type: 'simpleFill', color: '#4E79A740' }, { id: '1', type: 'simpleLine', color: '#4E79A7', width: 0.25 }] },
+    },
+  ],
+};
 
 type Op =
   | { op: 'add'; type: LayerType; parent: number | null }
@@ -178,7 +217,46 @@ const EDITS: { name: string; symbol: Symbol; selected: LayerPath; op: Op }[] = [
   { name: 'switched on', symbol: AREA, selected: [2], op: { op: 'enable', at: [2], on: true } },
   { name: 'a marker’s layer switched off', symbol: AREA, selected: [1, 1], op: { op: 'enable', at: [1, 1], on: false } },
   { name: 'a marker’s layer replaced', symbol: AREA, selected: [1, 0], op: { op: 'put', at: [1, 0], layer: { id: '0', type: 'shape', shape: 'star', size: 2, fill: '#E15759' } } },
+  { name: 'a layer added to a generator’s symbol takes its class', symbol: GEN, selected: [1], op: { op: 'add', type: 'simpleLine', parent: 1 } },
+  { name: 'a generator’s layer moved up', symbol: GEN, selected: [1, 1], op: { op: 'move', delta: -1 } },
+  { name: 'a generator’s layer duplicated', symbol: GEN, selected: [1, 0], op: { op: 'duplicate' } },
+  { name: 'a generator’s layer removed', symbol: GEN, selected: [1, 0], op: { op: 'remove' } },
+  { name: 'a generator’s layer switched off', symbol: GEN, selected: [1, 1], op: { op: 'enable', at: [1, 1], on: false } },
+  { name: 'a generator’s layer replaced', symbol: GEN, selected: [1, 0], op: { op: 'put', at: [1, 0], layer: { id: '0', type: 'hatchFill', angle: 45, spacing: 2, width: 0.2, color: 'ink' } } },
 ];
+
+/** A generator to edit the steps of. */
+const STEPPED: GeometryGenerator = {
+  id: '1',
+  type: 'geometryGenerator',
+  steps: [{ kind: 'centroid' }, { kind: 'circle', radius: 3 }, { kind: 'translate', dx: 1, dy: 0 }],
+  symbol: { type: 'fill', layers: [{ id: '0', type: 'simpleFill', color: '#4E79A740' }] },
+};
+
+/** Steps' lines in the list, in each unit and with a number from an expression. */
+const STEP_LINES: { step: GeneratorStep; unit: string }[] = [
+  ...STEP_KINDS.map((k) => ({ step: newStep(k), unit: 'mm' })),
+  { step: { kind: 'vertices', which: 'ends' }, unit: 'mm' },
+  { step: { kind: 'vertices' }, unit: 'mm' },
+  { step: { kind: 'buffer', distance: 2.5, side: 'left' }, unit: 'm' },
+  { step: { kind: 'buffer', distance: { expr: 'Genişlik / 2', fallback: 1 } }, unit: 'm' },
+  { step: { kind: 'extend', end: 3.333 }, unit: 'px' },
+  { step: { kind: 'translate', dy: -2 }, unit: 'mm' },
+  { step: { kind: 'scale', y: 0.5 }, unit: 'mm' },
+  { step: { kind: 'wedge', direction: { expr: 'Yön' }, width: 90, radius: 8 }, unit: 'm' },
+];
+
+/** What each step leaves of a point, a line and an area, one after another. */
+const OUTPUTS: { steps: GeneratorStep[]; input: GenClass }[] = [
+  ...(['point', 'line', 'area'] as GenClass[]).flatMap((input) => STEP_KINDS.map((k) => ({ steps: [newStep(k)], input }))),
+  { steps: [], input: 'line' },
+  { steps: [{ kind: 'boundary' }, { kind: 'vertices', which: 'all' }, { kind: 'circle', radius: 1 }], input: 'area' },
+  { steps: [{ kind: 'centroid' }, { kind: 'extend', end: 1 }, { kind: 'circle', radius: 1 }], input: 'area' },
+];
+
+/** Layers with effects, for their switches and their lines. */
+const SHADOWED: AnyLayer = { id: '0', type: 'simpleFill', color: '#F28E2B', effects: [{ type: 'innerGlow', spread: 0.5, blur: 1, color: '#FFFFFF', opacity: 0.5, enabled: false }, { type: 'dropShadow', distance: 2, angle: 90, blur: 1, color: '#000000', opacity: 0.6 }] };
+const PLAIN: AnyLayer = { id: '0', type: 'simpleLine', color: 'ink', width: 0.35 };
 
 function run(symbol: Symbol, selected: LayerPath, op: Op): { symbol: Symbol; selected: LayerPath } | null {
   switch (op.op) {
@@ -262,6 +340,48 @@ it.runIf(!!process.env.GOLDEN_WRITE)('records the designer', () => {
         { first: 'sembol › katman 2: kimlik yok', more: 2, text: DESIGNER_TEXTS.notSaved('sembol › katman 2: kimlik yok', 2) },
       ],
       saved: { name: 'Bahçe alanı', text: DESIGNER_TEXTS.saved('Bahçe alanı') },
+      intoGenerator: { parent: 'Geometri üretici', text: DESIGNER_TEXTS.intoGenerator('Geometri üretici') },
+      inGenerator: { parent: 'Geometri üretici', text: DESIGNER_TEXTS.inGenerator('Geometri üretici') },
+    },
+    // Geometri üretici (docs/adr/0226 §1): what a parent's child rows may be, the steps and their edits.
+    childTypes: [
+      { parent: { id: '0', type: 'markerLine', placement: 'first', marker: { type: 'marker', layers: [] } } },
+      ...KINDS.map((kind) => ({ parent: { id: '0', type: 'geometryGenerator', steps: [], symbol: { type: kind, layers: [] } } })),
+    ].map(({ parent }) => ({ parent, types: childTypes(parent as GeometryGenerator) })),
+    steps: {
+      labels: STEP_LABEL,
+      kinds: STEP_KINDS,
+      vertexChoices: VERTEX_CHOICES,
+      bufferSides: BUFFER_SIDES,
+      classOf: CLASS_OF,
+      newSteps: STEP_KINDS.map((kind) => ({ kind, step: newStep(kind) })),
+      lines: STEP_LINES.map(({ step, unit }) => ({ step, unit, line: stepSummary(step, unit) })),
+      outputs: OUTPUTS.map(({ steps, input }) => ({ steps, input, output: stepOutput(steps, input) })),
+      edits: [
+        { name: 'a step added', layer: STEPPED, op: { op: 'add', kind: 'buffer' }, result: addStep(STEPPED, 'buffer') },
+        { name: 'a step moved up', layer: STEPPED, op: { op: 'move', at: 2, delta: -1 }, result: moveStep(STEPPED, 2, -1) },
+        { name: 'not above the first', layer: STEPPED, op: { op: 'move', at: 0, delta: -1 }, result: moveStep(STEPPED, 0, -1) },
+        { name: 'not below the last', layer: STEPPED, op: { op: 'move', at: 2, delta: 1 }, result: moveStep(STEPPED, 2, 1) },
+        { name: 'a step removed', layer: STEPPED, op: { op: 'remove', at: 1 }, result: removeStep(STEPPED, 1) },
+        { name: 'a step replaced', layer: STEPPED, op: { op: 'put', at: 1, step: { kind: 'polygon', sides: 5, radius: 2, rotation: 18 } }, result: putStep(STEPPED, 1, { kind: 'polygon', sides: 5, radius: 2, rotation: 18 }) },
+        ...KINDS.map((kind) => ({ name: `drawn with a ${kind} symbol`, layer: STEPPED, op: { op: 'kind', kind }, result: setGeneratorKind(STEPPED, kind) })),
+      ].map((e) => plain(e)),
+    },
+    // Draw effects (docs/adr/0226 §2).
+    effects: {
+      labels: EFFECT_LABEL,
+      types: EFFECT_TYPES,
+      newEffects: EFFECT_TYPES.map((type) => ({ type, effect: newEffect(type) })),
+      takes: [[0], [1, 0]].map((path) => ({ path, takes: takesEffects(path as LayerPath) })),
+      edits: [
+        { name: 'a shadow switched on, sorted before the glow', layer: SHADOWED, op: { op: 'set', type: 'outerGlow', on: true }, result: setEffect(SHADOWED, 'outerGlow', true) },
+        { name: 'a switched-off effect switched on keeps its values', layer: SHADOWED, op: { op: 'set', type: 'innerGlow', on: true }, result: setEffect(SHADOWED, 'innerGlow', true) },
+        { name: 'an effect switched off goes', layer: SHADOWED, op: { op: 'set', type: 'dropShadow', on: false }, result: setEffect(SHADOWED, 'dropShadow', false) },
+        { name: 'the last effect switched off leaves no list', layer: setEffect(SHADOWED, 'innerGlow', false), op: { op: 'set', type: 'dropShadow', on: false }, result: setEffect(setEffect(SHADOWED, 'innerGlow', false), 'dropShadow', false) },
+        { name: 'a first effect', layer: PLAIN, op: { op: 'set', type: 'blur', on: true }, result: setEffect(PLAIN, 'blur', true) },
+        { name: 'an effect replaced', layer: SHADOWED, op: { op: 'put', effect: { type: 'dropShadow', distance: 3, angle: 180, blur: 0, color: '#333333', opacity: 1 } }, result: putEffect(SHADOWED, { type: 'dropShadow', distance: 3, angle: 180, blur: 0, color: '#333333', opacity: 1 }) },
+      ].map((e) => plain(e)),
+      lines: [PLAIN, SHADOWED, setEffect(SHADOWED, 'innerGlow', true), setEffect(setEffect(PLAIN, 'blur', true), 'outerGlow', true)].map((layer) => ({ layer, line: effectsSummary(layer) })),
     },
   };
   writeFileSync(OUT, `${JSON.stringify(file, null, 1)}\n`);

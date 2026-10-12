@@ -19,15 +19,16 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT, CAD_ENTITIES_SET,
-    EntitiesCreate, EntitiesSetProperties, LabelsPin, LayersFilter, LayersInfo, LayersLabels,
-    LayersRenderer, LayersService, LayersTime, NetworkDefine, ScenariosEdit,
+    EntitiesCreate, EntitiesSetProperties, LabelsPin, LayersCompose, LayersFilter, LayersInfo,
+    LayersLabels, LayersRenderer, LayersService, LayersTime, NetworkDefine, ScenariosEdit,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, blocks_define, blocks_edit, circle, delete,
-    edit, labels_pin, layers_filter, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_time, line, network_define, point, polygon, polyline, scenarios_edit, set, transform,
+    edit, labels_pin, layers_compose, layers_filter, layers_info, layers_labels, layers_renderer,
+    layers_service, layers_time, line, network_define, point, polygon, polyline, scenarios_edit,
+    set, transform,
 };
 use serde_json::{Value, json};
 
@@ -347,6 +348,12 @@ impl Input for LayersFilter {
 }
 
 impl Input for LayersInfo {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for LayersCompose {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -917,6 +924,7 @@ fn run_op(
         kentos_domain::contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
         kentos_domain::contracts::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
         kentos_domain::contracts::CAD_LAYERS_INFO => run!(layers_info, LayersInfo),
+        kentos_domain::contracts::CAD_LAYERS_COMPOSE => run!(layers_compose, LayersCompose),
         kentos_domain::contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
         kentos_domain::contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
         kentos_domain::contracts::CAD_LAYERS_RENDERER => run!(layers_renderer, LayersRenderer),

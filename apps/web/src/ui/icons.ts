@@ -845,6 +845,13 @@ export const ICONS = {
   dimensionStyle: '<path d="M2.5 6v9M10.5 6v9M2.5 12.5h8"/><path d="m4.3 11.3-1.8 1.2 1.8 1.2M8.7 11.3l1.8 1.2-1.8 1.2"/><path d="M13 6h4.5M13 10h4.5M13 14h4.5"/><circle cx="14.6" cy="6" r="1.1" fill="currentColor"/><circle cx="16.2" cy="10" r="1.1" fill="currentColor"/><circle cx="14.2" cy="14" r="1.1" fill="currentColor"/>',
   styles: '<path d="M10 3a7 7 0 1 0 0 14c1 0 1.5-.8 1.2-1.6-.4-1 .2-2 1.3-2H14a3.5 3.5 0 0 0 3.5-3.5C17.5 6 14.1 3 10 3z"/><circle cx="6.6" cy="9.2" r=".9"/><circle cx="8.9" cy="6.2" r=".9"/><circle cx="12.6" cy="6.6" r=".9"/>',
   layerStyle: '<rect x="3" y="3" width="10" height="10" rx="1"/><path d="m3 8.5 5.5-5.5M5 13l8-8"/><circle cx="14.5" cy="14.5" r="3"/>',
+  // Katman çizimi (docs/adr/0226 §3, §4): two layers, the top one see-through over the bottom one.
+  layerCompose: '<rect x="2.5" y="2.5" width="10" height="10" rx="1"/><rect x="7.5" y="7.5" width="10" height="10" rx="1" fill="currentColor" fill-opacity=".3"/>',
+  // Geometri üretici (docs/adr/0226 §1): the object's point, the shape made round it dashed, a spark for the making.
+  geometryGenerator: `<circle cx="9" cy="11" r="6" stroke-dasharray="2.2 1.6"/>${grip(9, 11)}<path d="M16 1.4 16.85 3.15 18.6 4 16.85 4.85 16 6.6 15.15 4.85 13.4 4 15.15 3.15z" fill="currentColor" stroke="none"/>`,
+  // Its Sınırlayıcı kutu step: a shape, its box dashed round it.
+  stepEnvelope:
+    '<rect x="2.5" y="3.5" width="15" height="13" stroke-dasharray="2.2 1.6"/><path d="M4.5 13.5 8 5.5l7.5 3.5-3 5.5z" fill="currentColor" fill-opacity=".2" stroke-width="1.3"/>',
   // Commands shown as ribbon buttons.
   saveAs: '<path d="M3.5 3.5h10l3 3v4"/><path d="M3.5 3.5v13h6"/><path d="M6.5 3.5v4h6v-4M6 16.5v-5h5"/><path d="m12.4 17.6.6-2.6 4.1-4.1a1.2 1.2 0 0 1 1.7 1.7L14.7 16.7z"/>',
   pasteOriginal: `<rect x="3.5" y="4" width="10" height="13.5" rx="1"/><path d="M6.3 4V2.8h4.4V4"/><path d="M15.5 9.5v7M12 13h7"/><circle cx="15.5" cy="13" r="2" fill="none"/>`,

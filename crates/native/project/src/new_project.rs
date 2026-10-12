@@ -262,6 +262,7 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         replaces: None,
         actions: Vec::new(),
         card: None,
+        compose: None,
         filter: None,
     }
 }

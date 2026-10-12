@@ -59,6 +59,9 @@ pub struct NewLayer {
     /// by the node it makes (Başka çizimden al's layers); a group keeps none.
     pub actions: Vec<kentos_contracts::LayerAction>,
     pub card: Option<kentos_contracts::InfoCard>,
+    /// A layer's composition (docs/adr/0226 §3, §4), kept by the node it makes;
+    /// a group keeps none.
+    pub compose: Option<kentos_contracts::LayerCompose>,
 }
 
 impl NewLayer {
@@ -80,6 +83,7 @@ impl NewLayer {
             replaces: None,
             actions: Vec::new(),
             card: None,
+            compose: None,
             filter: None,
         }
     }
@@ -449,6 +453,17 @@ impl LayerTree {
         }
     }
 
+    /// A layer's composition, as an undo or a redo puts it (docs/adr/0226 §3, §4).
+    pub(crate) fn replace_compose(
+        &mut self,
+        id: &str,
+        compose: Option<&kentos_contracts::LayerCompose>,
+    ) {
+        if let Some(node) = self.node_mut(id) {
+            node.compose = compose.cloned();
+        }
+    }
+
     pub(crate) fn replace_service(&mut self, id: &str, served: &crate::history::Served) {
         if let Some(node) = self.node_mut(id) {
             node.name.clone_from(&served.name);
@@ -493,6 +508,7 @@ impl LayerTree {
                 Vec::new()
             },
             card: new.card.filter(|_| new.kind == LayerNodeType::Layer),
+            compose: new.compose.filter(|_| new.kind == LayerNodeType::Layer),
             style: new.style,
             children: Vec::new(),
         }

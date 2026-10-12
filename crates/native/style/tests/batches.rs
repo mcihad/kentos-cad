@@ -381,7 +381,7 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
         }
     }
     assert_eq!(
-        checked, 66,
-        "twenty-two cases built in parts (four thematic ones never are), three part sizes"
+        checked, 72,
+        "twenty-four cases built in parts (four thematic ones never are), three part sizes"
     );
 }

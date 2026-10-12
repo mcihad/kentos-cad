@@ -489,6 +489,12 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                     Some(v) => serde_json::from_value(v.clone())
                         .or_else(|e| fail(format!("{at}: kart okunamadı: {e}")))?,
                 },
+                // A composition (docs/adr/0226 §3, §4), as `LayerInit` carries it.
+                compose: match layer.get("compose") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: katman çizimi okunamadı: {e}")))?,
+                },
             };
             let parent = step.get("parent").and_then(Value::as_str);
             let activate = step

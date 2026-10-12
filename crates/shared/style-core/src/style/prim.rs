@@ -230,6 +230,85 @@ impl MarkerStyle {
     }
 }
 
+/// A shadow as the page draws it (docs/adr/0226 §2): its shift east and
+/// north, its blur, in the effect's unit.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShadowSpec {
+    pub dx: f64,
+    pub dy: f64,
+    pub blur: f64,
+    pub color: String,
+    pub opacity: f64,
+}
+
+/// A glow as the page draws it: its spread and blur, in the effect's unit.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GlowSpec {
+    pub spread: f64,
+    pub blur: f64,
+    pub color: String,
+    pub opacity: f64,
+}
+
+/// A symbol layer's effects as the page draws them (docs/adr/0226 §2):
+/// every length in `unit` (metres in the world or CSS px), colours as the
+/// symbol wrote them (a theme token resolves on the page).
+#[derive(Clone, Debug, PartialEq)]
+pub struct EffectSpec {
+    pub unit: PrimUnit,
+    pub shadow: Option<ShadowSpec>,
+    pub glow: Option<GlowSpec>,
+    pub inner_shadow: Option<ShadowSpec>,
+    pub inner_glow: Option<GlowSpec>,
+    pub blur: f64,
+}
+
+impl EffectSpec {
+    pub fn write_json(&self, out: &mut String) {
+        let shadow = |out: &mut String, s: &ShadowSpec| {
+            let mut o = Obj::new(out);
+            o.num("dx", s.dx);
+            o.num("dy", s.dy);
+            o.num("blur", s.blur);
+            o.str("color", &s.color);
+            o.num("opacity", s.opacity);
+            o.end();
+        };
+        let glow = |out: &mut String, g: &GlowSpec| {
+            let mut o = Obj::new(out);
+            o.num("spread", g.spread);
+            o.num("blur", g.blur);
+            o.str("color", &g.color);
+            o.num("opacity", g.opacity);
+            o.end();
+        };
+        let mut o = Obj::new(out);
+        o.str("unit", self.unit.name());
+        if let Some(s) = &self.shadow {
+            shadow(o.key("shadow"), s);
+        }
+        if let Some(g) = &self.glow {
+            glow(o.key("glow"), g);
+        }
+        if let Some(s) = &self.inner_shadow {
+            shadow(o.key("innerShadow"), s);
+        }
+        if let Some(g) = &self.inner_glow {
+            glow(o.key("innerGlow"), g);
+        }
+        if self.blur > 0.0 {
+            o.num("blur", self.blur);
+        }
+        o.end();
+    }
+
+    pub fn json(&self) -> String {
+        let mut out = String::new();
+        self.write_json(&mut out);
+        out
+    }
+}
+
 /// Where compile sends its output.
 pub trait Sink {
     fn stroke(&mut self, style: &StrokeStyle, path: &[Vec2], closed: bool);
@@ -237,6 +316,9 @@ pub trait Sink {
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]);
     /// `angle`: radians, the direction the marker faces (0 = east).
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64);
+    /// The primitives that follow belong to the effect group of a symbol
+    /// layer at `level` with these effects (docs/adr/0226 §2); None ends it.
+    fn effects(&mut self, _spec: Option<&EffectSpec>, _level: f64) {}
 }
 
 // ── JSON, as the page reads it and as `JSON.stringify` wrote it ─────────
@@ -662,12 +744,25 @@ pub fn points(out: &mut String, pts: &[Vec2]) {
 }
 
 /// Collects primitives in order, as JSON (previews, legends and tests:
-/// formerly the TypeScript `PrimitiveList`).
+/// formerly the TypeScript `PrimitiveList`). A primitive of an effect group
+/// says its group (`"group"`, from 1), and the groups' effects come after
+/// the primitives (`"effects"`, the group's at its index − 1; docs/adr/0226 §2).
 #[derive(Default)]
 pub struct PrimitiveList {
     strokes: Vec<String>,
     fills: Vec<String>,
     markers: Vec<String>,
+    /// The groups' keys (effects and level) and effects, in their order.
+    groups: Vec<(String, String)>,
+    group: usize,
+}
+
+impl PrimitiveList {
+    fn write_group(&self, o: &mut Obj) {
+        if self.group > 0 {
+            o.num("group", self.group as f64);
+        }
+    }
 }
 
 impl Sink for PrimitiveList {
@@ -677,6 +772,7 @@ impl Sink for PrimitiveList {
         style.write_json(o.key("style"));
         points(o.key("path"), path);
         o.bool("closed", closed);
+        self.write_group(&mut o);
         o.end();
         self.strokes.push(out);
     }
@@ -694,6 +790,7 @@ impl Sink for PrimitiveList {
             points(r, ring);
         }
         r.push(']');
+        self.write_group(&mut o);
         o.end();
         self.fills.push(out);
     }
@@ -704,13 +801,41 @@ impl Sink for PrimitiveList {
         style.write_json(o.key("style"));
         point(o.key("at"), at);
         o.num("angle", angle);
+        self.write_group(&mut o);
         o.end();
         self.markers.push(out);
     }
+
+    fn effects(&mut self, spec: Option<&EffectSpec>, level: f64) {
+        self.group = match spec {
+            None => 0,
+            Some(spec) => {
+                let json = spec.json();
+                let key = group_key(&json, level);
+                match self.groups.iter().position(|(k, _)| *k == key) {
+                    Some(i) => i + 1,
+                    None => {
+                        self.groups.push((key, json));
+                        self.groups.len()
+                    }
+                }
+            }
+        };
+    }
+}
+
+/// An effect group's identity: its effects and its symbol layer's level (two
+/// layers with equal effects are two groups; docs/adr/0226 §2).
+pub fn group_key(effects: &str, level: f64) -> String {
+    let mut key = String::with_capacity(effects.len() + 16);
+    key.push_str(effects);
+    key.push('@');
+    num(&mut key, level);
+    key
 }
 
 impl PrimitiveList {
-    /// `{"strokes":[…],"fills":[…],"markers":[…]}`.
+    /// `{"strokes":[…],"fills":[…],"markers":[…]}`, and `"effects":[…]` when a group was made.
     pub fn json(&self) -> String {
         let mut out = String::from("{");
         for (i, (name, list)) in [
@@ -726,6 +851,12 @@ impl PrimitiveList {
             }
             let _ = write!(out, "\"{name}\":[");
             out.push_str(&list.join(","));
+            out.push(']');
+        }
+        if !self.groups.is_empty() {
+            out.push_str(",\"effects\":[");
+            let specs: Vec<&str> = self.groups.iter().map(|(_, json)| json.as_str()).collect();
+            out.push_str(&specs.join(","));
             out.push(']');
         }
         out.push('}');

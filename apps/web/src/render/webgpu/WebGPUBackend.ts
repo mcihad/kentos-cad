@@ -1,6 +1,8 @@
 import { supportedSamples, type AtlasSource, type FrameState, type RenderBackend, type RGBA, type SceneLayer } from '../types';
+import { composeKey, markerBoxes, planCompose, type ComposePlan, type PlanView } from '../composePlan';
 import { madeCanvas } from '../pictures';
 import type { ServiceSource } from '../servicePass';
+import { WebGPUComposer } from './composer';
 import { WGSL } from './shaders';
 import { WebGPUStyledRenderer, type GpuStyledLayer } from './styledRenderer';
 
@@ -44,6 +46,7 @@ const BUFFER = { VERTEX: 0x20, UNIFORM: 0x40, COPY_DST: 0x08 } as const;
 const STAGE = { VERTEX: 0x1, FRAGMENT: 0x2 } as const;
 const RENDER_ATTACHMENT = 0x10;
 const TEXTURE_BINDING = 0x04;
+const COPY_SRC = 0x01;
 
 /** A full-view triangle that copies the kept base into the frame's target (as in WebGL2Backend). */
 const COPY_WGSL = `
@@ -107,6 +110,8 @@ export class WebGPUBackend implements RenderBackend {
   private baseKey = '';
   /** The overlays of the last frame: uploading them leaves the base as it is. */
   private overlayIds: ReadonlySet<string> = new Set();
+  /** Katman çizimi and draw effects (docs/adr/0226), made with the first frame that composes. */
+  private composer: WebGPUComposer | null = null;
 
   static isSupported(): boolean {
     return typeof navigator !== 'undefined' && 'gpu' in navigator;
@@ -217,6 +222,7 @@ export class WebGPUBackend implements RenderBackend {
       }
       this.pipelines.delete(n);
       this.styled.forget(n);
+      this.composer?.forget(n);
       if (this.samples === n) {
         this.samples = n === this.working ? 1 : this.working;
         this.baseKey = '';
@@ -329,12 +335,13 @@ export class WebGPUBackend implements RenderBackend {
     if (!this.base || this.base.width !== w || this.base.height !== h) {
       const old = this.base;
       if (old) void device.queue.onSubmittedWorkDone().then(() => old.destroy());
-      this.base = device.createTexture({ size: [w, h], format: this.format, usage: RENDER_ATTACHMENT | TEXTURE_BINDING });
+      // Copied from too: a layer mixed in by a mode reads the drawing beneath it (docs/adr/0226 §4).
+      this.base = device.createTexture({ size: [w, h], format: this.format, usage: RENDER_ATTACHMENT | TEXTURE_BINDING | COPY_SRC });
       this.copyBind = device.createBindGroup({ layout: this.copyLayout, entries: [{ binding: 0, resource: this.base.createView() }] });
       this.baseKey = '';
     }
     this.overlayIds = new Set(frame.overlays);
-    const key = `${view.center.x},${view.center.y},${view.scale},${w}x${h},${frame.scaleDenominator},${frame.clearColor.join()},${frame.underlays.join()}|${frame.order.join()}`;
+    const key = `${view.center.x},${view.center.y},${view.scale},${w}x${h},${frame.scaleDenominator},${frame.clearColor.join()},${frame.underlays.join()}|${frame.order.join()}|${composeKey(frame.compositions)}`;
     const drawBase = !frame.keepBase || key !== this.baseKey;
     // The camera centre's float32 high part first, its low part last: the styled shaders take it from each batch's tile.
     const [cx, cy] = [Math.fround(view.center.x), Math.fround(view.center.y)];
@@ -416,7 +423,38 @@ export class WebGPUBackend implements RenderBackend {
           pass.draw(6, p.count);
         }
     };
-    if (drawBase) {
+    const plan = drawBase ? this.composePlan(frame, w, h) : null;
+    if (plan) {
+      // A composed frame (docs/adr/0226): the ground and the underlays, then the plan's passes; the multisampled
+      // picture is kept between them and resolved into the base where the composer asks (before a copy, at the end).
+      const base = this.base;
+      const kept = (clear: boolean, resolve: boolean): GPURenderPassEncoder =>
+        encoder.beginRenderPass({
+          colorAttachments: [
+            multisampled
+              ? { view: this.msaa!.createView(), ...(resolve && { resolveTarget: base.createView() }), clearValue: { r, g, b, a: 1 }, loadOp: clear ? 'clear' : 'load', storeOp: 'store' }
+              : { view: base.createView(), clearValue: { r, g, b, a: 1 }, loadOp: clear ? 'clear' : 'load', storeOp: 'store' },
+          ],
+        });
+      const order = frame.order.map((id) => this.layers.get(id));
+      (this.composer ??= new WebGPUComposer(device, this.format)).record(encoder, plan, [w, h], this.samples, {
+        picture: (_enc, first, resolve) => {
+          pass = kept(first, resolve);
+          pass.setBindGroup(0, this.frameBind);
+          if (first) {
+            drawPass(frame.underlays);
+            pass.setBindGroup(0, this.frameBind);
+          }
+          return pass;
+        },
+        copyPicture: (enc, to) => enc.copyTextureToTexture({ texture: base }, { texture: to }, [w, h]),
+        draw: (p, li, from, to) => {
+          const l = order[li];
+          if (l) this.drawRange(p, l, from, to, pipes);
+        },
+      });
+      this.baseKey = key;
+    } else if (drawBase) {
       pass = begin(this.base);
       pass.setBindGroup(0, this.frameBind);
       drawPass(frame.underlays);
@@ -447,8 +485,60 @@ export class WebGPUBackend implements RenderBackend {
     device.queue.submit([encoder.finish()]);
   }
 
+  /**
+   * The composed frame's plan (docs/adr/0226), from the persistent layers as prepare left them; null when no layer is
+   * composed and no effect group draws.
+   */
+  private composePlan(frame: FrameState, w: number, h: number): ComposePlan | null {
+    const { view } = frame;
+    const pv: PlanView = { size: [w, h], cam: [view.center.x, view.center.y], pxPerM: view.scale * this.dpr, dpr: this.dpr };
+    const layers = frame.order.map((id) => {
+      const l = this.layers.get(id);
+      const list = l?.styled.list ?? [];
+      return {
+        id,
+        batches: list.map((s) => s.batch),
+        drawn: (i: number) => list[i]?.visible ?? false,
+        plain: !!l && (l.fills.length > 0 || l.lines.length > 0 || l.points.length > 0),
+        compose: frame.compositions?.get(id),
+      };
+    });
+    return planCompose(layers, pv, (id, grow, out) => {
+      for (const s of this.layers.get(id)?.styled.list ?? []) if (s.visible && s.batch.kind === 'marker') markerBoxes(s.batch, s.hit?.aspect ?? 1, pv, grow, out);
+    });
+  }
+
+  /** A layer's batches `from` … `to` into a pass: its plain fills when it starts at the first, its plain lines and points when it ends at the last. */
+  private drawRange(pass: GPURenderPassEncoder, l: GpuLayer, from: number, to: number, pipes: Pipelines): void {
+    pass.setBindGroup(0, this.frameBind);
+    if (from === 0 && l.fills.length) {
+      pass.setPipeline(pipes.fill);
+      for (const f of l.fills) {
+        pass.setBindGroup(1, f.bind);
+        pass.setVertexBuffer(0, f.buffers[0]);
+        pass.draw(f.count);
+      }
+    }
+    if (to > from && this.styled.draw(pass, { list: l.styled.list.slice(from, to) }, this.samples)) pass.setBindGroup(0, this.frameBind);
+    if (to < l.styled.list.length) return;
+    if (l.lines.length) pass.setPipeline(pipes.line);
+    for (const ln of l.lines) {
+      pass.setBindGroup(1, ln.bind);
+      pass.setVertexBuffer(0, ln.buffers[0]);
+      pass.setVertexBuffer(1, ln.buffers[1]);
+      pass.draw(ln.count);
+    }
+    if (l.points.length) pass.setPipeline(pipes.point);
+    for (const pt of l.points) {
+      pass.setBindGroup(1, pt.bind);
+      pass.setVertexBuffer(0, pt.buffers[0]);
+      pass.draw(6, pt.count);
+    }
+  }
+
   dispose(): void {
     for (const id of [...this.layers.keys()]) this.remove(id);
+    this.composer?.dispose();
     this.msaa?.destroy();
     this.base?.destroy();
     this.frameBuffer?.destroy();

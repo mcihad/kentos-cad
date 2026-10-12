@@ -3,12 +3,15 @@
 //! starts, a layer's one-line summary for the list, form patches turned into
 //! layers, new drafts, the layer style slots' starting symbols, the window's
 //! titles and words, and the preview's scale. The layer list's edits are in
-//! [`list`]. Symbols stay the JSON they are saved as, so fields this side
-//! does not edit survive. Both platforms are held to
+//! [`list`], a geometry generator's steps in [`steps`], draw effects in
+//! [`effects`] (docs/adr/0226). Symbols stay the JSON they are saved as, so
+//! fields this side does not edit survive. Both platforms are held to
 //! `fixtures/style/v1/designer.json`.
 
+pub mod effects;
 pub mod list;
 mod patch;
+pub mod steps;
 mod summary;
 
 use kentos_style_core::js::number;
@@ -44,6 +47,7 @@ pub fn label(layer_type: &str) -> &'static str {
         "svg" => "SVG çizimi",
         "text" => "Yazı",
         "raster" => "Görüntü",
+        "geometryGenerator" => "Geometri üretici",
         _ => "Bilinmeyen katman",
     }
 }
@@ -59,9 +63,10 @@ pub fn layer_types(kind: &str) -> &'static [&'static str] {
             "simpleLine",
             "markerLine",
             "centroidMarker",
+            "geometryGenerator",
         ],
-        "line" => &["simpleLine", "markerLine"],
-        "marker" => &["shape", "text", "svg", "raster"],
+        "line" => &["simpleLine", "markerLine", "geometryGenerator"],
+        "marker" => &["shape", "text", "svg", "raster", "geometryGenerator"],
         _ => &[],
     }
 }
@@ -77,6 +82,48 @@ pub fn has_marker(layer: &Value) -> bool {
         type_of(layer),
         "markerLine" | "patternFill" | "centroidMarker"
     )
+}
+
+/// Whether a layer's own symbol's layers are child rows: those holding a
+/// marker, and a geometry generator (`hasChildren`, docs/adr/0226 §1).
+pub fn has_children(layer: &Value) -> bool {
+    has_marker(layer) || type_of(layer) == "geometryGenerator"
+}
+
+/// The key of the symbol whose layers are a parent's child rows.
+pub fn child_key(layer: &Value) -> &'static str {
+    if type_of(layer) == "geometryGenerator" {
+        "symbol"
+    } else {
+        "marker"
+    }
+}
+
+/// The types a parent's child rows may be: a marker's markers, a generator's
+/// symbol's own types without a layer holding a symbol of its own (`childTypes`).
+pub fn child_types(layer: &Value) -> Vec<&'static str> {
+    if type_of(layer) != "geometryGenerator" {
+        return layer_types("marker")
+            .iter()
+            .copied()
+            .filter(|t| *t != "geometryGenerator")
+            .collect();
+    }
+    let kind = layer
+        .get("symbol")
+        .and_then(|s| s.get("type"))
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    layer_types(kind)
+        .iter()
+        .copied()
+        .filter(|t| {
+            !matches!(
+                *t,
+                "markerLine" | "patternFill" | "centroidMarker" | "geometryGenerator"
+            )
+        })
+        .collect()
 }
 
 fn dot(id: &str) -> Value {
@@ -125,7 +172,34 @@ pub fn new_layer(layer_type: &str, id: &str, context: &str) -> Value {
             "color": "ink",
         }),
         "raster" => json!({ "id": id, "type": layer_type, "asset": "", "size": 5 }),
+        "geometryGenerator" => new_generator(id, context),
         _ => json!({ "id": id, "type": layer_type }),
+    }
+}
+
+/// A new geometry generator for a symbol of `context` (docs/adr/0226 §1): a
+/// point's circle filled, a line's two ends marked, an area's bounding box outlined.
+fn new_generator(id: &str, context: &str) -> Value {
+    match context {
+        "marker" => json!({
+            "id": id, "type": "geometryGenerator", "steps": [{ "kind": "circle", "radius": 3 }],
+            "symbol": { "type": "fill", "layers": [
+                { "id": "0", "type": "simpleFill", "color": "#4E79A740" },
+                { "id": "1", "type": "simpleLine", "color": "#4E79A7", "width": 0.25 },
+            ] },
+        }),
+        "line" => json!({
+            "id": id, "type": "geometryGenerator", "steps": [{ "kind": "vertices", "which": "ends" }],
+            "symbol": { "type": "marker", "layers": [
+                { "id": "0", "type": "shape", "shape": "circle", "size": 1.5, "fill": "ink" },
+            ] },
+        }),
+        _ => json!({
+            "id": id, "type": "geometryGenerator", "steps": [{ "kind": "envelope" }],
+            "symbol": { "type": "line", "layers": [
+                { "id": "0", "type": "simpleLine", "color": "ink", "width": 0.25, "dash": [2, 1] },
+            ] },
+        }),
     }
 }
 
@@ -279,6 +353,15 @@ pub fn new_draft(kind: &str, path: Option<&[String]>) -> Draft {
     }
 }
 
+/// The starting symbol of a kind (`defaultFor` by the symbol's type).
+pub fn default_for_kind(kind: &str) -> Value {
+    default_for(match kind {
+        "fill" => GeometryClass::Fill,
+        "line" => GeometryClass::Line,
+        _ => GeometryClass::Marker,
+    })
+}
+
 /// What a layer style's slot with no symbol and no plain look starts editing from (`defaultFor`).
 pub fn default_for(class: GeometryClass) -> Value {
     match class {
@@ -364,6 +447,26 @@ pub mod texts {
     pub const INLINE: &str = "Bu sembol katman stilinin içindedir; kitaplığa yazılmaz.";
     pub const CANNOT_EDIT: &str =
         "Bu sembol düzenlenemez: sistem sembollerinin kopyası düzenlenir.";
+    /// A geometry generator's form (docs/adr/0226 §1).
+    pub const DRAWS_WITH: &str = "Çizen sembol";
+    pub const STEPS: &str = "Adımlar";
+    pub const ADD_STEP: &str = "Adım ekle";
+    pub const NO_STEPS: &str = "Adım yok: nesnenin kendi geometrisi çizilir.";
+    pub const NOTHING_LEFT: &str = "Bu adımlardan sonra bir şey kalmaz; adımları değiştirin.";
+    /// Draw effects (docs/adr/0226 §2).
+    pub const EFFECTS: &str = "Efektler";
+    pub const EFFECTS_INSIDE: &str =
+        "Efektler sembolün kendi katmanlarına konur; bu katman üstündekinin içinde çizilir.";
+
+    /// “Katman ekle”'s header over a geometry generator's symbol's layer types.
+    pub fn into_generator(parent: &str) -> String {
+        format!("“{parent}” sembolüne")
+    }
+
+    /// The form's note on a geometry generator's symbol's layer.
+    pub fn in_generator(parent: &str) -> String {
+        format!("{parent} sembolünde")
+    }
 
     /// “Katman ekle”'s header over the marker's layer types.
     pub fn into_marker(parent: &str) -> String {

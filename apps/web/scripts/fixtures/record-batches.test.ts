@@ -43,6 +43,42 @@ const LIBRARY: Record<string, Symbol> = {
   'alan-doku': { type: 'fill', layers: [{ id: 'i', type: 'imageFill', asset: 'doku', tileSize: 5 }] },
   'nokta-agac': { type: 'marker', layers: [{ id: 'v', type: 'svg', asset: 'agac', size: 4, fill: '#2E7D32' }] },
   'nokta-harf': { type: 'marker', layers: [{ id: 't', type: 'text', text: 'T', size: 3, font: 'sans', weight: 700, color: 'fg', halo: { color: 'paper', width: 0.5 } }] },
+  // Sembol katmanı ekleri (docs/adr/0226): a photo point's view as a slice from its Yön, a shadowed and glowing
+  // parcel, a road's buffer drawn as an area.
+  'nokta-bakis': {
+    type: 'marker',
+    layers: [
+      {
+        id: 'g',
+        type: 'geometryGenerator',
+        steps: [{ kind: 'wedge', direction: { expr: '[Yön]', fallback: 0 }, width: 60, radius: 8 }],
+        symbol: { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: '#4E79A766' }, { id: 'l', type: 'simpleLine', color: '#4E79A7', width: 0.25 }] },
+      },
+      { id: 'c', type: 'shape', shape: 'circle', size: 2, fill: '#4E79A7' },
+    ],
+  },
+  'alan-golgeli': {
+    type: 'fill',
+    layers: [
+      {
+        id: 'f',
+        type: 'simpleFill',
+        color: '#F28E2B',
+        effects: [
+          { type: 'dropShadow', distance: 1, angle: 135, blur: 1.5, color: '#000000', opacity: 0.5 },
+          { type: 'outerGlow', spread: 0.5, blur: 1, color: '#FFD000', opacity: 0.7 },
+        ],
+      },
+      { id: 'l', type: 'simpleLine', color: 'fg', width: 0.35 },
+    ],
+  },
+  'cizgi-tampon': {
+    type: 'line',
+    layers: [
+      { id: 'g', type: 'geometryGenerator', steps: [{ kind: 'buffer', distance: 2, side: 'both' }], symbol: { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: '#59A14F55' }] } },
+      { id: 'l', type: 'simpleLine', color: '#59A14F', width: 0.5 },
+    ],
+  },
 };
 
 const O = { x: 487000, y: 4420000 };
@@ -94,6 +130,15 @@ const FAR: NewEntity[] = [
   { kind: 'polyline', layerId: 'k', attrs: {}, symbol: 'cizgi-oklu', pts: [L(0, 20), L(30, 20), L(30, 35)] },
   { kind: 'point', layerId: 'k', attrs: {}, symbol: 'nokta-agac', p: L(40, 25) },
   { kind: 'point', layerId: 'k', attrs: {}, p: L(50, 25) },
+];
+
+/** Geometri üretici and draw effects (docs/adr/0226 §1, §2): photo points with and without their Yön, a parcel, a road. */
+const EXTRAS: NewEntity[] = [
+  { kind: 'point', layerId: 'k', attrs: { Yön: '45' }, symbol: 'nokta-bakis', p: P(10, 10) },
+  { kind: 'point', layerId: 'k', attrs: { Yön: '200' }, symbol: 'nokta-bakis', p: P(30, 10) },
+  { kind: 'point', layerId: 'k', attrs: {}, symbol: 'nokta-bakis', p: P(50, 10) },
+  { kind: 'polygon', layerId: 'k', attrs: {}, symbol: 'alan-golgeli', pts: [P(0, 20), P(20, 20), P(20, 35), P(0, 35)] },
+  { kind: 'polyline', layerId: 'k', attrs: {}, symbol: 'cizgi-tampon', pts: [P(30, 20), P(50, 20), P(50, 35)] },
 ];
 
 const CATEGORIZED: LayerStyle = {
@@ -220,6 +265,9 @@ const INPUTS: Input[] = [
   { id: 'cluster', title: 'Kümeleme: büyüyen küme işareti, tek noktalar Kategorili', style: CLUSTER, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
   { id: 'displacement', title: 'Yayma: iç içe halkalar, merkez ve halka, tek noktalar Tek sembol', style: DISPLACEMENT, entities: THEMATIC, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
   { id: 'inverted', title: 'Ters alan: kutunun alanların dışı, örtüşenler boş', style: INVERTED, entities: THEMATIC, plotScale: 1000, clip: CLIP, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  // Sembol katmanı ekleri (docs/adr/0226): the generator's areas drawn with its symbol, the effect group's id and effects on its batches.
+  { id: 'generator-effects', title: 'Geometri üretici ve çizim efektleri: Yön’den daire dilimi (değeri yoksa yedeği), gölgeli ve parıltılı parsel, yolun tamponu', style: SIMPLE, entities: EXTRAS, plotScale: 1000, view: { symbolSize: 'plot', pxPerM: 4, lineWeights: true } },
+  { id: 'generator-effects-screen', title: 'Geometri üretici ve çizim efektleri, ekranda sabit semboller, 12 px/m', style: SIMPLE, entities: EXTRAS, plotScale: 1000, view: { symbolSize: 'screen', pxPerM: 12, lineWeights: true } },
 ];
 
 it.runIf(!!process.env.GOLDEN_WRITE)('records the styled layers’ way to the GPU', () => {

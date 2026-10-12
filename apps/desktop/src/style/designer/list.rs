@@ -6,9 +6,10 @@
 use iced::widget::tooltip::Position;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Border, Center, Color, Element, Fill, Theme};
+use kentos_native_style::designer::effects::effects_summary;
 use kentos_native_style::designer::{
-    self as model, LayerPath, add_parent, can_move, can_remove, has_marker, label as layer_label,
-    layer_types, summary, texts, type_of,
+    self as model, LayerPath, add_parent, can_move, can_remove, child_key, child_types,
+    has_children, label as layer_label, layer_types, summary, texts, type_of,
 };
 use kentos_ui::icon::icon;
 use kentos_ui::label;
@@ -37,6 +38,7 @@ fn layer_icon(t: &str) -> &'static str {
         "svg" => "penTool",
         "text" => "text",
         "raster" => "sheetPicture",
+        "geometryGenerator" => "geometryGenerator",
         _ => "more",
     }
 }
@@ -54,9 +56,9 @@ pub(super) fn rows(symbol: &Value) -> Vec<LayerPath> {
         .map_or(&[][..], Vec::as_slice);
     for (i, l) in layers.iter().enumerate() {
         out.push(LayerPath::Top(i));
-        if has_marker(l) {
+        if has_children(l) {
             let n = l
-                .get("marker")
+                .get(child_key(l))
                 .and_then(|m| m.get("layers"))
                 .and_then(Value::as_array)
                 .map_or(0, Vec::len);
@@ -71,9 +73,10 @@ pub(super) fn layer_list(d: &Designer) -> Element<'_, Message> {
     let symbol = &d.draft.symbol;
     let kind = d.kind().to_owned();
     let parent = add_parent(symbol, d.selected);
-    let parent_label = parent
-        .and_then(|i| symbol.get("layers").and_then(|l| l.get(i)))
-        .map(|p| layer_label(type_of(p)));
+    let owner = parent.and_then(|i| symbol.get("layers").and_then(|l| l.get(i)));
+    let parent_label = owner.map(|p| layer_label(type_of(p)));
+    let generator = owner.is_some_and(|p| type_of(p) == "geometryGenerator");
+    let child_list = owner.map(child_types).unwrap_or_default();
     let add = MenuButton::new(
         container(
             row![
@@ -93,8 +96,12 @@ pub(super) fn layer_list(d: &Designer) -> Element<'_, Message> {
                     .icon(crate::icons::from_web(Some(layer_icon(t))));
             }
             if let (Some(i), Some(name)) = (parent, parent_label) {
-                m = m.separator().header(texts::into_marker(name));
-                for t in layer_types("marker") {
+                m = m.separator().header(if generator {
+                    texts::into_generator(name)
+                } else {
+                    texts::into_marker(name)
+                });
+                for t in &child_list {
                     m = m
                         .item(layer_label(t), ev(Event::Add(t, Some(i))))
                         .icon(crate::icons::from_web(Some(layer_icon(t))));
@@ -199,7 +206,7 @@ fn layer_row<'a>(d: &Designer, p: LayerPath, l: &Value) -> Element<'a, Message> 
     let size = typography::caption();
     let words = column![
         label::body(layer_label(type_of(l))),
-        label::caption(summary(l))
+        label::caption(row_summary(l))
             .size(size)
             .style(style::text::muted),
     ]
@@ -223,6 +230,16 @@ fn layer_row<'a>(d: &Designer, p: LayerPath, l: &Value) -> Element<'a, Message> 
         ..iced::Padding::ZERO
     })
     .into()
+}
+
+/// A row's line: the layer's summary, and its effects switched on (docs/adr/0226 §2).
+fn row_summary(l: &Value) -> String {
+    let fx = effects_summary(l);
+    if fx.is_empty() {
+        summary(l)
+    } else {
+        format!("{} · {fx}", summary(l))
+    }
 }
 
 /// A row: the chosen one on the accent's soft ground with its line (`sdes__row`).

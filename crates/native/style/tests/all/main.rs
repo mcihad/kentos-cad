@@ -4,6 +4,7 @@
 
 mod classify;
 mod designer;
+mod generator_timing;
 mod kstil;
 mod legend;
 mod object_templates;

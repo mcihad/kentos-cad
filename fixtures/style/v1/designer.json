@@ -13,7 +13,8 @@
   "shape": "Şekil",
   "svg": "SVG çizimi",
   "text": "Yazı",
-  "raster": "Görüntü"
+  "raster": "Görüntü",
+  "geometryGenerator": "Geometri üretici"
  },
  "layerTypes": {
   "fill": [
@@ -23,17 +24,20 @@
    "imageFill",
    "simpleLine",
    "markerLine",
-   "centroidMarker"
+   "centroidMarker",
+   "geometryGenerator"
   ],
   "line": [
    "simpleLine",
-   "markerLine"
+   "markerLine",
+   "geometryGenerator"
   ],
   "marker": [
    "shape",
    "text",
    "svg",
-   "raster"
+   "raster",
+   "geometryGenerator"
   ]
  },
  "kindTitles": {
@@ -532,6 +536,35 @@
    }
   },
   {
+   "type": "geometryGenerator",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "geometryGenerator",
+    "steps": [
+     {
+      "kind": "envelope"
+     }
+    ],
+    "symbol": {
+     "type": "line",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "dash": [
+        2,
+        1
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
    "type": "simpleFill",
    "id": "3",
    "context": "line",
@@ -715,6 +748,33 @@
    }
   },
   {
+   "type": "geometryGenerator",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "geometryGenerator",
+    "steps": [
+     {
+      "kind": "vertices",
+      "which": "ends"
+     }
+    ],
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1.5,
+       "fill": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
    "type": "simpleFill",
    "id": "3",
    "context": "marker",
@@ -895,6 +955,37 @@
     "type": "raster",
     "asset": "",
     "size": 5
+   }
+  },
+  {
+   "type": "geometryGenerator",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "geometryGenerator",
+    "steps": [
+     {
+      "kind": "circle",
+      "radius": 3
+     }
+    ],
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#4E79A740"
+      },
+      {
+       "id": "1",
+       "type": "simpleLine",
+       "color": "#4E79A7",
+       "width": 0.25
+      }
+     ]
+    }
    }
   }
  ],
@@ -1564,6 +1655,64 @@
     "size": 3
    },
    "summary": "öznitelikten"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "geometryGenerator",
+    "steps": [],
+    "symbol": {
+     "type": "line",
+     "layers": []
+    }
+   },
+   "summary": "adımsız · çizgi"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "geometryGenerator",
+    "steps": [
+     {
+      "kind": "circle",
+      "radius": 3
+     }
+    ],
+    "symbol": {
+     "type": "fill",
+     "layers": []
+    }
+   },
+   "summary": "Daire · alan"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "geometryGenerator",
+    "steps": [
+     {
+      "kind": "centroid"
+     },
+     {
+      "kind": "wedge",
+      "direction": {
+       "expr": "Yön",
+       "fallback": 0
+      },
+      "width": 60,
+      "radius": 5
+     },
+     {
+      "kind": "scale",
+      "x": 2
+     }
+    ],
+    "symbol": {
+     "type": "fill",
+     "layers": []
+    }
+   },
+   "summary": "Ağırlık merkezi → Daire dilimi → Ölçekle · alan"
   }
  ],
  "countSuffixes": [
@@ -4350,6 +4499,664 @@
      0
     ]
    }
+  },
+  {
+   "name": "a layer added to a generator’s symbol takes its class",
+   "symbol": {
+    "type": "marker",
+    "layers": [
+     {
+      "id": "0",
+      "type": "shape",
+      "shape": "circle",
+      "size": 2,
+      "fill": "ink"
+     },
+     {
+      "id": "1",
+      "type": "geometryGenerator",
+      "steps": [
+       {
+        "kind": "circle",
+        "radius": 3
+       }
+      ],
+      "symbol": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "0",
+         "type": "simpleFill",
+         "color": "#4E79A740"
+        },
+        {
+         "id": "1",
+         "type": "simpleLine",
+         "color": "#4E79A7",
+         "width": 0.25
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "selected": [
+    1
+   ],
+   "layer": {
+    "id": "1",
+    "type": "geometryGenerator",
+    "steps": [
+     {
+      "kind": "circle",
+      "radius": 3
+     }
+    ],
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#4E79A740"
+      },
+      {
+       "id": "1",
+       "type": "simpleLine",
+       "color": "#4E79A7",
+       "width": 0.25
+      }
+     ]
+    }
+   },
+   "addParent": 1,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "add",
+    "type": "simpleLine",
+    "parent": 1
+   },
+   "result": {
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2,
+       "fill": "ink"
+      },
+      {
+       "id": "1",
+       "type": "geometryGenerator",
+       "steps": [
+        {
+         "kind": "circle",
+         "radius": 3
+        }
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#4E79A740"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "#4E79A7",
+          "width": 0.25
+         },
+         {
+          "id": "2",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.25
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "selected": [
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "name": "a generator’s layer moved up",
+   "symbol": {
+    "type": "marker",
+    "layers": [
+     {
+      "id": "0",
+      "type": "shape",
+      "shape": "circle",
+      "size": 2,
+      "fill": "ink"
+     },
+     {
+      "id": "1",
+      "type": "geometryGenerator",
+      "steps": [
+       {
+        "kind": "circle",
+        "radius": 3
+       }
+      ],
+      "symbol": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "0",
+         "type": "simpleFill",
+         "color": "#4E79A740"
+        },
+        {
+         "id": "1",
+         "type": "simpleLine",
+         "color": "#4E79A7",
+         "width": 0.25
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "selected": [
+    1,
+    1
+   ],
+   "layer": {
+    "id": "1",
+    "type": "simpleLine",
+    "color": "#4E79A7",
+    "width": 0.25
+   },
+   "addParent": 1,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "move",
+    "delta": -1
+   },
+   "result": {
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2,
+       "fill": "ink"
+      },
+      {
+       "id": "1",
+       "type": "geometryGenerator",
+       "steps": [
+        {
+         "kind": "circle",
+         "radius": 3
+        }
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "#4E79A7",
+          "width": 0.25
+         },
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#4E79A740"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "selected": [
+     1,
+     0
+    ]
+   }
+  },
+  {
+   "name": "a generator’s layer duplicated",
+   "symbol": {
+    "type": "marker",
+    "layers": [
+     {
+      "id": "0",
+      "type": "shape",
+      "shape": "circle",
+      "size": 2,
+      "fill": "ink"
+     },
+     {
+      "id": "1",
+      "type": "geometryGenerator",
+      "steps": [
+       {
+        "kind": "circle",
+        "radius": 3
+       }
+      ],
+      "symbol": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "0",
+         "type": "simpleFill",
+         "color": "#4E79A740"
+        },
+        {
+         "id": "1",
+         "type": "simpleLine",
+         "color": "#4E79A7",
+         "width": 0.25
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "selected": [
+    1,
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#4E79A740"
+   },
+   "addParent": 1,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "duplicate"
+   },
+   "result": {
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2,
+       "fill": "ink"
+      },
+      {
+       "id": "1",
+       "type": "geometryGenerator",
+       "steps": [
+        {
+         "kind": "circle",
+         "radius": 3
+        }
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#4E79A740"
+         },
+         {
+          "id": "2",
+          "type": "simpleFill",
+          "color": "#4E79A740"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "#4E79A7",
+          "width": 0.25
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "selected": [
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "a generator’s layer removed",
+   "symbol": {
+    "type": "marker",
+    "layers": [
+     {
+      "id": "0",
+      "type": "shape",
+      "shape": "circle",
+      "size": 2,
+      "fill": "ink"
+     },
+     {
+      "id": "1",
+      "type": "geometryGenerator",
+      "steps": [
+       {
+        "kind": "circle",
+        "radius": 3
+       }
+      ],
+      "symbol": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "0",
+         "type": "simpleFill",
+         "color": "#4E79A740"
+        },
+        {
+         "id": "1",
+         "type": "simpleLine",
+         "color": "#4E79A7",
+         "width": 0.25
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "selected": [
+    1,
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#4E79A740"
+   },
+   "addParent": 1,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "remove"
+   },
+   "result": {
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2,
+       "fill": "ink"
+      },
+      {
+       "id": "1",
+       "type": "geometryGenerator",
+       "steps": [
+        {
+         "kind": "circle",
+         "radius": 3
+        }
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "#4E79A7",
+          "width": 0.25
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "selected": [
+     1,
+     0
+    ]
+   }
+  },
+  {
+   "name": "a generator’s layer switched off",
+   "symbol": {
+    "type": "marker",
+    "layers": [
+     {
+      "id": "0",
+      "type": "shape",
+      "shape": "circle",
+      "size": 2,
+      "fill": "ink"
+     },
+     {
+      "id": "1",
+      "type": "geometryGenerator",
+      "steps": [
+       {
+        "kind": "circle",
+        "radius": 3
+       }
+      ],
+      "symbol": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "0",
+         "type": "simpleFill",
+         "color": "#4E79A740"
+        },
+        {
+         "id": "1",
+         "type": "simpleLine",
+         "color": "#4E79A7",
+         "width": 0.25
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "selected": [
+    1,
+    1
+   ],
+   "layer": {
+    "id": "1",
+    "type": "simpleLine",
+    "color": "#4E79A7",
+    "width": 0.25
+   },
+   "addParent": 1,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "enable",
+    "at": [
+     1,
+     1
+    ],
+    "on": false
+   },
+   "result": {
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2,
+       "fill": "ink"
+      },
+      {
+       "id": "1",
+       "type": "geometryGenerator",
+       "steps": [
+        {
+         "kind": "circle",
+         "radius": 3
+        }
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#4E79A740"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "#4E79A7",
+          "width": 0.25,
+          "enabled": false
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "selected": [
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "a generator’s layer replaced",
+   "symbol": {
+    "type": "marker",
+    "layers": [
+     {
+      "id": "0",
+      "type": "shape",
+      "shape": "circle",
+      "size": 2,
+      "fill": "ink"
+     },
+     {
+      "id": "1",
+      "type": "geometryGenerator",
+      "steps": [
+       {
+        "kind": "circle",
+        "radius": 3
+       }
+      ],
+      "symbol": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "0",
+         "type": "simpleFill",
+         "color": "#4E79A740"
+        },
+        {
+         "id": "1",
+         "type": "simpleLine",
+         "color": "#4E79A7",
+         "width": 0.25
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "selected": [
+    1,
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#4E79A740"
+   },
+   "addParent": 1,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "put",
+    "at": [
+     1,
+     0
+    ],
+    "layer": {
+     "id": "0",
+     "type": "hatchFill",
+     "angle": 45,
+     "spacing": 2,
+     "width": 0.2,
+     "color": "ink"
+    }
+   },
+   "result": {
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2,
+       "fill": "ink"
+      },
+      {
+       "id": "1",
+       "type": "geometryGenerator",
+       "steps": [
+        {
+         "kind": "circle",
+         "radius": 3
+        }
+       ],
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "hatchFill",
+          "angle": 45,
+          "spacing": 2,
+          "width": 0.2,
+          "color": "ink"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "#4E79A7",
+          "width": 0.25
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "selected": [
+     1,
+     0
+    ]
+   }
   }
  ],
  "drafts": [
@@ -4703,6 +5510,21 @@
    "parent": "Çizgi boyunca işaret",
    "text": "Çizgi boyunca işaret işaretinde"
   },
+  "intoGenerator": {
+   "parent": "Geometri üretici",
+   "text": "“Geometri üretici” sembolüne"
+  },
+  "inGenerator": {
+   "parent": "Geometri üretici",
+   "text": "Geometri üretici sembolünde"
+  },
+  "drawsWith": "Çizen sembol",
+  "steps": "Adımlar",
+  "addStep": "Adım ekle",
+  "noSteps": "Adım yok: nesnenin kendi geometrisi çizilir.",
+  "nothingLeft": "Bu adımlardan sonra bir şey kalmaz; adımları değiştirin.",
+  "effects": "Efektler",
+  "effectsInside": "Efektler sembolün kendi katmanlarına konur; bu katman üstündekinin içinde çizilir.",
   "notSaved": [
    {
     "first": "sembol › katman 1: renk geçerli bir renk değil",
@@ -4720,5 +5542,1911 @@
    "text": "“Bahçe alanı” kaydedildi."
   },
   "cannotEdit": "Bu sembol düzenlenemez: sistem sembollerinin kopyası düzenlenir."
+ },
+ "childTypes": [
+  {
+   "parent": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "first",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "types": [
+    "shape",
+    "text",
+    "svg",
+    "raster"
+   ]
+  },
+  {
+   "parent": {
+    "id": "0",
+    "type": "geometryGenerator",
+    "steps": [],
+    "symbol": {
+     "type": "fill",
+     "layers": []
+    }
+   },
+   "types": [
+    "simpleFill",
+    "hatchFill",
+    "imageFill",
+    "simpleLine"
+   ]
+  },
+  {
+   "parent": {
+    "id": "0",
+    "type": "geometryGenerator",
+    "steps": [],
+    "symbol": {
+     "type": "line",
+     "layers": []
+    }
+   },
+   "types": [
+    "simpleLine"
+   ]
+  },
+  {
+   "parent": {
+    "id": "0",
+    "type": "geometryGenerator",
+    "steps": [],
+    "symbol": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "types": [
+    "shape",
+    "text",
+    "svg",
+    "raster"
+   ]
+  }
+ ],
+ "steps": {
+  "labels": {
+   "centroid": "Ağırlık merkezi",
+   "pointOnSurface": "İç nokta",
+   "vertices": "Köşeler",
+   "boundary": "Sınır",
+   "offset": "Paralel",
+   "extend": "Uzat",
+   "buffer": "Tampon",
+   "envelope": "Sınırlayıcı kutu",
+   "hull": "Dışbükey örtü",
+   "circle": "Daire",
+   "wedge": "Daire dilimi",
+   "polygon": "Düzgün çokgen",
+   "translate": "Öteleme",
+   "rotate": "Döndür",
+   "scale": "Ölçekle"
+  },
+  "kinds": [
+   "centroid",
+   "pointOnSurface",
+   "vertices",
+   "boundary",
+   "offset",
+   "extend",
+   "buffer",
+   "envelope",
+   "hull",
+   "circle",
+   "wedge",
+   "polygon",
+   "translate",
+   "rotate",
+   "scale"
+  ],
+  "vertexChoices": [
+   {
+    "value": "all",
+    "label": "Hepsi"
+   },
+   {
+    "value": "inner",
+    "label": "Uçlar dışında"
+   },
+   {
+    "value": "first",
+    "label": "İlk"
+   },
+   {
+    "value": "last",
+    "label": "Son"
+   },
+   {
+    "value": "ends",
+    "label": "İki uç"
+   }
+  ],
+  "bufferSides": [
+   {
+    "value": "both",
+    "label": "İki yan"
+   },
+   {
+    "value": "left",
+    "label": "Sol yan"
+   },
+   {
+    "value": "right",
+    "label": "Sağ yan"
+   }
+  ],
+  "classOf": {
+   "fill": "area",
+   "line": "line",
+   "marker": "point"
+  },
+  "newSteps": [
+   {
+    "kind": "centroid",
+    "step": {
+     "kind": "centroid"
+    }
+   },
+   {
+    "kind": "pointOnSurface",
+    "step": {
+     "kind": "pointOnSurface"
+    }
+   },
+   {
+    "kind": "vertices",
+    "step": {
+     "kind": "vertices",
+     "which": "all"
+    }
+   },
+   {
+    "kind": "boundary",
+    "step": {
+     "kind": "boundary"
+    }
+   },
+   {
+    "kind": "offset",
+    "step": {
+     "kind": "offset",
+     "distance": 1
+    }
+   },
+   {
+    "kind": "extend",
+    "step": {
+     "kind": "extend",
+     "start": 0,
+     "end": 2
+    }
+   },
+   {
+    "kind": "buffer",
+    "step": {
+     "kind": "buffer",
+     "distance": 2
+    }
+   },
+   {
+    "kind": "envelope",
+    "step": {
+     "kind": "envelope"
+    }
+   },
+   {
+    "kind": "hull",
+    "step": {
+     "kind": "hull"
+    }
+   },
+   {
+    "kind": "circle",
+    "step": {
+     "kind": "circle",
+     "radius": 2
+    }
+   },
+   {
+    "kind": "wedge",
+    "step": {
+     "kind": "wedge",
+     "direction": 0,
+     "width": 60,
+     "radius": 5
+    }
+   },
+   {
+    "kind": "polygon",
+    "step": {
+     "kind": "polygon",
+     "sides": 6,
+     "radius": 2
+    }
+   },
+   {
+    "kind": "translate",
+    "step": {
+     "kind": "translate",
+     "dx": 1,
+     "dy": 0
+    }
+   },
+   {
+    "kind": "rotate",
+    "step": {
+     "kind": "rotate",
+     "angle": 45
+    }
+   },
+   {
+    "kind": "scale",
+    "step": {
+     "kind": "scale",
+     "x": 1.5
+    }
+   }
+  ],
+  "lines": [
+   {
+    "step": {
+     "kind": "centroid"
+    },
+    "unit": "mm",
+    "line": "Ağırlık merkezi"
+   },
+   {
+    "step": {
+     "kind": "pointOnSurface"
+    },
+    "unit": "mm",
+    "line": "İç nokta"
+   },
+   {
+    "step": {
+     "kind": "vertices",
+     "which": "all"
+    },
+    "unit": "mm",
+    "line": "Köşeler · Hepsi"
+   },
+   {
+    "step": {
+     "kind": "boundary"
+    },
+    "unit": "mm",
+    "line": "Sınır"
+   },
+   {
+    "step": {
+     "kind": "offset",
+     "distance": 1
+    },
+    "unit": "mm",
+    "line": "Paralel · 1 mm"
+   },
+   {
+    "step": {
+     "kind": "extend",
+     "start": 0,
+     "end": 2
+    },
+    "unit": "mm",
+    "line": "Uzat · 0 / 2 mm"
+   },
+   {
+    "step": {
+     "kind": "buffer",
+     "distance": 2
+    },
+    "unit": "mm",
+    "line": "Tampon · 2 mm"
+   },
+   {
+    "step": {
+     "kind": "envelope"
+    },
+    "unit": "mm",
+    "line": "Sınırlayıcı kutu"
+   },
+   {
+    "step": {
+     "kind": "hull"
+    },
+    "unit": "mm",
+    "line": "Dışbükey örtü"
+   },
+   {
+    "step": {
+     "kind": "circle",
+     "radius": 2
+    },
+    "unit": "mm",
+    "line": "Daire · 2 mm"
+   },
+   {
+    "step": {
+     "kind": "wedge",
+     "direction": 0,
+     "width": 60,
+     "radius": 5
+    },
+    "unit": "mm",
+    "line": "Daire dilimi · 60° · 5 mm"
+   },
+   {
+    "step": {
+     "kind": "polygon",
+     "sides": 6,
+     "radius": 2
+    },
+    "unit": "mm",
+    "line": "Düzgün çokgen · 6 köşe · 2 mm"
+   },
+   {
+    "step": {
+     "kind": "translate",
+     "dx": 1,
+     "dy": 0
+    },
+    "unit": "mm",
+    "line": "Öteleme · 1, 0 mm"
+   },
+   {
+    "step": {
+     "kind": "rotate",
+     "angle": 45
+    },
+    "unit": "mm",
+    "line": "Döndür · 45°"
+   },
+   {
+    "step": {
+     "kind": "scale",
+     "x": 1.5
+    },
+    "unit": "mm",
+    "line": "Ölçekle · 1.5 × 1.5"
+   },
+   {
+    "step": {
+     "kind": "vertices",
+     "which": "ends"
+    },
+    "unit": "mm",
+    "line": "Köşeler · İki uç"
+   },
+   {
+    "step": {
+     "kind": "vertices"
+    },
+    "unit": "mm",
+    "line": "Köşeler · Hepsi"
+   },
+   {
+    "step": {
+     "kind": "buffer",
+     "distance": 2.5,
+     "side": "left"
+    },
+    "unit": "m",
+    "line": "Tampon · 2.5 m, sol yan"
+   },
+   {
+    "step": {
+     "kind": "buffer",
+     "distance": {
+      "expr": "Genişlik / 2",
+      "fallback": 1
+     }
+    },
+    "unit": "m",
+    "line": "Tampon · ƒ m"
+   },
+   {
+    "step": {
+     "kind": "extend",
+     "end": 3.333
+    },
+    "unit": "px",
+    "line": "Uzat · 0 / 3.33 px"
+   },
+   {
+    "step": {
+     "kind": "translate",
+     "dy": -2
+    },
+    "unit": "mm",
+    "line": "Öteleme · 0, -2 mm"
+   },
+   {
+    "step": {
+     "kind": "scale",
+     "y": 0.5
+    },
+    "unit": "mm",
+    "line": "Ölçekle · 0.5 × 0.5"
+   },
+   {
+    "step": {
+     "kind": "wedge",
+     "direction": {
+      "expr": "Yön"
+     },
+     "width": 90,
+     "radius": 8
+    },
+    "unit": "m",
+    "line": "Daire dilimi · 90° · 8 m"
+   }
+  ],
+  "outputs": [
+   {
+    "steps": [
+     {
+      "kind": "centroid"
+     }
+    ],
+    "input": "point",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "pointOnSurface"
+     }
+    ],
+    "input": "point",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "vertices",
+      "which": "all"
+     }
+    ],
+    "input": "point",
+    "output": null
+   },
+   {
+    "steps": [
+     {
+      "kind": "boundary"
+     }
+    ],
+    "input": "point",
+    "output": null
+   },
+   {
+    "steps": [
+     {
+      "kind": "offset",
+      "distance": 1
+     }
+    ],
+    "input": "point",
+    "output": null
+   },
+   {
+    "steps": [
+     {
+      "kind": "extend",
+      "start": 0,
+      "end": 2
+     }
+    ],
+    "input": "point",
+    "output": null
+   },
+   {
+    "steps": [
+     {
+      "kind": "buffer",
+      "distance": 2
+     }
+    ],
+    "input": "point",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "envelope"
+     }
+    ],
+    "input": "point",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "hull"
+     }
+    ],
+    "input": "point",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "circle",
+      "radius": 2
+     }
+    ],
+    "input": "point",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "wedge",
+      "direction": 0,
+      "width": 60,
+      "radius": 5
+     }
+    ],
+    "input": "point",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "polygon",
+      "sides": 6,
+      "radius": 2
+     }
+    ],
+    "input": "point",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "translate",
+      "dx": 1,
+      "dy": 0
+     }
+    ],
+    "input": "point",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "rotate",
+      "angle": 45
+     }
+    ],
+    "input": "point",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "scale",
+      "x": 1.5
+     }
+    ],
+    "input": "point",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "centroid"
+     }
+    ],
+    "input": "line",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "pointOnSurface"
+     }
+    ],
+    "input": "line",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "vertices",
+      "which": "all"
+     }
+    ],
+    "input": "line",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "boundary"
+     }
+    ],
+    "input": "line",
+    "output": null
+   },
+   {
+    "steps": [
+     {
+      "kind": "offset",
+      "distance": 1
+     }
+    ],
+    "input": "line",
+    "output": "line"
+   },
+   {
+    "steps": [
+     {
+      "kind": "extend",
+      "start": 0,
+      "end": 2
+     }
+    ],
+    "input": "line",
+    "output": "line"
+   },
+   {
+    "steps": [
+     {
+      "kind": "buffer",
+      "distance": 2
+     }
+    ],
+    "input": "line",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "envelope"
+     }
+    ],
+    "input": "line",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "hull"
+     }
+    ],
+    "input": "line",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "circle",
+      "radius": 2
+     }
+    ],
+    "input": "line",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "wedge",
+      "direction": 0,
+      "width": 60,
+      "radius": 5
+     }
+    ],
+    "input": "line",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "polygon",
+      "sides": 6,
+      "radius": 2
+     }
+    ],
+    "input": "line",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "translate",
+      "dx": 1,
+      "dy": 0
+     }
+    ],
+    "input": "line",
+    "output": "line"
+   },
+   {
+    "steps": [
+     {
+      "kind": "rotate",
+      "angle": 45
+     }
+    ],
+    "input": "line",
+    "output": "line"
+   },
+   {
+    "steps": [
+     {
+      "kind": "scale",
+      "x": 1.5
+     }
+    ],
+    "input": "line",
+    "output": "line"
+   },
+   {
+    "steps": [
+     {
+      "kind": "centroid"
+     }
+    ],
+    "input": "area",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "pointOnSurface"
+     }
+    ],
+    "input": "area",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "vertices",
+      "which": "all"
+     }
+    ],
+    "input": "area",
+    "output": "point"
+   },
+   {
+    "steps": [
+     {
+      "kind": "boundary"
+     }
+    ],
+    "input": "area",
+    "output": "line"
+   },
+   {
+    "steps": [
+     {
+      "kind": "offset",
+      "distance": 1
+     }
+    ],
+    "input": "area",
+    "output": "line"
+   },
+   {
+    "steps": [
+     {
+      "kind": "extend",
+      "start": 0,
+      "end": 2
+     }
+    ],
+    "input": "area",
+    "output": null
+   },
+   {
+    "steps": [
+     {
+      "kind": "buffer",
+      "distance": 2
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "envelope"
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "hull"
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "circle",
+      "radius": 2
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "wedge",
+      "direction": 0,
+      "width": 60,
+      "radius": 5
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "polygon",
+      "sides": 6,
+      "radius": 2
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "translate",
+      "dx": 1,
+      "dy": 0
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "rotate",
+      "angle": 45
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "scale",
+      "x": 1.5
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [],
+    "input": "line",
+    "output": "line"
+   },
+   {
+    "steps": [
+     {
+      "kind": "boundary"
+     },
+     {
+      "kind": "vertices",
+      "which": "all"
+     },
+     {
+      "kind": "circle",
+      "radius": 1
+     }
+    ],
+    "input": "area",
+    "output": "area"
+   },
+   {
+    "steps": [
+     {
+      "kind": "centroid"
+     },
+     {
+      "kind": "extend",
+      "end": 1
+     },
+     {
+      "kind": "circle",
+      "radius": 1
+     }
+    ],
+    "input": "area",
+    "output": null
+   }
+  ],
+  "edits": [
+   {
+    "name": "a step added",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "add",
+     "kind": "buffer"
+    },
+    "result": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      },
+      {
+       "kind": "buffer",
+       "distance": 2
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "name": "a step moved up",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "move",
+     "at": 2,
+     "delta": -1
+    },
+    "result": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "name": "not above the first",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "move",
+     "at": 0,
+     "delta": -1
+    },
+    "result": null
+   },
+   {
+    "name": "not below the last",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "move",
+     "at": 2,
+     "delta": 1
+    },
+    "result": null
+   },
+   {
+    "name": "a step removed",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "remove",
+     "at": 1
+    },
+    "result": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "name": "a step replaced",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "put",
+     "at": 1,
+     "step": {
+      "kind": "polygon",
+      "sides": 5,
+      "radius": 2,
+      "rotation": 18
+     }
+    },
+    "result": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "polygon",
+       "sides": 5,
+       "radius": 2,
+       "rotation": 18
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "name": "drawn with a fill symbol",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "kind",
+     "kind": "fill"
+    },
+    "result": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "name": "drawn with a line symbol",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "kind",
+     "kind": "line"
+    },
+    "result": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "line",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleLine",
+        "color": "ink",
+        "width": 0.35
+       }
+      ]
+     }
+    }
+   },
+   {
+    "name": "drawn with a marker symbol",
+    "layer": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A740"
+       }
+      ]
+     }
+    },
+    "op": {
+     "op": "kind",
+     "kind": "marker"
+    },
+    "result": {
+     "id": "1",
+     "type": "geometryGenerator",
+     "steps": [
+      {
+       "kind": "centroid"
+      },
+      {
+       "kind": "circle",
+       "radius": 3
+      },
+      {
+       "kind": "translate",
+       "dx": 1,
+       "dy": 0
+      }
+     ],
+     "symbol": {
+      "type": "marker",
+      "layers": [
+       {
+        "id": "0",
+        "type": "shape",
+        "shape": "circle",
+        "size": 2.4,
+        "fill": "ink"
+       }
+      ]
+     }
+    }
+   }
+  ]
+ },
+ "effects": {
+  "labels": {
+   "dropShadow": "Gölge",
+   "outerGlow": "Dış parıltı",
+   "blur": "Bulanıklaştır",
+   "innerShadow": "İç gölge",
+   "innerGlow": "İç parıltı"
+  },
+  "types": [
+   "dropShadow",
+   "outerGlow",
+   "blur",
+   "innerShadow",
+   "innerGlow"
+  ],
+  "newEffects": [
+   {
+    "type": "dropShadow",
+    "effect": {
+     "type": "dropShadow",
+     "distance": 1,
+     "angle": 135,
+     "blur": 1.5,
+     "color": "#000000",
+     "opacity": 0.5
+    }
+   },
+   {
+    "type": "outerGlow",
+    "effect": {
+     "type": "outerGlow",
+     "spread": 0.5,
+     "blur": 1.5,
+     "color": "#FFFFFF",
+     "opacity": 0.5
+    }
+   },
+   {
+    "type": "blur",
+    "effect": {
+     "type": "blur",
+     "blur": 1
+    }
+   },
+   {
+    "type": "innerShadow",
+    "effect": {
+     "type": "innerShadow",
+     "distance": 0.5,
+     "angle": 135,
+     "blur": 1,
+     "color": "#000000",
+     "opacity": 0.5
+    }
+   },
+   {
+    "type": "innerGlow",
+    "effect": {
+     "type": "innerGlow",
+     "spread": 0.5,
+     "blur": 1,
+     "color": "#FFFFFF",
+     "opacity": 0.5
+    }
+   }
+  ],
+  "takes": [
+   {
+    "path": [
+     0
+    ],
+    "takes": true
+   },
+   {
+    "path": [
+     1,
+     0
+    ],
+    "takes": false
+   }
+  ],
+  "edits": [
+   {
+    "name": "a shadow switched on, sorted before the glow",
+    "layer": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5,
+       "enabled": false
+      },
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      }
+     ]
+    },
+    "op": {
+     "op": "set",
+     "type": "outerGlow",
+     "on": true
+    },
+    "result": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      },
+      {
+       "type": "outerGlow",
+       "spread": 0.5,
+       "blur": 1.5,
+       "color": "#FFFFFF",
+       "opacity": 0.5
+      },
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5,
+       "enabled": false
+      }
+     ]
+    }
+   },
+   {
+    "name": "a switched-off effect switched on keeps its values",
+    "layer": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5,
+       "enabled": false
+      },
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      }
+     ]
+    },
+    "op": {
+     "op": "set",
+     "type": "innerGlow",
+     "on": true
+    },
+    "result": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      },
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5
+      }
+     ]
+    }
+   },
+   {
+    "name": "an effect switched off goes",
+    "layer": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5,
+       "enabled": false
+      },
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      }
+     ]
+    },
+    "op": {
+     "op": "set",
+     "type": "dropShadow",
+     "on": false
+    },
+    "result": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5,
+       "enabled": false
+      }
+     ]
+    }
+   },
+   {
+    "name": "the last effect switched off leaves no list",
+    "layer": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      }
+     ]
+    },
+    "op": {
+     "op": "set",
+     "type": "dropShadow",
+     "on": false
+    },
+    "result": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B"
+    }
+   },
+   {
+    "name": "a first effect",
+    "layer": {
+     "id": "0",
+     "type": "simpleLine",
+     "color": "ink",
+     "width": 0.35
+    },
+    "op": {
+     "op": "set",
+     "type": "blur",
+     "on": true
+    },
+    "result": {
+     "id": "0",
+     "type": "simpleLine",
+     "color": "ink",
+     "width": 0.35,
+     "effects": [
+      {
+       "type": "blur",
+       "blur": 1
+      }
+     ]
+    }
+   },
+   {
+    "name": "an effect replaced",
+    "layer": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5,
+       "enabled": false
+      },
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      }
+     ]
+    },
+    "op": {
+     "op": "put",
+     "effect": {
+      "type": "dropShadow",
+      "distance": 3,
+      "angle": 180,
+      "blur": 0,
+      "color": "#333333",
+      "opacity": 1
+     }
+    },
+    "result": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "dropShadow",
+       "distance": 3,
+       "angle": 180,
+       "blur": 0,
+       "color": "#333333",
+       "opacity": 1
+      },
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5,
+       "enabled": false
+      }
+     ]
+    }
+   }
+  ],
+  "lines": [
+   {
+    "layer": {
+     "id": "0",
+     "type": "simpleLine",
+     "color": "ink",
+     "width": 0.35
+    },
+    "line": ""
+   },
+   {
+    "layer": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5,
+       "enabled": false
+      },
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      }
+     ]
+    },
+    "line": "gölge"
+   },
+   {
+    "layer": {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#F28E2B",
+     "effects": [
+      {
+       "type": "dropShadow",
+       "distance": 2,
+       "angle": 90,
+       "blur": 1,
+       "color": "#000000",
+       "opacity": 0.6
+      },
+      {
+       "type": "innerGlow",
+       "spread": 0.5,
+       "blur": 1,
+       "color": "#FFFFFF",
+       "opacity": 0.5
+      }
+     ]
+    },
+    "line": "gölge, iç parıltı"
+   },
+   {
+    "layer": {
+     "id": "0",
+     "type": "simpleLine",
+     "color": "ink",
+     "width": 0.35,
+     "effects": [
+      {
+       "type": "outerGlow",
+       "spread": 0.5,
+       "blur": 1.5,
+       "color": "#FFFFFF",
+       "opacity": 0.5
+      },
+      {
+       "type": "blur",
+       "blur": 1
+      }
+     ]
+    },
+    "line": "dış parıltı, bulanıklaştır"
+   }
+  ]
  }
 }

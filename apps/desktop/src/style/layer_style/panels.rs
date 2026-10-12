@@ -95,10 +95,24 @@ impl App {
         };
         let title = format!("Katman stili: {}", node.map_or("", |n| n.name.as_str()));
         let name = node.map_or(String::new(), |n| n.name.clone());
+        // Katman çizimi under the panel (docs/adr/0226 §3, §4): the drawing's other layers to mask.
+        let others: Vec<(String, String)> = model
+            .layers()
+            .leaves()
+            .into_iter()
+            .filter(|n| n.id != window.layer)
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
+        let body = column![
+            panel,
+            horizontal_divider(),
+            super::compose::section(window, others)
+        ]
+        .spacing(16);
         let base = overlay::modal(
             Dialog::new(title)
                 .push(top)
-                .scroll_fill(container(panel).padding([0, 4]).width(Fill))
+                .scroll_fill(container(body).padding([0, 4]).width(Fill))
                 .push(horizontal_divider())
                 .push(footer(window))
                 .width(WIDTH)

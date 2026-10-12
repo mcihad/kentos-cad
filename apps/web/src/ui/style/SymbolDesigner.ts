@@ -17,9 +17,11 @@ import {
   canRemove,
   DESIGNER_TEXTS as T,
   designerTitle,
+  childTypes,
   duplicateLayer,
+  effectsSummary,
   GEOMETRIES,
-  hasMarker,
+  hasChildren,
   LAYER_LABEL,
   LAYER_TYPES,
   layerAt,
@@ -31,6 +33,7 @@ import {
   savedAs,
   setEnabled,
   summary,
+  takesEffects,
   ZOOM,
   zoomed,
   zoomText,
@@ -86,6 +89,7 @@ const LAYER_ICON: Record<LayerType, string> = {
   svg: 'penTool',
   text: 'text',
   raster: 'sheetPicture',
+  geometryGenerator: 'geometryGenerator',
 };
 
 export function openSymbolDesigner(ctx: AppContext, opts: DesignerOptions): void {
@@ -120,6 +124,8 @@ class SymbolDesigner {
   /** The list's tools, enabled as the chosen layer and the history allow. */
   private readonly tools: Record<'up' | 'down' | 'dup' | 'remove' | 'undo' | 'redo', HTMLButtonElement>;
   private selected: LayerPath = [0];
+  /** A geometry generator's chosen step (docs/adr/0226 §1). */
+  private step = 0;
   private geometry: PreviewGeometry;
   private pxPerMm: number = ZOOM.start;
   /** The draft as saved, or as opened (a new symbol: the starting one): what `dirty` compares with. */
@@ -239,12 +245,12 @@ class SymbolDesigner {
     return this.draft.symbol;
   }
 
-  /** The list's rows in order: each layer, and under a layer that places markers its marker's layers. */
+  /** The list's rows in order: each layer, and under a layer holding a symbol of its own (a marker, a generator's) that symbol's layers. */
   private rows(): LayerPath[] {
     const out: LayerPath[] = [];
     (this.symbol.layers as readonly AnyLayer[]).forEach((l, i) => {
       out.push([i]);
-      if (hasMarker(l)) l.marker.layers.forEach((_, j) => out.push([i, j]));
+      if (hasChildren(l)) (l.type === 'geometryGenerator' ? l.symbol : l.marker).layers.forEach((_, j) => out.push([i, j]));
     });
     return out;
   }
@@ -254,9 +260,13 @@ class SymbolDesigner {
     const kind = this.symbol.type;
     const parent = addParent(this.symbol, this.selected);
     const items = LAYER_TYPES[kind].map((t) => ({ label: LAYER_LABEL[t], icon: LAYER_ICON[t], run: () => this.add(t, null) }));
+    const owner = parent !== null ? (this.symbol.layers as readonly AnyLayer[])[parent] : undefined;
     const nested =
-      parent !== null
-        ? [{ kind: 'header' as const, label: T.intoMarker(LAYER_LABEL[(this.symbol.layers as readonly AnyLayer[])[parent].type]) }, ...LAYER_TYPES.marker.map((t) => ({ label: LAYER_LABEL[t], icon: LAYER_ICON[t], run: () => this.add(t, parent) }))]
+      owner && parent !== null && hasChildren(owner)
+        ? [
+            { kind: 'header' as const, label: owner.type === 'geometryGenerator' ? T.intoGenerator(LAYER_LABEL[owner.type]) : T.intoMarker(LAYER_LABEL[owner.type]) },
+            ...childTypes(owner).map((t) => ({ label: LAYER_LABEL[t], icon: LAYER_ICON[t], run: () => this.add(t, parent) })),
+          ]
         : [];
     PopupMenu.open([{ kind: 'header', label: T.intoSymbol }, ...items, ...(nested.length ? [{ kind: 'separator' as const }, ...nested] : [])], { x: r.left, y: r.bottom + 4 });
   }
@@ -323,7 +333,7 @@ class SymbolDesigner {
         { class: `sdes__row${p.length === 2 ? ' sdes__row--child' : ''}`, role: 'option', 'aria-selected': String(selected), tabindex: selected ? '0' : '-1' },
         on,
         h('span', { class: 'sdes__rlabel' }, LAYER_LABEL[l.type]),
-        h('span', { class: 'sdes__rsum' }, summary(l)),
+        h('span', { class: 'sdes__rsum' }, rowSummary(l)),
       );
       r.addEventListener('click', () => this.choose(p));
       return r;
@@ -332,6 +342,7 @@ class SymbolDesigner {
   }
 
   private choose(p: LayerPath): void {
+    if (!same(p, this.selected)) this.step = 0;
     this.selected = p;
     this.renderList();
     this.renderProps();
@@ -366,7 +377,13 @@ class SymbolDesigner {
         new Promise((resolve) => {
           void import('../svgedit/SvgEditor').then((m) => m.openSvgEditor(this.ctx, { id, onSaved: (saved) => resolve(saved) }));
         }),
-      context: this.selected.length === 2 ? 'marker' : this.symbol.type,
+      context: this.contextOf(this.selected),
+      step: this.step,
+      chooseStep: (i) => {
+        this.step = Math.max(0, i);
+        this.keepFocus(() => this.renderProps());
+      },
+      effects: takesEffects(this.selected),
     };
     const p = this.selected;
     const form = layerForm(
@@ -375,19 +392,28 @@ class SymbolDesigner {
         const cur = layerAt(this.symbol, p);
         if (!cur) return;
         this.snapshot(`${p.join('.')}:${Object.keys(patch).join(',')}`);
-        this.draft.symbol = putLayer(this.symbol, p, applyPatch(cur, patch));
+        const next = applyPatch(cur, patch);
+        this.draft.symbol = putLayer(this.symbol, p, next);
         // The form stays (focus is kept); list summaries and the preview follow.
         this.renderList();
         this.renderTools();
         this.redraw();
         this.renderTitle();
-        if ('type' in patch || 'placement' in patch || 'shape' in patch || 'dash' in patch || 'halo' in patch) queueMicrotask(() => this.keepFocus(() => this.renderProps()));
+        if ('type' in patch || 'placement' in patch || 'shape' in patch || 'dash' in patch || 'halo' in patch || 'symbol' in patch || structural(cur, next)) queueMicrotask(() => this.keepFocus(() => this.renderProps()));
       },
       env,
     );
     const parent = p.length === 2 ? (this.symbol.layers as readonly AnyLayer[])[p[0]] : null;
-    const title = h('div', { class: 'sdes__ptitle' }, h('span', null, LAYER_LABEL[l.type]), parent ? h('span', { class: 'sdes__pctx' }, T.inMarker(LAYER_LABEL[parent.type])) : null);
-    replaceChildren(this.props, title, form);
+    const where = parent ? (parent.type === 'geometryGenerator' ? T.inGenerator(LAYER_LABEL[parent.type]) : T.inMarker(LAYER_LABEL[parent.type])) : null;
+    const title = h('div', { class: 'sdes__ptitle' }, h('span', null, LAYER_LABEL[l.type]), where ? h('span', { class: 'sdes__pctx' }, where) : null);
+    replaceChildren(this.props, title, form, p.length === 2 && !takesEffects(p) ? h('p', { class: 'sdf__hint' }, T.effectsInside) : null);
+  }
+
+  /** Where a layer sits: a symbol's own kind, a marker's layers are markers, a generator's symbol's layers its class. */
+  private contextOf(p: LayerPath): 'fill' | 'line' | 'marker' {
+    if (p.length === 1) return this.symbol.type;
+    const parent = (this.symbol.layers as readonly AnyLayer[])[p[0]];
+    return parent?.type === 'geometryGenerator' ? parent.symbol.type : 'marker';
   }
 
   /** Rebuilds part of the form without losing the field being typed in. */
@@ -568,3 +594,16 @@ class SymbolDesigner {
 }
 
 const same = (a: LayerPath, b: LayerPath) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+/** A row's line: the layer's summary, and its effects switched on (docs/adr/0226 §2). */
+function rowSummary(l: AnyLayer): string {
+  const fx = effectsSummary(l);
+  return fx ? `${summary(l)} · ${fx}` : summary(l);
+}
+
+/** Whether a patch changed the form's rows: steps added, gone or reordered, effects switched (docs/adr/0226). */
+function structural(before: AnyLayer, after: AnyLayer): boolean {
+  const kinds = (l: AnyLayer) => (l.type === 'geometryGenerator' ? l.steps.map((st) => st.kind).join() : '');
+  const effects = (l: AnyLayer) => (l.effects ?? []).map((e) => `${e.type}${e.enabled === false ? '-' : ''}`).join();
+  return kinds(before) !== kinds(after) || effects(before) !== effects(after);
+}

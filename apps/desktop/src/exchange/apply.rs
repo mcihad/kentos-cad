@@ -423,6 +423,7 @@ fn make_layers(
             replaces: None,
             actions: Vec::new(),
             card: None,
+            compose: None,
             filter: None,
         };
         doc.add_layer(new, parent.as_deref(), false)

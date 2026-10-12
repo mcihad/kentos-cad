@@ -53,6 +53,12 @@ pub struct Spots(RefCell<Option<(u64, Shown)>>);
 type Shown = Rc<Vec<(LabelSpot, Grow)>>;
 
 impl Spots {
+    /// The labels last placed (this frame's, once the labels' layer was built):
+    /// a mask's shapes (docs/adr/0226 §3).
+    pub fn last(&self) -> Option<Shown> {
+        self.0.borrow().as_ref().map(|(_, spots)| spots.clone())
+    }
+
     fn get(&self, key: u64, ask: impl FnOnce() -> Vec<(LabelSpot, Grow)>) -> Shown {
         let mut kept = self.0.borrow_mut();
         match kept.as_ref() {

@@ -151,6 +151,7 @@ impl Styles {
                 ),
                 opaque: !settings.bool("graphics.transparency"),
             },
+            labels: None,
         }
     }
 

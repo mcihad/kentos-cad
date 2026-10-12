@@ -7,6 +7,7 @@
 //! the block definitions in `blocks.rs`.
 
 mod blocks;
+mod compose;
 mod crs;
 mod filter;
 mod info;
@@ -296,6 +297,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     filter_tree(r, &layers)?;
     label_tree(r, &layers)?;
     info_tree(r, &layers)?;
+    compose_tree(r, &layers)?;
     Ok(DocumentSnapshotV2 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
@@ -343,6 +345,18 @@ fn filter_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError
 /// it: actions and a card on a layer that holds objects.
 fn info_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
     let Some(problem) = kentos_contracts::infos_problem(layers) else {
+        return Ok(());
+    };
+    r.push(Seg::Name("layers"));
+    let e = r.fail(Code::BadValue, &problem);
+    r.pop();
+    Err(e)
+}
+
+/// Schema 41's tree rule (docs/adr/0226 §3, §4), as `composes_problem` says
+/// it: a composition on a layer, its mask cutting into other layers of the tree.
+fn compose_tree(r: &mut Reader<'_>, layers: &[LayerNode]) -> Result<(), KcadError> {
+    let Some(problem) = kentos_contracts::composes_problem(layers) else {
         return Ok(());
     };
     r.push(Seg::Name("layers"));
@@ -821,13 +835,14 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut snap, mut fields, mut service, mut feed) = (None, None, None, None);
     let (mut time, mut scenario, mut replaces) = (None, None, None);
     let mut filter = None;
-    let (mut actions, mut card) = (None, None);
+    let (mut actions, mut card, mut compose) = (None, None, None);
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
             "name" => name = Some(text(r)?),
             "card" if has.attachments => card = Some(info::info_card(r)?),
             "actions" if has.attachments => actions = Some(info::layer_actions(r)?),
+            "compose" if has.compose => compose = Some(compose::layer_compose(r)?),
             "filter" if has.filters => filter = Some(filter::layer_filter(r)?),
             "time" if has.temporal => time = Some(temporal::layer_time(r)?),
             "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
@@ -958,6 +973,15 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 ));
             }
             (card, _) => card,
+        },
+        compose: match (compose, kind) {
+            (Some(_), Some(LayerNodeType::Group)) => {
+                return Err(r.fail(
+                    Code::BadValue,
+                    "grubun katman çizimi olmaz; katman çizimi yalnız katmanındır",
+                ));
+            }
+            (compose, _) => compose,
         },
     })
 }

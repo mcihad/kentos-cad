@@ -213,9 +213,10 @@ Hesabın hepsi `crates/shared/style-core/src/style/`'dadır (ADR 0008 “Stil de
   - Atlasın resimleri tiny-skia ile çizilir. SVG roxmltree ve SVG çekirdeğinin okuyucularıyla okunur (`apps/desktop/src/style`); yazılar harf ana hatlarıyla.
   - Katmanlar yan yana kurulur. Değişen katman yalnız kendisidir.
 - **Performans:** katman yalnız kirlenince yeniden kurulur (öznitelik değişince yalnız işleyicisi olan katmanlar); çizim ölçeği ya da kitaplık değişince bütün katmanlar kurulur. Vurgu katmanları (`__sel`, `__hover`) eski ince çizgi hattını kullanır.
+- **Geometri üretici, çizim efektleri ve Katman çizimi** ([ADR 0226](adr/0226-symbol-layer-extras.md)): üreticinin adımları sayfanın derlemesinde nesne başına bir kez çalışır (`style-core`'un `style/generate.rs`'i; şekiller sayfanın kendi toplulukları). Efektli sembol katmanının toplulukları bir efekt grubudur (`group`, `effect`); efekt grubu, saydam, kipli ya da maskelenen katman çizim alanında kendi resmine çizilir ve birleştirilir (masaüstü `crates/render/wgpu/src/compose.rs`, web `render/composePlan.ts` ile iki arka ucun `composer.ts`'i; WGSL `shaders/wgsl/compose`, sözleşmesi `compose.layout.json`, WebGL2'nin ikizi `webgl2/composeShaders.ts`). Efektlerin haritaları paketlidir (bir dokuda dört piksel), bulanıklığın dokunuşları kenardan uzakta doğrusal süzgeçle ikişer okunur; bir grubun bütün efektleri tek geçişte birleşir. Efekti, kipi ve maskesi olmayan çizim eskisi gibi tek geçiştir. Önizlemeler: masaüstünde aynı hat, web'de Canvas2D (`render/effectsCanvas.ts`).
 - **Bilinen sınırlar:**
   - Birleşimler hep yuvarlaktır (`join` yok sayılır); saydam kalın çizgide parça uçları üst üste binip koyulaşır.
-  - Bulanık gölge ve parıltı gibi çizim efektleri yok.
+  - Efektler, maske, saydamlık ve kip Büyüteç'te, Genel bakış'ta ve paftanın PDF'inde yoktur (geometri üretici vardır).
   - Atlas çözünürlüğü sabittir (yazı 48 px, SVG 128 px, döşeme 128 px); çok büyütülen SVG işaret yumuşar.
 
 ## 7. Tasarımcılar

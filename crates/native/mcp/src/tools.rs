@@ -347,6 +347,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.renderer"
             // Without actions or a card it takes a layer's away (docs/adr/0225 §4, §5).
             | "cad.layers.info"
+            // Without opacity, mode or mask it takes a layer's composition away (docs/adr/0226 §3, §4).
+            | "cad.layers.compose"
     );
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \

@@ -10,7 +10,7 @@ use crate::classify::rounded;
 // ── Summaries ──────────────────────────────────────────────────────────
 
 /// A number to two decimals as the list writes it; “ƒ” for one from an expression.
-fn num(v: Option<&Value>) -> String {
+pub(super) fn num(v: Option<&Value>) -> String {
     match v {
         Some(Value::Number(n)) => rounded(n.as_f64().unwrap_or(f64::NAN), 2),
         _ => "ƒ".into(),
@@ -143,6 +143,41 @@ pub fn summary(layer: &Value) -> String {
             Some(Value::String(t)) => format!("“{t}”"),
             _ => "öznitelikten".into(),
         },
+        "geometryGenerator" => {
+            let steps: Vec<&str> = g("steps")
+                .and_then(Value::as_array)
+                .map(|list| {
+                    list.iter()
+                        .map(|st| {
+                            let kind = st.get("kind").and_then(Value::as_str).unwrap_or("");
+                            super::steps::step_label(kind).unwrap_or(kind)
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            let class = g("symbol")
+                .and_then(|s| s.get("type"))
+                .and_then(Value::as_str)
+                .map_or("", class_word);
+            format!(
+                "{} · {class}",
+                if steps.is_empty() {
+                    "adımsız".to_owned()
+                } else {
+                    steps.join(" → ")
+                }
+            )
+        }
         _ => String::new(),
+    }
+}
+
+/// A generator's symbol's class as the summary says it (`CLASS_WORD`).
+pub fn class_word(kind: &str) -> &'static str {
+    match kind {
+        "fill" => "alan",
+        "line" => "çizgi",
+        "marker" => "işaret",
+        _ => "",
     }
 }

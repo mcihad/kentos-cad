@@ -266,6 +266,17 @@ pub const INVALID_TEMPLATE: &str = "invalid_template";
 /// An object's attachments against their rules (`attachments_problem`).
 pub const INVALID_ATTACHMENTS: &str = "invalid_attachments";
 
+// ── cad.layers.compose (docs/adr/0226 §3, §4) ──────────────────────────
+
+/// An opacity outside 0–1, or a mask against its rule (`LayerMask::problem`).
+pub const INVALID_COMPOSE: &str = "invalid_compose";
+/// A mask cutting into its own layer.
+pub const MASK_TARGET_SELF: &str = "mask_target_self";
+/// A mask's target the drawing does not have.
+pub const MASK_TARGET_NOT_FOUND: &str = "mask_target_not_found";
+/// A mask's target that is a group.
+pub const MASK_TARGET_NOT_A_LAYER: &str = "mask_target_not_a_layer";
+
 // ── cad.layers.labels and cad.labels.pin (docs/adr/0212 §5) ─────────────
 
 /// A label style or a layer's labelling against its rules (`style_problem`, `layer_labels_problem`).

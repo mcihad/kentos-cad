@@ -1,8 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import type { Symbol } from '../../model/style';
+import type { Effect, EffectType, GeneratorStep, GeneratorStepKind, GeometryGenerator, Symbol } from '../../model/style';
+import { EFFECT_TYPES } from '../../model/style';
 import {
   addLayer,
   addParent,
+  addStep,
+  BUFFER_SIDES,
+  childTypes,
+  CLASS_OF,
+  EFFECT_LABEL,
+  effectsSummary,
+  moveStep,
+  newEffect,
+  newStep,
+  putEffect,
+  putStep,
+  removeStep,
+  setEffect,
+  setGeneratorKind,
+  STEP_KINDS,
+  STEP_LABEL,
+  stepOutput,
+  stepSummary,
+  takesEffects,
+  VERTEX_CHOICES,
+  type GenClass,
   ANCHORS,
   applyPatch,
   canMove,
@@ -86,6 +108,26 @@ const F = JSON.parse(Object.values(files)[0]) as {
   paths: { text: string; path: string[] }[];
   zoom: { min: number; max: number; step: number; start: number; real: number; steps: { px: number; factor: number; result: number }[]; texts: { px: number; text: string }[] };
   texts: Record<string, unknown>;
+  childTypes: { parent: GeometryGenerator; types: LayerType[] }[];
+  steps: {
+    labels: unknown;
+    kinds: unknown;
+    vertexChoices: unknown;
+    bufferSides: unknown;
+    classOf: unknown;
+    newSteps: { kind: GeneratorStepKind; step: unknown }[];
+    lines: { step: GeneratorStep; unit: string; line: string }[];
+    outputs: { steps: GeneratorStep[]; input: GenClass; output: GenClass | null }[];
+    edits: { name: string; layer: GeometryGenerator; op: { op: string; kind?: string; at?: number; delta?: number; step?: GeneratorStep }; result: unknown }[];
+  };
+  effects: {
+    labels: unknown;
+    types: unknown;
+    newEffects: { type: EffectType; effect: unknown }[];
+    takes: { path: LayerPath; takes: boolean }[];
+    edits: { name: string; layer: AnyLayer; op: { op: string; type?: EffectType; on?: boolean; effect?: Effect }; result: unknown }[];
+    lines: { layer: AnyLayer; line: string }[];
+  };
 };
 
 const plain = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
@@ -167,5 +209,45 @@ describe('symbol designer (fixtures/style/v1/designer.json)', () => {
     for (const n of F.texts.notSaved as { first: string; more: number; text: string }[]) expect(DESIGNER_TEXTS.notSaved(n.first, n.more)).toBe(n.text);
     const saved = F.texts.saved as { name: string; text: string };
     expect(DESIGNER_TEXTS.saved(saved.name)).toBe(saved.text);
+    const intoGenerator = F.texts.intoGenerator as { parent: string; text: string };
+    expect(DESIGNER_TEXTS.intoGenerator(intoGenerator.parent)).toBe(intoGenerator.text);
+    const inGenerator = F.texts.inGenerator as { parent: string; text: string };
+    expect(DESIGNER_TEXTS.inGenerator(inGenerator.parent)).toBe(inGenerator.text);
+  });
+
+  it('lists a parent’s child types and a generator’s steps as the file does (docs/adr/0226 §1)', () => {
+    for (const c of F.childTypes) expect(childTypes(c.parent), JSON.stringify(c.parent)).toEqual(c.types);
+    const S = F.steps;
+    expect([STEP_LABEL, STEP_KINDS, VERTEX_CHOICES, BUFFER_SIDES, CLASS_OF]).toEqual([S.labels, S.kinds, S.vertexChoices, S.bufferSides, S.classOf]);
+    for (const c of S.newSteps) expect(newStep(c.kind), c.kind).toEqual(c.step);
+    for (const c of S.lines) expect(stepSummary(c.step, c.unit), JSON.stringify(c.step)).toBe(c.line);
+    for (const c of S.outputs) expect(stepOutput(c.steps, c.input), `${JSON.stringify(c.steps)} on ${c.input}`).toBe(c.output);
+    for (const e of S.edits) {
+      const o = e.op;
+      const out =
+        o.op === 'add'
+          ? addStep(e.layer, o.kind as GeneratorStepKind)
+          : o.op === 'move'
+            ? moveStep(e.layer, o.at!, o.delta!)
+            : o.op === 'remove'
+              ? removeStep(e.layer, o.at!)
+              : o.op === 'put'
+                ? putStep(e.layer, o.at!, o.step!)
+                : setGeneratorKind(e.layer, o.kind as SymbolKind);
+      expect(plain(out), e.name).toEqual(e.result);
+    }
+  });
+
+  it('switches and sums effects up as the file does (docs/adr/0226 §2)', () => {
+    const E = F.effects;
+    expect([EFFECT_LABEL, EFFECT_TYPES]).toEqual([E.labels, E.types]);
+    for (const c of E.newEffects) expect(newEffect(c.type), c.type).toEqual(c.effect);
+    for (const c of E.takes) expect(takesEffects(c.path)).toBe(c.takes);
+    for (const e of E.edits) {
+      const o = e.op;
+      const out = o.op === 'set' ? setEffect(e.layer, o.type!, o.on!) : putEffect(e.layer, o.effect!);
+      expect(plain(out), e.name).toEqual(e.result);
+    }
+    for (const c of E.lines) expect(effectsSummary(c.layer)).toBe(c.line);
   });
 });

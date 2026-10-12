@@ -122,6 +122,12 @@ pub(crate) enum Op {
         before: Box<LayerInfo>,
         after: Box<LayerInfo>,
     },
+    /// A layer's composition (docs/adr/0226 §3, §4), before and after.
+    LayerCompose {
+        layer: String,
+        before: Option<Box<kentos_contracts::LayerCompose>>,
+        after: Option<Box<kentos_contracts::LayerCompose>>,
+    },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
     /// new one (`Document::add_layer`) is a `LayerAdd`.
@@ -226,6 +232,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerInfo {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerCompose {
+                layer,
+                before,
+                after,
+            } => Op::LayerCompose {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -523,6 +538,7 @@ impl Document {
                 | Op::LayerTemporal { .. }
                 | Op::LayerFilter { .. }
                 | Op::LayerInfo { .. }
+                | Op::LayerCompose { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerActive { .. }
@@ -652,6 +668,10 @@ impl Document {
             }
             Op::LayerInfo { layer, after, .. } => {
                 self.layers.replace_info(layer, after);
+                return;
+            }
+            Op::LayerCompose { layer, after, .. } => {
+                self.layers.replace_compose(layer, after.as_deref());
                 return;
             }
             // A node still holding objects stays: taking it away would leave
