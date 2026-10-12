@@ -111,6 +111,8 @@ mod navigation_cards;
 #[cfg(test)]
 mod netcad_names_tests;
 mod object_info;
+#[cfg(test)]
+mod offset_scenes;
 mod opening;
 #[cfg(test)]
 mod overlap_tests;

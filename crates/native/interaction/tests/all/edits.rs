@@ -110,6 +110,76 @@ fn offset_copies_at_the_distance_or_through_a_point() {
 
 // ── Buda, Uzat ──────────────────────────────────────────────────────────────
 
+/// The Ötele tool asks `cad.entities.offset` (docs/adr/0246): what it writes
+/// for a click is exactly what the command writes for the same request, as
+/// Python and MCP send it, bit for bit, on the same drawing.
+#[test]
+fn the_offset_tool_writes_what_the_semantic_command_writes() {
+    use kentos_contracts::{CommandResult, EntitiesOffset, OffsetBy, Vec2};
+    use kentos_native_application::{ExecutionContext, offset};
+
+    /// The object, where its edge is clicked, the side, İki yana, Kaynağı sil.
+    type Ask = (u32, [f64; 2], [f64; 2], bool, bool);
+    let asks: [Ask; 3] = [
+        (2, [-20.0, 10.0], [-23.0, 10.0], false, false),
+        (4, [5.0, 4.0], [5.0, 5.0], true, false),
+        (10, [19.0, -6.0], [19.0, -5.0], false, true),
+    ];
+    for (slot, edge_at, side, both, erase) in asks {
+        let mut by_tool = bench(&[]);
+        by_tool.start("offset");
+        assert!(by_tool.type_text("0.2"));
+        if both {
+            assert!(by_tool.type_text("I"));
+        }
+        if erase {
+            assert!(by_tool.type_text("S"));
+        }
+        by_tool.click(edge_at[0], edge_at[1]);
+        by_tool.click(side[0], side[1]);
+        assert_eq!(by_tool.last_level(), Some(Level::Success), "{slot}");
+
+        let mut by_command = bench(&[]);
+        let uid = by_command
+            .doc
+            .uid(Slot(slot))
+            .expect("an object")
+            .to_string();
+        let input = EntitiesOffset {
+            uids: vec![uid],
+            by: OffsetBy::Distance {
+                distance: 0.2,
+                side: Vec2 {
+                    x: 487_000.0 + side[0],
+                    y: 4_420_000.0 + side[1],
+                },
+            },
+            both_sides: both,
+            delete_source: erase,
+            layer_id: None,
+            expected_revision: None,
+        };
+        let result = offset::execute(&mut ExecutionContext::new(&mut by_command.doc), input);
+        let CommandResult::Completed { output, .. } = result else {
+            panic!("{slot}: {result:?}");
+        };
+        assert_eq!(output.created.len(), if both { 2 } else { 1 }, "{slot}");
+        assert_eq!(output.distances, [0.2]);
+        let all = |b: &Bench| -> Vec<Entity> { b.doc.entities().cloned().collect() };
+        assert_eq!(all(&by_tool), all(&by_command), "{slot}");
+        if slot == 2 {
+            // What Python and MCP get for the same request (python/tests/test_offset.py, crates/native/mcp/tests/mcp.rs).
+            let Entity::Line(copy) = by_tool.newest() else {
+                panic!("a line");
+            };
+            assert_eq!((copy.a.x, copy.a.y), (486_979.8, 4_420_006.0));
+            assert_eq!((copy.b.x, copy.b.y), (486_979.8, 4_420_018.0));
+        }
+        assert_eq!(by_tool.doc.undo().as_deref(), Some("Ötele"));
+        assert_eq!(by_command.doc.undo().as_deref(), Some("Ötele"));
+    }
+}
+
 #[test]
 fn trim_cuts_between_the_visible_edges_and_shift_extends() {
     let mut b = bench(&[]);
