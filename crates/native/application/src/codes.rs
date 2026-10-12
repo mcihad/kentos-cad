@@ -119,6 +119,10 @@ pub const INVALID_LINK: &str = "invalid_link";
 /// gradient's colour not `#RRGGBB`, a tie's seed not finite or an object
 /// named twice (`cad.entities.create`, `cad.entities.edit`).
 pub const INVALID_HATCH: &str = "invalid_hatch";
+/// A dimension's references that cannot be: empty, an object id empty, an
+/// index too big or a broken reason unknown (`cad.entities.create`,
+/// `cad.entities.edit`, `cad.dimensions.reassociate`; docs/adr/0249 §3).
+pub const INVALID_REFS: &str = "invalid_refs";
 /// The object a linked text names is not in the drawing (`cad.entities.create`).
 pub const LINK_NOT_FOUND: &str = "link_not_found";
 /// A block name empty or only white space (`cad.blocks.define`, `cad.blocks.edit`).
@@ -238,6 +242,13 @@ pub const INVALID_DISTANCE: &str = "invalid_distance";
 pub const NOT_OFFSETTABLE: &str = "not_offsettable";
 /// A copy the core could not make (a warning), or none at all (a refusal).
 pub const OFFSET_FAILED: &str = "offset_failed";
+
+// ── cad.dimensions.reassociate (docs/adr/0249 §3) ───────────────────────
+
+/// An object that is not a dimension where one is asked for.
+pub const NOT_A_DIMENSION: &str = "not_a_dimension";
+/// A place its object does not have (a vertex past its ring, a centre of a line).
+pub const NO_SUCH_PLACE: &str = "no_such_place";
 
 // ── cad.addresses.define (docs/adr/0229 §14) ───────────────────────────
 

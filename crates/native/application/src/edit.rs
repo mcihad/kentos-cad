@@ -947,6 +947,14 @@ pub(crate) fn check_geometry(
             at(""),
         )));
     }
+    // A dimension's references (docs/adr/0249 §3).
+    if let EntityGeometry::Dimension {
+        refs: Some(refs), ..
+    } = g
+        && let Some(words) = refs.problem()
+    {
+        return Err(Stop::Failed(error(codes::INVALID_REFS, words, at(".refs"))));
+    }
     // A text's face and a dimension's look (docs/adr/0183 §9).
     let style = match g {
         EntityGeometry::Text { face, .. } | EntityGeometry::Table { face, .. } => face.problem(),

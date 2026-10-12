@@ -50,6 +50,7 @@ pub mod geometry;
 pub mod info_templates;
 pub mod label_texts;
 pub mod labels_pin;
+pub mod dimensions_reassociate;
 pub mod layer_filter;
 pub mod layers_compose;
 pub mod layers_filter;
@@ -165,6 +166,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LABELS_PIN,
         kentos_contracts::CAD_LABELS_PIN_VERSION,
+    ),
+    // Yeniden bağla ([`dimensions_reassociate`], docs/adr/0249 §3).
+    (
+        kentos_contracts::CAD_DIMENSIONS_REASSOCIATE,
+        kentos_contracts::CAD_DIMENSIONS_REASSOCIATE_VERSION,
     ),
     // Katman stili's renderers ([`layers_renderer`], docs/adr/0213 §5).
     (

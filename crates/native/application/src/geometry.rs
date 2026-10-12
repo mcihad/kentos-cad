@@ -1125,7 +1125,8 @@ fn held(zs: Option<Vec<Option<f64>>>) -> Option<Vec<Option<f64>>> {
 /// An object copied into a new one (Kopyala, Dizi, a block's definition,
 /// Yapıştır): a linked text's copy writes no object's label, it is a text of
 /// its own (docs/adr/0175 §4); an associative hatch's copy follows no
-/// objects (docs/adr/0186 §6); every other object as it is.
+/// objects (docs/adr/0186 §6), an associative dimension's copy has free points
+/// (docs/adr/0249 §3); every other object as it is.
 pub fn unlinked(mut entity: Entity) -> Entity {
     match &mut entity {
         Entity::Text(text) => {
@@ -1133,6 +1134,8 @@ pub fn unlinked(mut entity: Entity) -> Entity {
             text.label_scale = None;
         }
         Entity::Hatch(hatch) => hatch.assoc = None,
+        // A copy's points are its own (docs/adr/0249 §3).
+        Entity::Dimension(d) => d.refs = None,
         _ => {}
     }
     entity

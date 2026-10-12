@@ -10,7 +10,9 @@
 //!   breaks keeps its point and says why (`broken`);
 //! - a dimension whose point the step itself moved (moved alone, its end
 //!   dragged by a grip) while that point's object did not change lets that
-//!   point go: its reference is dropped, the point is free.
+//!   point go: its reference is dropped, the point is free; a step that
+//!   gives the point a new reference too (`cad.dimensions.reassociate`)
+//!   keeps it.
 //!
 //! The changes join the step: one undo takes them back with the rest.
 
@@ -81,6 +83,15 @@ fn point_of(d: &DimensionEntity, name: &str) -> Option<Vec2> {
         "a" => Some(d.a),
         "b" => Some(d.b),
         _ => d.c,
+    }
+}
+
+fn reference_of<'a>(d: &'a DimensionEntity, name: &str) -> Option<&'a SubRef> {
+    let r = d.refs.as_ref()?;
+    match name {
+        "a" => r.a.as_ref(),
+        "b" => r.b.as_ref(),
+        _ => r.c.as_ref(),
     }
 }
 
@@ -200,9 +211,11 @@ impl Document {
                         }
                     }
                     None => {
-                        // Its object did not change: a point the step moved itself is free now.
+                        // Its object did not change: a point the step moved itself, its reference left as it
+                        // was, is free now (a step that binds the point anew keeps the new reference).
                         if let Some(w) = &was
                             && point_of(w, name) != point_of(d, name)
+                            && reference_of(w, name) == Some(r)
                         {
                             *reference_mut(&mut next_refs, name) = None;
                         }

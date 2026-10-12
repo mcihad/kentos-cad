@@ -9,4 +9,5 @@ mod edit;
 mod fixtures;
 mod info_templates;
 mod polygon;
+mod reassociate;
 mod transform;
