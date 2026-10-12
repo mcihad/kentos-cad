@@ -457,6 +457,13 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                     now.label_of = was.label_of;
                     now.label_scale = was.label_scale;
                 }
+                // A dimension keeps its references when the edit names none (docs/adr/0249 §3): the
+                // document lets a point go when the edit moved it, its object unchanged.
+                if let (Entity::Dimension(was), Entity::Dimension(now)) = (entity, &mut next)
+                    && now.refs.is_none()
+                {
+                    now.refs = was.refs.clone();
+                }
                 checked.changed.push(Changed {
                     slot,
                     uid: uid.clone(),

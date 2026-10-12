@@ -126,3 +126,40 @@ fn a_copy_of_a_bound_dimension_is_free() {
     let Entity::Dimension(d) = copy else { panic!() };
     assert!(d.refs.is_none());
 }
+
+/// Öznitelikler writes a dimension's Zemin through `cad.entities.edit`'s
+/// update, its geometry from the core's shape (no references): the
+/// references stay; a grip that moves a bound point lets that point go.
+#[test]
+fn an_edit_without_references_keeps_them_and_a_moved_point_goes_free() {
+    use kentos_domain::contracts::{EditOperation, EntitiesEdit, EntityEdit};
+    use kentos_native_application::edit;
+    use kentos_native_application::geometry::{edit_geometry, shape};
+    let (mut doc, wall, dim) = drawing();
+    bind(&mut doc, wall, dim, &[(DimensionPoint::A, 0), (DimensionPoint::B, 1)]);
+    let mut masked = dimension(&doc, dim);
+    masked.mask = true;
+    let write = |doc: &mut Document, e: Entity| {
+        let input = EntitiesEdit {
+            operation: EditOperation::Properties,
+            changes: vec![EntityEdit::Update {
+                uid: doc.uid(dim).unwrap().to_string(),
+                geometry: edit_geometry(shape(&e)).unwrap(),
+            }],
+            expected_revision: None,
+        };
+        assert!(matches!(
+            edit::execute(&mut ExecutionContext::new(doc), input),
+            CommandResult::Completed { .. }
+        ));
+    };
+    write(&mut doc, Entity::Dimension(masked));
+    let d = dimension(&doc, dim);
+    assert!(d.mask);
+    assert_eq!(d.refs.as_ref().unwrap().each().count(), 2);
+    let mut dragged = d.clone();
+    dragged.b = Vec2 { x: 8.0, y: 0.0 };
+    write(&mut doc, Entity::Dimension(dragged));
+    let refs = dimension(&doc, dim).refs.unwrap();
+    assert!(refs.a.is_some() && refs.b.is_none());
+}

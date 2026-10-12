@@ -731,6 +731,12 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
             seen.label_scale
         ));
     }
+    // An associative dimension's references (docs/adr/0249 §3), exact.
+    if let Some(refs) = &want.refs
+        && seen.refs != *refs
+    {
+        bad.push(format!("{name}.refs: {:?}, beklenen {refs:?}", seen.refs));
+    }
     // A multi-line text's box (from clicks: within the click tolerance), spacing and runs (docs/adr/0182).
     if let Some(width) = want.box_width {
         let near = match (width, seen.box_width) {
