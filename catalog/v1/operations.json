@@ -1,0 +1,1255 @@
+{
+  "format": "kentos.catalog-operations",
+  "version": 1,
+  "levels": {
+    "semantic": "Ürün komutu kullanıcının verdiğini alır, sonucu kendisi hesaplar: Python ve MCP aynı işi yeniden hesaplamadan yapar.",
+    "geometry": "Ürün komutu var ama sonucun geometrisini çağıran hesaplar: arayüz hesaplayıp yazdırır.",
+    "processing": "İşlemler aracı: yalnız uygulamanın çalıştırıcısından.",
+    "none": "Belgeyi ya da projeyi değiştirir ama ürün komutu yok: arayüz doğrudan yazar.",
+    "query": "Yalnız okur ya da ölçer.",
+    "session": "Görünüm, seçim, çizim yardımcısı ya da aracın adımı: oturumun durumu.",
+    "host": "Pencere, panel ya da yardım: uygulamanın sunumu."
+  },
+  "rules": [
+    {
+      "match": "view.*",
+      "level": "session",
+      "note": "Görünüm; cad.session.* yok (plan §5.1)."
+    },
+    {
+      "match": "draft.*",
+      "level": "session",
+      "note": "Çizim yardımcıları oturumun durumu."
+    },
+    {
+      "match": "edit.selectFilter*",
+      "level": "session"
+    },
+    {
+      "match": "basemap.*",
+      "level": "semantic",
+      "via": [
+        "cad.layers.service"
+      ]
+    },
+    {
+      "match": "processing.toolbox",
+      "level": "host"
+    },
+    {
+      "match": "processing.history",
+      "level": "host"
+    },
+    {
+      "match": "processing.*",
+      "level": "processing",
+      "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz."
+    },
+    {
+      "match": "sheet.*",
+      "level": "none",
+      "note": "Pafta komutları katalogda yok (plan §17)."
+    },
+    {
+      "match": "chart.*",
+      "level": "query"
+    },
+    {
+      "match": "help.*",
+      "level": "host"
+    },
+    {
+      "match": "workspace.*",
+      "level": "none",
+      "note": "Proje türü proje ayarı; komutu yok."
+    }
+  ],
+  "commands": {
+    "tool.confirm": {
+      "level": "session"
+    },
+    "tool.repeat": {
+      "level": "session"
+    },
+    "tool.cancel": {
+      "level": "session"
+    },
+    "edit.cycleSelection": {
+      "level": "session"
+    },
+    "edit.deselect": {
+      "level": "session"
+    },
+    "edit.invertSelection": {
+      "level": "session"
+    },
+    "edit.previousSelection": {
+      "level": "session"
+    },
+    "edit.selectAll": {
+      "level": "session"
+    },
+    "edit.copy": {
+      "level": "session",
+      "note": "Oturumun panosu."
+    },
+    "edit.cut": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.delete"
+      ]
+    },
+    "edit.paste": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.create"
+      ]
+    },
+    "edit.pasteOriginal": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.create"
+      ]
+    },
+    "edit.undo": {
+      "level": "semantic",
+      "python": "Document.undo",
+      "mcp": "undo"
+    },
+    "edit.redo": {
+      "level": "semantic",
+      "python": "Document.redo",
+      "mcp": "redo"
+    },
+    "file.new": {
+      "level": "semantic",
+      "python": "Document.new",
+      "mcp": "drawing.new"
+    },
+    "file.open": {
+      "level": "semantic",
+      "python": "Document.open",
+      "mcp": "drawing.open"
+    },
+    "file.save": {
+      "level": "semantic",
+      "python": "Document.save",
+      "mcp": "drawing.save"
+    },
+    "file.saveAs": {
+      "level": "semantic",
+      "python": "Document.save",
+      "mcp": "drawing.save"
+    },
+    "file.settings": {
+      "level": "none",
+      "note": "Proje ayarları doğrudan yazılır; cad.settings.* yok."
+    },
+    "file.start": {
+      "level": "host"
+    },
+    "file.saveSelection": {
+      "level": "none"
+    },
+    "file.takeFrom": {
+      "level": "none"
+    },
+    "file.print": {
+      "level": "none"
+    },
+    "file.export.pdf": {
+      "level": "none"
+    },
+    "file.export.dxf": {
+      "level": "none",
+      "note": "Dışa aktarma komutu yok (cad.files.*)."
+    },
+    "file.export.geojson": {
+      "level": "none"
+    },
+    "file.export.gpx": {
+      "level": "none"
+    },
+    "file.export.kml": {
+      "level": "none"
+    },
+    "file.export.ncn": {
+      "level": "none"
+    },
+    "file.import.dxf": {
+      "level": "none",
+      "note": "İçe aktarma komutu yok (cad.files.*)."
+    },
+    "file.import.geojson": {
+      "level": "none"
+    },
+    "file.import.gnss": {
+      "level": "none"
+    },
+    "file.import.kml": {
+      "level": "none"
+    },
+    "file.import.ncn": {
+      "level": "none"
+    },
+    "file.import.ncz": {
+      "level": "none"
+    },
+    "file.import.photos": {
+      "level": "none"
+    },
+    "file.import.shp": {
+      "level": "none"
+    },
+    "cloud.rename": {
+      "level": "semantic",
+      "via": [
+        "project.rename"
+      ]
+    },
+    "cloud.share": {
+      "level": "semantic",
+      "via": [
+        "project.share"
+      ]
+    },
+    "cloud.delete": {
+      "level": "semantic",
+      "via": [
+        "project.trash"
+      ]
+    },
+    "cloud.open": {
+      "level": "semantic",
+      "python": "Connection",
+      "mcp": "project.open"
+    },
+    "cloud.openNewest": {
+      "level": "host"
+    },
+    "cloud.history": {
+      "level": "host"
+    },
+    "cloud.upload": {
+      "level": "semantic",
+      "via": [
+        "project.import"
+      ]
+    },
+    "cloud.uploadFile": {
+      "level": "semantic",
+      "via": [
+        "project.file.commit"
+      ]
+    },
+    "cloud.signIn": {
+      "level": "host"
+    },
+    "cloud.signOut": {
+      "level": "host"
+    },
+    "cloud.conflicts": {
+      "level": "host"
+    },
+    "server.check": {
+      "level": "host"
+    },
+    "commandline.focus": {
+      "level": "host"
+    },
+    "tools.options": {
+      "level": "host",
+      "note": "Kullanıcı tercihleri; proje verisi değil."
+    },
+    "layer.new": {
+      "level": "none",
+      "note": "Katman işlemleri katalogda yok (plan §24.1 madde 8)."
+    },
+    "layer.newGroup": {
+      "level": "none"
+    },
+    "layer.duplicate": {
+      "level": "none"
+    },
+    "layer.merge": {
+      "level": "none"
+    },
+    "layer.purge": {
+      "level": "none"
+    },
+    "layer.showAll": {
+      "level": "none"
+    },
+    "layer.unisolate": {
+      "level": "none"
+    },
+    "layer.states": {
+      "level": "none"
+    },
+    "layer.stateSave": {
+      "level": "none"
+    },
+    "layer.fields": {
+      "level": "none"
+    },
+    "layer.list": {
+      "level": "query",
+      "python": "Document.layers"
+    },
+    "layer.filter": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.filter"
+      ]
+    },
+    "layer.filterClear": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.filter"
+      ]
+    },
+    "layer.filterFromSelection": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.filter"
+      ]
+    },
+    "layer.info": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.info"
+      ]
+    },
+    "layer.labels": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.labels"
+      ]
+    },
+    "style.assign": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.set"
+      ]
+    },
+    "style.clearSymbol": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.set"
+      ]
+    },
+    "style.layerStyle": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.renderer"
+      ]
+    },
+    "style.textStyles": {
+      "level": "none",
+      "note": "Stil tabloları doğrudan yazılır (plan CAD-CMD-15)."
+    },
+    "style.dimensionStyles": {
+      "level": "none"
+    },
+    "style.manager": {
+      "level": "host"
+    },
+    "style.svgEditor": {
+      "level": "host"
+    },
+    "style.legend": {
+      "level": "host"
+    },
+    "block.attributes": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.edit"
+      ]
+    },
+    "block.purge": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.edit"
+      ]
+    },
+    "block.insertFile": {
+      "level": "geometry",
+      "via": [
+        "cad.blocks.define"
+      ]
+    },
+    "block.panel": {
+      "level": "host"
+    },
+    "calc.traverse": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "traverse"
+    },
+    "calc.polar": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "polarSurvey"
+    },
+    "calc.forward": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "forwardIntersection"
+    },
+    "calc.resection": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "resection"
+    },
+    "calc.network": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "networkAdjust"
+    },
+    "calc.levelNetwork": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "levelAdjust"
+    },
+    "calc.stakeout": {
+      "level": "query"
+    },
+    "calc.fieldbook": {
+      "level": "host"
+    },
+    "data.chart": {
+      "level": "query"
+    },
+    "data.statistics": {
+      "level": "query"
+    },
+    "data.search": {
+      "level": "query"
+    },
+    "data.unmark": {
+      "level": "session"
+    },
+    "data.featureTable": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.set"
+      ]
+    },
+    "data.compare": {
+      "level": "none"
+    },
+    "data.sources": {
+      "level": "host"
+    },
+    "cogo.check": {
+      "level": "query"
+    },
+    "cogo.update": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.set"
+      ]
+    },
+    "crs.set": {
+      "level": "none"
+    },
+    "crs.transform": {
+      "level": "query"
+    },
+    "crs.query": {
+      "level": "query"
+    },
+    "crs.points": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.create"
+      ]
+    },
+    "field.send": {
+      "level": "none"
+    },
+    "attachment.add": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.set"
+      ]
+    },
+    "attachment.addLink": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.set"
+      ]
+    },
+    "map.contours": {
+      "level": "processing"
+    },
+    "map.edgeLengths": {
+      "level": "processing"
+    },
+    "map.parcelReport": {
+      "level": "none"
+    },
+    "map.profile": {
+      "level": "none"
+    },
+    "map.sheet": {
+      "level": "none"
+    },
+    "analysis.slope": {
+      "level": "processing"
+    },
+    "analysis.volume": {
+      "level": "none"
+    },
+    "mesh.add": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "raster"
+    },
+    "raster.add": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "raster"
+    },
+    "pointcloud.add": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "pointCloud"
+    },
+    "raster.style": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "rasterStyle"
+    },
+    "pointcloud.style": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "pointCloudStyle"
+    },
+    "raster.georef": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "rasterGeoref"
+    },
+    "pointcloud.query": {
+      "level": "query"
+    },
+    "pointcloud.vpcSave": {
+      "level": "none"
+    },
+    "network.manage": {
+      "level": "semantic",
+      "via": [
+        "cad.network.define"
+      ]
+    },
+    "scenario.apply": {
+      "level": "semantic",
+      "via": [
+        "cad.scenarios.edit"
+      ]
+    },
+    "scenario.create": {
+      "level": "semantic",
+      "via": [
+        "cad.scenarios.edit"
+      ]
+    },
+    "scenario.base": {
+      "level": "session"
+    },
+    "scenario.show": {
+      "level": "session"
+    },
+    "scenario.compare": {
+      "level": "none"
+    },
+    "time.layer": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.time"
+      ]
+    },
+    "time.slider": {
+      "level": "session"
+    },
+    "time.compare": {
+      "level": "none"
+    },
+    "service.add": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.service"
+      ]
+    },
+    "service.feed": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.service"
+      ]
+    },
+    "service.info": {
+      "level": "query"
+    },
+    "service.connections": {
+      "level": "host",
+      "note": "Bağlantıların gizli değerleri cihazda."
+    },
+    "table.insert": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "table"
+    },
+    "table.edit": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "table"
+    },
+    "table.update": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "tableUpdate"
+    },
+    "template.apply": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.set"
+      ]
+    },
+    "template.draw": {
+      "level": "host"
+    },
+    "template.new": {
+      "level": "host"
+    },
+    "template.fromSelection": {
+      "level": "host"
+    },
+    "template.panel": {
+      "level": "host"
+    },
+    "text.findReplace": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "replaceText"
+    },
+    "topology.check": {
+      "level": "query"
+    },
+    "topology.rules": {
+      "level": "none"
+    },
+    "transform.edgematch": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.edit"
+      ],
+      "operation": "edgematch"
+    },
+    "transform.fit": {
+      "level": "geometry",
+      "via": [
+        "cad.entities.transform"
+      ],
+      "note": "Dönüşüm araçta kontrol noktalarından çözülür."
+    },
+    "point.editor": {
+      "level": "host"
+    },
+    "address.search": {
+      "level": "query",
+      "python": "kentos.address"
+    },
+    "address.reverse": {
+      "level": "query",
+      "python": "kentos.address"
+    },
+    "address.data": {
+      "level": "semantic",
+      "via": [
+        "cad.addresses.define"
+      ]
+    },
+    "address.providers": {
+      "level": "host"
+    },
+    "processing.run.address.geocode": {
+      "level": "processing",
+      "python": "kentos.address",
+      "note": "kentos.address adayları verir, noktaları yazmaz."
+    },
+    "processing.run.address.reverse": {
+      "level": "processing",
+      "python": "kentos.address"
+    }
+  },
+  "tools": {
+    "line": {
+      "level": "semantic"
+    },
+    "polyline": {
+      "level": "semantic"
+    },
+    "polygon": {
+      "level": "semantic"
+    },
+    "point": {
+      "level": "semantic"
+    },
+    "spot": {
+      "level": "semantic"
+    },
+    "area": {
+      "level": "semantic",
+      "note": "Alan hesapla çizilen alanı yazar; ölçüsü Document.measure ile."
+    },
+    "arc": {
+      "level": "geometry",
+      "note": "cad.arc.create merkez, yarıçap ve açılar ister; araç bunları tıklamalardan hesaplar.",
+      "methods": {
+        "3 nokta": "geometry",
+        "Merkez, başlangıç, bitiş": "geometry",
+        "Devam": "geometry"
+      }
+    },
+    "circle": {
+      "level": "semantic",
+      "methods": {
+        "Merkez, yarıçap": "semantic",
+        "2 nokta": "geometry",
+        "3 nokta": "geometry",
+        "Teğet, teğet, yarıçap": "geometry",
+        "Teğet, teğet, teğet": "geometry"
+      }
+    },
+    "ellipse": {
+      "level": "semantic",
+      "operation": null
+    },
+    "spline": {
+      "level": "semantic"
+    },
+    "xline": {
+      "level": "semantic"
+    },
+    "ray": {
+      "level": "semantic"
+    },
+    "text": {
+      "level": "semantic"
+    },
+    "mtext": {
+      "level": "semantic"
+    },
+    "leader": {
+      "level": "semantic",
+      "operation": "leader"
+    },
+    "imageInsert": {
+      "level": "semantic",
+      "operation": "image"
+    },
+    "blockInsert": {
+      "level": "semantic"
+    },
+    "rectangle": {
+      "level": "geometry",
+      "note": "Köşeler iki tıklamadan hesaplanıp cad.polygon.create'e verilir."
+    },
+    "rectangle3": {
+      "level": "geometry"
+    },
+    "regularPolygon": {
+      "level": "geometry"
+    },
+    "sector": {
+      "level": "geometry"
+    },
+    "revcloud": {
+      "level": "geometry"
+    },
+    "donut": {
+      "level": "geometry"
+    },
+    "parallel": {
+      "level": "geometry",
+      "operation": "parallel"
+    },
+    "perpIn": {
+      "level": "geometry",
+      "operation": "perpendicularIn"
+    },
+    "perpOut": {
+      "level": "geometry",
+      "operation": "perpendicularOut"
+    },
+    "divide": {
+      "level": "geometry",
+      "operation": "divide"
+    },
+    "pointsBetween": {
+      "level": "geometry",
+      "operation": "pointsBetween",
+      "methods": {
+        "Eşit aralık": "geometry",
+        "Uzaklıkla": "geometry",
+        "Oranla": "geometry"
+      }
+    },
+    "intersectPoint": {
+      "level": "geometry",
+      "operation": "intersectPoint",
+      "methods": {
+        "İki uzaklık": "geometry",
+        "İki doğrultu": "geometry",
+        "İki doğru": "geometry"
+      }
+    },
+    "tangentLine": {
+      "level": "geometry",
+      "operation": "tangentLine"
+    },
+    "fourthCorner": {
+      "level": "geometry",
+      "operation": "fourthCorner"
+    },
+    "rangeRings": {
+      "level": "geometry",
+      "operation": "rangeRings"
+    },
+    "centerline": {
+      "level": "geometry",
+      "operation": "centerline"
+    },
+    "planRoad": {
+      "level": "geometry",
+      "operation": "planRoad"
+    },
+    "vertexPoints": {
+      "level": "geometry",
+      "operation": "vertexPoints"
+    },
+    "adjoin": {
+      "level": "geometry",
+      "operation": "adjoin"
+    },
+    "boundary": {
+      "level": "geometry",
+      "operation": "boundary"
+    },
+    "polygonize": {
+      "level": "geometry",
+      "operation": "polygonize"
+    },
+    "parcel": {
+      "level": "geometry"
+    },
+    "hatch": {
+      "level": "geometry",
+      "operation": "hatch",
+      "note": "Bölge araçta bulunur; komut son taramayı alır."
+    },
+    "hatchSelected": {
+      "level": "geometry",
+      "operation": "hatch"
+    },
+    "dimension": {
+      "level": "semantic",
+      "note": "Ölçü tanım noktalarını saklar; nesneye bağlı (ilişkili) değildir.",
+      "methods": {
+        "Hizalı": "semantic",
+        "Doğrusal": "semantic",
+        "Açı": "semantic",
+        "Koordinat": "semantic",
+        "Semt": "semantic",
+        "Eğim": "semantic",
+        "Yarıçap": "geometry",
+        "Çap": "geometry",
+        "Yay uzunluğu": "geometry",
+        "Kırıklı yarıçap": "geometry"
+      }
+    },
+    "dimContinue": {
+      "level": "geometry",
+      "operation": "dimensionChain"
+    },
+    "dimBaseline": {
+      "level": "geometry",
+      "operation": "dimensionBaseline"
+    },
+    "quickDimension": {
+      "level": "geometry"
+    },
+    "coordinateLabel": {
+      "level": "geometry",
+      "operation": "coordinates"
+    },
+    "coordinateVertices": {
+      "level": "geometry",
+      "operation": "coordinates"
+    },
+    "stationLabels": {
+      "level": "geometry",
+      "operation": "stations"
+    },
+    "labelsToText": {
+      "level": "geometry",
+      "operation": "labels"
+    },
+    "placeTextFile": {
+      "level": "geometry",
+      "operation": "textFile"
+    },
+    "textAlong": {
+      "level": "geometry",
+      "operation": "textAlong"
+    },
+    "copyToLayer": {
+      "level": "geometry"
+    },
+    "timeVersion": {
+      "level": "geometry"
+    },
+    "netRoute": {
+      "level": "geometry"
+    },
+    "netServiceArea": {
+      "level": "geometry"
+    },
+    "move": {
+      "level": "semantic"
+    },
+    "copy": {
+      "level": "semantic"
+    },
+    "rotate": {
+      "level": "semantic"
+    },
+    "scale": {
+      "level": "semantic"
+    },
+    "mirror": {
+      "level": "semantic"
+    },
+    "align": {
+      "level": "semantic"
+    },
+    "alignDistribute": {
+      "level": "semantic",
+      "methods": {
+        "Sola hizala": "semantic",
+        "Ortala": "semantic",
+        "Sağa hizala": "semantic",
+        "Üste hizala": "semantic",
+        "Ortaya hizala": "semantic",
+        "Alta hizala": "semantic",
+        "Yatay dağıt": "semantic",
+        "Dikey dağıt": "semantic"
+      }
+    },
+    "array": {
+      "level": "semantic"
+    },
+    "arrayPolar": {
+      "level": "semantic"
+    },
+    "arrayPath": {
+      "level": "semantic"
+    },
+    "erase": {
+      "level": "semantic"
+    },
+    "matchProperties": {
+      "level": "semantic"
+    },
+    "layerMatch": {
+      "level": "semantic"
+    },
+    "timeEnd": {
+      "level": "semantic"
+    },
+    "labelMove": {
+      "level": "semantic"
+    },
+    "labelRotate": {
+      "level": "semantic"
+    },
+    "labelPin": {
+      "level": "semantic"
+    },
+    "labelHide": {
+      "level": "semantic"
+    },
+    "blockDefine": {
+      "level": "semantic"
+    },
+    "offset": {
+      "level": "geometry",
+      "operation": "offset"
+    },
+    "trim": {
+      "level": "geometry",
+      "operation": "trim",
+      "methods": {
+        "Tıklayarak": "geometry",
+        "Çit": "geometry"
+      }
+    },
+    "extend": {
+      "level": "geometry",
+      "operation": "extend",
+      "methods": {
+        "Tıklayarak": "geometry",
+        "Çit": "geometry"
+      }
+    },
+    "fillet": {
+      "level": "geometry",
+      "operation": "fillet"
+    },
+    "filletAll": {
+      "level": "geometry",
+      "operation": "fillet"
+    },
+    "chamfer": {
+      "level": "geometry",
+      "operation": "chamfer"
+    },
+    "chamferAll": {
+      "level": "geometry",
+      "operation": "chamfer"
+    },
+    "break": {
+      "level": "geometry",
+      "operation": "break"
+    },
+    "join": {
+      "level": "geometry",
+      "operation": "join"
+    },
+    "explode": {
+      "level": "geometry",
+      "operation": "explode"
+    },
+    "lengthen": {
+      "level": "geometry",
+      "operation": "lengthen"
+    },
+    "vertex": {
+      "level": "geometry",
+      "operation": "vertexAdd"
+    },
+    "stretch": {
+      "level": "geometry",
+      "operation": "stretch"
+    },
+    "split": {
+      "level": "geometry",
+      "operation": "split",
+      "methods": {
+        "Kesişimlerden": "geometry",
+        "Eşit parçalara": "geometry",
+        "Uzunluktan": "geometry"
+      }
+    },
+    "reverse": {
+      "level": "geometry",
+      "operation": "reverse"
+    },
+    "simplify": {
+      "level": "geometry",
+      "operation": "simplify"
+    },
+    "cleanup": {
+      "level": "geometry",
+      "operation": "cleanup"
+    },
+    "setElevation": {
+      "level": "geometry",
+      "operation": "elevation",
+      "methods": {
+        "Sabit": "geometry",
+        "Artır": "geometry",
+        "Sıfırla": "geometry"
+      }
+    },
+    "readable": {
+      "level": "geometry",
+      "operation": "readable"
+    },
+    "topology": {
+      "level": "geometry",
+      "operation": "topology"
+    },
+    "reshape": {
+      "level": "geometry",
+      "operation": "reshape"
+    },
+    "continue": {
+      "level": "geometry",
+      "operation": "continue"
+    },
+    "edgeShift": {
+      "level": "geometry",
+      "operation": "edgeShift"
+    },
+    "imageClip": {
+      "level": "geometry",
+      "operation": "imageClip"
+    },
+    "textCurve": {
+      "level": "geometry",
+      "operation": "textPath",
+      "methods": {
+        "Eğriye oturt": "geometry",
+        "Doğrultuya döndür": "geometry",
+        "Düzleştir": "geometry"
+      }
+    },
+    "roadJunctions": {
+      "level": "geometry",
+      "operation": "roadJunctions"
+    },
+    "medianClose": {
+      "level": "geometry",
+      "operation": "medianClose"
+    },
+    "areaUnion": {
+      "level": "geometry",
+      "operation": "areaUnion"
+    },
+    "areaIntersect": {
+      "level": "geometry",
+      "operation": "areaIntersect"
+    },
+    "areaSubtract": {
+      "level": "geometry",
+      "operation": "areaSubtract"
+    },
+    "areaSplit": {
+      "level": "geometry",
+      "operation": "areaSplit"
+    },
+    "toArea": {
+      "level": "geometry",
+      "operation": "toArea"
+    },
+    "toPolyline": {
+      "level": "geometry",
+      "operation": "toPolyline"
+    },
+    "partsJoin": {
+      "level": "geometry",
+      "operation": "partsJoin"
+    },
+    "partsSplit": {
+      "level": "geometry",
+      "operation": "partsSplit"
+    },
+    "holeAdd": {
+      "level": "geometry",
+      "operation": "holeAdd"
+    },
+    "holeRemove": {
+      "level": "geometry",
+      "operation": "holeRemove"
+    },
+    "holeFill": {
+      "level": "geometry",
+      "operation": "holeFill"
+    },
+    "identify": {
+      "level": "query",
+      "python": "Document.entity",
+      "note": "Bilgi kartı; nesnenin kaydı Python ve MCP'de okunur."
+    },
+    "measure": {
+      "level": "query",
+      "note": "İki nokta arası uzunluk: noktalardan hesap; ölçme API'si nesne ister."
+    },
+    "measureAngle": {
+      "level": "query"
+    },
+    "stationOffset": {
+      "level": "query"
+    },
+    "netTrace": {
+      "level": "query",
+      "python": "kentos.network"
+    },
+    "layerIsolate": {
+      "level": "none"
+    },
+    "layerLock": {
+      "level": "none"
+    },
+    "layerMakeActive": {
+      "level": "none"
+    },
+    "layerOff": {
+      "level": "none"
+    },
+    "pan": {
+      "level": "session"
+    },
+    "zoomWindow": {
+      "level": "session"
+    },
+    "select": {
+      "level": "session"
+    },
+    "selectCircle": {
+      "level": "session"
+    },
+    "selectContaining": {
+      "level": "session"
+    },
+    "selectFence": {
+      "level": "session"
+    },
+    "selectPolygon": {
+      "level": "session"
+    },
+    "selectSimilar": {
+      "level": "session"
+    },
+    "stakeout": {
+      "level": "query"
+    },
+    "subdivide": {
+      "level": "geometry"
+    }
+  }
+}

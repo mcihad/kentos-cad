@@ -181,6 +181,9 @@ sütunu yapılır.
 - **Yeni komutun arayüz kaydı:** web dururken yeni komutların adı, kısa adı, ikonu, açıklaması, takma adları, kısayolları ve şeritteki
   yeri platformdan bağımsız `catalog/v1/additions.json`'a yazılır. Masaüstü bunu web'in donmuş envanteriyle birlikte okur; dosyanın
   kurallarını masaüstünün testi denetler. İlk tüketicisi `GIS-40`'tır.
+- **İşlem düzeyi:** her yeni komut, araç ya da yöntem `catalog/v1/operations.json`'da düzeyini (semantic, geometry, processing, none,
+  query, session, host) aynı commit'te alır; bir iş düzey değiştirirse (örneğin bir araç anlamsal ürün komutuna geçerse) eşlemesi
+  de değişir. `scripts/cad/manifest.py` manifesti yeniden yazar, `--check` eşlenmemiş öğede düşer (ADR 0244).
 
 | İş | Web | Masaüstü |
 |---|---|---|
@@ -309,6 +312,7 @@ sütunu yapılır.
    pnpm py:test                 # Python SDK ve ortak komut durumları (komut ya da Python değiştiyse)
    python3 scripts/fixtures/<dokunulan>_cases.py --check   # dokunulan her bağımsız başvuru
    python3 scripts/fixtures/kcad_v2_reference.py --check   # .kcad değiştiyse
+   python3 scripts/cad/manifest.py --check   # komut, araç, yöntem ya da ürün komutu değiştiyse (ADR 0244)
    ```
 
    Web dururken (ADR 0228) web'in komutları koşmaz: `pnpm typecheck`, `pnpm test`, `pnpm e2e:interaction`, `pnpm build`,

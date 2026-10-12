@@ -7,6 +7,7 @@ her proje türünün şeridindeki yeri. Biçimi web'in donmuş envanterinin (`do
 | Dosya | İçerik |
 |---|---|
 | `v1/additions.json` | `kentos.catalog-additions` sürüm 1: `commands`, `icons` (web setinin 20 × 20'lik ızgarasındaki SVG öğeleri, `<svg>` öğesi olmadan), `ribbon` (türler, sekme; yeni panel `label`, `icon`, `after` ya da var olan panele `into`; öğeler komut ve boy; isteğe bağlı `overflow`: panelin ▾ listesine giden seyrek komutlar) |
+| `v1/operations.json` | `kentos.catalog-operations` sürüm 1: her arayüz komutunun, aracının ve yönteminin ürün işlemi düzeyi (semantic, geometry, processing, none, query, session, host), ürün komutu ve işlemi, katalog dışı Python ve MCP yolları; kurallar ve tek tek öğeler (ADR 0244). Yeni komut, araç ya da yöntem eşlemesiyle aynı commit'te gelir; `python3 scripts/cad/manifest.py` `docs/cad/manifest.{json,md}`'yi yazar, `--check` denetler |
 
 - Masaüstü dosyayı envanterle birlikte gömer (`apps/desktop/src/catalog.rs`); kurallarını oradaki test denetler: kimliklerin tekliği ve
   envanterde olmaması, ikonların, sekmelerin ve panellerin varlığı, boylar, her ikonun her öğesinin çizilmesi.

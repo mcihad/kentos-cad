@@ -972,6 +972,34 @@ Sahibin kararı (1 Ekim 2026): bu grup en sondadır; sahip “zamanı geldi” d
 
 Kabul: profesyonel bir 2D proje iki arayüzde düzenlenir, pafta alınır ve seçilen dış uygulamalarla aktarım kayıpları ölçülür. Hesaplama, dosya, komut, Python ve AI erişimi envanterde birbirine bağlanır.
 
+### 16.5 Profesyonel 2D mimari çizim planı ([plan/cad.md](plan/cad.md))
+
+Sahibin kararı (12 Ekim 2026): “Plan/CAD.md dosyası ile devam edelim”. Planın ayrıntılı görevleri (`CAD-AUD-…`, `CAD-CMD-…`,
+`CAD-DATA-…` …) ve kabul senaryoları `plan/cad.md`'dedir; burada planın §24.1'deki ilk on iki somut iş sırasıyla izlenir.
+Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır (MADDE-TARIFI §14).
+
+- [x] `CADP-01` CAD işlem manifesti: arayüzün her komutu, aracı ve yöntemi için ürün işlemi, düzeyi ve Python ile AI karşılığı;
+  boşluk raporu (plan `CAD-AUD-01`–`06`, `11`, `12`). — **12 Ekim, [ADR 0244](docs/adr/0244-cad-operation-manifest.md):**
+  eşleme `catalog/v1/operations.json` (düzeyler: semantic, geometry, processing, none, query, session, host), üreteç
+  `scripts/cad/manifest.py` (`--check` sapmayı ve eşlenmemiş öğeyi düşürür), çıktı `docs/cad/manifest.{json,md}`: 654 satır;
+  CBS'ye özgü olmayan 449 satırın 243'ünü Python ve AI arayüz gibi yapamıyor (geometry 115, none 98, processing 13, query 17).
+- [ ] `CADP-02` Pafta kaynakları ile envanter farkı: masaüstünün pafta tasarımcısının gerçekte yaptıkları (`sheet.*` 59 komutun
+  58'i `ported.json`'da yok) kaynağa göre işaretlenir (plan `CAD-AUD-08`).
+- [ ] `CADP-03` Yeni çizimin birimi ve sihirbazın parametreleri Python'da ve MCP'de; API'lerin birim açıklamaları (plan `CAD-AUD-09`,
+  `CAD-DATA-01`–`03`, `05`, `06`). Paralel ajan, dal `cad-units`, ADR 0245.
+- [ ] `CADP-04` Anlamsal Ötele: `cad.entities.offset` arayüzde, masaüstünde, başsız sunucuda, Python'da ve MCP'de (plan `CAD-CMD-01`,
+  `02`, `06`). Paralel ajan, dal `cad-offset`, ADR 0246.
+- [ ] `CADP-05` Aynı kalıpla Buda, Uzat, Köşe yuvarla ve ilişkili ölçü oluşturma (plan `CAD-CMD-03`–`05`).
+- [ ] `CADP-06` Alt nesne kimliği ve başvuruların göçü ve geçersizleşmesi (plan `CAD-DATA-13`, `14`; `DEC-03`).
+- [ ] `CADP-07` İlişkili ölçü: bağ, izleme ve yeniden bağlama (plan §11.1).
+- [ ] `CADP-08` Katman, stil ve ayar işlemleri katalogda; SDK ve MCP eşit (plan `CAD-CMD-14`, `15`; §5.1 `cad.layers.*`,
+  `cad.styles.*`, `cad.settings.*`).
+- [ ] `CADP-09` Pafta kitabı `.kcad`'in kaynağında; cihaz kitaplarından göç (plan §17.1).
+- [ ] `CADP-10` Uygulamanın gerçek AI yüzeyi ve çizimin bağlam, sorgu, plan ve yürütme zinciri (plan §19).
+- [ ] `CADP-11` DWG karar matrisi ve gerçek ofis dosyalarıyla kodek denemesi; seçim ayrı ADR'de (plan §16.1, `DEC-01`).
+- [ ] `CADP-12` İlk uçtan uca kabul çizimi: oda, düzeltme, ölçü ve tarama, 1:50 pafta, PDF ve DXF, başka ortamda yeniden açma
+  (plan §23.1).
+
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 
 Bu modül çizilmiş bir polyline'ı yol tasarımı saymayacak. Aks, boykesit, enkesit ve koridorun kaynak parametreleri; türetilmiş mesh ve metrajdan ayrı tutulacak. IFC 4.3 altyapı kapsamı ve `IfcAlignment` uyumu için dış veri eşleme tasarımı yapılabilir. [IFC altyapı kapsamı](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/content/scope.htm), [IfcAlignment](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcAlignment.htm).
