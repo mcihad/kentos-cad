@@ -4,19 +4,20 @@
 
 use kentos_contracts::{
     AddressesDefine, ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, DimensionsReassociate,
-    EntitiesArray, EntitiesCreate, EntitiesDelete, EntitiesEdit, EntitiesOffset,
-    EntitiesSetProperties, EntitiesTransform, LabelsPin, LayersCompose, LayersEdit, LayersFilter,
-    LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
-    LineCreate, NetworkDefine, PointCreate, PolygonCreate, PolylineCreate, ScenariosEdit,
-    SettingsSet, StylesEdit,
+    EntitiesArray, EntitiesChamfer, EntitiesCreate, EntitiesDelete, EntitiesEdit, EntitiesFillet,
+    EntitiesOffset, EntitiesSetProperties, EntitiesTransform, EntitiesTrim, LabelsPin,
+    LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer,
+    LayersService, LayersSet, LayersStates, LayersTime, LineCreate, NetworkDefine, PointCreate,
+    PolygonCreate, PolylineCreate, ScenariosEdit, SettingsSet, StylesEdit,
 };
 use kentos_domain::Document;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, create, delete, dimensions_reassociate, edit, labels_pin, layers_compose, layers_edit,
-    layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
-    layers_states, layers_time, line, network_define, offset, point, polygon, polyline,
-    scenarios_edit, set, settings_set, styles_edit, transform,
+    circle, create, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
+    entities_fillet, entities_trim, labels_pin, layers_compose, layers_edit, layers_filter,
+    layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
+    layers_time, line, network_define, offset, point, polygon, polyline, scenarios_edit, set,
+    settings_set, styles_edit, transform,
 };
 use serde_json::Value;
 
@@ -106,6 +107,10 @@ pub fn run(
         kentos_contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
         kentos_contracts::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
+        kentos_contracts::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
+        kentos_contracts::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),
+        kentos_contracts::CAD_ENTITIES_FILLET => run!(entities_fillet, EntitiesFillet),
+        kentos_contracts::CAD_ENTITIES_CHAMFER => run!(entities_chamfer, EntitiesChamfer),
         kentos_contracts::CAD_DIMENSIONS_REASSOCIATE => {
             run!(dimensions_reassociate, DimensionsReassociate)
         }

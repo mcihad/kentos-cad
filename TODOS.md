@@ -105,6 +105,11 @@ Liste:
   kopuk bağ işareti; `cad.entities.edit`'in başvurusuz güncellemesinde ölçünün başvurularını koruma; iz oynatıcısına `refs`
   beklentisi; oynatılacak iz `dimension-refs.json`; bilinen bozulmalar: komut kataloğunda `cad.dimensions.reassociate` (yalnız
   `Desktop`), `fixtures/commands/v1/cad.dimensions.reassociate.json` web'in koşucusunda kayıtsız komut.
+- [ ] `CADP-05` (ADR 0250, 13 Ekim): web'de gerekenler: dört komutun işleyicileri `product/`'ta (`cad.entities.trim`, `.extend`,
+  `.fillet`, `.chamfer`; web'in deposunun `trimPreview`, `extendPreview`'i ve çekirdeğin köşe işlevleri WASM'dan), web'in Buda, Uzat,
+  Köşe yuvarla, Pah ve tüm köşeler araçlarının önizlemeyi planla, yazmayı komutla yapması; `cad.entities.create`'in ilişkili ölçüsü
+  yerleriyle (`placed_points`); katalogda `hosts`'a Web; oynatılacak iz `edge-commands.json`; bilinen bozulmalar: komut kataloğunda dört
+  komut (yalnız `Desktop`), `fixtures/commands/v1`'de dört dosya ve `cad.entities.create.json`'un iki yeni durumu web'in koşucusunda.
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
@@ -1023,7 +1028,13 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   kaynaklar, mesafe ve taraf ya da geçilecek nokta, İki yana, Kaynağı sil, hedef katman; hesap çekirdeğin `offset_entity`'si; araç
   önizlemeyi komutun planından çizer; 30 ortak durum kesirlerle bağımsız başvurudan; Python ve MCP aracın kopyasını bit bit yazar.
   Manifestte Ötele `semantic`.
-- [ ] `CADP-05` Aynı kalıpla Buda, Uzat, Köşe yuvarla ve ilişkili ölçü oluşturma (plan `CAD-CMD-03`–`05`).
+- [x] `CADP-05` Aynı kalıpla Buda, Uzat, Köşe yuvarla ve ilişkili ölçü oluşturma (plan `CAD-CMD-03`–`05`). — **13 Ekim,
+  [ADR 0250](docs/adr/0250-semantic-trim-extend-fillet-chamfer.md):** `cad.entities.trim`, `.extend` (seçimler ve açık sınırlar: bütün
+  görünenler, dikdörtgen ya da verilenler; Çit'in sırası), `.fillet`, `.chamfer` (yolun köşesi, iki çizgi ya da bütün köşeler; Kırp);
+  komut bağlamı ev sahibinin geometri deposunu taşır, başsız sunucu kendisininkini kurar; araçlar önizlemeyi planla, yazmayı komutla
+  yapar; `cad.entities.create` ilişkili ölçünün bağlı noktalarını yerlerinden yazar. 85 ortak durum bağımsız başvurudan
+  (`edge_command_cases.py`; aşkın değerler 60 basamakta, platform libm'i yok); Python ve MCP; iz `edge-commands.json`. Manifestte
+  semantic. Açık: Esnet, Birleştir, Kır, Böl, Sınır ve Tarama'nın anlamsal komutları (`CAD-CMD-05`).
 - [x] `CADP-06` Alt nesne kimliği ve başvuruların göçü ve geçersizleşmesi (plan `CAD-DATA-13`, `14`; `DEC-03`). — **12 Ekim,
   [ADR 0249](docs/adr/0249-subentity-references-and-associative-dimensions.md)** (CADP-07 ile tek parça; `.kcad` kısmı paralel ajanda):
   yer (`node`, `start`, `end`, `center`, `vertex`, `mid`) ve başvuru (`uid`, yer, `broken`); çekirdeğin `ops::subref`'i yapı aynıysa

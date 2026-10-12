@@ -1549,6 +1549,28 @@ class BlockChange(_Union):
         return _variant(_BLOCK_CHANGE, "BlockChange", "op", data).from_json(data)
 
 
+class CornerPick(_Union):
+    """Which corner, or corners.
+
+    One of:
+
+    - :class:`VertexCornerPick` (``kind: vertex``)
+    - :class:`LinesCornerPick` (``kind: lines``)
+    - :class:`AllCornerPick` (``kind: all``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CornerPick:
+        return _variant(_CORNER_PICK, "CornerPick", "kind", data).from_json(data)
+
+
 class CrsPlane(_Union):
     """A local system's coordinates to its base's: base x = a·x + b·y + c,
     base y = d·x + e·y + f; a similarity turns counter-clockwise (degrees),
@@ -1855,6 +1877,28 @@ class Transform(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> Transform:
         return _variant(_TRANSFORM, "Transform", "kind", data).from_json(data)
+
+
+class TrimBoundaries(_Union):
+    """Which objects bound the cut or the growth. An object never bounds itself.
+
+    One of:
+
+    - :class:`AllTrimBoundaries` (``kind: all``)
+    - :class:`AreaTrimBoundaries` (``kind: area``)
+    - :class:`ObjectsTrimBoundaries` (``kind: objects``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TrimBoundaries:
+        return _variant(_TRIM_BOUNDARIES, "TrimBoundaries", "kind", data).from_json(data)
 
 
 _ConstructionEntityT = TypeVar("_ConstructionEntityT", bound="ConstructionEntity")
@@ -4261,6 +4305,111 @@ class EntitiesArrayed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesChamfer(_Model):
+    """Input of `cad.entities.chamfer` v1: the corner cut `distance` along its
+    first side and `second` (absent: the same) along its other, as one undo
+    step “Pah”; Kırp, `all` and the refusals as `cad.entities.fillet`'s, the
+    codes `chamfer_failed` and `invalid_distance` (a negative distance; both
+    zero without Kırp or with `all`).
+    Attributes:
+        distance: The cut's distance along the first side (a vertex's: the edge before it), metres.
+        second: Along the other side; absent: `distance`.
+    """
+    corner: CornerPick
+    distance: float
+    expected_revision: str | None | Unset = UNSET
+    second: float | None | Unset = UNSET
+    trim: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corner"] = self.corner.to_json()
+        out["distance"] = float(self.distance)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.second is not UNSET:
+            out["second"] = None if self.second is None else float(self.second)
+        if self.trim is not UNSET:
+            out["trim"] = self.trim
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesChamfer:
+        return cls(
+            corner=CornerPick.from_json(data["corner"]),
+            distance=float(data["distance"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            second=UNSET if "second" not in data else None if data["second"] is None else float(data["second"]),
+            trim=data.get("trim", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesCornerPlan(_Model):
+    """What `cad.entities.fillet` or `.chamfer` would write (plan mode); nothing
+    is written. Execute against the plan's revision writes exactly this.
+    """
+    changed: list[Entity]
+    created: list[Entity]
+    done: int
+    skipped: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["created"] = [e0.to_json() for e0 in self.created]
+        out["done"] = self.done
+        out["skipped"] = self.skipped
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesCornerPlan:
+        return cls(
+            changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            created=[Entity.from_json(e0) for e0 in data["created"]],
+            done=data["done"],
+            skipped=data["skipped"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesCornered(_Model):
+    """Output of `cad.entities.fillet` v1 and `cad.entities.chamfer` v1.
+    Attributes:
+        changed: The objects that took new geometry.
+        created: The arc or the cut, when it is a new object.
+        done: The corners rounded or cut, and those left as they were (`all`).
+    """
+    changed: list[str]
+    created: list[str]
+    done: int
+    skipped: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["created"] = list(self.created)
+        out["done"] = self.done
+        out["skipped"] = self.skipped
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesCornered:
+        return cls(
+            changed=list(data["changed"]),
+            created=list(data["created"]),
+            done=data["done"],
+            skipped=data["skipped"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesCreate(_Model):
     """Input of `cad.entities.create` v1: new objects on a named layer, written
     as one undo step. Everything the command depends on is here (TODOS.md
@@ -4286,8 +4435,18 @@ class EntitiesCreate(_Model):
     text's object, in order: no object of the drawing has that id), then
     `invalid_attribute` and `attribute_required` (each object's attributes by
     the layer's fields, objects in order, names in theirs, at
-    `objects[i].attrs.<name>`; docs/adr/0199 §2); on the desktop also
-    `slots_exhausted`. Warning: `layer_hidden` (they are written all the same).
+    `objects[i].attrs.<name>`; docs/adr/0199 §2), then an associative
+    dimension's places (docs/adr/0250): `entity_not_found` (a live
+    reference's object, at `objects[i].geometry.refs.<point>.uid`),
+    `no_such_place` (a place its object has not, at `….place`); on the
+    desktop also `slots_exhausted`. Warning: `layer_hidden` (they are written
+    all the same). A dimension's references must hold (`invalid_refs`,
+    with the geometry's checks).
+
+    An associative dimension (`refs`, docs/adr/0249) is made by its places:
+    each point with a live reference is written where its place is now,
+    whatever coordinates were given for it; a broken reference's point is
+    written as given.
 
     A layer with fields (docs/adr/0199 §2): a value given to a field's key is
     written in its canonical text; a value that does not keep the field's
@@ -4622,6 +4781,56 @@ class EntitiesEdited(_Model):
             created=list(data["created"]),
             removed=list(data["removed"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesFillet(_Model):
+    """Input of `cad.entities.fillet` v1: the corner rounded with `radius`, as
+    one undo step “Köşe yuvarla”. With Kırp (`trim`, the default) the sides
+    take their new geometry and two lines get the arc as a new object from
+    the first; a vertex is rounded in its path. Without it the sides stay
+    and the arc alone is added (a radius above zero). A radius of zero joins
+    two lines at their meeting point.
+
+    With `all`, a corner that cannot be rounded (too short a side) is left
+    as it is and counted in `skipped`; an object none of whose corners can
+    be is left out with a `fillet_failed` warning at `corner.uids[i]`.
+
+    Refusals (`CommandError.code`), in this order: `no_entities` (`all`
+    without ids), `invalid_uid`, `not_finite` (the radius, a pick's x and
+    y), `invalid_distance` (a negative radius; zero without Kırp or with
+    `all`), `invalid_revision`, `revision_conflict` (status `conflict`),
+    `entity_not_found`, `layer_locked` (an object of the corner), `not_a_corner`
+    (a vertex out of its path or not between straight edges, two lines that are
+    one or parallel, an object of another kind), `fillet_failed` (the
+    radius does not fit; with `all`, none fits).
+    Attributes:
+        radius: The arc's radius, metres.
+        trim: Kırp: the sides are cut back to the arc (the default).
+    """
+    corner: CornerPick
+    radius: float
+    expected_revision: str | None | Unset = UNSET
+    trim: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corner"] = self.corner.to_json()
+        out["radius"] = float(self.radius)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.trim is not UNSET:
+            out["trim"] = self.trim
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesFillet:
+        return cls(
+            corner=CornerPick.from_json(data["corner"]),
+            radius=float(data["radius"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            trim=data.get("trim", UNSET),
         )
 
 
@@ -5111,6 +5320,126 @@ class EntitiesTransformed(_Model):
             changed=list(data["changed"]),
             created=list(data["created"]),
             locked=list(data["locked"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesTrim(_Model):
+    """Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked
+    objects trimmed (or extended) at their picks, as one undo step “Buda”
+    (“Uzat”). A trim replaces the object by the pieces that stay, the first
+    in its place keeping its id, its data kept when one piece is left (not
+    for a closed area); an extend gives the object its new geometry.
+
+    Picks of one object are taken in their order, each on the object as the
+    earlier ones left it: a trim cuts the piece the pick lies on (Çit: a
+    fence's crossings); an extend grows each end at most once. Every object
+    is bounded by the drawing as it was before the command. A pick that can
+    do nothing (no boundary crosses there, the end meets none) is left out
+    with a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no
+    pick does anything nothing is written and that is the answer.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities`
+    (no pick; `boundaries.uids` empty), `invalid_uid` (the picks' ids, then
+    the boundaries'), `not_finite` (a pick's or the rectangle's x and y),
+    `invalid_revision`, `revision_conflict` (status `conflict`),
+    `entity_not_found` (the picks' objects, then the boundaries'),
+    `layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:
+    an area with holes, which would lose them), then `trim_failed`
+    (`extend_failed`, at `picks`, with the first pick's reason: the core's
+    words for a kind it does not cut or grow, a closed path for Uzat, no
+    boundary there); on the desktop also `slots_exhausted`.
+    Attributes:
+        picks: The picks, at least one.
+        boundaries: The boundaries; absent: every shown object (`all`).
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+    """
+    picks: list[TrimPick]
+    boundaries: TrimBoundaries | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["picks"] = [e0.to_json() for e0 in self.picks]
+        if self.boundaries is not UNSET:
+            out["boundaries"] = None if self.boundaries is None else self.boundaries.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesTrim:
+        return cls(
+            picks=[TrimPick.from_json(e0) for e0 in data["picks"]],
+            boundaries=UNSET if "boundaries" not in data else None if data["boundaries"] is None else TrimBoundaries.from_json(data["boundaries"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesTrimPlan(_Model):
+    """What `cad.entities.trim` or `.extend` would write (plan mode); nothing is
+    written. Execute against the plan's revision writes exactly this.
+    Attributes:
+        changed: The objects that would take new geometry, as written, with their slots.
+        created: The new objects as written, `id` 0.
+        removed: The ids of the objects that would go.
+    """
+    changed: list[Entity]
+    created: list[Entity]
+    removed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["created"] = [e0.to_json() for e0 in self.created]
+        out["removed"] = list(self.removed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesTrimPlan:
+        return cls(
+            changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            created=[Entity.from_json(e0) for e0 in data["created"]],
+            removed=list(data["removed"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesTrimmed(_Model):
+    """Output of `cad.entities.trim` v1 and `cad.entities.extend` v1.
+    Attributes:
+        changed: The objects that took new geometry (a trim's first piece, an extended
+            object), in the picks' order.
+        created: The new objects (a trim's other pieces), in the order written.
+        removed: The objects a trim took away whole.
+        revision: The document's revision after the write, as decimal text.
+    """
+    changed: list[str]
+    created: list[str]
+    removed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["created"] = list(self.created)
+        out["removed"] = list(self.removed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesTrimmed:
+        return cls(
+            changed=list(data["changed"]),
+            created=list(data["created"]),
+            removed=list(data["removed"]),
             revision=data["revision"],
         )
 
@@ -12495,6 +12824,31 @@ class TopologySettings(_Model):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class TrimPick(_Model):
+    """Where an object was picked.
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+        at: A point on or near the object: Buda takes away the part between the
+            boundaries around it; Uzat grows the end nearest it.
+    """
+    uid: str
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TrimPick:
+        return cls(
+            uid=data["uid"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
 class Vec2(NamedTuple):
     """A point in world units: x = east (Y, sağa), y = north (X, yukarı)."""
 
@@ -12669,6 +13023,71 @@ class DeleteBlockChange(BlockChange):
     def from_json(cls, data: Mapping[str, Any]) -> DeleteBlockChange:
         return cls(
             id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VertexCornerPick(CornerPick):
+    """A polyline's or a closed area's vertex between two straight edges;
+    an area's vertices counted part after part (docs/adr/0143), its holes
+    not.
+    """
+    TAG_VALUE: ClassVar[str] = "vertex"
+    uid: str
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "vertex"}
+        out["uid"] = self.uid
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VertexCornerPick:
+        return cls(
+            uid=data["uid"],
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinesCornerPick(CornerPick):
+    """Two lines; each keeps the side of its pick."""
+    TAG_VALUE: ClassVar[str] = "lines"
+    first: TrimPick
+    second: TrimPick
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "lines"}
+        out["first"] = self.first.to_json()
+        out["second"] = self.second.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinesCornerPick:
+        return cls(
+            first=TrimPick.from_json(data["first"]),
+            second=TrimPick.from_json(data["second"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AllCornerPick(CornerPick):
+    """Every corner between straight edges of these polylines and areas;
+    at least one. Kırp is always on.
+    """
+    TAG_VALUE: ClassVar[str] = "all"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "all"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AllCornerPick:
+        return cls(
+            uids=list(data["uids"]),
         )
 
 
@@ -14353,10 +14772,71 @@ class ArrangeTransform(Transform):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class AllTrimBoundaries(TrimBoundaries):
+    """Every shown object of the drawing: on a visible layer, passing its
+    layer's filter (docs/adr/0211) and, on a host showing a time slice,
+    inside it (docs/adr/0210).
+    """
+    TAG_VALUE: ClassVar[str] = "all"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "all"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AllTrimBoundaries:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class AreaTrimBoundaries(TrimBoundaries):
+    """Every shown object whose box meets the rectangle (the tools give their
+    view: AutoCAD's quick mode, “every visible edge”).
+    """
+    TAG_VALUE: ClassVar[str] = "area"
+    min: Vec2
+    max: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "area"}
+        out["min"] = _vec2_out(self.min)
+        out["max"] = _vec2_out(self.max)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaTrimBoundaries:
+        return cls(
+            min=Vec2.from_json(data["min"]),
+            max=Vec2.from_json(data["max"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectsTrimBoundaries(TrimBoundaries):
+    """These objects (Sınır seç), shown or not; at least one."""
+    TAG_VALUE: ClassVar[str] = "objects"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "objects"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectsTrimBoundaries:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
 _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "update": UpdateBlockChange, "delete": DeleteBlockChange}
+
+
+_CORNER_PICK: dict[str, type[CornerPick]] = {"vertex": VertexCornerPick, "lines": LinesCornerPick, "all": AllCornerPick}
 
 
 _CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affine": AffineCrsPlane}
@@ -14392,6 +14872,9 @@ _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSo
 _TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform, "rubbersheet": RubbersheetTransform, "arrange": ArrangeTransform}
 
 
+_TRIM_BOUNDARIES: dict[str, type[TrimBoundaries]] = {"all": AllTrimBoundaries, "area": AreaTrimBoundaries, "objects": ObjectsTrimBoundaries}
+
+
 __all__ = [
     "AccessSource",
     "AccessSourceName",
@@ -14404,6 +14887,8 @@ __all__ = [
     "AffineCrsPlane",
     "AffineTransform",
     "AlignTransform",
+    "AllCornerPick",
+    "AllTrimBoundaries",
     "AngleUnit",
     "AngleUnitName",
     "AnnotationHeights",
@@ -14420,6 +14905,7 @@ __all__ = [
     "AreaLevelName",
     "AreaPart",
     "AreaSource",
+    "AreaTrimBoundaries",
     "AreaUnit",
     "AreaUnitName",
     "AreasTableSource",
@@ -14473,6 +14959,7 @@ __all__ = [
     "Convention",
     "ConventionName",
     "CoordinatesTableSource",
+    "CornerPick",
     "CreateBlockChange",
     "CreateFeatureChange",
     "CreateOperation",
@@ -14518,6 +15005,9 @@ __all__ = [
     "EntitiesArray",
     "EntitiesArrayPlan",
     "EntitiesArrayed",
+    "EntitiesChamfer",
+    "EntitiesCornerPlan",
+    "EntitiesCornered",
     "EntitiesCreate",
     "EntitiesCreatePlan",
     "EntitiesCreated",
@@ -14527,6 +15017,7 @@ __all__ = [
     "EntitiesEdit",
     "EntitiesEditPlan",
     "EntitiesEdited",
+    "EntitiesFillet",
     "EntitiesOffset",
     "EntitiesOffsetMade",
     "EntitiesOffsetPlan",
@@ -14536,6 +15027,9 @@ __all__ = [
     "EntitiesTransform",
     "EntitiesTransformPlan",
     "EntitiesTransformed",
+    "EntitiesTrim",
+    "EntitiesTrimPlan",
+    "EntitiesTrimmed",
     "Entity",
     "EntityEdit",
     "EntityGeometry",
@@ -14671,6 +15165,7 @@ __all__ = [
     "LinePlan",
     "LineType",
     "LineTypeName",
+    "LinesCornerPick",
     "LocalCrsSystem",
     "LocalDefinition",
     "MidSubPlace",
@@ -14692,6 +15187,7 @@ __all__ = [
     "NetworkLayer",
     "NewObject",
     "NodeSubPlace",
+    "ObjectsTrimBoundaries",
     "ObstacleKind",
     "ObstacleKindName",
     "OffsetBy",
@@ -14853,6 +15349,8 @@ __all__ = [
     "TopologyRuleKindName",
     "TopologySettings",
     "Transform",
+    "TrimBoundaries",
+    "TrimPick",
     "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
@@ -14861,6 +15359,7 @@ __all__ = [
     "VariableValue",
     "Vec2",
     "Vec2Like",
+    "VertexCornerPick",
     "VertexSubPlace",
     "Workspace",
     "WorkspaceName",

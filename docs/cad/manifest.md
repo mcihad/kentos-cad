@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 21 | 69 | 5 | 38 | 133 |
-| geometry | 30 | 84 | 0 | 8 | 122 |
+| semantic | 25 | 75 | 5 | 38 | 143 |
+| geometry | 26 | 78 | 0 | 8 | 112 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 23 | 57 | 6 | 86 |
 | query | 0 | 21 | 0 | 4 | 25 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 450 satırdan 224'i: geometry 114, none 80, processing 13, query 17.
+CBS'ye özgü olmayan 450 satırdan 214'i: geometry 104, none 80, processing 13, query 17.
 
-### Sonucu çağıran hesaplar (geometry) — 114
+### Sonucu çağıran hesaplar (geometry) — 104
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -62,8 +62,6 @@ CBS'ye özgü olmayan 450 satırdan 224'i: geometry 114, none 80, processing 13,
 | `tool.boundary` | İçine tıklayarak alan | shared | cad.entities.create `boundary` |  |
 | `tool.break` | Kır | shared | cad.entities.edit `break` |  |
 | `tool.centerline` | Orta hat | shared | cad.entities.create `centerline` |  |
-| `tool.chamfer` | Pah | cad | cad.entities.edit `chamfer` |  |
-| `tool.chamferAll` | Tüm köşelere pah | cad | cad.entities.edit `chamfer` |  |
 | `tool.circle#2 nokta` | Daire: 2 nokta | shared | cad.circle.create |  |
 | `tool.circle#3 nokta` | Daire: 3 nokta | shared | cad.circle.create |  |
 | `tool.circle#Teğet, teğet, teğet` | Daire: Teğet, teğet, teğet | shared | cad.circle.create |  |
@@ -83,11 +81,6 @@ CBS'ye özgü olmayan 450 satırdan 224'i: geometry 114, none 80, processing 13,
 | `tool.donut` | Halka | cad | cad.entities.create |  |
 | `tool.edgeShift` | Paralel kaydır | shared | cad.entities.edit `edgeShift` |  |
 | `tool.explode` | Patlat | shared | cad.entities.edit `explode` |  |
-| `tool.extend` | Uzat | shared | cad.entities.edit `extend` |  |
-| `tool.extend#Tıklayarak` | Uzat: Tıklayarak | shared | cad.entities.edit `extend` |  |
-| `tool.extend#Çit` | Uzat: Çit | shared | cad.entities.edit `extend` |  |
-| `tool.fillet` | Köşe yuvarla | cad | cad.entities.edit `fillet` |  |
-| `tool.filletAll` | Tüm köşeleri yuvarla | cad | cad.entities.edit `fillet` |  |
 | `tool.fourthCorner` | Dördüncü köşe | shared | cad.entities.create `fourthCorner` |  |
 | `tool.hatch` | Tarama | cad | cad.entities.create `hatch` | Bölge araçta bulunur; komut son taramayı alır. |
 | `tool.hatchSelected` | Çoklu tara | cad | cad.entities.create `hatch` |  |
@@ -146,9 +139,6 @@ CBS'ye özgü olmayan 450 satırdan 224'i: geometry 114, none 80, processing 13,
 | `tool.toArea` | Alana çevir | shared | cad.entities.edit `toArea` |  |
 | `tool.toPolyline` | Çizgiye çevir | shared | cad.entities.edit `toPolyline` |  |
 | `tool.topology` | Topolojik temizlik | shared | cad.entities.edit `topology` |  |
-| `tool.trim` | Buda | shared | cad.entities.edit `trim` |  |
-| `tool.trim#Tıklayarak` | Buda: Tıklayarak | shared | cad.entities.edit `trim` |  |
-| `tool.trim#Çit` | Buda: Çit | shared | cad.entities.edit `trim` |  |
 | `tool.vertex` | Köşe ekle/sil | cad | cad.entities.edit `vertexAdd` |  |
 | `tool.vertexPoints` | Köşelere nokta | shared | cad.entities.create `vertexPoints` |  |
 

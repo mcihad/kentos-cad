@@ -243,6 +243,21 @@ pub const NOT_OFFSETTABLE: &str = "not_offsettable";
 /// A copy the core could not make (a warning), or none at all (a refusal).
 pub const OFFSET_FAILED: &str = "offset_failed";
 
+// ── cad.entities.trim, .extend, .fillet, .chamfer (docs/adr/0250) ───────
+
+/// An object Buda cannot cut: an area with holes.
+pub const NOT_TRIMMABLE: &str = "not_trimmable";
+/// A pick Buda could not cut (a warning), or none at all (a refusal).
+pub const TRIM_FAILED: &str = "trim_failed";
+/// A pick Uzat could not grow (a warning), or none at all (a refusal).
+pub const EXTEND_FAILED: &str = "extend_failed";
+/// What names no corner: a vertex out of its path or beside an arc, two lines that are one or parallel.
+pub const NOT_A_CORNER: &str = "not_a_corner";
+/// A radius that does not fit the corner (with `all`: no corner).
+pub const FILLET_FAILED: &str = "fillet_failed";
+/// Distances that do not fit the corner (with `all`: no corner).
+pub const CHAMFER_FAILED: &str = "chamfer_failed";
+
 // ── cad.dimensions.reassociate (docs/adr/0249 §3) ───────────────────────
 
 /// An object that is not a dimension where one is asked for.

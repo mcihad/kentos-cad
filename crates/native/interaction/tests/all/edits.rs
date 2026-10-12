@@ -216,6 +216,46 @@ fn trim_cuts_between_the_visible_edges_and_shift_extends() {
     assert_eq!(b.doc.revision(), before);
 }
 
+/// Buda and Uzat write through `cad.entities.trim` and `.extend` with the
+/// desktop's store and the view's rectangle (docs/adr/0250): a host without
+/// a store (the headless server, Python, MCP) asking every shown object gets
+/// the same drawing, the store it builds being the desktop's.
+#[test]
+fn the_trim_and_extend_tools_write_what_the_commands_write_without_a_store() {
+    use kentos_contracts::{CommandResult, EntitiesTrim, TrimBoundaries, TrimPick, Vec2};
+    use kentos_native_application::{ExecutionContext, entities_extend, entities_trim};
+
+    for (extend, at) in [(false, [-26.0, 12.0]), (true, [-9.0, 12.0])] {
+        let mut by_tool = bench(&[]);
+        by_tool.start(if extend { "extend" } else { "trim" });
+        by_tool.click(at[0], at[1]);
+        assert_eq!(by_tool.last_level(), Some(Level::Success), "{at:?}");
+
+        let mut by_command = bench(&[]);
+        let uid = by_command.doc.uid(Slot(1)).expect("line 1").to_string();
+        let input = EntitiesTrim {
+            picks: vec![TrimPick {
+                uid,
+                at: Vec2 {
+                    x: 487_000.0 + at[0],
+                    y: 4_420_000.0 + at[1],
+                },
+            }],
+            boundaries: Some(TrimBoundaries::All),
+            expected_revision: None,
+        };
+        let mut cx = ExecutionContext::new(&mut by_command.doc);
+        let done = if extend {
+            matches!(entities_extend::execute(&mut cx, input), CommandResult::Completed { .. })
+        } else {
+            matches!(entities_trim::execute(&mut cx, input), CommandResult::Completed { .. })
+        };
+        assert!(done, "{at:?}");
+        let all = |b: &Bench| -> Vec<Entity> { b.doc.entities().cloned().collect() };
+        assert_eq!(all(&by_tool), all(&by_command), "{at:?}");
+    }
+}
+
 #[test]
 fn extend_grows_to_the_chosen_boundaries() {
     let mut b = bench(&[]);

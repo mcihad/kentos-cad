@@ -1,0 +1,177 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "edge-commands",
+  "title": "Buda, Uzat ve Köşe yuvarla anlamsal komutlarla: önizleme komutun planı, tıklama komutun kendisi; sonuçlar araçlarınkiyle aynı",
+  "source": "docs/adr/0250 (cad.entities.trim, .extend, .fillet, .chamfer)",
+  "covers": [
+    "CADP-05"
+  ],
+  "document": "edits.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "prefs": {
+    "cursorInput": true
+  },
+  "clickTolerance": 0.125,
+  "steps": [
+    {
+      "move": [
+        -20,
+        0
+      ]
+    },
+    {
+      "run": "tool.trim",
+      "expect": {
+        "tool": "trim",
+        "options": [
+          "S"
+        ]
+      }
+    },
+    {
+      "move": [
+        -26,
+        12
+      ],
+      "note": "Önizleme cad.entities.trim'in planı: silinecek kısım kırmızı kesikli.",
+      "expect": {
+        "hover": 1
+      }
+    },
+    {
+      "shot": "buda-onizleme"
+    },
+    {
+      "click": [
+        -26,
+        12
+      ],
+      "expect": {
+        "log": "success",
+        "objects": [
+          {
+            "id": 1,
+            "kind": "line",
+            "points": [
+              [
+                -20,
+                12
+              ],
+              [
+                -8,
+                12
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "move": [
+        -9,
+        12
+      ],
+      "shift": true
+    },
+    {
+      "shot": "uzat-onizleme",
+      "note": "Shift: Uzat'ın planı, uzamış çizgi kesikli."
+    },
+    {
+      "click": [
+        -9,
+        12
+      ],
+      "shift": true,
+      "expect": {
+        "log": "success",
+        "objects": [
+          {
+            "id": 1,
+            "kind": "line",
+            "points": [
+              [
+                -20,
+                12
+              ],
+              [
+                -4,
+                12
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "shot": "buda-uzat-sonuc"
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "run": "tool.fillet",
+      "expect": {
+        "tool": "fillet",
+        "options": [
+          "K"
+        ]
+      }
+    },
+    {
+      "move": [
+        0.25,
+        4.25
+      ]
+    },
+    {
+      "click": [
+        0.25,
+        4.25
+      ],
+      "expect": {
+        "tool": "fillet",
+        "points": 0
+      }
+    },
+    {
+      "move": [
+        0.25,
+        6
+      ]
+    },
+    {
+      "shot": "kose-yuvarla-onizleme",
+      "note": "Çekilen yarıçapla cad.entities.fillet'in planı."
+    },
+    {
+      "text": "2"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "log": "success"
+      }
+    },
+    {
+      "shot": "kose-yuvarla-sonuc"
+    }
+  ]
+}

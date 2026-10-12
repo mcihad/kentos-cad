@@ -1441,6 +1441,130 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250), held together by
+        // fixtures/commands/v1/cad.entities.{trim,extend,fillet,chamfer}.json; the desktop's alone while the web is paused.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_TRIM.into(),
+            version: crate::CAD_ENTITIES_TRIM_VERSION,
+            title: "Nesneleri buda".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesneleri tıklandıkları yerde sınırlarına kadar budar; tek geri alma adımı “Buda”. \
+                      Her seçim (picks) bir nesne ve onun üstünde ya da yakınında bir noktadır: o noktanın iki yanındaki sınırların arasındaki parça kalkar. Aynı nesnenin seçimleri sırayla, önceki seçimlerin bıraktığı parçalar üstünde işlenir (Çit). \
+                      boundaries sınırları söyler: all (varsayılan; bütün görünen nesneler: görünür katmanda, katman süzgecinden geçen), area (köşeleri verilen dikdörtgene değen görünen nesneler; aracın görünümü) ya da objects (verilen nesneler, Sınır seç). Nesne kendini sınırlamaz; her nesne komuttan önceki çizimle sınırlanır. \
+                      Nesnenin yerini kalan ilk parça alır, öbür parçalar ondan yeni nesnelerdir; tek parça kalırsa özellikleri korunur (kapalı alan değilse). Adalı alan budanmaz. \
+                      Bir şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir şey yapamazsa hiçbir şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur: Buda aracı, Python ve ajan aynı isteğe aynı parçaları alır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesTrim>(),
+            output: schema::<crate::EntitiesTrimmed>(),
+            plan: Some(schema::<crate::EntitiesTrimPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Bir duvar çizgisini iki kesen arasında buda".into(),
+                    input: json!({ "picks": [{ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "at": { "x": 500005.0, "y": 4400000.0 } }] }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003"], "removed": [], "revision": "52" })),
+                },
+                CommandExample {
+                    title: "Yalnız seçilen sınırlarla, görünümün dikdörtgeninde değil".into(),
+                    input: json!({ "picks": [{ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "at": { "x": 500005.0, "y": 4400000.0 } }], "boundaries": { "kind": "objects", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"] } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_EXTEND.into(),
+            version: crate::CAD_ENTITIES_EXTEND_VERSION,
+            title: "Nesneleri uzat".into(),
+            summary: "Kalıcı kimlikleriyle verilen açık çizgileri, çoklu çizgileri ve yayları tıklanan yere yakın uçlarından ilk sınıra kadar uzatır; tek geri alma adımı “Uzat”. \
+                      Seçimler ve sınırlar cad.entities.trim'deki gibidir; aynı nesnenin iki seçimi iki ucunu uzatabilir, bir uç bir kez uzar. Uç hiçbir sınıra ulaşmıyorsa seçim extend_failed uyarısıyla atlanır; hiçbir uç uzamazsa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesTrim>(),
+            output: schema::<crate::EntitiesTrimmed>(),
+            plan: Some(schema::<crate::EntitiesTrimPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Bir çizginin sağ ucunu ilk sınıra uzat".into(),
+                    input: json!({ "picks": [{ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "at": { "x": 500009.0, "y": 4400000.0 } }] }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": [], "removed": [], "revision": "53" })),
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_FILLET.into(),
+            version: crate::CAD_ENTITIES_FILLET_VERSION,
+            title: "Köşe yuvarla".into(),
+            summary: "Bir köşeyi verilen yarıçapla yuvarlar; tek geri alma adımı “Köşe yuvarla”. \
+                      corner köşeyi söyler: vertex (çoklu çizginin ya da alanın düz kenarlar arasındaki köşesi, kimliği ve köşe sırası), lines (iki çizgi, her biri tıklandığı tarafı korur) ya da all (verilen çoklu çizgi ve alanların bütün köşeleri; sığmayan köşe atlanır ve sayılır). \
+                      trim (Kırp, varsayılan açık) kenarları yaya kadar kırpar; iki çizginin yayı ilk çizgiden yeni nesnedir. Kırp kapalıyken kenarlar kalır, yalnız yay eklenir. Sıfır yarıçap iki çizgiyi buluştukları noktada birleştirir. \
+                      Hesap paylaşılan geometri çekirdeğinindir; araç, Python ve ajan aynı köşeyi aynı yarıçapla aynı biçimde yuvarlar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesFillet>(),
+            output: schema::<crate::EntitiesCornered>(),
+            plan: Some(schema::<crate::EntitiesCornerPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Bir parselin üçüncü köşesini 2 m yarıçapla yuvarla".into(),
+                    input: json!({ "corner": { "kind": "vertex", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "index": 2 }, "radius": 2.0 }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": [], "done": 1, "skipped": 0, "revision": "54" })),
+                },
+                CommandExample {
+                    title: "İki çizgiyi 1 m yarıçapla birleştir".into(),
+                    input: json!({ "corner": { "kind": "lines", "first": { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "at": { "x": 500004.0, "y": 4400000.0 } }, "second": { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002", "at": { "x": 500010.0, "y": 4400004.0 } } }, "radius": 1.0 }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_CHAMFER.into(),
+            version: crate::CAD_ENTITIES_CHAMFER_VERSION,
+            title: "Pah kır".into(),
+            summary: "Bir köşeyi pah kırar: ilk kenar boyunca distance, öbürü boyunca second (verilmezse aynı) metre; tek geri alma adımı “Pah”. \
+                      corner, trim ve all cad.entities.fillet'teki gibidir; iki çizginin pahı ilk çizgiden yeni bir çizgidir. İki mesafe de sıfırsa iki çizgi buluştukları noktada birleşir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesChamfer>(),
+            output: schema::<crate::EntitiesCornered>(),
+            plan: Some(schema::<crate::EntitiesCornerPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Bir alanın bütün köşelerine 0,5 m pah".into(),
+                    input: json!({ "corner": { "kind": "all", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"] }, "distance": 0.5 }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": [], "done": 4, "skipped": 0, "revision": "55" })),
+                },
+            ],
+        },
         // The drawing tools' command for objects without one of their own (docs/adr/0057),
         // held together by fixtures/commands/v1/cad.entities.create.json.
         CommandDescriptor {
@@ -2629,6 +2753,15 @@ mod tests {
                         serde_json::from_value::<crate::DimensionsReassociate>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {
+                        serde_json::from_value::<crate::EntitiesTrim>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_FILLET => {
+                        serde_json::from_value::<crate::EntitiesFillet>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_CHAMFER => {
+                        serde_json::from_value::<crate::EntitiesChamfer>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_CREATE => {
                         serde_json::from_value::<crate::EntitiesCreate>(e.input.clone()).map(|_| ())
                     }
@@ -2738,6 +2871,14 @@ mod tests {
                         }
                         crate::CAD_DIMENSIONS_REASSOCIATE => {
                             serde_json::from_value::<crate::DimensionsReassociated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {
+                            serde_json::from_value::<crate::EntitiesTrimmed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_FILLET | crate::CAD_ENTITIES_CHAMFER => {
+                            serde_json::from_value::<crate::EntitiesCornered>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_CREATE => {

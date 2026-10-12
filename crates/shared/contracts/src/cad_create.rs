@@ -185,8 +185,18 @@ pub struct NewObject {
 /// text's object, in order: no object of the drawing has that id), then
 /// `invalid_attribute` and `attribute_required` (each object's attributes by
 /// the layer's fields, objects in order, names in theirs, at
-/// `objects[i].attrs.<name>`; docs/adr/0199 §2); on the desktop also
-/// `slots_exhausted`. Warning: `layer_hidden` (they are written all the same).
+/// `objects[i].attrs.<name>`; docs/adr/0199 §2), then an associative
+/// dimension's places (docs/adr/0250): `entity_not_found` (a live
+/// reference's object, at `objects[i].geometry.refs.<point>.uid`),
+/// `no_such_place` (a place its object has not, at `….place`); on the
+/// desktop also `slots_exhausted`. Warning: `layer_hidden` (they are written
+/// all the same). A dimension's references must hold (`invalid_refs`,
+/// with the geometry's checks).
+///
+/// An associative dimension (`refs`, docs/adr/0249) is made by its places:
+/// each point with a live reference is written where its place is now,
+/// whatever coordinates were given for it; a broken reference's point is
+/// written as given.
 ///
 /// A layer with fields (docs/adr/0199 §2): a value given to a field's key is
 /// written in its canonical text; a value that does not keep the field's

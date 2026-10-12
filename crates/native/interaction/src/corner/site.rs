@@ -6,9 +6,8 @@
 use kentos_contracts::Entity;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::ops::fillet::Seg;
 use kentos_geometry_core::tools::editing::{
-    CornerGeom, CornerSite, corner_near, lines_corner_at, path_corner_at, shared_corner,
+    CornerSite, corner_near, lines_corner_at, shared_corner,
 };
 use kentos_native_application::geometry::shape;
 
@@ -19,34 +18,7 @@ use crate::tool::{Context, Pointer};
 /// How near the cursor a corner is found, logical pixels (the web's `HOVER_PX`).
 const HOVER_PX: f64 = 12.0;
 
-/// Where the corner is, in the drawing.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) enum Site {
-    /// Vertex `vertex` of the path at `slot`.
-    Vertex { slot: Slot, vertex: usize },
-    /// Two lines; each keeps the side of its pick point.
-    Lines {
-        first: Slot,
-        pick1: Vec2,
-        second: Slot,
-        pick2: Vec2,
-    },
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct Corner {
-    pub site: Site,
-    pub geom: CornerGeom,
-}
-
-impl Corner {
-    pub fn slots(&self) -> Vec<Slot> {
-        match self.site {
-            Site::Vertex { slot, .. } => vec![slot],
-            Site::Lines { first, second, .. } => vec![first, second],
-        }
-    }
-}
+pub(super) use kentos_native_application::corner::{Corner, Site, line_of, path_corner};
 
 /// The kinds the corner tools take, off locked layers.
 pub(super) fn editable(e: &Entity, doc: &Document) -> bool {
@@ -54,30 +26,6 @@ pub(super) fn editable(e: &Entity, doc: &Document) -> bool {
         e,
         Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
     ) && edge::unlocked(e, doc)
-}
-
-pub(super) fn line_of(e: &Entity) -> Option<Seg> {
-    match e {
-        Entity::Line(l) => Some(Seg {
-            a: Vec2::new(l.a.x, l.a.y),
-            b: Vec2::new(l.b.x, l.b.y),
-        }),
-        _ => None,
-    }
-}
-
-/// A path's corner at vertex `i` (the web's `pathCorner`), an area's
-/// vertices counted part after part (docs/adr/0143): none at an open path's
-/// end, beside an arc or on a straight run (the core's `path_corner_at`).
-pub(super) fn path_corner(slot: Slot, e: &Entity, i: usize) -> Option<Corner> {
-    if !matches!(e, Entity::Polyline(_) | Entity::Polygon(_)) {
-        return None;
-    }
-    let geom = path_corner_at(&shape(e), i)?;
-    Some(Corner {
-        site: Site::Vertex { slot, vertex: i },
-        geom,
-    })
 }
 
 /// The nearest corner within reach of the cursor: path vertices and

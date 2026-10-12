@@ -6676,14 +6676,14 @@
    "id": "tool.chamfer",
    "kind": "tool",
    "title": "Pah",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.chamfer"
    ],
-   "operation": "chamfer",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.chamfer",
+   "mcp": "cad.entities.chamfer",
+   "note": "Köşe, iki mesafe ve Kırp komuta verilir (ADR 0250).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -6692,14 +6692,14 @@
    "id": "tool.chamferAll",
    "kind": "tool",
    "title": "Tüm köşelere pah",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.chamfer"
    ],
-   "operation": "chamfer",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.chamfer",
+   "mcp": "cad.entities.chamfer",
+   "note": "Nesneler `all` köşesiyle ve iki mesafe komuta verilir (ADR 0250).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -7234,14 +7234,14 @@
    "id": "tool.extend",
    "kind": "tool",
    "title": "Uzat",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.extend"
    ],
-   "operation": "extend",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.extend",
+   "mcp": "cad.entities.extend",
+   "note": "Seçimler ve sınırlar komuta verilir; her uç bir kez (ADR 0250).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -7250,13 +7250,13 @@
    "id": "tool.extend#Tıklayarak",
    "kind": "method",
    "title": "Uzat: Tıklayarak",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.extend"
    ],
-   "operation": "extend",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.entities.extend",
+   "mcp": "cad.entities.extend",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -7266,13 +7266,13 @@
    "id": "tool.extend#Çit",
    "kind": "method",
    "title": "Uzat: Çit",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.extend"
    ],
-   "operation": "extend",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.entities.extend",
+   "mcp": "cad.entities.extend",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -7282,14 +7282,14 @@
    "id": "tool.fillet",
    "kind": "tool",
    "title": "Köşe yuvarla",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.fillet"
    ],
-   "operation": "fillet",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.fillet",
+   "mcp": "cad.entities.fillet",
+   "note": "Köşe (yolun köşesi ya da iki çizgi), yarıçap ve Kırp komuta verilir (ADR 0250).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 3
@@ -7298,14 +7298,14 @@
    "id": "tool.filletAll",
    "kind": "tool",
    "title": "Tüm köşeleri yuvarla",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.fillet"
    ],
-   "operation": "fillet",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.fillet",
+   "mcp": "cad.entities.fillet",
+   "note": "Nesneler `all` köşesiyle ve yarıçap komuta verilir (ADR 0250).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -8948,14 +8948,14 @@
    "id": "tool.trim",
    "kind": "tool",
    "title": "Buda",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.trim"
    ],
-   "operation": "trim",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.trim",
+   "mcp": "cad.entities.trim",
+   "note": "Seçimler (nesne ve tıklanan yer) ve sınırlar (görünümün dikdörtgeni ya da Sınır seç) komuta verilir (ADR 0250).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -8964,13 +8964,13 @@
    "id": "tool.trim#Tıklayarak",
    "kind": "method",
    "title": "Buda: Tıklayarak",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.trim"
    ],
-   "operation": "trim",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.entities.trim",
+   "mcp": "cad.entities.trim",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -8980,13 +8980,13 @@
    "id": "tool.trim#Çit",
    "kind": "method",
    "title": "Buda: Çit",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.trim"
    ],
-   "operation": "trim",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.entities.trim",
+   "mcp": "cad.entities.trim",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",

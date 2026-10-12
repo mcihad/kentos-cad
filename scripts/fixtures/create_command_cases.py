@@ -1729,6 +1729,49 @@ cases.append({
     ],
 })
 
+# ── An associative dimension made by its places (docs/adr/0249, 0250) ──
+
+def bound_dimension(a_place, b_place, a=P(0, 0), b=P(0, 0), broken=None):
+    refs = {"a": {"uid": uid(1), "place": a_place}, "b": {"uid": uid(1), "place": b_place}}
+    if broken:
+        refs["b"]["broken"] = broken
+    return {"kind": "dimension", "a": a, "b": b, "offset": 2, "height": 0.5, "refs": refs}
+
+
+MADE_BOUND = O(bound_dimension({"kind": "start"}, {"kind": "end"}))
+NO_PLACE = "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor."
+ABSENT = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+cases.append({
+    "name": "İlişkili ölçü yerleriyle eklenir: bağlı noktaları verilen koordinat değil, yerlerin şimdiki noktasıdır; kopuk bağın noktası verildiği gibi",
+    "note": "ADR 0250: Python ve ajan ölçüyü nesnenin yerleriyle verir. Çizgi 1'in başı (487000, 4420000), sonu (487020, 4420000).",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [MADE_BOUND]}, "result": done([3]),
+         "expect": {"ids": IDS + [3], "entities": {"3": {**made(MADE_BOUND, 3), "a": P(487000, 4420000), "b": P(487020, 4420000)}},
+                    "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(bound_dimension({"kind": "start"}, {"kind": "end"}, b=P(487030, 4420000), broken="vertex_gone"))]},
+         "result": done([4]), "note": "b'nin bağı kopuk: noktası verildiği gibi kalır; a başa oturur. Yuva yeniden verilmez: 4.",
+         "expect": {"entities": {"4": {**made(O(bound_dimension({"kind": "start"}, {"kind": "end"}, b=P(487030, 4420000), broken="vertex_gone")), 4),
+                                       "a": P(487000, 4420000)}}}},
+    ],
+})
+cases.append({
+    "name": "İlişkili ölçünün retleri: boş başvurular invalid_refs, yeri olmayan no_such_place, nesnesi olmayan entity_not_found; hiçbir şey yazılmaz",
+    "note": "ADR 0249 §3, 0250. Yeri ve nesneyi geometrinin kurallarından ve katmandan sonra denetler.",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({"kind": "dimension", "a": P(0, 0), "b": P(1, 0), "offset": 2, "height": 0.5, "refs": {}})]},
+         "result": failed("invalid_refs", "Ölçünün başvuruları boş: hiç başvuru yoksa alan yazılmaz.", "objects[0].geometry.refs"),
+         "expect": {"ids": IDS, "revision": "same", "canUndo": False}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(bound_dimension({"kind": "start"}, {"kind": "center"}))]},
+         "result": failed("no_such_place", NO_PLACE, "objects[0].geometry.refs.b.place"), "expect": {"ids": IDS, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({"kind": "dimension", "a": P(0, 0), "b": P(1, 0), "offset": 2, "height": 0.5,
+                                                                    "refs": {"a": {"uid": ABSENT, "place": {"kind": "start"}}}})]},
+         "result": failed("entity_not_found", f"“{ABSENT}” kimlikli nesne çizimde yok: ölçünün noktası onun yerine bağlanamaz. Çizimdeki bir nesnenin kimliğini verin.",
+                          "objects[0].geometry.refs.a.uid"),
+         "expect": {"ids": IDS, "revision": "same"}},
+    ],
+})
+
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",

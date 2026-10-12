@@ -57,7 +57,7 @@ pub fn plan(
     match check(cx.doc, input) {
         Ok(checked) => CommandResult::Completed {
             output: EntitiesCreatePlan {
-                entities: entities(input, &checked.attrs),
+                entities: entities(input, &checked.attrs, &checked.placed),
                 revision: cx.doc.revision().to_string(),
             },
             warnings: checked.warnings,
@@ -73,13 +73,17 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesCreate,
 ) -> CommandResult<EntitiesCreated> {
-    let Checked { warnings, attrs } = match check(cx.doc, &input) {
+    let Checked {
+        warnings,
+        attrs,
+        placed,
+    } = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
     let slots = match cx
         .doc
-        .add_many(entities(&input, &attrs), label(input.operation))
+        .add_many(entities(&input, &attrs, &placed), label(input.operation))
     {
         Ok(slots) => slots,
         Err(full) => {
@@ -162,6 +166,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
 struct Checked {
     warnings: Vec<CommandWarning>,
     attrs: Vec<BTreeMap<String, String>>,
+    /// Each object's measured points read from the places its live references name (docs/adr/0250).
+    placed: Vec<Vec<(&'static str, kentos_contracts::Vec2)>>,
 }
 
 /// The checks in the contract's order: why nothing may be written, or what
@@ -250,7 +256,56 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
         }
         attrs.push(own);
     }
-    Ok(Checked { warnings, attrs })
+    let placed = placed_points(doc, input)?;
+    Ok(Checked {
+        warnings,
+        attrs,
+        placed,
+    })
+}
+
+/// Every object's measured points read from the places its live references name (docs/adr/0249 §1,
+/// 0250): an associative dimension is made by its places, its points following from them, so a script
+/// or an agent gives the places and not the coordinates. A reference to an object the drawing lacks is
+/// `entity_not_found`, to a place its object has not `no_such_place`; a broken reference's point is as given.
+fn placed_points(
+    doc: &Document,
+    input: &EntitiesCreate,
+) -> Result<Vec<Vec<(&'static str, kentos_contracts::Vec2)>>, Stop> {
+    use kentos_geometry_core::ops::subref::point;
+    let mut out = Vec::with_capacity(input.objects.len());
+    for (i, object) in input.objects.iter().enumerate() {
+        let mut own = Vec::new();
+        if let EntityGeometry::Dimension {
+            refs: Some(refs), ..
+        } = &object.geometry
+        {
+            for (name, r) in refs.each().filter(|(_, r)| r.live()) {
+                let at = format!("objects[{i}].geometry.refs.{name}");
+                let uid = Uuid::from_bytes(r.uid.0);
+                let Some(e) = doc.slot_of(uid).and_then(|s| doc.get(s)) else {
+                    return Err(Stop::Failed(error(
+                        codes::ENTITY_NOT_FOUND,
+                        format!(
+                            "“{uid}” kimlikli nesne çizimde yok: ölçünün noktası onun yerine bağlanamaz. Çizimdeki bir nesnenin kimliğini verin."
+                        ),
+                        Some(format!("{at}.uid")),
+                    )));
+                };
+                let place = kentos_domain::dimension_ties::core_place(r.place);
+                let Some(p) = point(&crate::blocks::core_entity(e), place) else {
+                    return Err(Stop::Failed(error(
+                        codes::NO_SUCH_PLACE,
+                        "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.".into(),
+                        Some(format!("{at}.place")),
+                    )));
+                };
+                own.push((name, kentos_contracts::Vec2 { x: p.x, y: p.y }));
+            }
+        }
+        out.push(own);
+    }
+    Ok(out)
 }
 
 /// A new object's link to the object whose label it writes, when it has one
@@ -320,12 +375,17 @@ fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
 /// The objects `input` describes, as the document stores them: slot 0 (given
 /// when written), its own copies of every field, the attributes `attrs`
 /// (each object's, as the checks gave them).
-fn entities(input: &EntitiesCreate, attrs: &[BTreeMap<String, String>]) -> Vec<Entity> {
+fn entities(
+    input: &EntitiesCreate,
+    attrs: &[BTreeMap<String, String>],
+    placed: &[Vec<(&'static str, kentos_contracts::Vec2)>],
+) -> Vec<Entity> {
     input
         .objects
         .iter()
         .zip(attrs)
-        .map(|(object, attrs)| {
+        .zip(placed)
+        .map(|((object, attrs), placed)| {
             let mut entity = entity_of(
                 &object.geometry,
                 EntityBase {
@@ -340,6 +400,16 @@ fn entities(input: &EntitiesCreate, attrs: &[BTreeMap<String, String>]) -> Vec<E
                     attachments: Vec::new(),
                 },
             );
+            // An associative dimension's bound points are where their places are (docs/adr/0250).
+            if let Entity::Dimension(d) = &mut entity {
+                for (name, p) in placed {
+                    match *name {
+                        "a" => d.a = *p,
+                        "b" => d.b = *p,
+                        _ => d.c = Some(*p),
+                    }
+                }
+            }
             // A linked text knows its object (docs/adr/0175 §4).
             if let Entity::Text(text) = &mut entity {
                 text.label_of = object.label_of.as_deref().and_then(EntityId::parse);

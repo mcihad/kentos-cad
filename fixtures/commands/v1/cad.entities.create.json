@@ -749,6 +749,24 @@
         {"op": "validate", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "point", "p": {"x": 487070, "y": 4420070}}, "attrs": {"Ada": " "}}]}, "result": {"status": "failed", "error": {"code": "attribute_required", "message": "“Ada” alanı zorunlu; boş bırakılamaz.", "path": "objects[0].attrs.Ada"}}},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "point", "p": {"x": 487070, "y": 4420070}}, "attrs": {"Tarih": "31.02.2026"}}]}, "result": {"status": "failed", "error": {"code": "invalid_attribute", "message": "“Tarih” alanı tarih ister; “31.02.2026” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın.", "path": "objects[0].attrs.Tarih"}}, "expect": {"revision": "same"}}
       ]
+    },
+    {
+      "name": "İlişkili ölçü yerleriyle eklenir: bağlı noktaları verilen koordinat değil, yerlerin şimdiki noktasıdır; kopuk bağın noktası verildiği gibi",
+      "note": "ADR 0250: Python ve ajan ölçüyü nesnenin yerleriyle verir. Çizgi 1'in başı (487000, 4420000), sonu (487020, 4420000).",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "dimension", "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0}, "offset": 2, "height": 0.5, "refs": {"a": {"uid": "$uidOf:1", "place": {"kind": "start"}}, "b": {"uid": "$uidOf:1", "place": {"kind": "end"}}}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3], "entities": {"3": {"kind": "dimension", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "offset": 2, "height": 0.5, "refs": {"a": {"uid": "$uidOf:1", "place": {"kind": "start"}}, "b": {"uid": "$uidOf:1", "place": {"kind": "end"}}}, "id": 3, "layerId": "yapi", "attrs": {}}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [1, 2]}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "dimension", "a": {"x": 0, "y": 0}, "b": {"x": 487030, "y": 4420000}, "offset": 2, "height": 0.5, "refs": {"a": {"uid": "$uidOf:1", "place": {"kind": "start"}}, "b": {"uid": "$uidOf:1", "place": {"kind": "end"}, "broken": "vertex_gone"}}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:4"], "ids": [4], "revision": "$current"}, "warnings": []}, "note": "b'nin bağı kopuk: noktası verildiği gibi kalır; a başa oturur. Yuva yeniden verilmez: 4.", "expect": {"entities": {"4": {"kind": "dimension", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487030, "y": 4420000}, "offset": 2, "height": 0.5, "refs": {"a": {"uid": "$uidOf:1", "place": {"kind": "start"}}, "b": {"uid": "$uidOf:1", "place": {"kind": "end"}, "broken": "vertex_gone"}}, "id": 4, "layerId": "yapi", "attrs": {}}}}}
+      ]
+    },
+    {
+      "name": "İlişkili ölçünün retleri: boş başvurular invalid_refs, yeri olmayan no_such_place, nesnesi olmayan entity_not_found; hiçbir şey yazılmaz",
+      "note": "ADR 0249 §3, 0250. Yeri ve nesneyi geometrinin kurallarından ve katmandan sonra denetler.",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "dimension", "a": {"x": 0, "y": 0}, "b": {"x": 1, "y": 0}, "offset": 2, "height": 0.5, "refs": {}}}]}, "result": {"status": "failed", "error": {"code": "invalid_refs", "message": "Ölçünün başvuruları boş: hiç başvuru yoksa alan yazılmaz.", "path": "objects[0].geometry.refs"}}, "expect": {"ids": [1, 2], "revision": "same", "canUndo": false}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "dimension", "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0}, "offset": 2, "height": 0.5, "refs": {"a": {"uid": "$uidOf:1", "place": {"kind": "start"}}, "b": {"uid": "$uidOf:1", "place": {"kind": "center"}}}}}]}, "result": {"status": "failed", "error": {"code": "no_such_place", "message": "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.", "path": "objects[0].geometry.refs.b.place"}}, "expect": {"ids": [1, 2], "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "dimension", "a": {"x": 0, "y": 0}, "b": {"x": 1, "y": 0}, "offset": 2, "height": 0.5, "refs": {"a": {"uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "place": {"kind": "start"}}}}}]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: ölçünün noktası onun yerine bağlanamaz. Çizimdeki bir nesnenin kimliğini verin.", "path": "objects[0].geometry.refs.a.uid"}}, "expect": {"ids": [1, 2], "revision": "same"}}
+      ]
     }
   ]
 }
