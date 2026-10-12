@@ -185,6 +185,25 @@ def follow(pl, before, after):
     return {"at": pl, "point": p} if p is not None else {"broken": "no_such_place"}
 
 
+def place_at(e, snap, at):
+    """The place a snap of `snap` stood on at `at`: the first candidate (the object's order) within a nanometre."""
+    cands = []
+    if snap == "endpoint":
+        cands = [place("start"), place("end")] + [pl for pl, _ in vertices(e)]
+    elif snap == "midpoint":
+        cands = [place("mid", 0, 0, 0)] + [place("mid", pl["part"], pl["ring"], pl["index"])
+                                          for pl, _ in vertices(e) if pl["kind"] == "vertex"]
+    elif snap == "center":
+        cands = [place("center")]
+    elif snap == "node":
+        cands = [pl for pl, _ in vertices(e)]
+    for pl in cands:
+        p = point(e, pl)
+        if p is not None and abs(p["x"] - at["x"]) <= 1e-9 and abs(p["y"] - at["y"]) <= 1e-9:
+            return pl
+    return None
+
+
 # ---- the cases -------------------------------------------------------------------------------------------------
 
 def place(kind, part=None, ring_=None, index=None):
@@ -294,6 +313,20 @@ FOLLOW_CASES = [
     ("Olmayan köşe", place("vertex", 0, 0, 9), ROOM, ROOM),
 ]
 
+SNAP_CASES = [
+    ("Uç nokta: çizginin sonu", LINE, "endpoint", v(4, 0)),
+    ("Uç nokta: alanın köşesi", ROOM, "endpoint", v(4, 3)),
+    ("Uç nokta: deliğin köşesi", HOLED, "endpoint", v(4, 2)),
+    ("Uç nokta: yayın sonu", ARC, "endpoint", v(0.0, 2.0)),
+    ("Orta nokta: kapanan kenar", ROOM, "midpoint", v(0, 1.5)),
+    ("Orta nokta: çizgi", LINE, "midpoint", v(2, 0)),
+    ("Orta nokta: yaylı kenar", ARCED, "midpoint", v(1, -0.5)),
+    ("Merkez: daire", CIRCLE, "center", v(1, 1)),
+    ("Nokta: çok noktalının ikincisi", POINTS, "node", v(3, 3)),
+    ("Yakın: yer değil", LINE, "nearest", v(1, 0)),
+    ("Uç nokta ama orada köşe yok", ROOM, "endpoint", v(2, 0)),
+]
+
 TRIG = {"Yayın başı", "Yayın sonu", "Elipsin başı", "Elipsin sonu", "Budanan yayın başı yeni başında", "Elipsin sonu"}
 
 
@@ -305,12 +338,14 @@ def build():
     for name, pl, before, after in FOLLOW_CASES:
         follows.append({"name": name, "place": pl, "before": before, "after": after,
                         "expect": follow(pl, before, after), "exact": name not in TRIG})
+    snaps = [{"name": n, "entity": e, "snap": s, "at": at, "place": place_at(e, s, at)} for n, e, s, at in SNAP_CASES]
     return {
         "format": "kentos.subref-cases",
         "version": 1,
         "source": "scripts/fixtures/subref_cases.py (docs/adr/0249)",
         "points": points,
         "follows": follows,
+        "snaps": snaps,
     }
 
 
@@ -323,7 +358,7 @@ def main():
         if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
             print(f"{OUT.relative_to(ROOT)} güncel değil", file=sys.stderr)
             return 1
-        print(f"alt nesne başvuruları tutarlı: {len(build()['points'])} nokta, {len(build()['follows'])} izleme durumu")
+        print(f"alt nesne başvuruları tutarlı: {len(build()['points'])} nokta, {len(build()['follows'])} izleme, {len(build()['snaps'])} kenet durumu")
         return 0
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text, encoding="utf-8")

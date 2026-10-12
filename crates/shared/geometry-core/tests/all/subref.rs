@@ -81,3 +81,27 @@ fn every_place_follows_its_object_as_the_reference_says() {
     // Every reason is met.
     assert!(broken >= 8, "{broken}");
 }
+
+#[test]
+fn a_snap_names_the_place_the_reference_names() {
+    use kentos_geometry_core::ops::subref::place_at;
+    use kentos_geometry_core::store::snap::SnapKind;
+    let cases: Value = serde_json::from_str(CASES).expect("the cases");
+    let snaps = cases["snaps"].as_array().expect("snaps");
+    assert!(snaps.len() >= 10);
+    for c in snaps {
+        let name = c["name"].as_str().unwrap();
+        let kind = match c["snap"].as_str().unwrap() {
+            "endpoint" => SnapKind::Endpoint,
+            "midpoint" => SnapKind::Midpoint,
+            "center" => SnapKind::Center,
+            "node" => SnapKind::Node,
+            "nearest" => SnapKind::Nearest,
+            other => panic!("{other}"),
+        };
+        let at = Vec2::new(c["at"]["x"].as_f64().unwrap(), c["at"]["y"].as_f64().unwrap());
+        let got = place_at(&entity(&c["entity"]), kind, at);
+        let want = (!c["place"].is_null()).then(|| place(&c["place"]));
+        assert_eq!(got, want, "{name}");
+    }
+}

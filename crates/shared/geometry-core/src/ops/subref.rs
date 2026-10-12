@@ -28,6 +28,7 @@ use crate::geom::arc::{ArcGeom, arc_end, arc_start};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_at, segment_mid};
 use crate::geom::ellipse::{EllipseGeom, ellipse_point};
+use crate::store::snap::SnapKind;
 use crate::vec2::Vec2;
 
 /// A place on an object.
@@ -43,9 +44,17 @@ pub enum Place {
     Center,
     /// A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the
     /// outer ring, `h` its `h`th hole; the vertex's index in the ring.
-    Vertex { part: usize, ring: usize, index: usize },
+    Vertex {
+        part: usize,
+        ring: usize,
+        index: usize,
+    },
     /// The middle of a line (all zero) or of a path's edge from vertex `index` to the next.
-    Mid { part: usize, ring: usize, index: usize },
+    Mid {
+        part: usize,
+        ring: usize,
+        index: usize,
+    },
 }
 
 /// Why a place no longer is on its object.
@@ -103,12 +112,24 @@ type PathParts<'a> = (
 
 fn ring_of<'a>(shape: &'a Shape, part: usize, ring: usize) -> Option<PathRing<'a>> {
     let (pts, bulges, holes, parts, closed): PathParts<'a> = match shape {
-        Shape::Polyline { pts, bulges, holes, parts } => {
-            (pts, bulges.as_deref(), holes.as_ref(), parts.as_ref(), false)
-        }
-        Shape::Polygon { pts, bulges, holes, parts } => {
-            (pts, bulges.as_deref(), holes.as_ref(), parts.as_ref(), true)
-        }
+        Shape::Polyline {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => (
+            pts,
+            bulges.as_deref(),
+            holes.as_ref(),
+            parts.as_ref(),
+            false,
+        ),
+        Shape::Polygon {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => (pts, bulges.as_deref(), holes.as_ref(), parts.as_ref(), true),
         _ => return None,
     };
     let (pts, bulges, holes) = if part == 0 {
@@ -118,10 +139,18 @@ fn ring_of<'a>(shape: &'a Shape, part: usize, ring: usize) -> Option<PathRing<'a
         (p.pts.as_slice(), p.bulges.as_deref(), p.holes.as_ref())
     };
     if ring == 0 {
-        return Some(PathRing { pts, bulges, closed });
+        return Some(PathRing {
+            pts,
+            bulges,
+            closed,
+        });
     }
     let h = holes?.get(ring - 1)?;
-    Some(PathRing { pts: &h.pts, bulges: h.bulges.as_deref(), closed: true })
+    Some(PathRing {
+        pts: &h.pts,
+        bulges: h.bulges.as_deref(),
+        closed: true,
+    })
 }
 
 /// The object's family: a place follows only within one.
@@ -146,19 +175,52 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
         }
         (Shape::Line { a, .. }, Place::Start) => Some(*a),
         (Shape::Line { b, .. }, Place::End) => Some(*b),
-        (Shape::Line { a, b }, Place::Mid { part: 0, ring: 0, index: 0 }) => {
-            Some(Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0))
-        }
-        (Shape::Circle { c, .. } | Shape::Arc { c, .. } | Shape::Ellipse { c, .. }, Place::Center) => {
-            Some(*c)
-        }
+        (
+            Shape::Line { a, b },
+            Place::Mid {
+                part: 0,
+                ring: 0,
+                index: 0,
+            },
+        ) => Some(Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0)),
+        (
+            Shape::Circle { c, .. } | Shape::Arc { c, .. } | Shape::Ellipse { c, .. },
+            Place::Center,
+        ) => Some(*c),
         (Shape::Arc { c, r, a0, a1 }, Place::Start | Place::End) => {
-            let g = ArcGeom { c: *c, r: *r, a0: *a0, a1: *a1 };
-            Some(if place == Place::Start { arc_start(&g) } else { arc_end(&g) })
+            let g = ArcGeom {
+                c: *c,
+                r: *r,
+                a0: *a0,
+                a1: *a1,
+            };
+            Some(if place == Place::Start {
+                arc_start(&g)
+            } else {
+                arc_end(&g)
+            })
         }
-        (Shape::Ellipse { c, major, ratio, t0, t1 }, Place::Start | Place::End) => {
-            let g = EllipseGeom { c: *c, major: *major, ratio: *ratio, t0: *t0, t1: *t1 };
-            Some(ellipse_point(&g, if place == Place::Start { *t0 } else { *t1 }))
+        (
+            Shape::Ellipse {
+                c,
+                major,
+                ratio,
+                t0,
+                t1,
+            },
+            Place::Start | Place::End,
+        ) => {
+            let g = EllipseGeom {
+                c: *c,
+                major: *major,
+                ratio: *ratio,
+                t0: *t0,
+                t1: *t1,
+            };
+            Some(ellipse_point(
+                &g,
+                if place == Place::Start { *t0 } else { *t1 },
+            ))
         }
         (_, Place::Vertex { part, ring, index }) => {
             ring_of(&e.shape, part, ring)?.pts.get(index).copied()
@@ -273,8 +335,18 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
             };
             let n = r.pts.len();
             let (a, b) = (r.pts[index], r.pts[(index + 1) % n]);
-            let (Ok(Place::Vertex { part: pa, ring: ra, index: ia }), Ok(Place::Vertex { part: pb, ring: rb, index: ib })) =
-                (found(a), found(b))
+            let (
+                Ok(Place::Vertex {
+                    part: pa,
+                    ring: ra,
+                    index: ia,
+                }),
+                Ok(Place::Vertex {
+                    part: pb,
+                    ring: rb,
+                    index: ib,
+                }),
+            ) = (found(a), found(b))
             else {
                 return Followed::Broken(match (found(a), found(b)) {
                     (Err(Reason::Ambiguous), _) | (_, Err(Reason::Ambiguous)) => Reason::Ambiguous,
@@ -285,11 +357,23 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
                 return Followed::Broken(Reason::NoSuchPlace);
             };
             let m = nr.pts.len();
-            let next = |i: usize| if i + 1 < m { Some(i + 1) } else if nr.closed { Some(0) } else { None };
+            let next = |i: usize| {
+                if i + 1 < m {
+                    Some(i + 1)
+                } else if nr.closed {
+                    Some(0)
+                } else {
+                    None
+                }
+            };
             if (pa, ra) != (pb, rb) || next(ia) != Some(ib) {
                 return Followed::Broken(Reason::VertexGone);
             }
-            let to = Place::Mid { part: pa, ring: ra, index: ia };
+            let to = Place::Mid {
+                part: pa,
+                ring: ra,
+                index: ia,
+            };
             match point(after, to) {
                 Some(p) => Followed::At(to, p),
                 None => Followed::Broken(Reason::NoSuchPlace),
@@ -300,4 +384,39 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
             None => Followed::Broken(Reason::NoSuchPlace),
         },
     }
+}
+
+/// The place on `e` a snap of `kind` stood on at `at` (an associative dimension's point, docs/adr/0249 §3): an
+/// end or a vertex for Uç nokta, an edge's middle for Orta nokta, the centre for Merkez, a point for Nokta; the
+/// first (in the object's order) whose point is `at`, within a nanometre. None for another snap (Yakın, Kesişim …)
+/// or when no place is there.
+pub fn place_at(e: &Entity, kind: SnapKind, at: Vec2) -> Option<Place> {
+    let mut candidates: Vec<Place> = Vec::new();
+    match kind {
+        SnapKind::Endpoint => {
+            candidates.extend([Place::Start, Place::End]);
+            candidates.extend(vertex_places(&e.shape).into_iter().map(|(p, _)| p));
+        }
+        SnapKind::Midpoint => {
+            candidates.push(Place::Mid {
+                part: 0,
+                ring: 0,
+                index: 0,
+            });
+            for (p, _) in vertex_places(&e.shape) {
+                if let Place::Vertex { part, ring, index } = p {
+                    candidates.push(Place::Mid { part, ring, index });
+                }
+            }
+        }
+        SnapKind::Center => candidates.push(Place::Center),
+        SnapKind::Node => {
+            candidates.extend(vertex_places(&e.shape).into_iter().map(|(p, _)| p));
+        }
+        _ => return None,
+    }
+    const NEAR: f64 = 1e-9;
+    candidates.into_iter().find(|&p| {
+        point(e, p).is_some_and(|q| (q.x - at.x).abs() <= NEAR && (q.y - at.y).abs() <= NEAR)
+    })
 }

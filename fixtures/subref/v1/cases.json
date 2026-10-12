@@ -1923,5 +1923,339 @@
    },
    "exact": true
   }
+ ],
+ "snaps": [
+  {
+   "name": "Uç nokta: çizginin sonu",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 4,
+    "y": 0
+   },
+   "place": {
+    "kind": "end"
+   }
+  },
+  {
+   "name": "Uç nokta: alanın köşesi",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 4,
+    "y": 3
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 0,
+    "index": 2
+   }
+  },
+  {
+   "name": "Uç nokta: deliğin köşesi",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 2,
+        "y": 2
+       },
+       {
+        "x": 2,
+        "y": 4
+       },
+       {
+        "x": 4,
+        "y": 4
+       },
+       {
+        "x": 4,
+        "y": 2
+       }
+      ]
+     }
+    ]
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 4,
+    "y": 2
+   },
+   "place": {
+    "kind": "vertex",
+    "part": 0,
+    "ring": 1,
+    "index": 3
+   }
+  },
+  {
+   "name": "Uç nokta: yayın sonu",
+   "entity": {
+    "kind": "arc",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 2,
+    "a0": 0.0,
+    "a1": 1.5707963267948966
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 0.0,
+    "y": 2.0
+   },
+   "place": {
+    "kind": "end"
+   }
+  },
+  {
+   "name": "Orta nokta: kapanan kenar",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "snap": "midpoint",
+   "at": {
+    "x": 0,
+    "y": 1.5
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 3
+   }
+  },
+  {
+   "name": "Orta nokta: çizgi",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "snap": "midpoint",
+   "at": {
+    "x": 2,
+    "y": 0
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   }
+  },
+  {
+   "name": "Orta nokta: yaylı kenar",
+   "entity": {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 2,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     0.5,
+     0.0
+    ]
+   },
+   "snap": "midpoint",
+   "at": {
+    "x": 1,
+    "y": -0.5
+   },
+   "place": {
+    "kind": "mid",
+    "part": 0,
+    "ring": 0,
+    "index": 0
+   }
+  },
+  {
+   "name": "Merkez: daire",
+   "entity": {
+    "kind": "circle",
+    "c": {
+     "x": 1,
+     "y": 1
+    },
+    "r": 2
+   },
+   "snap": "center",
+   "at": {
+    "x": 1,
+    "y": 1
+   },
+   "place": {
+    "kind": "center"
+   }
+  },
+  {
+   "name": "Nokta: çok noktalının ikincisi",
+   "entity": {
+    "kind": "point",
+    "p": {
+     "x": 1,
+     "y": 1
+    },
+    "parts": [
+     {
+      "p": {
+       "x": 2,
+       "y": 2
+      }
+     },
+     {
+      "p": {
+       "x": 3,
+       "y": 3
+      }
+     }
+    ]
+   },
+   "snap": "node",
+   "at": {
+    "x": 3,
+    "y": 3
+   },
+   "place": {
+    "kind": "node",
+    "part": 2
+   }
+  },
+  {
+   "name": "Yakın: yer değil",
+   "entity": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 4,
+     "y": 0
+    }
+   },
+   "snap": "nearest",
+   "at": {
+    "x": 1,
+    "y": 0
+   },
+   "place": null
+  },
+  {
+   "name": "Uç nokta ama orada köşe yok",
+   "entity": {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 0,
+      "y": 3
+     }
+    ]
+   },
+   "snap": "endpoint",
+   "at": {
+    "x": 2,
+    "y": 0
+   },
+   "place": null
+  }
  ]
 }

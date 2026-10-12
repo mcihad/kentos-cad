@@ -61,7 +61,8 @@ pub(crate) struct Store {
 }
 
 /// The objects a hatch's region follows: its closed object, islands and
-/// cutouts (docs/adr/0186 §6).
+/// cutouts (docs/adr/0186 §6); the objects an associative dimension's points
+/// follow while their references hold (docs/adr/0249 §3).
 fn ties_of(stored: &Stored) -> Vec<Uuid> {
     match &*stored.entity {
         Entity::Hatch(h) => h.assoc.as_ref().map_or_else(Vec::new, |a| {
@@ -70,6 +71,15 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
                 .chain(&a.cutouts)
                 .map(|id| Uuid::from_bytes(id.0))
                 .collect()
+        }),
+        Entity::Dimension(d) => d.refs.as_ref().map_or_else(Vec::new, |r| {
+            let mut of: Vec<Uuid> = r
+                .each()
+                .filter(|(_, s)| s.live())
+                .map(|(_, s)| Uuid::from_bytes(s.uid.0))
+                .collect();
+            of.dedup();
+            of
         }),
         _ => Vec::new(),
     }
