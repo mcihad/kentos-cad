@@ -56,13 +56,19 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesEdit) -> CommandResul
 /// What execute would write now: the objects as they would be, and the
 /// revision to expect for exactly that; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesEdit) -> CommandResult<EntitiesEditPlan> {
-    match check(cx.doc, input) {
+    plan_in(cx.doc, input)
+}
+
+/// [`plan`] over the document alone: a tool's preview reads it without a
+/// context to write through (`cad.entities.offset`, docs/adr/0246).
+pub fn plan_in(doc: &Document, input: &EntitiesEdit) -> CommandResult<EntitiesEditPlan> {
+    match check(doc, input) {
         Ok(checked) => CommandResult::Completed {
             output: EntitiesEditPlan {
                 changed: checked.changed.into_iter().map(|c| c.entity).collect(),
                 created: checked.created,
                 removed: checked.removed.into_iter().map(|(_, uid)| uid).collect(),
-                revision: cx.doc.revision().to_string(),
+                revision: doc.revision().to_string(),
             },
             warnings: checked.warnings,
         },

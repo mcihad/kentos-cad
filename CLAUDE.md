@@ -485,6 +485,8 @@ cargo test -p kentos-native-application   # ürün komutlarının durumları mas
 python3 scripts/fixtures/transform_command_cases.py --check   # cad.entities.transform durumlarını dönüşümlerin tanımından denetle (ADR 0037; Kauçuk levha'nınkiler levhanın çekirdekle aynı işlem sırasıyla Python ikizinden, sheet_f64.py, ADR 0158)
 python3 scripts/fixtures/edit_command_cases.py --check   # cad.entities.edit durumlarını sözleşmenin kuralından denetle (ADR 0047)
 python3 scripts/fixtures/array_command_cases.py --check   # cad.entities.array durumlarını dizilerin tanımından denetle (ADR 0047)
+python3 scripts/fixtures/offset_command_cases.py --check   # cad.entities.offset durumlarını (çizgi, çoklu çizgi, alan, yay, daire, Noktadan geç, iki yana, Kaynağı sil, hedef katman, retler) ötelemenin tanımından kesirlerle denetle (ADR 0246)
+KENTOS_SHOTS_ONLY=otele-onizleme,otele-iki-yana,otele-sonuc cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Ötele'nin anlamsal komutla önizlemesi, iki yanası ve sonucu, .run/shots/arac-otele-* (ADR 0246)
 python3 scripts/fixtures/create_command_cases.py --check   # cad.entities.create durumlarını sözleşmenin kuralından denetle (ADR 0057)
 python3 scripts/fixtures/set_command_cases.py --check   # cad.entities.set durumlarını (Öznitelikler: katman, renk, sembol, öznitelik, etiket) sözleşmenin kuralından denetle (ADR 0066)
 cargo test --release -p kentos-interaction --test perf -- --ignored --nocapture   # masaüstü deposu: eşitleme, kenet ve seçme süreleri (ADR 0029)
@@ -1784,7 +1786,7 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   boşluk). `CADP-02` ([ADR 0247](docs/adr/0247-sheet-commands-on-the-desktop.md)) bitti: pafta komutlarının masaüstündeki yerleri
   `equivalents.json`'da, Ad ver yerinde (liste, ağaç, F2); `kentos-sheet-ui` masaüstü takımında. Sahibin izniyle (12 Ekim) iki paralel ajan: `CADP-03` (dal `cad-units`, ADR 0245; PR #21 birleşti: Python ve MCP'de yeni
   çizimin birimi ve sihirbazın parametreleri, cevaplarda `units`) ve `CADP-04` (dal `cad-offset`,
-  ADR 0246); ağır işler `/tmp/kentos-heavy.sh` kilidiyle sırayla. PR'leri ana ajan birleştirir; birleştirirken eşleme ve manifest
+  ADR 0246; PR #22 birleşti: `cad.entities.offset`, araç komutun planıyla); ağır işler `/tmp/kentos-heavy.sh` kilidiyle sırayla. PR'leri ana ajan birleştirir; birleştirirken eşleme ve manifest
   yeniden yazılır.
   Paralel dal `gis-37-38-42-43` (sahibin sözü, 10 Ekim: “GIS-37, 38, 42, 43 maddelerini tamamla”, “Yeni branch içinde yap bunları”;
   ADR numaraları 0237, 0238, 0242, 0243): `GIS-37` çok ölçütlü uygunluk ([ADR 0237](docs/adr/0237-multi-criteria-suitability.md)) tek

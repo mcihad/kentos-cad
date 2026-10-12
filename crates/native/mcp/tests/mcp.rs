@@ -71,6 +71,7 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         "drawing.entities",
         "cad.polygon.create",
         "cad.entities.set",
+        "cad.entities.offset",
         "cad.layers.service",
         "cad.network.define",
         "cad.addresses.define",
@@ -89,8 +90,9 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
     }
     // A map service layer's command removes a layer too (docs/adr/0208 §15), a network's its definition (0209 §11),
     // a layer's time its time and a scenario's apply its layers (0210 §11), a labelling or a pin with null (0212 §5),
-    // a renderer with null (0213 §5), address data's definition (0229 §14).
+    // a renderer with null (0213 §5), address data's definition (0229 §14), Ötele's deleteSource its sources (0246).
     for name in [
+        "cad.entities.offset",
         "cad.layers.service",
         "cad.network.define",
         "cad.addresses.define",
@@ -463,6 +465,78 @@ fn a_layers_filter_goes_through_its_tool_and_leaves_the_objects() {
     );
     let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
     assert_eq!(undone["structuredContent"]["step"], "Katman süzgeci");
+}
+
+/// Ötele by its meaning (docs/adr/0246): the line 2 of the traces' drawing
+/// moved 0.2 m west is the copy the desktop's Ötele tool writes for the same
+/// request (crates/native/interaction, tests/all/edits.rs) and Python's
+/// (python/tests/test_offset.py): x = 486979.8 from y = 4420006 to 4420018.
+#[test]
+fn an_offset_by_its_meaning_gives_the_tools_copy() {
+    let scene = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/interaction/v1/edits.kcad"
+    );
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({ "path": scene }));
+    let drawing = opened["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let page = call(
+        &mut server,
+        "drawing.entities",
+        json!({ "drawing": drawing, "kinds": ["line"], "bbox": [486979, 4420005, 486981, 4420019] }),
+    );
+    let line = page["structuredContent"]["items"]
+        .as_array()
+        .and_then(|items| items.iter().find(|i| i["entity"]["id"] == 2))
+        .and_then(|i| i["uid"].as_str())
+        .expect("the line 2")
+        .to_owned();
+    let ask_offset = |op: &str| {
+        json!({
+            "drawing": drawing,
+            "op": op,
+            "uids": [line],
+            "by": { "kind": "distance", "distance": 0.2, "side": { "x": 486977.0, "y": 4420010.0 } }
+        })
+    };
+    let planned = call(&mut server, "cad.entities.offset", ask_offset("plan"));
+    assert_eq!(planned["isError"], false, "{planned}");
+    let copy = planned["structuredContent"]["output"]["entities"][0].clone();
+    let written = call(&mut server, "cad.entities.offset", ask_offset("execute"));
+    assert_eq!(written["isError"], false, "{written}");
+    let output = &written["structuredContent"]["output"];
+    assert_eq!(output["distances"], json!([0.2]));
+    let made = output["created"][0].as_str().expect("a copy").to_owned();
+    let page = call(
+        &mut server,
+        "drawing.entities",
+        json!({ "drawing": drawing, "kinds": ["line"], "bbox": [486979.7, 4420005, 486979.9, 4420019] }),
+    );
+    let written_copy = page["structuredContent"]["items"]
+        .as_array()
+        .and_then(|items| items.iter().find(|i| i["uid"] == made.as_str()))
+        .map(|i| i["entity"].clone())
+        .expect("the copy");
+    for (end, y) in [("a", 4420006.0), ("b", 4420018.0)] {
+        assert_eq!(written_copy[end], json!({ "x": 486979.8, "y": y }), "{end}");
+        assert_eq!(copy[end], written_copy[end], "the plan is what was written");
+    }
+    let refused = call(
+        &mut server,
+        "cad.entities.offset",
+        json!({ "drawing": drawing, "uids": [line], "by": { "kind": "distance", "distance": 0.0, "side": { "x": 0.0, "y": 0.0 } } }),
+    );
+    assert_eq!(refused["isError"], true);
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "invalid_distance"
+    );
+    assert_eq!(refused["structuredContent"]["error"]["path"], "by.distance");
+    let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
+    assert_eq!(undone["structuredContent"]["step"], "Ötele");
 }
 
 #[test]

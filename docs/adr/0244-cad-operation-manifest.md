@@ -63,6 +63,8 @@ Elle tutulur, biçimi `kentos.catalog-operations` sürüm 1'dir:
 - `rules`: sıralı kalıplar (`view.*` → `session`, `processing.*` → `processing` …); ilk uyan geçerlidir;
 - `commands`: komut başına düzey, `via` (ürün komutları), `operation`, `python`, `mcp`, `note`. Kurallardan önce gelir;
 - `tools`: araç başına düzey, isteğe bağlı `operation`, `via`, yöntem başına düzey (`methods`), `python`, `note`.
+  Bir araç başka bir komuta geçtiyse (envanter donmuş, eski komutu söyler) `was` eskisini anar; denetim ancak o zaman çelişkiye
+  göz yumar (12 Ekim eki: Ötele, ADR 0246).
 
 **Kural:** yeni komut, araç ya da yöntem eşlemesiyle aynı commit'te gelir. Bir iş düzey değiştirdiğinde (örneğin Ötele
 `semantic` olduğunda), eşlemesi de o commit'te değişir.

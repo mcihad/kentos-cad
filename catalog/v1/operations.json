@@ -1072,8 +1072,12 @@
       "level": "semantic"
     },
     "offset": {
-      "level": "geometry",
-      "operation": "offset"
+      "level": "semantic",
+      "via": [
+        "cad.entities.offset"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Kaynaklar, mesafe ya da geçilecek nokta, taraf, iki yana ve kaynağı sil komuta verilir (ADR 0246)."
     },
     "trim": {
       "level": "geometry",

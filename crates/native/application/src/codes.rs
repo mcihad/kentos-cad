@@ -230,6 +230,15 @@ pub const UNKNOWN_NETWORK: &str = "unknown_network";
 /// A warning: a network names a layer the drawing does not have.
 pub const UNKNOWN_LAYER: &str = "unknown_layer";
 
+// ── cad.entities.offset (docs/adr/0246) ─────────────────────────────────
+
+/// An offset distance not above zero.
+pub const INVALID_DISTANCE: &str = "invalid_distance";
+/// An object of a kind that is not offset (a point, a text, a hatch …).
+pub const NOT_OFFSETTABLE: &str = "not_offsettable";
+/// A copy the core could not make (a warning), or none at all (a refusal).
+pub const OFFSET_FAILED: &str = "offset_failed";
+
 // ── cad.addresses.define (docs/adr/0229 §14) ───────────────────────────
 
 /// `set` without a locator.

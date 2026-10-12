@@ -88,6 +88,12 @@ Liste:
   `settings` beklentileri; bilinen bozulmalar: komut kataloğunda beş yeni komut (masaüstünün), `fixtures/commands/v1`'de beş dosya
   (web'in koşucusunda kaydı olmayan komut), `fixtures/layers/v1/purge.json`'un altlık durumu (servis katmanı temizlenmez:
   `model/layerPurge.ts`'in `removable`'ı), Yazı ve Ölçü stillerinin değişmeyen nesneyi yazmaması (`app/styleTables.ts`).
+- [ ] `CAD-CMD-02` (ADR 0246, 12 Ekim; plan/cad.md §24.1 madde 4): web'de gerekenler: `cad.entities.offset` işleyicisi `product/`'ta
+  (web'in `edit` işleyicisine `offset` işlemiyle yazan, çekirdeğin `offsetEntity` ve `offsetThroughDistance`'ı WASM'dan; masaüstünün
+  `offset.rs`'i gibi), web'in Ötele aracı (`tools/edgeTools.ts`'in `OffsetTool`'u) önizlemede komutun planını, tıklamada yazmasını
+  kullanır; kayıt (`product/registry.ts`) ve katalogda `hosts`'a Web; oynatılacak iz `edge-tools.json` (değişmedi); ortak durumlar
+  `fixtures/commands/v1/cad.entities.offset.json` web'in koşucusunda; bilinen bozulmalar: `product/fixtures.test.ts` bu dosyanın
+  komutunu web'de bulamaz (“web'de çalışmıyor”); komut kataloğunda `cad.entities.offset` (yalnız `Desktop` işaretli).
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
@@ -1001,8 +1007,11 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   srid, il, çizim birimi, ölçek, yazı tipi; sihirbazın sözleriyle retler); başsız sunucu, Python (`Document.new`, `Units`) ve MCP
   (`drawing.new`) aynı kuralla; özet ve ölçü `units`'i söyler (tel değerleri metrede kalır). Açık: katalog şemalarının birimleri
   (`CAD-DATA-05`'in kalanı) ve projenin biriminin değiştirilmesi (`CAD-DATA-04`).
-- [ ] `CADP-04` Anlamsal Ötele: `cad.entities.offset` arayüzde, masaüstünde, başsız sunucuda, Python'da ve MCP'de (plan `CAD-CMD-01`,
-  `02`, `06`). Paralel ajan, dal `cad-offset`, ADR 0246.
+- [x] `CADP-04` Anlamsal Ötele: `cad.entities.offset` arayüzde, masaüstünde, başsız sunucuda, Python'da ve MCP'de (plan `CAD-CMD-01`,
+  `02`, `06`). — **12 Ekim, [ADR 0246](docs/adr/0246-semantic-offset-command.md)** (paralel ajan, dal `cad-offset`, PR #22): girdi
+  kaynaklar, mesafe ve taraf ya da geçilecek nokta, İki yana, Kaynağı sil, hedef katman; hesap çekirdeğin `offset_entity`'si; araç
+  önizlemeyi komutun planından çizer; 30 ortak durum kesirlerle bağımsız başvurudan; Python ve MCP aracın kopyasını bit bit yazar.
+  Manifestte Ötele `semantic`.
 - [ ] `CADP-05` Aynı kalıpla Buda, Uzat, Köşe yuvarla ve ilişkili ölçü oluşturma (plan `CAD-CMD-03`–`05`).
 - [ ] `CADP-06` Alt nesne kimliği ve başvuruların göçü ve geçersizleşmesi (plan `CAD-DATA-13`, `14`; `DEC-03`).
 - [ ] `CADP-07` İlişkili ölçü: bağ, izleme ve yeniden bağlama (plan §11.1).

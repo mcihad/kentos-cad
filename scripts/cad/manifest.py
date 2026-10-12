@@ -164,7 +164,13 @@ def build() -> tuple[dict, str, list[str]]:
         if entry["level"] not in LEVELS:
             problems.append(f"araç “{tid}”: “{entry['level']}” düzeyi yok")
         via = entry.get("via") or ([t["productCommand"]] if t.get("productCommand") else [])
-        if entry.get("via") and t.get("productCommand") and t["productCommand"] not in entry["via"]:
+        # The inventory is frozen (docs/adr/0228): a tool moved to another command says which it was.
+        if (
+            entry.get("via")
+            and t.get("productCommand")
+            and t["productCommand"] not in entry["via"]
+            and entry.get("was") != t["productCommand"]
+        ):
             problems.append(f"araç “{tid}”: eşleme {entry['via']} diyor, envanter {t['productCommand']}")
         operation = entry.get("operation")
         check_via(f"araç “{tid}”", via, operation)

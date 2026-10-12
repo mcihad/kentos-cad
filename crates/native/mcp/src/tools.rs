@@ -341,6 +341,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.set"
             | "cad.blocks.define"
             | "cad.blocks.edit"
+            // deleteSource deletes the objects it offsets (docs/adr/0246).
+            | "cad.entities.offset"
             // Its remove takes a service layer away (docs/adr/0208 §15).
             | "cad.layers.service"
             // Its remove takes a network's definition away (docs/adr/0209 §11).

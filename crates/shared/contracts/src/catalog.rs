@@ -1335,6 +1335,69 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Ötele's semantic command (docs/adr/0246), held together by
+        // fixtures/commands/v1/cad.entities.offset.json. The web is paused
+        // (docs/adr/0228): the desktop's host alone runs it for now.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_OFFSET.into(),
+            version: crate::CAD_ENTITIES_OFFSET_VERSION,
+            title: "Nesneleri ötele".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesnelerin paralel kopyalarını yapar; kopyalar ve kaynakların silinmesi tek geri alma adımındadır, adı “Ötele”. \
+                      Girdi sonucun geometrisi değil, istenen öteleme: distance ile mesafe (metre, sıfırdan büyük) ve side noktası (çizgide ve yolda noktaya en yakın kenarın o yanı, daire, yay ve elipste nokta dışarıdaysa büyür, içerideyse küçülür) ya da through ile kopyanın geçeceği nokta (Noktadan geç: mesafe noktanın nesneye uzaklığıdır). \
+                      bothSides (İki yana) öbür yana da aynı mesafede bir kopya yapar; deleteSource (Kaynağı sil) kopyası yapılan kaynakları aynı adımda siler; layerId kopyaların katmanıdır, verilmezse her kopya kaynağının katmanına gider. \
+                      Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı parça parça), kapalı alan, daire, yay, elips ve yardımcı çizgi ile ışın ötelenir; öbür türler not_offsettable ile reddedilir. Kopyayı ortak geometri çekirdeği hesaplar: Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle öteleyince aynı kopyayı bulur. \
+                      Kopya kaynağının katmanını, rengini ve çizgi kalınlığını alır; özniteliklerini, etiketini, simgesini ve eklerini almaz; köşeler kaynağın köşelerinin kotunu ve ölçüsünü (M) taşır. \
+                      Yapılamayan kopya (merkezini geçen daire, içe dönen yay) offset_failed uyarısıyla atlanır; hiçbir kopya yapılamazsa hiçbir şey yazılmaz. Kilitli katmandaki nesne ötelenmez: hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Plan yazmadan kopyaları gösterir; planın sürümüyle yazma planı yazar. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesOffset>(),
+            output: schema::<crate::EntitiesOffsetMade>(),
+            plan: Some(schema::<crate::EntitiesOffsetPlan>()),
+            examples: vec![
+                CommandExample {
+                    title: "Bir yol kenarını 0,2 m doğuya ötelemek".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "by": { "kind": "distance", "distance": 0.2, "side": { "x": 423520.0, "y": 4512300.0 } }
+                    }),
+                    output: Some(json!({
+                        "created": ["01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"],
+                        "removed": [],
+                        "distances": [0.2],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Bir parsel sınırını iki yana 1,5 m, kopyalar başka katmana, kaynak silinir; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "by": { "kind": "distance", "distance": 1.5, "side": { "x": 423510.0, "y": 4512310.0 } },
+                        "bothSides": true,
+                        "deleteSource": true,
+                        "layerId": "yol",
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir daireyi bir noktadan geçecek biçimde ötelemek (Noktadan geç)".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "by": { "kind": "through", "point": { "x": 423515.0, "y": 4512300.0 } }
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // The drawing tools' command for objects without one of their own (docs/adr/0057),
         // held together by fixtures/commands/v1/cad.entities.create.json.
         CommandDescriptor {
@@ -2516,6 +2579,9 @@ mod tests {
                     crate::CAD_ENTITIES_ARRAY => {
                         serde_json::from_value::<crate::EntitiesArray>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_OFFSET => {
+                        serde_json::from_value::<crate::EntitiesOffset>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_CREATE => {
                         serde_json::from_value::<crate::EntitiesCreate>(e.input.clone()).map(|_| ())
                     }
@@ -2617,6 +2683,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_ARRAY => {
                             serde_json::from_value::<crate::EntitiesArrayed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_OFFSET => {
+                            serde_json::from_value::<crate::EntitiesOffsetMade>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_CREATE => {
