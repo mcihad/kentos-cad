@@ -207,6 +207,9 @@ impl TimeVersion {
                 })
                 .collect();
             let input = EntitiesSetProperties {
+                line_type: None,
+                line_type_scale: None,
+                transparency: None,
                 uids: slots
                     .iter()
                     .filter_map(|s| cx.doc.uid(*s))

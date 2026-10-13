@@ -383,6 +383,7 @@ impl Polygonize {
                 .areas
                 .iter()
                 .map(|a| NewObject {
+                    line_type: None,
                     line_weight: a
                         .geometry
                         .draws_lines()

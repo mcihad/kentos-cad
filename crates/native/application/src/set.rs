@@ -134,6 +134,10 @@ pub fn label(input: &EntitiesSetProperties) -> &'static str {
         PropertiesOperation::Template => "Şablonu uygula",
         // Öznitelikler's Ekler (docs/adr/0225 §2).
         PropertiesOperation::Attachments => "Ekler",
+        // The look's parts (docs/adr/0260 §6).
+        PropertiesOperation::LineType => "Çizgi tipi değiştir",
+        PropertiesOperation::LineTypeScale => "Çizgi tipi ölçeği",
+        PropertiesOperation::Transparency => "Saydamlık değiştir",
     }
 }
 
@@ -187,6 +191,16 @@ fn changed(
     if let Some(weight) = input.line_weight {
         base.line_weight = weight;
     }
+    if let Some(t) = input.line_type {
+        base.look.line_type = t;
+    }
+    // A scale of 1 is no scale of its own: absent is 1 (docs/adr/0260 §2).
+    if let Some(x) = input.line_type_scale {
+        base.look.line_type_scale = x.filter(|x| *x != 1.0);
+    }
+    if let Some(x) = input.transparency {
+        base.look.transparency = x;
+    }
     if let Some(symbol) = &input.symbol {
         base.symbol.clone_from(symbol);
     }
@@ -216,6 +230,9 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     if input.layer_id.is_none()
         && input.color.is_none()
         && input.line_weight.is_none()
+        && input.line_type.is_none()
+        && input.line_type_scale.is_none()
+        && input.transparency.is_none()
         && input.symbol.is_none()
         && attrs.is_none()
         && input.label.is_none()
@@ -238,6 +255,24 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         )));
     }
     checks::line_weight(input.line_weight.flatten(), "lineWeight")?;
+    if let Some(x) = input.line_type_scale.flatten()
+        && !(x.is_finite() && x > 0.0 && x <= kentos_contracts::MAX_LINE_TYPE_SCALE)
+    {
+        return Err(Stop::failed(error(
+            codes::INVALID_LINE_TYPE_SCALE,
+            "Çizgi tipi ölçeği 0'dan büyük, en çok 1000 olmalı. Bir ölçek yazın ya da 1'e döndürmek için null verin.".into(),
+            Some("lineTypeScale".into()),
+        )));
+    }
+    if let Some(x) = input.transparency.flatten()
+        && !(x.is_finite() && (0.0..=kentos_contracts::MAX_TRANSPARENCY).contains(&x))
+    {
+        return Err(Stop::failed(error(
+            codes::INVALID_TRANSPARENCY,
+            "Saydamlık 0 ile 0,9 arasında olmalı (%0–90). Bir saydamlık yazın ya da kaynağına döndürmek için null verin.".into(),
+            Some("transparency".into()),
+        )));
+    }
     if let Some(problem) = input.attachments.as_deref().and_then(attachments_problem) {
         return Err(Stop::failed(error(
             codes::INVALID_ATTACHMENTS,

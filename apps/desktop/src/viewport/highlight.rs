@@ -263,6 +263,7 @@ mod tests {
             return;
         };
         let base = |id: u32, layer: &str| EntityBase {
+            look: Default::default(),
             id,
             layer_id: layer.into(),
             color: None,

@@ -234,6 +234,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         y: 4_420_187.52,
     };
     doc.layers = vec![LayerNode {
+        plot: None,
         id: "l".into(),
         name: "Çizgi".into(),
         kind: LayerNodeType::Layer,
@@ -268,6 +269,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         ma: None,
         mb: None,
         base: EntityBase {
+            look: Default::default(),
             id: 1,
             layer_id: "l".into(),
             color: None,

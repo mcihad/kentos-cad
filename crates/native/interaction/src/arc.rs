@@ -235,6 +235,7 @@ impl Arc {
     /// the active layer and the current colour explicit in its input (CMD-07).
     fn write(&mut self, g: &ArcGeom, cx: &mut Context<'_>) -> bool {
         let input = ArcCreate {
+            line_type: cx.draft.line_type,
             layer_id: cx.doc.layers().active().to_owned(),
             c: wire(g.c),
             r: g.r,

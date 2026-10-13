@@ -170,10 +170,10 @@ fn line_type_weight_and_scale_are_the_webs_fields() {
     ))));
     let _ = app.update(Message::RibbonPanel(Event::Weight(Some(0.35))));
     assert_eq!(
-        (app.new_line_type, app.draft.line_weight),
+        (app.draft.line_type, app.draft.line_weight),
         (Some(LineType::Dashed), Some(0.35))
     );
-    assert_eq!(line_type_text(app.new_line_type), "Kesikli");
+    assert_eq!(line_type_text(app.draft.line_type), "Kesikli");
     assert_eq!(weight_value_text(app.draft.line_weight), "0.35 mm");
     assert_eq!(weight_value_text(None), "Katmana göre");
     let color = |text| kentos_interaction::DraftColor::new(text);

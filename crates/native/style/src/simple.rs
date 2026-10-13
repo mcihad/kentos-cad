@@ -103,6 +103,97 @@ pub fn symbols_of_layer_style(
     })
 }
 
+/// An object's own stroke (docs/adr/0260 §2, §3): its line type over its
+/// layer's, its pattern's scale and its opacity (1 − its transparency).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Stroke {
+    pub line_type: Option<LineType>,
+    pub scale: f64,
+    pub opacity: f64,
+}
+
+impl Stroke {
+    /// An object's stroke from its look.
+    pub fn of(look: &kentos_contracts::ObjectLook) -> Self {
+        Self {
+            line_type: look.line_type,
+            scale: look.line_type_scale.unwrap_or(1.0),
+            opacity: 1.0 - look.transparency.unwrap_or(0.0),
+        }
+    }
+
+    /// Whether it changes nothing of its layer's look.
+    pub fn plain(&self) -> bool {
+        self.line_type.is_none() && self.scale == 1.0 && self.opacity == 1.0
+    }
+
+    /// Its parts as a key: line type, scale and opacity bits.
+    pub fn key(&self) -> (u8, u64, u64) {
+        (
+            self.line_type.map_or(0, |t| 1 + t as u8),
+            self.scale.to_bits(),
+            self.opacity.to_bits(),
+        )
+    }
+
+    /// `symbols` (a set of symbols, or one symbol) with this stroke: every
+    /// layer's dash scaled, its opacity set. A plain stroke leaves them as they are.
+    pub fn apply(&self, mut symbols: Value) -> Value {
+        if self.scale == 1.0 && self.opacity == 1.0 {
+            return symbols;
+        }
+        fn walk(v: &mut Value, s: &Stroke) {
+            match v {
+                Value::Object(map) => {
+                    if map.contains_key("type") && map.contains_key("id") {
+                        if let Some(Value::Array(dash)) = map.get_mut("dash")
+                            && s.scale != 1.0
+                        {
+                            for d in dash.iter_mut() {
+                                if let Some(x) = d.as_f64() {
+                                    *d = json!(x * s.scale);
+                                }
+                            }
+                        }
+                        if s.opacity != 1.0 {
+                            let own = map.get("opacity").and_then(Value::as_f64).unwrap_or(1.0);
+                            map.insert("opacity".into(), json!(own * s.opacity));
+                        }
+                    }
+                    for (_, x) in map.iter_mut() {
+                        walk(x, s);
+                    }
+                }
+                Value::Array(list) => list.iter_mut().for_each(|x| walk(x, s)),
+                _ => {}
+            }
+        }
+        walk(&mut symbols, self);
+        symbols
+    }
+}
+
+/// An object's simple look (docs/adr/0260): its layer's symbols in its own
+/// colour, weight, line type, pattern scale and opacity. A plain stroke gives
+/// exactly [`symbols_of_layer_style`]'s symbols.
+pub fn symbols_of_object(
+    style: &LayerStyle,
+    color: &str,
+    weight: f64,
+    hairlines: bool,
+    stroke: Stroke,
+) -> Value {
+    let symbols = match stroke.line_type {
+        Some(t) if t != style.line_type => {
+            let mut own = style.clone();
+            own.line_type = t;
+            symbols_of_layer_style(&own, color, weight, hairlines)
+        }
+        _ => symbols_of_layer_style(style, color, weight, hairlines),
+    };
+    stroke.apply(symbols)
+}
+
 /// A hatch object's own pattern (`hatchSymbolOf`): solid at 45 %, a
 /// gradient (docs/adr/0186 §3), or one hatch fill a family, as the geometry
 /// core gives the families (spacing in metres; a user-defined pattern's

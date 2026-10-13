@@ -300,6 +300,7 @@ fn object(
     let mut attrs = m.stamp.attrs.clone();
     attrs.extend(own.unwrap_or_default());
     NewObject {
+        line_type: None,
         line_weight: geometry.draws_lines().then_some(m.line_weight).flatten(),
         geometry,
         color: m.color.clone(),

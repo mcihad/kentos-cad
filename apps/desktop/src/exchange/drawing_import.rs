@@ -633,6 +633,7 @@ impl App {
                 let target = match self.target(l).existing {
                     Some(id) => LayerTarget::Existing(id),
                     None => LayerTarget::New {
+                        plot: None,
                         name: l.name.clone(),
                         style: Box::new(LayerStyle {
                             color: l.color.clone(),

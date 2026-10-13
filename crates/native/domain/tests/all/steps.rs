@@ -26,6 +26,7 @@ fn empty() -> Document {
 
 fn base(layer: &str) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: layer.into(),
         color: None,

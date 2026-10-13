@@ -48,6 +48,7 @@ fn points(n: usize) -> DocumentSnapshotV2 {
         .map(|i| {
             Entity::Point(PointEntity {
                 base: EntityBase {
+                    look: Default::default(),
                     id: i as u32 + 1,
                     layer_id: "0".into(),
                     color: None,

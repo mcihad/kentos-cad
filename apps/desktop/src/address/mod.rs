@@ -767,6 +767,7 @@ impl App {
         let input = EntitiesCreate {
             layer_id: layer,
             objects: vec![NewObject {
+                line_type: None,
                 geometry: EntityGeometry::Point {
                     p: Wire {
                         x: m.at.x,
@@ -857,6 +858,9 @@ impl App {
         let set = kentos_native_application::set::execute(
             &mut ExecutionContext::new(model),
             EntitiesSetProperties {
+                line_type: None,
+                line_type_scale: None,
+                transparency: None,
                 uids: vec![uid],
                 layer_id: None,
                 color: None,

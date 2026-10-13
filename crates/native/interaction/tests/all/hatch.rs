@@ -276,6 +276,7 @@ fn too_dense_a_pattern_is_refused() {
     let square = Entity::Polygon(PathEntity {
         ms: None,
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".to_owned(),
             color: None,

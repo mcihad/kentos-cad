@@ -46,6 +46,7 @@ fn parcel(i: usize, shift: f64) -> Entity {
     Entity::Polygon(PathEntity {
         ms: None,
         base: EntityBase {
+            look: Default::default(),
             id: i as u32 + 1,
             layer_id: "parsel".into(),
             color: None,
@@ -105,6 +106,7 @@ fn opened(n: usize) -> Opened {
         address_locators: Vec::new(),
     };
     let layers = vec![LayerNode {
+        plot: None,
         id: "parsel".into(),
         name: "Parsel".into(),
         kind: LayerNodeType::Layer,

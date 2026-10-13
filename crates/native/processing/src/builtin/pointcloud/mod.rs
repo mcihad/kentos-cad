@@ -370,6 +370,7 @@ pub fn cloud_object(
     };
     Entity::PointCloud(PointCloudEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer.to_owned(),
             color: None,

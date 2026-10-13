@@ -528,6 +528,12 @@
         { "op": "execute", "input": { "layerId": "yapi", "a": { "x": 487010, "y": 4420010 }, "b": { "x": 487030, "y": 4420022.5 }, "label": "D1", "symbol": "temel.cizgi.cift", "attrs": { "Tür": "Duvar" } }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "line", "id": 10, "layerId": "yapi", "attrs": { "Tür": "Duvar" }, "label": "D1", "symbol": "temel.cizgi.cift", "a": { "x": 487010, "y": 4420010 }, "b": { "x": 487030, "y": 4420022.5 } } }, "revision": "changed" } },
         { "op": "undo", "returns": "Ekle", "expect": { "ids": [4, 9] } }
       ]
+    },
+    {
+      "name": "kendi çizgi tipiyle yazılır (ADR 0260 §2): şeridin Çizgi tipi yeni nesneye girdinin lineType'ıyla gelir; verilmezse katmanınkidir",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "a": { "x": 487010, "y": 4420010 }, "b": { "x": 487030, "y": 4420010 }, "lineType": "dashed" }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "lineType": "dashed", "a": { "x": 487010, "y": 4420010 }, "b": { "x": 487030, "y": 4420010 } } }, "revision": "changed" } }
+      ]
     }
   ]
 }

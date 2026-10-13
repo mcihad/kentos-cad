@@ -116,6 +116,7 @@ fn shown(e: &Entity, names: &[String]) -> String {
 fn shape_of(e: &Entity) -> Entity {
     let mut shape = e.clone();
     *shape.base_mut() = EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: String::new(),
         color: None,

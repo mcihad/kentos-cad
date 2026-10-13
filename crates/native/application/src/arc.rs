@@ -107,6 +107,10 @@ fn check(doc: &Document, input: &ArcCreate) -> Result<Vec<CommandWarning>, Stop>
 fn arc(input: ArcCreate, id: u32) -> Entity {
     Entity::Arc(ArcEntity {
         base: EntityBase {
+            look: kentos_contracts::ObjectLook {
+                line_type: input.line_type,
+                ..Default::default()
+            },
             id,
             layer_id: input.layer_id,
             color: input.color,

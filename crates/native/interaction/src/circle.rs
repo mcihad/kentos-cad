@@ -245,6 +245,7 @@ impl Circle {
     /// current colour explicit in its input (CMD-07).
     fn write(&mut self, c: Vec2, r: f64, cx: &mut Context<'_>) -> bool {
         let input = CircleCreate {
+            line_type: cx.draft.line_type,
             layer_id: cx.doc.layers().active().to_owned(),
             c: wire(c),
             r,

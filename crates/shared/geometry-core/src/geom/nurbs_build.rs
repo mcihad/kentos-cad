@@ -425,8 +425,17 @@ mod tests {
     #[test]
     fn far_from_the_origin_a_curve_measures_as_near_it() {
         // Map coordinates (487 000, 4 420 000): the length's quadrature settles as it does at the origin.
-        let near = [v(0.0, 0.0), v(12.0, 7.5), v(25.0, 3.0), v(38.0, 11.0), v(52.0, 6.25)];
-        let far: Vec<Vec2> = near.iter().map(|p| v(p.x + 487_000.0, p.y + 4_420_000.0)).collect();
+        let near = [
+            v(0.0, 0.0),
+            v(12.0, 7.5),
+            v(25.0, 3.0),
+            v(38.0, 11.0),
+            v(52.0, 6.25),
+        ];
+        let far: Vec<Vec2> = near
+            .iter()
+            .map(|p| v(p.x + 487_000.0, p.y + 4_420_000.0))
+            .collect();
         let a = through(&near, 3, false).unwrap().view().length();
         let b = through(&far, 3, false).unwrap().view().length();
         assert!((a - b).abs() < 1e-9, "{a} {b}");

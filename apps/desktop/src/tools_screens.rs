@@ -229,6 +229,7 @@ fn mm_labels(app: &mut App) {
     for (x, w, h) in [(0.0, 2.0, 1.5), (2.5, 1.0, 1.0)] {
         let p = |x: f64, y: f64| kentos_contracts::Vec2 { x, y };
         let base = kentos_contracts::EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer.clone(),
             color: None,
@@ -329,6 +330,7 @@ fn mm_rooms(app: &mut App) -> String {
         ("Dolap", 6.0, 1.0, 0.5),
     ] {
         let base = EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer.clone(),
             color: None,
@@ -451,6 +453,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::offset_scenes::scenes());
     all.extend(crate::polyline_scenes::scenes());
     all.extend(crate::nurbs_scenes::scenes());
+    all.extend(crate::look_scenes::scenes());
     all.extend(crate::image_scenes::scenes());
     all.extend(crate::temporal_scenes::scenes());
     all.extend(crate::attachment_scenes::scenes());

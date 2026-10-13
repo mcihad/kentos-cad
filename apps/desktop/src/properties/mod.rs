@@ -62,6 +62,11 @@ pub enum Event {
     Color(Vec<Slot>, Option<String>),
     /// Kalınlık ▾: the objects' own line weight in mm; none, the layer's (docs/adr/0139).
     Weight(Vec<Slot>, Option<f64>),
+    /// Çizgi tipi ▾, Çizgi tipi ölçeği ▾, Saydamlık ▾ (docs/adr/0260 §2, §3):
+    /// the objects' own; none, their source's (a scale of 1).
+    LineType(Vec<Slot>, Option<kentos_contracts::LineType>),
+    LineTypeScale(Vec<Slot>, Option<f64>),
+    Transparency(Vec<Slot>, Option<f64>),
     /// Desen ▾ of a hatch: one of Tarama's choices (docs/adr/0186 §7), its
     /// Ölçek and Açı carried over.
     Pattern(Slot, usize),
@@ -516,6 +521,21 @@ impl App {
                 input.line_weight = Some(weight);
                 properties::set_properties(model, input)
             }
+            Event::LineType(ids, t) => {
+                let mut input = set_input(model, &ids, PropertiesOperation::LineType);
+                input.line_type = Some(t);
+                properties::set_properties(model, input)
+            }
+            Event::LineTypeScale(ids, s) => {
+                let mut input = set_input(model, &ids, PropertiesOperation::LineTypeScale);
+                input.line_type_scale = Some(s);
+                properties::set_properties(model, input)
+            }
+            Event::Transparency(ids, t) => {
+                let mut input = set_input(model, &ids, PropertiesOperation::Transparency);
+                input.transparency = Some(t);
+                properties::set_properties(model, input)
+            }
             Event::Pattern(slot, choice) => match model.get(slot) {
                 Some(Entity::Hatch(h)) => {
                     let plot = model.settings().plot_scale;
@@ -673,6 +693,9 @@ fn set_input(
     operation: PropertiesOperation,
 ) -> EntitiesSetProperties {
     EntitiesSetProperties {
+        line_type: None,
+        line_type_scale: None,
+        transparency: None,
         uids: properties::uids_of(model, slots),
         layer_id: None,
         color: None,

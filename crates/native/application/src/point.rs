@@ -91,6 +91,7 @@ fn check(doc: &Document, input: &PointCreate) -> Result<Vec<CommandWarning>, Sto
 fn point(input: PointCreate, id: u32) -> Entity {
     Entity::Point(PointEntity {
         base: EntityBase {
+            look: Default::default(),
             id,
             layer_id: input.layer_id,
             color: input.color,

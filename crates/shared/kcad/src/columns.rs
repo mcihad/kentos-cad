@@ -106,7 +106,7 @@ use kentos_contracts::{
     DimensionEntity, DimensionLook, DimensionRefs, DimensionStyle, DimensionTextPlace, DrawingFont,
     DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, GradientShape, HatchAssoc,
     HatchEntity, HatchGradient, HatchPattern, HatchPatternType, ImageEntity, ImageFields,
-    InsertEntity, LeaderArrow, LeaderEntity, LineEntity, LineType, Paragraph, PathEntity,
+    InsertEntity, LeaderArrow, LeaderEntity, LineEntity, LineType, LookPart, Paragraph, PathEntity,
     PatternLine, PointEntity, PointPart, RasterEntity, RasterFields, RasterRender, RasterSample,
     RasterStretch, RingGeometry, SplineEntity, SubPlace, SubRef, TableAlign, TableEntity,
     TableGrid, TableSource, TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2,
@@ -214,6 +214,15 @@ const ATT_ASSET: u32 = 1;
 const ATT_FILE: u32 = 2;
 const ATT_URL: u32 = 4;
 const ATT_NOTE: u32 = 8;
+/// An object's look (docs/adr/0260): after the attachments, its bits (`LOOK_TYPE` …), then its line type
+/// (its place in `LineType::ALL`), scale, transparency and order (floats) and its by-layer parts (a mask in
+/// `LookPart::ALL`'s order) as it has them.
+const LOOK: u32 = 64;
+const LOOK_TYPE: u32 = 1;
+const LOOK_SCALE: u32 = 2;
+const LOOK_TRANSPARENCY: u32 = 4;
+const LOOK_ORDER: u32 = 8;
+const LOOK_BY_LAYER: u32 = 16;
 /// A kind's optional fields, in the order the module's table names them.
 const OPT: [u32; 19] = [
     1 << 8,
@@ -481,6 +490,7 @@ impl Packer {
             line_weight,
             label_pins,
             attachments,
+            look,
         } = entity.base();
         let flags_at = self.out.ints.len() + 1;
         self.out.ints.extend([layer, 0, count(attrs.len())]);
@@ -542,6 +552,40 @@ impl Packer {
                         self.text(v);
                     }
                 }
+            }
+        }
+        if !look.is_empty() {
+            flags |= LOOK;
+            let bits = [
+                (LOOK_TYPE, look.line_type.is_some()),
+                (LOOK_SCALE, look.line_type_scale.is_some()),
+                (LOOK_TRANSPARENCY, look.transparency.is_some()),
+                (LOOK_ORDER, look.order.is_some()),
+                (LOOK_BY_LAYER, !look.by_layer.is_empty()),
+            ]
+            .iter()
+            .filter(|(_, on)| *on)
+            .fold(0, |m, (b, _)| m | b);
+            self.int(bits);
+            if let Some(t) = look.line_type {
+                self.int(count(
+                    LineType::ALL.iter().position(|x| *x == t).unwrap_or(0),
+                ));
+            }
+            for x in [look.line_type_scale, look.transparency]
+                .into_iter()
+                .flatten()
+            {
+                self.float(x);
+            }
+            if let Some(o) = look.order {
+                self.float(f64::from(o));
+            }
+            if !look.by_layer.is_empty() {
+                let mask = look.by_layer.iter().fold(0, |m, p| {
+                    m | 1 << LookPart::ALL.iter().position(|x| x == p).unwrap_or(0)
+                });
+                self.int(mask);
             }
         }
         for (key, value) in attrs {
@@ -1790,6 +1834,50 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
             });
         }
     }
+    let mut look = kentos_contracts::ObjectLook::default();
+    if flags & LOOK != 0 {
+        let bits = c.int()?;
+        if bits & !(LOOK_TYPE | LOOK_SCALE | LOOK_TRANSPARENCY | LOOK_ORDER | LOOK_BY_LAYER) != 0 {
+            return Err(broken(&format!(
+                "{}. nesnenin görünüşünün bayrakları {bits:#x}",
+                i + 1
+            )));
+        }
+        if bits & LOOK_TYPE != 0 {
+            let at = c.usize()?;
+            look.line_type = Some(
+                *LineType::ALL
+                    .get(at)
+                    .ok_or_else(|| broken(&format!("{}. nesnenin çizgi tipi {at}", i + 1)))?,
+            );
+        }
+        look.line_type_scale = (bits & LOOK_SCALE != 0).then(|| c.float()).transpose()?;
+        look.transparency = (bits & LOOK_TRANSPARENCY != 0)
+            .then(|| c.float())
+            .transpose()?;
+        if bits & LOOK_ORDER != 0 {
+            let o = c.float()?;
+            if o.fract() != 0.0 || !(f64::from(i32::MIN)..=f64::from(i32::MAX)).contains(&o) {
+                return Err(broken(&format!("{}. nesnenin çizim sırası {o}", i + 1)));
+            }
+            look.order = Some(o as i32);
+        }
+        if bits & LOOK_BY_LAYER != 0 {
+            let mask = c.int()?;
+            if mask >> LookPart::ALL.len() != 0 {
+                return Err(broken(&format!(
+                    "{}. nesnenin katmana göre parçaları {mask:#x}",
+                    i + 1
+                )));
+            }
+            look.by_layer = LookPart::ALL
+                .iter()
+                .enumerate()
+                .filter(|(k, _)| mask & 1 << k != 0)
+                .map(|(_, p)| *p)
+                .collect();
+        }
+    }
     let mut attrs = BTreeMap::new();
     for _ in 0..attr_count {
         let key = c.text(|| place("attrs"))?;
@@ -1797,6 +1885,7 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
         attrs.insert(key, value);
     }
     let base = EntityBase {
+        look,
         id: count(i + 1),
         layer_id: layer,
         color,
@@ -1807,7 +1896,7 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
         label_pins,
         attachments,
     };
-    let known = COLOR | LABEL | SYMBOL | WEIGHT | PINS | ATTACHMENTS | allowed(k);
+    let known = COLOR | LABEL | SYMBOL | WEIGHT | PINS | ATTACHMENTS | LOOK | allowed(k);
     if flags & !known != 0 {
         return Err(broken(&format!(
             "{}. nesnenin bayrakları {flags:#x}",
@@ -3039,6 +3128,7 @@ mod tests {
 
     fn base(layer: &str) -> EntityBase {
         EntityBase {
+            look: Default::default(),
             id: 7,
             layer_id: layer.into(),
             color: None,

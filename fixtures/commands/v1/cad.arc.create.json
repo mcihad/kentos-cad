@@ -224,6 +224,12 @@
         {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "label": "B1", "symbol": "temel.cizgi.cift", "attrs": {"Tür": "Bordür"}}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "arc", "id": 10, "layerId": "yapi", "attrs": {"Tür": "Bordür"}, "label": "B1", "symbol": "temel.cizgi.cift", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}}, "revision": "changed"}},
         {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9]}}
       ]
+    },
+    {
+      "name": "kendi çizgi tipiyle yazılır (ADR 0260 §2): şeridin Çizgi tipi yeni nesneye girdinin lineType'ıyla gelir; verilmezse katmanınkidir",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "c": { "x": 487020, "y": 4420015 }, "r": 7.5, "a0": 0, "a1": 1.5, "lineType": "dotted" }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "arc", "id": 10, "layerId": "yapi", "attrs": {}, "lineType": "dotted", "c": { "x": 487020, "y": 4420015 }, "r": 7.5, "a0": 0, "a1": 1.5 } }, "revision": "changed" } }
+      ]
     }
   ]
 }

@@ -223,6 +223,7 @@ pub fn tool() -> Tool {
 
 fn base(layer: &str, label: Option<String>, attrs: &BTreeMap<String, String>) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: layer.into(),
         color: None,

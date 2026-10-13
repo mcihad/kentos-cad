@@ -76,6 +76,7 @@ impl NurbsTool {
             }
         };
         NurbsCreate {
+            line_type: cx.draft.line_type,
             layer_id: cx.doc.layers().active().to_owned(),
             by,
             closed,

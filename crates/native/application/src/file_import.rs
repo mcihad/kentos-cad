@@ -238,6 +238,7 @@ fn plan_of(
         } else {
             let default = kentos_domain::default_style();
             LayerTarget::New {
+                plot: l.plot,
                 name: l.name.clone(),
                 style: Box::new(LayerStyle {
                     color: l.color.clone(),

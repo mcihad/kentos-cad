@@ -56,6 +56,7 @@ mod edge_shift_scenes;
 mod elevation_scenes;
 #[cfg(test)]
 mod elevation_tests;
+mod draw_order;
 mod exchange;
 mod expression;
 mod features;
@@ -112,6 +113,10 @@ mod navigation;
 mod navigation_cards;
 #[cfg(test)]
 mod netcad_names_tests;
+#[cfg(test)]
+mod look_scenes;
+#[cfg(test)]
+mod nurbs_scenes;
 mod object_info;
 #[cfg(test)]
 mod offset_scenes;
@@ -130,8 +135,6 @@ mod point_calc;
 mod point_calc_scenes;
 mod pointclouds;
 mod points;
-#[cfg(test)]
-mod nurbs_scenes;
 #[cfg(test)]
 mod polyline_scenes;
 mod preview;

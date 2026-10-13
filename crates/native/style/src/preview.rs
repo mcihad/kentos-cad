@@ -211,6 +211,7 @@ pub fn preview(
         labels: None,
     };
     let opts = BuildOptions {
+        layer_styles: None,
         origin: Vec2::new(0.0, 0.0),
         plot_scale: 1000.0,
         screen: false,

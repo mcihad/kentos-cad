@@ -14,6 +14,7 @@ use serde_json::Value;
 
 fn object(o: &Value, id: u32) -> Entity {
     let base = EntityBase {
+        look: Default::default(),
         id,
         layer_id: "katman".into(),
         color: None,

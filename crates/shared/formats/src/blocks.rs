@@ -109,6 +109,7 @@ impl Placing {
                     return None;
                 };
                 let base = EntityBase {
+                    look: Default::default(),
                     id: 0,
                     layer_id: String::new(),
                     color: None,
@@ -689,6 +690,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
 /// A placed piece as the contract's object (never an insert: the core opens them).
 fn entity(s: &Shape) -> Option<Entity> {
     let base = EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: String::new(),
         color: None,

@@ -498,6 +498,7 @@ mod tests {
 
     fn base() -> EntityBase {
         EntityBase {
+            look: Default::default(),
             id: 1,
             layer_id: "cizim".into(),
             color: None,

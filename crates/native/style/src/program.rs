@@ -30,7 +30,9 @@ pub use kentos_native_application::expression_unit::{Unit as ReadingUnit, readin
 use kentos_native_application::geometry::{edit_geometry, entity_of};
 
 use crate::library::StyleLibrary;
-use crate::simple::{hatch_symbol_of, leader_symbols_of, symbols_of_layer_style};
+use crate::simple::{
+    Stroke, hatch_symbol_of, leader_symbols_of, symbols_of_layer_style, symbols_of_object,
+};
 use crate::table::{ExprTable, expr_table};
 
 /// Metres of paper per CSS pixel at 96 dpi (0.26458 mm), as the web's `METRES_PER_PX`.
@@ -79,6 +81,9 @@ pub struct BuildOptions<'a> {
     /// stay in metres, and so does a preview on a sample object
     /// (`ReadingUnit::METRE`).
     pub reading_unit: ReadingUnit,
+    /// The layers' looks by id, for a block's pieces that follow their own
+    /// layer (`byLayer`, docs/adr/0260 §1); none: they take the insert's.
+    pub layer_styles: Option<&'a std::collections::HashMap<String, LayerStyle>>,
 }
 
 /// What the page gives the core for a layer: the program's JSON, the
@@ -207,7 +212,12 @@ struct Interned {
     ref_index: HashMap<String, i32>,
     /// The simple look's set by colour and line weight (its bits).
     simple: HashMap<(String, u64), i32>,
+    /// An object's own stroke's set by colour, weight and stroke (docs/adr/0260).
+    stroked: HashMap<StrokeKey, i32>,
 }
+
+/// An own stroke's key: colour, weight bits and the stroke's line type, scale and transparency bits.
+type StrokeKey = (String, u64, (u8, u64, u64));
 
 impl Interned {
     fn set(&mut self, s: Value) -> i32 {
@@ -242,6 +252,24 @@ impl Interned {
         s
     }
 
+    /// The simple look's set for an object with its own stroke, made once.
+    fn stroked(
+        &mut self,
+        style: &LayerStyle,
+        color: &str,
+        weight: f64,
+        hairlines: bool,
+        stroke: Stroke,
+    ) -> i32 {
+        let key = (color.to_owned(), weight.to_bits(), stroke.key());
+        if let Some(&s) = self.stroked.get(&key) {
+            return s;
+        }
+        let s = self.set(symbols_of_object(style, color, weight, hairlines, stroke));
+        self.stroked.insert(key, s);
+        s
+    }
+
     fn own(&mut self, id: &str) -> i32 {
         if let Some(&k) = self.ref_index.get(id) {
             return k;
@@ -271,13 +299,22 @@ pub fn layer_call(
         let color = base.color.as_deref().unwrap_or(&style.color);
         // The object's own weight, else its layer's (docs/adr/0139).
         let weight = base.line_weight.unwrap_or(style.line_weight);
-        let (c, s) = match last {
-            Some((lc, lw, c, s)) if lc == color && lw == weight.to_bits() => (c, s),
-            _ => {
-                let c = it.color(color);
-                let s = it.simple(style, color, weight, opts.hairlines);
-                last = Some((color, weight.to_bits(), c, s));
-                (c, s)
+        // Its own line type, pattern scale and transparency (docs/adr/0260).
+        let stroke = Stroke::of(&base.look);
+        let (c, s) = if !stroke.plain() {
+            (
+                it.color(color),
+                it.stroked(style, color, weight, opts.hairlines, stroke),
+            )
+        } else {
+            match last {
+                Some((lc, lw, c, s)) if lc == color && lw == weight.to_bits() => (c, s),
+                _ => {
+                    let c = it.color(color);
+                    let s = it.simple(style, color, weight, opts.hairlines);
+                    last = Some((color, weight.to_bits(), c, s));
+                    (c, s)
+                }
             }
         };
         // A block's insert: each piece's own look (docs/adr/0144).
@@ -287,9 +324,36 @@ pub fn layer_call(
                 .and_then(|item| item.expanded.as_deref())
         {
             for (i, shape) in x.shapes.iter().enumerate() {
-                let color = x.colors.get(i).cloned().flatten();
+                // A piece that follows its own layer takes that layer's parts (docs/adr/0260 §1).
+                let own = x
+                    .by_layer
+                    .get(i)
+                    .cloned()
+                    .flatten()
+                    .and_then(|(id, mask)| Some((opts.layer_styles?.get(&id)?, mask)));
+                let follows = |bit: u8| own.is_some_and(|(_, m)| m & bit != 0);
+                let piece_style = match own {
+                    Some((s, m)) if m & kentos_geometry_core::block::BY_LAYER_LINE_TYPE != 0 => s,
+                    _ => style,
+                };
+                let color = x.colors.get(i).cloned().flatten().or_else(|| {
+                    follows(kentos_geometry_core::block::BY_LAYER_COLOR)
+                        .then(|| own.map(|(s, _)| s.color.clone()))
+                        .flatten()
+                });
                 let color = color.as_deref().unwrap_or(color_of(base, style));
-                let weight = x.weights.get(i).copied().flatten().unwrap_or(weight);
+                let weight = x
+                    .weights
+                    .get(i)
+                    .copied()
+                    .flatten()
+                    .unwrap_or(match own {
+                        Some((s, m)) if m & kentos_geometry_core::block::BY_LAYER_WEIGHT != 0 => {
+                            s.line_weight
+                        }
+                        _ => weight,
+                    });
+                let style = piece_style;
                 let hatch = match shape {
                     Shape::Hatch { .. } => {
                         edit_geometry(shape.clone()).map(|g| entity_of(&g, base.clone()))
@@ -318,19 +382,19 @@ pub fn layer_call(
             Entity::PointCloud(_) => (MODE_POINTCLOUD, 0),
             Entity::Hatch(h) => (
                 MODE_SET,
-                it.set(json!({ "fill": hatch_symbol_of(h, color) })),
+                it.set(stroke.apply(json!({ "fill": hatch_symbol_of(h, color) }))),
             ),
             // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another
             // symbol. A table's lines so, its frame's band solid (docs/adr/0184 §2).
             Entity::Leader(_) | Entity::Table(_) => (
                 MODE_SET,
-                it.set(leader_symbols_of(style, color, weight, opts.hairlines)),
+                it.set(stroke.apply(leader_symbols_of(style, color, weight, opts.hairlines))),
             ),
             // A wide polyline's band solid in its colour, its edges without width its line, as
             // AutoCAD draws one; its widths are its look (docs/adr/0258 §2).
             Entity::Polyline(p) if p.widths.is_some() => (
                 MODE_SET,
-                it.set(leader_symbols_of(style, color, weight, opts.hairlines)),
+                it.set(stroke.apply(leader_symbols_of(style, color, weight, opts.hairlines))),
             ),
             _ => match &base.symbol {
                 Some(id) => (MODE_OWN, it.own(id)),
@@ -405,7 +469,14 @@ pub fn build_layer(
     call.reads_index = program.needs.index;
     call.table = expr_table(&program.fields, program.needs, entities, opts.layer_name);
     let ids: Vec<f64> = entities.iter().map(|e| f64::from(e.base().id)).collect();
+    // The draw order bands (docs/adr/0260 §3), only when an object has its own order.
+    let bands: Vec<i32> = if entities.iter().any(|e| e.base().look.order.is_some()) {
+        entities.iter().map(|e| e.base().look.order.unwrap_or(0)).collect()
+    } else {
+        Vec::new()
+    };
     let objects = LayerObjects {
+        bands: &bands,
         ids: &ids,
         objects: &call.objects,
         pieces: &call.pieces,

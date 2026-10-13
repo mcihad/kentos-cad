@@ -419,6 +419,7 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                 }
             };
             let new = NewLayer {
+                plot: None,
                 id: layer.get("id").and_then(Value::as_str).map(str::to_owned),
                 name: text(layer, "name", at)?.to_owned(),
                 kind: match layer.get("type").and_then(Value::as_str) {

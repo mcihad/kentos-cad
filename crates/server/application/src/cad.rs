@@ -34,7 +34,7 @@ pub const PROJECTION_TOLERANCE: f64 = 0.001;
 /// Coordinates and sizes beyond this are refused as garbage (TM coordinates reach 4.5·10⁶ m).
 const MAX_ABS: f64 = 1e9;
 const MAX_POINTS: usize = 1_000_000;
-const BASE_KEYS: [&str; 10] = [
+const BASE_KEYS: [&str; 14] = [
     "kind",
     "id",
     "layerId",
@@ -45,7 +45,14 @@ const BASE_KEYS: [&str; 10] = [
     "lineWeight",
     "labelPins",
     "attachments",
+    "lineType",
+    "lineTypeScale",
+    "transparency",
+    "order",
 ];
+
+/// An object's look's keys (docs/adr/0260): a column of their own, `look`.
+const LOOK_KEYS: [&str; 4] = ["lineType", "lineTypeScale", "transparency", "order"];
 
 /// A feature row's content (without ids, versions and audit columns).
 #[derive(Clone, Debug, PartialEq)]
@@ -65,6 +72,9 @@ pub struct Stored {
     pub label_pins: Option<Value>,
     /// Its photos and documents, as the contract writes them (docs/adr/0225 §1); none: no attachments.
     pub attachments: Option<Value>,
+    /// Its line type, line type scale, transparency and drawing order (docs/adr/0260), an
+    /// object of the contract's keys; none: none of them.
+    pub look: Option<Value>,
 }
 
 fn p(v: kentos_contracts::Vec2) -> P {
@@ -160,6 +170,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
         if let Some(problem) = kentos_contracts::pins_problem(&base.label_pins) {
             return Err(problem);
         }
+    }
+    // Its look (docs/adr/0260): by the contract's rules, `byLayer` a block's object's only.
+    if let Some(problem) = kentos_contracts::look_problem(
+        &base.look,
+        base.color.is_some(),
+        base.line_weight.is_some(),
+        in_block,
+    ) {
+        return Err(problem);
     }
     // Photos and documents (docs/adr/0225 §1): the drawing's objects only, by the contract's rules.
     if !base.attachments.is_empty() {
@@ -642,6 +661,11 @@ pub fn to_stored(entity: &Entity, srid: u32, blocks: &Placing) -> Result<Stored,
         .get("attachments")
         .filter(|p| p.as_array().is_some_and(|a| !a.is_empty()))
         .cloned();
+    let look: Map<String, Value> = LOOK_KEYS
+        .iter()
+        .filter_map(|k| map.get(*k).map(|v| ((*k).to_string(), v.clone())))
+        .collect();
+    let look = (!look.is_empty()).then_some(Value::Object(look));
     let properties = map
         .get("attrs")
         .cloned()
@@ -668,6 +692,7 @@ pub fn to_stored(entity: &Entity, srid: u32, blocks: &Placing) -> Result<Stored,
         line_weight,
         label_pins,
         attachments,
+        look,
     })
 }
 
@@ -772,6 +797,11 @@ pub fn from_stored(s: &Stored) -> Result<Entity, String> {
     }
     if let Some(a) = &s.attachments {
         map.insert("attachments".into(), a.clone());
+    }
+    if let Some(Value::Object(look)) = &s.look {
+        for (k, v) in look {
+            map.insert(k.clone(), v.clone());
+        }
     }
     serde_json::from_value(Value::Object(map)).map_err(|e| format!("nesne okunamadı: {e}"))
 }
@@ -954,6 +984,28 @@ mod tests {
             err.contains("blok tanımının nesnesinde etiket iğnesi olmaz"),
             "{err}"
         );
+    }
+
+    #[test]
+    fn an_objects_look_is_a_column_of_its_own() {
+        // docs/adr/0260: the line type, its scale, transparency and order go in `look`, not the definition.
+        let line = entity(serde_json::json!({ "kind": "line", "id": 1, "layerId": "a", "attrs": {},
+            "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 },
+            "lineType": "dashed", "lineTypeScale": 2.5, "transparency": 0.5, "order": -3 }));
+        let s = to_stored(&line, 5256, &none()).unwrap();
+        assert_eq!(
+            s.look,
+            Some(serde_json::json!({ "lineType": "dashed", "lineTypeScale": 2.5, "transparency": 0.5, "order": -3 }))
+        );
+        assert_eq!(from_stored(&s).unwrap().base().look, line.base().look);
+        let arc = entity(serde_json::json!({ "kind": "arc", "id": 1, "layerId": "a", "attrs": {},
+            "c": { "x": 0, "y": 0 }, "r": 2, "a0": 0, "a1": 1, "transparency": 0.25 }));
+        let s = to_stored(&arc, 5256, &none()).unwrap();
+        assert!(s.cad_definition.as_ref().is_some_and(|d| d.get("transparency").is_none()));
+        assert_eq!(from_stored(&s).unwrap().base().look, arc.base().look);
+        let wrong = entity(serde_json::json!({ "kind": "line", "id": 1, "layerId": "a", "attrs": {},
+            "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 }, "transparency": 0.95 }));
+        assert!(to_stored(&wrong, 5256, &none()).is_err());
     }
 
     #[test]

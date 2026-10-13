@@ -1485,6 +1485,54 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Öne getir and Arkaya gönder (docs/adr/0260 §5), held together by
+        // fixtures/commands/v1/cad.entities.order.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_ORDER.into(),
+            version: crate::CAD_ENTITIES_ORDER_VERSION,
+            title: "Çizim sırasını değiştir".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesneleri katmanlarının çizim sırasında öne (front, Öne getir) ya da arkaya (back, Arkaya gönder) alır; tek geri alma adımıdır. \
+                      Nesnenin sırası order alanıdır (yoksa 0); eşitlerde belgenin sırası geçer. Her katmanda öbür nesnelerin en büyük (öne) ya da en küçük (arkaya) sırası bulunur, nesneler onun ötesindeki sıraları kendi aralarındaki sırayla alır. \
+                      Çizim sırası katmanı aşmaz: katmanların sırası ağacın sırasıdır. Zaten önde (arkada) olan katman değişmez; hiçbir şey değişmezse hiçbir şey yazılmaz. \
+                      Kilitli katmandaki nesne varsa hiçbir şey yazılmaz (layer_locked). \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesOrder>(),
+            output: schema::<crate::EntitiesOrdered>(),
+            plan: Some(schema::<crate::EntitiesOrderPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir taramayı katmanının arkasına göndermek".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "to": "back"
+                    }),
+                    output: Some(json!({
+                        "changed": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "ids": [12],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "İki yazıyı öne getirmek; yalnız planlandığı sürümde".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"],
+                        "to": "front",
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Denetim noktalı and Geçiş noktalı eğri's command (docs/adr/0259 §3), held together by
         // fixtures/commands/v1/cad.nurbs.create.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -3593,6 +3641,9 @@ mod tests {
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_ORDER => {
+                        serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_OFFSET => {
                         serde_json::from_value::<crate::EntitiesOffset>(e.input.clone()).map(|_| ())
                     }
@@ -3757,6 +3808,10 @@ mod tests {
                         }
                         crate::CAD_NURBS_CREATE => {
                             serde_json::from_value::<crate::NurbsCreated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_ORDER => {
+                            serde_json::from_value::<crate::EntitiesOrdered>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_OFFSET => {

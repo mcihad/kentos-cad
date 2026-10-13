@@ -1523,6 +1523,22 @@
    "tests": 0
   },
   {
+   "id": "edit.bringToFront",
+   "kind": "command",
+   "title": "Öne getir",
+   "level": "semantic",
+   "via": [
+    "cad.entities.order"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.order",
+   "mcp": "cad.entities.order",
+   "note": "Seçimin kalıcı kimlikleri ve yön komuta verilir (ADR 0260 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.copy",
    "kind": "command",
    "title": "Panoya kopyala",
@@ -1947,6 +1963,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "edit.sendToBack",
+   "kind": "command",
+   "title": "Arkaya gönder",
+   "level": "semantic",
+   "via": [
+    "cad.entities.order"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.order",
+   "mcp": "cad.entities.order",
+   "note": "Seçimin kalıcı kimlikleri ve yön komuta verilir (ADR 0260 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "edit.undo",

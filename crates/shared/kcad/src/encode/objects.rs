@@ -67,6 +67,10 @@ pub(super) enum Val<'d> {
     Runs(&'d [TextRun]),
     /// A whole number (a dimension's decimals, docs/adr/0183).
     Uint(u64),
+    /// A signed whole number (an object's drawing order, docs/adr/0260 §5).
+    Int(i64),
+    /// A block's object's parts that follow its layer (docs/adr/0260 §1).
+    LookParts(&'d [kentos_contracts::LookPart]),
     /// A text's curve (§6.6, docs/adr/0196): its vertices and bulges.
     TextPath(&'d kentos_contracts::TextPath),
     /// A table's cells, row by row (§6.6, docs/adr/0184).
@@ -224,6 +228,32 @@ impl<'d> Encoder<'d> {
                 ));
             }
             f.push(("lineWeight", Val::Float(w)));
+        }
+        // Its look (docs/adr/0260): written only as the contract's rule allows.
+        let look = &base.look;
+        if let Some(problem) = kentos_contracts::look_problem(
+            look,
+            base.color.is_some(),
+            base.line_weight.is_some(),
+            uid.is_none(),
+        ) {
+            self.path.push(Seg::Name(kind));
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        if let Some(t) = look.line_type {
+            f.push(("lineType", Val::Name(t.name())));
+        }
+        if let Some(x) = look.line_type_scale {
+            f.push(("lineTypeScale", Val::Float(x)));
+        }
+        if let Some(x) = look.transparency {
+            f.push(("transparency", Val::Float(x)));
+        }
+        if let Some(o) = look.order {
+            f.push(("order", Val::Int(i64::from(o))));
+        }
+        if !look.by_layer.is_empty() {
+            f.push(("byLayer", Val::LookParts(&look.by_layer)));
         }
         match entity {
             Entity::Point(e) => {
@@ -1097,6 +1127,18 @@ impl<'d> Encoder<'d> {
             Val::Float(x) => self.float(x),
             Val::Uint(n) => {
                 self.w.uint(n);
+                Ok(())
+            }
+            Val::Int(n) => {
+                self.w.int(n);
+                Ok(())
+            }
+            Val::LookParts(parts) => {
+                self.open(parts.len(), false)?;
+                for p in parts {
+                    self.w.text(p.name());
+                }
+                self.close();
                 Ok(())
             }
             Val::Bool(b) => {

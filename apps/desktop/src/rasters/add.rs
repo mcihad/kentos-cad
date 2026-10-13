@@ -499,6 +499,7 @@ impl App {
         let input = EntitiesCreate {
             layer_id: layer,
             objects: vec![NewObject {
+                line_type: None,
                 geometry: EntityGeometry::Raster(fields),
                 color: None,
                 line_weight: None,

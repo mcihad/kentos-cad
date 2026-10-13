@@ -132,13 +132,14 @@ pub(crate) async fn insert_objects(
         rows.iter().map(|(_, s)| s.label_pins.as_ref()).collect();
     let attachments: Vec<Option<&serde_json::Value>> =
         rows.iter().map(|(_, s)| s.attachments.as_ref()).collect();
+    let looks: Vec<Option<&serde_json::Value>> = rows.iter().map(|(_, s)| s.look.as_ref()).collect();
     sqlx::query(
         "insert into kentos.feature (tenant_id, project_id, id, layer_id, kind, source_kind, srid, geom, cad_definition, properties,
-                                     label, color, symbol, line_weight, label_pins, attachments, projection_version, created_by, updated_by, version)
+                                     label, color, symbol, line_weight, label_pins, attachments, look, projection_version, created_by, updated_by, version)
          select $1, $2, f.id, f.layer_id, f.kind, f.source_kind, $3, public.st_geomfromewkb(f.geom), f.cad_definition, f.properties,
-                f.label, f.color, f.symbol, f.line_weight, f.label_pins, f.attachments, $4, $5, $5, 1
-           from unnest($6::uuid[], $7::text[], $8::text[], $9::text[], $10::bytea[], $11::jsonb[], $12::jsonb[], $13::text[], $14::text[], $15::text[], $16::float8[], $17::jsonb[], $18::jsonb[])
-             as f(id, layer_id, kind, source_kind, geom, cad_definition, properties, label, color, symbol, line_weight, label_pins, attachments)",
+                f.label, f.color, f.symbol, f.line_weight, f.label_pins, f.attachments, f.look, $4, $5, $5, 1
+           from unnest($6::uuid[], $7::text[], $8::text[], $9::text[], $10::bytea[], $11::jsonb[], $12::jsonb[], $13::text[], $14::text[], $15::text[], $16::float8[], $17::jsonb[], $18::jsonb[], $19::jsonb[])
+             as f(id, layer_id, kind, source_kind, geom, cad_definition, properties, label, color, symbol, line_weight, label_pins, attachments, look)",
     )
     .bind(tenant)
     .bind(project)
@@ -158,6 +159,7 @@ pub(crate) async fn insert_objects(
     .bind(&weights)
     .bind(&pins)
     .bind(&attachments)
+    .bind(&looks)
     .execute(&mut **tx)
     .await?;
     Ok(())

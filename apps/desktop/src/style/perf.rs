@@ -27,6 +27,7 @@ use crate::document::Document;
 
 fn layer(id: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
+        plot: None,
         id: id.into(),
         name: id.into(),
         kind: LayerNodeType::Layer,
@@ -70,6 +71,7 @@ fn drawing(n: usize) -> Document {
     let mut base = |layer: &str| {
         id += 1;
         EntityBase {
+            look: Default::default(),
             id,
             layer_id: layer.into(),
             color: None,
@@ -398,6 +400,7 @@ fn temporal_drawing(n: usize, in_order: bool) -> Document {
             Entity::Polygon(PathEntity {
                 ms: None,
                 base: EntityBase {
+                    look: Default::default(),
                     id: i as u32 + 1,
                     layer_id: "parsel".into(),
                     color: None,

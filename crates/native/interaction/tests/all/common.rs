@@ -246,6 +246,7 @@ pub fn rel(p: kentos_contracts::Vec2) -> [f64; 2] {
 /// Objects added to a test drawing (docs/adr/0140): the fields every object has, on `layer`.
 pub fn base(layer: &str) -> kentos_contracts::EntityBase {
     kentos_contracts::EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: layer.to_owned(),
         color: None,

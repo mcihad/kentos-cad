@@ -263,6 +263,9 @@ pub fn write_cell(
         }
         let refused = in_step(doc, STEP, |doc| {
             let input = EntitiesSetProperties {
+                line_type: None,
+                line_type_scale: None,
+                transparency: None,
                 uids: vec![uid.clone()],
                 layer_id: None,
                 color: None,

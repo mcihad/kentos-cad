@@ -241,6 +241,7 @@ fn base(rng: &mut Rng, layer: &str) -> EntityBase {
         attrs.insert(rng.text(), rng.text());
     }
     EntityBase {
+        look: Default::default(),
         id: rng.below(1000) as u32 + 1,
         layer_id: layer.to_owned(),
         color: rng.chance(30).then(|| "#FF0000".to_owned()),
@@ -301,6 +302,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         ..LabelStyle::default()
     });
     LayerNode {
+        plot: None,
         id,
         name: rng.text(),
         kind: if group {
@@ -356,6 +358,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
     if ids.is_empty() {
         ids.push("son".to_owned());
         layers.push(LayerNode {
+            plot: None,
             id: "son".to_owned(),
             name: "Son".to_owned(),
             kind: LayerNodeType::Layer,

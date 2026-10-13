@@ -47,6 +47,7 @@ fn picture(fields: impl FnOnce(&mut ImageFields)) -> Entity {
     fields(&mut image);
     Entity::Image(ImageEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "0".into(),
             color: None,

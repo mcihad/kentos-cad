@@ -304,6 +304,7 @@ impl Emitter {
         let own = e.color.map(app_color);
         let layers = l.color.map(app_color).unwrap_or_else(|| "ink".to_owned());
         EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: l.name.clone(),
             color: own.filter(|c| *c != layers),
@@ -1044,6 +1045,7 @@ impl Emitter {
             .map(|i| {
                 let l = &self.layers[i];
                 ImportLayer {
+                    plot: None,
                     name: l.name.clone(),
                     color: l.color.map_or_else(|| "ink".to_owned(), app_color),
                     visible: true,

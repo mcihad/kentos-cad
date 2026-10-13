@@ -150,6 +150,7 @@ fn a_local_project_edits_its_points_in_its_unit() {
 fn a_point_reads_its_label_place_elevation_kod_layer_and_selection() {
     let p = kentos_contracts::PointEntity {
         base: kentos_contracts::EntityBase {
+            look: Default::default(),
             id: 4,
             layer_id: "nokta".into(),
             color: None,

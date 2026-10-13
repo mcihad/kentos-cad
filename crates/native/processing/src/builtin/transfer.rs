@@ -504,6 +504,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             }
         }
         let base = EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer_id.clone(),
             color: None,

@@ -183,6 +183,7 @@ mod tests {
             doc.model
                 .add(Entity::Polygon(PathEntity {
                     base: EntityBase {
+                        look: Default::default(),
                         id: 0,
                         layer_id: layer,
                         color: None,

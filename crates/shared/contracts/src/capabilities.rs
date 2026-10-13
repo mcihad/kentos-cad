@@ -416,6 +416,8 @@ const ENTRIES: &[Entry] = &[
                 "layer_not_found",
                 "not_a_layer",
                 "invalid_line_weight",
+                "invalid_line_type_scale",
+                "invalid_transparency",
                 "invalid_attribute",
                 "attribute_required",
                 "invalid_attachments",
@@ -521,6 +523,12 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &["unknown_layer"],
         targets: none,
+    },
+    Entry {
+        id: "cad.entities.order",
+        refusals: &[OBJECTS, &["order_limit"], REVISION],
+        warnings: &[],
+        targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {
         id: "cad.nurbs.create",

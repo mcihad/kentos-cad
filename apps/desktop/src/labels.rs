@@ -2791,6 +2791,7 @@ fn perf() {
     for i in 0..side * side {
         snapshot.entities.push(Entity::Point(PointEntity {
             base: EntityBase {
+                look: Default::default(),
                 id: first + i as u32 + 1,
                 layer_id: "parsel".into(),
                 color: None,

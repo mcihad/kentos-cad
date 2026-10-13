@@ -496,6 +496,8 @@ pub enum Message {
     RibbonModelFlashEnd(String),
     LayerVisible(String),
     LayerLocked(String),
+    /// Yazdır: a node printed or not (`cad.layers.set`'s `plot`, docs/adr/0260 §4).
+    LayerPlot(String),
     LayerExpanded(String),
     /// A drawing read from disk, or `None` when the file dialog was cancelled.
     /// Boxed: a drawing is large and messages are moved often.
@@ -741,7 +743,6 @@ pub struct App {
     /// The line type new objects take, `None` by layer (the ribbon's Tip):
     /// the session's, which no tool reads yet (web). The weight is the
     /// draft's (`Draft::line_weight`), which the tools give new objects.
-    pub new_line_type: Option<kentos_contracts::LineType>,
     /// Typed values open beside the cursor (`drafting.cursorInput`).
     pub cursor_input: bool,
     /// The strip over the drawing while a command runs (`drafting.commandBar`, command_bar.rs).
@@ -1060,7 +1061,6 @@ impl App {
             followed: None,
             field: None,
             draft: Draft::default(),
-            new_line_type: None,
             cursor_input: true,
             command_bar: false,
             hover_info: true,
@@ -1621,6 +1621,7 @@ impl App {
             // Through `cad.layers.set`, as Python and MCP do (docs/adr/0248 §6).
             Message::LayerVisible(id) => self.toggle_layer_visible(&id),
             Message::LayerLocked(id) => self.toggle_layer_locked(&id),
+            Message::LayerPlot(id) => self.toggle_layer_plot(&id),
             Message::LayerExpanded(id) => {
                 if let Some(doc) = &mut self.document
                     && let Some(expanded) = doc.find(&id).map(|n| !n.expanded)
@@ -1780,6 +1781,7 @@ impl App {
             // The session's, not settings: kept through a settings change.
             color: self.draft.color,
             line_weight: self.draft.line_weight,
+            line_type: self.draft.line_type,
             geographic: kentos_interaction::second::Notation::parse(&s.text("display.geographic")),
             // Seçim süzgeci's kinds are the session's (docs/adr/0187 §5).
             select_kinds: s.bool("drafting.selectFilter").then_some(self.select_kinds),
@@ -2248,6 +2250,9 @@ impl App {
             "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
             "address.data" => return self.open_address_data(),
             "address.providers" => return self.open_address_providers(),
+            // Sırala (draw_order.rs, docs/adr/0260 §5).
+            "edit.bringToFront" => self.order_selection(kentos_contracts::OrderTo::Front),
+            "edit.sendToBack" => self.order_selection(kentos_contracts::OrderTo::Back),
             // Zaman and Senaryo (temporal/, docs/adr/0210 §10).
             "time.slider" => self.time_toggle(),
             "time.layer" => self.open_time_layer(None),

@@ -54,6 +54,7 @@ pub fn drawing(extra: usize) -> Document {
     for i in 0..extra {
         snapshot.entities.push(Entity::Point(PointEntity {
             base: EntityBase {
+                look: Default::default(),
                 id: first + i as u32 + 1,
                 layer_id: layer.clone(),
                 color: None,

@@ -419,6 +419,7 @@ mod tests {
         doc.model
             .add(Entity::Point(PointEntity {
                 base: EntityBase {
+                    look: Default::default(),
                     id: 0,
                     layer_id: layer.to_owned(),
                     color: None,

@@ -9,6 +9,9 @@ import type { LayerSetOperation } from "./LayerSetOperation";
  * edit (the revision stays).
  *
  * - `rename`: `layer`, `name` (trimmed);
+ * - `plot`: `layer`, `value` (docs/adr/0260 §4): a node not printed is drawn
+ *   on screen but not on a sheet, its PDF or a print; a group's covers
+ *   everything under it;
  * - `visible`, `locked`: `layer`, `value`; a group's lock holds for
  *   everything under it, a hidden group hides everything under it;
  * - `active`: `layer`, a layer holding objects;
@@ -17,9 +20,9 @@ import type { LayerSetOperation } from "./LayerSetOperation";
  * - `showAll`: every node shown.
  *
  * Refusals (`CommandError.code`), checked in this order: `no_layer`
- * (rename, visible, locked, active without `layer`), `no_layers` (isolate
+ * (rename, visible, locked, plot, active without `layer`), `no_layers` (isolate
  * without a node), `empty_name` (rename with a name empty or only white
- * space), `no_value` (visible, locked without `value`); then
+ * space), `no_value` (visible, locked, plot without `value`); then
  * `invalid_revision`, `revision_conflict` (status `conflict`);
  * `layer_not_found` (`layer`, `layers[i]`), `not_a_layer` (active: a
  * group), `service_layer` (active: a layer drawn from a map service holds

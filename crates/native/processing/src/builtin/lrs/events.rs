@@ -209,6 +209,7 @@ fn run_events(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedbac
         match (&out.p, &out.parts) {
             (Some(p), _) => add.push(Entity::Point(PointEntity {
                 base: EntityBase {
+                    look: Default::default(),
                     id: 0,
                     layer_id: layer.clone(),
                     color: None,

@@ -22,6 +22,7 @@ fn drawing(last_id: u32) -> Document {
 
 fn triangle() -> PolygonCreate {
     PolygonCreate {
+        line_type: None,
         layer_id: "yapi".into(),
         pts: vec![
             Vec2 {

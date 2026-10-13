@@ -800,6 +800,7 @@ impl Path {
             };
             let area = &areas[0];
             let input = PolygonCreate {
+                line_type: cx.draft.line_type,
                 layer_id: layer,
                 pts: wire_all(&area.outer.pts),
                 bulges: area.outer.bulges.clone(),
@@ -1100,6 +1101,7 @@ impl Path {
             }
             let ring = &areas[0].outer;
             let input = PolygonCreate {
+                line_type: cx.draft.line_type,
                 layer_id: layer,
                 pts: ring.pts.iter().copied().map(wire).collect(),
                 bulges: ring.bulges.clone(),
@@ -1172,6 +1174,7 @@ impl Path {
         }
         let edges = if closed { pts.len() } else { pts.len() - 1 };
         let input = PolylineCreate {
+            line_type: cx.draft.line_type,
             layer_id: cx.doc.layers().active().to_owned(),
             pts: pts.iter().copied().map(wire).collect(),
             bulges: has_bulges(Some(&bulges)).then_some(bulges),
@@ -1243,6 +1246,7 @@ impl Path {
         let input = EntitiesCreate {
             layer_id: PARCEL_LAYER.to_owned(),
             objects: vec![NewObject {
+                line_type: cx.draft.line_type,
                 geometry,
                 color: cx.draft.color_text(),
                 line_weight: cx.draft.line_weight,

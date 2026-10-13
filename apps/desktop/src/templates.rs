@@ -283,6 +283,9 @@ impl App {
         };
         let text = |key: &str| set.get(key).map(|v| v.as_str().map(str::to_owned));
         let input = EntitiesSetProperties {
+            line_type: None,
+            line_type_scale: None,
+            transparency: None,
             uids,
             layer_id: layer_ids.into_iter().next(),
             color: text("color"),

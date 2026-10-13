@@ -114,6 +114,7 @@ impl Line {
                 .map(|attrs| attrs.0.into_iter().collect())
         });
         let input = LineCreate {
+            line_type: cx.draft.line_type,
             layer_id: cx.doc.layers().active().to_owned(),
             a: wire(a),
             b: wire(b),

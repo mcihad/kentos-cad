@@ -67,6 +67,11 @@ pub struct EntityBase {
         ts(as = "Option<Vec<crate::attachment::Attachment>>", optional)
     )]
     pub attachments: Vec<crate::attachment::Attachment>,
+    /// Its line type, line type scale, transparency, drawing order and, on a
+    /// block's object, the parts that follow its own layer (docs/adr/0260).
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub look: crate::look::ObjectLook,
 }
 
 /// The heaviest line weight an object may have, mm: DXF's heaviest is 2.11,

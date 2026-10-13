@@ -41,6 +41,7 @@ fn schema(file: &[u8]) -> u8 {
 
 fn base() -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: "0".into(),
         color: None,

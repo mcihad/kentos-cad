@@ -8,7 +8,13 @@ use kentos_contracts::{CommandResult, Entity, NurbsBy, NurbsCreate, Vec2};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, nurbs};
 
-const PTS: [[f64; 2]; 5] = [[0.0, 0.0], [12.0, 7.5], [25.0, 3.0], [38.0, 11.0], [52.0, 6.25]];
+const PTS: [[f64; 2]; 5] = [
+    [0.0, 0.0],
+    [12.0, 7.5],
+    [25.0, 3.0],
+    [38.0, 11.0],
+    [52.0, 6.25],
+];
 
 fn at(p: [f64; 2]) -> Vec2 {
     Vec2 {
@@ -21,6 +27,7 @@ fn at(p: [f64; 2]) -> Vec2 {
 fn by_command(by: NurbsBy, closed: bool) -> Entity {
     let mut b = Bench::new("nurbs");
     let input = NurbsCreate {
+        line_type: None,
         layer_id: b.doc.layers().active().to_owned(),
         by,
         closed,
@@ -32,7 +39,10 @@ fn by_command(by: NurbsBy, closed: bool) -> Entity {
         expected_revision: None,
     };
     let result = nurbs::execute(&mut ExecutionContext::new(&mut b.doc), input);
-    assert!(matches!(result, CommandResult::Completed { .. }), "{result:?}");
+    assert!(
+        matches!(result, CommandResult::Completed { .. }),
+        "{result:?}"
+    );
     b.newest().clone()
 }
 
@@ -57,7 +67,10 @@ fn the_tool_writes_what_the_command_writes_through_the_points() {
     };
     assert_eq!(n.fit.as_ref().map(Vec::len), Some(5));
     assert_eq!(n.ctrl.first(), Some(&at(PTS[0])));
-    assert!(b.last_text().is_some_and(|t| t.starts_with("NURBS eğrisi eklendi: 5 geçiş noktası")));
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.starts_with("NURBS eğrisi eklendi: 5 geçiş noktası"))
+    );
     // One undo step, Ekle.
     assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
     assert!(!b.doc.entities().any(|e| matches!(e, Entity::Nurbs(_))));
@@ -106,7 +119,11 @@ fn the_preview_is_the_commands_plan() {
     b.move_to(PTS[2][0], PTS[2][1]);
     let preview = b.run(|s, cx| s.preview(&cx.format())).expect("a preview");
     // The curve solid, through the points and the cursor; the control polygon dashed.
-    let solid = preview.strokes.iter().find(|s| s.dash.is_none()).expect("the curve");
+    let solid = preview
+        .strokes
+        .iter()
+        .find(|s| s.dash.is_none())
+        .expect("the curve");
     let last = *solid.pts.last().expect("points");
     assert!((last.x - (E + PTS[2][0])).abs() < 1e-9 && (last.y - (N + PTS[2][1])).abs() < 1e-9);
     assert!(preview.strokes.iter().any(|s| s.dash.is_some()));

@@ -170,6 +170,7 @@ impl Fields {
     fn entity<E: de::Error>(self) -> Result<Entity, E> {
         let kind = need(self.kind, "kind")?;
         let base = EntityBase {
+            look: Default::default(),
             id: need(self.id, "id")?,
             layer_id: need(self.layer_id, "layerId")?,
             color: self.color,

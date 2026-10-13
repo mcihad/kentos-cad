@@ -307,6 +307,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çekirdekte yolun kapalılığı `is_closed_path`, şerit `geom::band` (`MIXED` kaydı, nesnenin renginde dolu), genişliğin taşınması
   `ops::widths` (`widths_lost`); `cad.polyline.create`'in `closed` ve `widths`'i, `invalid_polyline`; Çoklu çizgi'de Kapat (K) ve
   Genişlik (E), Öznitelikler'de Kapalı ve Genişlik; DXF'in 43, 40 ve 41'i ve `closedPolylines` (CAD projesinde kapalı çizgi) (ADR 0258);
+  NURBS eğrisi: `nurbs` türü (derece, denetim noktaları, düğümler, ağırlıklar; kapalı, periyodik, geçiş noktaları, teğetler; `.kcad` şema 47,
+  `FORMATS_VERSION` 60), çekirdek `geom::nurbs` ve `nurbs_build` (Piegl ve Tiller; geçiş noktalarından global interpolasyon), budama ve
+  kırma `ops::nurbs_cuts`; `cad.nurbs.create`, NURBS eğrisi aracı (Yöntem, Derece, Kapat); DXF'in SPLINE'ı tam NURBS; daire, yay ve elips
+  analitik, Catmull–Rom eğrisi ayrı tür; uzunluklar OpenCASCADE'le (`curves_occt.py`) (ADR 0259);
+  nesnenin görünüşü: kendi çizgi tipi, ölçeği ve saydamlığı (`lineType`, `lineTypeScale`, `transparency`), bloğun nesnesinde katmana göre
+  parçalar (`byLayer`), katmanın içinde çizim sırası (`order`; Öne getir, Arkaya gönder: `cad.entities.order`; stil motorunda sıra
+  bantları), katmanın `plot`'u (Yazdır / Yazdırma, pafta atlar); `.kcad` şema 48, `FORMATS_VERSION` 61, sunucuda göç 0018
+  (`feature.look`); `cad.entities.set`'in üç işlemi, oluşturan komutların `lineType`'ı (şeridin Çizgi tipi yeni nesnelere), DXF'in 6, 48,
+  440 ve 290'ı (ADR 0260);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

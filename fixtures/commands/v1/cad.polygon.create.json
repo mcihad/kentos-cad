@@ -624,6 +624,12 @@
         { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "label": "101", "symbol": "temel.alan.kenar-ici", "attrs": { "Tür": "Parsel" } }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": { "Tür": "Parsel" }, "label": "101", "symbol": "temel.alan.kenar-ici", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] } }, "revision": "changed" } },
         { "op": "undo", "returns": "Ekle", "expect": { "ids": [4, 9] } }
       ]
+    },
+    {
+      "name": "kendi çizgi tipiyle yazılır (ADR 0260 §2): şeridin Çizgi tipi yeni nesneye girdinin lineType'ıyla gelir; verilmezse katmanınkidir",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "lineType": "dashed" }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": {}, "lineType": "dashed", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] } }, "revision": "changed" } }
+      ]
     }
   ]
 }

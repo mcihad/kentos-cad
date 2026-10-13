@@ -233,6 +233,7 @@ fn go(
         }
         kentos_contracts::Entity::PointCloud(PointCloudEntity {
             base: EntityBase {
+                look: Default::default(),
                 id: 0,
                 layer_id: r.layer("layer").id.clone(),
                 color: None,

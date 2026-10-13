@@ -105,6 +105,10 @@ fn line(input: LineCreate, id: u32) -> Entity {
         ma: None,
         mb: None,
         base: EntityBase {
+            look: kentos_contracts::ObjectLook {
+                line_type: input.line_type,
+                ..Default::default()
+            },
             id,
             layer_id: input.layer_id,
             color: input.color,

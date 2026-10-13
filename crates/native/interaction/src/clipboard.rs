@@ -227,6 +227,7 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
             let objects = run
                 .iter()
                 .map(|(e, geometry)| NewObject {
+                    line_type: None,
                     geometry: geometry.clone(),
                     color: e.base().color.clone(),
                     line_weight: e.base().line_weight,
@@ -268,6 +269,9 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
         }
         for (symbol, uids) in symbols {
             let input = EntitiesSetProperties {
+                line_type: None,
+                line_type_scale: None,
+                transparency: None,
                 uids,
                 layer_id: None,
                 color: None,

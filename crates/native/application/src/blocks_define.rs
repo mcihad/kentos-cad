@@ -345,6 +345,7 @@ pub(crate) fn replaced(
         .collect();
     let insert = Entity::Insert(InsertEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer.to_owned(),
             color: None,

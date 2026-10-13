@@ -162,6 +162,14 @@ Liste:
   `io/kcad.ts`'in KCAD şema 47'si ve tipli sütunların türü 19, `io/columns.ts`; `FORMATS_VERSION` 60); paketli biçimin türü 23
   (`wasm/pack.ts`); çekirdeğin JSON API'si `tangents`'ı taşımaz; `cad.nurbs.create`'in web işleyicisi ve NURBS eğrisi aracı
   (Yöntem, Derece, Kapat; önizleme planla); Öznitelikler'in satırları; seçim süzgecinde Eğri'nin NURBS'ü de tutması.
+- [ ] `CAD-DATA-21` (ADR 0260, 13 Ekim): web'de gerekenler: belgenin ve TS türlerinin `look` alanları (`lineType`, `lineTypeScale`,
+  `transparency`, `order`, `byLayer`) ve katmanın `plot`'u (`io/kcad.ts`'in KCAD şema 48'i, tipli sütunların bayrağı 64,
+  `io/columns.ts`; `FORMATS_VERSION` 61); stil motoruna nesnenin çizgisinin (`Stroke`: desen ölçeği, saydamlık) ve çizim sırası
+  bantlarının verilmesi (`LayerObjects::bands`, `geometry-wasm`'ın `store.rs`'i bugün boş verir), bloğun parçalarının katmanını
+  izlemesi (`layer_styles`); `cad.entities.set`'in `lineType`, `lineTypeScale`, `transparency` işlemleri ve `cad.entities.order`'ın web
+  işleyicileri; Öznitelikler'in Çizgi tipi, Çizgi tipi ölçeği ve Saydamlık satırları; şeridin Çizgi tipinin yeni nesnelere yazılması;
+  Öne getir, Arkaya gönder ve katmanın Yazdır anahtarı; paftanın yazdırılmayan katmanları atlaması; DXF'in 6, 48, 440 ve 290'ı web'in
+  okuyucusunda.
 - [ ] `CAD-DATA-18`, `CAD-DATA-19` (ADR 0258, 13 Ekim): web'de gerekenler: belgenin ve TS türlerinin çoklu çizgisinde `closed` ve
   `widths` (`model/document.ts`, `io/kcad.ts`'in KCAD şema 46'sı ve tipli sütunların yol bitleri 13 ve 14, `io/columns.ts`;
   `FORMATS_VERSION` 59, web'in kopyası 53); çekirdeğin JSON API'si `Shape::Polyline`'ın `closed`'ını ve `widths`'ini taşımaz (web'in

@@ -409,6 +409,10 @@ fn entities(
             let mut entity = entity_of(
                 &object.geometry,
                 EntityBase {
+                    look: kentos_contracts::ObjectLook {
+                        line_type: object.line_type,
+                        ..Default::default()
+                    },
                     id: 0,
                     layer_id: input.layer_id.clone(),
                     color: object.color.clone(),

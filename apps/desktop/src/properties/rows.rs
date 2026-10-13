@@ -191,6 +191,14 @@ impl Row {
         self
     }
 
+    /// Its editor kept only when `editable` (a row on a locked layer shows its value only).
+    fn editor_if(mut self, editable: bool) -> Self {
+        if !editable {
+            self.editor = None;
+        }
+        self
+    }
+
     fn editor(mut self, editor: Option<Editor>) -> Self {
         self.editor = editor;
         self
@@ -502,6 +510,118 @@ fn weight_editor(ids: &[Slot], current: Option<Option<f64>>) -> Editor {
     }
 }
 
+/// A pick of a look's menu.
+fn pick(label: String, chosen: bool, message: Message) -> Choice {
+    Choice::Pick {
+        label,
+        swatch: None,
+        icon: None,
+        wide: false,
+        chosen,
+        enabled: true,
+        message,
+    }
+}
+
+/// Çizgi tipi ▾ (docs/adr/0260 §2): by layer, then the four types.
+fn line_type_row(ids: &[Slot], current: Option<Option<kentos_contracts::LineType>>) -> Row {
+    let text = match current {
+        None => "Çeşitli".to_owned(),
+        Some(t) => crate::ribbon_panels::line_type_text(t).to_owned(),
+    };
+    let set = |t| Message::Properties(Event::LineType(ids.to_vec(), t));
+    let mut items = vec![
+        pick("Katmana göre".into(), current == Some(None), set(None)),
+        Choice::Separator,
+    ];
+    items.extend(kentos_contracts::LineType::ALL.into_iter().map(|t| {
+        pick(
+            crate::ribbon_panels::line_type_text(Some(t)).to_owned(),
+            current == Some(Some(t)),
+            set(Some(t)),
+        )
+    }));
+    Row::text("Çizgi tipi", text.clone()).editor(Some(Editor::Select {
+        text,
+        swatch: None,
+        icon: None,
+        items,
+    }))
+}
+
+/// Çizgi tipi ölçeği ▾ (docs/adr/0260 §2): the pattern's factor, 1 its absence.
+fn line_type_scale_row(ids: &[Slot], current: Option<Option<f64>>) -> Row {
+    let shown = plain_number;
+    let text = match current {
+        None => "Çeşitli".to_owned(),
+        Some(s) => shown(s.unwrap_or(1.0)),
+    };
+    let set =
+        |s: f64| Message::Properties(Event::LineTypeScale(ids.to_vec(), (s != 1.0).then_some(s)));
+    let mut scales = vec![0.25, 0.5, 1.0, 2.0, 5.0, 10.0];
+    if let Some(Some(s)) = current
+        && !scales.contains(&s)
+    {
+        scales.push(s);
+        scales.sort_by(f64::total_cmp);
+    }
+    let items = scales
+        .into_iter()
+        .map(|s| {
+            pick(
+                shown(s),
+                current.map(|c| c.unwrap_or(1.0)) == Some(s),
+                set(s),
+            )
+        })
+        .collect();
+    Row::text("Çizgi tipi ölçeği", text.clone()).editor(Some(Editor::Select {
+        text,
+        swatch: None,
+        icon: None,
+        items,
+    }))
+}
+
+/// Saydamlık ▾ (docs/adr/0260 §3): by layer, then whole percents up to 90.
+fn transparency_row(ids: &[Slot], current: Option<Option<f64>>) -> Row {
+    let percent = |t: f64| format!("%{}", (t * 100.0).round());
+    let text = match current {
+        None => "Çeşitli".to_owned(),
+        Some(None) => "Katmana göre".to_owned(),
+        Some(Some(t)) => percent(t),
+    };
+    let set = |t| Message::Properties(Event::Transparency(ids.to_vec(), t));
+    let mut items = vec![
+        pick("Katmana göre".into(), current == Some(None), set(None)),
+        Choice::Separator,
+    ];
+    let mut steps = vec![0.0, 0.1, 0.25, 0.5, 0.75, 0.9];
+    if let Some(Some(t)) = current
+        && !steps.contains(&t)
+    {
+        steps.push(t);
+        steps.sort_by(f64::total_cmp);
+    }
+    items.extend(
+        steps
+            .into_iter()
+            .map(|t| pick(percent(t), current == Some(Some(t)), set(Some(t)))),
+    );
+    Row::text("Saydamlık", text.clone()).editor(Some(Editor::Select {
+        text,
+        swatch: None,
+        icon: None,
+        items,
+    }))
+}
+
+/// A number as the panel writes a factor: no trailing zeros (`2.5`, `10`).
+pub(crate) fn plain_number(x: f64) -> String {
+    let s = format!("{x:.4}");
+    s.trim_end_matches('0').trim_end_matches('.').to_owned()
+}
+
 /// A symbol as the panel names it: “Çeşitli”, “Katman stiline göre”, or its
 /// name among the project's styles; one of the system library, which the
 /// desktop does not hold yet, by its id (docs/adr/0063).
@@ -747,7 +867,11 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         general.push(
             Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&ids, weight))),
         );
+        // Its own line type, its scale and transparency (docs/adr/0260).
+        general.push(line_type_row(&ids, Some(base.look.line_type)).editor_if(!locked));
+        general.push(line_type_scale_row(&ids, Some(base.look.line_type_scale)).editor_if(!locked));
     }
+    general.push(transparency_row(&ids, Some(base.look.transparency)).editor_if(!locked));
     if takes_symbol(e) {
         general.push(
             Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),
@@ -1948,6 +2072,22 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             Row::text("Kalınlık", weight_text(weight))
                 .editor(edit(weight_editor(&lined_ids, weight))),
         );
+        // The look's parts (docs/adr/0260): the shared value, else Çeşitli.
+        let same = |f: &dyn Fn(&Entity) -> String| lined.iter().all(|e| f(e) == f(lined[0]));
+        let line_type = same(&|e| format!("{:?}", e.base().look.line_type))
+            .then(|| lined[0].base().look.line_type);
+        let scale = same(&|e| format!("{:?}", e.base().look.line_type_scale))
+            .then(|| lined[0].base().look.line_type_scale);
+        rows.push(line_type_row(&lined_ids, line_type).editor_if(!any_locked));
+        rows.push(line_type_scale_row(&lined_ids, scale).editor_if(!any_locked));
+    }
+    {
+        let all: Vec<Slot> = objects.iter().map(|e| Slot(e.base().id)).collect();
+        let t = objects
+            .iter()
+            .all(|e| e.base().look.transparency == objects[0].base().look.transparency)
+            .then(|| objects[0].base().look.transparency);
+        rows.push(transparency_row(&all, t).editor_if(!any_locked));
     }
     rows.push(
         Row::text("Sembol", symbol_text(doc, symbol)).editor(edit(symbol_editor(doc, symbol))),

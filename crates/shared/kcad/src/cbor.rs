@@ -455,6 +455,24 @@ impl<'a> Reader<'a> {
         }
     }
 
+    /// A signed integer with a magnitude of at most `limit` (an object's drawing order, docs/adr/0260 §5).
+    pub fn int(&mut self, limit: u64) -> Result<i64, KcadError> {
+        let (h, _) = self.checked()?;
+        let value = match h.major {
+            UINT if h.arg <= limit => h.arg as i64,
+            NINT if h.arg <= limit => -1 - h.arg as i64,
+            UINT | NINT => {
+                return Err(self.fail_at(
+                    Code::BadValue,
+                    h.at,
+                    &format!("tam sayı aralık dışında (−{}…{limit})", limit + 1),
+                ));
+            }
+            _ => return Err(self.wrong(h, "tam sayı")),
+        };
+        Ok(value)
+    }
+
     /// An integer from 0 to `max`; a negative one is out of range, not of another type (§6.3).
     pub fn uint(&mut self, max: u64) -> Result<u64, KcadError> {
         let (h, _) = self.checked()?;

@@ -14,10 +14,10 @@ use kentos_domain::contracts::ChangesetApply;
 use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
-    EntitiesOffset, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose, LayersEdit,
-    LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates,
-    LayersTime, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit,
-    StylesEdit,
+    EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
+    LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet,
+    LayersStates, LayersTime, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet,
+    SheetsEdit, StylesEdit,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -35,10 +35,10 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
     circle, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_trim, labels_pin, layers_compose, layers_edit, layers_filter,
-    layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
-    layers_time, line, network_define, nurbs, offset, point, polygon, polyline, scenarios_edit,
-    set, settings_set, sheets_edit, styles_edit, transform, units_change,
+    entities_fillet, entities_order, entities_trim, labels_pin, layers_compose, layers_edit,
+    layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
+    layers_states, layers_time, line, network_define, nurbs, offset, point, polygon, polyline,
+    scenarios_edit, set, settings_set, sheets_edit, styles_edit, transform, units_change,
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
@@ -389,6 +389,13 @@ impl Input for kentos_domain::contracts::NurbsCreate {
                 .or_else(|| list_number(knots.as_deref_mut()?, "knots", rest)),
             NurbsBy::Fit { pts, .. } => named_point(pts, "pts", rest),
         }
+    }
+}
+
+impl Input for EntitiesOrder {
+    /// No number: the input is ids.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -825,6 +832,8 @@ impl Input for EntitiesSetProperties {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "lineWeight" => self.line_weight.as_mut()?.as_mut(),
+            "lineTypeScale" => self.line_type_scale.as_mut()?.as_mut(),
+            "transparency" => self.transparency.as_mut()?.as_mut(),
             _ => None,
         }
     }
@@ -1356,6 +1365,7 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         kentos_domain::contracts::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),
+        kentos_domain::contracts::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),

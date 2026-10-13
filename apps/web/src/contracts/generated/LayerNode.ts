@@ -72,4 +72,10 @@ card?: InfoCard,
  * §4): opacity, blending mode, the mask it cuts into other layers;
  * absent, opaque and normal. Only a layer has it, never a group.
  */
-compose?: LayerCompose, };
+compose?: LayerCompose, 
+/**
+ * Yazdır: absent, it is printed; `false`, it is drawn on screen but not
+ * on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
+ * docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
+ */
+plot?: boolean, };

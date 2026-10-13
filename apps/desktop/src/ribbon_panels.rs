@@ -101,7 +101,7 @@ fn color_text(color: Option<DraftColor>) -> String {
         .map_or_else(|| value.to_uppercase(), |(name, _)| (*name).to_owned())
 }
 
-fn line_type_text(line_type: Option<LineType>) -> &'static str {
+pub(crate) fn line_type_text(line_type: Option<LineType>) -> &'static str {
     line_type
         .and_then(|t| LINE_TYPES.iter().find(|(lt, _)| *lt == t))
         .map_or("Katmana göre", |(_, name)| name)
@@ -117,7 +117,7 @@ impl App {
     pub(crate) fn ribbon_panel_event(&mut self, event: Event) {
         match event {
             Event::Color(color) => self.draft.color = color.and_then(DraftColor::new),
-            Event::LineType(line_type) => self.new_line_type = line_type,
+            Event::LineType(line_type) => self.draft.line_type = line_type,
             // New objects drawn with lines take it (docs/adr/0139).
             Event::Weight(weight) => self.draft.line_weight = weight,
             // Its annotations at the old general height follow it in one step (docs/adr/0205 §3).
@@ -376,7 +376,7 @@ impl App {
             .iter()
             .map(|(_, value)| self.drawing_color(value))
             .collect();
-        let (line_type, weight) = (self.new_line_type, self.draft.line_weight);
+        let (line_type, weight) = (self.draft.line_type, self.draft.line_weight);
         let scale = doc.settings().plot_scale;
         let cad = self.work_mode() == kentos_contracts::Workspace::Cad;
         let s = typography::scaled;

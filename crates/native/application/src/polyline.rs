@@ -186,6 +186,10 @@ fn polyline(input: PolylineCreate, id: u32) -> Entity {
     Entity::Polyline(PathEntity {
         ms: None,
         base: EntityBase {
+            look: kentos_contracts::ObjectLook {
+                line_type: input.line_type,
+                ..Default::default()
+            },
             id,
             layer_id: input.layer_id,
             color: input.color,

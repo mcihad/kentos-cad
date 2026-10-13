@@ -646,6 +646,15 @@ impl Document {
         changed
     }
 
+    /// Yazdır (docs/adr/0260 §4): whether a layer or group is printed; an
+    /// edit when it changes, never an undo step, as a lock. Whether it changed.
+    pub fn set_layer_plot(&mut self, id: &str, plot: bool) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_plot(id, plot);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
     /// A layer's own snapping, on a group's every layer (docs/adr/0163 §4):
     /// an edit, not an undo step, as a lock is.
     pub fn set_layer_snap(&mut self, id: &str, snap: Option<LayerSnap>) {

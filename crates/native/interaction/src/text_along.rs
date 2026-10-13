@@ -262,6 +262,7 @@ impl TextAlong {
         let (p, rotation, path) = piece(curve, at, length, share)?;
         Some(TextEntity {
             base: kentos_contracts::EntityBase {
+                look: Default::default(),
                 id: 0,
                 layer_id: String::new(),
                 color: None,

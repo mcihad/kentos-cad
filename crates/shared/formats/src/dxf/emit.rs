@@ -72,6 +72,8 @@ pub struct Library {
     pub layer_colors: HashMap<String, String>,
     /// Upper-case layer name → the layer's line weight (mm), for BYBLOCK children of inserts on it.
     pub layer_weights: HashMap<String, f64>,
+    /// Upper-case line type name → the type KentOS draws it as (an object's 6, docs/adr/0260 §2).
+    pub ltypes: HashMap<String, kentos_contracts::LineType>,
     /// Upper-case layer name → the name as the LAYER table spells it (DXF layer names ignore case).
     pub layer_names: HashMap<String, String>,
     /// Upper-case text style name → fixed height (0: none).
@@ -211,6 +213,7 @@ impl Out {
 
 fn base(layer: &str, color: Option<String>, line_weight: Option<f64>) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: layer.to_string(),
         color,
@@ -940,6 +943,39 @@ impl<'l> Emitter<'l> {
         Some(locals.map(world).collect())
     }
 
+    /// An object's own look from its 6, 48 and 440 (docs/adr/0260 §2, §3): a
+    /// named line type as KentOS draws it (BYLAYER and BYBLOCK none), a
+    /// pattern scale other than 1, a transparency from its alpha in whole
+    /// percents (BYLAYER and BYBLOCK none), at most 90 %.
+    fn look_of(&self, e: &Parsed) -> kentos_contracts::ObjectLook {
+        let c = &e.common;
+        let line_type = c.line_type.as_deref().and_then(|n| {
+            let up = n.to_uppercase();
+            (!up.is_empty() && up != "BYLAYER" && up != "BYBLOCK").then(|| {
+                self.lib
+                    .ltypes
+                    .get(&up)
+                    .copied()
+                    .unwrap_or_else(|| super::classify_name(n))
+            })
+        });
+        let line_type_scale = c
+            .ltscale
+            .filter(|s| s.is_finite() && *s > 0.0 && *s != 1.0)
+            .map(|s| s.min(kentos_contracts::MAX_LINE_TYPE_SCALE));
+        let transparency = c.transparency.filter(|v| v & 0x0200_0000 != 0).map(|v| {
+            let alpha = (v & 0xFF) as f64;
+            let percent = ((255.0 - alpha) / 255.0 * 100.0).round();
+            (percent / 100.0).min(kentos_contracts::MAX_TRANSPARENCY)
+        });
+        kentos_contracts::ObjectLook {
+            line_type,
+            line_type_scale,
+            transparency: transparency.filter(|t| *t > 0.0),
+            ..Default::default()
+        }
+    }
+
     /// The colour override: none for BYLAYER, the insert's colour for BYBLOCK.
     /// In a definition BYLAYER on a layer other than 0 is that layer's colour
     /// (its look kept on layer 0), and BYBLOCK at its top is none (the
@@ -962,6 +998,13 @@ impl<'l> Emitter<'l> {
         let start = self.out.entities.len();
         self.emit_kind(e, ctx);
         let end = self.out.entities.len();
+        // Its own line type, pattern scale and transparency (docs/adr/0260): BYLAYER and BYBLOCK are its source's.
+        let look = self.look_of(e);
+        if !look.is_empty() {
+            for x in &mut self.out.entities[start..end] {
+                x.base_mut().look = look.clone();
+            }
+        }
         if let Some(meta) = &e.meta {
             for x in &mut self.out.entities[start..end] {
                 apply_meta(meta, x);

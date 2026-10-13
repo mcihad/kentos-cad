@@ -473,6 +473,7 @@ fn point_entity(row: Row) -> Entity {
     }
     Entity::Point(PointEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: String::new(),
             color: None,

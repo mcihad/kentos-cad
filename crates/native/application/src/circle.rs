@@ -95,6 +95,10 @@ fn check(doc: &Document, input: &CircleCreate) -> Result<Vec<CommandWarning>, St
 fn circle(input: CircleCreate, id: u32) -> Entity {
     Entity::Circle(CircleEntity {
         base: EntityBase {
+            look: kentos_contracts::ObjectLook {
+                line_type: input.line_type,
+                ..Default::default()
+            },
             id,
             layer_id: input.layer_id,
             color: input.color,

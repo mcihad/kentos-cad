@@ -17,7 +17,7 @@ use kentos_sheet::kinds::MapLayers;
 use kentos_sheet::pdf::{MapContent, MapLayerContent, MapPath, MapText, TextAnchor, VectorMap};
 
 use crate::fonts::sheet_font;
-use crate::layers::{Look, build_whole, names, shown_layers};
+use crate::layers::{Look, build_whole, in_order, names, printed_layers};
 use crate::vectors::{VectorScale, layer_paths};
 
 /// A CSS pixel on the paper, millimetres: the unit the maps' labels are laid out in (the web's
@@ -155,13 +155,15 @@ pub fn vector_content(
         scale,
         origin: [origin.x, origin.y],
     };
+    let mut layer_styles = HashMap::new();
+    crate::layers::styles(doc.layers().nodes(), &mut layer_styles);
     let mut shapes: Vec<MapLayerContent> = Vec::new();
     let mut unsupported = Vec::new();
-    for node in shown_layers(doc.layers().nodes()) {
+    for node in printed_layers(doc.layers().nodes()) {
         if only.is_some_and(|l| !l.contains(&node.id)) {
             continue;
         }
-        let objects: Vec<&kentos_contracts::Entity> = doc.by_layer(&node.id).collect();
+        let objects: Vec<&kentos_contracts::Entity> = in_order(doc.by_layer(&node.id).collect());
         if objects.is_empty() {
             continue;
         }
@@ -172,7 +174,10 @@ pub fn vector_content(
             &objects,
             &look,
             clip,
-            &layer_names,
+            crate::layers::LayerTables {
+                names: &layer_names,
+                styles: &layer_styles,
+            },
         );
         let (paths, missing) = layer_paths(&styled, &o, Some(reach));
         if !missing.is_empty() {

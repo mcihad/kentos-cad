@@ -70,6 +70,8 @@ struct LayerDef {
     locked: bool,
     line_type: LineType,
     line_weight: Option<f64>,
+    /// Printed: DXF's 290 (docs/adr/0260 §4); absent, printed.
+    plot: bool,
 }
 
 /// AutoCAD's name for a DXF version.
@@ -237,7 +239,7 @@ fn classify_pattern(elements: &[f64]) -> LineType {
 }
 
 /// A line type from its name, where the LTYPE table does not say.
-fn classify_name(name: &str) -> LineType {
+pub(crate) fn classify_name(name: &str) -> LineType {
     let n = name.to_uppercase();
     if n.contains("DASHDOT")
         || n.contains("CENTER")
@@ -336,6 +338,7 @@ impl<'a> Reader<'a> {
                         locked: flags & 4 != 0,
                         line_type,
                         line_weight: weight,
+                        plot: g(290).and_then(|x| parse_int(x.text())) != Some(0),
                     };
                     let key = def.name.to_uppercase();
                     self.lib.layer_colors.insert(key.clone(), def.color.clone());
@@ -358,6 +361,7 @@ impl<'a> Reader<'a> {
                         classify_pattern(&elements)
                     };
                     self.ltypes.insert(n.to_uppercase(), t);
+                    self.lib.ltypes.insert(n.to_uppercase(), t);
                     // By its handle too: a DIMSTYLE names its lines' types so (docs/adr/0205 §6).
                     if let Some(h) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
                         self.lib.ltype_handles.insert(h, t);
@@ -704,6 +708,7 @@ fn read_once(
                 locked: l.locked,
                 line_type: l.line_type,
                 line_weight: l.line_weight,
+                plot: (!l.plot).then_some(false),
                 count,
                 kinds: BTreeMap::new(),
                 bounds: None,
@@ -719,6 +724,7 @@ fn read_once(
     extra.sort();
     for (name, &count) in extra {
         layers.push(ImportLayer {
+            plot: None,
             name: name.clone(),
             color: "ink".to_string(),
             visible: true,

@@ -808,6 +808,122 @@ cases.append({
                "expect": {"revision": "same", "entities": {"2": E(2), "5": E(5)}}}],
 })
 
+
+# ── Çizgi tipi, ölçeği ve saydamlık (docs/adr/0260 §2, §3) ─────────────
+
+
+def looked(i, **look):
+    """The object with its own look fields: a value sets one, None takes it away (its source's again)."""
+    e = E(i)
+    for key, value in look.items():
+        if value is None:
+            e.pop(key, None)
+        else:
+            e[key] = value
+    return e
+
+
+SCALE = "Çizgi tipi ölçeği 0'dan büyük, en çok 1000 olmalı. Bir ölçek yazın ya da 1'e döndürmek için null verin."
+TRANSPARENCY = "Saydamlık 0 ile 0,9 arasında olmalı (%0–90). Bir saydamlık yazın ya da kaynağına döndürmek için null verin."
+
+cases.append({
+    "name": "Çizgi tipi değiştir: nesnenin kendi çizgi tipi verilir (ADR 0260 §2); aynısı değişiklik değildir; null kaynağına döndürür; her yazma kendi adımıdır",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1, 2), "lineType": "dashed", "operation": "lineType"}, "result": done([1, 2]),
+         "expect": {"entities": {"1": looked(1, lineType="dashed"), "2": looked(2, lineType="dashed")}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2), "lineType": "dashed", "operation": "lineType"}, "result": done([]), "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(1), "lineType": None, "operation": "lineType"}, "result": done([1]),
+         "expect": {"entities": {"1": E(1)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Çizgi tipi değiştir", "note": "Öznitelikler'in Çizgi tipi ▾ satırının adımı.", "expect": {"entities": {"1": looked(1, lineType="dashed")}}},
+        {"op": "undo", "returns": "Çizgi tipi değiştir", "expect": {"entities": {"1": E(1), "2": E(2)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "sürekli çizgi tipi de bir değerdir: katmanınkinden ayrıdır; dört tipin her biri",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "lineType": "continuous", "operation": "lineType"}, "result": done([1]),
+         "expect": {"entities": {"1": looked(1, lineType="continuous")}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2, 3, 4), "lineType": "dotted", "operation": "lineType"}, "result": done([2, 3, 4]),
+         "expect": {"entities": {"2": looked(2, lineType="dotted"), "3": looked(3, lineType="dotted"), "4": looked(4, lineType="dotted")}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(8), "lineType": "dashdot", "operation": "lineType"}, "result": done([8]),
+         "expect": {"entities": {"8": looked(8, lineType="dashdot")}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "Çizgi tipi ölçeği: desenin nesneye özgü çarpanı; 1 yazılmaz (yokluğu 1'dir), null da 1'e döndürür; adım “Çizgi tipi ölçeği”",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1, 2), "lineTypeScale": 2.5, "operation": "lineTypeScale"}, "result": done([1, 2]),
+         "expect": {"entities": {"1": looked(1, lineTypeScale=2.5), "2": looked(2, lineTypeScale=2.5)}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(1), "lineTypeScale": 1, "operation": "lineTypeScale"}, "result": done([1]),
+         "note": "1 nesnenin yokluğudur: alan kalkar.", "expect": {"entities": {"1": E(1)}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2), "lineTypeScale": None, "operation": "lineTypeScale"}, "result": done([2]),
+         "expect": {"entities": {"2": E(2)}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(3), "lineTypeScale": 1, "operation": "lineTypeScale"}, "result": done([]), "expect": {"revision": "same"}},
+        {"op": "undo", "returns": "Çizgi tipi ölçeği", "expect": {"entities": {"2": looked(2, lineTypeScale=2.5)}}},
+    ],
+})
+
+cases.append({
+    "name": "çizgi tipi ölçeği 0'dan büyük, en çok 1000; 0, eksi, 1000'in üstü ve NaN reddedilir: invalid_line_type_scale (yolu lineTypeScale)",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "lineTypeScale": 0, "operation": "lineTypeScale"}, "result": failed("invalid_line_type_scale", SCALE, "lineTypeScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "lineTypeScale": -2, "operation": "lineTypeScale"}, "result": failed("invalid_line_type_scale", SCALE, "lineTypeScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "lineTypeScale": 1000.5, "operation": "lineTypeScale"}, "result": failed("invalid_line_type_scale", SCALE, "lineTypeScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "lineTypeScale": 2, "operation": "lineTypeScale"}, "nonFinite": {"lineTypeScale": "NaN"}, "result": failed("invalid_line_type_scale", SCALE, "lineTypeScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "lineTypeScale": 1000, "operation": "lineTypeScale"}, "result": done([1]),
+         "note": "1000 sınırın içindedir.", "expect": {"entities": {"1": looked(1, lineTypeScale=1000)}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "Saydamlık değiştir: 0 ile 0,9 arası (ADR 0260 §3); 0 da bir değerdir (bloktaki nesne yerleştirmeninkini almaz); null kaynağına döndürür",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(2, 8), "transparency": 0.5, "operation": "transparency"}, "result": done([2, 8]),
+         "expect": {"entities": {"2": looked(2, transparency=0.5), "8": looked(8, transparency=0.5)}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(3), "transparency": 0, "operation": "transparency"}, "result": done([3]),
+         "expect": {"entities": {"3": looked(3, transparency=0)}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(2), "transparency": None, "operation": "transparency"}, "result": done([2]),
+         "expect": {"entities": {"2": E(2)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Saydamlık değiştir", "note": "Öznitelikler'in Saydamlık ▾ satırının adımı.", "expect": {"entities": {"2": looked(2, transparency=0.5)}}},
+    ],
+})
+
+cases.append({
+    "name": "saydamlık 0 ile 0,9 arasında olmalı: eksi, 0,9'un üstü ve NaN reddedilir: invalid_transparency (yolu transparency)",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "transparency": -0.1, "operation": "transparency"}, "result": failed("invalid_transparency", TRANSPARENCY, "transparency"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "transparency": 0.95, "operation": "transparency"}, "result": failed("invalid_transparency", TRANSPARENCY, "transparency"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "transparency": 0.5, "operation": "transparency"}, "nonFinite": {"transparency": "NaN"}, "result": failed("invalid_transparency", TRANSPARENCY, "transparency"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(1), "transparency": 0.9, "operation": "transparency"}, "result": done([1]),
+         "note": "0,9 sınırın içindedir.", "expect": {"entities": {"1": looked(1, transparency=0.9)}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "görünüşün parçaları birlikte de verilir: tek adım, adı işlemin adı; kilitli katmandaki nesne değişmez",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(1), "lineType": "dashed", "lineTypeScale": 4, "transparency": 0.25, "color": GREEN, "operation": "lineType"}, "result": done([1]),
+         "expect": {"entities": {"1": looked(1, lineType="dashed", lineTypeScale=4, transparency=0.25, color=GREEN)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Çizgi tipi değiştir", "expect": {"entities": {"1": E(1)}, "canUndo": False}},
+        {"op": "execute", "input": {"uids": uids(1, 5), "transparency": 0.25, "operation": "transparency"}, "result": locked_object("Kilitli katman", 1),
+         "note": "Geri alınan adım yinelenebilir kalır.", "expect": {"entities": {"1": E(1), "5": E(5)}, "canRedo": True, "revision": "same"}},
+    ],
+})
+
+cases.append({
+    "name": "ölçek ve saydamlığın denetimi kalınlıktan sonra, sürümden önce gelir",
+    "steps": [
+        {"op": "execute", "input": {"uids": [MISSING], "lineWeight": 200, "lineTypeScale": 0, "operation": "lineWeight", "expectedRevision": "999"},
+         "result": failed("invalid_line_weight", WEIGHT, "lineWeight"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": [MISSING], "lineTypeScale": 0, "transparency": 2, "operation": "lineTypeScale", "expectedRevision": "999"},
+         "result": failed("invalid_line_type_scale", SCALE, "lineTypeScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": [MISSING], "transparency": 2, "operation": "transparency", "expectedRevision": "999"},
+         "result": failed("invalid_transparency", TRANSPARENCY, "transparency"), "expect": NOTHING},
+    ],
+})
+
 write(
     "cad.entities.set",
     "Nesnelerin özelliklerini değiştir: doğrulama, plan, yazma, geri alma",

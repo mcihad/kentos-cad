@@ -429,6 +429,9 @@ pub struct LayerObjects<'a> {
     /// pattern). An insert is drawn piece by piece, each with the object's
     /// symbols and values; the simple look (and the fallback) by its piece's set.
     pub pieces: &'a [i32],
+    /// Each object's draw order band (docs/adr/0260 §3), as `ids`; empty when
+    /// none has its own order. Bands draw in turn, each fills under strokes.
+    pub bands: &'a [i32],
 }
 
 /// What Görünüm kipleri leave out of a layer (docs/adr/0195 §1): the fills
@@ -625,6 +628,7 @@ pub fn build_layer_in(
         if mode == MODE_SKIP {
             continue;
         }
+        sink.set_band(o.bands.get(i).copied().unwrap_or(0));
         let values = RowValues {
             program,
             table: &table,
@@ -685,6 +689,7 @@ pub fn build_layer_in(
     }
     if let Some(r) = whole {
         sink.hide(false, false);
+        sink.set_band(0);
         draw_whole(
             r, &taken, program, &table, &env, clip, frame, &mut sink, &mut cx,
         );

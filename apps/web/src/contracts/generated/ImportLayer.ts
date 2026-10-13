@@ -16,6 +16,10 @@ color: string, visible: boolean, locked: boolean, lineType: LineType,
  */
 lineWeight?: number, 
 /**
+ * Yazdır (docs/adr/0260 §4): `false` when the file's layer is not printed (DXF's 290).
+ */
+plot?: boolean, 
+/**
  * Objects read onto this layer.
  */
 count: number, 

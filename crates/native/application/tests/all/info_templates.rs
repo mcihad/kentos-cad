@@ -18,6 +18,7 @@ fn parcel(i: usize) -> Entity {
     };
     Entity::Polygon(PathEntity {
         base: EntityBase {
+            look: Default::default(),
             id: i as u32 + 1,
             layer_id: "parsel".to_owned(),
             color: None,

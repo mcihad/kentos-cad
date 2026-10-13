@@ -31,6 +31,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.hatch": entities.hatch,
     "cad.entities.join": entities.join,
     "cad.entities.offset": entities.offset,
+    "cad.entities.order": entities.order,
     "cad.entities.set": entities.set,
     "cad.entities.stretch": entities.stretch,
     "cad.entities.transform": entities.transform,

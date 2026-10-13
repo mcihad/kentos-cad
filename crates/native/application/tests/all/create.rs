@@ -31,6 +31,7 @@ fn points(n: usize) -> EntitiesCreate {
         layer_id: "yapi".into(),
         objects: (0..n)
             .map(|i| NewObject {
+                line_type: None,
                 geometry: EntityGeometry::Point {
                     p: at(487000.0 + i as f64, 4420000.0),
                     z: None,
@@ -113,6 +114,7 @@ fn the_geometry_is_written_as_given() {
         EntitiesCreate {
             layer_id: "yapi".into(),
             objects: vec![NewObject {
+                line_type: None,
                 geometry: EntityGeometry::Xline {
                     p: at(487020.000000001, -0.0),
                     dir,

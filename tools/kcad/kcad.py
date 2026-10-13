@@ -167,6 +167,10 @@ SCHEMA_WITH_POLYLINE_EXTRAS = 46
 # Schema 47: schema 46 and the `nurbs` kind, a general NURBS curve as given, in the drawing and in a block definition
 # (docs/adr/0259).
 SCHEMA_WITH_NURBS = 47
+# Schema 48: schema 47 and an object's `lineType`, `lineTypeScale`, `transparency`, `order` (the drawing's objects) and
+# `byLayer` (a block's objects), a layer's `plot` (docs/adr/0260).
+SCHEMA_WITH_LOOK = 48
+LOOK_PARTS = ("color", "lineType", "lineWeight", "transparency")
 # A NURBS curve's bounds (kentos_contracts::nurbs).
 NURBS_MAX_DEGREE = 11
 NURBS_MAX_POINTS = 100_000
@@ -330,7 +334,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1821,6 +1825,7 @@ class _Schema:
         self.requests = version >= SCHEMA_WITH_REQUESTS
         self.polyline_extras = version >= SCHEMA_WITH_POLYLINE_EXTRAS
         self.nurbs = version >= SCHEMA_WITH_NURBS
+        self.look = version >= SCHEMA_WITH_LOOK
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2403,6 +2408,7 @@ class _Schema:
                 **({"filter": (self.layer_filter_, False)} if self.filters else {}),
                 **({"actions": (self.layer_actions_, False), "card": (self.info_card_, False)} if self.attachments else {}),
                 **({"compose": (self.layer_compose_, False)} if self.compose else {}),
+                **({"plot": (self.only_false, False)} if self.look else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -2533,6 +2539,11 @@ class _Schema:
         if not texts:
             self.fail("bad_value", "boş liste yazılmaz")
         return texts
+
+    def only_false(self, v):
+        if self.bool(v) is not False:
+            self.fail("bad_value", "plot yalnız false yazılır; yazdırılan katmanda alan yoktur")
+        return False
 
     def only_true(self, v):
         if self.bool(v) is not True:
@@ -3073,6 +3084,7 @@ class _Schema:
                 self.polyline_extras_rules(fields)
             if kind == "nurbs":
                 self.nurbs_rules(fields)
+            self.look_rules(fields)
             if kind == "dimension":
                 self.dimension_rules(fields)
             if kind == "text" and ("labelOf" in fields) != ("labelScale" in fields):
@@ -3893,7 +3905,37 @@ class _Schema:
             **({"labelPins": (self.label_pins_, False)} if self.labels and self.inside is None else {}),
             # Photos and documents (schema 40, docs/adr/0225 §1): the drawing's objects only.
             **({"attachments": (self.attachments_, False)} if self.attachments and self.inside is None else {}),
+            # An object's look (schema 48, docs/adr/0260): the order the drawing's objects', `byLayer` a block's.
+            **({"lineType": (self.enum(LINE_TYPES), False), "lineTypeScale": (self.float, False), "transparency": (self.float, False)} if self.look else {}),
+            **({"order": (self.order, False)} if self.look and self.inside is None else {}),
+            **({"byLayer": (self.array(self.enum(LOOK_PARTS)), False)} if self.look and self.inside is not None else {}),
         }
+
+    def order(self, v):
+        """An object's drawing order (schema 48): a 32-bit whole number."""
+        if type(v) is not int:
+            self.fail("wrong_type", "tam sayı olmalı")
+        if not -(2**31) <= v < 2**31:
+            self.fail("bad_value", f"çizim sırası {v} aralık dışında")
+        return v
+
+    def look_rules(self, obj):
+        """An object's look (schema 48, docs/adr/0260 §1–§3): a scale above 0 and at most 1000, a transparency from 0
+        to 0.9; the by-layer parts in order, once, none with a value of its own."""
+        s = obj.get("lineTypeScale")
+        if s is not None and not 0 < s <= 1000:
+            self.fail("bad_value", f"çizgi tipi ölçeği {s}; 0'dan büyük, en çok 1000 olmalı")
+        t = obj.get("transparency")
+        if t is not None and not 0 <= t <= 0.9:
+            self.fail("bad_value", f"saydamlık {t}; 0 ile 0,9 arası olmalı")
+        parts = obj.get("byLayer", [])
+        if "byLayer" in obj and not parts:
+            self.fail("bad_value", "boş katmana göre listesi yazılmaz")
+        idx = [LOOK_PARTS.index(p) for p in parts]
+        if idx != sorted(set(idx)):
+            self.fail("bad_value", "katmana göre parçalar sırayla ve birer kez yazılır")
+        if any(p in obj for p in parts):
+            self.fail("bad_value", "kendi değeri olan parça katmana göre olamaz")
 
     def line_weight(self, v):
         w = self.float(v)
