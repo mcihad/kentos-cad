@@ -25,6 +25,7 @@ fn picked(name: &str) -> Picked {
     Picked {
         name: name.to_owned(),
         bytes: std::fs::read(gis(name)).expect("a fixture").into(),
+        path: Some(gis(name)),
     }
 }
 

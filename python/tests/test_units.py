@@ -5,6 +5,7 @@ units."""
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 import kentos.cad as cad
 
@@ -111,3 +112,30 @@ class MeasureBasis(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DxfUnit(unittest.TestCase):
+    """A DXF's unit decided by one rule (docs/adr/0257 §1): what the file declares in a local project, metres with a
+    coordinate system, the project's unit for a file that declares none; or the one chosen."""
+
+    FILES = Path(__file__).resolve().parents[2] / "fixtures/formats/v1/dxf-units"
+
+    def test_a_millimetre_room_into_a_metre_project_and_undo(self) -> None:
+        doc = cad.Document.new("Oda", workspace="cad", drawing_unit="m")
+        done = doc.import_dxf(self.FILES / "mm.dxf")
+        self.assertEqual((done.unit.declared, done.unit.used, done.unit.source), (4, 4, cad.UnitSource.DECLARED))
+        self.assertEqual((done.unit.factor, done.unit.assumed, done.objects, done.blocks), (0.001, False, 5, 1))
+        self.assertEqual([layer.name for layer in done.layers], ["DUVAR"])
+        wall = next(r.entity for r in doc.entities() if r.entity.kind == "line")
+        self.assertEqual((wall.a.x, wall.b.x), (0.0, 4.0))
+        self.assertEqual(doc.undo(), "DXF: mm.dxf")
+
+    def test_a_file_declaring_no_unit_is_said_and_a_unit_can_be_chosen(self) -> None:
+        doc = cad.Document.new("Oda", workspace="cad", drawing_unit="mm")
+        plan = cad.file.import_.dxf.run(doc, cad.ImportDxf(path=str(self.FILES / "unitless.dxf")), op="plan")
+        assert plan.output is not None
+        self.assertEqual((plan.output.unit.source, plan.output.unit.assumed), (cad.UnitSource.PROJECT, True))
+        self.assertEqual([w.code for w in plan.warnings], ["unit_assumed"])
+        self.assertEqual(doc.info().can_undo, False)
+        chosen = doc.import_dxf(self.FILES / "unitless.dxf", file_unit="cm", group="")
+        self.assertEqual((chosen.unit.used, chosen.unit.factor, chosen.group), (5, 0.01, cad.UNSET))

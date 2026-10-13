@@ -27,7 +27,8 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     DimensionMeasure, DimensionsCreate, Division, EntitiesBoundary, EntitiesBreak, EntitiesDivide,
-    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, MeasuredPoint, UnitsChange,
+    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, MeasuredPoint,
+    UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
@@ -40,7 +41,7 @@ use kentos_native_application::{
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
-    entities_hatch, entities_join, stretch,
+    entities_hatch, entities_join, file_import, stretch,
 };
 use serde_json::{Value, json};
 
@@ -76,9 +77,11 @@ const STEP_KEYS: &[&str] = &[
     "note",
 ];
 
-/// JSON equality with numbers compared as numbers (the file's `1` is the document's `1.0`).
+/// JSON equality with numbers compared as numbers (the file's `1` is the document's `1.0`);
+/// an expected `"$any"` takes whatever is there (a reader's report, docs/adr/0257 §3).
 fn same(a: &Value, b: &Value) -> bool {
     match (a, b) {
+        (_, Value::String(w)) if w == "$any" => true,
         (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
         (Value::Array(x), Value::Array(y)) => {
             x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same(p, q))
@@ -111,6 +114,10 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
     Ok(match value {
         // “$$…” is the text “$…” itself (a change set's reference to a step, docs/adr/0253 §8).
         Value::String(text) if text.starts_with("$$") => Value::String(text[1..].to_owned()),
+        // Whatever the command gives (compared by `same`).
+        Value::String(text) if text == "$any" => value.clone(),
+        // A fixture file's absolute path, anywhere in a text (docs/adr/0257 §3).
+        Value::String(text) if text.contains("$fixture:") => Value::String(with_fixtures(text)),
         Value::String(text) if text.starts_with("$blockOf:") => {
             let name = &text["$blockOf:".len()..];
             let block = doc
@@ -213,6 +220,23 @@ fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<
         ),
         other => other.clone(),
     })
+}
+
+/// `text` with every `$fixture:rel/path` (up to a space) replaced by the
+/// absolute path of `fixtures/rel/path`.
+fn with_fixtures(text: &str) -> String {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+    let mut out = String::new();
+    let mut rest = text;
+    while let Some(start) = rest.find("$fixture:") {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + "$fixture:".len()..];
+        let end = after.find(char::is_whitespace).unwrap_or(after.len());
+        out.push_str(&root.join(&after[..end]).display().to_string());
+        rest = &after[end..];
+    }
+    out.push_str(rest);
+    out
 }
 
 /// `text` with every `$uid:name` replaced by the persistent id `captureUid` took as `name`.
@@ -676,6 +700,13 @@ impl Input for SettingsSet {
 
 impl Input for UnitsChange {
     /// No numbers: two units and a choice (docs/adr/0256 §1).
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for ImportDxf {
+    /// No number: a path, names and choices.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -1287,6 +1318,7 @@ fn run_op(
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
+        kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
@@ -1392,6 +1424,23 @@ fn fresh_layers(got: &Value, before: &std::collections::HashSet<String>) -> Vec<
     out.into_iter().map(|(_, s)| s).collect()
 }
 
+/// The node of `id` in a layer tree and the id of the group it is in.
+fn node_with_parent<'a>(
+    nodes: &'a [kentos_domain::contracts::LayerNode],
+    id: &str,
+    parent: Option<&'a str>,
+) -> Option<(&'a kentos_domain::contracts::LayerNode, Option<&'a str>)> {
+    for n in nodes {
+        if n.id == id {
+            return Some((n, parent));
+        }
+        if let Some(found) = node_with_parent(&n.children, id, Some(&n.id)) {
+            return Some(found);
+        }
+    }
+    None
+}
+
 /// Every node's id of a layer tree.
 fn layer_ids(nodes: &[kentos_domain::contracts::LayerNode]) -> std::collections::HashSet<String> {
     let mut out = std::collections::HashSet::new();
@@ -1487,6 +1536,48 @@ fn check(
                         .unwrap_or(Value::Null);
                     let entity = block_ids(entity, doc, state, at)?;
                     expect_same(&got, &entity, &format!("nesne {id}"), at)?;
+                }
+            }
+            // Only the fields named of each object, each whole (docs/adr/0257 §3: a reader's
+            // object holds more than a case should know of it).
+            "fields" => {
+                for (id, fields) in want.as_object().unwrap_or(&empty) {
+                    let slot = id
+                        .parse::<u32>()
+                        .map(Slot)
+                        .map_err(|_| format!("{at}: {id}"))?;
+                    let got = doc
+                        .get(slot)
+                        .map(serde_json::to_value)
+                        .transpose()
+                        .map_err(|e| format!("{at}: {e}"))?
+                        .ok_or_else(|| format!("{at}: {id} yuvasında nesne yok"))?;
+                    for (k, v) in fields.as_object().unwrap_or(&empty) {
+                        let v = block_ids(v, doc, state, at)?;
+                        expect_same(
+                            got.get(k).unwrap_or(&Value::Null),
+                            &v,
+                            &format!("nesne {id}.{k}"),
+                            at,
+                        )?;
+                    }
+                }
+            }
+            // Only the fields named of each layer-tree node, by id; `parent` is the
+            // id of the group it is in, null at the top (docs/adr/0257 §3).
+            "nodes" => {
+                for (id, fields) in want.as_object().unwrap_or(&empty) {
+                    let (node, parent) = node_with_parent(doc.layers().nodes(), id, None)
+                        .ok_or_else(|| format!("{at}: “{id}” düğümü ağaçta yok"))?;
+                    let got = serde_json::to_value(node).map_err(|e| format!("{at}: {e}"))?;
+                    for (k, v) in fields.as_object().unwrap_or(&empty) {
+                        let got = if k == "parent" {
+                            parent.map_or(Value::Null, |p| json!(p))
+                        } else {
+                            got.get(k).cloned().unwrap_or(Value::Null)
+                        };
+                        expect_same(&got, v, &format!("düğüm {id}.{k}"), at)?;
+                    }
                 }
             }
             "canUndo" => expect_same(&json!(doc.can_undo()), want, "canUndo", at)?,

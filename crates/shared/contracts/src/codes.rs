@@ -556,6 +556,20 @@ codes! {
     NOTHING_TO_EXPORT = "nothing_to_export", Failed, false, "Çizimde yazılacak nesne yok.";
     /// A project with no sheet to print.
     NO_SHEETS = "no_sheets", Failed, false, "Projenin pafta kitabında pafta yok.";
+    /// A file to read that is not there (`file.import.dxf`, docs/adr/0257 §3).
+    FILE_NOT_FOUND = "file_not_found", Failed, false, "Okunacak dosya yok.";
+    /// A file to import that cannot be read as its format.
+    IMPORT_UNREADABLE = "import_unreadable", Failed, false, "Dosya okunamadı ya da biçimi bozuk; hiçbir şey alınmadı.";
+    /// An import with no object to take: the file holds none, or every layer was left out.
+    NOTHING_TO_IMPORT = "nothing_to_import", Failed, false, "Dosyada ya da seçilen katmanlarında alınacak nesne yok.";
+    /// The file declares no unit (or a code no one defines): its numbers were taken in the project's unit (docs/adr/0257 §1).
+    UNIT_ASSUMED = "unit_assumed", Warning, false, "Dosya birim bildirmiyor; değerler ölçeklenmeden projenin biriminde (sistemli projede metre) sayıldı.";
+    /// A project with a coordinate system read a file declaring another unit as metres.
+    UNIT_IGNORED = "unit_ignored", Warning, false, "Dosya başka bir birim bildiriyor; koordinat sistemi olan proje onu metre okudu, değerler ölçeklenmedi.";
+    /// Blocks whose unit is another than the file's (docs/adr/0257 §2).
+    BLOCK_UNITS_DIFFER = "block_units_differ", Warning, false, "Bazı blokların birimi dosyanınkinden başka; yerleştirmelerin ölçeği oranı taşır.";
+    /// What the reader could not take (the report says each).
+    IMPORT_LOSSES = "import_losses", Warning, false, "Okuyucu dosyanın bazı nesnelerini ya da özelliklerini alamadı; rapor nedenlerini söyler.";
     /// The PDF could not be made.
     PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
 

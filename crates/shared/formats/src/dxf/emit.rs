@@ -80,6 +80,9 @@ pub struct Library {
     pub dim_styles: HashMap<String, DimStyle>,
     /// A block record's handle → its block's name (a leader's arrowhead block).
     pub block_records: HashMap<u64, String>,
+    /// The block records' insertion units other than none, by the blocks'
+    /// names, in the table's order (BLOCK_RECORD's group 70, docs/adr/0257 §2).
+    pub block_units: Vec<(String, i64)>,
     /// Upper-case text style name → its STYLE record (docs/adr/0183 §7).
     pub text_records: HashMap<String, super::styles::StyleRecord>,
     /// A STYLE record's handle → its upper-case name (a DIMSTYLE's DIMTXSTY).

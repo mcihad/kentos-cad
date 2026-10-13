@@ -41,8 +41,9 @@ class Coverage(unittest.TestCase):
             parts = c["id"].split(".")
             parts = parts[1:] if parts[0] == "cad" else parts
             obj: Any = cad
+            # A Python keyword gets a trailing underscore, a namespace's too (file.import.dxf: file.import_.dxf).
             for p in parts[:-1]:
-                obj = getattr(obj, p)
+                obj = getattr(obj, p + "_" if keyword.iskeyword(p) else p)
             # A Python keyword gets a trailing underscore (cad.entities.break: entities.break_).
             name = parts[-1] + "_" if keyword.iskeyword(parts[-1]) else parts[-1]
             self.assertIs(getattr(obj, name), w, c["id"])

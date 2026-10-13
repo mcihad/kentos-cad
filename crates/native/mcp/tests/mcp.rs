@@ -1277,3 +1277,64 @@ fn an_agent_changes_the_unit_and_measures_in_a_batch() {
         "method_unavailable"
     );
 }
+
+/// An agent takes a DXF in (docs/adr/0257 §3): the tool is the catalog's, not
+/// destructive (it only adds); the plan says the unit the file declares, the
+/// write takes the millimetre room in as metres; a file declaring none is
+/// read in the project's unit and says so.
+#[test]
+fn an_agent_imports_a_dxf_in_its_unit() {
+    let mut server = Server::new();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tools = listed["result"]["tools"].as_array().expect("tools");
+    let import = tools
+        .iter()
+        .find(|t| t["name"] == "file.import.dxf")
+        .expect("file.import.dxf");
+    assert_eq!(import["annotations"]["destructiveHint"], false);
+    assert!(
+        import["inputSchema"]["properties"]
+            .get("fileUnit")
+            .is_some(),
+        "{import}"
+    );
+    let files = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/dxf-units");
+    let made = call(
+        &mut server,
+        "drawing.new",
+        json!({ "name": "Oda", "workspace": "cad", "drawingUnit": "m" }),
+    );
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let path = files.join("mm.dxf").display().to_string();
+    let planned = call(
+        &mut server,
+        "file.import.dxf",
+        json!({ "drawing": drawing, "op": "plan", "path": path }),
+    );
+    assert_eq!(planned["isError"], false, "{planned}");
+    let unit = &planned["structuredContent"]["output"]["unit"];
+    assert_eq!(
+        (&unit["declared"], &unit["source"], &unit["factor"]),
+        (&json!(4), &json!("declared"), &json!(0.001))
+    );
+    let done = call(
+        &mut server,
+        "file.import.dxf",
+        json!({ "drawing": drawing, "path": path }),
+    );
+    assert_eq!(done["isError"], false, "{done}");
+    assert_eq!(done["structuredContent"]["output"]["objects"], 5);
+    let unitless = call(
+        &mut server,
+        "file.import.dxf",
+        json!({ "drawing": drawing, "op": "plan", "path": files.join("unitless.dxf").display().to_string() }),
+    );
+    let warnings = unitless["structuredContent"]["warnings"]
+        .as_array()
+        .expect("warnings");
+    assert_eq!(warnings[0]["code"], "unit_assumed", "{unitless}");
+}

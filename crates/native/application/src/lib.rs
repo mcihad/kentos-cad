@@ -72,7 +72,9 @@ pub use break_join::{entities_break, entities_join};
 pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use region::{entities_boundary, entities_hatch};
+pub mod file_import;
 pub mod geometry_store;
+pub mod import_apply;
 pub mod layer_filter;
 pub mod layers_compose;
 pub mod layers_edit;
@@ -300,6 +302,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_UNITS_CHANGE,
         kentos_contracts::CAD_UNITS_CHANGE_VERSION,
+    ),
+    // A DXF into the drawing, its unit decided by one rule ([`file_import`], docs/adr/0257).
+    (
+        kentos_contracts::FILE_IMPORT_DXF,
+        kentos_contracts::FILE_IMPORT_DXF_VERSION,
     ),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (

@@ -841,6 +841,7 @@ mod tests {
         Picked {
             name: name.to_owned(),
             bytes: vec![byte].into(),
+            path: None,
         }
     }
 

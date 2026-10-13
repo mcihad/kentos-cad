@@ -116,6 +116,8 @@ Sürüm ve kalıcı kimlik iki uygulamada aynı sayı değildir; dosya onları a
 | `"$layer"` | son komutun eklediği katman | `output.layer` ya da `output.node.id`'de: komutun eklediği (plan: ekleyeceği), ağaçta olmayan bir `layer-N` (ADR 0208 §15); `expect.layers`'ta da |
 | `"$$…"` | `"$…"` metninin kendisi: değişiklik kümesinin önceki bir adıma başvurusu (`"$$nokta"` → `"$nokta"`, ADR 0253 §8) | aynı; `expect.entities`'te de |
 | `"$layer:2"` | katman ekleyen son komutun ikinci yeni katmanı | sonuçta adımdan önce ağaçta olmayan `layer-N`'ler sayılarına göre sıralı; execute'ta ağaçta, plan'da ağaçta değil; katman eklemeyen komut önceki bağı bırakır (ADR 0210 §11); `expect.layers` ve `expect.entities`'te de |
+| `$fixture:yol` (bir metnin içinde de, boşluğa kadar) | `fixtures/yol`'un mutlak yolu: komutun okuyacağı ortak dosya (`file.import.dxf`, ADR 0257 §3) | aynı; bir iletinin içinde de (`$fixture:formats/v1/dxf-units/yok.dxf yok; …`) |
+| `"$any"` | — | değeri ne olursa olsun alan: okuyucunun raporu, okuyucunun okuyamama nedeni gibi bu durumların bilmediği değerler (ADR 0257 §3) |
 
 **Sürüm neden yalnız karşılaştırılır?** Sürüm bir sayaçtır; sözleşmesi eşitliktir. Web açılışı bir kez sayar, masaüstü saymaz (ADR 0020). Kimlik yeni nesnede rastgeledir (UUIDv7, ADR 0014).
 
@@ -138,6 +140,8 @@ Yalnız yazılan alanlar denetlenir.
 | `activeLayer` | etkin katmanın kimliği; `"$layer"` da olur (ADR 0248) |
 | `name` | çizimin adı (ADR 0248 §6) |
 | `settings` | `{ "anahtar": değer }`: projenin ayarlarından yalnız verilenler, alan alan eşit; yazılmayan (boş liste, verilmeyen değer) `null` (ADR 0248) |
+| `fields` | `{ "kimlik": { "alan": değer } }`: nesnenin yalnız verilen alanları, her biri bütün; okuyucunun verdiği nesnenin bu durumların bilmediği alanları denetlenmez (ADR 0257 §3) |
+| `nodes` | `{ "düğüm": { "alan": değer } }`: katman ağacının düğümünün yalnız verilen alanları; `parent` içinde olduğu grubun kimliği, ağacın üstündeyse `null` (ADR 0257 §3) |
 
 ## Kurallar
 
@@ -158,4 +162,7 @@ Yalnız yazılan alanlar denetlenir.
 - Katman ağacının, stillerin ve ayarların komutları (ADR 0248) web dururken yalnız masaüstünde ve Python'da koşar; durumları KentOS
   kodu olmadan `scripts/fixtures/layer_tree_command_cases.py` (üç dosya), `style_edit_command_cases.py` ve
   `settings_set_command_cases.py` yazar (`--check` farkı arar). Web dönüşte işleyicilerini ve üç yeni beklentiyi alır (TODOS.md §0.2).
+- DXF içe alma (`file.import.dxf`, ADR 0257) ortak DXF dosyalarını okur (`fixtures/formats/v1/dxf-units`, `dxf-import`); durumları
+  KentOS kodu olmadan `scripts/fixtures/dxf_import_command_cases.py` yazar (birim kuralı `dxf_units_cases.py`'den; `--check` farkı
+  arar). Nesnelerin yalnız bu durumların bildiği alanları (`fields`) ve açılan katmanların yerleri (`nodes`) denetlenir.
 - −0 dosyada yazılmaz: JavaScript'in yazdığı JSON onu 0 yapar. −0'ın korunduğu iki koşucunun kendi testlerindedir (`apps/web/src/wasm/transform.wasm.test.ts`, `crates/native/application/tests/all/transform.rs`).

@@ -2738,6 +2738,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-domain",
  "kentos-expression",
+ "kentos-formats",
  "kentos-geometry-core",
  "kentos-sheet",
  "kentos-style-core",

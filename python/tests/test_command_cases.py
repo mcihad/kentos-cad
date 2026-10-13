@@ -66,6 +66,12 @@ class Case:
             # “$$…” is the text “$…” itself (a change set's reference to a step, docs/adr/0253 §8).
             if value.startswith("$$"):
                 return value[1:]
+            # Whatever the command gives (compared by `same`).
+            if value == "$any":
+                return value
+            # A fixture file's absolute path, anywhere in a text (docs/adr/0257 §3).
+            if "$fixture:" in value:
+                return re.sub(r"\$fixture:(\S+)", lambda m: str(ROOT / "fixtures" / m.group(1)), value)
             if value.startswith("$blockOf:"):
                 block = self.block_named(value[len("$blockOf:"):])
                 assert block is not None, f"{at}: {value}: no such block"
@@ -180,6 +186,28 @@ class Case:
                 for slot, entity in want.items():
                     record = slots.get(int(slot))
                     same(None if record is None else record.entity.to_json(), self.block_ids(entity, at), f"{at}: object {slot}")
+            elif key == "fields":
+                # Only the fields named of each object, each whole (docs/adr/0257 §3).
+                slots = self.slots()
+                for slot, fields in want.items():
+                    record = slots.get(int(slot))
+                    assert record is not None, f"{at}: no object in slot {slot}"
+                    data = record.entity.to_json()
+                    for k, v in fields.items():
+                        same(data.get(k), self.block_ids(v, at), f"{at}: object {slot}.{k}")
+            elif key == "nodes":
+                # Only the fields named of each layer-tree node; `parent` the group it is in (docs/adr/0257 §3).
+                found: dict[str, tuple[dict[str, Any], str | None]] = {}
+                stack = [(n, None) for n in json.loads(self.doc._session.layers())]
+                while stack:
+                    node, parent = stack.pop()
+                    found[node["id"]] = (node, parent)
+                    stack.extend((c, node["id"]) for c in node.get("children") or [])
+                for id, fields in want.items():
+                    assert id in found, f"{at}: no node {id}"
+                    node, parent = found[id]
+                    for k, v in fields.items():
+                        same(parent if k == "parent" else node.get(k), v, f"{at}: node {id}.{k}")
             elif key in ("canUndo", "canRedo", "dirty"):
                 flag = {"canUndo": info.can_undo, "canRedo": info.can_redo, "dirty": info.dirty}[key]
                 assert flag == want, f"{at}: {key} {flag}"
@@ -295,7 +323,10 @@ def wire(outcome: cad.Outcome[Any]) -> dict[str, Any]:
 
 
 def same(got: Any, want: Any, at: str) -> None:
-    """Equal as JSON, numbers as numbers (the file's 1 is 1.0)."""
+    """Equal as JSON, numbers as numbers (the file's 1 is 1.0); an expected "$any" takes whatever is there (a reader's
+    report, docs/adr/0257 §3)."""
+    if want == "$any":
+        return
     if isinstance(want, dict):
         assert isinstance(got, dict) and set(got) == set(want), f"{at}: {json.dumps(got)} != {json.dumps(want)}"
         for k in want:

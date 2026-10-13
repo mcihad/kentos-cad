@@ -57,11 +57,13 @@ use kentos_render_wgpu::scene;
 
 use crate::app::{App, Dialog, Message, Picker};
 
-/// The file an import reads: its name and bytes.
+/// The file an import reads: its name and bytes, and where it was when
+/// known (what a command's journal row names, docs/adr/0257 §4).
 #[derive(Debug, Clone)]
 pub struct Picked {
     pub name: String,
     pub bytes: Arc<[u8]>,
+    pub path: Option<PathBuf>,
 }
 
 /// What an import picks.
@@ -274,10 +276,12 @@ impl App {
                     let mut files = Vec::with_capacity(picked.len());
                     for file in picked {
                         let name = file.file_name();
+                        let path = Some(file.path().to_path_buf());
                         let bytes = file.read().await;
                         files.push(Picked {
                             name,
                             bytes: bytes.into(),
+                            path,
                         });
                     }
                     Some(Ok(files))
@@ -293,10 +297,12 @@ impl App {
                     .pick_file()
                     .await?;
                 let name = file.file_name();
+                let path = Some(file.path().to_path_buf());
                 let bytes = file.read().await;
                 Some(Ok(Picked {
                     name,
                     bytes: bytes.into(),
+                    path,
                 }))
             },
             move |file| message(Event::Picked(kind, file)),
@@ -511,6 +517,7 @@ fn read_file(path: &PathBuf) -> Result<Picked, String> {
     Ok(Picked {
         name,
         bytes: bytes.into(),
+        path: Some(path.clone()),
     })
 }
 

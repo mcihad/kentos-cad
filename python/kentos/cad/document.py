@@ -493,6 +493,36 @@ class Document:
             Path(raw["path"]), int(raw["bytes"]), int(raw["objects"]), int(raw["layers"]), raw["report"], str(raw.get("sha256", ""))
         )
 
+    def import_dxf(
+        self,
+        path: str | os.PathLike[str],
+        *,
+        file_unit: str | None = None,
+        explode_blocks: bool = False,
+        skip_layers: Sequence[str] = (),
+        layers: Mapping[str, str] | None = None,
+        group: str | None = None,
+    ) -> Any:
+        """A DXF file into the drawing as the desktop's DXF içe aktar takes it, as one undo step
+        (``file.import.dxf``, docs/adr/0257): each of its layers onto the drawing's layer of the
+        same name, else a new one in a group named after the file (``group``; ``""`` for the top of
+        the tree), ``layers`` routing a file's layer to a layer id, ``skip_layers`` leaving some out.
+        Its unit: ``file_unit`` (``"mm"``, ``"in"``, ``"usFt"`` …) when given, else what the file
+        declares in a local project and metres with a coordinate system; a file declaring none is
+        read in the project's unit (``unit.assumed`` and the ``unit_assumed`` warning say so).
+        The answer is ``DxfImported``: the unit decided, the layers made, the objects taken."""
+        from .file import import_
+
+        return import_.dxf(
+            self,
+            path=os.fspath(path),
+            file_unit=file_unit,
+            explode_blocks=explode_blocks,
+            skip_layers=list(skip_layers),
+            layers=dict(layers or {}),
+            group=group,
+        )
+
     def export_pdf(self, path: str | os.PathLike[str], sheets: Sequence[str] | None = None) -> Printed:
         """The project's sheet book as a PDF: the sheets named (by id) or all, a page each, as the
         desktop's Dışa aktar › PDF writes them (each map at its scale, GeoPDF where the system is a

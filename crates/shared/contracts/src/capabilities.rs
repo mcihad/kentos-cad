@@ -1109,6 +1109,23 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.import.dxf",
+        refusals: &[
+            &["invalid_file_path"],
+            REVISION,
+            &["file_not_found", "import_unreadable"],
+            LAYER,
+            &["nothing_to_import"],
+        ],
+        warnings: &[
+            "unit_assumed",
+            "unit_ignored",
+            "block_units_differ",
+            "import_losses",
+        ],
+        targets: none,
+    },
+    Entry {
         id: "file.export.dxf",
         refusals: &[&[
             "invalid_file_path",

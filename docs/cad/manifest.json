@@ -2064,12 +2064,14 @@
    "id": "file.import.dxf",
    "kind": "command",
    "title": "DXF…",
-   "level": "none",
-   "via": [],
+   "level": "semantic",
+   "via": [
+    "file.import.dxf"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": "İçe aktarma komutu yok (cad.files.*).",
+   "python": "Connection: file.import.dxf",
+   "mcp": "file.import.dxf",
+   "note": "Pencere dosyayı okuyup gösterir, komutla yazar (file_import::execute_read); 20 000'den çok nesne kare kare, komutun planıyla ve kaydıyla (ADR 0257).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

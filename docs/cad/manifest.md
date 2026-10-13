@@ -17,10 +17,10 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 32 | 81 | 38 | 38 | 189 |
+| semantic | 32 | 82 | 38 | 38 | 190 |
 | geometry | 19 | 74 | 0 | 8 | 101 |
 | processing | 0 | 11 | 2 | 140 | 153 |
-| none | 0 | 21 | 0 | 6 | 27 |
+| none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
 | session | 0 | 78 | 43 | 5 | 126 |
 | host | 0 | 15 | 14 | 4 | 33 |
@@ -31,7 +31,7 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 450 satırdan 145'i: geometry 93, none 21, processing 13, query 18.
+CBS'ye özgü olmayan 450 satırdan 144'i: geometry 93, none 20, processing 13, query 18.
 
 ### Sonucu çağıran hesaplar (geometry) — 93
 
@@ -131,7 +131,7 @@ CBS'ye özgü olmayan 450 satırdan 145'i: geometry 93, none 21, processing 13, 
 | `tool.vertex` | Köşe ekle/sil | cad | cad.entities.edit `vertexAdd` |  |
 | `tool.vertexPoints` | Köşelere nokta | shared | cad.entities.create `vertexPoints` |  |
 
-### Ürün komutu yok (none) — 21
+### Ürün komutu yok (none) — 20
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -143,7 +143,6 @@ CBS'ye özgü olmayan 450 satırdan 145'i: geometry 93, none 21, processing 13, 
 | `file.export.kml` | KML/KMZ… | shared | — |  |
 | `file.export.ncn` | Koordinat listesi (NCN, TXT, CSV)… | shared | — |  |
 | `file.export.pdf` | PDF pafta… | shared | — |  |
-| `file.import.dxf` | DXF… | shared | — | İçe aktarma komutu yok (cad.files.*). |
 | `file.import.geojson` | GeoJSON… | shared | — |  |
 | `file.import.gnss` | GNSS (GPX, NMEA)… | shared | — |  |
 | `file.import.kml` | KML/KMZ… | shared | — |  |

@@ -255,8 +255,11 @@
       "level": "none"
     },
     "file.import.dxf": {
-      "level": "none",
-      "note": "İçe aktarma komutu yok (cad.files.*)."
+      "level": "semantic",
+      "via": [
+        "file.import.dxf"
+      ],
+      "note": "Pencere dosyayı okuyup gösterir, komutla yazar (file_import::execute_read); 20 000'den çok nesne kare kare, komutun planıyla ve kaydıyla (ADR 0257)."
     },
     "file.import.geojson": {
       "level": "none"

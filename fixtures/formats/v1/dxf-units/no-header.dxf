@@ -1,0 +1,192 @@
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+  0
+LAYER
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+DUVAR
+ 70
+0
+ 62
+1
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+  0
+BLOCK_RECORD
+  5
+100
+100
+AcDbSymbolTableRecord
+100
+AcDbBlockTableRecord
+  2
+KAPI
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+BLOCK
+  8
+0
+  2
+KAPI
+ 70
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+  3
+KAPI
+  0
+LINE
+  8
+0
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 11
+900.0
+ 21
+0.0
+ 31
+0.0
+  0
+ENDBLK
+  8
+0
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LINE
+  8
+DUVAR
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 11
+4000.0
+ 21
+0.0
+ 31
+0.0
+  0
+CIRCLE
+  8
+DUVAR
+ 10
+1000.0
+ 20
+500.0
+ 30
+0.0
+ 40
+250.0
+  0
+TEXT
+  8
+DUVAR
+ 10
+100.0
+ 20
+3000.0
+ 30
+0.0
+ 40
+250.0
+  1
+Salon
+  0
+MTEXT
+  8
+DUVAR
+100
+AcDbEntity
+100
+AcDbMText
+ 10
+100.0
+ 20
+2500.0
+ 30
+0.0
+ 40
+200.0
+ 41
+3000.0
+ 71
+1
+  1
+Not kutusu
+  0
+INSERT
+  8
+DUVAR
+  2
+KAPI
+ 10
+1000.0
+ 20
+0.0
+ 30
+0.0
+ 41
+1.0
+ 42
+1.0
+ 43
+1.0
+ 50
+0.0
+  0
+ENDSEC
+  0
+EOF

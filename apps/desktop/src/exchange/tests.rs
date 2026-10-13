@@ -704,8 +704,129 @@ fn unit_screens() {
             app.picker = Picker::File(fixture("units.dxf"));
             run(&mut app, "file.import.dxf");
             shot(&mut app, &out, &format!("aktar-{mode}-22-dxf-birim"), size);
+
+            // Dosyanın birimi (docs/adr/0257 §4): declared, declared none and chosen, ignored by a
+            // project with a coordinate system, blocks in another unit.
+            let local = |app: &mut App, unit: Option<kentos_contracts::DrawingUnit>| {
+                let model = &mut app.document.as_mut().expect("open").model;
+                let settings = kentos_contracts::ProjectSettings {
+                    srid: 0,
+                    drawing_unit: unit,
+                    ..model.settings().clone()
+                };
+                model.set_settings(settings);
+            };
+            local(&mut app, None);
+            app.picker = Picker::File(fixture("dxf-units/mm.dxf"));
+            run(&mut app, "file.import.dxf");
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-23-dxf-birim-bildirilen"),
+                size,
+            );
+            local(&mut app, Some(kentos_contracts::DrawingUnit::Mm));
+            app.picker = Picker::File(fixture("dxf-units/unitless.dxf"));
+            run(&mut app, "file.import.dxf");
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-24-dxf-birim-bildirmeyen"),
+                size,
+            );
+            send(
+                &mut app,
+                Event::DrawingImport(drawing_import::Event::FileUnit(Some(
+                    kentos_contracts::FileUnit::Cm,
+                ))),
+            );
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-25-dxf-birim-secilen"),
+                size,
+            );
+            let mut app = app_with_drawing();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            app.picker = Picker::File(fixture("dxf-units/mm.dxf"));
+            run(&mut app, "file.import.dxf");
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-26-dxf-birim-sistemli"),
+                size,
+            );
+            app.picker = Picker::File(fixture("dxf-units/block-units.dxf"));
+            run(&mut app, "file.import.dxf");
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-27-dxf-blok-birimi"),
+                size,
+            );
         }
     }
+}
+
+/// A DXF goes in by `file.import.dxf` (docs/adr/0257 §3, §4): a file that
+/// declares no unit is read in the project's; Dosyanın birimi reads it again
+/// in the unit chosen; İçe aktar writes with the command, whose row the
+/// journal keeps with the window's choices.
+#[test]
+fn a_dxf_goes_in_by_its_command_in_the_unit_chosen() {
+    let mut app = app_with_drawing();
+    {
+        let model = &mut app.document.as_mut().expect("open").model;
+        let settings = kentos_contracts::ProjectSettings {
+            srid: 0,
+            drawing_unit: None,
+            ..model.settings().clone()
+        };
+        model.set_settings(settings);
+    }
+    app.picker = Picker::File(fixture("dxf-units/unitless.dxf"));
+    run(&mut app, "file.import.dxf");
+    let decided = |app: &App| match &app.exchange {
+        Some(Window::DrawingImport(s)) => format!("{s:?}"),
+        _ => panic!("the DXF window"),
+    };
+    assert!(
+        decided(&app).contains("source: Project"),
+        "{}",
+        decided(&app)
+    );
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::FileUnit(Some(
+            kentos_contracts::FileUnit::Mm,
+        ))),
+    );
+    assert!(decided(&app).contains("source: Chosen"), "read again");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    assert_eq!(app.dialog, None, "the window closes after the import");
+    let model = &app.document.as_ref().expect("open").model;
+    let wall = model
+        .entities()
+        .find_map(|e| match e {
+            Entity::Line(l) if l.base.layer_id.starts_with("import-") => Some((l.a, l.b)),
+            _ => None,
+        })
+        .expect("the wall");
+    assert_eq!((wall.0.x, wall.1.x), (0.0, 4.0), "4000 mm");
+    let row = model.journal().last().expect("a row");
+    assert_eq!(row.command.as_deref(), Some("file.import.dxf"));
+    assert_eq!(row.label.as_deref(), Some("DXF: unitless.dxf"));
+    let input = row.input.clone().expect("the input");
+    assert_eq!(input["fileUnit"], "mm");
+    assert!(
+        input["path"]
+            .as_str()
+            .is_some_and(|p| p.ends_with("dxf-units/unitless.dxf")),
+        "{input}"
+    );
 }
 
 /// A DXF's attribute definitions come in with its blocks (docs/adr/0144 §7):
