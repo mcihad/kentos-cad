@@ -54,9 +54,9 @@ use crate::{
     SCHEMA_WITH_NETWORKS, SCHEMA_WITH_NURBS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
     SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_RASTERS,
     SCHEMA_WITH_REQUESTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
-    SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_UCS, SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS,
+    SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS,
+    SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_UCS, SCHEMA_WITH_VARIABLES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, length_style, line_type, point_symbol,
@@ -1148,6 +1148,16 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 51 (docs/adr/0263): a dimension's reference along an edge or inside a block.
+    let extended = |r: &kentos_contracts::SubRef| {
+        matches!(r.place, kentos_contracts::SubPlace::Along { .. }) || !r.path.is_empty()
+    };
+    if doc.entities.iter().any(|e| {
+        matches!(e, kentos_contracts::Entity::Dimension(d)
+            if d.refs.as_ref().is_some_and(|r| r.each().any(|(_, s)| extended(s))))
+    }) {
+        return SCHEMA_WITH_SUBREF_EXTRAS;
     }
     // Schema 50 (docs/adr/0262): an inch or foot drawing, or a length style.
     if doc.settings.drawing_unit.is_some_and(|u| u.imperial())

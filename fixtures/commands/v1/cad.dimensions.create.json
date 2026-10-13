@@ -354,6 +354,114 @@
       ]
     },
     {
+      "name": "Hizalı: çizginin çeyreğinden (along) alanın köşesine, ikisi de bağlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "along",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0,
+                  "t": 0.25
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487010,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487003,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.25
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
       "name": "Hizalı: koordinatlarla, serbest; uzaklık yazılmış",
       "steps": [
         {
@@ -2867,6 +2975,125 @@
               "code": "entity_not_found",
               "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
               "path": "measure.b.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizginin ikinci kenarı yok (along)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "along",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1,
+                  "t": 0.5
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_such_place",
+              "message": "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.",
+              "path": "measure.b.place"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blok yolu yerleştirme olmayan nesnede (docs/adr/0263 §3)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "end"
+                },
+                "path": [
+                  0
+                ]
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "piece_gone",
+              "message": "Blok yolunda böyle bir parça yok: yolun bir sırası tanımın dışında, yol bir yerleştirmede bitiyor ya da yerleştirme olmayan bir nesneden geçiyor.",
+              "path": "measure.b.path"
             }
           },
           "expect": {

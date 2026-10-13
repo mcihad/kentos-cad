@@ -67,6 +67,19 @@ pub fn place_words(place: &SubPlace) -> String {
         SubPlace::Center => "merkez".into(),
         SubPlace::Vertex { index, .. } => format!("{}. köşe", index + 1),
         SubPlace::Mid { index, .. } => format!("{}. kenarın ortası", index + 1),
+        SubPlace::Along { index, t, .. } => {
+            format!("{}. kenar üstünde %{}", index + 1, (t * 100.0).round())
+        }
+    }
+}
+
+/// A reference's place as the prompt says it; “blokta” when it is on a piece inside an insert.
+pub fn ref_words(r: &SubRef) -> String {
+    let place = place_words(&r.place);
+    if r.path.is_empty() {
+        place
+    } else {
+        format!("{place} (blokta)")
     }
 }
 
@@ -164,6 +177,7 @@ impl DimensionReassociate {
                     to: Some(PlaceOn {
                         uid: uid_text(&r),
                         place: r.place,
+                        path: r.path.clone(),
                     }),
                 });
             }
@@ -348,7 +362,7 @@ impl Tool for DimensionReassociate {
                     &shown.look,
                 )];
                 match &self.hovering {
-                    Some((_, r)) => lines.push(format!("Bağlanacak: {}", place_words(&r.place))),
+                    Some((_, r)) => lines.push(format!("Bağlanacak: {}", ref_words(r))),
                     None => {
                         lines.push("Kenetle bir nesnenin yerine gelin".into());
                         out.tag_tone = Tone::Danger;

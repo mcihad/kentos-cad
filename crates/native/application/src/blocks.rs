@@ -79,6 +79,37 @@ pub fn core_entity(e: &Entity) -> CoreEntity {
     }
 }
 
+/// The words of `piece_gone` (docs/adr/0263 §3).
+pub const NO_PIECE: &str = "Blok yolunda böyle bir parça yok: yolun bir sırası tanımın dışında, yol bir yerleştirmede bitiyor ya da yerleştirme olmayan bir nesneden geçiyor.";
+
+/// Why a place on an object (or on a piece inside it) is not there (docs/adr/0263 §3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PlaceMiss {
+    /// The block path names no piece in the insert (`piece_gone`).
+    Piece,
+    /// The object, or the piece, has no such place (`no_such_place`).
+    Place,
+}
+
+/// Where a place is now on `e`, or, with a block path, on the piece it names inside `e` (an insert), placed
+/// with the drawing's definitions.
+pub fn place_point(
+    blocks: &[Arc<BlockDefinition>],
+    e: &Entity,
+    path: &[u32],
+    place: kentos_contracts::SubPlace,
+) -> Result<kentos_geometry_core::Vec2, PlaceMiss> {
+    use kentos_geometry_core::ops::subref::{piece, point};
+    let core = kentos_domain::dimension_ties::core_place(place);
+    let shape = core_entity(e);
+    if path.is_empty() {
+        return point(&shape, core).ok_or(PlaceMiss::Place);
+    }
+    let blocks = kentos_domain::dimension_ties::core_blocks(blocks);
+    let piece = piece(&blocks, &shape, path).ok_or(PlaceMiss::Piece)?;
+    point(&piece, core).ok_or(PlaceMiss::Place)
+}
+
 /// An insert's pieces as objects: each its placed shape, on the insert's
 /// layer, with its own colour and line weight, else the insert's; the
 /// insert's slot, no attributes. A piece the contract cannot hold, and an

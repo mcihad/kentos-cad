@@ -3,4 +3,4 @@
 /**
  * A place on an object.
  */
-export type SubPlace = { "kind": "node", part: number, } | { "kind": "start" } | { "kind": "end" } | { "kind": "center" } | { "kind": "vertex", part: number, ring: number, index: number, } | { "kind": "mid", part: number, ring: number, index: number, };
+export type SubPlace = { "kind": "node", part: number, } | { "kind": "start" } | { "kind": "end" } | { "kind": "center" } | { "kind": "vertex", part: number, ring: number, index: number, } | { "kind": "mid", part: number, ring: number, index: number, } | { "kind": "along", part: number, ring: number, index: number, t: number, };

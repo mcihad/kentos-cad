@@ -43,6 +43,11 @@ pub enum MeasuredPoint {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         uid: String,
         place: SubPlace,
+        /// When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        path: Vec<u32>,
     },
 }
 
@@ -254,6 +259,11 @@ pub struct PlaceOn {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
     pub place: SubPlace,
+    /// When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub path: Vec<u32>,
 }
 
 /// One point's new binding.

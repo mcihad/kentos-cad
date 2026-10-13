@@ -260,18 +260,22 @@ const EXT_WEIGHT: u32 = 16;
 const EXT_LINE_TYPE: u32 = 32;
 const TEXT_COLOR: u32 = 64;
 /// A dimension's references follow (docs/adr/0249 §4): a mask int (1 `a`, 2 `b`, 4 `c`), then per
-/// reference its place's kind (its place in `PLACE_KINDS`), the kind's numbers and whether it broke
-/// (0 or 1); its object's id (UUID text) and, when it broke, why.
+/// reference its place's kind (its place in `PLACE_KINDS`, plus [`IN_BLOCK`] when it has a block path),
+/// the kind's numbers (an `along` place's `t` a float), the path's length and numbers when it has one
+/// (docs/adr/0263 §3) and whether it broke (0 or 1); its object's id (UUID text) and, when it broke, why.
 const REFS: u32 = 1 << 28;
 /// A reference's place kinds, numbered as the columns hold them, and how many numbers each has.
-const PLACE_KINDS: [(&str, usize); 6] = [
+const PLACE_KINDS: [(&str, usize); 7] = [
     ("node", 1),
     ("start", 0),
     ("end", 0),
     ("center", 0),
     ("vertex", 3),
     ("mid", 3),
+    ("along", 3),
 ];
+/// Added to a reference's kind when it has a block path (docs/adr/0263 §3).
+const IN_BLOCK: u32 = 8;
 /// The line types, numbered as the columns hold them (the contract's order).
 const LINE_TYPES: [LineType; 4] = [
     LineType::Continuous,
@@ -1037,10 +1041,23 @@ impl Packer {
                             SubPlace::Center => (3, [0; 3]),
                             SubPlace::Vertex { part, ring, index } => (4, [part, ring, index]),
                             SubPlace::Mid { part, ring, index } => (5, [part, ring, index]),
+                            SubPlace::Along {
+                                part, ring, index, ..
+                            } => (6, [part, ring, index]),
                         };
-                        self.int(kind);
+                        let in_block = !r.path.is_empty();
+                        self.int(kind + if in_block { IN_BLOCK } else { 0 });
                         for x in &numbers[..PLACE_KINDS[kind as usize].1] {
                             self.int(*x);
+                        }
+                        if let SubPlace::Along { t, .. } = r.place {
+                            self.float(t);
+                        }
+                        if in_block {
+                            self.int(r.path.len() as u32);
+                            for x in &r.path {
+                                self.int(*x);
+                            }
                         }
                         self.int(u32::from(r.broken.is_some()));
                         self.text(&r.uid.to_text());
@@ -2319,7 +2336,9 @@ fn geometry(
                     if mask & 1 << i == 0 {
                         continue;
                     }
-                    let kind = c.usize()?;
+                    let written = c.usize()?;
+                    let in_block = written & IN_BLOCK as usize != 0;
+                    let kind = written & !(IN_BLOCK as usize);
                     let (_, n) = *PLACE_KINDS
                         .get(kind)
                         .ok_or_else(|| broken(&format!("başvurunun yer türü {kind}")))?;
@@ -2334,8 +2353,24 @@ fn geometry(
                         2 => SubPlace::End,
                         3 => SubPlace::Center,
                         4 => SubPlace::Vertex { part, ring, index },
-                        _ => SubPlace::Mid { part, ring, index },
+                        5 => SubPlace::Mid { part, ring, index },
+                        _ => SubPlace::Along {
+                            part,
+                            ring,
+                            index,
+                            t: c.float()?,
+                        },
                     };
+                    let mut path = Vec::new();
+                    if in_block {
+                        let n = c.usize()?;
+                        if n > kentos_contracts::SUBREF_PATH_DEPTH {
+                            return Err(broken(&format!("başvurunun blok yolu {n} düzey")));
+                        }
+                        for _ in 0..n {
+                            path.push(c.int()?);
+                        }
+                    }
                     let is_broken = match c.int()? {
                         0 => false,
                         1 => true,
@@ -2352,6 +2387,7 @@ fn geometry(
                     *slot = Some(SubRef {
                         uid,
                         place: spot,
+                        path,
                         broken: why,
                     });
                 }
@@ -2377,7 +2413,7 @@ fn geometry(
                 mask: has(4),
                 za,
                 zb,
-                refs,
+                refs: refs.map(Box::new),
                 look: DimensionLook {
                     dim_style,
                     arrow,

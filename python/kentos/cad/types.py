@@ -2132,6 +2132,7 @@ class SubPlace(_Union):
     - :class:`CenterSubPlace` (``kind: center``)
     - :class:`VertexSubPlace` (``kind: vertex``)
     - :class:`MidSubPlace` (``kind: mid``)
+    - :class:`AlongSubPlace` (``kind: along``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -11566,14 +11567,18 @@ class PlaceOn(_Model):
     """A place on an object named by the object's persistent id.
     Attributes:
         uid: The object's persistent id (lowercase UUID text with hyphens).
+        path: When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3). Unit: index.
     """
     uid: str
     place: SubPlace
+    path: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uid"] = self.uid
         out["place"] = self.place.to_json()
+        if self.path is not UNSET:
+            out["path"] = list(self.path)
         return out
 
     @classmethod
@@ -11581,6 +11586,7 @@ class PlaceOn(_Model):
         return cls(
             uid=data["uid"],
             place=SubPlace.from_json(data["place"]),
+            path=list(data["path"]) if "path" in data else UNSET,
         )
 
 
@@ -14930,10 +14936,13 @@ class SubRef(_Model):
     Attributes:
         broken: Why it no longer follows its object ([`SUBREF_BROKEN`]); none while it does. The point keeps its last
             coordinates.
+        path: When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's
+            place in that level's definition, every one but the last an insert; empty (not written) for the object itself. Unit: index.
     """
     uid: str
     place: SubPlace
     broken: str | None | Unset = UNSET
+    path: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -14941,6 +14950,8 @@ class SubRef(_Model):
         out["place"] = self.place.to_json()
         if self.broken is not UNSET:
             out["broken"] = self.broken
+        if self.path is not UNSET:
+            out["path"] = list(self.path)
         return out
 
     @classmethod
@@ -14949,6 +14960,7 @@ class SubRef(_Model):
             uid=data["uid"],
             place=SubPlace.from_json(data["place"]),
             broken=data.get("broken", UNSET),
+            path=list(data["path"]) if "path" in data else UNSET,
         )
 
 
@@ -18036,15 +18048,19 @@ class PlaceMeasuredPoint(MeasuredPoint):
     from then on (docs/adr/0249 §3); the others' are read from them.
     Attributes:
         uid: The object's persistent id (lowercase UUID text with hyphens).
+        path: When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3). Unit: index.
     """
     TAG_VALUE: ClassVar[str] = "place"
     uid: str
     place: SubPlace
+    path: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "place"}
         out["uid"] = self.uid
         out["place"] = self.place.to_json()
+        if self.path is not UNSET:
+            out["path"] = list(self.path)
         return out
 
     @classmethod
@@ -18052,6 +18068,7 @@ class PlaceMeasuredPoint(MeasuredPoint):
         return cls(
             uid=data["uid"],
             place=SubPlace.from_json(data["place"]),
+            path=list(data["path"]) if "path" in data else UNSET,
         )
 
 
@@ -18349,6 +18366,41 @@ class MidSubPlace(SubPlace):
             part=data["part"],
             ring=data["ring"],
             index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlongSubPlace(SubPlace):
+    """A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`
+    to the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's
+    (`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.
+    Attributes:
+        part: Unit: index.
+        ring: Unit: index.
+        index: Unit: index.
+        t: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "along"
+    part: int
+    ring: int
+    index: int
+    t: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "along"}
+        out["part"] = self.part
+        out["ring"] = self.ring
+        out["index"] = self.index
+        out["t"] = float(self.t)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlongSubPlace:
+        return cls(
+            part=data["part"],
+            ring=data["ring"],
+            index=data["index"],
+            t=float(data["t"]),
         )
 
 
@@ -19028,7 +19080,7 @@ _NURBS_BY: dict[str, type[NurbsBy]] = {"control": ControlNurbsBy, "fit": FitNurb
 _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
 
 
-_SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace}
+_SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
 
 
 _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
@@ -19058,6 +19110,7 @@ __all__ = [
     "AlignedDimensionMeasure",
     "AllCornerPick",
     "AllTrimBoundaries",
+    "AlongSubPlace",
     "AngleArcDimensionMeasure",
     "AngleDimensionMeasure",
     "AngleUnit",

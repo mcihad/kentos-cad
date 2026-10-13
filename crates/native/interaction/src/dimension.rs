@@ -51,7 +51,7 @@ use kentos_native_application::{ExecutionContext, codes, dimensions_create};
 
 use kentos_contracts::{EntityId, SubRef};
 use kentos_domain::dimension_ties::contract_place;
-use kentos_geometry_core::ops::subref::place_at;
+use kentos_geometry_core::ops::subref::{place_at, place_in};
 use kentos_geometry_core::store::snap::SnapHit;
 use kentos_native_application::blocks::core_entity;
 
@@ -186,17 +186,26 @@ fn snapped_elevation(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) -> Option
 }
 
 /// The place on an object a snap stands on, when it is one (docs/adr/0249 §3): the snap's kind and exact point name
-/// one of the object's places (`ops::subref::place_at`). A nearest point, an intersection or a typed point is none.
+/// one of the object's places (`ops::subref::place_at`); Yakın, Dik, Teğet and Çeyrek a place along an edge or a
+/// curve, and a snap on an insert the place on the piece inside it (docs/adr/0263). An intersection or a typed point
+/// is none.
 pub(crate) fn snapped_place(snap: Option<SnapHit>, p: Vec2, cx: &Context<'_>) -> Option<SubRef> {
     let hit = snap?;
     if !(0.0..=f64::from(u32::MAX)).contains(&hit.id) || hit.point != p {
         return None;
     }
     let slot = kentos_domain::Slot(hit.id as u32);
-    let place = place_at(&core_entity(cx.doc.get(slot)?), hit.kind, hit.point)?;
+    let e = cx.doc.get(slot)?;
+    let (path, place) = if matches!(e, Entity::Insert(_)) {
+        let blocks = kentos_domain::dimension_ties::core_blocks(cx.doc.blocks());
+        place_in(&blocks, &core_entity(e), hit.kind, hit.point)?
+    } else {
+        (Vec::new(), place_at(&core_entity(e), hit.kind, hit.point)?)
+    };
     Some(SubRef {
         uid: EntityId(*cx.doc.uid(slot)?.as_bytes()),
         place: contract_place(place),
+        path,
         broken: None,
     })
 }
@@ -463,6 +472,7 @@ impl Dimension {
             Some((_, r)) => MeasuredPoint::Place {
                 uid: kentos_domain::Uuid::from_bytes(r.uid.0).to_string(),
                 place: r.place,
+                path: r.path.clone(),
             },
             None => MeasuredPoint::At { at: wire(p) },
         }

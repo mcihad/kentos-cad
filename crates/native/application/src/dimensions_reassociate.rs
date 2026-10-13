@@ -16,11 +16,9 @@ use kentos_contracts::{
     CommandResult, DimensionEntity, DimensionPoint, DimensionsReassociate,
     DimensionsReassociatePlan, DimensionsReassociated, Entity, EntityId, SubRef, Vec2,
 };
-use kentos_domain::dimension_ties::core_place;
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::dimension_geom;
 use kentos_geometry_core::geom::dimension::layout_dimension;
-use kentos_geometry_core::ops::subref::point;
 
 use crate::ExecutionContext;
 use crate::blocks::core_entity;
@@ -92,6 +90,15 @@ fn check(doc: &Document, input: &DimensionsReassociate) -> Result<Checked, Stop>
                 codes::INVALID_REFS,
                 problem,
                 format!("points[{i}].to.place"),
+            ));
+        }
+        if let Some(to) = &b.to
+            && let Some(problem) = kentos_contracts::path_problem(&to.path)
+        {
+            return Err(fail(
+                codes::INVALID_REFS,
+                problem,
+                format!("points[{i}].to.path"),
             ));
         }
     }
@@ -175,13 +182,23 @@ fn check(doc: &Document, input: &DimensionsReassociate) -> Result<Checked, Stop>
         }
         let place = doc
             .get(*at)
-            .and_then(|e| point(&core_entity(e), core_place(to.place)));
-        let Some(p) = place else {
-            return Err(fail(
-                codes::NO_SUCH_PLACE,
-                "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.".into(),
-                format!("points[{i}].to.place"),
-            ));
+            .map(|e| crate::blocks::place_point(doc.blocks(), e, &to.path, to.place));
+        let p = match place {
+            Some(Ok(p)) => p,
+            Some(Err(crate::blocks::PlaceMiss::Piece)) => {
+                return Err(fail(
+                    codes::PIECE_GONE,
+                    crate::blocks::NO_PIECE.into(),
+                    format!("points[{i}].to.path"),
+                ));
+            }
+            _ => {
+                return Err(fail(
+                    codes::NO_SUCH_PLACE,
+                    "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.".into(),
+                    format!("points[{i}].to.place"),
+                ));
+            }
         };
         let p = Vec2 { x: p.x, y: p.y };
         match b.point {
@@ -192,6 +209,7 @@ fn check(doc: &Document, input: &DimensionsReassociate) -> Result<Checked, Stop>
         *held = Some(SubRef {
             uid: EntityId(*u.as_bytes()),
             place: to.place,
+            path: to.path.clone(),
             broken: None,
         });
     }

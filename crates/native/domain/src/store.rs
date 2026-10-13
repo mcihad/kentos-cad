@@ -139,6 +139,12 @@ impl Store {
         !self.ties.is_empty()
     }
 
+    /// Every object that follows another (hatches and dimensions), each once, in slot order.
+    pub fn tied_slots(&self) -> Vec<Slot> {
+        let all: BTreeSet<Slot> = self.ties.values().flatten().copied().collect();
+        all.into_iter().collect()
+    }
+
     fn link(&mut self, stored: &Stored) {
         if let Some(of) = link_of(stored) {
             self.links.entry(of).or_default().insert(stored.slot());

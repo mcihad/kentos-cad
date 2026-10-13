@@ -1484,20 +1484,26 @@ def hatch_assoc(a):
 
 
 # A reference's places and the numbers each has (docs/adr/0249 §1); the codes of a broken one.
-SUBREF_PLACES = {"node": ("part",), "start": (), "end": (), "center": (), "vertex": ("part", "ring", "index"), "mid": ("part", "ring", "index")}
-SUBREF_BROKEN = ("object_gone", "kind_changed", "no_such_place", "vertex_gone", "ambiguous")
+SUBREF_PLACES = {"node": ("part",), "start": (), "end": (), "center": (), "vertex": ("part", "ring", "index"), "mid": ("part", "ring", "index"), "along": ("part", "ring", "index")}
+SUBREF_BROKEN = ("object_gone", "kind_changed", "no_such_place", "vertex_gone", "ambiguous", "piece_gone")
 
 
 def subref(r):
     """A reference (schema 43, docs/adr/0249 §4): the object's persistent id, the place (its kind, then the numbers it
-    has, as unsigned integers), why it broke only when it did."""
+    has, as unsigned integers; an `along` place's `t` last, a float in [0, 1], schema 51, docs/adr/0263 §1), its block
+    path when it names a piece inside an insert (unsigned integers, 1 to 16, schema 51, §3), why it broke only when it
+    did."""
     place = r["place"]
     numbers = SUBREF_PLACES[place["kind"]]
-    assert set(place) == {"kind", *numbers}, place
+    extra = ("t",) if place["kind"] == "along" else ()
+    assert set(place) == {"kind", *numbers, *extra}, place
     assert all(0 <= place[k] <= 10_000_000 for k in numbers), place
+    assert not extra or 0.0 <= place["t"] <= 1.0, place
     assert r.get("broken", SUBREF_BROKEN[0]) in SUBREF_BROKEN, r
-    encoded_place = cmap({"kind": text(place["kind"]), **{k: uint(place[k]) for k in numbers}})
-    return cmap(fields(r, {"uid": (lambda u: blob(uid_bytes(u)), True), "place": (lambda _: encoded_place, True), "broken": (text, False)}, "başvuru"))
+    assert "path" not in r or 1 <= len(r["path"]) <= 16, r
+    encoded_place = cmap({"kind": text(place["kind"]), **{k: uint(place[k]) for k in numbers}, **{k: f64(place[k]) for k in extra}})
+    path = lambda xs: array([uint(x) for x in xs])  # noqa: E731
+    return cmap(fields(r, {"uid": (lambda u: blob(uid_bytes(u)), True), "place": (lambda _: encoded_place, True), "path": (path, False), "broken": (text, False)}, "başvuru"))
 
 
 def dimension_refs(refs):
@@ -1775,6 +1781,12 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 51 (docs/adr/0263): a dimension's reference along an edge or inside a block.
+    def extended(r):
+        return r["place"]["kind"] == "along" or "path" in r
+
+    if any(e["kind"] == "dimension" and any(extended(r) for r in e.get("refs", {}).values()) for e in entities):
+        return 51
     # Schema 50 (docs/adr/0262): a drawing in inches or feet, or a length style.
     if settings and (settings.get("drawingUnit") in ("in", "ft") or "lengthStyle" in settings):
         return 50
@@ -2085,7 +2097,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-51.kcad"] = container(root(cmap(parts), version=uint(51)))
+    files["schema-version-52.kcad"] = container(root(cmap(parts), version=uint(52)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2370,6 +2382,14 @@ def broken(minimal_content, minimal_file):
     files["dimension-refs-unknown-kind.kcad"] = in_schema(43, dimension_of(cmap({"a": cmap({"uid": blob(uid_bytes(m["uids"][0])), "place": cmap({"kind": text("edge")})})})))
     files["dimension-refs-unknown-broken.kcad"] = in_schema(43, dimension_of(cmap({"b": corner(1, broken=text("lost"))})))
     files["dimension-refs-unknown-field.kcad"] = in_schema(43, dimension_of(cmap({"a": corner(0), "d": corner(1)})))
+    # A reference along an edge and inside a block are schema 51's (docs/adr/0263): in schema 50 `along` is an unknown
+    # place and `path` an unknown field; t within [0, 1]; a path neither empty nor deeper than 16.
+    along = lambda t, **extra: cmap({"uid": blob(uid_bytes(m["uids"][0])), "place": cmap({"kind": text("along"), "part": uint(0), "ring": uint(0), "index": uint(1), "t": f64(t)}), **extra})  # noqa: E731
+    files["dimension-refs-along-in-schema-50.kcad"] = in_schema(50, dimension_of(cmap({"a": along(0.5)})))
+    files["dimension-refs-path-in-schema-50.kcad"] = in_schema(50, dimension_of(cmap({"a": corner(0, path=array([uint(0)]))})))
+    files["dimension-refs-along-t-above-one.kcad"] = in_schema(51, dimension_of(cmap({"a": along(1.5)})))
+    files["dimension-refs-path-empty.kcad"] = in_schema(51, dimension_of(cmap({"a": corner(0, path=array([]))})))
+    files["dimension-refs-path-deep.kcad"] = in_schema(51, dimension_of(cmap({"a": corner(0, path=array([uint(0)] * 17))})))
     files["dimension-refs-in-block.kcad"] = with_blocks([block(1, "Ölçü", [cmap({"dimension": cmap({"attrs": cmap({}), "layerId": text("0"), **dim_body, "refs": cmap({"a": corner(0)})})})])], version=43)
     # A closed and a wide polyline are schema 46's (docs/adr/0258): in schema 45 unknown fields; an area has neither;
     # `closed` only true; widths one pair of two numbers for each vertex, not below 0, the last pair 0 on an open
@@ -3299,6 +3319,7 @@ def build():
     out["look.kcad"] = container(document(load("look.json")))
     out["ucs.kcad"] = container(document(load("ucs.json")))
     out["imperial.kcad"] = container(document(load("imperial.json")))
+    out["subref-extras.kcad"] = container(document(load("subref-extras.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

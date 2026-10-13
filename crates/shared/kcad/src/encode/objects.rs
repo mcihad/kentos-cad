@@ -112,12 +112,24 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
-    /// A reference (docs/adr/0249 §4): uid (3), place (5), broken (6) when it broke; the place
-    /// its kind (4) and then its numbers, part (4), ring (4), index (5), as its kind has them.
+    /// A reference (docs/adr/0249 §4): uid (3), path (4) when it names a piece inside a block
+    /// (docs/adr/0263 §3), place (5), broken (6) when it broke; the place an `along` place's t (1)
+    /// first, then its kind (4) and its numbers, part (4), ring (4), index (5), as its kind has them.
     fn subref(&mut self, r: &'d SubRef) -> Result<(), KcadError> {
-        self.open(2 + usize::from(r.broken.is_some()), true)?;
+        self.open(
+            2 + usize::from(!r.path.is_empty()) + usize::from(r.broken.is_some()),
+            true,
+        )?;
         self.key("uid");
         self.at(Seg::Name("uid"), |e| e.id(&r.uid.0))?;
+        if !r.path.is_empty() {
+            self.key("path");
+            self.open(r.path.len(), false)?;
+            for x in &r.path {
+                self.w.uint(u64::from(*x));
+            }
+            self.close();
+        }
         self.key("place");
         let (kind, numbers, n) = match r.place {
             SubPlace::Node { part } => ("node", [part, 0, 0], 1),
@@ -126,9 +138,20 @@ impl<'d> Encoder<'d> {
             SubPlace::Center => ("center", [0; 3], 0),
             SubPlace::Vertex { part, ring, index } => ("vertex", [part, ring, index], 3),
             SubPlace::Mid { part, ring, index } => ("mid", [part, ring, index], 3),
+            SubPlace::Along {
+                part, ring, index, ..
+            } => ("along", [part, ring, index], 3),
+        };
+        let t = match r.place {
+            SubPlace::Along { t, .. } => Some(t),
+            _ => None,
         };
         self.at(Seg::Name("place"), |e| {
-            e.open(1 + n, true)?;
+            e.open(1 + n + usize::from(t.is_some()), true)?;
+            if let Some(t) = t {
+                e.key("t");
+                e.w.float(t);
+            }
             e.key("kind");
             e.w.text(kind);
             for (key, x) in ["part", "ring", "index"].into_iter().zip(&numbers[..n]) {

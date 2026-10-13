@@ -1,4 +1,4 @@
-//! Places on objects and the references that name them (docs/adr/0249): what an associative dimension's points
+//! Places on objects and the references that name them (docs/adr/0249, 0263): what an associative dimension's points
 //! follow. The rule that follows a place through an edit is the geometry core's (`ops::subref`).
 
 use serde::{Deserialize, Serialize};
@@ -10,8 +10,11 @@ use crate::EntityId;
 /// The most parts, rings or vertices a place's index may name (a path's own limit is lower).
 pub const SUBREF_INDEX_LIMIT: u32 = 10_000_000;
 
+/// The most levels a block path has (the block core's `MAX_DEPTH`, docs/adr/0263 §3).
+pub const SUBREF_PATH_DEPTH: usize = 16;
+
 /// A place on an object.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -47,19 +50,33 @@ pub enum SubPlace {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         index: u32,
     },
+    /// A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`
+    /// to the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's
+    /// (`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.
+    Along {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        part: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        ring: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        index: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        t: f64,
+    },
 }
 
 /// Why a reference broke (the core's `Reason`), as its stable code.
-pub const SUBREF_BROKEN: [&str; 5] = [
+pub const SUBREF_BROKEN: [&str; 6] = [
     "object_gone",
     "kind_changed",
     "no_such_place",
     "vertex_gone",
     "ambiguous",
+    "piece_gone",
 ];
 
 /// A place on an object by the object's persistent id: what a dimension's point follows.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -67,6 +84,12 @@ pub const SUBREF_BROKEN: [&str; 5] = [
 pub struct SubRef {
     pub uid: EntityId,
     pub place: SubPlace,
+    /// When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's
+    /// place in that level's definition, every one but the last an insert; empty (not written) for the object itself.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub path: Vec<u32>,
     /// Why it no longer follows its object ([`SUBREF_BROKEN`]); none while it does. The point keeps its last
     /// coordinates.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -75,7 +98,7 @@ pub struct SubRef {
 }
 
 /// An associative dimension's references: what its points `a`, `b` and `c` follow; a point without one is free.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -100,12 +123,76 @@ impl SubPlace {
             SubPlace::Node { part } if big(part) => {
                 Some(format!("Yerin parçası {part}: çok büyük."))
             }
-            SubPlace::Vertex { part, ring, index } | SubPlace::Mid { part, ring, index }
-                if big(part) || big(ring) || big(index) =>
-            {
+            SubPlace::Vertex { part, ring, index }
+            | SubPlace::Mid { part, ring, index }
+            | SubPlace::Along {
+                part, ring, index, ..
+            } if big(part) || big(ring) || big(index) => {
                 Some("Yerin parçası, halkası ya da sırası çok büyük.".into())
             }
+            SubPlace::Along { t, .. } if !(0.0..=1.0).contains(&t) => {
+                Some(format!("Yerin t'si {t}: 0 ile 1 arasında olmalı."))
+            }
             _ => None,
+        }
+    }
+}
+
+/// What is wrong with a block path (docs/adr/0263 §3); none when it holds. Empty is the object itself.
+pub fn path_problem(path: &[u32]) -> Option<String> {
+    if path.len() > SUBREF_PATH_DEPTH {
+        return Some(format!(
+            "Blok yolu {} düzey; en çok {SUBREF_PATH_DEPTH} olur.",
+            path.len()
+        ));
+    }
+    path.iter()
+        .any(|&i| i > SUBREF_INDEX_LIMIT)
+        .then(|| "Blok yolunun bir sırası çok büyük.".into())
+}
+
+/// A range of an object (docs/adr/0263 §2): from one `along` place to another on the same part and ring, in the
+/// object's direction; around a closed ring, a circle or a whole ellipse when `to` comes first. No object keeps one
+/// yet; the rule and its length are the core's (`ops::subref::range_length`, `follow_range`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SubRange {
+    pub uid: EntityId,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub path: Vec<u32>,
+    pub from: SubPlace,
+    pub to: SubPlace,
+}
+
+impl SubRange {
+    /// What is wrong with the range; none when it holds.
+    pub fn problem(&self) -> Option<String> {
+        if self.uid.0 == [0; 16] {
+            return Some("Aralığın nesne kimliği boş.".into());
+        }
+        if let Some(p) = path_problem(&self.path) {
+            return Some(p);
+        }
+        match (self.from, self.to) {
+            (
+                SubPlace::Along {
+                    part: p0, ring: r0, ..
+                },
+                SubPlace::Along {
+                    part: p1, ring: r1, ..
+                },
+            ) => {
+                if (p0, r0) != (p1, r1) {
+                    return Some("Aralığın iki ucu aynı parçada ve halkada olmalı.".into());
+                }
+                self.from.problem().or_else(|| self.to.problem())
+            }
+            _ => Some("Aralığın uçları kenar ya da eğri üstündeki yerlerdir (along).".into()),
         }
     }
 }
@@ -123,7 +210,7 @@ impl SubRef {
         {
             return Some(format!("Başvurunun kopma nedeni “{b}” bilinmiyor."));
         }
-        self.place.problem()
+        self.place.problem().or_else(|| path_problem(&self.path))
     }
 
     /// Whether it follows its object (not broken).
@@ -163,6 +250,7 @@ pub fn broken_words(code: &str) -> &'static str {
         "no_such_place" => "yer nesnede yok",
         "vertex_gone" => "köşe silindi ya da taşındı",
         "ambiguous" => "köşe birden çok yerde",
+        "piece_gone" => "blok parçası yok",
         _ => "bilinmeyen neden",
     }
 }
@@ -179,8 +267,57 @@ mod tests {
                 ring: 0,
                 index: 2,
             },
+            path: Vec::new(),
             broken: broken.map(str::to_owned),
         }
+    }
+
+    #[test]
+    fn along_places_paths_and_ranges_say_what_is_wrong() {
+        let along = |t: f64| SubPlace::Along {
+            part: 0,
+            ring: 0,
+            index: 1,
+            t,
+        };
+        assert!(along(0.5).problem().is_none());
+        assert!(along(1.5).problem().unwrap().contains("0 ile 1"));
+        assert!(along(f64::NAN).problem().is_some());
+        let text = serde_json::to_string(&SubRef {
+            path: vec![1, 0],
+            place: along(0.25),
+            ..r(None)
+        })
+        .unwrap();
+        assert!(text.contains(r#""path":[1,0]"#), "{text}");
+        assert!(
+            text.contains(r#""kind":"along","part":0,"ring":0,"index":1,"t":0.25"#),
+            "{text}"
+        );
+        assert!(!serde_json::to_string(&r(None)).unwrap().contains("path"));
+        assert!(path_problem(&[0; 17]).unwrap().contains("17 düzey"));
+        assert!(path_problem(&[0; 16]).is_none());
+        let range = |from, to| SubRange {
+            uid: EntityId([7; 16]),
+            path: Vec::new(),
+            from,
+            to,
+        };
+        assert!(range(along(0.1), along(0.9)).problem().is_none());
+        assert!(range(SubPlace::Start, along(0.9)).problem().is_some());
+        let other_ring = SubPlace::Along {
+            part: 0,
+            ring: 1,
+            index: 0,
+            t: 0.5,
+        };
+        assert!(
+            range(along(0.1), other_ring)
+                .problem()
+                .unwrap()
+                .contains("halkada")
+        );
+        assert_eq!(broken_words("piece_gone"), "blok parçası yok");
     }
 
     #[test]

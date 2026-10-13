@@ -46,6 +46,7 @@ fn bind(doc: &mut Document, wall: Slot, dim: Slot, bindings: &[(DimensionPoint, 
                 to: Some(PlaceOn {
                     uid: uid(wall),
                     place: vertex(index),
+                    path: Vec::new(),
                 }),
             })
             .collect(),

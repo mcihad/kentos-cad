@@ -414,6 +414,8 @@ codes! {
     NOT_A_DIMENSION = "not_a_dimension", Failed, false, "Ölçü istenen yerde ölçü olmayan bir nesne verildi.";
     /// A place its object does not have.
     NO_SUCH_PLACE = "no_such_place", Failed, false, "Nesnenin böyle bir yeri yok (halkasının ötesinde bir köşe, çizginin merkezi).";
+    /// A block path that names no piece inside the insert (docs/adr/0263 §3).
+    PIECE_GONE = "piece_gone", Failed, false, "Blok yolunda böyle bir parça yok (tanımın dışında bir sıra, yerleştirmede biten ya da yerleştirme olmayandan geçen yol).";
 
     // ── Dimensions from what they measure (docs/adr/0255) ───────────────
     /// An object without an edge of the kind a dimension measures.

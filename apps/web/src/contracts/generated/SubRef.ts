@@ -7,6 +7,11 @@ import type { SubPlace } from "./SubPlace";
  */
 export type SubRef = { uid: EntityId, place: SubPlace, 
 /**
+ * When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's
+ * place in that level's definition, every one but the last an insert; empty (not written) for the object itself.
+ */
+path?: Array<number>, 
+/**
  * Why it no longer follows its object ([`SUBREF_BROKEN`]); none while it does. The point keeps its last
  * coordinates.
  */

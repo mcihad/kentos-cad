@@ -162,6 +162,10 @@ Liste:
   `io/kcad.ts`'in KCAD şema 47'si ve tipli sütunların türü 19, `io/columns.ts`; `FORMATS_VERSION` 60); paketli biçimin türü 23
   (`wasm/pack.ts`); çekirdeğin JSON API'si `tangents`'ı taşımaz; `cad.nurbs.create`'in web işleyicisi ve NURBS eğrisi aracı
   (Yöntem, Derece, Kapat; önizleme planla); Öznitelikler'in satırları; seçim süzgecinde Eğri'nin NURBS'ü de tutması.
+- [ ] `CAD-DATA-13` (ADR 0263, 14 Ekim): web'de gerekenler: `SubPlace`'in `along`'u, `SubRef`'in ve `PlaceOn`'un `path`'i, `SubRange`
+  (TS türleri, `io/kcad.ts`'in KCAD şema 51'i, `io/columns.ts`'in başvuru türü 6 ve blok yolu, `FORMATS_VERSION` 62), web belgesinin
+  ilişkili ölçü izlemesinde `along` ve blok parçaları (çekirdeğin `follow_in`'i WASM'a), ölçü aracının Yakın, Dik, Teğet ve Çeyrek'te ve
+  yerleştirmenin parçasında bağlaması (`place_at`, `place_in`), Yeniden bağla'nın istemindeki “kenar üstünde %…” ve “(blokta)”.
 - [ ] `CAD-DATA-12` (ADR 0262, 14 Ekim): web'de gerekenler: `DrawingUnit`'in `in` ve `ft`'si ve ayarların `lengthStyle`'ı (TS
   türleri, `io/kcad.ts`'in KCAD şema 50'si), `Formatter`'ın tam oranla çevirisi ve ayak-inç biçimleri (çekirdeğin `tools::imperial`'i
   WASM'a), yazılan nokta ve uzunlukta ayak ve inç işaretleri (`point_text`'in `Len`'i), Proje ayarları'nda İnç, Ayak ve Uzunluk biçimi,

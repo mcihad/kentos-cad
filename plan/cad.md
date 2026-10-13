@@ -232,7 +232,7 @@ Her mutating istekte uygun `expectedRevision`, idempotency ve actor/scope bilgis
 
 ### 6.2 Kaynak geometri ve referans kimliği
 
-- [ ] **CAD-DATA-13:** Entity UUID'lerine ek olarak köşe, segment, eğri aralığı ve blok içi alt nesne için kararlı referans tasarla. — *Kısmen (12 Ekim; CADP-06/07, ADR 0249: köşe, kenar ortası, uç, merkez ve düğüm; eğri aralığı ve blok içi açık).*
+- [x] **CAD-DATA-13:** Entity UUID'lerine ek olarak köşe, segment, eğri aralığı ve blok içi alt nesne için kararlı referans tasarla. — *14 Ekim; ADR 0249 (köşe, kenar ortası, uç, merkez, düğüm) ve [ADR 0263](../docs/adr/0263-places-along-and-inside-blocks.md): kenar ve eğri boyunca yer (`along`), eğri aralığı (`SubRange`, `range_length`), blok içi parça (`path`); KCAD şema 51.*
 - [x] **CAD-DATA-14:** Referanslar vertex index'e körü körüne bağlı olmasın; köşe ekle/sil ve kenar bölme sırasında eşleme/invalidasyon politikası tanımlansın. — **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
 - [x] **CAD-DATA-15:** Daire/yay/elips kaynakları analitik kalsın; ölçme, snap ve trim çizilen kırık çizgi üzerinden yapılmasın. — *13 Ekim; [ADR 0259](../docs/adr/0259-nurbs-and-curves.md) §1: denetlendi, kenet ve kesme eğrinin kendisinde; uzunluklar OpenCASCADE'le (`curves_occt.py`).*
 - [x] **CAD-DATA-16:** Genel NURBS için derece, knot dizisi, kontrol noktaları, ağırlıklar, periodic/closed, fit/tangent ve tolerans alanlarını ekle. — *13 Ekim; [ADR 0259](../docs/adr/0259-nurbs-and-curves.md) §2–§4, §6: `nurbs` türü, `cad.nurbs.create`, NURBS eğrisi aracı, KCAD şema 47, DXF SPLINE tam.*

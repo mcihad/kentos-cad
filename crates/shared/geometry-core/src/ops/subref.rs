@@ -1,5 +1,5 @@
 //! Places on an object that an annotation measures, and how they follow the
-//! object's edits (docs/adr/0249; plan/cad.md `CAD-DATA-13`, `14`, `DEC-03`).
+//! object's edits (docs/adr/0249, 0263; plan/cad.md `CAD-DATA-13`, `14`, `DEC-03`).
 //!
 //! A place is named by the object's persistent id (kept by the caller) and a
 //! [`Place`]: a point's node, a line's or arc's start or end, a centre, a
@@ -22,17 +22,24 @@
 //! Exact comparison keeps the rule deterministic on every platform; an edit
 //! that both moves a vertex and changes the structure breaks the place, and
 //! the annotation keeps its last coordinates (`CAD-ANNO-02`).
+//!
+//! A place along an edge or a curve (docs/adr/0263 §1) keeps its fraction:
+//! on a path it follows its edge as an edge's middle does. A range is two such
+//! places; a place inside a block is a place on the piece a block path names
+//! in an insert, followed with the definitions of each moment.
 
+use crate::block::Blocks;
 use crate::entity::{Entity, Part, Shape};
-use crate::geom::arc::{ArcGeom, arc_end, arc_start};
+use crate::geom::arc::{ArcGeom, arc_end, arc_start, norm_angle, point_on_circle, sweep};
 use crate::geom::arrangement::Ring;
-use crate::geom::bulge::{bulge_at, segment_mid};
-use crate::geom::ellipse::{EllipseGeom, ellipse_point};
+use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
+use crate::geom::ellipse::{EllipseGeom, ellipse_length, ellipse_point, param_of_point};
+use crate::jsmath::{TAU, atan2, js_hypot, js_max, js_min};
 use crate::store::snap::SnapKind;
 use crate::vec2::Vec2;
 
 /// A place on an object.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Place {
     /// A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
     Node { part: usize },
@@ -55,6 +62,14 @@ pub enum Place {
         ring: usize,
         index: usize,
     },
+    /// A point along a line (all zero), a path's edge from vertex `index`, an arc, a circle or an ellipse, at the
+    /// fraction `t` (0 to 1) of its chord or sweep (docs/adr/0263 §1).
+    Along {
+        part: usize,
+        ring: usize,
+        index: usize,
+        t: f64,
+    },
 }
 
 /// Why a place no longer is on its object.
@@ -70,6 +85,8 @@ pub enum Reason {
     VertexGone,
     /// The structure changed and the vertex is in more than one place.
     Ambiguous,
+    /// The piece a block path names is no longer in the insert (docs/adr/0263 §3).
+    PieceGone,
 }
 
 impl Reason {
@@ -81,6 +98,7 @@ impl Reason {
             Reason::NoSuchPlace => "no_such_place",
             Reason::VertexGone => "vertex_gone",
             Reason::Ambiguous => "ambiguous",
+            Reason::PieceGone => "piece_gone",
         }
     }
 }
@@ -237,6 +255,15 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
             let b = r.pts[(index + 1) % n];
             Some(segment_mid(a, b, bulge_at(r.bulges, index)))
         }
+        (
+            shape,
+            Place::Along {
+                part,
+                ring,
+                index,
+                t,
+            },
+        ) => along_point(shape, part, ring, index, t),
         _ => None,
     }
 }
@@ -247,7 +274,11 @@ fn same_structure(before: &Shape, after: &Shape, place: Place) -> bool {
     // Only a path's rings and a multi-point's points have a structure; a line's middle has none.
     let path = matches!(before, Shape::Polyline { .. } | Shape::Polygon { .. });
     match place {
-        Place::Vertex { part, ring, .. } | Place::Mid { part, ring, .. } if path => {
+        Place::Vertex { part, ring, .. }
+        | Place::Mid { part, ring, .. }
+        | Place::Along { part, ring, .. }
+            if path =>
+        {
             match (ring_of(before, part, ring), ring_of(after, part, ring)) {
                 (Some(b), Some(a)) => b.pts.len() == a.pts.len() && b.closed == a.closed,
                 _ => false,
@@ -330,7 +361,10 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
             Ok(to) => Followed::At(to, was),
             Err(reason) => Followed::Broken(reason),
         },
-        Place::Mid { part, ring, index } => {
+        Place::Mid { part, ring, index }
+        | Place::Along {
+            part, ring, index, ..
+        } => {
             // The edge's two ends, found in the new geometry as one edge.
             let Some(r) = ring_of(&before.shape, part, ring) else {
                 return Followed::Broken(Reason::NoSuchPlace);
@@ -371,10 +405,18 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
             if (pa, ra) != (pb, rb) || next(ia) != Some(ib) {
                 return Followed::Broken(Reason::VertexGone);
             }
-            let to = Place::Mid {
-                part: pa,
-                ring: ra,
-                index: ia,
+            let to = match place {
+                Place::Along { t, .. } => Place::Along {
+                    part: pa,
+                    ring: ra,
+                    index: ia,
+                    t,
+                },
+                _ => Place::Mid {
+                    part: pa,
+                    ring: ra,
+                    index: ia,
+                },
             };
             match point(after, to) {
                 Some(p) => Followed::At(to, p),
@@ -390,8 +432,9 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
 
 /// The place on `e` a snap of `kind` stood on at `at` (an associative dimension's point, docs/adr/0249 §3): an
 /// end or a vertex for Uç nokta, an edge's middle for Orta nokta, the centre for Merkez, a point for Nokta; the
-/// first (in the object's order) whose point is `at`, within a nanometre. None for another snap (Yakın, Kesişim …)
-/// or when no place is there.
+/// first (in the object's order) whose point is `at`, within a nanometre. Yakın, Dik, Teğet and Çeyrek stand on an
+/// edge or a curve: the first one `at` is on, as an `along` place (docs/adr/0263 §1). None for another snap
+/// (Kesişim is on two objects …) or when no place is there.
 pub fn place_at(e: &Entity, kind: SnapKind, at: Vec2) -> Option<Place> {
     let mut candidates: Vec<Place> = Vec::new();
     match kind {
@@ -415,10 +458,352 @@ pub fn place_at(e: &Entity, kind: SnapKind, at: Vec2) -> Option<Place> {
         SnapKind::Node => {
             candidates.extend(vertex_places(&e.shape).into_iter().map(|(p, _)| p));
         }
+        SnapKind::Nearest | SnapKind::Perpendicular | SnapKind::Tangent | SnapKind::Quadrant => {
+            return along_at(e, at);
+        }
         _ => return None,
     }
     const NEAR: f64 = 1e-9;
     candidates.into_iter().find(|&p| {
         point(e, p).is_some_and(|q| (q.x - at.x).abs() <= NEAR && (q.y - at.y).abs() <= NEAR)
     })
+}
+
+// ---- places along an edge or a curve (docs/adr/0263 §1) ----------------------------------------------------------
+
+/// The circle of a bulged edge: centre, radius, start angle, signed sweep; none when straight.
+fn edge_arc(a: Vec2, b: Vec2, bulge: f64) -> Option<(Vec2, f64, f64, f64)> {
+    bulge_arc(a, b, bulge).map(|g| (g.c, g.r, g.a0, g.sweep))
+}
+
+fn lerp(a: Vec2, b: Vec2, t: f64) -> Vec2 {
+    Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+}
+
+/// A path's edge from vertex `index`: its ends and bulge; none when the ring has no such edge.
+fn edge_of(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<(Vec2, Vec2, f64)> {
+    let r = ring_of(shape, part, ring)?;
+    let n = r.pts.len();
+    if index >= n || (!r.closed && index + 1 >= n) {
+        return None;
+    }
+    Some((
+        r.pts[index],
+        r.pts[(index + 1) % n],
+        bulge_at(r.bulges, index),
+    ))
+}
+
+/// Where `along { part, ring, index, t }` is on `shape`.
+fn along_point(shape: &Shape, part: usize, ring: usize, index: usize, t: f64) -> Option<Vec2> {
+    if !(0.0..=1.0).contains(&t) {
+        return None;
+    }
+    let whole = part == 0 && ring == 0 && index == 0;
+    match shape {
+        Shape::Line { a, b } => whole.then(|| lerp(*a, *b, t)),
+        Shape::Arc { c, r, a0, a1 } => {
+            whole.then(|| point_on_circle(*c, *r, a0 + t * sweep(*a0, *a1)))
+        }
+        Shape::Circle { c, r } => whole.then(|| point_on_circle(*c, *r, t * TAU)),
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => whole.then(|| {
+            let g = EllipseGeom {
+                c: *c,
+                major: *major,
+                ratio: *ratio,
+                t0: *t0,
+                t1: *t1,
+            };
+            ellipse_point(&g, t0 + t * sweep(*t0, *t1))
+        }),
+        _ => {
+            let (a, b, k) = edge_of(shape, part, ring, index)?;
+            Some(match edge_arc(a, b, k) {
+                Some((c, r, a0, sw)) => point_on_circle(c, r, a0 + t * sw),
+                None => lerp(a, b, t),
+            })
+        }
+    }
+}
+
+/// How near a snap's point must be to an edge to stand on it: a nanometre, or 1e-14 of its coordinates when larger.
+fn near_enough(at: Vec2) -> f64 {
+    js_max(1e-9, 1e-14 * js_max(at.x.abs(), at.y.abs()))
+}
+
+fn clamp01(t: f64) -> f64 {
+    js_min(1.0, js_max(0.0, t))
+}
+
+/// The fraction of a straight edge at which `at` lies on it; none off it.
+fn t_on_segment(a: Vec2, b: Vec2, at: Vec2) -> Option<f64> {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let ll = dx * dx + dy * dy;
+    if ll == 0.0 {
+        return None;
+    }
+    let t = clamp01(((at.x - a.x) * dx + (at.y - a.y) * dy) / ll);
+    let q = lerp(a, b, t);
+    (js_hypot(q.x - at.x, q.y - at.y) <= near_enough(at)).then_some(t)
+}
+
+/// The fraction of a signed sweep from `a0` at which `at` lies on the circle's arc; none off it.
+fn t_on_arc(c: Vec2, r: f64, a0: f64, sw: f64, at: Vec2) -> Option<f64> {
+    if (js_hypot(at.x - c.x, at.y - c.y) - r).abs() > near_enough(at) {
+        return None;
+    }
+    let th = atan2(at.y - c.y, at.x - c.x);
+    let d = if sw > 0.0 {
+        norm_angle(th - a0)
+    } else {
+        norm_angle(a0 - th)
+    };
+    let span = sw.abs();
+    if d > span + 1e-9 {
+        return (d >= TAU - 1e-9).then_some(0.0);
+    }
+    Some(clamp01(d / span))
+}
+
+/// The first edge or curve of `e` (in its order) that `at` lies on, as an `along` place.
+fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
+    let whole = |t: f64| Place::Along {
+        part: 0,
+        ring: 0,
+        index: 0,
+        t,
+    };
+    match &e.shape {
+        Shape::Line { a, b } => t_on_segment(*a, *b, at).map(whole),
+        Shape::Arc { c, r, a0, a1 } => t_on_arc(*c, *r, *a0, sweep(*a0, *a1), at).map(whole),
+        Shape::Circle { c, r } => t_on_arc(*c, *r, 0.0, TAU, at).map(|t| whole(t % 1.0)),
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => {
+            let g = EllipseGeom {
+                c: *c,
+                major: *major,
+                ratio: *ratio,
+                t0: *t0,
+                t1: *t1,
+            };
+            let p = param_of_point(&g, at);
+            let q = ellipse_point(&g, p);
+            if js_hypot(q.x - at.x, q.y - at.y) > near_enough(at) {
+                return None;
+            }
+            let sw = sweep(*t0, *t1);
+            let d = norm_angle(p - t0);
+            if d > sw + 1e-9 {
+                return (d >= TAU - 1e-9).then(|| whole(0.0));
+            }
+            Some(whole(clamp01(d / sw)))
+        }
+        _ => vertex_places(&e.shape).into_iter().find_map(|(p, _)| {
+            let Place::Vertex { part, ring, index } = p else {
+                return None;
+            };
+            let (a, b, k) = edge_of(&e.shape, part, ring, index)?;
+            let t = match edge_arc(a, b, k) {
+                Some((c, r, a0, sw)) => t_on_arc(c, r, a0, sw, at),
+                None => t_on_segment(a, b, at),
+            }?;
+            Some(Place::Along {
+                part,
+                ring,
+                index,
+                t,
+            })
+        }),
+    }
+}
+
+// ---- ranges (docs/adr/0263 §2) -----------------------------------------------------------------------------------
+
+/// The length of a piece of an edge, from fraction `t0` to `t1`.
+fn edge_piece(a: Vec2, b: Vec2, k: f64, t0: f64, t1: f64) -> f64 {
+    match edge_arc(a, b, k) {
+        Some((_, r, _, sw)) => r * sw.abs() * (t1 - t0),
+        None => js_hypot(b.x - a.x, b.y - a.y) * (t1 - t0),
+    }
+}
+
+/// The length of an ellipse's curve between parameters `s0` and `s1` (`s0 < s1`).
+fn ellipse_piece(c: Vec2, major: Vec2, ratio: f64, s0: f64, s1: f64) -> f64 {
+    ellipse_length(&EllipseGeom {
+        c,
+        major,
+        ratio,
+        t0: s0,
+        t1: s1,
+    })
+}
+
+/// The length of the range from `from` to `to`, two `along` places of `e` on one part and ring, in the object's
+/// direction; around a closed ring, a circle or a whole ellipse when `to` comes first; none when the places are not
+/// such or `to` comes first on an open one.
+pub fn range_length(e: &Entity, from: Place, to: Place) -> Option<f64> {
+    let (
+        Place::Along {
+            part,
+            ring,
+            index: i0,
+            t: t0,
+        },
+        Place::Along {
+            part: p1,
+            ring: r1,
+            index: i1,
+            t: t1,
+        },
+    ) = (from, to)
+    else {
+        return None;
+    };
+    point(e, from)?;
+    point(e, to)?;
+    if (part, ring) != (p1, r1) {
+        return None;
+    }
+    let behind = (i1, t1) < (i0, t0);
+    match &e.shape {
+        Shape::Line { a, b } => (!behind).then(|| js_hypot(b.x - a.x, b.y - a.y) * (t1 - t0)),
+        Shape::Arc { r, a0, a1, .. } => (!behind).then(|| r * sweep(*a0, *a1) * (t1 - t0)),
+        Shape::Circle { r, .. } => {
+            let d = t1 - t0;
+            Some(r * TAU * if d >= 0.0 { d } else { d + 1.0 })
+        }
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0: e0,
+            t1: e1,
+        } => {
+            let sw = sweep(*e0, *e1);
+            if sw >= TAU {
+                let d = t1 - t0;
+                let s0 = e0 + t0 * TAU;
+                Some(ellipse_piece(
+                    *c,
+                    *major,
+                    *ratio,
+                    s0,
+                    s0 + (if d >= 0.0 { d } else { d + 1.0 }) * TAU,
+                ))
+            } else {
+                (!behind).then(|| ellipse_piece(*c, *major, *ratio, e0 + t0 * sw, e0 + t1 * sw))
+            }
+        }
+        shape => {
+            let r = ring_of(shape, part, ring)?;
+            let n = r.pts.len();
+            if behind && !r.closed {
+                return None;
+            }
+            let edges = if r.closed { n } else { n - 1 };
+            let (mut i, mut t, mut wrapped, mut total) = (i0, t0, behind, 0.0);
+            loop {
+                let last = i == i1 && !wrapped;
+                let end = if last { t1 } else { 1.0 };
+                total += edge_piece(r.pts[i], r.pts[(i + 1) % n], bulge_at(r.bulges, i), t, end);
+                if last {
+                    return Some(total);
+                }
+                i = (i + 1) % edges;
+                t = 0.0;
+                if i == 0 {
+                    wrapped = false;
+                }
+            }
+        }
+    }
+}
+
+/// Where a range went: both ends followed; one broken breaks it; ends on different rings break it (`VertexGone`).
+pub fn follow_range(
+    from: Place,
+    to: Place,
+    before: &Entity,
+    after: Option<&Entity>,
+) -> Result<(Place, Place), Reason> {
+    let a = match follow(from, before, after) {
+        Followed::At(p, _) => p,
+        Followed::Broken(r) => return Err(r),
+    };
+    let b = match follow(to, before, after) {
+        Followed::At(p, _) => p,
+        Followed::Broken(r) => return Err(r),
+    };
+    let ring = |p: Place| match p {
+        Place::Along { part, ring, .. } => Some((part, ring)),
+        _ => None,
+    };
+    if ring(a) != ring(b) {
+        return Err(Reason::VertexGone);
+    }
+    Ok((a, b))
+}
+
+// ---- pieces inside blocks (docs/adr/0263 §3) ---------------------------------------------------------------------
+
+/// The piece a block path names in an insert, as an object of its own.
+pub fn piece(blocks: &Blocks, insert: &Entity, path: &[u32]) -> Option<Entity> {
+    blocks.piece(&insert.shape, path).map(Entity::new)
+}
+
+/// Where a place on a piece inside an insert is.
+pub fn point_in(blocks: &Blocks, insert: &Entity, path: &[u32], place: Place) -> Option<Vec2> {
+    point(&piece(blocks, insert, path)?, place)
+}
+
+/// Where a place on a piece inside an insert went: the insert gone, or no longer an insert, breaks it; the piece
+/// gone from the new insert (or its new definition) breaks it (`PieceGone`); else the piece's place follows by
+/// [`follow`]. `before` and `after` each carry the definitions of their moment.
+pub fn follow_in(
+    place: Place,
+    path: &[u32],
+    before: (&Blocks, &Entity),
+    after: Option<(&Blocks, &Entity)>,
+) -> Followed {
+    let Some((blocks_after, after)) = after else {
+        return Followed::Broken(Reason::ObjectGone);
+    };
+    if !matches!(after.shape, Shape::Insert { .. }) {
+        return Followed::Broken(Reason::KindChanged);
+    }
+    let Some(was) = piece(before.0, before.1, path) else {
+        return Followed::Broken(Reason::NoSuchPlace);
+    };
+    let Some(now) = piece(blocks_after, after, path) else {
+        return Followed::Broken(Reason::PieceGone);
+    };
+    follow(place, &was, Some(&now))
+}
+
+/// The piece and place a snap of `kind` stood on at `at` inside an insert: the first piece (in the flattening's
+/// order) that has one (`place_at`).
+pub fn place_in(
+    blocks: &Blocks,
+    insert: &Entity,
+    kind: SnapKind,
+    at: Vec2,
+) -> Option<(Vec<u32>, Place)> {
+    blocks
+        .piece_paths(&insert.shape)
+        .into_iter()
+        .find_map(|path| {
+            let e = piece(blocks, insert, &path)?;
+            place_at(&e, kind, at).map(|p| (path, p))
+        })
 }

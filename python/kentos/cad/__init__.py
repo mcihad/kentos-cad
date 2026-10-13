@@ -47,6 +47,7 @@ __all__ = [
     "AlignedDimensionMeasure",
     "AllCornerPick",
     "AllTrimBoundaries",
+    "AlongSubPlace",
     "AngleArcDimensionMeasure",
     "AngleDimensionMeasure",
     "AngleUnit",

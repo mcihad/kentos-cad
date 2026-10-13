@@ -174,6 +174,8 @@ SCHEMA_WITH_LOOK = 48
 SCHEMA_WITH_UCS = 49
 # Schema 50: schema 49, the drawing units `in` and `ft` and the settings' `lengthStyle` (docs/adr/0262).
 SCHEMA_WITH_IMPERIAL = 50
+# Schema 51: schema 50, a reference's place `along` (part, ring, index, t) and its block `path` (docs/adr/0263).
+SCHEMA_WITH_SUBREF_EXTRAS = 51
 # A UCS's bounds (kentos_contracts::cad_ucs): an origin within 10 000 km, an angle in [0, 2π), at most 100 named, a name
 # trimmed, 1 to 64 characters, no control characters.
 UCS_REACH = 1.0e7
@@ -188,9 +190,11 @@ REQUEST_LEDGER = 256
 REQUEST_ANSWER_LIMIT = 64 * 1024
 # A reference's places and how many numbers (part, ring, index) each has; the codes of a broken one
 # (kentos_contracts::subref).
-SUBREF_PLACES = {"node": 1, "start": 0, "end": 0, "center": 0, "vertex": 3, "mid": 3}
+SUBREF_PLACES = {"node": 1, "start": 0, "end": 0, "center": 0, "vertex": 3, "mid": 3, "along": 3}
 SUBREF_INDEX_LIMIT = 10_000_000
-SUBREF_BROKEN = ("object_gone", "kind_changed", "no_such_place", "vertex_gone", "ambiguous")
+SUBREF_BROKEN = ("object_gone", "kind_changed", "no_such_place", "vertex_gone", "ambiguous", "piece_gone")
+# A block path's most levels (the block core's MAX_DEPTH, docs/adr/0263 §3).
+SUBREF_PATH_DEPTH = 16
 # Address data's bounds and levels (kentos_contracts::address).
 ADDRESS_LOCATOR_LIMIT = 16
 ADDRESS_MIN_SCORES = (50, 100)
@@ -343,7 +347,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1837,6 +1841,7 @@ class _Schema:
         self.look = version >= SCHEMA_WITH_LOOK
         self.ucs = version >= SCHEMA_WITH_UCS
         self.imperial = version >= SCHEMA_WITH_IMPERIAL
+        self.subref_extras = version >= SCHEMA_WITH_SUBREF_EXTRAS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3789,12 +3794,34 @@ class _Schema:
         """A place on an object (docs/adr/0249 §1): its `kind`, then the numbers that kind has, each at most
         SUBREF_INDEX_LIMIT; a number its kind does not have is an unknown field."""
         n = 0
+        kinds = tuple(k for k in SUBREF_PLACES if k != "along" or self.subref_extras)
+        kind = None
+        if type(v) is dict and "t" in v and not self.subref_extras:
+            # The shortest key comes first: before schema 51 an along place's t is an unknown field.
+            return self.fields({"kind": (self.text, True)})(v)
         if type(v) is dict and "kind" in v:
-            n = SUBREF_PLACES[self.at("kind", self.enum(tuple(SUBREF_PLACES)), v["kind"])]
+            kind = self.at("kind", self.enum(kinds), v["kind"])
+            n = SUBREF_PLACES[kind]
         table = {"kind": (self.text, True)}
         for key in ("part", "ring", "index")[:n]:
             table[key] = (self.sub_index, True)
+        if kind == "along":
+            table["t"] = (self.fraction, True)
         return self.fields(table)(v)
+
+    def fraction(self, v):
+        x = self.float(v)
+        if not (0.0 <= x <= 1.0):
+            self.fail("bad_value", f"{x} 0 ile 1 arasında olmalı")
+        return x
+
+    def sub_path(self, v):
+        path = self.array(self.sub_index)(v)
+        if not path:
+            self.fail("bad_value", "Başvurunun blok yolu boş: boşsa alan yazılmaz.")
+        if len(path) > SUBREF_PATH_DEPTH:
+            self.fail("bad_value", f"Başvurunun blok yolu {len(path)} düzey; en çok {SUBREF_PATH_DEPTH} olmalı.")
+        return path
 
     def sub_index(self, v):
         x = self.uint(64)(v)
@@ -3803,7 +3830,10 @@ class _Schema:
         return x
 
     def subref(self, v):
-        r = self.fields({"uid": (self.id16, True), "place": (self.sub_place, True), "broken": (self.text, False)})(v)
+        table = {"uid": (self.id16, True), "place": (self.sub_place, True), "broken": (self.text, False)}
+        if self.subref_extras:
+            table["path"] = (self.sub_path, False)
+        r = self.fields(table)(v)
         if "broken" in r and r["broken"] not in SUBREF_BROKEN:
             self.fail("bad_value", f"Başvurunun kopma nedeni “{r['broken']}” bilinmiyor.")
         return r

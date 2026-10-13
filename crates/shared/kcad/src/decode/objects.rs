@@ -198,6 +198,8 @@ pub(super) struct Features {
     polyline_extras: bool,
     /// Schema 47: the NURBS curve (docs/adr/0259).
     nurbs: bool,
+    /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
+    subref_extras: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -261,6 +263,7 @@ impl Features {
             look: schema >= crate::SCHEMA_WITH_LOOK,
             ucs: schema >= crate::SCHEMA_WITH_UCS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
+            subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
@@ -1010,7 +1013,7 @@ pub(super) fn object(
             }
             "pattern" => f.pattern = Some(pattern(r, has)?),
             "assoc" => f.assoc = Some(hatch_assoc(r)?),
-            "refs" => f.refs = Some(dimension_refs(r)?),
+            "refs" => f.refs = Some(dimension_refs(r, has.subref_extras)?),
             "block" => {
                 f.block_at = r.position();
                 f.block = Some(BlockId(id16(r)?));
@@ -1556,7 +1559,7 @@ fn build(
                 mask: f.mask.unwrap_or(false),
                 za,
                 zb,
-                refs: f.refs.take(),
+                refs: f.refs.take().map(Box::new),
                 look: std::mem::take(&mut f.look),
             })
         }
@@ -2388,7 +2391,7 @@ fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
 
 /// What a dimension's points follow (docs/adr/0249 §4): `a`, `b` and `c`, each a reference; a point
 /// without one is not written, nor are references none of its points has.
-fn dimension_refs(r: &mut Reader<'_>) -> Result<DimensionRefs, KcadError> {
+fn dimension_refs(r: &mut Reader<'_>, extras: bool) -> Result<DimensionRefs, KcadError> {
     let at = r.position();
     let mut refs = DimensionRefs::default();
     map(r, |r, key| {
@@ -2398,7 +2401,7 @@ fn dimension_refs(r: &mut Reader<'_>) -> Result<DimensionRefs, KcadError> {
             "c" => &mut refs.c,
             _ => return Err(unknown(r)),
         };
-        *slot = Some(subref(r)?);
+        *slot = Some(subref(r, extras)?);
         Ok(())
     })?;
     if let Some(words) = refs.problem() {
@@ -2407,25 +2410,41 @@ fn dimension_refs(r: &mut Reader<'_>) -> Result<DimensionRefs, KcadError> {
     Ok(refs)
 }
 
-/// The places a reference may name, by their written kind.
-const PLACE_KINDS: [(&str, u8); 6] = [
+/// The places a reference may name, by their written kind; `along` only from schema 51.
+const PLACE_KINDS: [(&str, u8); 7] = [
     ("node", 1),
     ("start", 0),
     ("end", 0),
     ("center", 0),
     ("vertex", 3),
     ("mid", 3),
+    ("along", 3),
 ];
 
 /// A reference (docs/adr/0249 §4): the object's persistent id, the place (its `kind` and the
-/// numbers that kind has) and, when it broke, why.
-fn subref(r: &mut Reader<'_>) -> Result<SubRef, KcadError> {
+/// numbers that kind has), its block path (schema 51, docs/adr/0263 §3; never empty) and, when it
+/// broke, why.
+fn subref(r: &mut Reader<'_>, extras: bool) -> Result<SubRef, KcadError> {
     let at = r.position();
-    let (mut uid, mut place, mut broken) = (None, None, None);
+    let (mut uid, mut place, mut broken, mut path) = (None, None, None, Vec::new());
     map(r, |r, key| {
         match key {
             "uid" => uid = Some(EntityId(id16(r)?)),
-            "place" => place = Some(sub_place(r)?),
+            "place" => place = Some(sub_place(r, extras)?),
+            "path" if extras => {
+                let at = r.position();
+                let n = r.array()?;
+                if n == 0 {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "Başvurunun blok yolu boş: boşsa alan yazılmaz.",
+                    ));
+                }
+                for _ in 0..n {
+                    path.push(r.uint(u64::from(SUBREF_INDEX_LIMIT))? as u32);
+                }
+            }
             "broken" => broken = Some(text(r)?),
             _ => return Err(unknown(r)),
         }
@@ -2434,6 +2453,7 @@ fn subref(r: &mut Reader<'_>) -> Result<SubRef, KcadError> {
     let s = SubRef {
         uid: required(r, uid, "uid")?,
         place: required(r, place, "place")?,
+        path,
         broken,
     };
     if let Some(words) = s.problem() {
@@ -2444,13 +2464,19 @@ fn subref(r: &mut Reader<'_>) -> Result<SubRef, KcadError> {
 
 /// A place on an object: `kind` first (the keys' order), then its numbers, each at most
 /// [`SUBREF_INDEX_LIMIT`]; a number its kind does not have is an unknown field.
-fn sub_place(r: &mut Reader<'_>) -> Result<SubPlace, KcadError> {
-    let (mut kind, mut numbers) = (None::<&str>, [None::<u32>; 3]);
+fn sub_place(r: &mut Reader<'_>, extras: bool) -> Result<SubPlace, KcadError> {
+    let (mut kind, mut numbers, mut t) = (None::<&str>, [None::<u32>; 3], None::<f64>);
     map(r, |r, key| {
         let slot = match key {
             "kind" => {
                 let names = PLACE_KINDS.map(|(n, _)| (n, n));
-                kind = Some(named(r, &names)?);
+                let known = if extras { &names[..] } else { &names[..6] };
+                kind = Some(named(r, known)?);
+                return Ok(());
+            }
+            // Shorter keys first: an along place's t comes before its kind.
+            "t" if extras => {
+                t = Some(r.float()?);
                 return Ok(());
             }
             "part" => 0,
@@ -2469,6 +2495,9 @@ fn sub_place(r: &mut Reader<'_>) -> Result<SubPlace, KcadError> {
         Ok(())
     })?;
     let kind = required(r, kind, "kind")?;
+    if t.is_some() && kind != "along" {
+        return Err(unknown(r));
+    }
     let mut number = |i: usize, key: &'static str| required(r, numbers[i], key);
     Ok(match kind {
         "node" => SubPlace::Node {
@@ -2482,10 +2511,16 @@ fn sub_place(r: &mut Reader<'_>) -> Result<SubPlace, KcadError> {
             ring: number(1, "ring")?,
             index: number(2, "index")?,
         },
-        _ => SubPlace::Mid {
+        "mid" => SubPlace::Mid {
             part: number(0, "part")?,
             ring: number(1, "ring")?,
             index: number(2, "index")?,
+        },
+        _ => SubPlace::Along {
+            part: number(0, "part")?,
+            ring: number(1, "ring")?,
+            index: number(2, "index")?,
+            t: required(r, t, "t")?,
         },
     })
 }
