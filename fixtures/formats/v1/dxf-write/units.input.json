@@ -148,6 +148,77 @@
         "y": 0.02
       },
       "r": 0.0055
+    },
+    {
+      "kind": "text",
+      "id": 9,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 0.002,
+        "y": 0.11
+      },
+      "text": "Plaka: S235\nKalınlık 8 mm",
+      "height": 0.0025,
+      "rotation": 0,
+      "align": "topLeft",
+      "boxWidth": 0.045,
+      "lineSpacing": 1.25
+    },
+    {
+      "kind": "table",
+      "id": 10,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 0.14,
+        "y": 0.08
+      },
+      "rotation": 0,
+      "height": 0.0025,
+      "rows": [
+        0.006,
+        0.006
+      ],
+      "columns": [
+        0.02,
+        0.015
+      ],
+      "cells": [
+        [
+          "Parça",
+          "Adet"
+        ],
+        [
+          "Pim",
+          "2"
+        ]
+      ],
+      "frame": 0.0005
+    },
+    {
+      "kind": "text",
+      "id": 11,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 0.0,
+        "y": -0.02
+      },
+      "text": "Kesim çizgisi",
+      "height": 0.0025,
+      "rotation": 0,
+      "path": {
+        "pts": [
+          {
+            "x": 0.06,
+            "y": 0.0
+          }
+        ],
+        "bulges": [
+          0.2
+        ]
+      }
     }
   ],
   "layers": [

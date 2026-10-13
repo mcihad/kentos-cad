@@ -136,18 +136,22 @@ pub struct PointCloudStyle {
     /// The ramp's least and most value (heights in metres, or intensities).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub max: Option<f64>,
     /// Classes not drawn (0–255), in order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u8>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub hidden: Vec<u8>,
     /// Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub rgb8: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "size-unit")))]
     pub size: f64,
     #[serde(default, skip_serializing_if = "is_default")]
     #[cfg_attr(feature = "ts", ts(as = "Option<PointSizeUnit>", optional))]
@@ -234,8 +238,10 @@ pub struct CloudSource {
     pub format: CloudFormat,
     /// Its points, as its header says.
     #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u64,
     /// `[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub bounds: [f64; 6],
 }
 
@@ -264,16 +270,20 @@ pub struct PointCloudEntity {
 pub struct PointCloudFields {
     pub sources: Vec<CloudSource>,
     /// The members' bounds together.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub bounds: [f64; 6],
     /// The members' points together.
     #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u64,
     /// The files' system; 0: they named none and the user took the project's.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: u32,
     pub style: PointCloudStyle,
     /// 0.1 to 1; absent: opaque.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
 }
 

@@ -69,6 +69,7 @@ pub struct SheetMapInfo {
     /// The map's scale denominator (1:N); none for a map that follows something else (an atlas).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
 }
 
@@ -82,9 +83,12 @@ pub struct SheetInfo {
     pub id: String,
     pub name: String,
     /// The page's width and height, millimetres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub width: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: f64,
     /// Its items, how many.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub items: u32,
     /// Its map frames, in drawing order.
     pub maps: Vec<SheetMapInfo>,

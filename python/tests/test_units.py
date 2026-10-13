@@ -50,5 +50,64 @@ class MillimetreProject(unittest.TestCase):
             cad.Document.new(srid=4)
 
 
+
+class UnitChange(unittest.TestCase):
+    """docs/adr/0256 §1: the sizes or the numbers kept, in one undo step."""
+
+    def test_keeping_the_numbers_scales_the_drawing_and_undo_gives_both_back(self) -> None:
+        doc = cad.Document.new("Oda", workspace="cad", drawing_unit="m")
+        # A drawing in millimetres taken for metres: a 4000 × 3000 “m” room.
+        made = cad.polygon.create(doc, layer_id=doc.active_layer, pts=[(0, 0), (4000, 0), (4000, 3000), (0, 3000)])
+        plan = cad.units.change.plan(doc, from_="m", to="mm", geometry="scale")
+        self.assertEqual((plan.factor, plan.objects), (0.001, 1))
+        self.assertEqual(doc.measure(made.uid).area, 12_000_000.0, "a plan writes nothing")
+        out = cad.units.change(doc, from_="m", to="mm", geometry="scale")
+        self.assertEqual(out.to, cad.DrawingUnit.MM)
+        m = doc.measure(made.uid)
+        self.assertEqual((m.area, m.units.drawing), (12.0, cad.DrawingUnit.MM))
+        self.assertEqual(doc.undo(), "Birimi değiştir")
+        self.assertEqual(doc.units.drawing, cad.DrawingUnit.M)
+        self.assertEqual(doc.measure(made.uid).area, 12_000_000.0)
+
+    def test_keeping_the_sizes_changes_only_the_unit(self) -> None:
+        doc = cad.Document.new("Oda", workspace="cad", drawing_unit="mm")
+        made = cad.polygon.create(doc, layer_id=doc.active_layer, pts=ROOM)
+        cad.units.change(doc, from_="mm", to="cm", geometry="keep")
+        self.assertEqual((doc.units.drawing, doc.measure(made.uid).area), (cad.DrawingUnit.CM, 12.0))
+        with self.assertRaises(cad.CommandFailed) as wrong:
+            cad.units.change(doc, from_="mm", to="m", geometry="keep")
+        self.assertEqual(wrong.exception.code, "unit_mismatch")
+
+
+class MeasureBasis(unittest.TestCase):
+    """docs/adr/0256 §4, §5: what a measure was taken in and how; a batch; the conventions."""
+
+    def test_a_batch_sums_and_says_its_basis(self) -> None:
+        doc = cad.Document.new("Oda", workspace="cad", drawing_unit="mm")
+        room = cad.polygon.create(doc, layer_id=doc.active_layer, pts=ROOM)
+        wall = cad.line.create(doc, layer_id=doc.active_layer, a=(0, 0), b=(0, 2.5))
+        many = doc.measure_many([room.uid, wall.uid])
+        self.assertEqual((many.count, many.area, many.length), (2, 12.0, 16.5))
+        self.assertEqual((many.basis.kind, many.basis.frame, many.basis.method), ("local", "world", "plane"))
+        self.assertIsNone(many.items[1].area)
+        with self.assertRaises(cad.HostError) as no_system:
+            doc.measure(room.uid, method="ellipsoid")
+        self.assertEqual(no_system.exception.code, "method_unavailable")
+
+    def test_the_conventions_by_the_project_type(self) -> None:
+        c = cad.Document.new("Oda", workspace="cad", drawing_unit="mm").conventions
+        self.assertEqual((c.axes, c.labels, c.polar_zero, c.polar_turn, c.angle_unit), (("east", "north"), ("X", "Y"), "east", "ccw", "deg"))
+        g = cad.Document.new(srid=5256).conventions
+        self.assertEqual((g.workspace, g.labels, g.polar_zero, g.polar_turn), ("gis", ("Y", "X"), "north", "cw"))
+
+    def test_on_the_ellipsoid_in_a_projected_system(self) -> None:
+        doc = cad.Document.new(srid=5256)
+        x, y = 500_000.0, 4_400_000.0
+        sq = cad.polygon.create(doc, layer_id=doc.active_layer, pts=[(x, y), (x + 100, y), (x + 100, y + 100), (x, y + 100)])
+        m = doc.measure(sq.uid, method="ellipsoid")
+        self.assertEqual((m.basis.kind, m.basis.method, m.units.area), ("projected", "ellipsoid", "m2"))
+        self.assertAlmostEqual(m.area or 0, 10_000.0, delta=1.0)
+
+
 if __name__ == "__main__":
     unittest.main()

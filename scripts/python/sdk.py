@@ -154,6 +154,7 @@ class Field:
     description: str
     default: object = None  # the schema's default (JSON), or None
     has_default: bool = False
+    unit: str = ""  # the schema's x-unit (docs/adr/0256 §3), or none
 
 
 @dataclass
@@ -274,6 +275,7 @@ class Model:
                 type=parse_type(p, f"{where}.{wire}"),
                 required=wire in required,
                 description=p.get("description", "") if isinstance(p, dict) else "",
+                unit=str(p.get("x-unit", "")) if isinstance(p, dict) else "",
             )
             if isinstance(p, dict) and "default" in p:
                 f.default = p["default"]
@@ -537,13 +539,18 @@ def decode_arg(em: Emit, f: Field) -> str:
     return f'{f.py}={expr} if "{f.wire}" in data else UNSET'
 
 
+def unit_note(f: Field) -> str:
+    """The field's unit as its docs say it (``types.UNITS`` explains each)."""
+    return f" Unit: {f.unit}." if f.unit else ""
+
+
 def attributes_doc(fields: list[Field]) -> str:
-    rows = [f for f in fields if f.description]
+    rows = [f for f in fields if f.description or f.unit]
     if not rows:
         return ""
     out = ["", "Attributes:"]
     for f in rows:
-        text = doc_text(f.description).split("\n")
+        text = (doc_text(f.description) + unit_note(f)).strip().split("\n")
         out.append(f"    {f.py}: {text[0]}")
         out.extend(f"        {line}" if line.strip() else "" for line in text[1:])
     return "\n".join(out)
@@ -652,9 +659,16 @@ def emit_union_base(u: Union, common: list[tuple[str, str]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def emit_types(model: Model) -> str:
+def emit_types(model: Model, units: list[dict] | None = None) -> str:
     em = Emit(model)
     parts = [HEADER, TYPES_PRELUDE]
+    if units:
+        rows = "".join(f"    {q(u['unit'])}: {q(u['meaning'])},\n" for u in units)
+        parts.append(
+            "\n\n#: What the fields' ``Unit:`` notes mean (the catalog's ``units``, docs/adr/0256 §3): every number\n"
+            "#: a command takes or gives names one.\n"
+            f"UNITS: dict[str, str] = {{\n{rows}}}\n"
+        )
     # Enums first, then the plain values' names, then union bases, then structs, then the variants.
     for name in sorted(model.enums):
         parts.append("\n\n" + emit_enum(model.enums[name]))
@@ -866,7 +880,7 @@ def build_arg(em: Emit, f: Field) -> str:
 def args_doc(fields: list[Field], first: tuple[str, str]) -> str:
     out = ["Args:", f"    {first[0]}: {first[1]}"]
     for f in fields:
-        text = doc_text(f.description).split("\n") if f.description else [""]
+        text = (doc_text(f.description) + unit_note(f)).strip().split("\n") if f.description or f.unit else [""]
         out.append(f"    {f.py}: {text[0]}".rstrip())
         out.extend(f"        {line}" if line.strip() else "" for line in text[1:])
     return "\n".join(out)
@@ -1237,7 +1251,7 @@ def generate() -> dict[Path, str]:
     catalog, schemas = load()
     model = Model(schemas)
     commands = commands_of(catalog)
-    files = {OUT / "types.py": emit_types(model)}
+    files = {OUT / "types.py": emit_types(model, catalog.get("units"))}
     files.update(emit_modules(model, commands))
     files[OUT / "__init__.py"] = emit_init(model, commands)
     return files

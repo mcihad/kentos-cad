@@ -18,7 +18,10 @@ pub const SUBREF_INDEX_LIMIT: u32 = 10_000_000;
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum SubPlace {
     /// A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
-    Node { part: u32 },
+    Node {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        part: u32,
+    },
     /// A line's, arc's or elliptical arc's start.
     Start,
     /// Its end.
@@ -27,9 +30,23 @@ pub enum SubPlace {
     Center,
     /// A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its
     /// `h`th hole; the vertex's index in the ring.
-    Vertex { part: u32, ring: u32, index: u32 },
+    Vertex {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        part: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        ring: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        index: u32,
+    },
     /// The middle of a line (all zero) or of a path's edge from vertex `index` to the next.
-    Mid { part: u32, ring: u32, index: u32 },
+    Mid {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        part: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        ring: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        index: u32,
+    },
 }
 
 /// Why a reference broke (the core's `Reason`), as its stable code.

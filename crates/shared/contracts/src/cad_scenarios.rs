@@ -115,8 +115,10 @@ pub struct ScenariosEdited {
     /// `apply`: the scenario's other layers, base layers now, in its group (an ordinary group now).
     pub kept: Vec<String>,
     /// Objects copied (`create`) or moved into base layers (`apply`).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
     /// `apply`: the base layers' objects removed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub removed: u32,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -135,7 +137,9 @@ pub struct ScenariosEditPlan {
     pub scenario: String,
     pub layers: Vec<ScenarioPair>,
     pub kept: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub removed: u32,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

@@ -136,8 +136,8 @@ class DesktopSession(_document.SessionBase):
     def __init__(self, channel: Channel) -> None:
         self._channel = channel
 
-    def _ask(self, method: str, **params: Any) -> str:
-        return json.dumps(self._channel.call(method, params), ensure_ascii=False)
+    def _ask(self, name: str, /, **params: Any) -> str:
+        return json.dumps(self._channel.call(name, params), ensure_ascii=False)
 
     def run(self, command: str, op: str, input: str, version: int | None = None) -> str:
         return self._ask("run", command=command, op=op, input=json.loads(input), version=version)
@@ -171,8 +171,11 @@ class DesktopSession(_document.SessionBase):
     def entity(self, uid: str) -> str:
         return self._ask("entity", uid=uid)
 
-    def measure(self, uid: str) -> str:
-        return self._ask("measure", uid=uid)
+    def measure(self, uid: str, method: str | None = None) -> str:
+        return self._ask("measure", uid=uid, method=method)
+
+    def measure_many(self, uids: str, method: str | None = None) -> str:
+        return self._ask("measureMany", uids=json.loads(uids), method=method)
 
     def begin_group(self, label: str) -> None:
         self._channel.call("begin_group", {"label": label})

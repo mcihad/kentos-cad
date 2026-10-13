@@ -26,6 +26,7 @@ pub struct Vec2 {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntityBase {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: u32,
     pub layer_id: String,
     /// Colour override; absent = the layer's colour ("katmana göre").
@@ -48,6 +49,7 @@ pub struct EntityBase {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
     /// §3.7), one a class at most.
@@ -79,9 +81,11 @@ pub struct PointEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     /// A multi-point object's points past its first, whose own are the
     /// fields above; absent for one point (docs/adr/0174).
@@ -97,9 +101,11 @@ pub struct PointEntity {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct PointPart {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
 }
 
@@ -111,24 +117,30 @@ pub struct LineEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub a: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub b: Vec2,
     /// The start's elevation, m; absent = none (docs/adr/0142).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub za: Option<f64>,
     /// The end's elevation, m; absent = none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub zb: Option<f64>,
     /// The start's measure (M) on a route, in the route's own unit; absent =
     /// none (docs/adr/0224 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
     pub ma: Option<f64>,
     /// The end's measure; absent = none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
     pub mb: Option<f64>,
 }
 
@@ -138,14 +150,17 @@ pub struct LineEntity {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RingGeometry {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     /// Each vertex's elevation, m, as many as `pts`; `null` for a vertex
     /// without one (not 0); absent when no vertex has one (docs/adr/0142).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub zs: Option<Vec<Option<f64>>>,
 }
 
@@ -158,9 +173,11 @@ pub struct RingGeometry {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct AreaPart {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -168,11 +185,13 @@ pub struct AreaPart {
     /// Each vertex's elevation, as the area's own `zs` (docs/adr/0142).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub zs: Option<Vec<Option<f64>>>,
     /// A polyline's part's measures, as the polyline's own `ms`
     /// (docs/adr/0224 §1); an area's part has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
     pub ms: Option<Vec<Option<f64>>>,
 }
 
@@ -185,9 +204,11 @@ pub struct PathEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -196,12 +217,14 @@ pub struct PathEntity {
     /// without one (not 0); absent when no vertex has one (docs/adr/0142).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub zs: Option<Vec<Option<f64>>>,
     /// A polyline's vertices' measures (M) on a route, as many as `pts`;
     /// `null` for a vertex without one; absent when none has one
     /// (docs/adr/0224 §1). A polygon has none: a route is a line.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
     pub ms: Option<Vec<Option<f64>>>,
     /// A polygon's or a polyline's parts past its first, whose own are the
     /// fields above; absent for one part (docs/adr/0143, 0174). A
@@ -219,7 +242,9 @@ pub struct CircleEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub c: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub r: f64,
 }
 
@@ -232,9 +257,13 @@ pub struct ArcEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub c: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub r: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub a0: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub a1: f64,
 }
 
@@ -247,10 +276,15 @@ pub struct EllipseEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub c: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub major: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub ratio: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub t0: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub t1: f64,
 }
 
@@ -263,7 +297,9 @@ pub struct ConstructionEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub dir: Vec2,
 }
 
@@ -275,6 +311,7 @@ pub struct SplineEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     pub closed: bool,
 }
@@ -288,11 +325,14 @@ pub struct TextEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
     pub text: String,
     /// Metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: f64,
     /// Degrees, counter-clockwise from east.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub rotation: f64,
     /// Where `p` is on the text; absent: the left of the baseline (docs/adr/0145).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -303,6 +343,7 @@ pub struct TextEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub width_factor: Option<f64>,
     /// The text's box is filled with the drawing area's colour before the
     /// text is drawn (Netcad's “fon”): what lies under it does not show.
@@ -319,6 +360,7 @@ pub struct TextEntity {
     /// The scale's denominator (1:N) the linked label is written at; finite, over 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub label_scale: Option<f64>,
     /// A multi-line text's box, line spacing and letter formats (docs/adr/0182).
     #[serde(flatten)]
@@ -347,12 +389,14 @@ pub struct TextEntity {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TextPath {
     /// The vertices after `p`, at least one.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     /// Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):
     /// DXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:
     /// every edge straight.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
 }
 
@@ -433,12 +477,14 @@ pub struct Paragraph {
     /// Absent: they end only at line breaks.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub box_width: Option<f64>,
     /// The distance between the lines' baselines in 5/3 of the height (DXF's
     /// group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.25, max = 4.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub line_spacing: Option<f64>,
     /// The letters' formats: ranges of the text's Unicode scalar values (not
     /// UTF-16 units), in order, not overlapping, each with a format; a run
@@ -553,7 +599,9 @@ pub const MAX_LINE_SPACING: f64 = 4.0;
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TextRun {
     /// Its first letter and the one past its last, counting Unicode scalar values.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub start: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub end: u32,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
@@ -704,10 +752,13 @@ pub struct InsertEntity {
     /// The definition's id.
     pub block: crate::identity::BlockId,
     /// Where the definition's base point goes.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
     /// Positive and finite; 1 is the definition's size.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale: f64,
     /// Radians, counter-clockwise from east.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: f64,
     /// Mirrored in the definition's x axis, before the turn.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -729,6 +780,7 @@ pub struct BlockDefinition {
     /// Unique in the drawing, Turkish case folded.
     pub name: String,
     /// The point placed at an insert's `p`, in the definition's coordinates.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub base: Vec2,
     pub entities: Vec<Entity>,
     /// The texts an insert shows from its attributes (ATTDEF).
@@ -758,10 +810,13 @@ pub struct AttributeDefinition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
     /// Metres, in the definition's size.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: f64,
     /// Degrees, counter-clockwise from east, as a text's.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub rotation: f64,
     /// Where `p` is on the text, as a text's (docs/adr/0145).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -771,6 +826,7 @@ pub struct AttributeDefinition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub width_factor: Option<f64>,
 }
 
@@ -861,9 +917,13 @@ pub struct DimensionEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub a: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub b: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -874,11 +934,13 @@ pub struct DimensionEntity {
     /// Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub angle: Option<f64>,
     /// Angular: the vertex. Arc length: the arc's centre. Jogged: the centre
     /// the line starts from (docs/adr/0147).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub c: Option<Vec2>,
     /// The value is drawn over the drawing's background (docs/adr/0147, as a
     /// text's mask, docs/adr/0145).
@@ -888,9 +950,11 @@ pub struct DimensionEntity {
     /// Slope: the two points' elevations, metres (docs/adr/0147).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub za: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub zb: Option<f64>,
     /// The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -910,9 +974,11 @@ pub struct HatchEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub ring: Vec<Vec2>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub holes: Option<Vec<Vec<Vec2>>>,
     pub pattern: crate::HatchPattern,
     /// The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
@@ -935,6 +1001,7 @@ pub struct LeaderEntity {
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
     /// At least two: the arrow's tip first, where the landing starts last.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     /// The note, one line; absent: the arrow alone, no landing and no note.
     /// Never empty: no note is the field's absence.
@@ -943,8 +1010,10 @@ pub struct LeaderEntity {
     pub text: Option<String>,
     /// The note's height, metres, finite and over 0; the arrowhead and the
     /// landing are measured by it.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: f64,
     /// The note's and the landing's direction, degrees counter-clockwise from east.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub rotation: f64,
     /// The arrowhead; absent: a filled arrow.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -954,6 +1023,7 @@ pub struct LeaderEntity {
     /// absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub arrow_size: Option<f64>,
     /// The note's box is filled with the drawing area's colour before the
     /// note is drawn, as a text's mask (docs/adr/0145).

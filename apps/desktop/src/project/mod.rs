@@ -14,6 +14,7 @@ mod custom_crs;
 mod scale;
 pub(crate) mod settings;
 mod survey;
+mod unit_change;
 mod variables;
 mod wizard;
 

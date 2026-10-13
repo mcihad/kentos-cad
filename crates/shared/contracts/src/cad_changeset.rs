@@ -71,6 +71,7 @@ pub struct ChangesetStep {
     /// Its version; the host's when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
     /// Its input, its catalog's schema, with references to earlier steps.
     #[cfg_attr(feature = "ts", ts(type = "unknown"))]

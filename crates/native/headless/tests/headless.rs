@@ -349,6 +349,118 @@ fn a_millimetre_cad_project_is_drawn_and_measured_in_metres() {
     assert_eq!(refused.code, "invalid_input");
 }
 
+/// docs/adr/0256 §4, §5: a measure says what it was taken in and how; a
+/// batch gives each object, the sums and the basis once; the ellipsoid's
+/// and the ground's need a system and a height; the summary gives the axes'
+/// and angles' conventions.
+#[test]
+fn a_measure_says_its_basis_and_a_batch_sums() {
+    let choices = kentos_headless::new_drawing(
+        &json!({ "name": "Oda", "workspace": "cad", "drawingUnit": "mm" }),
+    )
+    .expect("the wizard's project");
+    let mut s = Session::new(&choices).expect("a new project");
+    let summary = s.summary();
+    assert_eq!(
+        summary["conventions"],
+        json!({ "workspace": "cad", "axes": { "x": "east", "y": "north" }, "labels": { "x": "X", "y": "Y" },
+                "polar": { "zero": "east", "turn": "ccw" }, "angleUnit": "deg" })
+    );
+    let layer = summary["activeLayer"].as_str().expect("a layer").to_owned();
+    let room = created(
+        &s.run(
+            "cad.polygon.create",
+            None,
+            Op::Execute,
+            json!({ "layerId": layer, "pts": [
+                {"x": 0.0, "y": 0.0}, {"x": 4.0, "y": 0.0}, {"x": 4.0, "y": 3.0}, {"x": 0.0, "y": 3.0}
+            ] }),
+        )
+        .expect("runs"),
+    );
+    let wall = created(
+        &s.run(
+            "cad.line.create",
+            None,
+            Op::Execute,
+            json!({ "layerId": layer, "a": {"x": 0.0, "y": 0.0}, "b": {"x": 0.0, "y": 2.5} }),
+        )
+        .expect("runs"),
+    );
+    let m = s.measure(&room).expect("measures");
+    assert_eq!(
+        serde_json::to_value(&m.basis).expect("basis"),
+        json!({ "srid": 0, "system": "Yerel (koordinat sistemi yok)", "kind": "local", "frame": "world", "method": "plane" })
+    );
+    let many = s
+        .measure_many(
+            &[room.clone(), wall.clone()],
+            kentos_headless::Method::Plane,
+        )
+        .expect("measures");
+    assert_eq!(
+        (many.totals.count, many.totals.area, many.totals.length),
+        (2, 12.0, 16.5)
+    );
+    assert_eq!(many.items[1].area, None);
+    // No system: no ellipsoid.
+    let refused = s
+        .measure_by(&room, kentos_headless::Method::Ellipsoid)
+        .expect_err("no system");
+    assert_eq!(refused.code, "method_unavailable");
+    // Over the rpc, as the desktop's console and its agents ask.
+    let mut doc = s.document().clone();
+    let answer = kentos_headless::rpc::call(
+        &mut doc,
+        "measureMany",
+        &json!({ "uids": [room, wall], "method": null }),
+    )
+    .expect("answers");
+    assert_eq!(answer["totals"]["area"], 12.0);
+
+    // A CBS project in TUREF / TM33: the plane's and the ellipsoid's, and the ground's with a height.
+    let tm = kentos_headless::new_drawing(&json!({ "srid": 5256 })).expect("a project");
+    let mut s = Session::new(&tm).expect("a new project");
+    assert_eq!(
+        s.summary()["conventions"]["labels"],
+        json!({ "x": "Y", "y": "X" })
+    );
+    assert_eq!(
+        s.summary()["conventions"]["polar"],
+        json!({ "zero": "north", "turn": "cw" })
+    );
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let (x, y) = (500_000.0, 4_400_000.0);
+    let square = created(
+        &s.run(
+            "cad.polygon.create",
+            None,
+            Op::Execute,
+            json!({ "layerId": layer, "pts": [
+                {"x": x, "y": y}, {"x": x + 100.0, "y": y}, {"x": x + 100.0, "y": y + 100.0}, {"x": x, "y": y + 100.0}
+            ] }),
+        )
+        .expect("runs"),
+    );
+    let plane = s.measure(&square).expect("plane");
+    assert_eq!(plane.area, Some(10_000.0));
+    let ellipsoid = s
+        .measure_by(&square, kentos_headless::Method::Ellipsoid)
+        .expect("ellipsoid");
+    assert_eq!(ellipsoid.basis.kind, "projected");
+    assert_eq!(ellipsoid.basis.method, kentos_headless::Method::Ellipsoid);
+    // On the central meridian the projection's scale is k0 = 1: the ellipsoid's area is the plane's over k0².
+    let area = ellipsoid.area.expect("an area");
+    assert!((area - 10_000.0).abs() < 1.0, "{area}");
+    let ground = s
+        .measure_by(&square, kentos_headless::Method::Ground)
+        .expect_err("no height");
+    assert_eq!(ground.code, "method_unavailable");
+}
+
 // ── The protocol (docs/adr/0253) ────────────────────────────────────────
 
 #[test]

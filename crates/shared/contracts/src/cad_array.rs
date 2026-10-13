@@ -38,10 +38,14 @@ pub enum ArrayLayout {
     /// column. A direction with more than one place needs a spacing.
     Grid {
         #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 10000)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         rows: u32,
         #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 10000)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         cols: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         dx: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         dy: f64,
     },
     /// Kutupsal dizi: `count` items around `center`, 2 to 1000, the
@@ -51,9 +55,12 @@ pub enum ArrayLayout {
     /// turns about the centre; without, it keeps its direction and moves as
     /// the middle of the copied objects' box goes round.
     Polar {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         center: Vec2,
         #[cfg_attr(feature = "schema", schemars(range(min = 2, max = 1000)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         count: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         fill: f64,
         rotate: bool,
     },
@@ -70,9 +77,11 @@ pub enum ArrayLayout {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         path: String,
         #[cfg_attr(feature = "schema", schemars(range(min = 2, max = 10000)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         count: u32,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         spacing: Option<f64>,
         align: bool,
     },

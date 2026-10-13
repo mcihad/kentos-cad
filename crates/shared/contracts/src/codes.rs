@@ -572,6 +572,10 @@ codes! {
     UNKNOWN_OBJECT = "unknown_object", Host, false, "Bu çizimde o kimlikte nesne, katman ya da blok yok.";
     /// A coordinate system the registry does not know.
     UNKNOWN_SYSTEM = "unknown_system", Host, false, "Koordinat sistemi kayıtta yok; EPSG kodunu ya da tanımı denetleyin.";
+    /// A measure on the ellipsoid or the ground a project cannot give (docs/adr/0256 §4).
+    METHOD_UNAVAILABLE = "method_unavailable", Host, false, "Bu ölçü yöntemi bu projede yok: elipsoit için koordinat sistemi, zemin için ortalama elipsoit yüksekliği gerekir.";
+    /// A point beyond what the project's system reaches (docs/adr/0256 §4).
+    OUT_OF_SYSTEM = "out_of_system", Host, false, "Ölçülen yerin bir noktası projenin sisteminin ulaştığı yerin dışında.";
     /// A file that cannot be read, or is not a KentOS drawing.
     FILE_UNREADABLE = "file_unreadable", Host, false, "Dosya okunamadı ya da bir KentOS çizimi (.kcad) değil.";
     /// An old v1 file a save would write over.

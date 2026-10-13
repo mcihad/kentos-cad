@@ -304,6 +304,20 @@ impl Session {
         query::measure(&self.doc, uid)
     }
 
+    /// An object's measures taken by `method` (docs/adr/0256 §4).
+    pub fn measure_by(&self, uid: &str, method: query::Method) -> Result<Measure, HeadlessError> {
+        query::measure_by(&self.doc, uid, method)
+    }
+
+    /// Many objects' measures taken by `method`, at most [`query::MEASURE_MAX`].
+    pub fn measure_many(
+        &self,
+        uids: &[String],
+        method: query::Method,
+    ) -> Result<query::Measures, HeadlessError> {
+        query::measure_many(&self.doc, uids, method)
+    }
+
     /// Undoes the last step; its name, or none when there is nothing to undo.
     pub fn undo(&mut self) -> Option<String> {
         self.doc.undo()

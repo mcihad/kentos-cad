@@ -34,14 +34,19 @@ pub struct TableEntity {
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
     /// Its top left corner.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
     /// Degrees counter-clockwise from east: its rows run along it.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub rotation: f64,
     /// Its cells' text height, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: f64,
     /// Its rows' heights, top to bottom, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub rows: Vec<f64>,
     /// Its columns' widths, left to right, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub columns: Vec<f64>,
     /// The cells' words, row by row, a row as many as there are columns;
     /// one line each, empty for an empty cell.
@@ -66,6 +71,7 @@ pub struct TableEntity {
     /// inside it (Kalın çerçeve); absent: a line as the others.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub frame: Option<f64>,
     /// Its cells' style and face (docs/adr/0183 §2).
     #[serde(flatten)]
@@ -84,9 +90,13 @@ pub struct TableEntity {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CellRange {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub row: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub col: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rows: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub cols: u32,
 }
 

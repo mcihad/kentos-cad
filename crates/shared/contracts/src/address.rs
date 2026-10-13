@@ -52,8 +52,10 @@ pub struct AddressLocator {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AreaSource>>", optional))]
     pub areas: Vec<AreaSource>,
     /// The least score a match takes, within [`ADDRESS_MIN_SCORES`].
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
     pub min_score: u32,
     /// How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub reach: f64,
 }
 

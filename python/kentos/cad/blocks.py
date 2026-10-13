@@ -82,7 +82,7 @@ class _BlocksDefine(LocalCommand[BlocksDefine, BlockDefined, BlocksDefinePlan]):
         Args:
             doc: The drawing it works on.
             name: The block's name, unique in the drawing (Turkish case folded).
-            base: The point an insert places, in the drawing's coordinates.
+            base: The point an insert places, in the drawing's coordinates. Unit: length.
             uids: The objects it is made of, at least one, by persistent id.
             description: What the block is.
             expected_revision: The document revision the input was prepared against, as decimal text
@@ -261,7 +261,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             operation:
             attributes: `attributes`: the definition's attribute definitions, the whole list
                 in its order (empty: it has none).
-            base: `rebase`: the new base point; `redefine`: the base point (absent: kept).
+            base: `rebase`: the new base point; `redefine`: the base point (absent: kept). Unit: length.
             block: The definition; every operation but `purge`.
             expected_revision: The document revision the input was prepared against, as decimal text.
             layer_id: `redefine` with `replace`: the layer the insert goes on.

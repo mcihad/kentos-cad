@@ -110,8 +110,10 @@ pub struct StylesEdited {
     /// Whether the table changed.
     pub changed: bool,
     /// The objects written in the undo step.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub followed: u32,
     /// The objects a locked layer kept as they were.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub locked: u32,
     /// The document's revision afterwards (plan: the one it was made
     /// against), as decimal text.

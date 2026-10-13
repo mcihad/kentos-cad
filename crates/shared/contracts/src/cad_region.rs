@@ -47,6 +47,7 @@ pub struct NewLook {
     /// is drawn with lines. Absent: the layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -83,6 +84,7 @@ pub struct NewLook {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesBoundary {
     /// A point inside the region.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
     /// The layer the area goes to.
     pub layer_id: String,
@@ -137,6 +139,7 @@ pub enum HatchWay {
 pub enum HatchRegion {
     /// The region around `at`.
     Point {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Vec2,
         /// How the region is found; absent: `object`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -202,10 +205,12 @@ pub struct HatchPatternSpec {
     /// Ölçek: on paper, times the project's plot scale; absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale: Option<f64>,
     /// Açı, degrees; absent: 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub angle: Option<f64>,
     /// İkinci renk of a gradient, `#RRGGBB` or a colour's name; absent: white.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -103,7 +103,7 @@ class _DimensionsCreate(LocalCommand[DimensionsCreate, EntitiesCreated, Entities
         Args:
             doc: The drawing it works on.
             measure:
-            at: Where the dimension goes: its line, its arc or its leader through it.
+            at: Where the dimension goes: its line, its arc or its leader through it. Unit: length.
             layer_id: The layer the dimension goes to.
             attrs: GIS attributes, text in v1. Absent: none.
             color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
@@ -113,16 +113,16 @@ class _DimensionsCreate(LocalCommand[DimensionsCreate, EntitiesCreated, Entities
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
             height: The value's height, metres; absent: the style's at the project's
-                scale, Standart's the project's Ölçü height (docs/adr/0205).
+                scale, Standart's the project's Ölçü height (docs/adr/0205). Unit: length.
             label: The text shown beside it. Absent: none.
             line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
-                is drawn with lines. Absent: the layer's.
+                is drawn with lines. Absent: the layer's. Unit: paper-mm.
             mask: The value drawn over the drawing's background (Zemin, docs/adr/0147).
             offset: Instead of `at`'s, the distance typed: Hizalı's, Semt's and Eğim's
                 signed (left of a→b positive), Doğrusal's along its direction's
                 normal, Açı's arc radius (its sign aside), Yay uzunluğu's from the arc
                 (out positive), Kırıklı yarıçap's jog along the radius from the
-                centre shown. Yarıçap, Çap and Koordinat take none: `at` places them.
+                centre shown. Yarıçap, Çap and Koordinat take none: `at` places them. Unit: length.
             symbol: Its own symbol, a library item's id. Absent: the layer's style.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).

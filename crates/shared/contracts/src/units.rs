@@ -20,6 +20,83 @@ use crate::{
     RingGeometry, Vec2,
 };
 
+/// What every number of the command catalog's schemas is in (docs/adr/0256
+/// §3): its `x-unit` is one of these, on the number or on the field holding
+/// it (a point's `x`, `y` take the unit of the field that is the point).
+/// Directions are counter-clockwise from the plane's east (x) axis unless a
+/// field says otherwise.
+pub const UNITS: &[(&str, &str)] = &[
+    (
+        "length",
+        "Projenin düzleminde uzunluk ya da koordinat: metre, coğrafi sistemde derece (units.length).",
+    ),
+    (
+        "area",
+        "Projenin düzleminde alan: m², coğrafi sistemde derece² (units.area).",
+    ),
+    ("elevation", "Düşey metre: kot, z, yükseklik."),
+    (
+        "m",
+        "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",
+    ),
+    ("measure", "Rotanın ölçüsü (M), rotanın kendi biriminde."),
+    (
+        "paper-mm",
+        "Kâğıtta milimetre: kalınlık, kâğıttaki yazı yüksekliği, pafta boyları.",
+    ),
+    ("px", "Ekranda mantıksal piksel."),
+    (
+        "deg",
+        "Derece; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
+    ),
+    (
+        "rad",
+        "Radyan; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
+    ),
+    ("azimuth-deg", "Kuzeyden saat yönünde derece."),
+    (
+        "1",
+        "Birimsiz sayı: çarpan, oran, büküm, saydamlık (0–1), ağırlık, öncelik, katsayı.",
+    ),
+    ("percent", "Yüzde (0–100)."),
+    ("ppm", "Milyonda bir."),
+    (
+        "pattern",
+        "Tarama deseninin tanımının birimi; taramanın ölçeğiyle çarpılınca metre.",
+    ),
+    ("count", "Adet."),
+    ("index", "0'dan başlayan sıra."),
+    ("id", "Çizimdeki yuva numarası (kalıcı kimlik değil)."),
+    (
+        "epsg",
+        "Koordinat sisteminin EPSG kodu; 0: yok (yerel proje).",
+    ),
+    ("scale", "Ölçeğin paydası: 1:N'nin N'si."),
+    ("zoom", "Karo düzeyi."),
+    ("bytes", "Bayt."),
+    ("version", "Sürüm numarası."),
+    (
+        "value",
+        "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
+    ),
+    ("km/h", "Kilometre bölü saat."),
+    ("system", "Adı verilen koordinat sisteminin kendi birimi."),
+    ("arcsec", "Yay saniyesi (″)."),
+    (
+        "size-unit",
+        "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
+    ),
+    (
+        "px/length",
+        "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
+    ),
+];
+
+/// Whether `unit` is one of [`UNITS`].
+pub fn is_unit(unit: &str) -> bool {
+    UNITS.iter().any(|(u, _)| *u == unit)
+}
+
 /// `value × mul ÷ div`: one length unit in another.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Scale {

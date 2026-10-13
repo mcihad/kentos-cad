@@ -37,6 +37,20 @@ pub struct CommandCatalog {
     /// The codes any call may answer with, whatever its command (the protocol's).
     #[serde(default)]
     pub protocol: Vec<String>,
+    /// What the schemas' `x-unit`s mean (docs/adr/0256 §3): every number of
+    /// every command's input, output and plan names one.
+    #[serde(default)]
+    pub units: Vec<CatalogUnit>,
+}
+
+/// A unit the schemas' `x-unit` names and what it means.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CatalogUnit {
+    pub unit: String,
+    /// Turkish, for people and for an agent reading a number.
+    pub meaning: String,
 }
 
 /// A code of the commands' answers and what it means (`codes::CODES`).
@@ -3052,6 +3066,13 @@ pub fn catalog() -> CommandCatalog {
             .iter()
             .map(|c| (*c).to_owned())
             .collect(),
+        units: crate::units::UNITS
+            .iter()
+            .map(|(unit, meaning)| CatalogUnit {
+                unit: (*unit).into(),
+                meaning: (*meaning).into(),
+            })
+            .collect(),
     }
 }
 
@@ -3155,6 +3176,132 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
 
 #[cfg(all(test, feature = "schema"))]
 mod tests {
+    /// docs/adr/0256 §3: every number of every command's input, output and
+    /// plan says its unit, on itself or on the field holding it; and each
+    /// unit is one the catalog explains.
+    #[test]
+    fn every_number_names_its_unit() {
+        use serde_json::Value;
+        use std::collections::BTreeSet;
+
+        /// The types that take their unit from the field holding them: a
+        /// missing unit is the holder's, as the holder's field is annotated.
+        const HELD: [&str; 2] = ["Vec2", "Bounds"];
+
+        #[allow(clippy::too_many_arguments)]
+        fn walk(
+            s: &Value,
+            defs: &serde_json::Map<String, Value>,
+            unit: Option<&str>,
+            at: &str,
+            held: Option<&str>,
+            seen: &mut BTreeSet<(String, Option<String>, Option<String>)>,
+            missing: &mut BTreeSet<String>,
+            wrong: &mut BTreeSet<String>,
+        ) {
+            let Some(map) = s.as_object() else {
+                return;
+            };
+            if map.contains_key("const") || map.contains_key("enum") {
+                return;
+            }
+            let own = map.get("x-unit").and_then(Value::as_str);
+            if let Some(u) = own
+                && !crate::units::is_unit(u)
+            {
+                wrong.insert(format!("{at}: {u}"));
+            }
+            let unit = own.or(unit);
+            let numeric = |t: &Value| matches!(t.as_str(), Some("number" | "integer"));
+            let is_number = match map.get("type") {
+                Some(Value::Array(ts)) => ts.iter().any(numeric),
+                Some(t) => numeric(t),
+                None => false,
+            };
+            if is_number && unit.is_none() {
+                missing.insert(held.unwrap_or(at).to_owned());
+            }
+            if let Some(r) = map.get("$ref").and_then(Value::as_str) {
+                let name = r.rsplit('/').next().unwrap_or_default().to_owned();
+                let held = if HELD.contains(&name.as_str()) {
+                    Some(held.unwrap_or(at))
+                } else {
+                    None
+                };
+                if seen.insert((
+                    name.clone(),
+                    unit.map(str::to_owned),
+                    held.map(str::to_owned),
+                )) && let Some(def) = defs.get(&name)
+                {
+                    walk(def, defs, unit, &name, held, seen, missing, wrong);
+                }
+            }
+            if let Some(Value::Object(props)) = map.get("properties") {
+                for (k, v) in props {
+                    walk(
+                        v,
+                        defs,
+                        unit,
+                        &format!("{at}.{k}"),
+                        held,
+                        seen,
+                        missing,
+                        wrong,
+                    );
+                }
+            }
+            for k in ["items", "additionalProperties"] {
+                if let Some(v) = map.get(k) {
+                    walk(v, defs, unit, at, held, seen, missing, wrong);
+                }
+            }
+            for k in ["anyOf", "oneOf", "allOf", "prefixItems"] {
+                for v in map.get(k).and_then(Value::as_array).into_iter().flatten() {
+                    walk(v, defs, unit, at, held, seen, missing, wrong);
+                }
+            }
+        }
+
+        let (mut missing, mut wrong) = (BTreeSet::new(), BTreeSet::new());
+        for d in super::catalog().commands {
+            for (part, schema) in [
+                ("input", Some(&d.input)),
+                ("output", Some(&d.output)),
+                ("plan", d.plan.as_ref()),
+            ] {
+                let Some(schema) = schema else {
+                    continue;
+                };
+                let empty = serde_json::Map::new();
+                let defs = schema
+                    .get("$defs")
+                    .and_then(Value::as_object)
+                    .unwrap_or(&empty);
+                let mut seen = BTreeSet::new();
+                walk(
+                    schema,
+                    defs,
+                    None,
+                    &format!("{}:{part}", d.id),
+                    None,
+                    &mut seen,
+                    &mut missing,
+                    &mut wrong,
+                );
+            }
+        }
+        assert!(
+            wrong.is_empty(),
+            "units the catalog does not explain: {wrong:#?}"
+        );
+        assert!(
+            missing.is_empty(),
+            "{} numbers without a unit (x-unit): {missing:#?}",
+            missing.len()
+        );
+    }
+
     use super::*;
     use crate::{
         EntitiesDelete, EntitiesDeleted, LineCreate, LineCreated, PolygonCreate, PolygonCreated,
@@ -3417,6 +3564,9 @@ mod tests {
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_UNITS_CHANGE => {
+                        serde_json::from_value::<crate::UnitsChange>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())
                     }
@@ -3579,6 +3729,10 @@ mod tests {
                         }
                         crate::CAD_SHEETS_EDIT => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_UNITS_CHANGE => {
+                            serde_json::from_value::<crate::UnitsChanged>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

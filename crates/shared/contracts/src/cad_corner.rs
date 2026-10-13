@@ -38,6 +38,7 @@ pub enum CornerPick {
     Vertex {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         uid: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         index: u32,
     },
     /// Two lines; each keeps the side of its pick.
@@ -77,6 +78,7 @@ pub enum CornerPick {
 pub struct EntitiesFillet {
     pub corner: CornerPick,
     /// The arc's radius, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub radius: f64,
     /// Kırp: the sides are cut back to the arc (the default).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -101,10 +103,12 @@ pub struct EntitiesFillet {
 pub struct EntitiesChamfer {
     pub corner: CornerPick,
     /// The cut's distance along the first side (a vertex's: the edge before it), metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: f64,
     /// Along the other side; absent: `distance`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub second: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -127,7 +131,9 @@ pub struct EntitiesCornered {
     /// The arc or the cut, when it is a new object.
     pub created: Vec<String>,
     /// The corners rounded or cut, and those left as they were (`all`).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub done: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub skipped: u32,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -143,7 +149,9 @@ pub struct EntitiesCornered {
 pub struct EntitiesCornerPlan {
     pub changed: Vec<Entity>,
     pub created: Vec<Entity>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub done: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub skipped: u32,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

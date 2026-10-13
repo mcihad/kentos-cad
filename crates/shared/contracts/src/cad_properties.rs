@@ -130,6 +130,7 @@ pub struct EntitiesSetProperties {
         feature = "schema",
         schemars(with = "Option<f64>", range(min = 0.0, max = 100.0))
     )]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<Option<f64>>,
     /// Their own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of their layer's style; null: the layer's style. The id is
@@ -184,6 +185,7 @@ pub struct EntitiesPropertiesSet {
     pub changed: Vec<String>,
     /// Their slots in the open document (`Entity.id`), in the same order;
     /// they mean nothing once the document is closed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub ids: Vec<u32>,
     /// The document's revision after the write, as decimal text (the same
     /// when nothing changed). Inside an open transaction or group the write

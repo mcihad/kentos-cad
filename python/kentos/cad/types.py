@@ -37,6 +37,40 @@ Vec2Like = Union["Vec2", "tuple[float, float]", "Sequence[float]"]
 """A point: :class:`Vec2`, or a pair ``(x, y)``: x east (Y), y north (X)."""
 
 
+#: What the fields' ``Unit:`` notes mean (the catalog's ``units``, docs/adr/0256 §3): every number
+#: a command takes or gives names one.
+UNITS: dict[str, str] = {
+    "length": "Projenin düzleminde uzunluk ya da koordinat: metre, coğrafi sistemde derece (units.length).",
+    "area": "Projenin düzleminde alan: m², coğrafi sistemde derece² (units.area).",
+    "elevation": "Düşey metre: kot, z, yükseklik.",
+    "m": "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",
+    "measure": "Rotanın ölçüsü (M), rotanın kendi biriminde.",
+    "paper-mm": "Kâğıtta milimetre: kalınlık, kâğıttaki yazı yüksekliği, pafta boyları.",
+    "px": "Ekranda mantıksal piksel.",
+    "deg": "Derece; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
+    "rad": "Radyan; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
+    "azimuth-deg": "Kuzeyden saat yönünde derece.",
+    "1": "Birimsiz sayı: çarpan, oran, büküm, saydamlık (0–1), ağırlık, öncelik, katsayı.",
+    "percent": "Yüzde (0–100).",
+    "ppm": "Milyonda bir.",
+    "pattern": "Tarama deseninin tanımının birimi; taramanın ölçeğiyle çarpılınca metre.",
+    "count": "Adet.",
+    "index": "0'dan başlayan sıra.",
+    "id": "Çizimdeki yuva numarası (kalıcı kimlik değil).",
+    "epsg": "Koordinat sisteminin EPSG kodu; 0: yok (yerel proje).",
+    "scale": "Ölçeğin paydası: 1:N'nin N'si.",
+    "zoom": "Karo düzeyi.",
+    "bytes": "Bayt.",
+    "version": "Sürüm numarası.",
+    "value": "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
+    "km/h": "Kilometre bölü saat.",
+    "system": "Adı verilen koordinat sisteminin kendi birimi.",
+    "arcsec": "Yay saniyesi (″).",
+    "size-unit": "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
+    "px/length": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
+}
+
+
 class AccessSource(_StrEnum):
     """Where a person's role in a project comes from.
 
@@ -1478,6 +1512,20 @@ TopologyRuleKindName = Literal["mustNotOverlap", "mustNotHaveGaps", "mustNotHave
 """The names of :class:`TopologyRuleKind`, for a plain string."""
 
 
+class UnitGeometry(_StrEnum):
+    """What becomes of the drawing when its unit changes.
+
+    - ``keep``: The sizes stay: only the unit lengths are read and typed in changes
+    - ``scale``: The numbers stay: the drawing is scaled by the ratio of the two
+    """
+    KEEP = "keep"
+    SCALE = "scale"
+
+
+UnitGeometryName = Literal["keep", "scale"]
+"""The names of :class:`UnitGeometry`, for a plain string."""
+
+
 class VariableKind(_StrEnum):
     """What a variable holds.
 
@@ -2048,8 +2096,8 @@ class AddressLocator(_Model):
     Attributes:
         id: Lower-case letters, digits and hyphens; one of its kind in the project.
         name: Trimmed; one of its kind in the project.
-        min_score: The least score a match takes, within [`ADDRESS_MIN_SCORES`].
-        reach: How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`].
+        min_score: The least score a match takes, within [`ADDRESS_MIN_SCORES`]. Unit: percent.
+        reach: How far Konumdan adres looks, metres: more than 0, at most [`ADDRESS_REACH_LIMIT`]. Unit: length.
         areas: Bölgeler: at most one area layer of each level.
         doors: Kapı noktaları: a point per door.
         streets: Yollar: the streets' centre lines.
@@ -2159,6 +2207,14 @@ class AddressesDefined(_Model):
 class AnnotationHeights(_Model):
     """The project's annotation heights on paper, mm (docs/adr/0205 §1): a
     height not given is its kind's default.
+    Attributes:
+        coordinate: Unit: paper-mm.
+        dimension: Unit: paper-mm.
+        leader: Unit: paper-mm.
+        measure: Unit: paper-mm.
+        station: Unit: paper-mm.
+        table: Unit: paper-mm.
+        text: Unit: paper-mm.
     """
     coordinate: float | None | Unset = UNSET
     dimension: float | None | Unset = UNSET
@@ -2219,11 +2275,11 @@ class ArcCreate(_Model):
     document reads them; no angle is refused for its size.
     Attributes:
         layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
-        c: Its centre: x east (Y), y north (X), in the project's units (m), float64.
-        r: Its radius, in the project's units; above zero.
+        c: Its centre: x east (Y), y north (X), in the project's units (m), float64. Unit: length.
+        r: Its radius, in the project's units; above zero. Unit: length.
         a0: Where it starts: radians, counter-clockwise from east (a geometry
-            angle, not a surveying bearing).
-        a1: Where it ends: the arc runs counter-clockwise from `a0` to `a1`.
+            angle, not a surveying bearing). Unit: rad.
+        a1: Where it ends: the arc runs counter-clockwise from `a0` to `a1`. Unit: rad.
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         expected_revision: The document revision the input was prepared against, as decimal text
@@ -2232,7 +2288,7 @@ class ArcCreate(_Model):
         label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
-            object from the current weight. Absent: the layer's (katmana göre).
+            object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
@@ -2293,7 +2349,7 @@ class ArcCreated(_Model):
     """Output of `cad.arc.create` v1: the object written.
     Attributes:
         uid: Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
-        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed. Unit: id.
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
@@ -2322,7 +2378,12 @@ class ArcCreated(_Model):
 class ArcEntity(Entity):
     """Arc from `a0` to `a1` (radians), always counter-clockwise.
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        c: Unit: length.
+        r: Unit: length.
+        a0: Unit: rad.
+        a1: Unit: rad.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -2331,7 +2392,7 @@ class ArcEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "arc"
@@ -2423,9 +2484,11 @@ class AreaPart(_Model):
     the area's own fields hold the first part's. A multi-part polyline's
     part is the same, open and without holes (docs/adr/0174).
     Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
         ms: A polyline's part's measures, as the polyline's own `ms`
-            (docs/adr/0224 §1); an area's part has none.
-        zs: Each vertex's elevation, as the area's own `zs` (docs/adr/0142).
+            (docs/adr/0224 §1); an area's part has none. Unit: measure.
+        zs: Each vertex's elevation, as the area's own `zs` (docs/adr/0142). Unit: elevation.
     """
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
@@ -2535,12 +2598,13 @@ class AttributeDefinition(_Model):
     attribute `tag`, else `value`, written at `p` in the definition's
     coordinates, moved with the insert.
     Attributes:
-        height: Metres, in the definition's size.
-        rotation: Degrees, counter-clockwise from east, as a text's.
+        p: Unit: length.
+        height: Metres, in the definition's size. Unit: length.
+        rotation: Degrees, counter-clockwise from east, as a text's. Unit: deg.
         align: Where `p` is on the text, as a text's (docs/adr/0145).
         prompt: What Blok ekle asks for it.
         value: The default value.
-        width_factor: The letters' width times this, as a text's (docs/adr/0145).
+        width_factor: The letters' width times this, as a text's (docs/adr/0145). Unit: 1.
     """
     tag: str
     p: Vec2
@@ -2588,6 +2652,7 @@ class BlockDefined(_Model):
         block: The new definition's id.
         removed: With `replace`: the objects deleted, in the input's order.
         revision: The document's revision after the write, as decimal text.
+        id: Unit: id.
         insert: With `replace`: the insert's persistent id and its slot.
     """
     block: str
@@ -2626,7 +2691,7 @@ class BlockDefinition(_Model):
     colour or line weight when it has one.
     Attributes:
         name: Unique in the drawing, Turkish case folded.
-        base: The point placed at an insert's `p`, in the definition's coordinates.
+        base: The point placed at an insert's `p`, in the definition's coordinates. Unit: length.
         attributes: The texts an insert shows from its attributes (ATTDEF).
     """
     id: str
@@ -2706,7 +2771,7 @@ class BlocksDefine(_Model):
     Warning: `layer_hidden` (the insert's layer).
     Attributes:
         name: The block's name, unique in the drawing (Turkish case folded).
-        base: The point an insert places, in the drawing's coordinates.
+        base: The point an insert places, in the drawing's coordinates. Unit: length.
         uids: The objects it is made of, at least one, by persistent id.
         description: What the block is.
         expected_revision: The document revision the input was prepared against, as decimal text
@@ -2822,7 +2887,7 @@ class BlocksEdit(_Model):
     Attributes:
         attributes: `attributes`: the definition's attribute definitions, the whole list
             in its order (empty: it has none).
-        base: `rebase`: the new base point; `redefine`: the base point (absent: kept).
+        base: `rebase`: the new base point; `redefine`: the base point (absent: kept). Unit: length.
         block: The definition; every operation but `purge`.
         expected_revision: The document revision the input was prepared against, as decimal text.
         layer_id: `redefine` with `replace`: the layer the insert goes on.
@@ -2922,6 +2987,7 @@ class BlocksEdited(_Model):
         deleted: `redefine` with `replace`: the objects deleted, in the input's order.
         revision: The document's revision after the write (the same when nothing was
             written), as decimal text.
+        id: Unit: id.
         insert: `redefine` with `replace`: the insert's persistent id and its slot.
     """
     changed: list[str]
@@ -2982,7 +3048,13 @@ class Bounds(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class CellRange(_Model):
-    """A merged range: `rows` × `cols` cells from row `row`, column `col`."""
+    """A merged range: `rows` × `cols` cells from row `row`, column `col`.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+        rows: Unit: count.
+        cols: Unit: count.
+    """
     row: int
     col: int
     rows: int
@@ -3093,7 +3165,7 @@ class ChangesetStep(_Model):
         input: Its input, its catalog's schema, with references to earlier steps.
         as_: The name later steps refer to its output by: a letter or `_`, then
             letters, digits and `_`; each once.
-        version: Its version; the host's when absent.
+        version: Its version; the host's when absent. Unit: version.
     """
     command: str
     input: Any
@@ -3333,8 +3405,8 @@ class CircleCreate(_Model):
     `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
     Attributes:
         layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
-        c: Its centre: x east (Y), y north (X), in the project's units (m), float64.
-        r: Its radius, in the project's units; above zero.
+        c: Its centre: x east (Y), y north (X), in the project's units (m), float64. Unit: length.
+        r: Its radius, in the project's units; above zero. Unit: length.
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         expected_revision: The document revision the input was prepared against, as decimal text
@@ -3343,7 +3415,7 @@ class CircleCreate(_Model):
         label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
-            object from the current weight. Absent: the layer's (katmana göre).
+            object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
@@ -3398,7 +3470,7 @@ class CircleCreated(_Model):
     """Output of `cad.circle.create` v1: the object written.
     Attributes:
         uid: Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
-        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed. Unit: id.
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
@@ -3430,7 +3502,10 @@ class CircleEntity(Entity):
     file is opened (`identity`, docs/adr/0014); the server's is a UUID in
     PostgreSQL (`feature.id`).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        c: Unit: length.
+        r: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -3439,7 +3514,7 @@ class CircleEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "circle"
@@ -3522,8 +3597,8 @@ class CirclePlan(_Model):
 class CloudSource(_Model):
     """One file of a cloud.
     Attributes:
-        count: Its points, as its header says.
-        bounds: `[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.
+        count: Its points, as its header says. Unit: count.
+        bounds: `[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says. Unit: system.
         asset: The project library's asset its bytes are (embedded); exactly one of
             `asset`, `file` and `url` is given.
         file: The file (linked): absolute, or relative to the drawing's folder.
@@ -3600,7 +3675,10 @@ class CommitResult(_Model):
 class ConstructionEntity(_Model):
     """Construction line or ray: base point and unit direction.
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        p: Unit: length.
+        dir: Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -3609,7 +3687,7 @@ class ConstructionEntity(_Model):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         symbol: Library symbol overriding the layer's style.
     """
     id: int
@@ -3667,6 +3745,8 @@ class CrsBase(_Model):
     """A local system's base: a projected system of the registry by its EPSG
     code (`srid`), or a transverse Mercator the project defines
     (`definition`); exactly one.
+    Attributes:
+        srid: Unit: epsg.
     """
     definition: CrsDefinition | None | Unset = UNSET
     srid: int | None | Unset = UNSET
@@ -3741,6 +3821,8 @@ class DatasetDim(_Model):
     index shown, its values (coordinates; moments in milliseconds since 1970
     when `time`) and units.
     Attributes:
+        index: Unit: index.
+        values: Unit: value.
         time: The values are a CF time axis's moments.
     """
     name: str
@@ -3815,35 +3897,40 @@ class DimensionEntity(Entity):
     file is opened (`identity`, docs/adr/0014); the server's is a UUID in
     PostgreSQL (`feature.id`).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
-        angle: Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).
+        a: Unit: length.
+        b: Unit: length.
+        offset: Unit: length.
+        height: Unit: length.
+        angle: Linear: measured direction in degrees (0 = ΔY, 90 = ΔX). Unit: deg.
         arrow: Its arrowheads; absent: oblique ticks.
         arrow_size: The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,
-            `DEFAULT_ARROW` for the others.
+            `DEFAULT_ARROW` for the others. Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         c: Angular: the vertex. Arc length: the arc's centre. Jogged: the centre
-            the line starts from (docs/adr/0147).
+            the line starts from (docs/adr/0147). Unit: length.
         color: Colour override; absent = the layer's colour ("katmana göre").
         decimals: A length's, a coordinate's or a slope's decimals; absent: the
-            project's length decimals (a slope's 2). Angles keep the project's.
+            project's length decimals (a slope's 2). Angles keep the project's. Unit: count.
         dim_line_color: The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:
             the object's (docs/adr/0205 §6).
         dim_line_type: The dimension line's type; absent: continuous.
-        dim_line_weight: The dimension line's weight, paper mm as an object's; absent: a hairline.
+        dim_line_weight: The dimension line's weight, paper mm as an object's; absent: a hairline. Unit: paper-mm.
         dim_style: The project's dimension style it follows, by its id; absent: Standart.
-        ext_beyond: How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.
+        ext_beyond: How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`. Unit: 1.
         ext_color: The extension lines' colour; absent: the object's.
         ext_line_type: The extension lines' type; absent: continuous.
-        ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.
-        ext_weight: The extension lines' weight, paper mm; absent: a hairline.
+        ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`. Unit: 1.
+        ext_weight: The extension lines' weight, paper mm; absent: a hairline. Unit: paper-mm.
         font: The value's typeface; absent: the project's.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         mask: The value is drawn over the drawing's background (docs/adr/0147, as a
             text's mask, docs/adr/0145).
         prefix: Written before the value (and its kind's own prefix).
@@ -3851,10 +3938,11 @@ class DimensionEntity(Entity):
         suffix: Written after the value.
         symbol: Library symbol overriding the layer's style.
         text_color: The value's colour; absent: the object's.
-        text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.
+        text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`. Unit: 1.
         text_place: Where the value stands; absent: over the line.
         unit: The unit lengths and coordinates are written in; absent: the project's.
-        za: Slope: the two points' elevations, metres (docs/adr/0147).
+        za: Slope: the two points' elevations, metres (docs/adr/0147). Unit: elevation.
+        zb: Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "dimension"
     id: int
@@ -4053,9 +4141,15 @@ class DimensionStyleDef(_Model):
     Attributes:
         id: One of its kind among the project's dimension styles (a UUIDv7).
         name: As a text style's.
-        height: The value's height on paper, mm.
-        arrow_size: The arrowhead's length, mm; absent: the arrowhead's default times the height.
+        height: The value's height on paper, mm. Unit: paper-mm.
+        arrow_size: The arrowhead's length, mm; absent: the arrowhead's default times the height. Unit: paper-mm.
+        decimals: Unit: count.
         dim_line_color: The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.
+        dim_line_weight: Unit: paper-mm.
+        ext_beyond: Unit: paper-mm.
+        ext_offset: Unit: paper-mm.
+        ext_weight: Unit: paper-mm.
+        text_gap: Unit: paper-mm.
     """
     id: str
     name: str
@@ -4173,7 +4267,7 @@ class DimensionsCreate(_Model):
     `layer_locked`, `invalid_line_weight`); a hidden layer gives a
     `layer_hidden` warning; on the desktop also `slots_exhausted`.
     Attributes:
-        at: Where the dimension goes: its line, its arc or its leader through it.
+        at: Where the dimension goes: its line, its arc or its leader through it. Unit: length.
         layer_id: The layer the dimension goes to.
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
@@ -4183,16 +4277,16 @@ class DimensionsCreate(_Model):
             text. When given and the document is no longer at it, nothing is
             written and the answer is `conflict`.
         height: The value's height, metres; absent: the style's at the project's
-            scale, Standart's the project's Ölçü height (docs/adr/0205).
+            scale, Standart's the project's Ölçü height (docs/adr/0205). Unit: length.
         label: The text shown beside it. Absent: none.
         line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
-            is drawn with lines. Absent: the layer's.
+            is drawn with lines. Absent: the layer's. Unit: paper-mm.
         mask: The value drawn over the drawing's background (Zemin, docs/adr/0147).
         offset: Instead of `at`'s, the distance typed: Hizalı's, Semt's and Eğim's
             signed (left of a→b positive), Doğrusal's along its direction's
             normal, Açı's arc radius (its sign aside), Yay uzunluğu's from the arc
             (out positive), Kırıklı yarıçap's jog along the radius from the
-            centre shown. Yarıçap, Çap and Koordinat take none: `at` places them.
+            centre shown. Yarıçap, Çap and Koordinat take none: `at` places them. Unit: length.
         symbol: Its own symbol, a library item's id. Absent: the layer's style.
     """
     measure: DimensionMeasure
@@ -4307,8 +4401,8 @@ class DimensionsReassociatePlan(_Model):
     """What `cad.dimensions.reassociate` would write (plan mode); nothing is written.
     Attributes:
         dimension: The dimension as execute would write it.
-        changed: The points whose binding or coordinates would change.
-        value: Its measured value then, and the value's unit, as in the output.
+        changed: The points whose binding or coordinates would change. Unit: count.
+        value: Its measured value then, and the value's unit, as in the output. Unit: value.
         revision: The document revision the plan was made against.
     """
     dimension: Entity
@@ -4342,8 +4436,8 @@ class DimensionsReassociated(_Model):
     """Output of `cad.dimensions.reassociate` v1.
     Attributes:
         changed: The points whose binding or coordinates changed (an undo step was
-            written when any did).
-        value: The dimension's measured value now, in its unit (`unit`).
+            written when any did). Unit: count.
+        value: The dimension's measured value now, in its unit (`unit`). Unit: value.
         unit: "length" (metres), "angle" (radians), "percent" or "coordinate".
         revision: The document's revision after the write, as decimal text.
     """
@@ -4427,9 +4521,10 @@ class DoorSource(_Model):
 class DxfExported(_Model):
     """What `file.export.dxf` wrote, or with `plan` would write.
     Attributes:
-        bytes: The file's bytes: written, or the size the plan would write.
+        bytes: The file's bytes: written, or the size the plan would write. Unit: bytes.
         sha256: SHA-256 of the bytes, 64 hex digits.
-        objects: The objects written and the layers they are on.
+        objects: The objects written and the layers they are on. Unit: count.
+        layers: Unit: count.
         replaced: Whether a file was there (and is written over).
         report: The writer's report: what each kind became, what changed on the way.
     """
@@ -4472,7 +4567,7 @@ class EdgeNear(_Model):
     Attributes:
         uid: The object's persistent id (lowercase UUID text with hyphens).
         near: Where it was clicked: its nearest edge is the one measured. An angle's
-            arms reach as far as their edges were clicked.
+            arms reach as far as their edges were clicked. Unit: length.
     """
     uid: str
     near: Vec2
@@ -4495,7 +4590,13 @@ class EdgeNear(_Model):
 class EllipseEntity(Entity):
     """DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        c: Unit: length.
+        major: Unit: length.
+        ratio: Unit: 1.
+        t0: Unit: rad.
+        t1: Unit: rad.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -4504,7 +4605,7 @@ class EllipseEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "ellipse"
@@ -4569,7 +4670,11 @@ class EllipseEntity(Entity):
 
 @dataclass(kw_only=True, slots=True)
 class Ellipsoid(_Model):
-    """An ellipsoid: its name, semi-major axis (m) and inverse flattening."""
+    """An ellipsoid: its name, semi-major axis (m) and inverse flattening.
+    Attributes:
+        semi_major: Unit: m.
+        inverse_flattening: Unit: 1.
+    """
     name: str
     semi_major: float
     inverse_flattening: float
@@ -4750,7 +4855,7 @@ class EntitiesBoundary(_Model):
     `not_a_layer`, `layer_locked`, `invalid_line_weight`); a hidden layer
     gives a `layer_hidden` warning; on the desktop also `slots_exhausted`.
     Attributes:
-        at: A point inside the region.
+        at: A point inside the region. Unit: length.
         layer_id: The layer the area goes to.
         attrs: GIS attributes, text in v1. Absent: none.
         boundaries: Whose line work closes the region; absent: every shown object (`all`).
@@ -4762,7 +4867,7 @@ class EntitiesBoundary(_Model):
         islands: Adalar: closed groups inside the region are holes; absent: true.
         label: The text shown beside it. Absent: none.
         line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
-            is drawn with lines. Absent: the layer's.
+            is drawn with lines. Absent: the layer's. Unit: paper-mm.
         symbol: Its own symbol, a library item's id. Absent: the layer's style.
     """
     at: Vec2
@@ -4837,11 +4942,11 @@ class EntitiesBreak(_Model):
     point); on the desktop also `slots_exhausted`.
     Attributes:
         uid: The object's persistent id (lowercase UUID text with hyphens).
-        first: The first break point, on or near the object.
+        first: The first break point, on or near the object. Unit: length.
         expected_revision: The document revision the input was prepared against, as decimal
             text. When given and the document is no longer at it, nothing is
             written and the answer is `conflict`.
-        second: The second; absent: the object splits at `first`.
+        second: The second; absent: the object splits at `first`. Unit: length.
     """
     uid: str
     first: Vec2
@@ -4876,8 +4981,8 @@ class EntitiesChamfer(_Model):
     codes `chamfer_failed` and `invalid_distance` (a negative distance; both
     zero without Kırp or with `all`).
     Attributes:
-        distance: The cut's distance along the first side (a vertex's: the edge before it), metres.
-        second: Along the other side; absent: `distance`.
+        distance: The cut's distance along the first side (a vertex's: the edge before it), metres. Unit: length.
+        second: Along the other side; absent: `distance`. Unit: length.
     """
     corner: CornerPick
     distance: float
@@ -4912,6 +5017,9 @@ class EntitiesChamfer(_Model):
 class EntitiesCornerPlan(_Model):
     """What `cad.entities.fillet` or `.chamfer` would write (plan mode); nothing
     is written. Execute against the plan's revision writes exactly this.
+    Attributes:
+        done: Unit: count.
+        skipped: Unit: count.
     """
     changed: list[Entity]
     created: list[Entity]
@@ -4945,7 +5053,8 @@ class EntitiesCornered(_Model):
     Attributes:
         changed: The objects that took new geometry.
         created: The arc or the cut, when it is a new object.
-        done: The corners rounded or cut, and those left as they were (`all`).
+        done: The corners rounded or cut, and those left as they were (`all`). Unit: count.
+        skipped: Unit: count.
     """
     changed: list[str]
     created: list[str]
@@ -5087,7 +5196,7 @@ class EntitiesCreated(_Model):
         created: Their persistent ids (UUIDv7, docs/adr/0014): the names files, the
             cloud, Python and AI use.
         ids: Their slots in the open document (`Entity.id`); they mean nothing
-            once the document is closed.
+            once the document is closed. Unit: id.
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
@@ -5243,7 +5352,7 @@ class EntitiesDivide(_Model):
             tool: from the end nearer the click).
         label: The text shown beside it. Absent: none.
         line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
-            is drawn with lines. Absent: the layer's.
+            is drawn with lines. Absent: the layer's. Unit: paper-mm.
         symbol: Its own symbol, a library item's id. Absent: the layer's style.
     """
     uid: str
@@ -5450,7 +5559,7 @@ class EntitiesFillet(_Model):
     one or parallel, an object of another kind), `fillet_failed` (the
     radius does not fit; with `all`, none fits).
     Attributes:
-        radius: The arc's radius, metres.
+        radius: The arc's radius, metres. Unit: length.
         trim: Kırp: the sides are cut back to the arc (the default).
     """
     corner: CornerPick
@@ -5509,7 +5618,7 @@ class EntitiesHatch(_Model):
             written and the answer is `conflict`.
         label: The text shown beside it. Absent: none.
         line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
-            is drawn with lines. Absent: the layer's.
+            is drawn with lines. Absent: the layer's. Unit: paper-mm.
         symbol: Its own symbol, a library item's id. Absent: the layer's style.
     """
     region: HatchRegion
@@ -5585,7 +5694,7 @@ class EntitiesJoin(_Model):
         expected_revision: The document revision the input was prepared against, as decimal
             text. When given and the document is no longer at it, nothing is
             written and the answer is `conflict`.
-        tolerance: How far apart two ends may be and still meet, metres; absent: 0.001.
+        tolerance: How far apart two ends may be and still meet, metres; absent: 0.001. Unit: length.
     """
     uids: list[str]
     chain: TrimBoundaries | None | Unset = UNSET
@@ -5697,7 +5806,7 @@ class EntitiesOffsetMade(_Model):
         created: The copies' persistent ids, in the order they were written.
         removed: The sources deleted (`deleteSource`), in the input's order.
         distances: Each source's distance in metres, in the input's order (a repeated id
-            once): the one given, or with `through` the point's from the object.
+            once): the one given, or with `through` the point's from the object. Unit: length.
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
@@ -5735,7 +5844,7 @@ class EntitiesOffsetPlan(_Model):
         entities: The copies as execute would write them, in the same order as
             `created`: `id` 0, as their slots are given when they are written.
         removed: The sources execute would delete (`deleteSource`).
-        distances: Each source's distance in metres, as in the output.
+        distances: Each source's distance in metres, as in the output. Unit: length.
         revision: The document revision the plan was made against. Give it as
             `expectedRevision` to write exactly this plan, or nothing.
     """
@@ -5772,7 +5881,7 @@ class EntitiesPropertiesSet(_Model):
         changed: Their persistent ids, in the input's order (a repeated one once); an
             object that already was as asked is not among them.
         ids: Their slots in the open document (`Entity.id`), in the same order;
-            they mean nothing once the document is closed.
+            they mean nothing once the document is closed. Unit: id.
         revision: The document's revision after the write, as decimal text (the same
             when nothing changed). Inside an open transaction or group the write
             joins it, and the revision changes when that ends.
@@ -5859,7 +5968,7 @@ class EntitiesSetProperties(_Model):
             Absent: they stay on theirs.
         line_weight: Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100); null: their layer's (katmana göre). Absent:
-            unchanged.
+            unchanged. Unit: paper-mm.
         symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of their layer's style; null: the layer's style. The id is
             not looked up: the libraries are the host's. Absent: unchanged.
@@ -5969,8 +6078,8 @@ class EntitiesStretch(_Model):
     `slots_exhausted`.
     Attributes:
         window: The window over the vertices to move, metres.
-        dx: How far east (Y) the vertices move, metres.
-        dy: How far north (X) the vertices move, metres.
+        dx: How far east (Y) the vertices move, metres. Unit: length.
+        dy: How far north (X) the vertices move, metres. Unit: length.
         expected_revision: The document revision the input was prepared against, as decimal
             text. When given and the document is no longer at it, nothing is
             written and the answer is `conflict`.
@@ -6408,12 +6517,13 @@ class ExportPdf(_Model):
 class FeatureFeed(_Model):
     """Where a layer's objects came from, to take them again (docs/adr/0208 §10).
     Attributes:
-        bbox: The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.
+        bbox: The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all. Unit: length.
         fetched: When they were last taken (RFC 3339).
         filter: CQL, or ArcGIS's `where`.
         key: The attribute that matches objects when they are taken again.
+        limit: Unit: count.
         name: WFS's type, OGC's collection, ArcGIS's layer.
-        srid: The system asked of the service.
+        srid: The system asked of the service. Unit: epsg.
         version: WFS's version.
     """
     kind: FeedKind | FeedKindName
@@ -6538,6 +6648,7 @@ class FileCommitted(_Model):
     """Output of `project.file.commit` v1.
     Attributes:
         revision: The new revision (decimal text).
+        size: Unit: bytes.
         replayed: The stored answer of an earlier identical command (its key was seen).
         objects: How many objects the file holds (decimal text), counted when it was
             verified; absent before that (and for revisions saved before it was counted).
@@ -6601,7 +6712,8 @@ class GridChoice(_Model):
     device's grid library keeps it by that), the file's name and size, the
     accuracy the project gives it.
     Attributes:
-        size: The file's size in bytes (at most the core's 256 MiB).
+        size: The file's size in bytes (at most the core's 256 MiB). Unit: bytes.
+        accuracy: Unit: m.
     """
     id: str
     file: str
@@ -6632,6 +6744,8 @@ class HatchAssoc(_Model):
     """The objects a hatch made inside a closed object follows (docs/adr/0186
     §6): the closed object, its islands, the texts and inserts left open, and
     the point clicked inside, which picks the region's part.
+    Attributes:
+        seed: Unit: length.
     """
     outer: str
     seed: Vec2
@@ -6665,17 +6779,20 @@ class HatchEntity(Entity):
     file is opened (`identity`, docs/adr/0014); the server's is a UUID in
     PostgreSQL (`feature.id`).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        ring: Unit: length.
         assoc: The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        holes: Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "hatch"
@@ -6769,12 +6886,12 @@ class HatchPattern(_Model):
     """
     Attributes:
         angle: Degrees, counter-clockwise from east: the lines' (lines, cross), the
-            pattern's turn (pattern), the gradient's direction (gradient).
-        spacing: Metres between the lines (lines, cross); 1 and unread for the others.
+            pattern's turn (pattern), the gradient's direction (gradient). Unit: deg.
+        spacing: Metres between the lines (lines, cross); 1 and unread for the others. Unit: length.
         gradient: A gradient's shape and second colour.
         lines: A pattern's line families.
         name: A pattern's name (`ANSI31`).
-        scale: A pattern's metres per unit of its definition.
+        scale: A pattern's metres per unit of its definition. Unit: length.
     """
     type: HatchPatternType | HatchPatternTypeName
     angle: float
@@ -6819,9 +6936,9 @@ class HatchPatternSpec(_Model):
         name: The pattern's name: Çizgili, Çapraz, Dolu, a library pattern (ANSI31,
             ISO02W100 …) or a gradient (Degrade doğrusal, silindir, küre); its
             case aside, Turkish, and a gradient by its shape's word too.
-        angle: Açı, degrees; absent: 0.
+        angle: Açı, degrees; absent: 0. Unit: deg.
         inverted: Ters: a gradient's colours swapped; absent: false.
-        scale: Ölçek: on paper, times the project's plot scale; absent: 1.
+        scale: Ölçek: on paper, times the project's plot scale; absent: 1. Unit: 1.
         second_color: İkinci renk of a gradient, `#RRGGBB` or a colour's name; absent: white.
     """
     name: str
@@ -6858,6 +6975,11 @@ class HatchPatternSpec(_Model):
 class Helmert(_Model):
     """Seven parameters: translations (m), rotations (″) in their convention,
     the scale difference (ppm), and the accuracy (m) when it is given.
+    Attributes:
+        translation: Unit: m.
+        rotation: Unit: arcsec.
+        scale: Unit: ppm.
+        accuracy: Unit: m.
     """
     translation: list[float]
     rotation: list[float]
@@ -6890,18 +7012,19 @@ class Helmert(_Model):
 class ImageEntity(Entity):
     """A picture (docs/adr/0192 §1).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
-        p: Its lower left corner.
-        width: Along its bottom edge, metres, over 0.
-        height: Along its left edge, metres, over 0.
-        rotation: Radians, counter-clockwise from east, about `p`.
+        p: Its lower left corner. Unit: length.
+        width: Along its bottom edge, metres, over 0. Unit: length.
+        height: Along its left edge, metres, over 0. Unit: length.
+        rotation: Radians, counter-clockwise from east, about `p`. Unit: rad.
         asset: The project library's PNG or JPEG asset its bytes are (embedded);
             exactly one of `asset` and `file` is given.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         clip: The part shown, in the picture's own fractions (0,0 its lower left,
             1,1 its upper right): at least three corners inside the unit square;
-            absent: the whole picture.
+            absent: the whole picture. Unit: 1.
         color: Colour override; absent = the layer's colour ("katmana göre").
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
@@ -6909,9 +7032,9 @@ class ImageEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         mirror: The picture mirrored in its own x axis (Aynala), before the turn.
-        opacity: 0.1 to 1; absent: opaque.
+        opacity: 0.1 to 1; absent: opaque. Unit: 1.
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "image"
@@ -6996,18 +7119,18 @@ class ImageFields(_Model):
     """What places and shows a picture: the image object's own fields, and its
     geometry in the commands (`EntityGeometry::Image`).
     Attributes:
-        p: Its lower left corner.
-        width: Along its bottom edge, metres, over 0.
-        height: Along its left edge, metres, over 0.
-        rotation: Radians, counter-clockwise from east, about `p`.
+        p: Its lower left corner. Unit: length.
+        width: Along its bottom edge, metres, over 0. Unit: length.
+        height: Along its left edge, metres, over 0. Unit: length.
+        rotation: Radians, counter-clockwise from east, about `p`. Unit: rad.
         asset: The project library's PNG or JPEG asset its bytes are (embedded);
             exactly one of `asset` and `file` is given.
         clip: The part shown, in the picture's own fractions (0,0 its lower left,
             1,1 its upper right): at least three corners inside the unit square;
-            absent: the whole picture.
+            absent: the whole picture. Unit: 1.
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         mirror: The picture mirrored in its own x axis (Aynala), before the turn.
-        opacity: 0.1 to 1; absent: opaque.
+        opacity: 0.1 to 1; absent: opaque. Unit: 1.
     """
     p: Vec2
     width: float
@@ -7101,11 +7224,12 @@ class InsertEntity(Entity):
     transform is a similarity: shapes keep their kind. The insert's own
     attributes carry the values of the definition's attribute definitions.
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         block: The definition's id.
-        p: Where the definition's base point goes.
-        scale: Positive and finite; 1 is the definition's size.
-        rotation: Radians, counter-clockwise from east.
+        p: Where the definition's base point goes. Unit: length.
+        scale: Positive and finite; 1 is the definition's size. Unit: 1.
+        rotation: Radians, counter-clockwise from east. Unit: rad.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -7114,7 +7238,7 @@ class InsertEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         mirror: Mirrored in the definition's x axis, before the turn.
         symbol: Library symbol overriding the layer's style.
     """
@@ -7286,7 +7410,7 @@ class LabelBackground(_Model):
     """A shape behind a label.
     Attributes:
         fill: Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.
-        padding: CSS px round the letters; absent, 2.
+        padding: CSS px round the letters; absent, 2. Unit: px.
         stroke: Its outline's colour; absent, none.
     """
     shape: LabelShape | LabelShapeName
@@ -7320,8 +7444,8 @@ class LabelCallout(_Model):
     """The line from a label placed away from its object to the object.
     Attributes:
         color: Absent, the label's.
-        min_length: A shorter one is not drawn, CSS px; absent, 6.
-        width: CSS px; absent, 1.
+        min_length: A shorter one is not drawn, CSS px; absent, 6. Unit: px.
+        width: CSS px; absent, 1. Unit: px.
     """
     kind: CalloutKind | CalloutKindName
     color: str | None | Unset = UNSET
@@ -7382,7 +7506,7 @@ class LabelClass(_Model):
 class LabelHalo(_Model):
     """The halo round a label's letters.
     Attributes:
-        width: CSS px; 0 none.
+        width: CSS px; 0 none. Unit: px.
         color: Hex or a theme name; absent, the drawing area's colour.
     """
     width: float
@@ -7407,7 +7531,7 @@ class LabelHalo(_Model):
 class LabelObstacle(_Model):
     """A layer's objects as obstacles to every label.
     Attributes:
-        weight: 1 to 10: a label of a lower priority cannot cover them; another may, at a cost.
+        weight: 1 to 10: a label of a lower priority cannot cover them; another may, at a cost. Unit: 1.
         kind: An area's inside (absent) or its outline.
     """
     weight: int
@@ -7433,10 +7557,10 @@ class LabelPin(_Model):
     """A label moved, turned, pinned or hidden by hand (an object's
     `labelPins`, docs/adr/0212 §3.7).
     Attributes:
-        at: Where the label's middle is from the object's anchor, metres; absent, the engine places it.
+        at: Where the label's middle is from the object's anchor, metres; absent, the engine places it. Unit: length.
         class_: The class's name; absent, the object's first label.
         hidden: Not drawn; written only as `true`.
-        rotation: Degrees counter-clockwise from east; only with `at`.
+        rotation: Degrees counter-clockwise from east; only with `at`. Unit: deg.
     """
     at: Vec2 | None | Unset = UNSET
     class_: str | None | Unset = UNSET
@@ -7502,10 +7626,10 @@ class LabelPinChange(_Model):
 class LabelShadow(_Model):
     """A label's shadow: the label again under it, moved.
     Attributes:
-        dx: CSS px right.
-        dy: CSS px up.
+        dx: CSS px right. Unit: px.
+        dy: CSS px up. Unit: px.
         color: Absent, black.
-        opacity: 0 to 1; absent, 0.5.
+        opacity: 0 to 1; absent, 0.5. Unit: 1.
     """
     dx: float
     dy: float
@@ -7536,7 +7660,7 @@ class LabelShadow(_Model):
 class LabelStack(_Model):
     """Cutting a label into lines (yığma).
     Attributes:
-        chars: The most letters a line holds (a longer word stays whole).
+        chars: The most letters a line holds (a longer word stays whole). Unit: count.
         at: The letters a line may end at; absent, the space.
     """
     mode: StackMode | StackModeName
@@ -7564,6 +7688,7 @@ class LabelStack(_Model):
 class LabelStyle(_Model):
     """How entity labels on a layer are drawn; sizes in CSS px.
     Attributes:
+        size: Unit: px.
         abbreviate: Shortening its words.
         align: How a label's lines line up; absent, centred.
         area: Where an area's label goes; absent, by `placement`.
@@ -7571,25 +7696,30 @@ class LabelStyle(_Model):
         callout: The line to the object from a label placed away from it.
         color: The letters' colour (hex or a theme name): instead of `ink`.
         curved: An outline's label (perimeter, boundary) letter by letter.
-        distance: CSS px between a label and its object; absent, 2.
-        duplicates: CSS px within which the same text is labelled once.
+        distance: CSS px between a label and its object; absent, 2. Unit: px.
+        duplicates: CSS px within which the same text is labelled once. Unit: px.
+        grow: Unit: length.
         halo: The halo round the letters; absent, 1.5 px of the drawing area's colour.
         inside: An area's label only where it fits inside.
         italic: Leaning letters.
         line: Where a line's label goes; absent, by `placement`.
-        max_angle: Degrees two neighbouring letters of a curved label may turn; absent, 25.
+        max_angle: Degrees two neighbouring letters of a curved label may turn; absent, 25. Unit: deg.
+        max_scale: Unit: px/length.
+        max_size: Unit: px.
         merge_lines: Lines meeting end to end with the same text labelled once.
+        min_feature_px: Unit: px.
+        min_scale: Unit: px/length.
         outside: An area's label that fits nowhere inside, outside with a callout.
         overlap: Whether it may cover another label; absent, never.
         point: Where a point's label goes; absent, by `placement`.
         position: A line label's side of its line (on an outline, `above` inside).
-        priority: 0 to 10; absent, 5: higher first.
-        repeat: CSS px between a line's repeated labels.
+        priority: 0 to 10; absent, 5: higher first. Unit: 1.
+        repeat: CSS px between a line's repeated labels. Unit: px.
         shadow: The label's shadow.
-        shrink: The smallest size a label is made when it does not fit, a factor 0.5–1.
+        shrink: The smallest size a label is made when it does not fit, a factor 0.5–1. Unit: 1.
         stack: Cutting the label into lines.
         text: The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.
-        weight: 400, 500 or 600.
+        weight: 400, 500 or 600. Unit: 1.
     """
     placement: LabelPlacement | LabelPlacementName
     size: float
@@ -7825,7 +7955,7 @@ class LabelsPinPlan(_Model):
 class LabelsPinned(_Model):
     """Output of `cad.labels.pin` v1.
     Attributes:
-        changed: The objects whose pins changed (an undo step was written when any did).
+        changed: The objects whose pins changed (an undo step was written when any did). Unit: count.
         revision: The document's revision after the write, as decimal text.
     """
     changed: int
@@ -7876,7 +8006,7 @@ class LayerCompose(_Model):
     §4); absent, as it always was: opaque, normal, no mask.
     Attributes:
         blend: Absent, normal.
-        opacity: 0–1; absent, 1.
+        opacity: 0–1; absent, 1. Unit: 1.
     """
     blend: BlendMode | BlendModeName | None | Unset = UNSET
     mask: LayerMask | None | Unset = UNSET
@@ -7907,11 +8037,11 @@ class LayerField(_Model):
     Attributes:
         alias: The name the table and the form show.
         default: The value a new object takes, in its canonical text.
-        length: A text's most characters (1–10 000).
+        length: A text's most characters (1–10 000). Unit: count.
         max: A number's greatest value, in its canonical text; included.
         min: A number's least value, in its canonical text; included.
         required: An object may not leave it empty; written only as `true`.
-        scale: A decimal's most fraction digits (0–15).
+        scale: A decimal's most fraction digits (0–15). Unit: count.
         values: The values a text or a number takes, when only some.
     """
     name: str
@@ -8024,7 +8154,7 @@ class LayerLabels(_Model):
 class LayerMask(_Model):
     """The mask a layer's labels and markers cut into other layers (docs/adr/0226 §3).
     Attributes:
-        size: How far the shapes grow, paper mm (0–10); their corners round as far.
+        size: How far the shapes grow, paper mm (0–10); their corners round as far. Unit: paper-mm.
         targets: The layers it cuts into, by their ids.
         labels: Its placed labels' boxes.
         markers: Its markers' boxes.
@@ -8262,8 +8392,10 @@ class LayerStatesDone(_Model):
     Attributes:
         state: The state saved, updated, renamed, removed or applied.
         changed: Whether anything changed.
-        visible: Apply's nodes shown or hidden, locked or unlocked, restyled.
-        missing: Apply's nodes the tree no longer has.
+        visible: Apply's nodes shown or hidden, locked or unlocked, restyled. Unit: count.
+        locked: Unit: count.
+        styles: Unit: count.
+        missing: Apply's nodes the tree no longer has. Unit: count.
         revision: The document's revision afterwards (plan: the one it was made
             against), as decimal text.
     """
@@ -8304,7 +8436,7 @@ class LayerStyle(_Model):
     """A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.
     Attributes:
         color: Hex colour or a theme token (fg, fg-dim, ink, paper).
-        line_weight: Plot line weight in mm.
+        line_weight: Plot line weight in mm. Unit: paper-mm.
         labels: How the layer is labelled (docs/adr/0212 §2): rule-based classes,
             none, its objects as obstacles; absent, by `label` (one label).
     """
@@ -8440,7 +8572,7 @@ class LayersCompose(_Model):
         blend: Absent, normal.
         expected_revision: The document revision the input was prepared against, as decimal text.
         mask: The mask its labels and markers cut into other layers; absent, none.
-        opacity: 0–1; absent, 1 (opaque).
+        opacity: 0–1; absent, 1 (opaque). Unit: 1.
     """
     layer: str
     blend: BlendMode | BlendModeName | None | Unset = UNSET
@@ -8582,10 +8714,11 @@ class LayersEdit(_Model):
         blocks: Purge's block definitions, by their ids.
         expected_revision: The document revision the input was prepared against, as decimal text.
         fields: The layer's fields (docs/adr/0199 §1).
+        index: Unit: index.
         kind: Add's kind of node; absent: a layer.
         layer: The node it acts on; merge's target.
         layers: Merge's sources; purge's layers and groups.
-        line_weight: Plot line weight, mm.
+        line_weight: Plot line weight, mm. Unit: paper-mm.
         name: Add's and duplicate's name, trimmed.
     """
     operation: LayerEditOperation | LayerEditOperationName
@@ -8671,11 +8804,11 @@ class LayersEdited(_Model):
     """Output of `cad.layers.edit` v1, and what plan says it would do.
     Attributes:
         changed: Whether anything was written (an undo step).
-        objects: The objects removed (remove), copied (duplicate) or moved (merge).
+        objects: The objects removed (remove), copied (duplicate) or moved (merge). Unit: count.
         removed: The nodes taken away: merge's sources, purge's layers then groups
             (deepest first).
         blocks: Purge's definitions taken away, in the order they went.
-        kept: Purge's asked ones that stay because something staying uses them.
+        kept: Purge's asked ones that stay because something staying uses them. Unit: count.
         revision: The document's revision after the write (plan: the one it was made
             against), as decimal text.
         layer: The node added or copied (a new `layer-N`), the node changed, merge's
@@ -8758,7 +8891,8 @@ class LayersFilterPlan(_Model):
     """What `cad.layers.filter` would write (plan mode); nothing is written.
     Attributes:
         node: The layer as execute would leave it.
-        passed: The layer's objects that would pass the filter, and all of them.
+        passed: The layer's objects that would pass the filter, and all of them. Unit: count.
+        total: Unit: count.
         revision: The document revision the plan was made against.
     """
     node: LayerNode
@@ -8792,8 +8926,8 @@ class LayersFiltered(_Model):
     """Output of `cad.layers.filter` v1.
     Attributes:
         changed: Whether the filter differed (an undo step was written).
-        passed: The layer's objects that pass the filter (all of them without one).
-        total: The layer's objects.
+        passed: The layer's objects that pass the filter (all of them without one). Unit: count.
+        total: The layer's objects. Unit: count.
         revision: The document's revision after the write, as decimal text.
     """
     layer: str
@@ -9158,6 +9292,7 @@ class LayersService(_Model):
         connections: Connections added to the project, or replacing its own of the same id.
         expected_revision: The document revision the input was prepared against, as decimal text.
         fields: `addFeed`: the layer's fields (docs/adr/0199 §1).
+        index: Unit: index.
         layer: `update`, `remove`: the layer's id.
         name: `add`, `addFeed`: the new layer's name; `update`: a new name.
     """
@@ -9487,14 +9622,15 @@ class LeaderEntity(Entity):
     along the note's direction and the note past the landing's end; one
     object. The arrowhead and the landing are measured by the note's height.
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
-        pts: At least two: the arrow's tip first, where the landing starts last.
+        pts: At least two: the arrow's tip first, where the landing starts last. Unit: length.
         height: The note's height, metres, finite and over 0; the arrowhead and the
-            landing are measured by it.
-        rotation: The note's and the landing's direction, degrees counter-clockwise from east.
+            landing are measured by it. Unit: length.
+        rotation: The note's and the landing's direction, degrees counter-clockwise from east. Unit: deg.
         arrow: The arrowhead; absent: a filled arrow.
         arrow_size: The arrowhead's length, times the note's height (docs/adr/0205 §7);
-            absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
+            absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`. Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -9503,7 +9639,7 @@ class LeaderEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         mask: The note's box is filled with the drawing area's colour before the
             note is drawn, as a text's mask (docs/adr/0145).
         symbol: Library symbol overriding the layer's style.
@@ -9597,8 +9733,8 @@ class LineCreate(_Model):
     validity is not checked, as for `cad.polygon.create`.
     Attributes:
         layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
-        a: Where it starts: x east (Y), y north (X), in the project's units (m), float64.
-        b: Where it ends.
+        a: Where it starts: x east (Y), y north (X), in the project's units (m), float64. Unit: length.
+        b: Where it ends. Unit: length.
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         expected_revision: The document revision the input was prepared against, as decimal text
@@ -9607,7 +9743,7 @@ class LineCreate(_Model):
         label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
-            object from the current weight. Absent: the layer's (katmana göre).
+            object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
@@ -9662,7 +9798,7 @@ class LineCreated(_Model):
     """Output of `cad.line.create` v1: the object written.
     Attributes:
         uid: Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
-        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed. Unit: id.
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
@@ -9694,7 +9830,10 @@ class LineEntity(Entity):
     file is opened (`identity`, docs/adr/0014); the server's is a UUID in
     PostgreSQL (`feature.id`).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        a: Unit: length.
+        b: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -9703,13 +9842,13 @@ class LineEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         ma: The start's measure (M) on a route, in the route's own unit; absent =
-            none (docs/adr/0224 §1).
-        mb: The end's measure; absent = none.
+            none (docs/adr/0224 §1). Unit: measure.
+        mb: The end's measure; absent = none. Unit: measure.
         symbol: Library symbol overriding the layer's style.
-        za: The start's elevation, m; absent = none (docs/adr/0142).
-        zb: The end's elevation, m; absent = none.
+        za: The start's elevation, m; absent = none (docs/adr/0142). Unit: elevation.
+        zb: The end's elevation, m; absent = none. Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "line"
     id: int
@@ -9828,7 +9967,7 @@ class NetworkCost(_Model):
     """A cost besides the length (docs/adr/0209 §2).
     Attributes:
         field: The attribute it reads: a speed in km/h, or the whole edge's cost.
-        speed: A speed cost's speed (km/h) where the field gives none it can read.
+        speed: A speed cost's speed (km/h) where the field gives none it can read. Unit: km/h.
         unit: A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.
     """
     name: str
@@ -9866,7 +10005,7 @@ class NetworkDef(_Model):
         id: Lower-case letters, digits and hyphens; one of its kind in the project.
         name: Trimmed; one of its kind in the project.
         edges: The line layers whose lines, paths and arcs are the edges, in this order.
-        tolerance: Metres, within [`NETWORK_TOLERANCES`].
+        tolerance: Metres, within [`NETWORK_TOLERANCES`]. Unit: length.
         closed: An expression: the edges it holds for are out of service, travelled by nothing.
         costs: The costs besides the length, in the order the tools offer them.
         junctions: The point layers whose points are junctions, sources or valves.
@@ -10021,10 +10160,10 @@ class NewObject(_Model):
             text only, given with `labelScale`; the text then follows the object
             (`TextEntity.label_of`). Absent: a text of its own.
         label_scale: The scale's denominator (1:N) the linked label is written at:
-            finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`.
+            finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`. Unit: scale.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
-            object from the current weight. Absent: the layer's (katmana göre).
+            object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
@@ -10076,25 +10215,28 @@ class NewObject(_Model):
 class PathEntity(_Model):
     """Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        bulges: Unit: 1.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         ms: A polyline's vertices' measures (M) on a route, as many as `pts`;
             `null` for a vertex without one; absent when none has one
-            (docs/adr/0224 §1). A polygon has none: a route is a line.
+            (docs/adr/0224 §1). A polygon has none: a route is a line. Unit: measure.
         parts: A polygon's or a polyline's parts past its first, whose own are the
             fields above; absent for one part (docs/adr/0143, 0174). A
             polyline's parts are open, of two vertices or more, without holes.
         symbol: Library symbol overriding the layer's style.
         zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
-            without one (not 0); absent when no vertex has one (docs/adr/0142).
+            without one (not 0); absent when no vertex has one (docs/adr/0142). Unit: elevation.
     """
     id: int
     layer_id: str
@@ -10169,6 +10311,11 @@ class PatternLine(_Model):
     units, before the pattern turns: lines at `angle` (degrees) through
     `origin`, each the next `offset` on (`[along, across]` the line), drawn
     as `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).
+    Attributes:
+        angle: Unit: deg.
+        origin: Unit: pattern.
+        offset: Unit: pattern.
+        dashes: Unit: pattern.
     """
     angle: float
     origin: list[float]
@@ -10198,6 +10345,7 @@ class PatternLine(_Model):
 class PdfExported(_Model):
     """What `file.export.pdf` wrote, or with `plan` would write.
     Attributes:
+        bytes: Unit: bytes.
         sheets: The sheets printed, by id, in page order.
         findings: The sheet core's findings (preflight).
         notes: What a host without a window cannot draw, said in words.
@@ -10306,10 +10454,11 @@ class PointBinding(_Model):
 class PointCloudEntity(_Model):
     """A point cloud (docs/adr/0207 §3).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
-        bounds: The members' bounds together.
-        count: The members' points together.
-        srid: The files' system; 0: they named none and the user took the project's.
+        bounds: The members' bounds together. Unit: system.
+        count: The members' points together. Unit: count.
+        srid: The files' system; 0: they named none and the user took the project's. Unit: epsg.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -10318,8 +10467,8 @@ class PointCloudEntity(_Model):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
-        opacity: 0.1 to 1; absent: opaque.
+            object (docs/adr/0139). Unit: paper-mm.
+        opacity: 0.1 to 1; absent: opaque. Unit: 1.
         symbol: Library symbol overriding the layer's style.
     """
     id: int
@@ -10390,10 +10539,10 @@ class PointCloudFields(_Model):
     """What places and shows a cloud: the object's own fields, and its geometry
     in the commands (`EntityGeometry::PointCloud`).
     Attributes:
-        bounds: The members' bounds together.
-        count: The members' points together.
-        srid: The files' system; 0: they named none and the user took the project's.
-        opacity: 0.1 to 1; absent: opaque.
+        bounds: The members' bounds together. Unit: system.
+        count: The members' points together. Unit: count.
+        srid: The files' system; 0: they named none and the user took the project's. Unit: epsg.
+        opacity: 0.1 to 1; absent: opaque. Unit: 1.
     """
     sources: list[CloudSource]
     bounds: list[float]
@@ -10429,8 +10578,10 @@ class PointCloudFields(_Model):
 class PointCloudStyle(_Model):
     """A cloud's look (docs/adr/0207 §5).
     Attributes:
-        hidden: Classes not drawn (0–255), in order.
-        min: The ramp's least and most value (heights in metres, or intensities).
+        size: Unit: size-unit.
+        hidden: Classes not drawn (0–255), in order. Unit: index.
+        max: Unit: value.
+        min: The ramp's least and most value (heights in metres, or intensities). Unit: value.
         ramp: One of the rasters' ramps (`RASTER_RAMPS`); absent: Arazi.
         rgb8: Colours with 8 significant bits (a file that writes 0–255 in its 16-bit fields).
     """
@@ -10498,7 +10649,7 @@ class PointCreate(_Model):
     all the same).
     Attributes:
         layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
-        p: Where it is: x east (Y), y north (X), in the project's units (m), float64.
+        p: Where it is: x east (Y), y north (X), in the project's units (m), float64. Unit: length.
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         expected_revision: The document revision the input was prepared against, as decimal text
@@ -10510,7 +10661,7 @@ class PointCreate(_Model):
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
             layer's style.
-        z: Its elevation (kot), in metres. Absent: none.
+        z: Its elevation (kot), in metres. Absent: none. Unit: elevation.
     """
     layer_id: str
     p: Vec2
@@ -10558,7 +10709,7 @@ class PointCreated(_Model):
     """Output of `cad.point.create` v1: the object written.
     Attributes:
         uid: Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
-        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed. Unit: id.
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
@@ -10590,7 +10741,9 @@ class PointEntity(Entity):
     file is opened (`identity`, docs/adr/0014); the server's is a UUID in
     PostgreSQL (`feature.id`).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        p: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -10599,10 +10752,11 @@ class PointEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         parts: A multi-point object's points past its first, whose own are the
             fields above; absent for one point (docs/adr/0174).
         symbol: Library symbol overriding the layer's style.
+        z: Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "point"
     id: int
@@ -10664,6 +10818,9 @@ class PointEntity(Entity):
 class PointPart(_Model):
     """A point of a multi-point object past its first (docs/adr/0174): its
     place and elevation, as the point's own fields hold the first's.
+    Attributes:
+        p: Unit: length.
+        z: Unit: elevation.
     """
     p: Vec2
     z: float | None | Unset = UNSET
@@ -10712,7 +10869,7 @@ class PointPlan(_Model):
 class PointStyle(_Model):
     """
     Attributes:
-        size: Diameter in CSS px.
+        size: Diameter in CSS px. Unit: px.
     """
     symbol: PointSymbol | PointSymbolName
     size: float
@@ -10748,11 +10905,11 @@ class PolygonCreate(_Model):
     Attributes:
         layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
         pts: Corners of the outer ring in order: x east (Y), y north (X), in the
-            project's units (m), float64. At least 3; the first is not repeated.
+            project's units (m), float64. At least 3; the first is not repeated. Unit: length.
         attrs: GIS attributes, text in v1. Absent: none.
         bulges: One bulge per edge, the closing edge (last corner → first) last:
             tan(θ/4) of the edge's included angle, positive counter-clockwise, 0
-            straight. Absent: every edge is straight.
+            straight. Absent: every edge is straight. Unit: 1.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
@@ -10761,7 +10918,7 @@ class PolygonCreate(_Model):
         label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
-            object from the current weight. Absent: the layer's (katmana göre).
+            object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
@@ -10821,7 +10978,7 @@ class PolygonCreated(_Model):
     """Output of `cad.polygon.create` v1: the object written.
     Attributes:
         uid: Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
-        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed. Unit: id.
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
@@ -10888,13 +11045,13 @@ class PolylineCreate(_Model):
     Attributes:
         layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
         pts: Its points in order: x east (Y), y north (X), in the project's units
-            (m), float64. At least 2.
+            (m), float64. At least 2. Unit: length.
         attrs: GIS attributes, text in v1. Absent: none.
         bulges: One bulge per edge (`pts[i]` → `pts[i + 1]`), so one fewer than the
             points: tan(θ/4) of the edge's included angle, positive
             counter-clockwise, 0 straight. Absent: every edge is straight. The
             document keeps one value per point, as DXF does: the polyline is
-            stored with a 0 after these, for the closing edge it does not have.
+            stored with a 0 after these, for the closing edge it does not have. Unit: 1.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
@@ -10902,7 +11059,7 @@ class PolylineCreate(_Model):
         label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
-            object from the current weight. Absent: the layer's (katmana göre).
+            object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
@@ -10958,7 +11115,7 @@ class PolylineCreated(_Model):
     """Output of `cad.polyline.create` v1: the object written.
     Attributes:
         uid: Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
-        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+        id: Its slot in the open document (`Entity.id`); it means nothing once the document is closed. Unit: id.
         revision: The document's revision after the write, as decimal text. Inside an
             open transaction or group the write joins it, and the revision
             changes when that ends.
@@ -11192,7 +11349,9 @@ class ProjectConvert(_Model):
 class ProjectCreate(_Model):
     """`POST /v1/tenants/{tenant}/projects`: a new project's metadata (its objects follow as commands).
     Attributes:
+        origin: Unit: length.
         description: The catalog's description (docs/adr/0028); absent: none.
+        home_view: Unit: length.
         project_type: Absent: the general type (`cad`).
         sheets: The project's sheet book and its pictures (docs/adr/0251); absent: none.
         storage: How the project is kept, for good (docs/adr/0031); absent: object by
@@ -11418,10 +11577,12 @@ class ProjectInfo(_Model):
     Attributes:
         access: What the caller may do in it.
         state: Active or archived (an archived project opens read-only; one in the trash does not open).
+        origin: Unit: length.
         event_cursor: Event cursor at the moment this was read: subscribe after it to miss nothing.
         blocks: A database project's block definitions with their versions
             (docs/adr/0144 §5), in the order they were made. An older server's
             answer without them has none.
+        home_view: Unit: length.
         sheets: A database project's sheet book and its pictures (docs/adr/0251); an
             older server's answer without it has none.
         storage: How it keeps its content: a file project opens from its newest
@@ -11734,7 +11895,10 @@ class ProjectRename(_Model):
 class ProjectSettings(_Model):
     """Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
     Attributes:
-        plot_scale: Plot scale denominator (1:1000 → 1000).
+        srid: Unit: epsg.
+        length_decimals: Unit: count.
+        area_decimals: Unit: count.
+        plot_scale: Plot scale denominator (1:1000 → 1000). Unit: scale.
         address_locators: The project's address data (docs/adr/0229 §2), in the order they were made.
         annotation: The project's annotation heights on paper (docs/adr/0205 §1); absent:
             every kind's default.
@@ -11751,7 +11915,7 @@ class ProjectSettings(_Model):
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
-            the project's own system, never a local project's.
+            the project's own system, never a local project's. Unit: epsg.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
@@ -11936,6 +12100,7 @@ class ProjectStyles(_Model):
 class ProjectSummary(_Model):
     """
     Attributes:
+        srid: Unit: epsg.
         updated_at: RFC 3339.
         owner_name: The owner's name ("Benimle paylaşılanlar" says whose it is); empty
             when the caller cannot see the owner (one who left the organisation).
@@ -12122,12 +12287,15 @@ class RasterDataset(_Model):
 class RasterEntity(Entity):
     """A raster (docs/adr/0204 §2).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         affine: `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
             upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's
-            geotransform order). Invertible.
-        width: Its size in pixels.
-        srid: The file's coordinate system; 0: the file named none and the user took the project's.
+            geotransform order). Invertible. Unit: system.
+        width: Its size in pixels. Unit: count.
+        height: Unit: count.
+        bands: Unit: count.
+        srid: The file's coordinate system; 0: the file named none and the user took the project's. Unit: epsg.
         asset: The project library's asset its file is (embedded); exactly one of
             `asset` and `file` is given.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
@@ -12140,8 +12308,8 @@ class RasterEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
-        opacity: 0.1 to 1; absent: opaque.
+            object (docs/adr/0139). Unit: paper-mm.
+        opacity: 0.1 to 1; absent: opaque. Unit: 1.
         symbol: Library symbol overriding the layer's style.
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
     """
@@ -12238,14 +12406,16 @@ class RasterFields(_Model):
     Attributes:
         affine: `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
             upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's
-            geotransform order). Invertible.
-        width: Its size in pixels.
-        srid: The file's coordinate system; 0: the file named none and the user took the project's.
+            geotransform order). Invertible. Unit: system.
+        width: Its size in pixels. Unit: count.
+        height: Unit: count.
+        bands: Unit: count.
+        srid: The file's coordinate system; 0: the file named none and the user took the project's. Unit: epsg.
         asset: The project library's asset its file is (embedded); exactly one of
             `asset` and `file` is given.
         dataset: A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
-        opacity: 0.1 to 1; absent: opaque.
+        opacity: 0.1 to 1; absent: opaque. Unit: 1.
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
     """
     affine: list[float]
@@ -12304,15 +12474,16 @@ class RasterFields(_Model):
 class RasterStyle(_Model):
     """A raster's look (docs/adr/0204 §4).
     Attributes:
-        bands: The bands drawn, from 1: three or four for `rgb`, one otherwise.
-        altitude: Its height above the horizon, degrees (0–90).
-        azimuth: Gölgeli kabartma's light: degrees from north, clockwise (0–360).
+        bands: The bands drawn, from 1: three or four for `rgb`, one otherwise. Unit: index.
+        altitude: Its height above the horizon, degrees (0–90). Unit: deg.
+        azimuth: Gölgeli kabartma's light: degrees from north, clockwise (0–360). Unit: azimuth-deg.
         edges: A mesh's edges drawn over it in this colour (`#RRGGBB`; docs/adr/0243 §5).
         invert: The ramp turned round.
-        min: `manual`'s least and most value.
-        nodata: The value shown as nothing, in place of the file's.
+        max: Unit: value.
+        min: `manual`'s least and most value. Unit: value.
+        nodata: The value shown as nothing, in place of the file's. Unit: value.
         ramp: One of `RASTER_RAMPS`; absent: Gri.
-        z_factor: Heights multiplied by it (over 0).
+        z_factor: Heights multiplied by it (over 0). Unit: 1.
     """
     render: RasterRender | RasterRenderName
     bands: list[int]
@@ -12379,8 +12550,10 @@ class RasterStyle(_Model):
 class RingGeometry(_Model):
     """A closed ring in vertex + bulge form (a polygon hole).
     Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
         zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
-            without one (not 0); absent when no vertex has one (docs/adr/0142).
+            without one (not 0); absent when no vertex has one (docs/adr/0142). Unit: elevation.
     """
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
@@ -12406,7 +12579,11 @@ class RingGeometry(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RubberLink(_Model):
-    """A link of Kauçuk levha: a point of the drawing and where it is to go."""
+    """A link of Kauçuk levha: a point of the drawing and where it is to go.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+    """
     from_: Vec2
     to: Vec2
 
@@ -12542,6 +12719,9 @@ class ScenariosEditPlan(_Model):
     """What `cad.scenarios.edit` would write (plan mode); nothing is written. The
     same as the output, the ids those execute would give, and the revision
     the plan was made against.
+    Attributes:
+        objects: Unit: count.
+        removed: Unit: count.
     """
     scenario: str
     layers: list[ScenarioPair]
@@ -12579,8 +12759,8 @@ class ScenariosEdited(_Model):
         scenario: The scenario group made, or the one applied (gone now).
         layers: `create`: each source with its copy; `apply`: each base layer with the scenario layer applied onto it.
         kept: `apply`: the scenario's other layers, base layers now, in its group (an ordinary group now).
-        objects: Objects copied (`create`) or moved into base layers (`apply`).
-        removed: `apply`: the base layers' objects removed.
+        objects: Objects copied (`create`) or moved into base layers (`apply`). Unit: count.
+        removed: `apply`: the base layers' objects removed. Unit: count.
         revision: The document's revision after the write, as decimal text.
     """
     scenario: str
@@ -12665,20 +12845,22 @@ class ServiceLayer(_Model):
             API Tiles: the tile set's; vector: the style's, the TileJSON's or the
             template; Google: empty.
         bbox: The service's extent, WGS 84 degrees (west, south, east, north), as
-            its capabilities give it: what “Servisin kapsamına yakınlaştır” shows.
+            its capabilities give it: what “Servisin kapsamına yakınlaştır” shows. Unit: deg.
         connection: The project's connection whose proof goes with the requests.
         dynamic: WMS and `export`: one picture of the view instead of tiles.
         format: The image's media type (`image/png`, …).
         grid: WMTS's, OGC's and a cached ArcGIS service's matrices.
         layers: WMS's layer names; WMTS's one layer; ArcGIS's layers shown.
         matrix_set: WMTS's matrix set's identifier (`TILEMATRIXSET`).
-        opacity: 0.1 to 1; absent: opaque.
+        max_zoom: Unit: zoom.
+        min_zoom: Unit: zoom.
+        opacity: 0.1 to 1; absent: opaque. Unit: 1.
         preset: The ready basemap it came from.
-        srid: The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.
+        srid: The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own. Unit: epsg.
         style: WMS's and WMTS's style; Google's map type.
         subdomains: `{s}`'s values, taken in turn.
         template: WMTS REST's and OGC's tile template.
-        tile_size: XYZ's and the vector tiles' tile side, pixels; absent 256.
+        tile_size: XYZ's and the vector tiles' tile side, pixels; absent 256. Unit: px.
         transparent: WMS's and `export`'s `TRANSPARENT`.
         version: WMS's version.
         y_flip: TMS: rows counted from the bottom.
@@ -12810,8 +12992,8 @@ class SettingsChanged(_Model):
     Attributes:
         changed: The keys whose value changed, in the input's documented order
             (`drawingUnit` too when a system made the unit metres).
-        followed: The annotations that took the new plot scale's height (one undo step).
-        locked: The annotations a locked layer kept at the old height.
+        followed: The annotations that took the new plot scale's height (one undo step). Unit: count.
+        locked: The annotations a locked layer kept at the old height. Unit: count.
         revision: The document's revision afterwards (plan: the one it was made
             against), as decimal text.
     """
@@ -12873,7 +13055,12 @@ class SettingsSet(_Model):
     `second_is_own` (the second system the project's own), `unit_needs_local`
     (a unit other than metres for a project with a system).
     Attributes:
+        area_decimals: Unit: count.
         expected_revision: The document revision the input was prepared against, as decimal text.
+        length_decimals: Unit: count.
+        plot_scale: Unit: scale.
+        second_srid: Unit: epsg.
+        srid: Unit: epsg.
     """
     angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET
     area_decimals: int | None | Unset = UNSET
@@ -12938,8 +13125,9 @@ class SettingsSet(_Model):
 class SheetInfo(_Model):
     """A sheet of the book as the answer lists it.
     Attributes:
-        width: The page's width and height, millimetres.
-        items: Its items, how many.
+        width: The page's width and height, millimetres. Unit: paper-mm.
+        height: Unit: paper-mm.
+        items: Its items, how many. Unit: count.
         maps: Its map frames, in drawing order.
     """
     id: str
@@ -12977,7 +13165,7 @@ class SheetMapInfo(_Model):
     Attributes:
         item: The item's id.
         name: The item's name, unique in its sheet.
-        scale: The map's scale denominator (1:N); none for a map that follows something else (an atlas).
+        scale: The map's scale denominator (1:N); none for a map that follows something else (an atlas). Unit: scale.
     """
     item: str
     name: str
@@ -13106,7 +13294,9 @@ class SplineEntity(Entity):
     file is opened (`identity`, docs/adr/0014); the server's is a UUID in
     PostgreSQL (`feature.id`).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -13115,7 +13305,7 @@ class SplineEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "spline"
@@ -13253,7 +13443,11 @@ class StretchTopology(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class StretchWindow(_Model):
-    """The window: the vertices inside it move (its edges count as inside)."""
+    """The window: the vertices inside it move (its edges count as inside).
+    Attributes:
+        min: Unit: length.
+        max: Unit: length.
+    """
     min: Vec2
     max: Vec2
 
@@ -13349,8 +13543,8 @@ class StylesEdited(_Model):
     Attributes:
         style: The style's id.
         changed: Whether the table changed.
-        followed: The objects written in the undo step.
-        locked: The objects a locked layer kept as they were.
+        followed: The objects written in the undo step. Unit: count.
+        locked: The objects a locked layer kept as they were. Unit: count.
         revision: The document's revision afterwards (plan: the one it was made
             against), as decimal text.
     """
@@ -13419,28 +13613,28 @@ class SurveySettings(_Model):
     radians, lengths in metres. An absent tolerance is not checked; the
     differences are still shown.
     Attributes:
-        face_hz: The two faces' horizontal reading difference.
-        face_slope: The two faces' slope distance difference.
+        face_hz: The two faces' horizontal reading difference. Unit: rad.
+        face_slope: The two faces' slope distance difference. Unit: m.
         ground_height: The project's mean ellipsoidal height (m), within [−500, 9000]: the
             ground values of Mesafe ölç and Alan hesapla (docs/adr/0171 §2;
             schema 16). Points' elevations are not used: whether orthometric or
-            ellipsoidal is not known.
-        index: The vertical index error.
+            ellipsoidal is not known. Unit: elevation.
+        index: The vertical index error. Unit: rad.
         reduce_to_grid: Kutupsal alım and Poligon hesabı take measured (ground) lengths to the
             grid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;
             schema 16): only with a ground height; absent, off.
-        refraction: k, within [−1, 1]; absent: [`REFRACTION`].
-        sigma_centering: Each end's centering, the instrument's and the target's, m (schema 28).
+        refraction: k, within [−1, 1]; absent: [`REFRACTION`]. Unit: 1.
+        sigma_centering: Each end's centering, the instrument's and the target's, m (schema 28). Unit: m.
         sigma_direction: A direction's a priori standard deviation, radians (docs/adr/0203 §1;
-            schema 28); absent: [`SIGMA_DEFAULTS`]'s.
-        sigma_distance: A distance's constant part, m (schema 28).
-        sigma_levelling: Geometric levelling's per √km, m (schema 28).
-        sigma_ppm: A distance's part per million of its length (schema 28).
-        sigma_zenith: A zenith angle's, radians (schema 28).
-        traverse_angle: A traverse's angular misclosure (schema 15).
-        traverse_coord: A traverse's linear (coordinate) misclosure (schema 15).
+            schema 28); absent: [`SIGMA_DEFAULTS`]'s. Unit: rad.
+        sigma_distance: A distance's constant part, m (schema 28). Unit: m.
+        sigma_levelling: Geometric levelling's per √km, m (schema 28). Unit: m.
+        sigma_ppm: A distance's part per million of its length (schema 28). Unit: ppm.
+        sigma_zenith: A zenith angle's, radians (schema 28). Unit: rad.
+        traverse_angle: A traverse's angular misclosure (schema 15). Unit: rad.
+        traverse_coord: A traverse's linear (coordinate) misclosure (schema 15). Unit: m.
         two_way: A traverse leg's horizontal distance measured from its two ends
-            (schema 15).
+            (schema 15). Unit: m.
     """
     face_hz: float | None | Unset = UNSET
     face_slope: float | None | Unset = UNSET
@@ -13517,12 +13711,13 @@ class SurveySettings(_Model):
 class TableEntity(Entity):
     """A table (docs/adr/0184 §1).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
-        p: Its top left corner.
-        rotation: Degrees counter-clockwise from east: its rows run along it.
-        height: Its cells' text height, metres.
-        rows: Its rows' heights, top to bottom, metres.
-        columns: Its columns' widths, left to right, metres.
+        p: Its top left corner. Unit: length.
+        rotation: Degrees counter-clockwise from east: its rows run along it. Unit: deg.
+        height: Its cells' text height, metres. Unit: length.
+        rows: Its rows' heights, top to bottom, metres. Unit: length.
+        columns: Its columns' widths, left to right, metres. Unit: length.
         cells: The cells' words, row by row, a row as many as there are columns;
             one line each, empty for an empty cell.
         aligns: Each column's alignment, as many as there are columns; absent: all left.
@@ -13531,7 +13726,7 @@ class TableEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
         frame: Its frame's width, metres: the outline drawn as a band that wide
-            inside it (Kalın çerçeve); absent: a line as the others.
+            inside it (Kalın çerçeve); absent: a line as the others. Unit: length.
         grid: Which of its lines are drawn; absent: all.
         header: The first row is its heading: bold, centred.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
@@ -13539,10 +13734,10 @@ class TableEntity(Entity):
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         merges: Merged ranges: each range's words in its top left cell, its others empty.
         oblique: How far its letters lean, degrees, positive with their tops to the
-            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
+            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
         source: Where its rows came from (Tabloyu güncelle); absent: written by hand.
         symbol: Library symbol overriding the layer's style.
         text_style: The project's text style it follows, by its id; absent: Standart.
@@ -13661,14 +13856,16 @@ class TextEntity(Entity):
     file is opened (`identity`, docs/adr/0014); the server's is a UUID in
     PostgreSQL (`feature.id`).
     Attributes:
+        id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
-        height: Metres.
-        rotation: Degrees, counter-clockwise from east.
+        p: Unit: length.
+        height: Metres. Unit: length.
+        rotation: Degrees, counter-clockwise from east. Unit: deg.
         align: Where `p` is on the text; absent: the left of the baseline (docs/adr/0145).
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         box_width: Metres, finite and over 0: the lines wrap word by word to this width.
-            Absent: they end only at line breaks.
+            Absent: they end only at line breaks. Unit: length.
         color: Colour override; absent = the layer's colour ("katmana göre").
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
         label_of: The object whose label this text writes (Etiketleri yazıya çevir's
@@ -13677,17 +13874,17 @@ class TextEntity(Entity):
             its own. Given with `label_scale` or not at all.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
-        label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0.
+        label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0. Unit: scale.
         line_spacing: The distance between the lines' baselines in 5/3 of the height (DXF's
-            group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.
+            group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
-            object (docs/adr/0139).
+            object (docs/adr/0139). Unit: paper-mm.
         mask: The text's box is filled with the drawing area's colour before the
             text is drawn (Netcad's “fon”): what lies under it does not show.
         oblique: How far its letters lean, degrees, positive with their tops to the
-            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
+            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
         path: The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),
             in its own frame; absent: a straight text.
         runs: The letters' formats: ranges of the text's Unicode scalar values (not
@@ -13697,7 +13894,7 @@ class TextEntity(Entity):
         symbol: Library symbol overriding the layer's style.
         text_style: The project's text style it follows, by its id; absent: Standart.
         width_factor: The letters' width times this, the height kept (Netcad's “sıkışma”,
-            DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.
+            DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`. Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "text"
     id: int
@@ -13820,10 +14017,10 @@ class TextPath(_Model):
     not written; `pts` are the ones after it. The frame carries the curve with
     the text when it moves, turns or scales.
     Attributes:
-        pts: The vertices after `p`, at least one.
+        pts: The vertices after `p`, at least one. Unit: length.
         bulges: Edge i's bulge, from vertex i to vertex i + 1 (vertex 0 is `p`):
             DXF's tan(θ/4), counter-clockwise positive; as many as `pts`. Absent:
-            every edge straight.
+            every edge straight. Unit: 1.
     """
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
@@ -13847,7 +14044,8 @@ class TextPath(_Model):
 class TextRun(_Model):
     """A range of a text's letters and their format (docs/adr/0182 §1).
     Attributes:
-        start: Its first letter and the one past its last, counting Unicode scalar values.
+        start: Its first letter and the one past its last, counting Unicode scalar values. Unit: index.
+        end: Unit: index.
         color: Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.
         script: Raised or lowered, at 0.6 of the height; absent: on the line.
     """
@@ -13896,9 +14094,9 @@ class TextStyleDef(_Model):
         name: Its name: trimmed, one of its kind whatever its letters' case, never
             `STANDARD_STYLE`.
         font_file: The typeface file a DXF named for it, written back as it came.
-        height: The texts' height on paper, mm; absent: the tool's height.
-        oblique: As a text's (`TextFace::oblique`).
-        width_factor: As a text's; absent: 1.
+        height: The texts' height on paper, mm; absent: the tool's height. Unit: paper-mm.
+        oblique: As a text's (`TextFace::oblique`). Unit: deg.
+        width_factor: As a text's; absent: 1. Unit: 1.
     """
     id: str
     name: str
@@ -13946,7 +14144,10 @@ class TextStyleDef(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class TileGrid(_Model):
-    """A service's tile grid as read: its system and its matrices, coarsest first."""
+    """A service's tile grid as read: its system and its matrices, coarsest first.
+    Attributes:
+        srid: Unit: epsg.
+    """
     srid: int
     matrices: list[TileMatrix]
 
@@ -13970,6 +14171,14 @@ class TileMatrix(_Model):
     grid system's units, its top left corner as east and north (longitude
     and latitude), whatever order the service wrote them in, its tiles' and
     its own size in tiles.
+    Attributes:
+        resolution: Unit: system.
+        x0: Unit: system.
+        y0: Unit: system.
+        tile_width: Unit: px.
+        tile_height: Unit: px.
+        matrix_width: Unit: count.
+        matrix_height: Unit: count.
     """
     id: str
     resolution: float
@@ -14011,8 +14220,13 @@ class TmDefinition(_Model):
     """A transverse Mercator grid: its origin's latitude (0 when left out),
     central meridian, scale and false origin.
     Attributes:
+        central_meridian: Unit: deg.
+        scale_factor: Unit: 1.
+        false_easting: Unit: m.
+        false_northing: Unit: m.
         custom_datum: the project's own (exactly one of the two).
         datum: The registry's datum by name; or
+        latitude_of_origin: Unit: deg.
     """
     central_meridian: float
     scale_factor: float
@@ -14056,6 +14270,7 @@ class TopologyException(_Model):
     Attributes:
         rule: The rule's id.
         objects: At least one.
+        at: Unit: length.
     """
     rule: str
     objects: list[str]
@@ -14086,7 +14301,7 @@ class TopologyRule(_Model):
             no longer has stays and is not checked.
         other: The other layer's id, for a rule between layers only.
         value: The value of a kind that takes one: a length in metres, an angle in
-            radians; absent: the kind's default.
+            radians; absent: the kind's default. Unit: value.
     """
     id: str
     kind: TopologyRuleKind | TopologyRuleKindName
@@ -14122,7 +14337,7 @@ class TopologySettings(_Model):
     Attributes:
         exceptions: Findings marked as left on purpose (docs/adr/0202 §3).
         rules: The rules, in the order they are checked and listed.
-        tolerance: Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`].
+        tolerance: Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`]. Unit: length.
     """
     exceptions: list[TopologyException] | Unset = UNSET
     rules: list[TopologyRule] | Unset = UNSET
@@ -14153,7 +14368,7 @@ class TrimPick(_Model):
     Attributes:
         uid: The object's persistent id (lowercase UUID text with hyphens).
         at: A point on or near the object: Buda takes away the part between the
-            boundaries around it; Uzat grows the end nearest it.
+            boundaries around it; Uzat grows the end nearest it. Unit: length.
     """
     uid: str
     at: Vec2
@@ -14169,6 +14384,106 @@ class TrimPick(_Model):
         return cls(
             uid=data["uid"],
             at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnitsChange(_Model):
+    """Input of `cad.units.change` v1: the drawing unit goes from `from` to
+    `to`, with `geometry` saying what becomes of the drawing, as one undo
+    step “Birimi değiştir” (the unit and the scaled drawing undone together).
+
+    With `scale`, everything the drawing measures in its unit is scaled by
+    one whole factor (×1000 from mm to m, ÷10 from cm to mm): every object's
+    coordinates, lengths, radii, elevations, its text, dimension, leader and
+    table heights and sizes, a paragraph's box, a curved text's curve, a
+    hatch's spacing and pattern scale, a picture's and a raster's frame; the
+    block definitions (base point, objects, attribute definitions); the home
+    view and the drawing's anchor. Angles, ratios, an insert's own scale,
+    paper sizes and a route's measures stay. A point cloud's points are in
+    its files and stay (`point_clouds_kept`); the sheet book stays
+    (`sheets_kept`); the topology tolerance and the networks' tolerances are
+    the project's precision and stay (`tolerances_kept`).
+
+    Refusals (`CommandError.code`), checked in this order: `same_unit`
+    (`from` is `to`), `invalid_revision`, `revision_conflict` (status
+    `conflict`), `unit_needs_local` (the project has a coordinate system:
+    its unit is the system's), `unit_mismatch` (`from` is not the drawing's
+    unit, which the message names), `layer_locked` (with `scale`: objects on
+    a locked layer, whose `uids` the error lists, the first 100).
+    Attributes:
+        from_: The drawing's unit now: said, not assumed, so a script written for
+            another drawing does not scale this one.
+        to: The unit it changes to.
+        geometry: Whether the sizes or the numbers stay.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+    """
+    from_: DrawingUnit | DrawingUnitName
+    to: DrawingUnit | DrawingUnitName
+    geometry: UnitGeometry | UnitGeometryName
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = _enum_out(self.from_)
+        out["to"] = _enum_out(self.to)
+        out["geometry"] = _enum_out(self.geometry)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnitsChange:
+        return cls(
+            from_=_enum_in(DrawingUnit, data["from"]),
+            to=_enum_in(DrawingUnit, data["to"]),
+            geometry=_enum_in(UnitGeometry, data["geometry"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnitsChanged(_Model):
+    """Output of `cad.units.change` v1, and what plan says it would do.
+    Attributes:
+        factor: What the drawing's lengths were multiplied by: 1 with `keep`; with
+            `scale` the units' ratio (1000 from mm to m, 0.1 from cm to mm). Unit: 1.
+        objects: The objects scaled (0 with `keep`). Unit: count.
+        blocks: The block definitions scaled (0 with `keep`). Unit: count.
+        revision: The document's revision afterwards (plan: the one it was made
+            against), as decimal text.
+    """
+    from_: DrawingUnit | DrawingUnitName
+    to: DrawingUnit | DrawingUnitName
+    geometry: UnitGeometry | UnitGeometryName
+    factor: float
+    objects: int
+    blocks: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = _enum_out(self.from_)
+        out["to"] = _enum_out(self.to)
+        out["geometry"] = _enum_out(self.geometry)
+        out["factor"] = float(self.factor)
+        out["objects"] = self.objects
+        out["blocks"] = self.blocks
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnitsChanged:
+        return cls(
+            from_=_enum_in(DrawingUnit, data["from"]),
+            to=_enum_in(DrawingUnit, data["to"]),
+            geometry=_enum_in(UnitGeometry, data["geometry"]),
+            factor=float(data["factor"]),
+            objects=data["objects"],
+            blocks=data["blocks"],
+            revision=data["revision"],
         )
 
 
@@ -14202,6 +14517,11 @@ class GridArrayLayout(ArrayLayout):
     columns and `i` rows from the originals moves `j·dx` east and `i·dy`
     north. The copies are made row after row, each row column after
     column. A direction with more than one place needs a spacing.
+    Attributes:
+        rows: Unit: count.
+        cols: Unit: count.
+        dx: Unit: length.
+        dy: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "grid"
     rows: int
@@ -14235,6 +14555,10 @@ class PolarArrayLayout(ArrayLayout):
     partial fill puts the last copy on its end. With `rotate` each copy
     turns about the centre; without, it keeps its direction and moves as
     the middle of the copied objects' box goes round.
+    Attributes:
+        center: Unit: length.
+        count: Unit: count.
+        fill: Unit: deg.
     """
     TAG_VALUE: ClassVar[str] = "polar"
     center: Vec2
@@ -14271,6 +14595,9 @@ class PathArrayLayout(ArrayLayout):
     the path's point there less its start; with `align` it first turns
     about the start by the path's direction there less its direction at
     the start. The path is read, never changed.
+    Attributes:
+        count: Unit: count.
+        spacing: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "path"
     path: str
@@ -14354,6 +14681,8 @@ class VertexCornerPick(CornerPick):
     """A polyline's or a closed area's vertex between two straight edges;
     an area's vertices counted part after part (docs/adr/0143), its holes
     not.
+    Attributes:
+        index: Unit: index.
     """
     TAG_VALUE: ClassVar[str] = "vertex"
     uid: str
@@ -14416,6 +14745,13 @@ class AllCornerPick(CornerPick):
 
 @dataclass(kw_only=True, slots=True)
 class SimilarityCrsPlane(CrsPlane):
+    """
+    Attributes:
+        east: Unit: m.
+        north: Unit: m.
+        rotation: Unit: deg.
+        scale: Unit: 1.
+    """
     TAG_VALUE: ClassVar[str] = "similarity"
     east: float
     north: float
@@ -14442,6 +14778,15 @@ class SimilarityCrsPlane(CrsPlane):
 
 @dataclass(kw_only=True, slots=True)
 class AffineCrsPlane(CrsPlane):
+    """
+    Attributes:
+        a: Unit: 1.
+        b: Unit: 1.
+        c: Unit: m.
+        d: Unit: 1.
+        e: Unit: 1.
+        f: Unit: m.
+    """
     TAG_VALUE: ClassVar[str] = "affine"
     a: float
     b: float
@@ -14524,6 +14869,8 @@ class AlignedDimensionMeasure(DimensionMeasure):
 class LinearDimensionMeasure(DimensionMeasure):
     """Doğrusal: the distance from `a` to `b` along a direction, degrees
     (0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies (AutoCAD's rule).
+    Attributes:
+        angle: Unit: deg.
     """
     TAG_VALUE: ClassVar[str] = "linear"
     a: MeasuredPoint
@@ -14551,6 +14898,8 @@ class LinearDimensionMeasure(DimensionMeasure):
 class OrdinateDimensionMeasure(DimensionMeasure):
     """Koordinat: `a`'s Y (angle 0) or X (90), its leader ending at `at`;
     absent: the axis `at` lies further along.
+    Attributes:
+        angle: Unit: deg.
     """
     TAG_VALUE: ClassVar[str] = "ordinate"
     a: MeasuredPoint
@@ -14596,6 +14945,9 @@ class AzimuthDimensionMeasure(DimensionMeasure):
 class SlopeDimensionMeasure(DimensionMeasure):
     """Eğim: the slope from `a` at `za` to `b` at `zb`, metres; an
     elevation absent: its place's vertex's (docs/adr/0142).
+    Attributes:
+        za: Unit: elevation.
+        zb: Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "slope"
     a: MeasuredPoint
@@ -14731,6 +15083,8 @@ class DiameterDimensionMeasure(DimensionMeasure):
 class ArcLengthDimensionMeasure(DimensionMeasure):
     """Yay uzunluğu of an arc or a path's arc segment; with `between`, the
     part between two points put on its circle (Kısmi).
+    Attributes:
+        between: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "arcLength"
     of: EdgeNear
@@ -14755,6 +15109,9 @@ class ArcLengthDimensionMeasure(DimensionMeasure):
 class JoggedDimensionMeasure(DimensionMeasure):
     """Kırıklı yarıçap of a circle, an arc or a path's arc segment: from the
     centre shown to the circle toward `on`, its jog where `at` is.
+    Attributes:
+        shown_centre: Unit: length.
+        on: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "jogged"
     of: EdgeNear
@@ -14781,6 +15138,8 @@ class JoggedDimensionMeasure(DimensionMeasure):
 class PartsDivision(Division):
     """Into `count` equal parts (2 to 10 000): a point between each two, and
     on a closed object one at its start too.
+    Attributes:
+        count: Unit: count.
     """
     TAG_VALUE: ClassVar[str] = "parts"
     count: int
@@ -14799,7 +15158,10 @@ class PartsDivision(Division):
 
 @dataclass(kw_only=True, slots=True)
 class StepDivision(Division):
-    """A point every `length` metres from the start (over 0)."""
+    """A point every `length` metres from the start (over 0).
+    Attributes:
+        length: Unit: length.
+    """
     TAG_VALUE: ClassVar[str] = "step"
     length: float
 
@@ -14929,7 +15291,7 @@ class AddEntityEdit(EntityEdit):
         keep_data: True: the attributes, the label and the attachments carry over (docs/adr/0225 §1).
         label: Its label, whatever `keepData` says.
         layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
-        line_weight: Its own line weight, paper mm, 0 to 100 (`EntityBase.line_weight`).
+        line_weight: Its own line weight, paper mm, 0 to 100 (`EntityBase.line_weight`). Unit: paper-mm.
     """
     TAG_VALUE: ClassVar[str] = "add"
     from_: str
@@ -14995,10 +15357,12 @@ class RemoveEntityEdit(EntityEdit):
 class PointEntityGeometry(EntityGeometry):
     """
     Attributes:
+        p: Unit: length.
         parts: A multi-point object's points past its first, each with its
             elevation (docs/adr/0174). The geometry is the whole object:
             absent, it has one point, so an edit of a multi-point object
             writes every point.
+        z: Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "point"
     p: Vec2
@@ -15027,10 +15391,12 @@ class PointEntityGeometry(EntityGeometry):
 class LineEntityGeometry(EntityGeometry):
     """
     Attributes:
+        a: Unit: length.
+        b: Unit: length.
         ms: The ends' measures (M) as written (docs/adr/0224 §2), as `zs`;
-            absent: each takes one from the objects the edit names.
+            absent: each takes one from the objects the edit names. Unit: measure.
         zs: The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
-            each vertex takes one from the objects the edit names.
+            each vertex takes one from the objects the edit names. Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "line"
     a: Vec2
@@ -15063,16 +15429,18 @@ class PolylineEntityGeometry(EntityGeometry):
     """An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
     one at vertex i bending the edge to vertex i + 1.
     Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
         ms: The vertices' measures (M) as written (docs/adr/0224 §2), as
             `zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex
-            takes one from the objects the edit names.
+            takes one from the objects the edit names. Unit: measure.
         parts: A multi-part polyline's parts past its first, each its vertices,
             arcs and elevations, without holes (docs/adr/0174). The geometry
             is the whole polyline: absent, it has one part, so an edit of a
             multi-part polyline writes every part.
         zs: The vertices' elevations as written (docs/adr/0142): as many as
             the vertices, `null` for one without; all `null`: none. Absent:
-            each vertex takes one from the objects the edit names.
+            each vertex takes one from the objects the edit names. Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "polyline"
     pts: list[Vec2]
@@ -15109,13 +15477,15 @@ class PolylineEntityGeometry(EntityGeometry):
 class PolygonEntityGeometry(EntityGeometry):
     """A closed area: its ring and, when it has any, its holes.
     Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
         parts: A multi-part area's parts past its first, each its ring, arcs,
             holes and elevations (docs/adr/0143). The geometry is the whole
             area: absent, it has one part, so an edit of a multi-part area
             writes every part.
         zs: The vertices' elevations as written (docs/adr/0142): as many as
             the vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:
-            each vertex takes one from the objects the edit names.
+            each vertex takes one from the objects the edit names. Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "polygon"
     pts: list[Vec2]
@@ -15150,6 +15520,11 @@ class PolygonEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class CircleEntityGeometry(EntityGeometry):
+    """
+    Attributes:
+        c: Unit: length.
+        r: Unit: length.
+    """
     TAG_VALUE: ClassVar[str] = "circle"
     c: Vec2
     r: float
@@ -15170,7 +15545,13 @@ class CircleEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class ArcEntityGeometry(EntityGeometry):
-    """Counter-clockwise from `a0` to `a1`."""
+    """Counter-clockwise from `a0` to `a1`.
+    Attributes:
+        c: Unit: length.
+        r: Unit: length.
+        a0: Unit: rad.
+        a1: Unit: rad.
+    """
     TAG_VALUE: ClassVar[str] = "arc"
     c: Vec2
     r: float
@@ -15197,7 +15578,14 @@ class ArcEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class EllipseEntityGeometry(EntityGeometry):
-    """Centre, major axis vector, minor/major ratio, parameters `t0` → `t1`."""
+    """Centre, major axis vector, minor/major ratio, parameters `t0` → `t1`.
+    Attributes:
+        c: Unit: length.
+        major: Unit: length.
+        ratio: Unit: 1.
+        t0: Unit: rad.
+        t1: Unit: rad.
+    """
     TAG_VALUE: ClassVar[str] = "ellipse"
     c: Vec2
     major: Vec2
@@ -15227,6 +15615,10 @@ class EllipseEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class SplineEntityGeometry(EntityGeometry):
+    """
+    Attributes:
+        pts: Unit: length.
+    """
     TAG_VALUE: ClassVar[str] = "spline"
     pts: list[Vec2]
     closed: bool
@@ -15247,7 +15639,11 @@ class SplineEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class XlineEntityGeometry(EntityGeometry):
-    """A construction line through `p` along the unit direction `dir`."""
+    """A construction line through `p` along the unit direction `dir`.
+    Attributes:
+        p: Unit: length.
+        dir: Unit: 1.
+    """
     TAG_VALUE: ClassVar[str] = "xline"
     p: Vec2
     dir: Vec2
@@ -15268,7 +15664,11 @@ class XlineEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class RayEntityGeometry(EntityGeometry):
-    """A ray from `p` along the unit direction `dir`."""
+    """A ray from `p` along the unit direction `dir`.
+    Attributes:
+        p: Unit: length.
+        dir: Unit: 1.
+    """
     TAG_VALUE: ClassVar[str] = "ray"
     p: Vec2
     dir: Vec2
@@ -15291,17 +15691,20 @@ class RayEntityGeometry(EntityGeometry):
 class TextEntityGeometry(EntityGeometry):
     """Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east.
     Attributes:
+        p: Unit: length.
+        height: Unit: length.
+        rotation: Unit: deg.
         align: Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
-        box_width: A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.
+        box_width: A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box. Unit: length.
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
-        line_spacing: Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4.
+        line_spacing: Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4. Unit: 1.
         mask: Its box filled with the drawing area's colour before it is drawn.
         oblique: How far its letters lean, degrees, positive with their tops to the
-            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
+            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
         path: The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight.
         runs: Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
         text_style: The project's text style it follows, by its id; absent: Standart.
-        width_factor: The letters' width times this, the height kept; absent: 1. Over 0, at most 100.
+        width_factor: The letters' width times this, the height kept; absent: 1. Over 0, at most 100. Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "text"
     p: Vec2
@@ -15385,31 +15788,38 @@ class DimensionEntityGeometry(EntityGeometry):
     length's and a jogged one's `c`, a slope's `za` and `zb`) is that ADR's
     table.
     Attributes:
+        a: Unit: length.
+        b: Unit: length.
+        offset: Unit: length.
+        height: Unit: length.
+        angle: Unit: deg.
         arrow: Its arrowheads; absent: oblique ticks.
         arrow_size: The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,
-            `DEFAULT_ARROW` for the others.
+            `DEFAULT_ARROW` for the others. Unit: 1.
+        c: Unit: length.
         decimals: A length's, a coordinate's or a slope's decimals; absent: the
-            project's length decimals (a slope's 2). Angles keep the project's.
+            project's length decimals (a slope's 2). Angles keep the project's. Unit: count.
         dim_line_color: The dimension line's and its arrowheads' colour, `#RRGGBB`; absent:
             the object's (docs/adr/0205 §6).
         dim_line_type: The dimension line's type; absent: continuous.
-        dim_line_weight: The dimension line's weight, paper mm as an object's; absent: a hairline.
+        dim_line_weight: The dimension line's weight, paper mm as an object's; absent: a hairline. Unit: paper-mm.
         dim_style: The project's dimension style it follows, by its id; absent: Standart.
-        ext_beyond: How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.
+        ext_beyond: How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`. Unit: 1.
         ext_color: The extension lines' colour; absent: the object's.
         ext_line_type: The extension lines' type; absent: continuous.
-        ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.
-        ext_weight: The extension lines' weight, paper mm; absent: a hairline.
+        ext_offset: The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`. Unit: 1.
+        ext_weight: The extension lines' weight, paper mm; absent: a hairline. Unit: paper-mm.
         font: The value's typeface; absent: the project's.
         mask: The value over the drawing's background (docs/adr/0147).
         prefix: Written before the value (and its kind's own prefix).
         refs: The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         suffix: Written after the value.
         text_color: The value's colour; absent: the object's.
-        text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.
+        text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`. Unit: 1.
         text_place: Where the value stands; absent: over the line.
         unit: The unit lengths and coordinates are written in; absent: the project's.
-        za: A slope's two elevations, metres (docs/adr/0147).
+        za: A slope's two elevations, metres (docs/adr/0147). Unit: elevation.
+        zb: Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "dimension"
     a: Vec2
@@ -15547,7 +15957,9 @@ class DimensionEntityGeometry(EntityGeometry):
 class HatchEntityGeometry(EntityGeometry):
     """A hatched area: its ring, its holes when it has any, and its pattern.
     Attributes:
+        ring: Unit: length.
         assoc: The objects its region follows (docs/adr/0186 §6).
+        holes: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "hatch"
     ring: list[Vec2]
@@ -15581,6 +15993,10 @@ class InsertEntityGeometry(EntityGeometry):
     `p`, its objects are mirrored in the definition's x axis when
     `mirror`, scaled by `scale` (above 0) and turned by `rotation`
     (radians, counter-clockwise) about `p`. The block is the drawing's.
+    Attributes:
+        p: Unit: length.
+        scale: Unit: 1.
+        rotation: Unit: rad.
     """
     TAG_VALUE: ClassVar[str] = "insert"
     block: str
@@ -15618,10 +16034,12 @@ class LeaderEntityGeometry(EntityGeometry):
     and the landing, `rotation` (degrees counter-clockwise from east)
     turns the note and the landing.
     Attributes:
-        pts: At least two: the arrow's tip first.
+        pts: At least two: the arrow's tip first. Unit: length.
+        height: Unit: length.
+        rotation: Unit: deg.
         arrow: The arrowhead; absent: a filled arrow.
         arrow_size: The arrowhead's length, times the note's height (docs/adr/0205
-            §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
+            §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`. Unit: 1.
         mask: The note's box filled with the drawing area's colour before it is drawn.
         text: The note, one line; absent: the arrow alone. Never empty.
     """
@@ -15670,14 +16088,19 @@ class TableEntityGeometry(EntityGeometry):
     text height; `rows` and `columns` its rows' heights and columns'
     widths (metres, over 0); `cells` the words, row by row.
     Attributes:
+        p: Unit: length.
+        rotation: Unit: deg.
+        height: Unit: length.
+        rows: Unit: length.
+        columns: Unit: length.
         aligns: Each column's alignment; absent: all left.
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
-        frame: Its frame's width, metres (Kalın çerçeve); absent: a line.
+        frame: Its frame's width, metres (Kalın çerçeve); absent: a line. Unit: length.
         grid: Which lines are drawn; absent: all.
         header: The first row is its heading.
         merges: Merged ranges, their words in their top left cells.
         oblique: How far its letters lean, degrees, positive with their tops to the
-            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
+            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
         source: Where its rows came from; absent: written by hand.
         text_style: The project's text style it follows, by its id; absent: Standart.
     """
@@ -15856,6 +16279,7 @@ class DeleteFeatureChange(FeatureChange):
 class PointHatchRegion(HatchRegion):
     """The region around `at`.
     Attributes:
+        at: Unit: length.
         associative: İlişkili (`object` only): the hatch follows its objects; absent: true.
         boundaries: `lines`: whose line work closes the region; absent: every shown object.
         boundary_layer: `lines`: only this layer's line work counts (Sınır katmanı).
@@ -15941,7 +16365,10 @@ class ObjectsHatchRegion(HatchRegion):
 
 @dataclass(kw_only=True, slots=True)
 class AtMeasuredPoint(MeasuredPoint):
-    """Coordinates: the point follows nothing."""
+    """Coordinates: the point follows nothing.
+    Attributes:
+        at: Unit: length.
+    """
     TAG_VALUE: ClassVar[str] = "at"
     at: Vec2
 
@@ -16046,6 +16473,9 @@ class DistanceOffsetBy(OffsetBy):
     `side`: the side of a line or a path is judged at its edge nearest
     the point; a circle, an arc or an ellipse grows when the point is
     outside it and shrinks when inside.
+    Attributes:
+        distance: Unit: length.
+        side: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "distance"
     distance: float
@@ -16069,6 +16499,8 @@ class DistanceOffsetBy(OffsetBy):
 class ThroughOffsetBy(OffsetBy):
     """Noktadan geç: each copy passes through `point`, its distance that of
     the point from its object's nearest edge (the side is the point's).
+    Attributes:
+        point: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "through"
     point: Vec2
@@ -16087,7 +16519,10 @@ class ThroughOffsetBy(OffsetBy):
 
 @dataclass(kw_only=True, slots=True)
 class NodeSubPlace(SubPlace):
-    """A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174)."""
+    """A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
+    Attributes:
+        part: Unit: index.
+    """
     TAG_VALUE: ClassVar[str] = "node"
     part: int
 
@@ -16149,6 +16584,10 @@ class CenterSubPlace(SubPlace):
 class VertexSubPlace(SubPlace):
     """A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its
     `h`th hole; the vertex's index in the ring.
+    Attributes:
+        part: Unit: index.
+        ring: Unit: index.
+        index: Unit: index.
     """
     TAG_VALUE: ClassVar[str] = "vertex"
     part: int
@@ -16173,7 +16612,12 @@ class VertexSubPlace(SubPlace):
 
 @dataclass(kw_only=True, slots=True)
 class MidSubPlace(SubPlace):
-    """The middle of a line (all zero) or of a path's edge from vertex `index` to the next."""
+    """The middle of a line (all zero) or of a path's edge from vertex `index` to the next.
+    Attributes:
+        part: Unit: index.
+        ring: Unit: index.
+        index: Unit: index.
+    """
     TAG_VALUE: ClassVar[str] = "mid"
     part: int
     ring: int
@@ -16273,7 +16717,11 @@ class FileTableSource(TableSource):
 
 @dataclass(kw_only=True, slots=True)
 class MoveTransform(Transform):
-    """Move (taşı) by a displacement: `dx` east, `dy` north."""
+    """Move (taşı) by a displacement: `dx` east, `dy` north.
+    Attributes:
+        dx: Unit: length.
+        dy: Unit: length.
+    """
     TAG_VALUE: ClassVar[str] = "move"
     dx: float
     dy: float
@@ -16294,7 +16742,11 @@ class MoveTransform(Transform):
 
 @dataclass(kw_only=True, slots=True)
 class RotateTransform(Transform):
-    """Rotate (döndür) about `center` by `angle` radians, counter-clockwise."""
+    """Rotate (döndür) about `center` by `angle` radians, counter-clockwise.
+    Attributes:
+        center: Unit: length.
+        angle: Unit: rad.
+    """
     TAG_VALUE: ClassVar[str] = "rotate"
     center: Vec2
     angle: float
@@ -16315,7 +16767,11 @@ class RotateTransform(Transform):
 
 @dataclass(kw_only=True, slots=True)
 class ScaleTransform(Transform):
-    """Scale (ölçekle) about `center` by `factor`, above zero."""
+    """Scale (ölçekle) about `center` by `factor`, above zero.
+    Attributes:
+        center: Unit: length.
+        factor: Unit: 1.
+    """
     TAG_VALUE: ClassVar[str] = "scale"
     center: Vec2
     factor: float
@@ -16336,7 +16792,11 @@ class ScaleTransform(Transform):
 
 @dataclass(kw_only=True, slots=True)
 class MirrorTransform(Transform):
-    """Mirror (aynala) across the line through `a` and `b`, two different points."""
+    """Mirror (aynala) across the line through `a` and `b`, two different points.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
     TAG_VALUE: ClassVar[str] = "mirror"
     a: Vec2
     b: Vec2
@@ -16364,6 +16824,11 @@ class AlignTransform(Transform):
     `scale` they are scaled about it so that the one length becomes the
     other. The second pair's points must lie apart from the first's;
     `scale` means nothing without a second pair.
+    Attributes:
+        source: Unit: length.
+        target: Unit: length.
+        source2: Unit: length.
+        target2: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "align"
     source: Vec2
@@ -16401,6 +16866,11 @@ class SimilarityTransform(Transform):
     the source centre, `to` the target's: x′ = to.x + a·x̄ − b·ȳ,
     y′ = to.y + b·x̄ + a·ȳ, x̄ = x − from.x, ȳ = y − from.y. Every kind
     moves as the modify tools move it.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        a: Unit: 1.
+        b: Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "similarity"
     from_: Vec2
@@ -16434,6 +16904,10 @@ class AffineTransform(Transform):
     object may change its kind), a path's arc segments straight vertices
     within 0.1 mm; texts, notes, blocks, dimensions and hatch patterns
     keep their shape at their anchor (docs/adr/0156 §4, §5).
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        m: Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "affine"
     from_: Vec2
@@ -16463,6 +16937,10 @@ class ProjectiveTransform(Transform):
     a2·ȳ + a3)/w, y′ = to.y + (b1·x̄ + b2·ȳ + b3)/w. Lines stay straight;
     curves become straight vertices within 0.1 mm; a point where w is
     1e-9 or less lies beyond the horizon.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        h: Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "projective"
     from_: Vec2
@@ -16522,6 +17000,8 @@ class ArrangeTransform(Transform):
     at equal gaps between them, `at` not given. A box is the object's
     extent as the drawing measures it (an insert with its block's
     pieces, a text in the drawing's typeface).
+    Attributes:
+        at: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "arrange"
     mode: ArrangeMode | ArrangeModeName
@@ -16563,6 +17043,9 @@ class AllTrimBoundaries(TrimBoundaries):
 class AreaTrimBoundaries(TrimBoundaries):
     """Every shown object whose box meets the rectangle (the tools give their
     view: AutoCAD's quick mode, “every visible edge”).
+    Attributes:
+        min: Unit: length.
+        max: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "area"
     min: Vec2
@@ -17185,6 +17668,10 @@ __all__ = [
     "Transform",
     "TrimBoundaries",
     "TrimPick",
+    "UnitGeometry",
+    "UnitGeometryName",
+    "UnitsChange",
+    "UnitsChanged",
     "UpdateBlockChange",
     "UpdateEntityEdit",
     "UpdateFeatureChange",

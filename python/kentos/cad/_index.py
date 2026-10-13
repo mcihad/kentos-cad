@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, sheets, styles
+from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, sheets, styles, units
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -55,6 +55,7 @@ COMMANDS: dict[str, Any] = {
     "cad.settings.set": settings.set,
     "cad.sheets.edit": sheets.edit,
     "cad.styles.edit": styles.edit,
+    "cad.units.change": units.change,
     "file.export.dxf": file.export.dxf,
     "file.export.pdf": file.export.pdf,
     "project.access.revoke": project.access.revoke,
@@ -81,4 +82,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "arc", "blocks", "changeset", "circle", "dimensions", "entities", "file", "labels", "layers", "line", "network", "point", "polygon", "polyline", "project", "scenarios", "settings", "sheets", "styles",)
+NAMESPACES = ("addresses", "arc", "blocks", "changeset", "circle", "dimensions", "entities", "file", "labels", "layers", "line", "network", "point", "polygon", "polyline", "project", "scenarios", "settings", "sheets", "styles", "units",)

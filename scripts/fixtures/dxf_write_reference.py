@@ -220,7 +220,7 @@ def group(e: list[tuple[int, str]], code: int) -> str | None:
 # A local project's unit: how many make a metre, and the $INSUNITS code naming it (docs/adr/0165 §2).
 UNITS = {"mm": (1000.0, "4"), "cm": (100.0, "5"), "m": (1.0, "6")}
 POINT_KEYS = {"p", "a", "b", "c", "base", "major"}
-LENGTH_KEYS = {"r", "height", "offset", "z", "za", "zb"}
+LENGTH_KEYS = {"r", "height", "offset", "z", "za", "zb", "boxWidth", "frame"}
 
 
 def scaled(o, k: float):
@@ -252,7 +252,11 @@ def scaled(o, k: float):
                 out[key]["scale"] = v["scale"] * k
         elif key == "assoc":
             out[key] = {**v, "seed": xy(v["seed"])}
-        elif key in ("entities", "blocks", "attributes", "parts"):
+        elif key in ("rows", "columns") and isinstance(v, list) and all(isinstance(x, (int, float)) for x in v):
+            # A table's rows' heights and columns' widths (docs/adr/0184 §1).
+            out[key] = [x * k for x in v]
+        elif key in ("entities", "blocks", "attributes", "parts", "path"):
+            # A curved text's curve is in the text's own frame, metres (docs/adr/0196 §1): its points scale.
             out[key] = scaled(v, k)
         else:
             out[key] = v

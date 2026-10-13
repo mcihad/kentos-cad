@@ -189,6 +189,7 @@ pub enum LabelsMode {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelHalo {
     /// CSS px; 0 none.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub width: f64,
     /// Hex or a theme name; absent, the drawing area's colour.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -215,6 +216,7 @@ pub struct LabelBackground {
     /// CSS px round the letters; absent, 2.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub padding: Option<f64>,
 }
 
@@ -226,8 +228,10 @@ pub struct LabelBackground {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelShadow {
     /// CSS px right.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub dx: f64,
     /// CSS px up.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub dy: f64,
     /// Absent, black.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -236,6 +240,7 @@ pub struct LabelShadow {
     /// 0 to 1; absent, 0.5.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
 }
 
@@ -254,10 +259,12 @@ pub struct LabelCallout {
     /// CSS px; absent, 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub width: Option<f64>,
     /// A shorter one is not drawn, CSS px; absent, 6.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub min_length: Option<f64>,
 }
 
@@ -270,6 +277,7 @@ pub struct LabelCallout {
 pub struct LabelStack {
     pub mode: StackMode,
     /// The most letters a line holds (a longer word stays whole).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub chars: u32,
     /// The letters a line may end at; absent, the space.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -327,6 +335,7 @@ pub struct LabelClass {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelObstacle {
     /// 1 to 10: a label of a lower priority cannot cover them; another may, at a cost.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub weight: u8,
     /// An area's inside (absent) or its outline.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -366,10 +375,12 @@ pub struct LabelPin {
     /// Where the label's middle is from the object's anchor, metres; absent, the engine places it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Option<crate::Vec2>,
     /// Degrees counter-clockwise from east; only with `at`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub rotation: Option<f64>,
     /// Not drawn; written only as `true`.
     #[serde(default, skip_serializing_if = "Option::is_none")]

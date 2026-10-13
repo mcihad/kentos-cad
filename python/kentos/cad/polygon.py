@@ -69,11 +69,11 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             doc: The drawing it works on.
             layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
             pts: Corners of the outer ring in order: x east (Y), y north (X), in the
-                project's units (m), float64. At least 3; the first is not repeated.
+                project's units (m), float64. At least 3; the first is not repeated. Unit: length.
             attrs: GIS attributes, text in v1. Absent: none.
             bulges: One bulge per edge, the closing edge (last corner → first) last:
                 tan(θ/4) of the edge's included angle, positive counter-clockwise, 0
-                straight. Absent: every edge is straight.
+                straight. Absent: every edge is straight. Unit: 1.
             color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
             expected_revision: The document revision the input was prepared against, as decimal text
                 (from a plan, or the document). When given and the document is no
@@ -82,7 +82,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             label: The text shown beside it (`EntityBase.label`). Absent: none.
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
-                object from the current weight. Absent: the layer's (katmana göre).
+                object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
             symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the

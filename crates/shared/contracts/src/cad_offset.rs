@@ -38,10 +38,18 @@ pub enum OffsetBy {
     /// `side`: the side of a line or a path is judged at its edge nearest
     /// the point; a circle, an arc or an ellipse grows when the point is
     /// outside it and shrinks when inside.
-    Distance { distance: f64, side: Vec2 },
+    Distance {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        distance: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        side: Vec2,
+    },
     /// Noktadan geç: each copy passes through `point`, its distance that of
     /// the point from its object's nearest edge (the side is the point's).
-    Through { point: Vec2 },
+    Through {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        point: Vec2,
+    },
 }
 
 /// Input of `cad.entities.offset` v1: parallel copies of the objects named
@@ -121,6 +129,7 @@ pub struct EntitiesOffsetMade {
     pub removed: Vec<String>,
     /// Each source's distance in metres, in the input's order (a repeated id
     /// once): the one given, or with `through` the point's from the object.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distances: Vec<f64>,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision
@@ -146,6 +155,7 @@ pub struct EntitiesOffsetPlan {
     /// The sources execute would delete (`deleteSource`).
     pub removed: Vec<String>,
     /// Each source's distance in metres, as in the output.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distances: Vec<f64>,
     /// The document revision the plan was made against. Give it as
     /// `expectedRevision` to write exactly this plan, or nothing.

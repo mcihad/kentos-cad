@@ -127,7 +127,7 @@ class _LayersCompose(LocalCommand[LayersCompose, LayersComposed, LayersComposePl
             blend: Absent, normal.
             expected_revision: The document revision the input was prepared against, as decimal text.
             mask: The mask its labels and markers cut into other layers; absent, none.
-            opacity: 0–1; absent, 1 (opaque).
+            opacity: 0–1; absent, 1 (opaque). Unit: 1.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -312,12 +312,12 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             color:
             expected_revision: The document revision the input was prepared against, as decimal text.
             fields: The layer's fields (docs/adr/0199 §1).
-            index:
+            index: Unit: index.
             kind: Add's kind of node; absent: a layer.
             layer: The node it acts on; merge's target.
             layers: Merge's sources; purge's layers and groups.
             line_type:
-            line_weight: Plot line weight, mm.
+            line_weight: Plot line weight, mm. Unit: paper-mm.
             locked:
             name: Add's and duplicate's name, trimmed.
             parent:
@@ -1128,7 +1128,7 @@ class _LayersService(LocalCommand[LayersService, LayersServiced, LayersServicePl
             expected_revision: The document revision the input was prepared against, as decimal text.
             feed:
             fields: `addFeed`: the layer's fields (docs/adr/0199 §1).
-            index:
+            index: Unit: index.
             layer: `update`, `remove`: the layer's id.
             name: `add`, `addFeed`: the new layer's name; `update`: a new name.
             parent:

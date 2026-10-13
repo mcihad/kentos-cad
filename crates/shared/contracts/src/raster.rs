@@ -209,6 +209,7 @@ pub enum RasterResampling {
 pub struct RasterStyle {
     pub render: RasterRender,
     /// The bands drawn, from 1: three or four for `rgb`, one otherwise.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub bands: Vec<u32>,
     #[serde(default, skip_serializing_if = "is_default")]
     #[cfg_attr(feature = "ts", ts(as = "Option<RasterStretch>", optional))]
@@ -216,9 +217,11 @@ pub struct RasterStyle {
     /// `manual`'s least and most value.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub max: Option<f64>,
     /// One of `RASTER_RAMPS`; absent: Gri.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -231,18 +234,22 @@ pub struct RasterStyle {
     /// Gölgeli kabartma's light: degrees from north, clockwise (0–360).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "azimuth-deg")))]
     pub azimuth: Option<f64>,
     /// Its height above the horizon, degrees (0–90).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub altitude: Option<f64>,
     /// Heights multiplied by it (over 0).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub z_factor: Option<f64>,
     /// The value shown as nothing, in place of the file's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub nodata: Option<f64>,
     #[serde(default, skip_serializing_if = "is_default")]
     #[cfg_attr(feature = "ts", ts(as = "Option<RasterResampling>", optional))]
@@ -356,7 +363,9 @@ impl RasterStyle {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DatasetDim {
     pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub values: Vec<f64>,
     /// The values are a CF time axis's moments.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -514,10 +523,14 @@ pub struct RasterFields {
     /// `[x₀, a, b, y₀, c, d]`: column i and row j (pixel corners, 0, 0 the
     /// upper left) lie at x = x₀ + a·i + b·j, y = y₀ + c·i + d·j (GDAL's
     /// geotransform order). Invertible.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub affine: [f64; 6],
     /// Its size in pixels.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub width: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub height: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub bands: u32,
     pub sample: RasterSample,
     /// The project library's asset its file is (embedded); exactly one of
@@ -534,11 +547,13 @@ pub struct RasterFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub url: Option<String>,
     /// The file's coordinate system; 0: the file named none and the user took the project's.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: u32,
     pub style: RasterStyle,
     /// 0.1 to 1; absent: opaque.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
     /// A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
     #[serde(default, skip_serializing_if = "Option::is_none")]

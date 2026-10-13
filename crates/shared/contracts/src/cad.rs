@@ -40,12 +40,14 @@ pub struct PolygonCreate {
     pub layer_id: String,
     /// Corners of the outer ring in order: x east (Y), y north (X), in the
     /// project's units (m), float64. At least 3; the first is not repeated.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     /// One bulge per edge, the closing edge (last corner → first) last:
     /// tan(θ/4) of the edge's included angle, positive counter-clockwise, 0
     /// straight. Absent: every edge is straight.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     /// Holes: closed rings of at least 3 corners, each with one bulge per edge when it has bulges.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -61,6 +63,7 @@ pub struct PolygonCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -102,6 +105,7 @@ pub struct PolygonCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
     /// Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: u32,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision
@@ -151,8 +155,10 @@ pub struct LineCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
     /// Where it starts: x east (Y), y north (X), in the project's units (m), float64.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub a: Vec2,
     /// Where it ends.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub b: Vec2,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -164,6 +170,7 @@ pub struct LineCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -199,6 +206,7 @@ pub struct LineCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
     /// Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: u32,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision
@@ -248,6 +256,7 @@ pub struct PolylineCreate {
     pub layer_id: String,
     /// Its points in order: x east (Y), y north (X), in the project's units
     /// (m), float64. At least 2.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub pts: Vec<Vec2>,
     /// One bulge per edge (`pts[i]` → `pts[i + 1]`), so one fewer than the
     /// points: tan(θ/4) of the edge's included angle, positive
@@ -256,6 +265,7 @@ pub struct PolylineCreate {
     /// stored with a 0 after these, for the closing edge it does not have.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -267,6 +277,7 @@ pub struct PolylineCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -302,6 +313,7 @@ pub struct PolylineCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
     /// Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: u32,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision

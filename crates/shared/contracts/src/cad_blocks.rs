@@ -58,6 +58,7 @@ pub struct BlocksDefine {
     /// The block's name, unique in the drawing (Turkish case folded).
     pub name: String,
     /// The point an insert places, in the drawing's coordinates.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub base: Vec2,
     /// The objects it is made of, at least one, by persistent id.
     pub uids: Vec<String>,
@@ -98,6 +99,7 @@ pub struct BlockDefined {
     pub insert: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: Option<u32>,
     /// With `replace`: the objects deleted, in the input's order.
     pub removed: Vec<String>,
@@ -203,6 +205,7 @@ pub struct BlocksEdit {
     /// `rebase`: the new base point; `redefine`: the base point (absent: kept).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub base: Option<Vec2>,
     /// `redefine`: true, the objects are replaced by an insert of the block.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -242,6 +245,7 @@ pub struct BlocksEdited {
     pub insert: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: Option<u32>,
     /// `redefine` with `replace`: the objects deleted, in the input's order.
     pub deleted: Vec<String>,

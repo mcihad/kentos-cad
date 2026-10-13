@@ -54,10 +54,12 @@ pub struct EntitiesBreak {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub uid: String,
     /// The first break point, on or near the object.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub first: Vec2,
     /// The second; absent: the object splits at `first`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub second: Option<Vec2>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
@@ -101,6 +103,7 @@ pub struct EntitiesJoin {
     /// How far apart two ends may be and still meet, metres; absent: 0.001.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
     /// Zincir: the objects the seed's chain walks over; absent: the objects of `uids`.
     #[serde(default, skip_serializing_if = "Option::is_none")]

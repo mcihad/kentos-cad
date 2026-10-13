@@ -34,6 +34,7 @@ pub enum VariableKind {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
 #[serde(untagged)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum VariableValue {

@@ -39,7 +39,10 @@ mod session;
 
 pub use dispatch::{Op, call_envelope, commands};
 pub use error::HeadlessError;
-pub use query::{Measure, Page, Units, units};
+pub use query::{
+    Basis, Conventions, MEASURE_MAX, Measure, MeasureItem, Measures, Method, Page, Totals, Units,
+    conventions, units,
+};
 pub use session::{NewDrawing, Session, new_drawing};
 
 /// The command catalog as JSON: every product command, its version, title,

@@ -175,6 +175,9 @@ pub struct State {
     scale_typed: String,
     /// Değişkenler' rows as typed (docs/adr/0214 §4; variables.rs).
     variables: Vec<variable_form::Row>,
+    /// Kaydet's question when a local project's unit changes with a drawing
+    /// in it (docs/adr/0256 §2; unit_change.rs), over this window.
+    pub(super) unit_question: Option<super::unit_change::Question>,
 }
 
 #[derive(Debug, Clone)]
@@ -231,6 +234,9 @@ pub enum Event {
     /// Uygulama ayarları over this window, which comes back when it closes.
     OpenApp,
     Save,
+    /// The unit question's answer (docs/adr/0256 §2): the sizes or the
+    /// numbers kept; none: Vazgeç, back to the window.
+    UnitAnswer(Option<kentos_contracts::UnitGeometry>),
 }
 
 fn event(e: Event) -> Message {
@@ -259,6 +265,7 @@ impl State {
             reduce: doc.settings().reduces_to_grid(),
             scale_typed: kentos_processing::text::js_number(doc.settings().plot_scale),
             variables: variable_form::rows(&doc.settings().variables),
+            unit_question: None,
         }
     }
 
@@ -292,14 +299,25 @@ impl State {
 
     /// Esc: the window over this one, or the question in a row, goes first.
     pub(super) fn dismiss_inner(&mut self) -> bool {
-        self.custom.take().is_some() || self.removing.take().is_some()
+        self.unit_question.take().is_some()
+            || self.custom.take().is_some()
+            || self.removing.take().is_some()
     }
 }
 
 impl App {
     pub(super) fn project_settings_event(&mut self, e: Event) -> Task<Message> {
         if let Event::Save = e {
-            self.save_project_settings();
+            self.save_project_settings(None);
+            return Task::none();
+        }
+        if let Event::UnitAnswer(answer) = e {
+            if let Some(Window::Settings(s)) = &mut self.project {
+                s.unit_question = None;
+            }
+            if answer.is_some() {
+                self.save_project_settings(answer);
+            }
             return Task::none();
         }
         if let Event::OpenApp = e {
@@ -442,7 +460,7 @@ impl App {
                 s.reduce = d.reduces_to_grid();
                 s.variables = variable_form::rows(&d.variables);
             }
-            Event::OpenApp | Event::Save => {}
+            Event::OpenApp | Event::Save | Event::UnitAnswer(_) => {}
         }
         // The project's own system, or none, is no second system (docs/adr/0167 §1).
         d.second_srid = d.second();
@@ -513,8 +531,75 @@ impl App {
         Task::none()
     }
 
-    /// Kaydet: the draft goes into the drawing (the web's `onSave`).
-    fn save_project_settings(&mut self) {
+    /// The draft's unit change, when a local project stays local and its unit
+    /// changes (docs/adr/0256 §2): with a drawing in it, asked about first
+    /// (`unit` none: the question opens, Kaydet waits); then written by
+    /// `cad.units.change` as one undo step, the sizes kept on an empty
+    /// drawing. Whether Kaydet goes on: a refusal is said and the window stays.
+    fn change_unit(&mut self, unit: Option<kentos_contracts::UnitGeometry>) -> bool {
+        use kentos_contracts::{CommandResult, UnitGeometry, UnitsChange};
+        let (Some(Window::Settings(s)), Some(doc)) = (&mut self.project, &mut self.document) else {
+            return true;
+        };
+        let (from, to) = (
+            s.initial.drawing_unit.unwrap_or(DrawingUnit::M),
+            s.settings.drawing_unit.unwrap_or(DrawingUnit::M),
+        );
+        if from == to || s.initial.has_system() || s.settings.has_system() {
+            return true;
+        }
+        let model = &doc.model;
+        let held = !model.is_empty() || !model.blocks().is_empty();
+        let Some(geometry) = unit.or((!held).then_some(UnitGeometry::Keep)) else {
+            s.unit_question = Some(super::unit_change::Question::of(model, from, to));
+            return false;
+        };
+        let input = UnitsChange {
+            from,
+            to,
+            geometry,
+            expected_revision: None,
+        };
+        let result = kentos_native_application::units_change::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        match result {
+            CommandResult::Completed { output, warnings } => {
+                let said = match output.geometry {
+                    UnitGeometry::Keep => {
+                        format!("Çizim birimi {} oldu; boylar korundu.", output.to.mark())
+                    }
+                    UnitGeometry::Scale => format!(
+                        "Çizim birimi {} oldu; sayılar korundu, çizim ölçeklendi ({} nesne, {} blok tanımı).",
+                        output.to.mark(),
+                        output.objects,
+                        output.blocks
+                    ),
+                };
+                self.say(Level::Success, said);
+                for w in warnings {
+                    self.warn(w.message);
+                }
+                true
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                self.warn(error.message);
+                false
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => false,
+        }
+    }
+
+    /// Kaydet: the draft goes into the drawing (the web's `onSave`). A local
+    /// project's unit changing with a drawing in it is asked about first
+    /// (`unit`: the answer, docs/adr/0256 §2) and written by `cad.units.change`.
+    fn save_project_settings(&mut self, unit: Option<kentos_contracts::UnitGeometry>) {
+        if !self.change_unit(unit) {
+            return;
+        }
         let (Some(Window::Settings(s)), Some(doc)) = (&self.project, &mut self.document) else {
             return;
         };
@@ -600,6 +685,10 @@ impl App {
         // Özel koordinat sistemi over this window, which waits under it.
         if let Some(editor) = &s.custom {
             return custom_crs::view(editor, |e| event(Event::Custom(e)));
+        }
+        // The unit question over it too (docs/adr/0256 §2).
+        if let Some(q) = &s.unit_question {
+            return super::unit_change::view(q, |a| event(Event::UnitAnswer(a)));
         }
         let nav = Section::ALL
             .iter()

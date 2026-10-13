@@ -129,6 +129,7 @@ pub struct NewObject {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -158,6 +159,7 @@ pub struct NewObject {
     /// finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub label_scale: Option<f64>,
 }
 
@@ -242,6 +244,7 @@ pub struct EntitiesCreated {
     pub created: Vec<String>,
     /// Their slots in the open document (`Entity.id`); they mean nothing
     /// once the document is closed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub ids: Vec<u32>,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision

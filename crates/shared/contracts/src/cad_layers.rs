@@ -85,6 +85,7 @@ pub struct LayersService {
     pub parent: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -245,8 +246,10 @@ pub struct LayersFiltered {
     /// Whether the filter differed (an undo step was written).
     pub changed: bool,
     /// The layer's objects that pass the filter (all of them without one).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub passed: u32,
     /// The layer's objects.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub total: u32,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -264,7 +267,9 @@ pub struct LayersFilterPlan {
     pub node: LayerNode,
     pub changed: bool,
     /// The layer's objects that would pass the filter, and all of them.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub passed: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub total: u32,
     /// The document revision the plan was made against.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -369,6 +374,7 @@ pub struct LayersCompose {
     /// 0–1; absent, 1 (opaque).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
     /// Absent, normal.
     #[serde(default, skip_serializing_if = "Option::is_none")]

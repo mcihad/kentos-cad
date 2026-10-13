@@ -198,9 +198,11 @@ pub enum EditOperation {
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum EntityGeometry {
     Point {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         z: Option<f64>,
         /// A multi-point object's points past its first, each with its
         /// elevation (docs/adr/0174). The geometry is the whole object:
@@ -211,37 +213,45 @@ pub enum EntityGeometry {
         parts: Option<Vec<PointPart>>,
     },
     Line {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         a: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         b: Vec2,
         /// The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
         /// each vertex takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zs: Option<Vec<Option<f64>>>,
         /// The ends' measures (M) as written (docs/adr/0224 §2), as `zs`;
         /// absent: each takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
         ms: Option<Vec<Option<f64>>>,
     },
     /// An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
     /// one at vertex i bending the edge to vertex i + 1.
     Polyline {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         bulges: Option<Vec<f64>>,
         /// The vertices' elevations as written (docs/adr/0142): as many as
         /// the vertices, `null` for one without; all `null`: none. Absent:
         /// each vertex takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zs: Option<Vec<Option<f64>>>,
         /// The vertices' measures (M) as written (docs/adr/0224 §2), as
         /// `zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex
         /// takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
         ms: Option<Vec<Option<f64>>>,
         /// A multi-part polyline's parts past its first, each its vertices,
         /// arcs and elevations, without holes (docs/adr/0174). The geometry
@@ -253,9 +263,11 @@ pub enum EntityGeometry {
     },
     /// A closed area: its ring and, when it has any, its holes.
     Polygon {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         bulges: Option<Vec<f64>>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
@@ -265,6 +277,7 @@ pub enum EntityGeometry {
         /// each vertex takes one from the objects the edit names.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zs: Option<Vec<Option<f64>>>,
         /// A multi-part area's parts past its first, each its ring, arcs,
         /// holes and elevations (docs/adr/0143). The geometry is the whole
@@ -275,43 +288,62 @@ pub enum EntityGeometry {
         parts: Option<Vec<AreaPart>>,
     },
     Circle {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         c: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         r: f64,
     },
     /// Counter-clockwise from `a0` to `a1`.
     Arc {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         c: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         r: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         a0: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         a1: f64,
     },
     /// Centre, major axis vector, minor/major ratio, parameters `t0` → `t1`.
     Ellipse {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         c: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         major: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         ratio: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         t0: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         t1: f64,
     },
     Spline {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
         closed: bool,
     },
     /// A construction line through `p` along the unit direction `dir`.
     Xline {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         dir: Vec2,
     },
     /// A ray from `p` along the unit direction `dir`.
     Ray {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         dir: Vec2,
     },
     /// Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east.
     Text {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Vec2,
         text: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         height: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         rotation: f64,
         /// Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -325,6 +357,7 @@ pub enum EntityGeometry {
         )]
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         width_factor: Option<f64>,
         /// Its box filled with the drawing area's colour before it is drawn.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -333,6 +366,7 @@ pub enum EntityGeometry {
         /// A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.
         #[serde(default, rename = "boxWidth", skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         box_width: Option<f64>,
         /// Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4.
         #[serde(
@@ -342,6 +376,7 @@ pub enum EntityGeometry {
         )]
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 0.25, max = 4.0)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         line_spacing: Option<f64>,
         /// Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -364,9 +399,13 @@ pub enum EntityGeometry {
     /// length's and a jogged one's `c`, a slope's `za` and `zb`) is that ADR's
     /// table.
     Dimension {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         a: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         b: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         offset: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         height: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
@@ -376,9 +415,11 @@ pub enum EntityGeometry {
         style: Option<DimensionStyle>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         angle: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         c: Option<Vec2>,
         /// The value over the drawing's background (docs/adr/0147).
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -387,9 +428,11 @@ pub enum EntityGeometry {
         /// A slope's two elevations, metres (docs/adr/0147).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         za: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zb: Option<f64>,
         /// The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -402,9 +445,11 @@ pub enum EntityGeometry {
     },
     /// A hatched area: its ring, its holes when it has any, and its pattern.
     Hatch {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         ring: Vec<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         holes: Option<Vec<Vec<Vec2>>>,
         pattern: HatchPattern,
         /// The objects its region follows (docs/adr/0186 §6).
@@ -418,8 +463,11 @@ pub enum EntityGeometry {
     /// (radians, counter-clockwise) about `p`. The block is the drawing's.
     Insert {
         block: BlockId,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         scale: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
         rotation: f64,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
@@ -432,12 +480,15 @@ pub enum EntityGeometry {
     /// turns the note and the landing.
     Leader {
         /// At least two: the arrow's tip first.
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
         /// The note, one line; absent: the arrow alone. Never empty.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         text: Option<String>,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         height: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         rotation: f64,
         /// The arrowhead; absent: a filled arrow.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -447,6 +498,7 @@ pub enum EntityGeometry {
         /// §7); absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`.
         #[serde(default, rename = "arrowSize", skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         arrow_size: Option<f64>,
         /// The note's box filled with the drawing area's colour before it is drawn.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -459,10 +511,15 @@ pub enum EntityGeometry {
     /// text height; `rows` and `columns` its rows' heights and columns'
     /// widths (metres, over 0); `cells` the words, row by row.
     Table {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         p: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         rotation: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         height: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         rows: Vec<f64>,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         columns: Vec<f64>,
         cells: Vec<Vec<String>>,
         /// Merged ranges, their words in their top left cells.
@@ -484,6 +541,7 @@ pub enum EntityGeometry {
         /// Its frame's width, metres (Kalın çerçeve); absent: a line.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         frame: Option<f64>,
         /// Its cells' style and face (docs/adr/0183 §2).
         #[serde(flatten)]
@@ -588,6 +646,7 @@ pub enum EntityEdit {
         )]
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
         line_weight: Option<f64>,
         /// Its attributes, whatever `keepData` says.
         #[serde(default, skip_serializing_if = "Option::is_none")]

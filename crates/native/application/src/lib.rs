@@ -103,6 +103,7 @@ pub mod styles_edit;
 pub mod topology_follow;
 pub mod transform;
 pub mod trim;
+pub mod units_change;
 
 pub use context::ExecutionContext;
 pub use kentos_contracts::{CommandError, CommandResult, CommandWarning};
@@ -294,6 +295,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_SETTINGS_SET,
         kentos_contracts::CAD_SETTINGS_SET_VERSION,
+    ),
+    // A local project's unit, keeping the sizes or the numbers ([`units_change`], docs/adr/0256 §1).
+    (
+        kentos_contracts::CAD_UNITS_CHANGE,
+        kentos_contracts::CAD_UNITS_CHANGE_VERSION,
     ),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (

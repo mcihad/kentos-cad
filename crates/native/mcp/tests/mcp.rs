@@ -1203,3 +1203,77 @@ fn a_model_writes_by_the_protocol_with_requests_stamps_jobs_and_a_journal() {
             .is_some_and(|n| n >= 3)
     );
 }
+
+/// docs/adr/0256: an agent changes a drawing's unit keeping the numbers,
+/// measures many objects at once with the basis said once, reads the
+/// conventions, and finds every number's unit in the tools' schemas.
+#[test]
+fn an_agent_changes_the_unit_and_measures_in_a_batch() {
+    let mut server = Server::new();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tools = listed["result"]["tools"].as_array().expect("tools");
+    let change = tools
+        .iter()
+        .find(|t| t["name"] == "cad.units.change")
+        .expect("cad.units.change");
+    assert_eq!(change["annotations"]["destructiveHint"], true);
+    let line = tools
+        .iter()
+        .find(|t| t["name"] == "cad.arc.create")
+        .expect("cad.arc.create");
+    assert_eq!(line["inputSchema"]["properties"]["a0"]["x-unit"], "rad");
+    assert_eq!(line["inputSchema"]["properties"]["r"]["x-unit"], "length");
+
+    let made = call(
+        &mut server,
+        "drawing.new",
+        json!({ "name": "Oda", "workspace": "cad", "drawingUnit": "m" }),
+    );
+    let summary = &made["structuredContent"]["summary"];
+    assert_eq!(
+        summary["conventions"]["labels"],
+        json!({ "x": "X", "y": "Y" })
+    );
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let layer = summary["activeLayer"].as_str().expect("a layer").to_owned();
+    // A millimetre drawing taken for metres: 4000 × 3000 “m”.
+    let room = json!([{"x": 0.0, "y": 0.0}, {"x": 4000.0, "y": 0.0}, {"x": 4000.0, "y": 3000.0}, {"x": 0.0, "y": 3000.0}]);
+    let written = call(
+        &mut server,
+        "cad.polygon.create",
+        json!({ "drawing": drawing, "layerId": layer, "pts": room }),
+    );
+    let uid = written["structuredContent"]["output"]["uid"]
+        .as_str()
+        .expect("its id")
+        .to_owned();
+    let changed = call(
+        &mut server,
+        "cad.units.change",
+        json!({ "drawing": drawing, "from": "m", "to": "mm", "geometry": "scale" }),
+    );
+    assert_eq!(changed["isError"], false, "{changed}");
+    assert_eq!(changed["structuredContent"]["output"]["factor"], 0.001);
+    let many = call(
+        &mut server,
+        "drawing.measure",
+        json!({ "drawing": drawing, "uids": [uid] }),
+    );
+    let m = &many["structuredContent"];
+    assert_eq!(m["totals"]["area"], 12.0, "{m}");
+    assert_eq!(m["units"]["drawing"], "mm");
+    assert_eq!(m["basis"]["method"], "plane");
+    let no_system = call(
+        &mut server,
+        "drawing.measure",
+        json!({ "drawing": drawing, "uid": uid, "method": "ellipsoid" }),
+    );
+    assert_eq!(no_system["isError"], true);
+    assert_eq!(
+        no_system["structuredContent"]["error"]["code"],
+        "method_unavailable"
+    );
+}

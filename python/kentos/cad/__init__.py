@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, sheets, styles  # noqa: E402  isort: skip
+from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, sheets, styles, units  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -82,6 +82,7 @@ __all__ = [
     "AuthKind",
     "AuthKindName",
     "AzimuthDimensionMeasure",
+    "Basis",
     "BlendMode",
     "BlendModeName",
     "BlockChange",
@@ -136,6 +137,7 @@ __all__ = [
     "ConstructionEntity",
     "Convention",
     "ConventionName",
+    "Conventions",
     "CoordinatesTableSource",
     "CornerPick",
     "CreateBlockChange",
@@ -383,7 +385,9 @@ __all__ = [
     "LocalCrsSystem",
     "LocalDefinition",
     "Measure",
+    "MeasureItem",
     "MeasuredPoint",
+    "Measures",
     "MidSubPlace",
     "MirrorTransform",
     "MoveTransform",
@@ -607,7 +611,11 @@ __all__ = [
     "TrimBoundaries",
     "TrimPick",
     "UNSET",
+    "UnitGeometry",
+    "UnitGeometryName",
     "Units",
+    "UnitsChange",
+    "UnitsChanged",
     "UnknownObject",
     "UnknownSystem",
     "Unreachable",
@@ -650,4 +658,5 @@ __all__ = [
     "sheets",
     "styles",
     "types",
+    "units",
 ]
