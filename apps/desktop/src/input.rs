@@ -836,10 +836,12 @@ impl App {
                 if !self.lock_typed(mode, &text) {
                     return;
                 }
-                if mode == LockAsk::Length {
-                    LockAsk::Angle
-                } else {
-                    LockAsk::Length
+                match mode {
+                    LockAsk::Length => LockAsk::Angle,
+                    // A coordinate's Tab turns to the other one (docs/adr/0267 §1).
+                    LockAsk::East => LockAsk::North,
+                    LockAsk::North => LockAsk::East,
+                    _ => LockAsk::Length,
                 }
             }
         };
@@ -866,6 +868,21 @@ impl App {
                 None => false,
             }) == Some(true);
         }
+        // A coordinate (docs/adr/0267 §1): typed as a length is, in the UCS.
+        if matches!(mode, LockAsk::East | LockAsk::North) {
+            let north = mode == LockAsk::North;
+            let locked = self.with_tool(|s, cx| match cx.typed_length(text) {
+                Some(m) => s.lock_coordinate(north, m, cx),
+                None => false,
+            });
+            if locked != Some(true) && !text.is_empty() {
+                let name = self.lock_name(mode);
+                self.warn(format!(
+                    "“{text}” bir uzunluk değil; {name} için koordinat yazın."
+                ));
+            }
+            return locked == Some(true);
+        }
         let Some(n) = kentos_geometry_core::tools::point_text::parse_number(text) else {
             if !text.is_empty() {
                 let name = self.lock_name(mode).to_lowercase();
@@ -877,6 +894,7 @@ impl App {
             LockAsk::Length => s.lock_length(cx.format().to_metres(n), cx),
             LockAsk::Angle => s.lock_toward(Toward::Angle(n), cx),
             LockAsk::Deflection => s.lock_toward(Toward::Deflection(n), cx),
+            LockAsk::East | LockAsk::North => false,
         }) == Some(true)
     }
 
@@ -886,6 +904,8 @@ impl App {
             LockAsk::Length => "Uzunluk",
             LockAsk::Angle => self.format().direction_name(),
             LockAsk::Deflection => "Sapma",
+            LockAsk::East => self.format().east_label(),
+            LockAsk::North => self.format().north_label(),
         }
     }
 
@@ -897,19 +917,19 @@ impl App {
         }
         let angles = self.format().angles();
         let cursor = self.viewport.cursor;
-        let mut locks = self.locks.clone();
-        locks.travel = self.session.travel();
-        let point = self.session.lock_reference().and_then(|from| {
-            let held = locks.locks(angles);
-            kentos_geometry_core::tools::locks::lock_point(
-                from,
-                cursor.unwrap_or(from),
-                held.length,
-                held.direction,
-            )
-        });
-        if let Some(p) = point {
-            self.with_tool(|s, cx| s.accept_point(p, cx));
+        let locks = self.locks_now();
+        // The preview's own rule, in the locks' frame (docs/adr/0267 §2).
+        let point = self
+            .session
+            .lock_reference()
+            .and_then(|from| locks.point(from, cursor.unwrap_or(from), angles));
+        match point {
+            Some(p) => {
+                self.with_tool(|s, cx| s.accept_point(p, cx));
+            }
+            None => self.warn(
+                "Kilitler bir nokta vermiyor: uzunluk koordinatın doğrusuna ulaşmıyor.".to_owned(),
+            ),
         }
     }
 
@@ -928,7 +948,10 @@ impl App {
                 self.place_locked();
             } else if !self.lock_typed(mode, &text) {
                 self.field = Some(field);
-            } else if self.locks.length.is_some() && self.locks.toward.is_some() {
+            } else if (self.locks.length.is_some() && self.locks.toward.is_some())
+                || (self.locks.east.is_some() && self.locks.north.is_some())
+                || (self.locks.coordinates() && self.locks.length.is_some())
+            {
                 self.place_locked();
             }
             return Task::none();

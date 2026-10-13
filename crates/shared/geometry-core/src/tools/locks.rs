@@ -72,6 +72,55 @@ pub fn lock_point(
     }
 }
 
+/// The point the coordinate locks hold (docs/adr/0267 §1), in the locks' frame: `o` the reference, `c` the cursor,
+/// `east` and `north` the locked coordinates, `length` a locked length from `o`:
+///
+/// - both coordinates: that point, whatever the cursor;
+/// - one and a length: of the circle about `o` of radius `length`, its point on the coordinate's line nearer the
+///   cursor (the greater when the cursor is half-way); none when the circle does not reach the line;
+/// - one alone: that coordinate, the other the cursor's;
+/// - none locked: none.
+pub fn coordinate_point(
+    o: Vec2,
+    c: Vec2,
+    east: Option<f64>,
+    north: Option<f64>,
+    length: Option<f64>,
+) -> Option<Vec2> {
+    match (east, north) {
+        (Some(x), Some(y)) => Some(Vec2::new(x, y)),
+        (Some(x), None) => {
+            let y = along_line(x - o.x, o.y, c.y, length)?;
+            Some(Vec2::new(x, y))
+        }
+        (None, Some(y)) => {
+            let x = along_line(y - o.y, o.x, c.x, length)?;
+            Some(Vec2::new(x, y))
+        }
+        (None, None) => None,
+    }
+}
+
+/// The free coordinate of a point on a coordinate's line: `d` the locked coordinate's distance from the reference,
+/// `from` the reference's free coordinate, `cursor` the cursor's; with a length, the circle's crossing nearer the
+/// cursor.
+fn along_line(d: f64, from: f64, cursor: f64, length: Option<f64>) -> Option<f64> {
+    let Some(l) = length else {
+        return Some(cursor);
+    };
+    let disc = l * l - d * d;
+    if disc < 0.0 {
+        return None;
+    }
+    let r = disc.sqrt();
+    let (up, down) = (from + r, from - r);
+    Some(if (cursor - up).abs() <= (cursor - down).abs() {
+        up
+    } else {
+        down
+    })
+}
+
 /// The effective cursor for the next point from `from` with the locks (§2):
 /// a locked direction leaves ortho and polar tracking out and projects the
 /// cursor (a snapped or tracked point too); a length alone comes after them,

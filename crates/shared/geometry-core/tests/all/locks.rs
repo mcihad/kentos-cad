@@ -259,3 +259,37 @@ fn lock_text() {
         assert_eq!(got, opt_num(&case["expect"]), "{text:?}");
     }
 }
+
+/// The coordinate locks (docs/adr/0267 §1) against `scripts/fixtures/lock_coordinate_cases.py`.
+#[test]
+fn coordinate_locks_hold_what_the_reference_says() {
+    use kentos_geometry_core::tools::locks::coordinate_point;
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/locks/v1/coordinates.json"
+    ))
+    .expect("the cases");
+    let p = |v: &Value| Vec2::new(v[0].as_f64().unwrap(), v[1].as_f64().unwrap());
+    let cases = cases["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 15);
+    for c in cases {
+        let name = c["name"].as_str().unwrap();
+        let got = coordinate_point(
+            p(&c["o"]),
+            p(&c["c"]),
+            c["x"].as_f64(),
+            c["y"].as_f64(),
+            c["length"].as_f64(),
+        );
+        match (got, &c["expect"]) {
+            (None, Value::Null) => {}
+            (Some(g), want) if !want.is_null() => {
+                let w = p(want);
+                assert!(
+                    (g.x - w.x).abs() <= 1e-8 && (g.y - w.y).abs() <= 1e-8,
+                    "{name}: {g:?} ≠ {w:?}"
+                );
+            }
+            (got, want) => panic!("{name}: {got:?}, başvuru {want}"),
+        }
+    }
+}

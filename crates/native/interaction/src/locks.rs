@@ -6,9 +6,11 @@
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::ops::edges::nearest_edge;
 use kentos_geometry_core::tools::locks::{
-    Direction, Locks, deflected, direction_of, edge_direction, perpendicular,
+    Direction, Locks, coordinate_point, deflected, direction_of, edge_direction, lock_point,
+    perpendicular,
 };
 use kentos_geometry_core::tools::point_input::Angles;
+use kentos_geometry_core::tools::ucs::Frame;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -84,6 +86,10 @@ pub enum LockAsk {
     Length,
     Angle,
     Deflection,
+    /// The east coordinate, in the locks' frame (docs/adr/0267 §1): a CAD project's X, a CBS project's Y.
+    East,
+    /// The north coordinate: a CAD project's Y, a CBS project's X.
+    North,
 }
 
 /// What holds the next point: a length from the reference and a direction.
@@ -108,18 +114,85 @@ pub struct LockState {
     /// cursor rule and typed relative points are measured from it instead
     /// of the tool's last corner. The session sets it before each event.
     pub reference: Option<Vec2>,
+    /// The east and north coordinates the next point keeps (docs/adr/0267 §1), metres in [`Self::frame`].
+    pub east: Option<f64>,
+    pub north: Option<f64>,
+    /// The frame the locks are in: the drawing's UCS, else the world (docs/adr/0261, 0267 §2). The session
+    /// sets it before each event.
+    pub frame: Frame,
 }
 
 impl LockState {
     /// Whether anything holds the next point.
     pub fn any(&self) -> bool {
-        self.length.is_some() || self.toward.is_some()
+        self.length.is_some() || self.toward.is_some() || self.coordinates()
+    }
+
+    /// Whether a coordinate is locked (docs/adr/0267 §1).
+    pub fn coordinates(&self) -> bool {
+        self.east.is_some() || self.north.is_some()
+    }
+
+    /// Locks the east or north coordinate (metres in the frame) at the reference `at`; a direction lock goes
+    /// (the two are never held together, §1).
+    pub fn lock_coordinate(&mut self, north: bool, metres: f64, at: Vec2) {
+        if north {
+            self.north = Some(metres);
+        } else {
+            self.east = Some(metres);
+        }
+        self.toward = None;
+        self.edge = None;
+        self.at = Some(at);
+    }
+
+    /// The point the locks hold from the reference `from` with the cursor at `c`, in the locks' frame
+    /// (docs/adr/0267): the coordinates (with the length), else the direction (a typed angle from the frame's
+    /// axes) and the length; none when they hold no point (a length the coordinate's line is beyond, the
+    /// cursor on the reference with a length alone).
+    pub fn point(&self, from: Vec2, c: Vec2, angles: Angles) -> Option<Vec2> {
+        if self.coordinates() {
+            let f = self.frame;
+            let p = coordinate_point(
+                f.to_frame(from),
+                f.to_frame(c),
+                self.east,
+                self.north,
+                self.length,
+            )?;
+            return Some(f.to_world(p));
+        }
+        let held = self.locks(angles);
+        lock_point(from, c, held.length, held.direction)
+    }
+
+    /// The locked coordinates' lines in the world, as a point on each and its direction (docs/adr/0267 §1): the
+    /// east's runs along the frame's y axis, the north's along its x axis; the guides the drawing dashes.
+    pub fn coordinate_lines(&self, from: Vec2) -> Vec<(Vec2, Vec2)> {
+        let f = self.frame;
+        let o = f.to_frame(from);
+        let mut out = Vec::new();
+        if let Some(e) = self.east {
+            out.push((
+                f.to_world(Vec2::new(e, o.y)),
+                f.dir_to_world(Vec2::new(0.0, 1.0)),
+            ));
+        }
+        if let Some(n) = self.north {
+            out.push((
+                f.to_world(Vec2::new(o.x, n)),
+                f.dir_to_world(Vec2::new(1.0, 0.0)),
+            ));
+        }
+        out
     }
 
     /// Every lock goes; Kalıcı stays as it was (it is the command's).
     pub fn clear(&mut self) {
         self.length = None;
         self.toward = None;
+        self.east = None;
+        self.north = None;
         self.at = None;
         self.edge = None;
     }
@@ -141,6 +214,9 @@ impl LockState {
         self.toward = Some(toward);
         self.at = Some(at);
         self.edge = None;
+        // A direction and a coordinate are never held together (docs/adr/0267 §1).
+        self.east = None;
+        self.north = None;
     }
 
     /// The direction lock alone goes (its chip's ×), its picked edge with it.
@@ -166,8 +242,9 @@ impl LockState {
     /// a picked edge's.
     pub fn direction(&self, angles: Angles) -> Option<Direction> {
         Some(match self.toward? {
+            // A typed angle is from the frame's axes (docs/adr/0261 §4).
             Toward::Angle(a) => Direction {
-                u: direction_of(a, angles),
+                u: self.frame.dir_to_world(direction_of(a, angles)),
                 both: false,
             },
             Toward::Deflection(a) => Direction {
@@ -194,12 +271,21 @@ impl LockState {
     /// (“Uzunluk 12.500 m”, “Açı 45.0000°”, “Sapma 100.0000 g”, “Paralel”).
     pub fn words(&self, format: &Format) -> Vec<String> {
         let mut out = Vec::new();
+        // What is measured in the frame says so when the frame is a UCS (docs/adr/0267 §2).
+        let ucs = if self.frame.is_world() { "" } else { " (UCS)" };
         if let Some(l) = self.length {
             out.push(format!("Uzunluk {}", format.length(l)));
         }
+        let (east, north) = (format.east_label(), format.north_label());
+        if let Some(x) = self.east {
+            out.push(format!("{east} {}{ucs}", format.length(x)));
+        }
+        if let Some(y) = self.north {
+            out.push(format!("{north} {}{ucs}", format.length(y)));
+        }
         match self.toward {
             Some(Toward::Angle(a)) => out.push(format!(
-                "{} {}",
+                "{} {}{ucs}",
                 format.direction_name(),
                 format.angle(format.angle_from_typed(a))
             )),

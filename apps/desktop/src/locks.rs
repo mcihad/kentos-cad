@@ -10,6 +10,17 @@ use crate::app::App;
 use crate::marks::LockMarks;
 
 impl App {
+    /// The locks as the cursor rule reads them now: the running tool's travel direction and the drawing's UCS
+    /// (docs/adr/0267 §2).
+    pub(crate) fn locks_now(&self) -> kentos_interaction::LockState {
+        let mut locks = self.locks.clone();
+        locks.travel = self.session.travel();
+        if let Some(doc) = &self.document {
+            locks.frame = kentos_interaction::frame_of(doc.settings());
+        }
+        locks
+    }
+
     /// The guides: the locked direction from the reference, the locked
     /// length round it; none without locks or a reference.
     pub(crate) fn lock_marks(&self, format: &Format) -> Option<LockMarks> {
@@ -18,8 +29,7 @@ impl App {
             return None;
         }
         let reference = self.session.lock_reference()?;
-        let mut locks = self.locks.clone();
-        locks.travel = self.session.travel();
+        let locks = self.locks_now();
         Some(LockMarks {
             reference,
             direction: locks.direction(format.angles()).map(|d| (d.u, d.both)),
@@ -27,12 +37,16 @@ impl App {
             edge: locks.edge,
             named,
             locks: self.locks.any(),
+            lines: {
+                let mut lines = locks.coordinate_lines(reference).into_iter();
+                [lines.next(), lines.next()]
+            },
         })
     }
 
     /// The locks as the value field's chips say them (Kalıcı is not a chip).
     pub(crate) fn lock_chips(&self, format: &Format) -> Vec<String> {
-        let mut shown = self.locks.clone();
+        let mut shown = self.locks_now();
         shown.keep = false;
         shown.words(format)
     }
@@ -47,7 +61,7 @@ impl App {
         self.session.lock_reference()?;
         let at = self.viewport.cursor?;
         Some((
-            format!("Kilit: {}", self.locks.words(format).join(" · ")),
+            format!("Kilit: {}", self.locks_now().words(format).join(" · ")),
             at,
         ))
     }

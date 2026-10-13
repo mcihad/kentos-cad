@@ -21,6 +21,12 @@ pub struct Frame {
     s: f64,
 }
 
+impl Default for Frame {
+    fn default() -> Frame {
+        Frame::WORLD
+    }
+}
+
 impl Frame {
     pub const WORLD: Frame = Frame {
         origin: Vec2 { x: 0.0, y: 0.0 },

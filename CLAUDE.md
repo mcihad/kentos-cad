@@ -333,6 +333,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   matrisi (bütün `.kcad` örnekleri kodekten, sütunlardan, bulutun kaynağından ve Python'dan; `tests/carriage.rs`, `test_carriage.py`) ve
   yeni şemanın altı adımlık kuralı (`kentos-kcad`'in `schemas` testi) (ADR 0265);
   yazılan uzunlukta metrik birim (`2.5m`, `250cm`) ve parantezli toplam (`(12.5+3*2)`), araçların uzunluk alanları tek yardımcıdan (ADR 0266);
+  koordinat kilitleri: değer alanında doğu ve kuzey (projenin eksen adlarıyla X ve Y) ayrı kilitlenir, uzunlukla birlikte de (çemberle
+  doğrunun imlece yakın kesişimi), kilidin çerçevesi UCS'tir ve çipte “(UCS)” der, kilitli koordinatın kesikli kılavuzu; `draft.lock.east`,
+  `.north`, çekirdeğin `coordinate_point`'i (ADR 0267);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

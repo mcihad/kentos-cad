@@ -1117,6 +1117,20 @@
    "tests": 2
   },
   {
+   "id": "draft.lock.east",
+   "kind": "command",
+   "title": "Doğu kilidi…",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Çizim yardımcıları oturumun durumu.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "draft.lock.keep",
    "kind": "command",
    "title": "Kilitler kalıcı",
@@ -1134,6 +1148,20 @@
    "id": "draft.lock.length",
    "kind": "command",
    "title": "Uzunluk kilidi…",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Çizim yardımcıları oturumun durumu.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "draft.lock.north",
+   "kind": "command",
+   "title": "Kuzey kilidi…",
    "level": "session",
    "via": [],
    "operation": null,

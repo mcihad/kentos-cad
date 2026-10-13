@@ -10,7 +10,6 @@ use kentos_geometry_core::tools::ucs::constrain_cursor_in;
 use kentos_native_application::codes;
 
 use crate::Vec2;
-use crate::locks::Toward;
 use crate::log::Level;
 use crate::tool::{Context, Pointer};
 
@@ -51,12 +50,21 @@ pub(crate) fn constrain(
         });
     // The drawing's UCS (docs/adr/0261 §4): ortho, polar tracking and a typed angle follow its axes.
     let frame = cx.frame();
+    // Coordinate locks (docs/adr/0267 §1): the point in the UCS, ortho and polar tracking left out.
+    if cx.locks.coordinates() {
+        let mut held = cx.locks.clone();
+        held.frame = frame;
+        return match held.point(from, p.world, cx.format().angles()) {
+            Some(q) => (q, None),
+            None => (from, None),
+        };
+    }
     if cx.locks.any() || square.is_some() {
-        let mut locks = cx.locks.locks(cx.format().angles());
-        // A typed angle is from the UCS's axes; the other directions are the objects', in the world.
-        if let (Some(Toward::Angle(_)), Some(d)) = (cx.locks.toward, locks.direction.as_mut()) {
-            d.u = frame.dir_to_world(d.u);
-        }
+        let mut held = cx.locks.clone();
+        // A typed angle is from the UCS's axes (the lock's frame); the other directions are the objects', in
+        // the world.
+        held.frame = frame;
+        let mut locks = held.locks(cx.format().angles());
         locks.direction = locks.direction.or(square);
         if locks.direction.is_none() {
             // A length alone: the cursor ruled in the UCS first, then held at the length.

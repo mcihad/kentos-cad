@@ -1,0 +1,271 @@
+{
+ "format": "kentos.lock-coordinate-cases",
+ "version": 1,
+ "source": "scripts/fixtures/lock_coordinate_cases.py (docs/adr/0267 §1)",
+ "cases": [
+  {
+   "name": "X ve Y: imleç önemsiz",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    50.0,
+    -3.0
+   ],
+   "x": 12.5,
+   "y": -4.25,
+   "length": null,
+   "expect": [
+    12.5,
+    -4.25
+   ]
+  },
+  {
+   "name": "yalnız X: imlecin Y'si",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    3.0,
+    7.5
+   ],
+   "x": 10,
+   "y": null,
+   "length": null,
+   "expect": [
+    10.0,
+    7.5
+   ]
+  },
+  {
+   "name": "yalnız Y: imlecin X'i",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    3.0,
+    7.5
+   ],
+   "x": null,
+   "y": -2,
+   "length": null,
+   "expect": [
+    3.0,
+    -2.0
+   ]
+  },
+  {
+   "name": "X ve uzunluk: imlece yakın üst kesişim (3-4-5)",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    3.0,
+    10.0
+   ],
+   "x": 3,
+   "y": null,
+   "length": 5,
+   "expect": [
+    3.0,
+    4.0
+   ]
+  },
+  {
+   "name": "X ve uzunluk: imlece yakın alt kesişim",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    3.0,
+    -10.0
+   ],
+   "x": 3,
+   "y": null,
+   "length": 5,
+   "expect": [
+    3.0,
+    -4.0
+   ]
+  },
+  {
+   "name": "X ve uzunluk: imleç aynı hizada, üst",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    3.0,
+    0.0
+   ],
+   "x": 3,
+   "y": null,
+   "length": 5,
+   "expect": [
+    3.0,
+    4.0
+   ]
+  },
+  {
+   "name": "X ve uzunluk: çember eksene değer",
+   "o": [
+    1.0,
+    1.0
+   ],
+   "c": [
+    9.0,
+    9.0
+   ],
+   "x": 6,
+   "y": null,
+   "length": 5,
+   "expect": [
+    6.0,
+    1.0
+   ]
+  },
+  {
+   "name": "X ve uzunluk: çember ulaşmaz",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    9.0,
+    9.0
+   ],
+   "x": 6,
+   "y": null,
+   "length": 5,
+   "expect": null
+  },
+  {
+   "name": "Y ve uzunluk: imlece yakın sağ kesişim",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    10.0,
+    4.0
+   ],
+   "x": null,
+   "y": 4,
+   "length": 5,
+   "expect": [
+    3.0,
+    4.0
+   ]
+  },
+  {
+   "name": "Y ve uzunluk: imlece yakın sol kesişim",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    -10.0,
+    4.0
+   ],
+   "x": null,
+   "y": 4,
+   "length": 5,
+   "expect": [
+    -3.0,
+    4.0
+   ]
+  },
+  {
+   "name": "X ve uzunluk: irrasyonel kök",
+   "o": [
+    2.0,
+    3.0
+   ],
+   "c": [
+    4.0,
+    9.0
+   ],
+   "x": 4,
+   "y": null,
+   "length": 7,
+   "expect": [
+    4.0,
+    9.70820393249937
+   ]
+  },
+  {
+   "name": "TM: yalnız X",
+   "o": [
+    487000.0,
+    4420000.0
+   ],
+   "c": [
+    487005.0,
+    4420012.5
+   ],
+   "x": 487020.25,
+   "y": null,
+   "length": null,
+   "expect": [
+    487020.25,
+    4420012.5
+   ]
+  },
+  {
+   "name": "TM: X ve uzunluk",
+   "o": [
+    487000.5,
+    4420000.25
+   ],
+   "c": [
+    487006.0,
+    4420030.0
+   ],
+   "x": 487006.5,
+   "y": null,
+   "length": 12.5,
+   "expect": [
+    487006.5,
+    4420011.2158560995
+   ]
+  },
+  {
+   "name": "TM: X ve Y",
+   "o": [
+    487000.0,
+    4420000.0
+   ],
+   "c": [
+    487000.0,
+    4420000.0
+   ],
+   "x": 487001.125,
+   "y": 4419992.125,
+   "length": null,
+   "expect": [
+    487001.125,
+    4419992.125
+   ]
+  },
+  {
+   "name": "hiçbiri yoksa nokta yok",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    1.0,
+    1.0
+   ],
+   "x": null,
+   "y": null,
+   "length": null,
+   "expect": null
+  }
+ ]
+}

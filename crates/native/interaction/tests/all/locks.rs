@@ -378,3 +378,122 @@ fn no_reference_without_a_command_that_takes_points() {
         ]
     );
 }
+
+/// The bench's drawing turned to a UCS at (E, N), its x axis 90° from east (docs/adr/0261).
+fn turned(b: &mut Bench) {
+    let mut settings = b.doc.settings().clone();
+    settings.ucs = Some(kentos_contracts::Ucs {
+        origin: kentos_contracts::Vec2 {
+            x: common::E,
+            y: common::N,
+        },
+        angle: std::f64::consts::FRAC_PI_2,
+    });
+    b.doc.set_settings(settings);
+}
+
+#[test]
+fn a_locked_east_holds_the_point_on_its_line_and_the_cursor_gives_the_north() {
+    // docs/adr/0267 §1: one coordinate locked, the other from the cursor.
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.lock_coordinate(false, common::E + 10.0, cx)));
+    assert!(b.locks.coordinates());
+    // A CBS project: the east is Y.
+    assert_eq!(b.last_text(), Some("Kilit: Y 487010.000 m."));
+    b.click(3.0, 7.0);
+    assert!(!b.locks.any(), "a one-shot lock goes with the point");
+    b.confirm();
+    assert!(near(points(&b)[1], [10.0, 7.0]), "{:?}", points(&b));
+}
+
+#[test]
+fn both_coordinates_hold_the_point_wherever_the_cursor_is() {
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.lock_coordinate(false, common::E + 4.0, cx)));
+    assert!(b.run(|s, cx| s.lock_coordinate(true, common::N - 2.5, cx)));
+    b.click(50.0, 50.0);
+    b.confirm();
+    assert!(near(points(&b)[1], [4.0, -2.5]), "{:?}", points(&b));
+}
+
+#[test]
+fn a_coordinate_and_a_length_meet_nearest_the_cursor() {
+    // From (0, 0), 5 m, the east 3: (3, 4) or (3, −4); the cursor below picks the second.
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.lock_length(5.0, cx)));
+    assert!(b.run(|s, cx| s.lock_coordinate(false, common::E + 3.0, cx)));
+    assert_eq!(
+        b.locks.length,
+        Some(5.0),
+        "a length stays with a coordinate"
+    );
+    b.click(1.0, -9.0);
+    b.confirm();
+    assert!(near(points(&b)[1], [3.0, -4.0]), "{:?}", points(&b));
+}
+
+#[test]
+fn a_length_short_of_the_coordinates_line_holds_no_point() {
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.lock_length(2.0, cx)));
+    assert!(b.run(|s, cx| s.lock_coordinate(false, common::E + 3.0, cx)));
+    let at = kentos_interaction::Vec2::new(common::E, common::N);
+    let cursor = kentos_interaction::Vec2::new(common::E + 5.0, common::N + 5.0);
+    let none = b.locks.point(at, cursor, Default::default());
+    assert_eq!(
+        none, None,
+        "2 m from the reference never reaches the east 3"
+    );
+}
+
+#[test]
+fn a_direction_and_a_coordinate_are_never_held_together() {
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.lock_coordinate(true, common::N + 6.0, cx)));
+    assert!(b.type_text("<100"));
+    assert!(!b.locks.coordinates(), "the angle lets the coordinate go");
+    assert_eq!(b.locks.toward, Some(Toward::Angle(100.0)));
+    assert!(b.run(|s, cx| s.lock_coordinate(false, common::E + 1.0, cx)));
+    assert_eq!(b.locks.toward, None, "the coordinate lets the angle go");
+}
+
+#[test]
+fn in_a_ucs_the_coordinates_are_the_ucs_ones_and_say_so() {
+    // docs/adr/0267 §1–§2: the UCS's x axis is north, so its X = 6 is the world's north 6.
+    let mut b = Bench::new("polyline");
+    turned(&mut b);
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.lock_coordinate(false, 6.0, cx)));
+    assert_eq!(b.last_text(), Some("Kilit: Y 6.000 m (UCS)."));
+    b.click(-4.0, 1.0);
+    b.confirm();
+    assert!(near(points(&b)[1], [-4.0, 6.0]), "{:?}", points(&b));
+}
+
+#[test]
+fn the_locked_coordinates_lines_run_along_the_frames_other_axis() {
+    let mut b = Bench::new("polyline");
+    turned(&mut b);
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.lock_coordinate(false, 6.0, cx)));
+    assert!(b.run(|s, cx| s.lock_coordinate(true, 2.0, cx)));
+    let from = kentos_interaction::Vec2::new(common::E, common::N);
+    let lines = b.locks.coordinate_lines(from);
+    // The UCS's x axis is north: X = 6 is the world's north 6, running east–west; Y = 2 is the world's west 2.
+    assert_eq!(lines.len(), 2);
+    let (p, u) = lines[0];
+    assert!(
+        near([p.x - common::E, p.y - common::N], [0.0, 6.0]) && near([u.x, u.y], [-1.0, 0.0]),
+        "{lines:?}"
+    );
+    let (p, u) = lines[1];
+    assert!(
+        near([p.x - common::E, p.y - common::N], [-2.0, 0.0]) && near([u.x, u.y], [0.0, 1.0]),
+        "{lines:?}"
+    );
+}

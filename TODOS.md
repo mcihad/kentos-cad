@@ -165,6 +165,9 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-INPUT-03` (ADR 0267, 14 Ekim): web'de gerekenler: `tools/locks.ts`'te doğu ve kuzey kilitleri (çekirdeğin `coordinate_point`'i
+  WASM'a, kilidin çerçevesi UCS), `ui/shell/CursorInput.ts`'te X ve Y alanları ve Tab'ın öbür koordinata geçmesi, çiplerin “(UCS)” eki,
+  kilitli koordinatın kesikli kılavuzu, `draft.lock.east` ve `.north` komutları; web'in iz oynatıcısı `lock-coordinates.json`'u geçmeli.
 - [ ] `CAD-DATA-13` (ADR 0263, 14 Ekim): web'de gerekenler: `SubPlace`'in `along`'u, `SubRef`'in ve `PlaceOn`'un `path`'i, `SubRange`
   (TS türleri, `io/kcad.ts`'in KCAD şema 51'i, `io/columns.ts`'in başvuru türü 6 ve blok yolu, `FORMATS_VERSION` 62), web belgesinin
   ilişkili ölçü izlemesinde `along` ve blok parçaları (çekirdeğin `follow_in`'i WASM'a), ölçü aracının Yakın, Dik, Teğet ve Çeyrek'te ve

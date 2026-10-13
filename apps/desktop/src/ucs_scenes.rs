@@ -2,11 +2,12 @@
 //! turned 30° drawn in the world's axes; the UCS aligned to its wall by
 //! Nesneye hizala, the grid, the axes' icon and the status bar following
 //! it; İki nokta while its x axis is given; a wall typed along the UCS's
-//! axes (`@8,0`, `@0,5`); the Koordinatlar panel of the Görünüm tab.
+//! axes (`@8,0`, `@0,5`); the Koordinatlar panel of the Görünüm tab; the X lock in the UCS (docs/adr/0267), its chip
+//! saying so, the Y field open beside the cursor.
 //! `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=ucs-dunya,ucs-nesne,ucs-iki-nokta,ucs-yazilan,ucs-serit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=ucs-dunya,ucs-nesne,ucs-iki-nokta,ucs-yazilan,ucs-serit,ucs-koordinat-kilidi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -90,6 +91,20 @@ fn typed_wall(app: &mut App) {
     hover(app, on(2.0, 6.0));
 }
 
+/// The X lock in the UCS (docs/adr/0267): from the corner, X = 6 along the wall locked, the Y field open with `3`
+/// typed; the preview on the locked line, the chip “X 6.000 m (UCS)”.
+fn coordinate_lock(app: &mut App) {
+    object(app);
+    run(app, "tool.polyline");
+    click(app, on(2.0, 2.0));
+    let _ = app.with_tool(|s, cx| s.lock_coordinate(false, 6.0, cx));
+    hover(app, on(5.0, 5.0));
+    app.ask_lock(kentos_interaction::LockAsk::North);
+    if let Some(field) = &mut app.field {
+        field.text = "3".to_owned();
+    }
+}
+
 /// The Görünüm tab's Koordinatlar panel.
 fn ribbon(app: &mut App) {
     object(app);
@@ -103,5 +118,6 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("ucs-iki-nokta", two_points),
         ("ucs-yazilan", typed_wall),
         ("ucs-serit", ribbon),
+        ("ucs-koordinat-kilidi", coordinate_lock),
     ]
 }

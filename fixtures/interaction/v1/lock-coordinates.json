@@ -1,0 +1,215 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "lock-coordinates",
+ "title": "Koordinat kilitleri: Çoklu çizgi'de Y kilidi… (CBS'de doğu) 487010'u Tab ile kilitler, alan X'e geçer; tık köşeyi doğusu 10'da, kuzeyi imleçten koyar; X kilidi… kuzeyi 4420003'te kilitler, 5 ve Tab uzunluğu da kilitler, tık çemberle doğrunun imlece yakın kesişimine iner; açı kilidi koordinatı bırakır; Enter yazar",
+ "source": "Masaüstünün kentos_interaction::locks'u, input.rs'i ve çekirdeğin tools::locks::coordinate_point'i, ADR 0267 §1",
+ "covers": [
+  "CAD-INPUT-03"
+ ],
+ "document": "empty.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.polyline"
+  },
+  {
+   "click": [
+    0,
+    0
+   ],
+   "expect": {
+    "points": 1,
+    "locks": []
+   }
+  },
+  {
+   "run": "draft.lock.east",
+   "note": "Y kilidi… değer alanını kendi adıyla, boş açar (CBS'de doğunun adı Y).",
+   "expect": {
+    "dynamicInput": ""
+   }
+  },
+  {
+   "text": "487010",
+   "expect": {
+    "dynamicInput": "487010"
+   }
+  },
+  {
+   "key": "Tab",
+   "note": "Tab doğuyu kilitler; alan kuzeye (X) geçer ve boşalır.",
+   "expect": {
+    "dynamicInput": "",
+    "locks": [
+     "Y 487010.000 m"
+    ],
+    "logged": [
+     "Kilit: Y 487010.000 m."
+    ]
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Alan kapanır; kilit durur.",
+   "expect": {
+    "dynamicInput": null,
+    "locks": [
+     "Y 487010.000 m"
+    ]
+   }
+  },
+  {
+   "click": [
+    3,
+    7
+   ],
+   "note": "Doğu kilitli, kuzey imleçten: (10; 7). Tek seferlik kilit noktayla kalkar.",
+   "expect": {
+    "points": 2,
+    "locks": []
+   }
+  },
+  {
+   "run": "draft.lock.north",
+   "expect": {
+    "dynamicInput": ""
+   }
+  },
+  {
+   "text": "4420003"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "dynamicInput": null,
+    "locks": [
+     "X 4420003.000 m"
+    ],
+    "logged": [
+     "Kilit: X 4420003.000 m."
+    ]
+   }
+  },
+  {
+   "move": [
+    16,
+    0
+   ]
+  },
+  {
+   "text": "5"
+  },
+  {
+   "key": "Tab",
+   "note": "Uzunluk da kilitlenir; koordinat kilidi durur.",
+   "expect": {
+    "locks": [
+     "Uzunluk 5.000 m",
+     "X 4420003.000 m"
+    ]
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "dynamicInput": null
+   }
+  },
+  {
+   "click": [
+    16,
+    0
+   ],
+   "note": "(10; 7)'den 5 m, kuzeyi 3: (13; 3) ya da (7; 3); imleç doğuda.",
+   "expect": {
+    "points": 3,
+    "locks": []
+   }
+  },
+  {
+   "run": "draft.lock.east"
+  },
+  {
+   "text": "487020"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "locks": [
+     "Y 487020.000 m"
+    ]
+   }
+  },
+  {
+   "text": "<100",
+   "note": "Açı kilidi koordinat kilidini bırakır (ikisi birlikte tutulmaz).",
+   "expect": {
+    "dynamicInput": "<100"
+   }
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "locks": [
+     "Semt 100.0000 g"
+    ]
+   }
+  },
+  {
+   "click": [
+    30,
+    9
+   ],
+   "note": "Doğuya giden ışında: (30; 3).",
+   "expect": {
+    "points": 4,
+    "locks": []
+   }
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 1,
+    "newest": {
+     "kind": "polyline",
+     "points": [
+      [
+       0,
+       0
+      ],
+      [
+       10,
+       7
+      ],
+      [
+       13,
+       3
+      ],
+      [
+       30,
+       3
+      ]
+     ]
+    }
+   }
+  }
+ ]
+}
