@@ -25,6 +25,8 @@ use kentos_style_core::style::build::{
 };
 use serde_json::{Map, Value, json};
 
+/// The unit a layer's renderer reads geometry in, and the project's: see [`BuildOptions::reading_unit`].
+pub use kentos_native_application::expression_unit::{Unit as ReadingUnit, reading_unit};
 use kentos_native_application::geometry::{edit_geometry, entity_of};
 
 use crate::library::StyleLibrary;
@@ -67,6 +69,16 @@ pub struct BuildOptions<'a> {
     /// A view-dependent renderer's view (docs/adr/0213 §3): the view's logical
     /// px per metre in quarter octaves, and the key of a heat map's picture.
     pub frame: Option<(f64, String)>,
+    /// The unit the layer's renderer reads geometry in where it compares what
+    /// Öznitelikler shows (`$alan`, `$uzunluk`, `$y` … in a category's or a
+    /// class's value, a rule's condition, a colour's, a size's, a weight's
+    /// number): the project's drawing unit (`reading_unit` of its settings;
+    /// docs/adr/0165 §2, the 13 Ekim addendum), so the classes Katman stili made
+    /// from the values it listed meet the values the layer draws by. A symbol's
+    /// own expressions (data-defined sizes, distances, the geometry generator)
+    /// stay in metres, and so does a preview on a sample object
+    /// (`ReadingUnit::METRE`).
+    pub reading_unit: ReadingUnit,
 }
 
 /// What the page gives the core for a layer: the program's JSON, the
@@ -383,7 +395,7 @@ pub fn build_layer(
     opts: &BuildOptions,
 ) -> Result<(LayerCall, Batches), String> {
     let mut call = layer_call(style, entities, opts, store);
-    let program = Program::read(&call.program)?;
+    let program = Program::read_in(&call.program, opts.reading_unit)?;
     call.reads_index = program.needs.index;
     call.table = expr_table(&program.fields, program.needs, entities, opts.layer_name);
     let ids: Vec<f64> = entities.iter().map(|e| f64::from(e.base().id)).collect();

@@ -136,6 +136,15 @@ Liste:
   köşeden); oynatılacak iz `usage-semantic-tools.json` ve resimleri; bilinen bozulmalar: komut kataloğunda yedi komut (yalnız
   `Desktop`), `fixtures/commands/v1`'de yedi dosya web'in koşucusunda kayıtsız komut; web'in araçları eski `cad.entities.edit` ve
   `.create` işlemleriyle yazar (izler geçer, kayıtları başka komut adı taşır).
+- [ ] `UNIT-02` (ADR 0165'in 13 Ekim eki, 13 Ekim): web'de gerekenler: `Program::read_in`'in WASM'dan çağrılması
+  (`crates/wasm/geometry-wasm/src/store.rs`'in `Program::read(json)`'ı projenin biriminin metredeki sayısını alır; `readingUnit`
+  `model/projectSettings.ts`'te var) ve stilli çizimin, pafta haritalarının (`app/sheet/mapFrames.ts`) ve PDF'in katmanı projenin
+  birimiyle kurması, birim değişince katmanların yeniden kurulması; web'in Katman stili'nin (`style/classify.ts`: `valuesOf`,
+  `numbersOf`; `ui/style/tally.ts`'in kural sayısı) ifadeyi projenin biriminde derlemesi (`exprCompileIn`, `evaluateExpressionIn`);
+  `fixtures/style/v1/units.json`'u (bağımsız başvurusu `scripts/fixtures/style_units_cases.py`) okuyan bir web testi
+  (`classifyFixture.test.ts`'in yanında); bilinen bozulmalar: web'de açılan mm projesinin işleyicisi eski gibi metrede okunur
+  (masaüstünün yazdığı sınıflar mm²'dedir, web'de pencere ve çizim onlarla uyuşmaz), `fixtures/expression/v2/builder.json`'un `$alan`
+  ve `$uzunluk` açıklamaları (web'in WASM'ı yeniden derlenene kadar `builder.test.ts` eski metni görür).
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek

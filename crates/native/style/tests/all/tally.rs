@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use kentos_contracts::Entity;
 use kentos_geometry_core::store::Store;
 use kentos_native_application::geometry::shape;
+use kentos_native_style::ReadingUnit;
 use kentos_native_style::classify::{ExprScope, numbers_per_object, values_of};
 use kentos_native_style::renderer::{Category, GraduatedClass, Rule};
 use kentos_native_style::tally::{
@@ -49,6 +50,7 @@ fn counts_what_the_drawing_draws() {
     let scope = ExprScope {
         layer_name: &name,
         measures: &measures,
+        unit: ReadingUnit::METRE,
     };
     let drawn = drawable(&list);
     let mut problems = Vec::new();

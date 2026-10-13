@@ -106,3 +106,6 @@
   - masaüstü davranışı `layer_style/tests.rs`'te sınanır (10 durum): açılış, taslaklar, sınıflar, kurallar, geri alma, bilinmeyen işleyici, komut, kapatırken soru, oklar.
 - **Resimler:** `cargo test -p kentos-desktop style::screens::layer_style_screens -- --ignored` masaüstünü, `node apps/web/scripts/style/layer-style-shots.mjs` web'i çeker. Masaüstünde altı durum (kapatırken soru dahil), iki boy, iki tema, büyük yazıyla bir boy daha; web'de beş durum. Web ajanının 18 sahnelik başvuru resimleri ve pencerenin tanımı (tuşlar, durum, geri alma, bilinen kusurlar) karşılaştırmada kullanıldı.
 - **Başarım:** değerler, sayılar ve kural sayıları belgenin sürümüyle önbellektedir. Resimler bir kez kurulur; çizimleri her karede GPU'da birkaç ek geçiştir.
+- **Birim (13 Ekim):** `$alan`, `$uzunluk` gibi geometri değerleri yerel projede çizim biriminde okunur (mm projesinde mm², mm): pencerenin
+  değerleri, sınıfları ve sayıları (`ExprScope::unit`) ile çizim (`BuildOptions::reading_unit`) aynı birimi kullanır, sınıf sınırları o
+  birimle saklanır; sembolün kendi ifadeleri metrede kalır. ADR 0165'in 13 Ekim eki, `layer_style/unit_tests.rs`.

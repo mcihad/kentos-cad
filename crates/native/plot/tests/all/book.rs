@@ -14,7 +14,7 @@ use crate::files::pdf_problems;
 
 const SCENARIO: &str = include_str!("../../../../../fixtures/acceptance/v1/room.json");
 
-fn step<'a>(scenario: &'a Value, what: impl Fn(&Value) -> bool) -> &'a Value {
+fn step(scenario: &Value, what: impl Fn(&Value) -> bool) -> &Value {
     scenario["steps"]
         .as_array()
         .expect("steps")

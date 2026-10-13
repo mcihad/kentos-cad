@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::Json;
 
-use crate::expr::{Expr, compile};
+use crate::expr::{Expr, Schema, Unit as ReadingUnit, compile, compile_with};
 
 /// Size unit: paper mm at the plot scale (the default), screen px, metres.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -35,19 +35,64 @@ pub enum Dd<T> {
 }
 
 /// The expressions of a program, compiled once each (equal sources share one).
+///
+/// Two kinds of expression meet in a program, and they speak different units
+/// where they read geometry (`$alan`, `$uzunluk`, `$y` … docs/adr/0165 §2, the
+/// 13 Ekim addendum):
+/// - what a layer's renderer reads (a category's or a class's value, a rule's
+///   condition, a colour's, a size's or a weight's number) is a reading, the
+///   user compares it with what Öznitelikler shows: it speaks the program's
+///   reading unit, the project's drawing unit (`reading_in`, `intern_reading`);
+/// - what a symbol reads (a data-defined size, angle, distance, colour or
+///   text, a geometry generator's steps) stays in metres whatever the project
+///   (`intern`): a symbol is portable (Kitaplığım, `.kstil`), it is the same
+///   symbol in every project it is dropped into, and the numbers it gives are
+///   sizes and distances in its own unit (paper mm, px or metres).
 #[derive(Default)]
 pub struct Exprs {
     pub list: Vec<Option<Expr>>,
     index: HashMap<String, usize>,
+    /// The readings compiled in the program's unit, apart from the metre ones.
+    readings: HashMap<String, usize>,
+    unit: ReadingUnit,
 }
 
 impl Exprs {
+    /// Expressions whose renderer readings speak `unit` (metres: as `default`).
+    pub fn reading_in(unit: ReadingUnit) -> Exprs {
+        Exprs {
+            unit,
+            ..Exprs::default()
+        }
+    }
+
+    /// A symbol's expression: geometry values in metres.
     pub fn intern(&mut self, source: &str) -> usize {
         if let Some(&i) = self.index.get(source) {
             return i;
         }
         self.list.push(compile(source).ok());
         self.index.insert(source.to_string(), self.list.len() - 1);
+        self.list.len() - 1
+    }
+
+    /// A renderer's expression (its value, condition or weight): geometry
+    /// values in the program's reading unit. In metres it is the symbol's own
+    /// expression, one compile for both.
+    pub fn intern_reading(&mut self, source: &str) -> usize {
+        if self.unit == ReadingUnit::METRE {
+            return self.intern(source);
+        }
+        if let Some(&i) = self.readings.get(source) {
+            return i;
+        }
+        let schema = Schema {
+            unit: self.unit,
+            ..Schema::default()
+        };
+        self.list.push(compile_with(source, &schema).ok());
+        self.readings
+            .insert(source.to_string(), self.list.len() - 1);
         self.list.len() - 1
     }
 }
@@ -1016,7 +1061,7 @@ impl Reader<'_> {
     fn rule(&mut self, v: &Json) -> Rule {
         Rule {
             filter: match v.get("filter") {
-                Json::Str(s) if !s.is_empty() => Some(Some(self.exprs.intern(s))),
+                Json::Str(s) if !s.is_empty() => Some(Some(self.exprs.intern_reading(s))),
                 _ => None,
             },
             is_else: opt_bool(v.get("isElse")).unwrap_or(false),
@@ -1031,9 +1076,10 @@ impl Reader<'_> {
         }
     }
 
+    /// A renderer's expression: a reading in the program's unit (`Exprs`).
     fn expr(&mut self, v: &Json) -> Option<usize> {
         match v {
-            Json::Str(s) => Some(self.exprs.intern(s)),
+            Json::Str(s) => Some(self.exprs.intern_reading(s)),
             _ => None,
         }
     }
@@ -1157,7 +1203,7 @@ impl Reader<'_> {
                 radius: num(v.get("radius")),
                 unit: distance_unit(v.get("unit")),
                 weight: match v.get("weight") {
-                    Json::Str(s) if !s.trim().is_empty() => Some(self.exprs.intern(s)),
+                    Json::Str(s) if !s.trim().is_empty() => Some(self.exprs.intern_reading(s)),
                     _ => None,
                 },
                 max: opt_num(v.get("max")).filter(|m| *m > 0.0),
