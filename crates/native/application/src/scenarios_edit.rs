@@ -34,7 +34,7 @@ pub fn label(op: ScenarioOperation) -> &'static str {
 }
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 /// Whether the node or a group above it is a scenario.
@@ -407,6 +407,21 @@ fn apply(
 /// Writes the scenario's change as one undo step named after the operation;
 /// a refusal halfway takes back what was written.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ScenariosEdit,
+) -> CommandResult<ScenariosEdited> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_SCENARIOS_EDIT,
+        kentos_contracts::CAD_SCENARIOS_EDIT_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: ScenariosEdit,
 ) -> CommandResult<ScenariosEdited> {

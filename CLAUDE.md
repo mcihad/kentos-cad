@@ -280,6 +280,18 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `kentos-plot` (haritaların vektörleri, paftanın girdileri, yazı tipleri, başsız kitap PDF'i; haritaların yazıları henüz yalnız
   masaüstünde), başsız DXF (`kentos_headless::export`); Python `export_dxf`, `export_pdf`, `sheets`, MCP `drawing.exportDxf`,
   `drawing.exportPdf` (ADR 0252);
+  komut protokolü: her yürütme belgenin tek adımı (`run_step`), nesne, blok, katman ağacı, ayar, stil ve pafta durum damgaları
+  (kanonik JSON'un SHA-256'sı; sayılar en kısa, eşitlikte çift), çağrı zarfı ve cevabı (`requestId`, `expected`, `planId`), planın
+  özeti ve parmak izi, idempotency defteri (`.kcad` şema 45, `FORMATS_VERSION` 57), kayıt `kentos.calls/1` ve tekrar oynatma (dosya
+  komutlarının baytları karşılaştırılır), kataloğun `capabilities`'i ve kodların tek tablosu (`codes.rs`, `host` türü dahil),
+  `CommandError`'ın `uids` ve `retryable`'ı, ortak değişiklik kümesi `cad.changeset.apply`, uzun işler (`start`, `job`, `cancel`;
+  hesap, `staged`, kesinleşme), `file.export.dxf` ve `.pdf` atomik yazmayla; başsız sunucu, Python, MCP ve masaüstünün ajan bağlantısı
+  aynı yoldan (ADR 0253);
+  anlamsal Esnet, Kır, Birleştir, Böl, Alan oluştur ve Tarama: `cad.entities.stretch` (pencere, fark, seçim, Topoloji'nin komşuları),
+  `.break`, `.join` (Zincir), `.divide`, `.boundary`, `.hatch` (nokta ya da Çoklu tara, desen adıyla); bölgeler ve komşular uygulama
+  katmanında (`region.rs`, `RegionCache`, `topology_follow.rs`), alanın halkaları kanonik; araçlar önizlemeyi planla, yazmayı komutla
+  yapar (ADR 0254); Ölçülendirme'nin on türü `cad.dimensions.create` ile: ölçülen nokta koordinat ya da yer, kenar nesne ve tıklanan
+  yerle, yer `at` ya da yazılan uzaklık, stil adıyla; aracın önizlemesi `measured_in` (ADR 0255);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -761,6 +773,9 @@ KENTOS_TEST_DB=required cargo test -p kentos-application --test project_sheets  
 python3 scripts/fixtures/acceptance_room.py --check; python3 scripts/fixtures/sheets_edit_command_cases.py --check   # ilk kabul çiziminin senaryosunu ve izin çizimini, cad.sheets.edit durumlarını KentOS kodu olmadan denetle (ADR 0252)
 .run/py/bin/python -m unittest discover -s python/tests -p "test_acceptance.py"; cargo test -p kentos-mcp --test acceptance; cargo test -p kentos-plot   # kabul çizimi Python'dan ve MCP'den, başsız kitap PDF'i; DXF ve PDF bağımsız okunur, antet poppler'ın pdftotext'iyle (ADR 0252)
 KENTOS_ACCEPTANCE_OUT=$PWD/.run/shots/kabul cargo test -p kentos-desktop acceptance_tests; KENTOS_TRACES_ONLY=acceptance-room cargo test -p kentos-desktop every_trace_passes; ./target/debug/kentos-cad kullan acceptance-room   # kabul çizimi masaüstünde (ajan bağlantısı, Dışa aktar › DXF, pafta kipinin PDF'i; dosyalar .run/shots/kabul) ve fareyle ve klavyeyle, resimler .run/shots/kullanim/masaustu-acceptance-room-* (ADR 0252)
+python3 scripts/fixtures/protocol_cases.py --check   # komut protokolünün kurallarını (plan kimliği, parmak izi, özet, zarf, beklentiler, idempotency, sayıların kanonik yazımı) KentOS kodu olmadan denetle; durumlar fixtures/protocol/v1/cases.json, Rust'ta protocol_cases.rs (ADR 0253)
+python3 scripts/fixtures/reshape_command_cases.py --check; python3 scripts/fixtures/region_command_cases.py --check; python3 scripts/fixtures/dimension_create_cases.py --check   # Esnet, Kır, Birleştir, Böl, Alan oluştur, Tarama ve Ölçü ekle'nin ortak durumlarını KentOS kodu olmadan, kesirlerle ve 60 basamaklı aşkın değerlerle denetle; durumlar fixtures/commands/v1/cad.entities.{stretch,break,join,divide,boundary,hatch}.json ve cad.dimensions.create.json (ADR 0254, 0255)
+KENTOS_TRACES_ONLY=usage-semantic-tools cargo test -p kentos-desktop every_trace_passes; ./target/debug/kentos-cad kullan usage-semantic-tools   # araçların anlamsal komutlarla önizlemesi ve yazması, .run/shots/kullanim/masaustu-usage-semantic-tools-* (ADR 0254, 0255)
 python3 scripts/cad/manifest.py --check   # CAD işlem manifesti: her arayüz komutunun, aracının ve yönteminin düzeyi (catalog/v1/operations.json), Python ve MCP karşılığı ve CAD tarafının boşlukları; eşlenmemiş öğe, olmayan komut ya da işlem ve eski çıktı düşer; --check'siz docs/cad/manifest.{json,md}'yi yazar (ADR 0244)
 cargo test --release -p kentos-formats --test all exif::timing -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all info_templates -- --ignored --nocapture; cargo test --release -p kentos-desktop a_card_opens_in_a_frame -- --ignored --nocapture   # 1 000 fotoğrafın EXIF'i, 10 000 nesnenin kart metni ve bir kartın açılması bütçeleriyle (ADR 0225 §7); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; ATTACH_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/attachments.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp apps/web/src/io/pkg/.stamp
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
@@ -1161,18 +1176,44 @@ tema/yazı ölçeği kontrolü yapılır. Çalıştırılmayan kontrol ve nedeni
 Komut, araç, ayar, pencere, depo ya da `.kcad` alanı değiştiyse `pnpm inventory`
 çalıştırın; farkı okuyup değişiklikle aynı commit'e koyun (docs/inventory/README.md). Web dururken (ADR 0228) envanter donmuştur;
 yeni komutların kaydı `catalog/v1/additions.json`'dadır, web'de gerekenler TODOS.md §0.2'ye yazılır.
+Çizimi ya da projeyi değiştiren yeni araç ve komut, §9.2'deki komut, Python ve MCP bütünlüğü olmadan tamamlandı sayılmaz.
 
 ## 9. Yeni iş ekleme tarifleri
 
 ### 9.1 Komut
 
 Registry/handler, enable/watch, gerekiyorsa alias/kısayol ve menü kaydı ekleyin;
-aynı iş için UI ve otomasyonda ayrı iş kuralı yazmayın.
+aynı iş için UI ve otomasyonda ayrı iş kuralı yazmayın. Belgeyi değiştiren ürün komutu §9.2'deki bütünlükle gelir: katalog
+ve yetenekler, ortak durumlar ve bağımsız başvuru, Python SDK, MCP, manifest.
 
 ### 9.2 Araç
 
 Mevcut araç ailesini seçin; `tools/catalog.ts`, `steps`, preview/input/iptal,
 kilitli katman ve tek undo testlerini tamamlayın. Hesabı ortak Rust'a ekleyin.
+
+**Araç = komut (sahibin kararı, 13 Ekim 2026).** Çizimi ya da projeyi değiştiren her yeni araç işini kendi anlamsal ürün
+komutuyla yapar; aynı işi Python ve yapay zekâ ajanı, geometriyi kendileri hesaplamadan, aynı komutla yapar. Bunlardan biri
+eksikse araç bitmiş sayılmaz:
+
+- **Anlamsal komut:** girdisi kullanıcının verdiğidir (nesnelerin kalıcı kimlikleri, yerleri, tıklanan noktalar, sayılar,
+  seçenekler), sonucu komut hesaplar; `validate`, `plan`, `execute`, `CommandResult`, protokolün kaydı ve tekrar oynatması
+  (ADR 0250, 0253, 0254, 0255). Hazır geometri alan `cad.entities.create` ve `.edit` işlemleri yalnız komutun iç yazma yoludur.
+- **Araç komutu kullanır:** önizleme komutun planından ya da onun hesabından (`plan_in`, `measured_in` gibi), yazma komutun
+  `execute`'undan; hesap araçta ikinci kez yazılmaz. Aracın görünümü, seçimi ve seçenekleri girdinin açık alanlarıdır (CMD-07).
+- **Katalog:** tanım, girdi, çıktı ve plan şemaları, örnekler, `capabilities` (hedef türler, ret ve uyarı kodları; anlamları
+  `codes.rs`'te); `DESKTOP_COMMANDS`, `registry.rs`; başsız sunucu kayıttan çalıştırır.
+- **Ortak durumlar:** `fixtures/commands/v1/<komut>.json`, en az 20 durum, KentOS kodu olmadan yazılmış bağımsız başvurudan
+  (`scripts/fixtures/<konu>_cases.py --check`); yetenek testi (`capabilities.rs`: her kod bir durumda ya da gerekçesiyle, tür
+  denemeleri) geçer.
+- **Python ve MCP:** `python3 scripts/python/sdk.py` ile `kentos.cad` yeniden üretilir ve `pnpm py:test` geçer (ortak durumlar
+  tipli katmandan da); MCP aracı katalogdan gelir, var olanı değiştiren komut `crates/native/mcp/src/tools.rs`'in yıkıcı
+  listesine yazılır.
+- **Manifest:** aracın düzeyi `catalog/v1/operations.json`'da `semantic`, `via`'sı komut; `python3 scripts/cad/manifest.py`
+  (ADR 0244). Yeni araç `geometry` ya da `none` düzeyinde gelmez.
+- **Kanıt:** izler değişmeden geçer; araç komutla çalışırken resimlenir (`kentos-cad kullan …`); aracın yazması kayıtta komutun
+  adıyla görünür. Web dururken (ADR 0228) web'in işleyicisi ve aracı TODOS.md §0.2'ye yazılır.
+
+Var olan `geometry` ve `none` düzeyindeki araçlar borçtur: `docs/cad/manifest.md` onları sayar; dokunulan araç bu kurala getirilir.
 
 ### 9.3 Ayar
 

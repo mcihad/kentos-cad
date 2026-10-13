@@ -24,6 +24,8 @@ kentos-style-core = { path = "../../shared/style-core" }
 # the web sends it (one reader in the core for both).
 # Pafta kitabı (docs/adr/0252 §2): the sheet core's operations, the ones the sheet designer makes.
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
+# The protocol's wrapper (docs/adr/0253) reads every command's input as the type it is.
+serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]

@@ -5,6 +5,7 @@ every example of the catalog reads into its type and writes back the same."""
 from __future__ import annotations
 
 import json
+import keyword
 import unittest
 from typing import Any
 
@@ -42,7 +43,8 @@ class Coverage(unittest.TestCase):
             obj: Any = cad
             for p in parts[:-1]:
                 obj = getattr(obj, p)
-            name = parts[-1] + "_" if parts[-1] == "import" else parts[-1]
+            # A Python keyword gets a trailing underscore (cad.entities.break: entities.break_).
+            name = parts[-1] + "_" if keyword.iskeyword(parts[-1]) else parts[-1]
             self.assertIs(getattr(obj, name), w, c["id"])
             self.assertEqual((w.id, w.version, w.title), (c["id"], c["version"], c["title"]))
             self.assertEqual(w.input_type.__name__, c["input"]["title"])
@@ -65,7 +67,9 @@ class Coverage(unittest.TestCase):
                     # A named text that is no choice (a block's id) is a plain `str`, as the generator writes it.
                     defs = c[side].get("$defs", {}).items()
                     names.update(n for n, d in defs if not (d.get("type") == "string" and "enum" not in d))
-        missing = sorted(n for n in names if not hasattr(types, n))
+        # A type whose name a hand-written part of the package has is renamed (scripts/python/sdk.py RENAMES).
+        renamed = {"CommandWarning": "StepWarning"}
+        missing = sorted(n for n in names if not hasattr(types, renamed.get(n, n)))
         self.assertEqual(missing, [])
 
     def test_the_package_exports_no_name_twice(self) -> None:

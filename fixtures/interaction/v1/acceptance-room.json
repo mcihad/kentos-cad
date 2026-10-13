@@ -173,7 +173,7 @@
   {"text": "4500,-1500"},
   {"key": "Enter", "expect": {"entities": 17, "newest": {"kind": "line", "points": [[-2.5, -3], [2.5, -3]]}}},
   {"key": "Esc"},
-  {"key": "Esc", "expect": {"tool": "select"}},
+  {"key": "Esc", "note": "Kayıt (ADR 0253 §3): her yazma bir ürün komutundan geçti, komutsuz düzenleme yok; kayıt izin çizimi yeniden açılınca her satırı aynı sonuçla oynatılır ve aynı çizimi verir.", "expect": {"tool": "select", "journal": {"edits": 0, "commands": 29, "replays": true}}},
   {"saveAndReopen": true, "note": "Kaydet ve aç: bütün çizim yerinde.", "expect": {"entities": 17, "objects": [{"id": 1, "kind": "polygon", "points": [[-2, -1.5], [2, -1.5], [2, 1.5], [-2, 1.5]]}, {"id": 2, "kind": "dimension", "points": [[-2, -1.5], [2, -1.5]], "refs": ["a", "b"]}, {"id": 3, "kind": "dimension", "points": [[2, 1.5], [-2, 1.5]], "refs": ["a", "b"]}, {"id": 9, "kind": "line", "points": [[-2.2, -1.7], [2.2, -1.7]]}, {"id": 13, "kind": "line", "points": [[-2, -1.5], [2, -1.5]]}, {"id": 17, "kind": "line", "points": [[-2.5, -3], [2.5, -3]]}]}},
   {"shot": "kaydedildi"}
  ]

@@ -31,12 +31,13 @@
 mod dispatch;
 mod error;
 pub mod export;
-mod files;
+pub mod file_commands;
+pub mod files;
 mod query;
 pub mod rpc;
 mod session;
 
-pub use dispatch::{DESKTOP, Op};
+pub use dispatch::{Op, call_envelope, commands};
 pub use error::HeadlessError;
 pub use query::{Measure, Page, Units, units};
 pub use session::{NewDrawing, Session, new_drawing};

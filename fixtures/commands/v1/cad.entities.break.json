@@ -1,0 +1,1922 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.break",
+  "commandVersion": 1,
+  "title": "Nesneyi kır",
+  "note": "Written by scripts/fixtures/reshape_command_cases.py from the operations' definitions (docs/adr/0047, 0057, 0160, 0161, 0254); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Biçim komutları",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "nokta",
+        "name": "Nokta",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "alt",
+            "name": "Alt",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 10,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Duvar"
+        },
+        "color": "#E5484D",
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Bordür"
+        },
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420020
+          },
+          {
+            "x": 487010,
+            "y": 4420020
+          },
+          {
+            "x": 487010,
+            "y": 4420030
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "101"
+        },
+        "pts": [
+          {
+            "x": 487020,
+            "y": 4420000
+          },
+          {
+            "x": 487030,
+            "y": 4420000
+          },
+          {
+            "x": 487030,
+            "y": 4420010
+          },
+          {
+            "x": 487020,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 13,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487030,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420010
+          },
+          {
+            "x": 487030,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 14,
+        "layerId": "kilitli",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "line",
+        "id": 15,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487050,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487060,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "point",
+        "id": 16,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487050,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 17,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Yol"
+        },
+        "a": {
+          "x": 487000,
+          "y": 4420060
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420060
+        }
+      },
+      {
+        "kind": "line",
+        "id": 18,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420060
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420060
+        }
+      },
+      {
+        "kind": "line",
+        "id": 19,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420060
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420070
+        }
+      },
+      {
+        "kind": "circle",
+        "id": 20,
+        "layerId": "yapi",
+        "attrs": {},
+        "c": {
+          "x": 487060,
+          "y": 4420060
+        },
+        "r": 5
+      },
+      {
+        "kind": "polygon",
+        "id": 21,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487020,
+            "y": 4420010
+          },
+          {
+            "x": 487030,
+            "y": 4420010
+          },
+          {
+            "x": 487030,
+            "y": 4420020
+          },
+          {
+            "x": 487020,
+            "y": 4420020
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 22,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487030,
+          "y": 4420010
+        },
+        "b": {
+          "x": 487032,
+          "y": 4420010
+        }
+      },
+      {
+        "kind": "line",
+        "id": 23,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "line",
+        "id": 24,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 25,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487070,
+            "y": 4420000
+          },
+          {
+            "x": 487080,
+            "y": 4420000
+          },
+          {
+            "x": 487080,
+            "y": 4420010
+          },
+          {
+            "x": 487070,
+            "y": 4420010
+          }
+        ],
+        "holes": [
+          {
+            "pts": [
+              {
+                "x": 487072,
+                "y": 4420002
+              },
+              {
+                "x": 487074,
+                "y": 4420002
+              },
+              {
+                "x": 487074,
+                "y": 4420004
+              },
+              {
+                "x": 487072,
+                "y": 4420004
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 26,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420090
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420090
+        }
+      },
+      {
+        "kind": "line",
+        "id": 27,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010.5,
+          "y": 4420090
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420090
+        }
+      },
+      {
+        "kind": "line",
+        "id": 28,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420100
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420100
+        }
+      },
+      {
+        "kind": "line",
+        "id": 29,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420100
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420110
+        }
+      },
+      {
+        "kind": "line",
+        "id": 30,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420110
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420100
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Çizginin iki noktası arası gider: iki parça, ilki yerinde, öbürü yeni; öznitelik kalmaz, renk kalır; adım “Kır”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487004,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487006,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "created": [
+                "$uidOf:31"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31
+            ],
+            "entities": {
+              "10": {
+                "kind": "line",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487004,
+                  "y": 4420000
+                }
+              },
+              "31": {
+                "kind": "line",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kır",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "10": {
+                "kind": "line",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Duvar"
+                },
+                "color": "#E5484D",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              }
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "İkinci nokta yoksa çizgi ilk noktada ikiye bölünür",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487005,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "created": [
+                "$uidOf:31"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31
+            ],
+            "entities": {
+              "10": {
+                "kind": "line",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487005,
+                  "y": 4420000
+                }
+              },
+              "31": {
+                "kind": "line",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487005,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nokta nesnenin dışındaysa izdüşümü sayılır: uca kadar gider, tek parça öznitelikleriyle kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487008,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487012,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "created": [],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "10": {
+                "kind": "line",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Duvar"
+                },
+                "color": "#E5484D",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487008,
+                  "y": 4420000
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu çizginin iki kenarı arası: iki uçlu parçalar çizgi olur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:11",
+            "first": {
+              "x": 487005,
+              "y": 4420020
+            },
+            "second": {
+              "x": 487010,
+              "y": 4420025
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "created": [
+                "$uidOf:31"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31
+            ],
+            "entities": {
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487005,
+                  "y": 4420020
+                }
+              },
+              "31": {
+                "kind": "line",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420025
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420030
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapalı alan: ilk noktadan ikinciye saat tersi giden kısım silinir, kalan açık çoklu çizgi; alanın verisi kalmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:12",
+            "first": {
+              "x": 487025,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487030,
+              "y": 4420005
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:12"
+              ],
+              "created": [],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "12": {
+                "kind": "polyline",
+                "id": 12,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487030,
+                    "y": 4420005
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420000
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapalı alan tek noktada: halka o noktadan açılır, tek açık çoklu çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:12",
+            "first": {
+              "x": 487025,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:12"
+              ],
+              "created": [],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "12": {
+                "kind": "polyline",
+                "id": 12,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487025,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420000
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noktalar ters sırayla verilse de aynı kısım gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487006,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487004,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "created": [
+                "$uidOf:31"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31
+            ],
+            "entities": {
+              "10": {
+                "kind": "line",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487004,
+                  "y": 4420000
+                }
+              },
+              "31": {
+                "kind": "line",
+                "id": 31,
+                "layerId": "yapi",
+                "attrs": {},
+                "color": "#E5484D",
+                "a": {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: parçalar yazılacakları gibi, yeni olan id 0; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487004,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487006,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                {
+                  "kind": "line",
+                  "id": 10,
+                  "layerId": "yapi",
+                  "attrs": {},
+                  "color": "#E5484D",
+                  "a": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "b": {
+                    "x": 487004,
+                    "y": 4420000
+                  }
+                }
+              ],
+              "created": [
+                {
+                  "kind": "line",
+                  "id": 0,
+                  "layerId": "yapi",
+                  "attrs": {},
+                  "color": "#E5484D",
+                  "a": {
+                    "x": 487006,
+                    "y": 4420000
+                  },
+                  "b": {
+                    "x": 487010,
+                    "y": 4420000
+                  }
+                }
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "Yapı-01",
+            "first": {
+              "x": 487004,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487006,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“Yapı-01” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İlk nokta sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487004,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487006,
+              "y": 4420000
+            }
+          },
+          "nonFinite": {
+            "first.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "İlk kırma noktasının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "first.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İkinci nokta sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487004,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487006,
+              "y": 4420000
+            }
+          },
+          "nonFinite": {
+            "second.y": "-Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "İkinci kırma noktasının kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "second.y"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487004,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487006,
+              "y": 4420000
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesne çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+            "first": {
+              "x": 487004,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487006,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nokta kırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:16",
+            "first": {
+              "x": 487050,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_breakable",
+              "message": "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ya da ışın olmalı.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adalı alan kırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:25",
+            "first": {
+              "x": 487075,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487080,
+              "y": 4420005
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_breakable",
+              "message": "Adalı alanda kırma yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:14",
+            "first": {
+              "x": 487004,
+              "y": 4420040
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki nesne değiştirilemez. Kilidi Katmanlar panelinden açın.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uçtan kırılmaz: çekirdeğin sözü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487000,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "break_failed",
+              "message": "Nesne ucundan kırılamaz; iç kısmında bir nokta gösterin.",
+              "path": "first"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki nokta bütün nesneyi kapsıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 486999,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487011,
+              "y": 4420000
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "break_failed",
+              "message": "İki nokta nesnenin tamamını kapsıyor; silmek için Sil kullanın.",
+              "path": "first"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Daire tek noktadan kırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:20",
+            "first": {
+              "x": 487065,
+              "y": 4420060
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "break_failed",
+              "message": "Daire tek noktadan kırılamaz; ikinci bir nokta gösterin.",
+              "path": "first"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:11",
+            "first": {
+              "x": 487005,
+              "y": 4420020
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "created": [
+                "$uidOf:31"
+              ],
+              "removed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:10",
+            "first": {
+              "x": 487004,
+              "y": 4420000
+            },
+            "second": {
+              "x": 487006,
+              "y": 4420000
+            },
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

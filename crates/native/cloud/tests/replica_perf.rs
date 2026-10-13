@@ -153,6 +153,7 @@ fn opened(n: usize) -> Opened {
         project_id: Some(kentos_contracts::ProjectId(project.into_bytes())),
         migrated_from: None,
         sheets: None,
+        requests: Vec::new(),
     };
     let document = Document::from_snapshot_v2(snapshot).expect("the drawing opens");
     let tenant = Uuid::now_v7();

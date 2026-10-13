@@ -16,8 +16,8 @@ use std::fmt;
 use std::sync::Arc;
 
 use kentos_contracts::{
-    Entity, EntityBase, LayerField, LayerNodeType, LayerSnap, LayerStyle, ProjectSettings,
-    ProjectSheets, ProjectStyles, fields_problem, sheets_problem,
+    Entity, EntityBase, LayerField, LayerNodeType, LayerSnap, LayerStyle, ProjectPart,
+    ProjectSettings, ProjectSheets, ProjectStyles, fields_problem, sheets_problem,
 };
 
 use crate::document::Document;
@@ -620,9 +620,9 @@ impl Document {
 
     /// Shows or hides a layer or group; an edit when it changes.
     pub fn set_layer_visible(&mut self, id: &str, visible: bool) {
-        if self.layers.set_visible(id, visible) {
-            self.mark_edited();
-        }
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_visible(id, visible);
+        self.flags_written(framed, changed, base);
     }
 
     pub fn toggle_layer_visible(&mut self, id: &str) {
@@ -632,71 +632,71 @@ impl Document {
     }
 
     pub fn toggle_layer_locked(&mut self, id: &str) {
-        if self.layers.toggle_locked(id) {
-            self.mark_edited();
-        }
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.toggle_locked(id);
+        self.flags_written(framed, changed, base);
     }
 
     /// Locks or unlocks a layer or group; an edit when it changes, never an
     /// undo step (`cad.layers.set`, docs/adr/0248 §2). Whether it changed.
     pub fn set_layer_locked(&mut self, id: &str, locked: bool) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
         let changed = self.layers.set_locked(id, locked);
-        if changed {
-            self.mark_edited();
-        }
+        self.flags_written(framed, changed, base);
         changed
     }
 
     /// A layer's own snapping, on a group's every layer (docs/adr/0163 §4):
     /// an edit, not an undo step, as a lock is.
     pub fn set_layer_snap(&mut self, id: &str, snap: Option<LayerSnap>) {
-        if self.layers.set_snap(id, snap) {
-            self.mark_edited();
-        }
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_snap(id, snap);
+        self.flags_written(framed, changed, base);
     }
 
     /// Shows only this node, the groups above it and everything below it.
     pub fn isolate_layer(&mut self, id: &str) {
-        if self.layers.isolate(id) {
-            self.mark_edited();
-        }
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.isolate(id);
+        self.flags_written(framed, changed, base);
     }
 
     /// Shows only these nodes, the groups above them and everything below
     /// them (Katmanı yalıt, docs/adr/0177 §1); an edit only when a node's
     /// visibility changed, which it returns.
     pub fn isolate_layers(&mut self, ids: &[String]) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
         let changed = self.layers.isolate_many(ids);
-        if changed {
-            self.mark_edited();
-        }
+        self.flags_written(framed, changed, base);
         changed
     }
 
     /// Shows every layer and group; an edit only when one was hidden (docs/adr/0020).
     pub fn show_all_layers(&mut self) {
-        if self.layers.show_all() {
-            self.mark_edited();
-        }
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.show_all();
+        self.flags_written(framed, changed, base);
     }
 
     /// Opens or closes a group in the tree: kept in the file, not an edit (web).
     pub fn set_layer_expanded(&mut self, id: &str, expanded: bool) {
+        self.before_part(ProjectPart::LayerFlags);
         self.layers.set_expanded(id, expanded);
     }
 
     /// Makes a layer the one new objects go to: kept in the file, not an edit
     /// (web). Groups and unknown ids are refused; returns whether it was taken.
     pub fn set_active_layer(&mut self, id: &str) -> bool {
+        // The step keeps the active layer from its start (step.rs).
         self.layers.set_active(id)
     }
 
     /// Renames a layer or group: trimmed, an empty name refused. The same name
     /// again is not an edit (docs/adr/0020).
     pub fn rename_layer(&mut self, id: &str, name: &str) {
-        if self.layers.rename(id, name) {
-            self.mark_edited();
-        }
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.rename(id, name);
+        self.flags_written(framed, changed, base);
     }
 
     /// Adds a layer or a group as one undo step, “Katman ekle” or “Grup
@@ -822,8 +822,10 @@ impl Document {
     /// differs, never an undo step. The window that asks trims it.
     pub fn set_name(&mut self, name: &str) {
         if self.name != name {
+            let (framed, base) = (self.before_part(ProjectPart::Name), self.edits);
             name.clone_into(&mut self.name);
             self.mark_edited();
+            self.after_part(ProjectPart::Name, framed, true, base);
         }
     }
 
@@ -837,8 +839,10 @@ impl Document {
     pub fn set_settings(&mut self, settings: ProjectSettings) {
         let settings = settings.sanitized();
         if self.settings != settings {
+            let (framed, base) = (self.before_part(ProjectPart::Settings), self.edits);
             self.settings = settings;
             self.mark_edited();
+            self.after_part(ProjectPart::Settings, framed, true, base);
         }
     }
 
@@ -847,8 +851,10 @@ impl Document {
     /// when it differs, never an undo step (the library keeps no undo).
     pub fn set_styles(&mut self, styles: ProjectStyles) {
         if self.styles != styles {
+            let (framed, base) = (self.before_part(ProjectPart::Styles), self.edits);
             self.styles = styles;
             self.mark_edited();
+            self.after_part(ProjectPart::Styles, framed, true, base);
         }
     }
 
@@ -862,10 +868,21 @@ impl Document {
             return Err(format!("{at}: {why}"));
         }
         if self.sheets.as_deref() != sheets.as_ref() {
+            let (framed, base) = (self.before_part(ProjectPart::Sheets), self.edits);
             self.sheets = sheets.map(Arc::new);
             self.mark_edited();
+            self.after_part(ProjectPart::Sheets, framed, true, base);
         }
         Ok(())
+    }
+
+    /// A layer flag was written (`changed`): an edit, and, outside a
+    /// command's step, a journal row.
+    fn flags_written(&mut self, framed: bool, changed: bool, base: u64) {
+        if changed {
+            self.mark_edited();
+            self.after_part(ProjectPart::LayerFlags, framed, true, base);
+        }
     }
 }
 
@@ -893,4 +910,9 @@ fn changed(mut entity: Entity, slot: Slot, before: &Entity) -> Entity {
 
 pub(crate) fn base_mut(entity: &mut Entity) -> &mut EntityBase {
     entity.base_mut()
+}
+
+/// Gives `entity` the slot `slot` as its id.
+pub(crate) fn set_slot(entity: &mut Entity, slot: Slot) {
+    base_mut(entity).id = slot.0;
 }

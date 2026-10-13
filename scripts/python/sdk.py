@@ -890,6 +890,12 @@ def emit_command(em: Emit, c: Command) -> str:
     if not c.local:
         params += ["expected_versions: Mapping[str, str] | None = None", "idempotency_key: str | None = None"]
     sig = ",\n        ".join(params)
+    # The protocol's own (docs/adr/0253): a write's request id and what it expects.
+    if c.local and any(f.py in ("request_id", "expected", "op") for f in fields):
+        raise Fail(f"{c.id}: an input field is named request_id, expected or op")
+    protocol = ["request_id: str | None = None", "expected: Expected | None = None"]
+    call_sig = ",\n        ".join(params + protocol) if c.local else sig
+    answer_sig = ",\n        ".join(params + ['op: str = "execute"'] + protocol)
     build = "".join(f"\n            {build_arg(em, f)}," for f in fields)
     make = f"{c.input}({build}\n        )" if fields else f"{c.input}()"
     head = wrap(doc_text(f"{c.title}: {c.summary}"))
@@ -924,10 +930,22 @@ def emit_command(em: Emit, c: Command) -> str:
         call_doc += "\n\nRaises:\n    ServerError: the server's refusal (its code, message and field)."
     target = first[0]
     lines.append("")
-    lines.append(f"    def __call__(\n        {sig},\n    ) -> {c.output}:")
+    if c.local:
+        call_doc = call_doc.replace(
+            "\n\nReturns:",
+            "\n    request_id: Names this write: sent again with the same call it is answered as"
+            "\n        before and applied once (docs/adr/0253 §6)."
+            "\n    expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's"
+            "\n        id); otherwise nothing is written and RevisionConflict is raised."
+            "\n\nReturns:",
+            1,
+        )
+    lines.append(f"    def __call__(\n        {call_sig},\n    ) -> {c.output}:")
     lines.append(docstring(call_doc, "        ").rstrip("\n"))
     if c.local:
-        lines.append(f"        return self.execute_input({target}, {make})")
+        lines.append(
+            f"        return self.execute_input({target}, {make}, request_id=request_id, expected=expected)"
+        )
     else:
         lines.append(
             f"        return self.execute_input(\n            {target},\n            {make},\n"
@@ -946,6 +964,16 @@ def emit_command(em: Emit, c: Command) -> str:
             "Checks the input against the drawing, writing nothing; its warnings.\n"
             "A refusal raises as for the call.", "        ").rstrip("\n"))
         lines.append(f"        return self.validate_input({target}, {make})")
+        lines.append("")
+        lines.append(f"    def answer(\n        {answer_sig},\n    ) -> Outcome[Any]:")
+        lines.append(docstring(
+            "``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):\n"
+            "the whole answer, a refusal in it rather than raised, with what it touched\n"
+            "(``summary``), the plan's id (``plan_id``), whether the request was answered\n"
+            "before (``replayed``) and its journal row (``call``).", "        ").rstrip("\n"))
+        lines.append(
+            f"        return self.answer_input({target}, {make}, op=op, request_id=request_id, expected=expected)"
+        )
     lines.append("")
     lines.append("")
     lines.append(f"{c.attr} = {cls}()")
@@ -996,9 +1024,12 @@ def emit_modules(model: Model, commands: list[Command]) -> dict[Path, str]:
             lines.append("")
             rt = ["UNSET", "CommandNote", "Unset", "_opt"]
             rt.append("LocalCommand" if any(c.local for c in cmds) else "")
+            rt.append("Outcome" if any(c.local for c in cmds) else "")
             rt.append("ServerCommand" if any(not c.local for c in cmds) else "")
             rt_names = ", ".join(sorted(n for n in rt if n))
             lines.append(f"from {dots}_runtime import {rt_names}  # noqa: F401")
+            if any(c.local for c in cmds):
+                lines.append(f"from {dots}protocol import Expected  # noqa: F401")
             lines.append(f"from {dots}types import (  # noqa: F401")
             lines.extend(f"    {n}," for n in type_names)
             lines.append(")")
@@ -1085,7 +1116,32 @@ def load() -> tuple[dict, dict[str, dict]]:
             for name, d in s.get("$defs", {}).items():
                 put(name, d)
             put(s["title"], {k: v for k, v in s.items() if k not in ("$schema", "$defs", "title")})
-    return catalog, inline_texts(schemas)
+    return catalog, inline_texts(renamed(schemas))
+
+
+# Contract types whose name a hand-written part of the package has already: the
+# warning a step of a change set gave (docs/adr/0253 §8) is `CommandWarning` in
+# Rust, the Python warning category (kentos.cad.errors) is too.
+RENAMES = {"CommandWarning": "StepWarning"}
+
+
+def renamed(schemas: dict[str, dict]) -> dict[str, dict]:
+    """`schemas` with the RENAMES applied, to the names and to every reference."""
+
+    def walk(node: Any) -> Any:
+        if isinstance(node, dict):
+            out = {}
+            for k, v in node.items():
+                if k == "$ref" and isinstance(v, str) and ref_name(v) in RENAMES:
+                    out[k] = "#/$defs/" + RENAMES[ref_name(v)]
+                else:
+                    out[k] = walk(v)
+            return out
+        if isinstance(node, list):
+            return [walk(x) for x in node]
+        return node
+
+    return {RENAMES.get(n, n): walk(body) for n, body in schemas.items()}
 
 
 def inline_texts(schemas: dict[str, dict]) -> dict[str, dict]:
@@ -1132,7 +1188,7 @@ def emit_init(model: Model, commands: list[Command]) -> str:
     spaces = sorted({c.path[0] for c in commands})
     names = ["COMMANDS", "NAMESPACES", "UNSET", "Unset", "CommandNote", "LocalCommand", "Outcome",
              "ServerCommand", "types", *spaces]
-    for module in ("_api", "connection", "document", "errors"):
+    for module in ("_api", "connection", "document", "errors", "protocol"):
         names += exports_of(OUT / f"{module}.py")
     names += type_names(model)
     if len(set(names)) != len(names):
@@ -1149,6 +1205,7 @@ def emit_init(model: Model, commands: list[Command]) -> str:
         + "from .connection import *  # noqa: F403\n"
         + "from .document import *  # noqa: F403\n"
         + "from .errors import *  # noqa: F403\n"
+        + "from .protocol import *  # noqa: F403\n"
         + "from .types import *  # noqa: F403\n\n"
         + f"from . import {', '.join(spaces)}  # noqa: E402  isort: skip\n\n"
         + f"__all__ = [\n{rows}]\n"

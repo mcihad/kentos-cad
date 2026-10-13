@@ -130,7 +130,10 @@ use crate::layer::LineType;
 /// 56: the project's sheet book (docs/adr/0251): `.kcad` document schema 44, the document's
 ///    `sheets` (the sheet core's book, opaque, and its pictures' bytes under their SHA-256; in the
 ///    snapshot's JSON the bytes are base64). The web's copy stays 53 while the web is paused.
-pub const FORMATS_VERSION: u32 = 56;
+/// 57: the request ledger (docs/adr/0253 §6): `.kcad` document schema 45, the document's
+///    `requests` (the requests a drawing executed: id, fingerprint, command, version, revision,
+///    status and the answer then). The web's copy stays 53 while the web is paused.
+pub const FORMATS_VERSION: u32 = 57;
 
 // ── Every import ────────────────────────────────────────────────────────
 

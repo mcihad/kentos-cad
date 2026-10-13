@@ -7,24 +7,32 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, arc, blocks, circle, dimensions, entities, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, sheets, styles
+from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, sheets, styles
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
     "cad.arc.create": arc.create,
     "cad.blocks.define": blocks.define,
     "cad.blocks.edit": blocks.edit,
+    "cad.changeset.apply": changeset.apply,
     "cad.circle.create": circle.create,
+    "cad.dimensions.create": dimensions.create,
     "cad.dimensions.reassociate": dimensions.reassociate,
     "cad.entities.array": entities.array,
+    "cad.entities.boundary": entities.boundary,
+    "cad.entities.break": entities.break_,
     "cad.entities.chamfer": entities.chamfer,
     "cad.entities.create": entities.create,
     "cad.entities.delete": entities.delete,
+    "cad.entities.divide": entities.divide,
     "cad.entities.edit": entities.edit,
     "cad.entities.extend": entities.extend,
     "cad.entities.fillet": entities.fillet,
+    "cad.entities.hatch": entities.hatch,
+    "cad.entities.join": entities.join,
     "cad.entities.offset": entities.offset,
     "cad.entities.set": entities.set,
+    "cad.entities.stretch": entities.stretch,
     "cad.entities.transform": entities.transform,
     "cad.entities.trim": entities.trim,
     "cad.labels.pin": labels.pin,
@@ -47,6 +55,8 @@ COMMANDS: dict[str, Any] = {
     "cad.settings.set": settings.set,
     "cad.sheets.edit": sheets.edit,
     "cad.styles.edit": styles.edit,
+    "file.export.dxf": file.export.dxf,
+    "file.export.pdf": file.export.pdf,
     "project.access.revoke": project.access.revoke,
     "project.archive": project.archive,
     "project.changes": project.changes,
@@ -71,4 +81,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "arc", "blocks", "circle", "dimensions", "entities", "labels", "layers", "line", "network", "point", "polygon", "polyline", "project", "scenarios", "settings", "sheets", "styles",)
+NAMESPACES = ("addresses", "arc", "blocks", "changeset", "circle", "dimensions", "entities", "file", "labels", "layers", "line", "network", "point", "polygon", "polyline", "project", "scenarios", "settings", "sheets", "styles",)

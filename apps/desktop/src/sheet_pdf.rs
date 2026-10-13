@@ -89,7 +89,8 @@ impl App {
             let dir = std::env::temp_dir().join("kentos-pafta");
             std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
             let path = dir.join(&name);
-            std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
+            // Whole before the viewer opens it (docs/adr/0253 §10).
+            kentos_headless::files::write_bytes(&bytes, &path).map_err(|e| e.message)?;
             Ok(path)
         }) {
             Ok(path) => match open_with_viewer(&path) {

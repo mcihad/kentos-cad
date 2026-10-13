@@ -154,7 +154,7 @@ pub fn execute(
     }
 }
 
-fn relay<T, U>(result: CommandResult<T>) -> CommandResult<U> {
+pub(crate) fn relay<T, U>(result: CommandResult<T>) -> CommandResult<U> {
     match result {
         CommandResult::Completed { .. } | CommandResult::Cancelled => CommandResult::Cancelled,
         CommandResult::Queued { job_id } => CommandResult::Queued { job_id },
@@ -170,7 +170,7 @@ struct Checked {
 }
 
 fn refuse(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.into())))
+    Stop::failed(error(code, message, Some(path.into())))
 }
 
 /// The changes that replace the object at `slot` by `pieces`: the first

@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     PointCreate,
     PointCreated,
@@ -52,6 +53,8 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
         label: str | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         z: float | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> PointCreated:
         """Nokta oluştur: Açık çizimde verilen katmana bir nokta nesnesi ekler; isteğe bağlı
         kotu ve yanında görünen yazısıyla. Tek geri alma adımıdır. Nokta aracı her nokta
@@ -76,6 +79,10 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
                 The id is not looked up: the libraries are the host's. Absent: the
                 layer's style.
             z: Its elevation (kot), in metres. Absent: none.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             PointCreated
@@ -93,7 +100,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
             label=label,
             symbol=symbol,
             z=z,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -150,6 +157,39 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
             symbol=symbol,
             z=z,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        layer_id: str,
+        p: Vec2Like,
+        attrs: Mapping[str, str] | None | Unset = UNSET,
+        color: str | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
+        z: float | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, PointCreate(
+            layer_id=layer_id,
+            p=Vec2.of(p),
+            attrs=_opt(attrs, lambda x: dict(x)),
+            color=color,
+            expected_revision=expected_revision,
+            label=label,
+            symbol=symbol,
+            z=z,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 create = _PointCreate()

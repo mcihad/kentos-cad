@@ -86,6 +86,9 @@ impl Document {
         {
             return Err(format!("{at}: {why}"));
         }
+        if let Some((_, why)) = kentos_contracts::requests_problem(&snapshot.requests) {
+            return Err(format!("İstekler: {why}"));
+        }
         let DocumentSnapshotV2 {
             name,
             settings,
@@ -100,9 +103,10 @@ impl Document {
             project_id,
             migrated_from,
             sheets,
+            requests,
             ..
         } = snapshot;
-        Ok(Self::build(Parts {
+        let mut doc = Self::build(Parts {
             snapshot: DocumentSnapshotV1 {
                 format: DOCUMENT_FORMAT.to_owned(),
                 version: DOCUMENT_VERSION,
@@ -120,7 +124,9 @@ impl Document {
             project_id: project_id.map(|p| Uuid::from_bytes(p.0)),
             migrated_from,
             sheets,
-        }))
+        });
+        doc.load_requests(requests);
+        Ok(doc)
     }
 
     fn build(parts: Parts) -> Self {
@@ -165,6 +171,7 @@ impl Document {
             store,
             next_slot: u64::from(largest) + 1,
             history: History::default(),
+            calls: crate::calls::Calls::default(),
             edits: 0,
             generation: 0,
             dirty: false,
@@ -214,6 +221,7 @@ impl Document {
             project_id: self.project_id.map(|p| ProjectId(p.into_bytes())),
             migrated_from: self.migrated_from.clone(),
             sheets: self.sheets.as_deref().cloned(),
+            requests: self.requests(),
         }
     }
 }

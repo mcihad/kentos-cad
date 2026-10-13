@@ -40,7 +40,7 @@ pub enum Effect {
     ShowModel,
     /// A sheet is in front.
     ShowSheet,
-    /// Ask where to write the export (the host's file dialog), then call [`Designer::export_to`].
+    /// Ask where to write the export (the host's file dialog), then [`Designer::export_bytes`] (or [`Designer::export_pdf`]) and write them whole.
     AskExportPath { kind: ExportKind, suggested: String },
     /// Ask which `.kpafta` file to read (the host's file dialog), then give its text back as [`crate::Message::ImportText`].
     AskImportPath,

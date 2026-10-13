@@ -202,6 +202,7 @@ pub fn new_document(o: &NewProject) -> Result<Document, String> {
             project_id: None,
             migrated_from: None,
             sheets: None,
+            requests: Vec::new(),
         },
         None,
     )

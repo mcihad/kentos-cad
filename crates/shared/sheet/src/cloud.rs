@@ -501,6 +501,7 @@ pub fn catalog_entries() -> Vec<kentos_contracts::CommandDescriptor> {
         input,
         output: schema::<SheetTemplateChanged>(),
         plan: None,
+        capabilities: None,
         examples: vec![CommandExample {
             title: title.into(),
             input: example,

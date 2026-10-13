@@ -5,7 +5,7 @@
 //! (apps/web/src/product/registry.test.ts) are held to theirs the same way.
 use std::collections::BTreeSet;
 
-use kentos_contracts::{CommandHost, catalog};
+use kentos_contracts::{CommandHost, FILE_COMMANDS, catalog};
 use kentos_native_application::DESKTOP_COMMANDS;
 
 #[test]
@@ -25,5 +25,13 @@ fn the_desktop_runs_exactly_the_catalog_commands_marked_desktop() {
         DESKTOP_COMMANDS.len(),
         "a command listed twice"
     );
-    assert_eq!(listed, handled);
+    // The commands that write files are the headless host's (docs/adr/0253 §10): they need the
+    // file formats and the sheet core, which the document's commands do not.
+    let files: BTreeSet<(String, u32)> = FILE_COMMANDS
+        .iter()
+        .map(|(name, version)| ((*name).to_string(), *version))
+        .collect();
+    assert!(handled.is_disjoint(&files));
+    let all: BTreeSet<(String, u32)> = handled.union(&files).cloned().collect();
+    assert_eq!(listed, all);
 }

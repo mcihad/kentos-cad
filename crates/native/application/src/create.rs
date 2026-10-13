@@ -54,11 +54,16 @@ pub fn plan(
     cx: &ExecutionContext<'_>,
     input: &EntitiesCreate,
 ) -> CommandResult<EntitiesCreatePlan> {
-    match check(cx.doc, input) {
+    plan_in(cx.doc, input)
+}
+
+/// [`plan`] over the document (a command that creates through this one, docs/adr/0254).
+pub fn plan_in(doc: &Document, input: &EntitiesCreate) -> CommandResult<EntitiesCreatePlan> {
+    match check(doc, input) {
         Ok(checked) => CommandResult::Completed {
             output: EntitiesCreatePlan {
                 entities: entities(input, &checked.attrs, &checked.placed),
-                revision: cx.doc.revision().to_string(),
+                revision: doc.revision().to_string(),
             },
             warnings: checked.warnings,
         },
@@ -70,6 +75,21 @@ pub fn plan(
 /// step (the document's own `add_many`), into the open transaction or group
 /// if one is. Nothing is written when the document has no slot left for them.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesCreate,
+) -> CommandResult<EntitiesCreated> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_ENTITIES_CREATE,
+        kentos_contracts::CAD_ENTITIES_CREATE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesCreate,
 ) -> CommandResult<EntitiesCreated> {
@@ -174,7 +194,7 @@ struct Checked {
 /// will be when it may.
 fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
     if input.objects.is_empty() {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NO_OBJECTS,
             "Eklenecek nesne verilmedi. En az bir nesne verin.".into(),
             Some("objects".into()),
@@ -215,7 +235,7 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
                 .and_then(|u| doc.slot_of(u))
                 .is_none()
         {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::LINK_NOT_FOUND,
                 format!(
                     "“{of}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Çizimdeki bir nesnenin kimliğini verin."
@@ -284,7 +304,7 @@ fn placed_points(
                 let at = format!("objects[{i}].geometry.refs.{name}");
                 let uid = Uuid::from_bytes(r.uid.0);
                 let Some(e) = doc.slot_of(uid).and_then(|s| doc.get(s)) else {
-                    return Err(Stop::Failed(error(
+                    return Err(Stop::failed(error(
                         codes::ENTITY_NOT_FOUND,
                         format!(
                             "“{uid}” kimlikli nesne çizimde yok: ölçünün noktası onun yerine bağlanamaz. Çizimdeki bir nesnenin kimliğini verin."
@@ -294,7 +314,7 @@ fn placed_points(
                 };
                 let place = kentos_domain::dimension_ties::core_place(r.place);
                 let Some(p) = point(&crate::blocks::core_entity(e), place) else {
-                    return Err(Stop::Failed(error(
+                    return Err(Stop::failed(error(
                         codes::NO_SUCH_PLACE,
                         "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.".into(),
                         Some(format!("{at}.place")),
@@ -313,7 +333,7 @@ fn placed_points(
 /// the scale finite and over 0 (`invalid_link`).
 fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
     let refuse = |field: &str, message: String| {
-        Err(Stop::Failed(error(
+        Err(Stop::failed(error(
             codes::INVALID_LINK,
             message,
             Some(format!("objects[{i}].{field}")),
@@ -363,7 +383,7 @@ fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
     }
     // A linked text has no curve (docs/adr/0196 §1).
     if let EntityGeometry::Text { path: Some(_), .. } = &object.geometry {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_PATH,
             "Nesneye bağlı yazının eğrisi olmaz. Önce bağı koparın ya da eğriyi kaldırın.".into(),
             Some(format!("objects[{i}].geometry.path")),

@@ -80,6 +80,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesArray,
 ) -> CommandResult<EntitiesArrayed> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_ENTITIES_ARRAY,
+        kentos_contracts::CAD_ENTITIES_ARRAY_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesArray,
+) -> CommandResult<EntitiesArrayed> {
     let checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -93,6 +108,7 @@ pub fn execute(
                     message: full.to_string(),
                     path: None,
                     revision: None,
+                    ..Default::default()
                 },
             };
         }
@@ -159,7 +175,7 @@ struct Checked {
 }
 
 fn refuse(code: &str, message: &str, path: &str) -> Stop {
-    Stop::Failed(checks::error(code, message.into(), Some(path.into())))
+    Stop::failed(checks::error(code, message.into(), Some(path.into())))
 }
 
 fn locked_message(n: usize) -> String {

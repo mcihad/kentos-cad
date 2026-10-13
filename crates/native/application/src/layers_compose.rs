@@ -23,7 +23,7 @@ pub use crate::codes;
 pub const LABEL: &str = "Katman çizimi";
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 fn check(doc: &Document, input: &LayersCompose) -> Result<LayerNode, Stop> {
@@ -131,6 +131,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersCompose) -> CommandResult<L
 
 /// Writes the composition as one undo step “Katman çizimi” when it differs.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersCompose,
+) -> CommandResult<LayersComposed> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LAYERS_COMPOSE,
+        kentos_contracts::CAD_LAYERS_COMPOSE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: LayersCompose,
 ) -> CommandResult<LayersComposed> {

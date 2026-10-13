@@ -122,6 +122,20 @@ Liste:
   yuvarla'nın `lines` köşesinde çizgilerin yönünü koruması (web'in `product/` işleyicisi eski kuralla; ortak durumlar ve `corner-tools`
   izi yenisini bekler); haritaların vektörleri `kentos-plot`'un kuralıyla (web'in `mapVectors.ts`'i aynı yolları vermeli); kabul
   senaryosunun izi (`acceptance-room.json`) web'in oynatıcısında.
+- [ ] `CAD-CMD` (ADR 0253, 13 Ekim): web'de gerekenler: çağrı protokolü (`CallEnvelope`, `CallAnswer`: `requestId`, `expected`,
+  `planId`; durum damgaları `etag`; özet; kayıt `kentos.calls/1` ve tekrar oynatma; `.kcad` şema 45'in `requests` defteri ve
+  `FORMATS_VERSION` 57), `CommandError`'ın `uids` ve `retryable`'ı (`product/` işleyicileri ve `fixtures.test.ts`'in karşılaştırması),
+  kanonik JSON'un sayı yazımı (eşitlikte çift; `fixtures/protocol/v1/cases.json` web'de de geçmeli), kataloğun `capabilities`'i ve
+  kodların `host` türü, ortak değişiklik kümesi (`cad.changeset.apply`), uzun işlerin aşamaları; iz oynatıcısına `journal` beklentisi
+  (`acceptance-room.json`); bilinen bozulmalar: komut kataloğunda yeni komutlar ve alanlar, `fixtures/commands/v1/cad.changeset.apply.json`.
+- [ ] `CAD-CMD-05`, `06` (ADR 0254, 0255, 13 Ekim): web'de gerekenler: yedi komutun işleyicileri `product/`'ta (`cad.entities.stretch`,
+  `.break`, `.join`, `.divide`, `.boundary`, `.hatch`, `cad.dimensions.create`; bölgeler, komşular ve ölçü ortak çekirdekten WASM'la:
+  `FaceIndex`, `cut_base`, `seed_of`, `topology_edit`, `radial_dimension`, `arc_length_ends`, `edge_arms`, `vertex_arms`) ve katalogda
+  `hosts`'a Web; Esnet, Kır, Birleştir (Zincir), Böl, İçine tıklayarak alan, Tarama, Çoklu tara ve Ölçülendirme araçlarının önizlemeyi
+  planla, yazmayı komutla yapması; alanın halkalarının kanonik yazılışı (dış saat yönünün tersine, delikler saat yönünde, en alçak
+  köşeden); oynatılacak iz `usage-semantic-tools.json` ve resimleri; bilinen bozulmalar: komut kataloğunda yedi komut (yalnız
+  `Desktop`), `fixtures/commands/v1`'de yedi dosya web'in koşucusunda kayıtsız komut; web'in araçları eski `cad.entities.edit` ve
+  `.create` işlemleriyle yazar (izler geçer, kayıtları başka komut adı taşır).
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
@@ -1046,7 +1060,7 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   komut bağlamı ev sahibinin geometri deposunu taşır, başsız sunucu kendisininkini kurar; araçlar önizlemeyi planla, yazmayı komutla
   yapar; `cad.entities.create` ilişkili ölçünün bağlı noktalarını yerlerinden yazar. 85 ortak durum bağımsız başvurudan
   (`edge_command_cases.py`; aşkın değerler 60 basamakta, platform libm'i yok); Python ve MCP; iz `edge-commands.json`. Manifestte
-  semantic. Açık: Esnet, Birleştir, Kır, Böl, Sınır ve Tarama'nın anlamsal komutları (`CAD-CMD-05`).
+  semantic. Esnet, Birleştir, Kır, Böl, Alan oluştur, Tarama ve Ölçülendirme'nin anlamsal komutları sonra geldi (ADR 0254, 0255).
 - [x] `CADP-06` Alt nesne kimliği ve başvuruların göçü ve geçersizleşmesi (plan `CAD-DATA-13`, `14`; `DEC-03`). — **12 Ekim,
   [ADR 0249](docs/adr/0249-subentity-references-and-associative-dimensions.md)** (CADP-07 ile tek parça; `.kcad` kısmı paralel ajanda):
   yer (`node`, `start`, `end`, `center`, `vertex`, `mid`) ve başvuru (`uid`, yer, `broken`); çekirdeğin `ops::subref`'i yapı aynıysa
@@ -1072,6 +1086,17 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   eşitlemesi kitabı meta olarak gönderir ve alır. Açık: pafta işlemleri katalogda ve başsız sunucuda (`CAD-SHEET-06`, `07`; ilk dilimi
   `CADP-12`'de, ADR 0252), modeli ve
   kâğıdı birlikte yazan betik işlemi (`CAD-SHEET-05`'in kalanı).
+- [x] Plan §5'in CAD-CMD maddeleri (sahibin isteği, 13 Ekim: “CAD-CMD adımlarını tamamla”, “hepsini de bitirene kadar durma”).
+  — **13 Ekim, [ADR 0253](docs/adr/0253-command-protocol.md), [ADR 0254](docs/adr/0254-semantic-stretch-break-join-divide-boundary-hatch.md),
+  [ADR 0255](docs/adr/0255-semantic-dimension-create.md):** çağrı protokolü (her yürütme belgenin tek adımı; nesne, blok, katman,
+  ayar, stil ve pafta damgaları; çağrı zarfı ve cevabı; planın özeti, plan kimliği ve parmak izi; idempotency defteri `.kcad` şema 45;
+  kayıt `kentos.calls/1` ve tekrar oynatma, dosya komutlarında baytların karşılaştırılması; kataloğun yetenekleri ve kodların tek
+  tablosu; ortak değişiklik kümesi `cad.changeset.apply`; uzun işlerin aşamaları ve iptali; DXF ve PDF atomik yazmayla katalogda);
+  anlamsal `cad.entities.stretch`, `.break`, `.join`, `.divide`, `.boundary`, `.hatch` ve `cad.dimensions.create` (on ölçü türü), araçlar
+  önizlemeyi planla, yazmayı komutla yapar; ortak durumlar bağımsız betiklerden (`protocol_cases.py`, `reshape_command_cases.py`,
+  `region_command_cases.py`, `dimension_create_cases.py`; komut durumları 1433), kabul çizimi dört yoldan kaydedilip oynatılır,
+  kullanım senaryosu `usage-semantic-tools` resimleriyle. Açık: Zincir, Baz ve Hızlı ölçü'nün kendi komutları; içe aktarmanın ve
+  İşlemler araçlarının katalog komutu olması (ADR 0253 §11); geri alınabilir ayar ve stil tabloları (ADR 0248'in göç yolu).
 - [ ] `CADP-10` Uygulamanın gerçek AI yüzeyi ve çizimin bağlam, sorgu, plan ve yürütme zinciri (plan §19). Sahibin kararı (13 Ekim): §16.5'in en son işi; `CADP-11` ve `CADP-12`'den sonra. `CADP-12`'nin kabul
   çizimi o zamana dek arayüz, yazılı komut, Python ve MCP yollarıyla yürür; uygulama içi panelin yolu `CADP-10`'la eklenir.
 - [ ] `CADP-11` DWG karar matrisi ve gerçek ofis dosyalarıyla kodek denemesi; seçim ayrı ADR'de (plan §16.1, `DEC-01`). Ertelendi (sahibin kararı, 13 Ekim:

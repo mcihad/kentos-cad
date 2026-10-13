@@ -6684,14 +6684,14 @@
    "id": "tool.boundary",
    "kind": "tool",
    "title": "İçine tıklayarak alan",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.boundary"
    ],
-   "operation": "boundary",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.boundary",
+   "mcp": "cad.entities.boundary",
+   "note": "Tıklanan nokta, görünüm ve Sınır katmanı komuta verilir; bölgeyi komut bulur (ADR 0254 §6).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -6700,14 +6700,14 @@
    "id": "tool.break",
    "kind": "tool",
    "title": "Kır",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.break"
    ],
-   "operation": "break",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.break",
+   "mcp": "cad.entities.break",
+   "note": "Nesne ve iki nokta komuta verilir; parçalar çekirdekten (ADR 0254 §3).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -7018,12 +7018,12 @@
    "title": "Ölçülendirme",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": "Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in kenetle bir yere oturan noktası nesneye bağlanır (refs, ADR 0249); öbür türler tanım noktalarını saklar.",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
+   "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in yere oturan noktası nesneye bağlanır (ADR 0249, 0255).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 7
@@ -7034,11 +7034,11 @@
    "title": "Ölçülendirme: Açı",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7050,11 +7050,11 @@
    "title": "Ölçülendirme: Doğrusal",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7066,11 +7066,11 @@
    "title": "Ölçülendirme: Eğim",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7082,11 +7082,11 @@
    "title": "Ölçülendirme: Hizalı",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7098,11 +7098,11 @@
    "title": "Ölçülendirme: Koordinat",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7112,13 +7112,13 @@
    "id": "tool.dimension#Kırıklı yarıçap",
    "kind": "method",
    "title": "Ölçülendirme: Kırıklı yarıçap",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7130,11 +7130,11 @@
    "title": "Ölçülendirme: Semt",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7144,13 +7144,13 @@
    "id": "tool.dimension#Yarıçap",
    "kind": "method",
    "title": "Ölçülendirme: Yarıçap",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7160,13 +7160,13 @@
    "id": "tool.dimension#Yay uzunluğu",
    "kind": "method",
    "title": "Ölçülendirme: Yay uzunluğu",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7176,13 +7176,13 @@
    "id": "tool.dimension#Çap",
    "kind": "method",
    "title": "Ölçülendirme: Çap",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
    "note": null,
    "scope": "cad",
    "desktop": "implemented",
@@ -7208,14 +7208,14 @@
    "id": "tool.divide",
    "kind": "tool",
    "title": "Böl",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.divide"
    ],
-   "operation": "divide",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.divide",
+   "mcp": "cad.entities.divide",
+   "note": "Nesne, parça sayısı ya da aralık ve başlangıç ucu komuta verilir (ADR 0254 §5).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -7400,14 +7400,14 @@
    "id": "tool.hatch",
    "kind": "tool",
    "title": "Tarama",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.hatch"
    ],
-   "operation": "hatch",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": "Bölge araçta bulunur; komut son taramayı alır.",
+   "operation": null,
+   "python": "kentos.cad.entities.hatch",
+   "mcp": "cad.entities.hatch",
+   "note": "Tıklanan nokta, yöntem, adalar ve desen komuta verilir; bölgeyi komut bulur (ADR 0254 §7).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 4
@@ -7416,14 +7416,14 @@
    "id": "tool.hatchSelected",
    "kind": "tool",
    "title": "Çoklu tara",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.hatch"
    ],
-   "operation": "hatch",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.hatch",
+   "mcp": "cad.entities.hatch",
+   "note": "Seçilen kapalı nesneler komuta verilir (Çoklu tara, ADR 0254 §7).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -7590,14 +7590,14 @@
    "id": "tool.join",
    "kind": "tool",
    "title": "Birleştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.join"
    ],
-   "operation": "join",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.join",
+   "mcp": "cad.entities.join",
+   "note": "Nesneler ya da Zincir'in tohumu ve görünüm komuta verilir (ADR 0254 §4).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 3
@@ -8796,14 +8796,14 @@
    "id": "tool.stretch",
    "kind": "tool",
    "title": "Esnet",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.stretch"
    ],
-   "operation": "stretch",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.stretch",
+   "mcp": "cad.entities.stretch",
+   "note": "Pencere, yer değiştirme, seçim ve Topoloji'nin durumu komuta verilir; komşular komutta izler (ADR 0254 §2).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 3

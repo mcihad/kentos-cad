@@ -506,6 +506,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
         project_id: rng.chance(50).then(|| ProjectId(rng.uid())),
         migrated_from: rng.chance(30).then(|| MigrationSource::v1("ab".repeat(32))),
         sheets: None,
+        requests: Vec::new(),
     }
 }
 

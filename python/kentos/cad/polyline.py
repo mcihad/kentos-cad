@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     PolylineCreate,
     PolylineCreated,
@@ -52,6 +53,8 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> PolylineCreated:
         """Çoklu çizgi oluştur: Açık çizimde verilen katmana noktaları ve isteğe bağlı yay
         değerleriyle (kenar başına bir tane) açık bir çoklu çizgi ekler; tek geri alma
@@ -83,6 +86,10 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the
                 layer's style.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             PolylineCreated
@@ -101,7 +108,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             label=label,
             line_weight=line_weight,
             symbol=symbol,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -162,6 +169,41 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             line_weight=line_weight,
             symbol=symbol,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        layer_id: str,
+        pts: Sequence[Vec2Like],
+        attrs: Mapping[str, str] | None | Unset = UNSET,
+        bulges: Sequence[float] | None | Unset = UNSET,
+        color: str | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
+        line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, PolylineCreate(
+            layer_id=layer_id,
+            pts=[Vec2.of(p) for p in pts],
+            attrs=_opt(attrs, lambda x: dict(x)),
+            bulges=_opt(bulges, lambda x: list(x)),
+            color=color,
+            expected_revision=expected_revision,
+            label=label,
+            line_weight=line_weight,
+            symbol=symbol,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 create = _PolylineCreate()

@@ -9,6 +9,7 @@ import type { ProjectId } from "./ProjectId";
 import type { ProjectSettings } from "./ProjectSettings";
 import type { ProjectSheets } from "./ProjectSheets";
 import type { ProjectStyles } from "./ProjectStyles";
+import type { RequestRecord } from "./RequestRecord";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -50,4 +51,9 @@ migratedFrom?: MigrationSource,
  * The project's sheet book and its pictures (docs/adr/0251); none in a
  * project without one.
  */
-sheets?: ProjectSheets, };
+sheets?: ProjectSheets, 
+/**
+ * The requests the drawing executed (docs/adr/0253 §6), oldest first,
+ * the last `REQUEST_LEDGER`; none when it executed none.
+ */
+requests?: Array<RequestRecord>, };

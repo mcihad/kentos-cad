@@ -4,26 +4,26 @@
 //! multi-part one, a circle, a full ellipse, a closed curve) is hatched by
 //! itself with Tarama's options, from a point inside it (its seed), its
 //! islands left out when Adalar says so, its texts and inserts when Yazılar
-//! does, following its objects when İlişkili is on. Enter writes them all
-//! in one step, “Tarama”; the regions show outlined before.
+//! does, following its objects when İlişkili is on. The product command
+//! `cad.entities.hatch` with its objects does the work (docs/adr/0254 §7):
+//! the regions are its own (`regions_in`), shown outlined before; Enter
+//! writes them all in one step, “Tarama”.
 
-use kentos_contracts::{CreateOperation, EntityGeometry};
+use kentos_contracts::{EntitiesHatch, HatchRegion, NewLook};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::polygon_ring;
-use kentos_geometry_core::geom::arrangement::{Area, Ring};
-use kentos_geometry_core::geom::hatch_pattern::too_dense;
+use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::ops::areas::areas_of_entity;
-use kentos_geometry_core::ops::hatch_region::{cut_base, pick, seed_of};
-use kentos_geometry_core::text::Font;
-use kentos_native_application::geometry::{core_pattern, drawing_font};
+use kentos_native_application::region::{Planned, RegionCache};
+use kentos_native_application::{ExecutionContext, entities_hatch};
 
 use crate::Vec2;
 use crate::format::Format;
-use crate::hatch::{Tie, assoc_of, cutouts_in, islands_in, left_out};
+use crate::hatch::left_out;
 use crate::hatch_options::{self as options, Asking};
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
-use crate::points::{self, wire_all};
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{self, Context, Flow, Memory, OptionChoice, Preview};
 use kentos_geometry_core::tools::point_text::js_trim;
@@ -32,25 +32,16 @@ use kentos_geometry_core::tools::point_text::js_trim;
 pub const ID: &str = "hatchSelected";
 pub const LABEL: &str = "Çoklu tara";
 
-/// A region to hatch: its part's area cut, the seed it was picked by and what it came from.
-struct Planned {
-    area: Area,
-    seed: Vec2,
-    tie: Tie,
-}
-
 #[derive(Default)]
 pub struct HatchSelected {
     /// The selection's objects, in its order.
     slots: Vec<Slot>,
     asking: Option<Asking>,
-    /// The regions for the drawing and the options as they are.
+    /// The regions for the drawing and the options as they are: the command's.
     plan: Vec<Planned>,
-    /// What the plan was made for: the drawing's revision and the options.
-    planned: Option<(u64, Memory)>,
+    /// What the command found the regions from, kept while the drawing stays.
+    cache: RegionCache,
     memory: Memory,
-    plot_scale: f64,
-    font: Font,
 }
 
 fn ring_points(r: &Ring) -> Vec<Vec2> {
@@ -62,110 +53,69 @@ impl HatchSelected {
         Modify::with(Self::default())
     }
 
+    /// The command's input: the selection's closed objects, the options,
+    /// the active layer and colour.
+    fn request(&self, cx: &Context<'_>) -> EntitiesHatch {
+        let m = *cx.memory;
+        let doc = &*cx.doc;
+        EntitiesHatch {
+            region: HatchRegion::Objects {
+                uids: self
+                    .slots
+                    .iter()
+                    .filter_map(|s| doc.uid(*s).map(|u| u.to_string()))
+                    .collect(),
+                islands: Some(m.hatch_islands),
+                texts: Some(m.hatch_texts),
+                associative: Some(m.hatch_assoc),
+            },
+            pattern: options::spec(&m),
+            layer_id: doc.layers().active().to_owned(),
+            look: NewLook {
+                color: cx.draft.color_text(),
+                line_weight: None,
+                attrs: cx.template_attrs(None),
+                label: cx.template_label(),
+                symbol: cx.template_symbol(),
+            },
+            expected_revision: None,
+        }
+    }
+
     /// Every closed object's regions, each part by itself from a point inside it.
     fn plan(&mut self, cx: &Context<'_>) {
-        let key = (cx.doc.revision(), self.memory);
-        if self.planned == Some(key) {
-            return;
-        }
-        let m = self.memory;
-        let mut plan = Vec::new();
-        for slot in &self.slots {
-            let id = f64::from(slot.0);
-            let Some(item) = cx.spatial.store().get(id) else {
-                continue;
-            };
-            for part in areas_of_entity(&item.shape) {
-                let Some(seed) = seed_of(&part) else {
-                    continue;
-                };
-                let (islands, island_areas) = if m.hatch_islands {
-                    islands_in(id, &part, &item.bounds, cx)
-                } else {
-                    (Vec::new(), Vec::new())
-                };
-                let (cutouts, boxes) = if m.hatch_texts {
-                    cutouts_in(&item.bounds, self.font, cx)
-                } else {
-                    (Vec::new(), Vec::new())
-                };
-                let cut = cut_base(&part, &island_areas, &boxes);
-                let Some(area) = pick(&cut.parts, seed).cloned() else {
-                    continue;
-                };
-                let tie = Tie {
-                    outer: id,
-                    islands: cut
-                        .islands
-                        .iter()
-                        .filter_map(|&k| islands.get(k).copied())
-                        .collect(),
-                    cutouts: cut
-                        .cutouts
-                        .iter()
-                        .filter_map(|&k| cutouts.get(k).copied())
-                        .collect(),
-                };
-                plan.push(Planned { area, seed, tie });
-            }
-        }
-        self.plan = plan;
-        self.planned = Some(key);
+        let input = self.request(cx);
+        self.plan =
+            entities_hatch::regions_in(cx.doc, Some(cx.spatial.store()), &input, &mut self.cache);
     }
 
     /// Writes every region's hatch in one step.
     fn write(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
         self.plan(cx);
-        let Some(pattern) = options::pattern(&self.memory, self.plot_scale) else {
-            return Flow::Exit;
-        };
         if self.plan.is_empty() {
             cx.say(Level::Warn, "Çoklu tara: taranacak bölge kalmadı; adalar ya da yazılar alanların hepsini kaplıyor.");
             return Flow::Exit;
         }
-        let core = core_pattern(&pattern);
-        let mut objects = Vec::with_capacity(self.plan.len());
-        let (mut islands, mut texts) = (0, 0);
-        for planned in &self.plan {
-            let ring = ring_points(&planned.area.outer);
-            if too_dense(&ring, &core) {
-                cx.say(
-                    Level::Warn,
-                    "Desen bu alanlar için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin.",
-                );
-                return Flow::Stay;
-            }
-            let holes: Vec<Vec<Vec2>> = planned.area.holes.iter().map(ring_points).collect();
-            islands += planned.tie.islands.len();
-            texts += planned.tie.cutouts.len();
-            let assoc = if self.memory.hatch_assoc {
-                assoc_of(&planned.tie, planned.seed, cx)
-            } else {
-                None
-            };
-            objects.push(EntityGeometry::Hatch {
-                ring: wire_all(&ring),
-                holes: (!holes.is_empty()).then(|| holes.iter().map(|h| wire_all(h)).collect()),
-                pattern: pattern.clone(),
-                assoc,
-            });
-        }
-        let n = objects.len();
-        if points::write_objects(objects, Some(CreateOperation::Hatch), cx).is_none() {
+        let (islands, texts) = self.plan.iter().fold((0, 0), |(i, t), p| match &p.tie {
+            Some(tie) => (i + tie.islands.len(), t + tie.cutouts.len()),
+            None => (i, t),
+        });
+        let input = self.request(cx);
+        let result = {
+            let mut ecx = ExecutionContext::with_store(cx.doc, cx.spatial.store());
+            entities_hatch::execute(&mut ecx, input)
+        };
+        let Some(out) = points::written(result, cx) else {
             return Flow::Stay;
-        }
-        let tie = Tie {
-            outer: 0.0,
-            islands: vec![0.0; islands],
-            cutouts: vec![0.0; texts],
         };
         let name = options::choice(&self.memory).name;
         cx.say(
             Level::Success,
             format!(
-                "{LABEL}: {n} {name} tarama eklendi{}",
-                left_out(&Some(tie), 0)
+                "{LABEL}: {} {name} tarama eklendi{}",
+                out.created.len(),
+                left_out(islands, texts)
             ),
         );
         Flow::Exit
@@ -183,14 +133,11 @@ impl Stages for HatchSelected {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.memory = *cx.memory;
-        self.plot_scale = cx.doc.settings().plot_scale;
-        self.font = drawing_font(cx.doc.settings().drawing_font);
     }
 
     /// The selection's closed objects; none: said, and the tool leaves.
     fn begin(&mut self, cx: &mut Context<'_>) -> Flow {
         self.asking = None;
-        self.planned = None;
         self.see(cx);
         let store = cx.spatial.store();
         self.slots = cx

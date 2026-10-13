@@ -33,6 +33,8 @@ pub struct Filter {
 pub struct Item<'a> {
     /// Its persistent id (lowercase UUID text with hyphens).
     pub uid: String,
+    /// Its state stamp (docs/adr/0253 §2): what a call expects of it.
+    pub stamp: String,
     pub entity: &'a Entity,
 }
 
@@ -153,6 +155,7 @@ pub fn page<'a>(doc: &'a Document, filter: &Filter) -> Result<Page<'a>, Headless
         }
         items.push(Item {
             uid: uid_text(doc, slot),
+            stamp: doc.stamp(slot).unwrap_or_default(),
             entity: e,
         });
     }

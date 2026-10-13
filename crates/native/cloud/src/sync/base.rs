@@ -204,6 +204,7 @@ impl ProjectSync {
                 project_id: Some(ProjectId(self.project.into_bytes())),
                 migrated_from: None,
                 sheets: self.meta_base.sheets.as_deref().cloned(),
+                requests: Vec::new(),
             },
             versions,
             block_versions: known_blocks.into_iter().map(|(id, v, _)| (id, v)).collect(),

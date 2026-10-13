@@ -2,25 +2,26 @@
 //! step for step (docs/adr/0065). A click inside a region the visible line
 //! work closes makes it an area on the active layer (AutoCAD's BOUNDARY,
 //! Netcad's “alan oluştur”); closed groups inside it are holes unless Adalar
-//! is off. The boundary set is every visible layer, or one picked by an
-//! object of it (Sınır katmanı, K). One undo step, “Alan oluştur”, through
-//! `cad.entities.create` on the active layer (docs/adr/0069): the command's
-//! refusals and warnings are the tool's.
+//! is off. The boundary set is the view's visible objects, or one layer's,
+//! picked by an object of it (Sınır katmanı, K). The product command
+//! `cad.entities.boundary` does the work (docs/adr/0254 §6): the region
+//! under the cursor is its own (`region_in`, its faces kept while the
+//! drawing and the view stay), the click its execute, one undo step
+//! “Alan oluştur” on the active layer; its refusals and warnings are the tool's.
 
-use kentos_contracts::CreateOperation;
+use kentos_contracts::{EntitiesBoundary, NewLook, TrimBoundaries};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::region::net_area;
-use kentos_geometry_core::ops::areas::polygon_of_area;
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::edit_geometry;
+use kentos_native_application::region::RegionCache;
+use kentos_native_application::{ExecutionContext, entities_boundary};
 
 use crate::Vec2;
-use crate::faces;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points;
+use crate::points::{self, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{self, Context, Flow, Memory, Pointer, Preview, Tag, Tone, Tool};
 
@@ -35,7 +36,8 @@ pub struct Boundary {
     /// Only this layer's line work bounds the regions; none, every visible layer's.
     layer: Option<String>,
     layer_name: Option<String>,
-    faces: Option<faces::Faces>,
+    /// The command's faces, kept while the drawing, the view and the layer stay.
+    cache: RegionCache,
     /// Where the cursor is and the region around it.
     hover: Option<(Vec2, Option<Area>)>,
     memory: Memory,
@@ -56,15 +58,33 @@ impl Boundary {
         });
     }
 
+    /// The command's input for a click at `p`: the view's objects (or the
+    /// boundary layer's), the active layer, the current colour and weight.
+    fn request(&self, p: Vec2, cx: &Context<'_>) -> EntitiesBoundary {
+        let view = cx.view.visible();
+        EntitiesBoundary {
+            at: wire(p),
+            layer_id: cx.doc.layers().active().to_owned(),
+            boundaries: Some(TrimBoundaries::Area {
+                min: wire(Vec2::new(view.min_x, view.min_y)),
+                max: wire(Vec2::new(view.max_x, view.max_y)),
+            }),
+            boundary_layer: self.layer.clone(),
+            islands: Some(cx.memory.boundary_islands),
+            look: NewLook {
+                color: cx.draft.color_text(),
+                line_weight: cx.draft.line_weight,
+                attrs: cx.template_attrs(None),
+                label: cx.template_label(),
+                symbol: cx.template_symbol(),
+            },
+            expected_revision: None,
+        }
+    }
+
     fn face_at(&mut self, p: Vec2, cx: &Context<'_>) -> Option<Area> {
-        let layer = self.layer.clone();
-        faces::face_at(
-            &mut self.faces,
-            p,
-            cx.memory.boundary_islands,
-            layer.as_deref(),
-            cx,
-        )
+        let input = self.request(p, cx);
+        entities_boundary::region_in(cx.doc, Some(cx.spatial.store()), &input, &mut self.cache)
     }
 
     /// The region around `p` becomes an area (the web's `pointerDown`).
@@ -76,11 +96,12 @@ impl Boundary {
             );
             return;
         };
-        let Some(geometry) = edit_geometry(polygon_of_area(&area).shape) else {
-            return;
+        let input = self.request(p, cx);
+        let result = {
+            let mut ecx = ExecutionContext::with_store(cx.doc, cx.spatial.store());
+            entities_boundary::execute(&mut ecx, input)
         };
-        let Some(out) = points::write_objects(vec![geometry], Some(CreateOperation::Boundary), cx)
-        else {
+        let Some(out) = points::written(result, cx) else {
             return;
         };
         let slots: Vec<Slot> = out.ids.iter().map(|&id| Slot(id)).collect();

@@ -2741,6 +2741,7 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-sheet",
  "kentos-style-core",
+ "serde",
  "serde_json",
 ]
 

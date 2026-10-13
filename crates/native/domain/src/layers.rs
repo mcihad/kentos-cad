@@ -723,3 +723,61 @@ fn visit_mut(
         prefix.pop();
     }
 }
+
+/// What a node keeps outside the undo history (docs/adr/0253 §1): its
+/// visibility, lock, fold, name and snapping.
+#[derive(Clone, Debug, PartialEq)]
+struct NodeFlags {
+    visible: bool,
+    locked: bool,
+    expanded: bool,
+    name: String,
+    snap: Option<LayerSnap>,
+}
+
+/// Every node's flags, by id: what a failed command's step puts back.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct LayerFlags(HashMap<String, NodeFlags>);
+
+impl LayerTree {
+    /// Every node's flags now.
+    pub(crate) fn flags(&self) -> LayerFlags {
+        fn walk(nodes: &[LayerNode], out: &mut HashMap<String, NodeFlags>) {
+            for node in nodes {
+                out.insert(
+                    node.id.clone(),
+                    NodeFlags {
+                        visible: node.visible,
+                        locked: node.locked,
+                        expanded: node.expanded,
+                        name: node.name.clone(),
+                        snap: node.snap.clone(),
+                    },
+                );
+                walk(&node.children, out);
+            }
+        }
+        let mut out = HashMap::new();
+        walk(&self.roots, &mut out);
+        LayerFlags(out)
+    }
+
+    /// Gives the nodes the flags `flags` has for them; a node it does not
+    /// know keeps its own.
+    pub(crate) fn restore_flags(&mut self, flags: &LayerFlags) {
+        visit_mut(&mut self.roots, &mut Vec::new(), &mut |_, node| {
+            if let Some(f) = flags.0.get(&node.id) {
+                node.visible = f.visible;
+                node.locked = f.locked;
+                node.expanded = f.expanded;
+                f.name.clone_into(&mut node.name);
+                node.snap = f.snap.clone();
+            }
+        });
+    }
+
+    /// Makes `id` the active layer again when it is still one of the tree's layers.
+    pub(crate) fn restore_active(&mut self, id: &str) {
+        let _ = self.set_active(id);
+    }
+}

@@ -20,6 +20,13 @@
 //! interface knows implicitly (the active layer, the current colour) is in the
 //! input (CMD-07); a command never reads interface state.
 //!
+//! Every `execute` runs through [`call::recorded`] (docs/adr/0253): one step
+//! of the document, all or nothing (the parts outside the undo history too),
+//! its integrity kept and a journal row left. [`call::call`] is the protocol
+//! the headless host, Python, MCP and agents call by (expectations, request
+//! ids, plans, summaries); [`registry`] finds a command by name; [`jobs`]
+//! runs one on a reading copy.
+//!
 //! Pure Rust, native only: no UI, GPU, database, runtime or network
 //! (scripts/arch/deps.mjs).
 #![forbid(unsafe_code)]
@@ -37,24 +44,34 @@ pub mod array;
 pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
+pub mod break_join;
+pub mod call;
+pub mod changeset;
 mod checks;
 pub mod circle;
 pub mod codes;
 mod context;
 pub mod corner;
 pub mod create;
+mod creating;
 pub mod delete;
 mod dimension;
+pub mod dimension_create;
 pub mod dimensions_reassociate;
+pub mod divide;
 mod edge_commands;
 pub mod edit;
 pub mod elevation;
 pub mod expression_unit;
 pub mod geometry;
 pub mod info_templates;
+pub mod jobs;
 pub mod label_texts;
 pub mod labels_pin;
+pub use break_join::{entities_break, entities_join};
+pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
+pub use region::{entities_boundary, entities_hatch};
 pub mod geometry_store;
 pub mod layer_filter;
 pub mod layers_compose;
@@ -73,12 +90,17 @@ pub mod offset;
 pub mod point;
 pub mod polygon;
 pub mod polyline;
+pub mod region;
+pub mod registry;
+pub mod replay;
 pub mod scenarios_edit;
 pub mod set;
 pub mod settings_set;
 pub mod sheets_edit;
+pub mod stretch;
 pub mod style_tables;
 pub mod styles_edit;
+pub mod topology_follow;
 pub mod transform;
 pub mod trim;
 
@@ -198,6 +220,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_contracts::CAD_DIMENSIONS_REASSOCIATE,
         kentos_contracts::CAD_DIMENSIONS_REASSOCIATE_VERSION,
     ),
+    // Ölçülendirme by what it measures ([`dimensions_create`], docs/adr/0255).
+    (
+        kentos_contracts::CAD_DIMENSIONS_CREATE,
+        kentos_contracts::CAD_DIMENSIONS_CREATE_VERSION,
+    ),
     // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250).
     (
         kentos_contracts::CAD_ENTITIES_TRIM,
@@ -214,6 +241,31 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_CHAMFER,
         kentos_contracts::CAD_ENTITIES_CHAMFER_VERSION,
+    ),
+    // Esnet, Kır, Birleştir, Böl, Alan oluştur and Tarama by their meaning (docs/adr/0254).
+    (
+        kentos_contracts::CAD_ENTITIES_STRETCH,
+        kentos_contracts::CAD_ENTITIES_STRETCH_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_BREAK,
+        kentos_contracts::CAD_ENTITIES_BREAK_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_JOIN,
+        kentos_contracts::CAD_ENTITIES_JOIN_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_DIVIDE,
+        kentos_contracts::CAD_ENTITIES_DIVIDE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_BOUNDARY,
+        kentos_contracts::CAD_ENTITIES_BOUNDARY_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_HATCH,
+        kentos_contracts::CAD_ENTITIES_HATCH_VERSION,
     ),
     // Katman stili's renderers ([`layers_renderer`], docs/adr/0213 §5).
     (
@@ -247,5 +299,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_SHEETS_EDIT,
         kentos_contracts::CAD_SHEETS_EDIT_VERSION,
+    ),
+    // The change set: several commands as one change ([`changeset`], docs/adr/0253 §8).
+    (
+        kentos_contracts::CAD_CHANGESET_APPLY,
+        kentos_contracts::CAD_CHANGESET_APPLY_VERSION,
     ),
 ];

@@ -15,6 +15,7 @@ mod info;
 mod labels;
 mod networks;
 mod objects;
+mod requests;
 mod services;
 mod sheets;
 mod styles;
@@ -256,6 +257,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let mut active_layer = None;
     let mut migrated_from = None;
     let mut sheets_ = None;
+    let mut requests_ = None;
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
@@ -281,6 +283,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
                 )?)
             }
             "homeView" => home_view = Some(bounds(r)?),
+            "requests" if has.requests => requests_ = Some(requests::requests(r)?),
             "settings" => settings_ = Some(settings(r, has)?),
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
@@ -318,6 +321,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         project_id,
         migrated_from,
         sheets: sheets_,
+        requests: requests_.unwrap_or_default(),
     })
 }
 

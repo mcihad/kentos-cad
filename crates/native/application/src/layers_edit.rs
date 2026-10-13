@@ -42,7 +42,7 @@ pub const NEW_LAYER: &str = "Yeni katman";
 pub const NEW_GROUP: &str = "Yeni grup";
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 /// An object as `cad.entities.create` writes its copy in place: its
@@ -110,7 +110,7 @@ fn check_input(input: &LayersEdit) -> Result<(), Stop> {
         && input.line_type.is_none()
         && input.line_weight.is_none()
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NOTHING_TO_SET,
             "Değişecek bir şey yok: color, lineType ya da lineWeight verin.".into(),
             None,
@@ -316,6 +316,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersEdit) -> CommandResult<Laye
 
 /// Writes the change as one undo step named after it.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersEdit) -> CommandResult<LayersEdited> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LAYERS_EDIT,
+        kentos_contracts::CAD_LAYERS_EDIT_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersEdit) -> CommandResult<LayersEdited> {
     if let Err(stop) = check(cx.doc, &input) {
         return stop.into();
     }

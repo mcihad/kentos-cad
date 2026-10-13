@@ -216,6 +216,33 @@ class DesktopSession(_document.SessionBase):
             "Açık çizimin paftalarını masaüstü yazar (Pafta › Dışa aktar › PDF); başka bir çizim için Document.open.",
         )
 
+    def call(self, envelope: str) -> str:
+        return self._ask("call", **json.loads(envelope))
+
+    def journal(self) -> str:
+        return self._ask("journal")
+
+    def replay(self, journal: str) -> str:
+        return self._ask("replay", journal=json.loads(journal))
+
+    def _no_jobs(self) -> str:
+        raise _native.HostError(
+            "not_in_console",
+            "Konsolda iş başlatılmaz: bir çalıştırma tek adımdır ve çizimi bitene dek tutar. Komutu call ile çağırın.",
+        )
+
+    def start(self, envelope: str) -> str:
+        return self._no_jobs()
+
+    def job(self, id: str) -> str:
+        return self._no_jobs()
+
+    def wait(self, id: str) -> str:
+        return self._no_jobs()
+
+    def cancel(self, id: str) -> str:
+        return self._no_jobs()
+
 
 def _no_input(prompt: object = "") -> str:
     raise RuntimeError("input() konsolda yok: değerleri betiğe yazın.")

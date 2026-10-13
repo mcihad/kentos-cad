@@ -63,6 +63,9 @@ class Case:
 
     def fill(self, value: Any, at: str) -> Any:
         if isinstance(value, str):
+            # “$$…” is the text “$…” itself (a change set's reference to a step, docs/adr/0253 §8).
+            if value.startswith("$$"):
+                return value[1:]
             if value.startswith("$blockOf:"):
                 block = self.block_named(value[len("$blockOf:"):])
                 assert block is not None, f"{at}: {value}: no such block"
@@ -239,7 +242,7 @@ class Case:
         """An expected object with its block ids (`$blockOf:Ad`, `$block:name`) and the persistent ids of the objects it
         names (`$uidOf:12`: a linked text's object, docs/adr/0175 §4) filled in; nothing else is a placeholder."""
         if isinstance(value, str):
-            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:", "$uidOf:", "$layer:")) else value
+            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:", "$uidOf:", "$layer:", "$$")) else value
         if isinstance(value, list):
             return [self.block_ids(v, at) for v in value]
         if isinstance(value, dict):
@@ -272,6 +275,11 @@ def wire(outcome: cad.Outcome[Any]) -> dict[str, Any]:
             error["path"] = e.path
         if e.revision is not None:
             error["revision"] = e.revision
+        # The objects a refusal names (docs/adr/0253 §7), and whether trying again may help.
+        if e.uids:
+            error["uids"] = list(e.uids)
+        if e.retryable:
+            error["retryable"] = True
         return {"status": outcome.status, "error": error}
     notes = []
     for n in outcome.warnings:

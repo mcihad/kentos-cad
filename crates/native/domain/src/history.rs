@@ -282,17 +282,32 @@ impl Op {
     }
 }
 
-/// One undo step: its name (shown after undo and redo) and its ops in order.
+/// One undo step: its name (shown after undo and redo), its ops in order,
+/// and its number in this session (from 1, given when it is recorded; the
+/// journal's rows name their step by it, docs/adr/0253 §3).
 #[derive(Clone, Debug)]
 pub(crate) struct Step {
-    label: String,
-    ops: Vec<Op>,
+    pub(crate) label: String,
+    pub(crate) ops: Vec<Op>,
+    pub(crate) seq: u64,
+}
+
+impl Step {
+    pub(crate) fn named(label: &str) -> Self {
+        Step {
+            label: label.to_owned(),
+            ops: Vec::new(),
+            seq: 0,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
 struct OpenGroup {
     id: u64,
     step: Step,
+    /// The journal's waiting rows when it opened: a cancel drops the later ones.
+    calls: usize,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -300,9 +315,16 @@ pub(crate) struct History {
     undo: VecDeque<Step>,
     redo: Vec<Step>,
     /// The open transaction (with its savepoints, it is one).
-    pending: Option<Step>,
+    pub(crate) pending: Option<Step>,
     group: Option<OpenGroup>,
     groups_begun: u64,
+    /// The last step's number given (`Step::seq`).
+    steps_given: u64,
+    /// The open transaction was opened without a name (a command's step,
+    /// `run_step`): it takes the first name an edit inside it gives.
+    pub(crate) adopt: bool,
+    /// The open steps' backups of what is no undo step (step.rs), innermost last.
+    pub(crate) frames: Vec<crate::step::Frame>,
     /// The slots every applied op touched, for readers that follow the
     /// document (`changes.rs`); kept with the ops since every change passes here.
     pub(crate) journal: Journal,
@@ -333,55 +355,76 @@ impl Document {
     ) -> Result<T, E> {
         let outer = self.history.pending.is_some();
         if !outer {
-            self.history.pending = Some(Step {
-                label: label.to_owned(),
-                ops: Vec::new(),
-            });
+            self.history.pending = Some(Step::named(label));
+        } else {
+            self.adopt_label(label);
         }
         let mark = self
             .history
             .pending
             .as_ref()
             .map_or(0, |step| step.ops.len());
+        let calls = self.calls.waiting();
         let result = body(self);
         if result.is_err() {
             self.rollback(mark);
+            self.calls.drop_waiting(calls);
         }
-        if !outer
-            && let Some(step) = self.history.pending.take()
-            && result.is_ok()
-            && !step.ops.is_empty()
-        {
-            self.commit(step);
+        if !outer && let Some(step) = self.history.pending.take() {
+            if result.is_ok() && !step.ops.is_empty() {
+                self.commit(step);
+            } else if result.is_ok() && self.history.group.is_none() {
+                // Nothing to undo; what was run inside (a command writing only
+                // parts outside the undo history) is in the journal all the same.
+                self.flush_calls(None, false);
+            }
         }
         result
+    }
+
+    /// Gives the open transaction `label` when it was opened without a name
+    /// and has none yet (a command's step takes its first edit's name).
+    fn adopt_label(&mut self, label: &str) {
+        if self.history.adopt
+            && let Some(step) = &mut self.history.pending
+            && step.label.is_empty()
+            && !label.is_empty()
+        {
+            label.clone_into(&mut step.label);
+            self.history.adopt = false;
+        }
     }
 
     /// Opens a group: every step committed until [`Document::end_group`]
     /// becomes one undo step named `label`, across as many transactions as the
     /// work needs (a processing model runs several tools).
     pub fn begin_group(&mut self, label: &str) -> Group {
+        // A group opened inside a command's unnamed step names that step: it
+        // is the command's own name for what it does (docs/adr/0253 §1).
+        self.adopt_label(label);
         if self.history.group.is_some() {
             return Group(None);
         }
         self.history.groups_begun += 1;
         let id = self.history.groups_begun;
+        let calls = self.calls.waiting();
         self.history.group = Some(OpenGroup {
             id,
-            step: Step {
-                label: label.to_owned(),
-                ops: Vec::new(),
-            },
+            step: Step::named(label),
+            calls,
         });
         Group(Some(id))
     }
 
     /// Closes a group: what it gathered becomes one undo step.
     pub fn end_group(&mut self, group: Group) {
-        if let Some(open) = self.take_group(group)
-            && !open.step.ops.is_empty()
-        {
-            self.commit(open.step);
+        if let Some(open) = self.take_group(group) {
+            if !open.step.ops.is_empty() {
+                self.commit(open.step);
+            } else if self.history.pending.is_none() {
+                // Nothing to undo; what ran inside is in the journal all the same.
+                self.flush_calls(None, false);
+            }
         }
     }
 
@@ -392,6 +435,7 @@ impl Document {
         if let Some(open) = self.take_group(group) {
             let changed = !open.step.ops.is_empty();
             self.revert(&open.step.ops);
+            self.calls.drop_waiting(open.calls);
             if changed {
                 self.mark_changed();
             }
@@ -445,6 +489,8 @@ impl Document {
         let step = self.history.undo.pop_back()?;
         self.revert(&step.ops);
         let label = step.label.clone();
+        self.calls
+            .set_status(step.seq, kentos_contracts::CallStatus::Undone);
         self.history.redo.push(step);
         self.mark_edited();
         Some(label)
@@ -460,6 +506,8 @@ impl Document {
             self.apply(op);
         }
         let label = step.label.clone();
+        self.calls
+            .set_status(step.seq, kentos_contracts::CallStatus::Done);
         self.history.undo.push_back(step);
         self.mark_edited();
         Some(label)
@@ -473,11 +521,12 @@ impl Document {
         for op in &ops {
             self.apply(op);
         }
+        self.adopt_label(label);
         match &mut self.history.pending {
             Some(step) => step.ops.extend(ops),
             None => self.commit(Step {
-                label: label.to_owned(),
                 ops,
+                ..Step::named(label)
             }),
         }
     }
@@ -487,6 +536,16 @@ impl Document {
     /// (linked.rs, docs/adr/0175 §4) and its associative hatches with theirs
     /// (hatch_ties.rs, docs/adr/0186 §6).
     fn commit(&mut self, mut step: Step) {
+        if self.history.group.is_some() {
+            self.fold_into_group(step);
+            return;
+        }
+        self.follow_into(&mut step.ops);
+        self.push_step(step);
+    }
+
+    /// A step into the open group.
+    pub(crate) fn fold_into_group(&mut self, step: Step) {
         if let Some(open) = &mut self.history.group {
             open.step.ops.extend(step.ops);
             // The drawing changed all the same, and what shows it follows each
@@ -494,16 +553,36 @@ impl Document {
             // hear a group's changes as they come); the edit is recorded, and
             // the revision moves, when the group ends.
             self.mark_changed();
-            return;
         }
-        let follow = self.follow_links(&step.ops);
-        step.ops.extend(follow);
+    }
+
+    /// Whether a group is open.
+    pub(crate) fn group_open(&self) -> bool {
+        self.history.group.is_some()
+    }
+
+    /// What keeps the linked texts with their objects (linked.rs,
+    /// docs/adr/0175 §4), the associative hatches with theirs (hatch_ties.rs,
+    /// docs/adr/0186 §6) and the dimensions with the places their points
+    /// name (dimension_ties.rs, docs/adr/0249 §3) after `ops`, applied and
+    /// joined to them.
+    pub(crate) fn follow_into(&mut self, ops: &mut Vec<Op>) {
+        let follow = self.follow_links(ops);
+        ops.extend(follow);
         // After the linked texts: a text a hatch leaves open may have moved with its object.
-        let ties = self.follow_hatches(&step.ops);
-        step.ops.extend(ties);
-        // After the hatches: a dimension follows the places its points name (docs/adr/0249 §3).
-        let dims = self.follow_dimensions(&step.ops);
-        step.ops.extend(dims);
+        let ties = self.follow_hatches(ops);
+        ops.extend(ties);
+        // After the hatches: a dimension follows the places its points name.
+        let dims = self.follow_dimensions(ops);
+        ops.extend(dims);
+    }
+
+    /// A finished, followed step onto the undo history as a new edit; its
+    /// number, which the journal's waiting rows take (calls.rs).
+    pub(crate) fn push_step(&mut self, mut step: Step) -> u64 {
+        self.history.steps_given += 1;
+        step.seq = self.history.steps_given;
+        let seq = step.seq;
         self.history.undo.push_back(step);
         if self.history.undo.len() > UNDO_LIMIT
             && let Some(oldest) = self.history.undo.pop_front()
@@ -515,19 +594,35 @@ impl Document {
         let ops = redo.iter().map(|s| s.ops.len()).sum();
         free_apart(redo, ops);
         self.mark_edited();
+        self.flush_calls(Some(seq), true);
+        seq
     }
 
-    /// Reverts the ops the open transaction applied after `mark` and forgets them.
-    fn rollback(&mut self, mark: usize) {
+    /// Takes the last step off the undo history, keeping what it did: a
+    /// reading copy hands its job's write on (patch.rs).
+    pub(crate) fn take_last_step(&mut self) -> Option<Step> {
+        self.history.undo.pop_back()
+    }
+
+    /// The last step on the undo history, its name and ops (the journal's
+    /// row of an edit made without a command, calls.rs).
+    pub(crate) fn last_step(&self) -> Option<&Step> {
+        self.history.undo.back()
+    }
+
+    /// Reverts the ops the open transaction applied after `mark` and forgets
+    /// them; how many there were.
+    pub(crate) fn rollback(&mut self, mark: usize) -> usize {
         let undone = match &mut self.history.pending {
             Some(step) => step.ops.split_off(mark.min(step.ops.len())),
-            None => return,
+            None => return 0,
         };
         self.revert(&undone);
+        undone.len()
     }
 
     /// Applies the inverse of `ops`, newest first.
-    fn revert(&mut self, ops: &[Op]) {
+    pub(crate) fn revert(&mut self, ops: &[Op]) {
         for op in ops.iter().rev() {
             self.apply(&op.inverse());
         }

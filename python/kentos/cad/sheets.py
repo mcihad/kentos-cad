@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     SheetsEdit,
     SheetsEdited,
@@ -50,6 +51,8 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         *,
         ops: Sequence[Any],
         expected_revision: str | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> SheetsEdited:
         """Pafta kitabı: Projenin pafta kitabını pafta çekirdeğinin kendi işlemleriyle
         değiştirir (kentos.sheet/1; pafta tasarımcısının yaptıkları): ops sırayla ve tek
@@ -72,6 +75,10 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             SheetsEdited
@@ -83,7 +90,7 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
         return self.execute_input(doc, SheetsEdit(
             ops=list(ops),
             expected_revision=expected_revision,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -116,6 +123,27 @@ class _SheetsEdit(LocalCommand[SheetsEdit, SheetsEdited, SheetsEdited]):
             ops=list(ops),
             expected_revision=expected_revision,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        ops: Sequence[Any],
+        expected_revision: str | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, SheetsEdit(
+            ops=list(ops),
+            expected_revision=expected_revision,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 edit = _SheetsEdit()

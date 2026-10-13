@@ -62,7 +62,7 @@ fn merged(
 }
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 fn check(doc: &Document, input: &LayersService) -> Result<Checked, Stop> {
@@ -267,6 +267,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersService) -> CommandResult<L
 
 /// Writes the change as one undo step named after the operation.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersService,
+) -> CommandResult<LayersServiced> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LAYERS_SERVICE,
+        kentos_contracts::CAD_LAYERS_SERVICE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: LayersService,
 ) -> CommandResult<LayersServiced> {

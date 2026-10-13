@@ -26,7 +26,7 @@ use crate::layer_filter::{CompiledFilter, compile_filter};
 pub const LABEL: &str = "Katman süzgeci";
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 fn check(
@@ -151,6 +151,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersFilter) -> CommandResult<La
 
 /// Writes the filter as one undo step “Katman süzgeci” when it differs.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersFilter,
+) -> CommandResult<LayersFiltered> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LAYERS_FILTER,
+        kentos_contracts::CAD_LAYERS_FILTER_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: LayersFilter,
 ) -> CommandResult<LayersFiltered> {

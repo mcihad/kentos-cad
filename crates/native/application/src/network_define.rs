@@ -27,7 +27,7 @@ struct Checked {
 }
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 fn check(doc: &Document, input: &NetworkDefine) -> Result<Checked, Stop> {
@@ -114,6 +114,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &NetworkDefine) -> CommandResult<N
 
 /// Writes the project's networks; a setting, not an undo step.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: NetworkDefine,
+) -> CommandResult<NetworkDefined> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_NETWORK_DEFINE,
+        kentos_contracts::CAD_NETWORK_DEFINE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: NetworkDefine,
 ) -> CommandResult<NetworkDefined> {

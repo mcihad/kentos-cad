@@ -56,6 +56,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LineCreate) -> CommandResult<Line
 /// Checks `input` again and writes the line as one undo step (“Ekle”, the
 /// document's own `add`): into the open transaction or group, if one is.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LineCreate) -> CommandResult<LineCreated> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LINE_CREATE,
+        kentos_contracts::CAD_LINE_CREATE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(cx: &mut ExecutionContext<'_>, input: LineCreate) -> CommandResult<LineCreated> {
     let warnings = match check(cx.doc, &input) {
         Ok(warnings) => warnings,
         Err(stop) => return stop.into(),
@@ -65,7 +77,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LineCreate) -> CommandResul
             output: LineCreated { uid, id, revision },
             warnings,
         },
-        Err(error) => CommandResult::Failed { error },
+        Err(stop) => stop.into(),
     }
 }
 

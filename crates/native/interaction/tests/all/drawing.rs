@@ -406,7 +406,7 @@ fn divide_is_one_step_and_the_locked_active_layer_says_why() {
     assert!(b.type_text("25"));
     assert_eq!(
         b.last_text(),
-        Some("Aralık nesne boyundan uzun; nokta konmadı.")
+        Some("Aralık nesnenin boyundan uzun; nokta konmadı. Daha kısa bir aralık verin.")
     );
     assert!(b.type_text("P"), "back to parts");
     let mut b = on(OBJECTS, "kilitli", "divide");

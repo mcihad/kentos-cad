@@ -110,6 +110,8 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
     })
     .expect("the agent link");
     app.python.link = Some(link);
+    // The journal is the session's (docs/adr/0253 §3): taken before every reopening.
+    let mut rows: Vec<Value> = Vec::new();
     let mut names = BTreeMap::new();
     names.insert(
         "layer".to_owned(),
@@ -163,6 +165,12 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
                 "{name}: the step “{label}” is said"
             );
         } else if step["reopen"] == true {
+            rows.extend(
+                ask(&mut app, "journal", json!({}))["calls"]
+                    .as_array()
+                    .cloned()
+                    .unwrap_or_default(),
+            );
             let file = dir.join(format!("oda-{n}.kcad"));
             let snapshot = app
                 .document
@@ -285,6 +293,47 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
         .filter(|l| l.text.starts_with("Ajan: "))
         .count();
     assert!(said >= runs, "{said} of {runs} commands said");
+    // The record says what ran, in order, and replays (docs/adr/0253 §3): on a new drawing of
+    // the same project every command row done is the same and the drawing is the same.
+    rows.extend(
+        ask(&mut app, "journal", json!({}))["calls"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default(),
+    );
+    let ran: Vec<&str> = scenario["steps"]
+        .as_array()
+        .expect("steps")
+        .iter()
+        .filter_map(|s| s["command"].as_str())
+        .collect();
+    let recorded: Vec<&str> = rows
+        .iter()
+        .filter(|r| r["kind"] == "command")
+        .filter_map(|r| r["command"].as_str())
+        .collect();
+    assert_eq!(
+        recorded, ran,
+        "the record's commands are the scenario's, in order"
+    );
+    let edits: Vec<&Value> = rows.iter().filter(|r| r["kind"] == "edit").collect();
+    assert!(
+        edits.is_empty(),
+        "every write went through a command: {edits:#?}"
+    );
+    let done = rows.iter().filter(|r| r["status"] == "done").count();
+    let mut journal = ask(&mut app, "journal", json!({}));
+    journal["calls"] = Value::Array(rows);
+    let mut fresh = kentos_headless::Session::new(&choices).expect("a new project");
+    let report = fresh.replay(journal).expect("replays");
+    assert_eq!(report["same"], json!(done), "{report}");
+    assert_eq!(
+        (report["failed"].clone(), report["differs"].clone()),
+        (json!(0), json!(0)),
+        "{report}"
+    );
+    let objects = ask(&mut app, "summary", json!({}))["objects"].clone();
+    assert_eq!(fresh.summary()["objects"], objects);
     // KENTOS_ACCEPTANCE_OUT=folder keeps the files the app wrote, to look at (CLAUDE.md §2).
     if let Ok(out) = std::env::var("KENTOS_ACCEPTANCE_OUT") {
         let out = std::path::Path::new(&out);

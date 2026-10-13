@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     AttributeDefinition,
     BlockDefined,
@@ -62,6 +63,8 @@ class _BlocksDefine(LocalCommand[BlocksDefine, BlockDefined, BlocksDefinePlan]):
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> BlockDefined:
         """Blok tanımla: Kalıcı kimlikleriyle verilen nesnelerden, verilen adla ve taban
         noktasıyla yeni bir blok tanımı yapar; tek geri alma adımı, adı Blok tanımla.
@@ -87,6 +90,10 @@ class _BlocksDefine(LocalCommand[BlocksDefine, BlockDefined, BlocksDefinePlan]):
                 longer at it, nothing is written and the answer is `conflict`.
             layer_id: With `replace`: the layer the insert goes on, a layer's id.
             replace: True: the objects are replaced by an insert of the new block.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             BlockDefined
@@ -103,7 +110,7 @@ class _BlocksDefine(LocalCommand[BlocksDefine, BlockDefined, BlocksDefinePlan]):
             expected_revision=expected_revision,
             layer_id=layer_id,
             replace=replace,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -157,6 +164,37 @@ class _BlocksDefine(LocalCommand[BlocksDefine, BlockDefined, BlocksDefinePlan]):
             replace=replace,
         ))
 
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        name: str,
+        base: Vec2Like,
+        uids: Sequence[str],
+        description: str | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        layer_id: str | None | Unset = UNSET,
+        replace: bool | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, BlocksDefine(
+            name=name,
+            base=Vec2.of(base),
+            uids=list(uids),
+            description=description,
+            expected_revision=expected_revision,
+            layer_id=layer_id,
+            replace=replace,
+        ), op=op, request_id=request_id, expected=expected)
+
 
 define = _BlocksDefine()
 """Blok tanımla (``cad.blocks.define``)."""
@@ -201,6 +239,8 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         name: str | None | Unset = UNSET,
         replace: bool | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> BlocksEdited:
         """Blok tanımını değiştir: Bir blok tanımını kimliğiyle değiştirir; tek geri alma
         adımı, adı işlemin: rename yeni ad (Blok değiştir), redefine içindekileri kalıcı
@@ -228,6 +268,10 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             name: `rename`: the new name.
             replace: `redefine`: true, the objects are replaced by an insert of the block.
             uids: `redefine`: the objects it is made of now, by persistent id.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             BlocksEdited
@@ -246,7 +290,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             name=name,
             replace=replace,
             uids=_opt(uids, lambda x: list(x)),
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -307,6 +351,41 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             replace=replace,
             uids=_opt(uids, lambda x: list(x)),
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        operation: BlockEditOperation | BlockEditOperationName,
+        attributes: Sequence[AttributeDefinition] | None | Unset = UNSET,
+        base: Vec2Like | None | Unset = UNSET,
+        block: str | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        layer_id: str | None | Unset = UNSET,
+        name: str | None | Unset = UNSET,
+        replace: bool | None | Unset = UNSET,
+        uids: Sequence[str] | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, BlocksEdit(
+            operation=operation,
+            attributes=_opt(attributes, lambda x: list(x)),
+            base=_opt(base, lambda x: Vec2.of(x)),
+            block=block,
+            expected_revision=expected_revision,
+            layer_id=layer_id,
+            name=name,
+            replace=replace,
+            uids=_opt(uids, lambda x: list(x)),
+        ), op=op, request_id=request_id, expected=expected)
 
 
 edit = _BlocksEdit()

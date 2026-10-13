@@ -7,7 +7,6 @@
 //! what prints.
 
 use std::io::{BufWriter, Write};
-use std::path::Path;
 
 use iced::widget::canvas as canvas_widget;
 use iced::widget::canvas::{self, Frame};
@@ -270,23 +269,16 @@ impl Designer {
         Ok((bytes, findings))
     }
 
-    /// The PDF written to `path`, and what it writes differently from the screen (the host says
-    /// it); what went wrong is kept for the mode to show too.
-    pub fn export_pdf_to(
+    /// The PDF's bytes for the host to write whole, and what it writes differently from the
+    /// screen (the host says it); what went wrong is kept for the mode to show too.
+    pub fn export_pdf(
         &mut self,
-        path: &Path,
         painter: &dyn MapPainter,
         host: PdfHost,
-    ) -> Result<Vec<kentos_sheet::preflight::Finding>, String> {
-        let result = self
-            .pdf_and_findings(painter, host)
-            .and_then(|(bytes, findings)| {
-                std::fs::write(path, bytes)
-                    .map(|()| findings)
-                    .map_err(|e| e.to_string())
-            });
+    ) -> Result<(Vec<u8>, Vec<kentos_sheet::preflight::Finding>), String> {
+        let result = self.pdf_and_findings(painter, host);
         if let Err(e) = &result {
-            self.error = Some(format!("PDF yazılamadı: {e}"));
+            self.error = Some(format!("PDF yapılamadı: {e}"));
         }
         result
     }
@@ -581,33 +573,35 @@ impl Designer {
         serde_json::from_str(&text).unwrap_or_else(|_| book.clone())
     }
 
-    /// Writes the export the host asked a path for (after [`crate::Effect::AskExportPath`]).
-    pub fn export_to(
+    /// The export the host asked a path for (after [`crate::Effect::AskExportPath`]) as bytes,
+    /// for the host to write whole: a temporary file beside the target, read back, renamed
+    /// (docs/adr/0253 §10). Not a PDF: [`Designer::export_pdf`], with the host's faces.
+    pub fn export_bytes(
         &mut self,
         kind: ExportKind,
-        path: &Path,
         painter: &dyn MapPainter,
-    ) -> Result<(), String> {
+    ) -> Result<Vec<u8>, String> {
         let result = match kind {
-            // The faces and the system are the host's: `export_pdf_to`.
+            // The faces and the system are the host's: `export_pdf`.
             ExportKind::Pdf => {
-                Err("PDF ev sahibinin yazı tipleriyle yazılır (export_pdf_to).".to_owned())
+                Err("PDF ev sahibinin yazı tipleriyle yapılır (export_pdf).".to_owned())
             }
-            ExportKind::Svg => self
-                .svg(painter)
-                .and_then(|s| std::fs::write(path, s).map_err(|e| e.to_string())),
-            ExportKind::Kpafta => self
-                .kpafta()
-                .and_then(|s| std::fs::write(path, s).map_err(|e| e.to_string())),
+            ExportKind::Svg => self.svg(painter).map(String::into_bytes),
+            ExportKind::Kpafta => self.kpafta().map(String::into_bytes),
             ExportKind::Png => {
-                let mut file = std::fs::File::create(path).map_err(|e| e.to_string())?;
-                self.write_png(painter, self.export_dpi, &mut file)
-                    .map(|_| ())
+                let mut out = Vec::new();
+                self.write_png(painter, self.export_dpi, &mut out)
+                    .map(|_| out)
             }
         };
         if let Err(e) = &result {
             self.error = Some(format!("Dışa aktarılamadı: {e}"));
         }
         result
+    }
+
+    /// The mode shows that the host could not write the export.
+    pub fn export_failed(&mut self, why: &str) {
+        self.error = Some(format!("Dışa aktarılamadı: {why}"));
     }
 }

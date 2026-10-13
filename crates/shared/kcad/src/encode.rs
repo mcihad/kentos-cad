@@ -23,6 +23,7 @@ mod labels;
 mod names;
 mod networks;
 mod objects;
+mod requests;
 mod services;
 mod sheets;
 mod styles;
@@ -50,9 +51,9 @@ use crate::{
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS, SCHEMA_WITH_STYLES,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_REQUESTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
+    SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
     SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
 };
 use names::{
@@ -269,10 +270,11 @@ impl<'d> Encoder<'d> {
             + usize::from(doc.home_view.is_some())
             + usize::from(doc.project_id.is_some())
             + usize::from(doc.migrated_from.is_some())
-            + usize::from(doc.sheets.is_some());
+            + usize::from(doc.sheets.is_some())
+            + usize::from(!doc.requests.is_empty());
         self.open(7 + optional, true)?;
-        // name (4), blocks layers origin sheets styles (6), entities homeView settings (8), projectId (9),
-        // activeLayer (11), migratedFrom (12).
+        // name (4), blocks layers origin sheets styles (6), entities homeView requests settings (8),
+        // projectId (9), activeLayer (11), migratedFrom (12).
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&doc.name))?;
         if !doc.blocks.is_empty() {
@@ -311,6 +313,10 @@ impl<'d> Encoder<'d> {
                 e.close();
                 Ok(())
             })?;
+        }
+        if !doc.requests.is_empty() {
+            self.key("requests");
+            self.at(Seg::Name("requests"), |e| e.requests(&doc.requests))?;
         }
         self.key("settings");
         self.at(Seg::Name("settings"), |e| e.settings(&doc.settings))?;
@@ -1100,6 +1106,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 45 (docs/adr/0253 §6): the requests the drawing executed.
+    if !doc.requests.is_empty() {
+        return SCHEMA_WITH_REQUESTS;
     }
     // Schema 44 (docs/adr/0251): the project's sheet book.
     if doc.sheets.is_some() {

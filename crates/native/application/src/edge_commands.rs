@@ -4,7 +4,7 @@
 //! with their size.
 
 macro_rules! trim_like {
-    ($name:ident, $act:expr, $doc:literal) => {
+    ($name:ident, $act:expr, $id:path, $version:path, $doc:literal) => {
         #[doc = $doc]
         pub mod $name {
             use kentos_contracts::{
@@ -29,14 +29,16 @@ macro_rules! trim_like {
                 cx: &mut ExecutionContext<'_>,
                 input: EntitiesTrim,
             ) -> CommandResult<EntitiesTrimmed> {
-                trim::execute(cx, input, $act)
+                crate::call::recorded(cx, $id, $version, input, |cx, input| {
+                    trim::execute(cx, input, $act)
+                })
             }
         }
     };
 }
 
 macro_rules! corner_like {
-    ($name:ident, $input:ty, $doc:literal) => {
+    ($name:ident, $input:ty, $id:path, $version:path, $doc:literal) => {
         #[doc = $doc]
         pub mod $name {
             use kentos_contracts::{CommandResult, EntitiesCornerPlan, EntitiesCornered};
@@ -59,7 +61,9 @@ macro_rules! corner_like {
                 cx: &mut ExecutionContext<'_>,
                 input: $input,
             ) -> CommandResult<EntitiesCornered> {
-                corner::execute(cx, (&input).into())
+                crate::call::recorded(cx, $id, $version, input, |cx, input| {
+                    corner::execute(cx, (&input).into())
+                })
             }
         }
     };
@@ -68,20 +72,28 @@ macro_rules! corner_like {
 trim_like!(
     entities_trim,
     crate::trim::Act::Trim,
+    kentos_contracts::CAD_ENTITIES_TRIM,
+    kentos_contracts::CAD_ENTITIES_TRIM_VERSION,
     "`cad.entities.trim` v1: Buda."
 );
 trim_like!(
     entities_extend,
     crate::trim::Act::Extend,
+    kentos_contracts::CAD_ENTITIES_EXTEND,
+    kentos_contracts::CAD_ENTITIES_EXTEND_VERSION,
     "`cad.entities.extend` v1: Uzat."
 );
 corner_like!(
     entities_fillet,
     kentos_contracts::EntitiesFillet,
+    kentos_contracts::CAD_ENTITIES_FILLET,
+    kentos_contracts::CAD_ENTITIES_FILLET_VERSION,
     "`cad.entities.fillet` v1: Köşe yuvarla."
 );
 corner_like!(
     entities_chamfer,
     kentos_contracts::EntitiesChamfer,
+    kentos_contracts::CAD_ENTITIES_CHAMFER,
+    kentos_contracts::CAD_ENTITIES_CHAMFER_VERSION,
     "`cad.entities.chamfer` v1: Pah."
 );

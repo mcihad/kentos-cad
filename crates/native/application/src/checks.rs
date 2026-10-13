@@ -15,16 +15,35 @@ use kentos_domain::{Document, Slot, Uuid};
 use crate::codes;
 
 /// Why a call stops before anything is written.
+/// The error is boxed: a call stops at most once, and the `Result`s every
+/// check returns stay small.
 pub(crate) enum Stop {
-    Failed(CommandError),
-    Conflict(CommandError),
+    Failed(Box<CommandError>),
+    Conflict(Box<CommandError>),
+}
+
+impl Stop {
+    pub(crate) fn failed(error: CommandError) -> Self {
+        Stop::Failed(Box::new(error))
+    }
+
+    pub(crate) fn conflict(error: CommandError) -> Self {
+        Stop::Conflict(Box::new(error))
+    }
+
+    /// The error it stops with, whichever way.
+    pub(crate) fn into_error(self) -> CommandError {
+        match self {
+            Stop::Failed(error) | Stop::Conflict(error) => *error,
+        }
+    }
 }
 
 impl<T> From<Stop> for CommandResult<T> {
     fn from(stop: Stop) -> Self {
         match stop {
-            Stop::Failed(error) => CommandResult::Failed { error },
-            Stop::Conflict(error) => CommandResult::Conflict { error },
+            Stop::Failed(error) => CommandResult::Failed { error: *error },
+            Stop::Conflict(error) => CommandResult::Conflict { error: *error },
         }
     }
 }
@@ -34,7 +53,7 @@ pub(crate) fn error(code: &str, message: String, path: Option<String>) -> Comman
         code: code.to_owned(),
         message,
         path,
-        revision: None,
+        ..CommandError::default()
     }
 }
 
@@ -44,7 +63,7 @@ pub(crate) fn error(code: &str, message: String, path: Option<String>) -> Comman
 /// numbers differently (∞, 1e21), and both sides answer in the same words.
 pub(crate) fn line_weight(weight: Option<f64>, path: &str) -> Result<(), Stop> {
     match weight {
-        Some(w) if !(0.0..=MAX_LINE_WEIGHT).contains(&w) => Err(Stop::Failed(error(
+        Some(w) if !(0.0..=MAX_LINE_WEIGHT).contains(&w) => Err(Stop::failed(error(
             codes::INVALID_LINE_WEIGHT,
             "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.".into(),
             Some(path.to_owned()),
@@ -84,7 +103,7 @@ pub(crate) fn field_values(
                 } else {
                     codes::INVALID_ATTRIBUTE
                 };
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     code,
                     refusal.message,
                     Some(format!("{at}.{key}")),
@@ -102,7 +121,7 @@ pub(crate) fn not_finite(whose: &str, axis: &str, path: String) -> Stop {
     } else {
         "kuzey (X)"
     };
-    Stop::Failed(error(
+    Stop::failed(error(
         codes::NOT_FINITE,
         format!(
             "{whose} {name} değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin."
@@ -127,7 +146,7 @@ pub(crate) fn finite(value: f64, what: &str, fix: &str, path: &str) -> Result<()
     if value.is_finite() {
         return Ok(());
     }
-    Err(Stop::Failed(error(
+    Err(Stop::failed(error(
         codes::NOT_FINITE,
         format!("{what} sonlu bir sayı değil (NaN ya da sonsuz). {fix}"),
         Some(path.into()),
@@ -139,7 +158,7 @@ pub(crate) fn radius(r: f64) -> Result<(), Stop> {
     if r > 0.0 {
         return Ok(());
     }
-    Err(Stop::Failed(error(
+    Err(Stop::failed(error(
         codes::INVALID_RADIUS,
         "Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.".into(),
         Some("r".into()),
@@ -153,7 +172,7 @@ pub(crate) fn revision(doc: &Document, expected: Option<&str>) -> Result<(), Sto
         return Ok(());
     };
     if !is_revision_text(expected) {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_REVISION,
             format!(
                 "Beklenen sürüm “{expected}” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın."
@@ -163,7 +182,7 @@ pub(crate) fn revision(doc: &Document, expected: Option<&str>) -> Result<(), Sto
     }
     let current = doc.revision().to_string();
     if expected != current {
-        return Err(Stop::Conflict(CommandError {
+        return Err(Stop::conflict(CommandError {
             revision: Some(current),
             ..error(
                 codes::REVISION_CONFLICT,
@@ -188,7 +207,7 @@ pub(crate) fn layer_at(doc: &Document, id: &str, path: &str) -> Result<Vec<Comma
     let layers = doc.layers();
     let at = || Some(path.to_owned());
     let Some(node) = layers.get(id) else {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::LAYER_NOT_FOUND,
             format!("“{id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."),
             at(),
@@ -196,7 +215,7 @@ pub(crate) fn layer_at(doc: &Document, id: &str, path: &str) -> Result<Vec<Comma
     };
     let name = &node.name;
     if node.kind != LayerNodeType::Layer {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NOT_A_LAYER,
             format!(
                 "“{name}” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin."
@@ -206,7 +225,7 @@ pub(crate) fn layer_at(doc: &Document, id: &str, path: &str) -> Result<Vec<Comma
     }
     // A layer drawn from a map service holds no objects (docs/adr/0208 §2).
     if node.service.is_some() {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::SERVICE_LAYER,
             format!(
                 "“{name}” bir servis katmanı; çizimi servisten gelir, ona nesne eklenmez. Başka bir katmanı etkinleştirin."
@@ -215,7 +234,7 @@ pub(crate) fn layer_at(doc: &Document, id: &str, path: &str) -> Result<Vec<Comma
         )));
     }
     if layers.is_locked(id) {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::LAYER_LOCKED,
             format!(
                 "“{name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin."
@@ -239,7 +258,7 @@ pub(crate) fn layer_at(doc: &Document, id: &str, path: &str) -> Result<Vec<Comma
 /// each lowercase UUID text with hyphens (`invalid_uid`, the first that is not).
 pub(crate) fn uids(uids: &[String], nothing: &str) -> Result<(), Stop> {
     if uids.is_empty() {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NO_ENTITIES,
             format!("{nothing} En az bir nesnenin kalıcı kimliğini verin."),
             Some("uids".into()),
@@ -247,7 +266,7 @@ pub(crate) fn uids(uids: &[String], nothing: &str) -> Result<(), Stop> {
     }
     for (i, uid) in uids.iter().enumerate() {
         if !is_uid_text(uid) {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::INVALID_UID,
                 format!(
                     "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın."
@@ -288,7 +307,7 @@ pub(crate) fn named<'a>(
             .and_then(|u| doc.slot_of(u))
             .and_then(|slot| Some((slot, doc.get(slot)?)));
         let Some((slot, entity)) = found else {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::ENTITY_NOT_FOUND,
                 format!(
                     "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
@@ -322,13 +341,14 @@ pub(crate) fn is_uid_text(text: &str) -> bool {
 /// Writes one object as one undo step (“Ekle”, the document's own `add`),
 /// into the open transaction or group if one is: its slot, persistent id and
 /// the revision after, or `slots_exhausted` when the document has no slot left.
-pub(crate) fn add(
-    doc: &mut Document,
-    entity: Entity,
-) -> Result<(u32, String, String), CommandError> {
+pub(crate) fn add(doc: &mut Document, entity: Entity) -> Result<(u32, String, String), Stop> {
     match doc.add(entity) {
         Ok(slot) => Ok(written(doc, slot)),
-        Err(full) => Err(error(codes::SLOTS_EXHAUSTED, full.to_string(), None)),
+        Err(full) => Err(Stop::failed(error(
+            codes::SLOTS_EXHAUSTED,
+            full.to_string(),
+            None,
+        ))),
     }
 }
 

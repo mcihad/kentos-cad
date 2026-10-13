@@ -514,13 +514,12 @@ fn read_file(path: &PathBuf) -> Result<Picked, String> {
     })
 }
 
+/// Writes an export whole or not at all (docs/adr/0253 §10): a temporary file
+/// beside the target, made durable, read back, renamed over it. A failed write
+/// leaves the file that was there as it was.
 fn write_file(path: &std::path::Path, bytes: &[u8]) -> Result<String, String> {
-    std::fs::write(path, bytes).map_err(|e| {
-        format!(
-            "“{}” yazılamadı: {e}. Başka bir yere kaydetmeyi deneyin.",
-            path.display()
-        )
-    })?;
+    kentos_headless::files::write_bytes(bytes, path)
+        .map_err(|e| format!("{} Başka bir yere kaydetmeyi deneyin.", e.message))?;
     Ok(path.file_name().map_or_else(
         || path.display().to_string(),
         |n| n.to_string_lossy().into_owned(),

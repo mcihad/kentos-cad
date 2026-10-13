@@ -63,6 +63,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<Bloc
 /// Checks `input` again and writes it as one undo step named after the
 /// operation, into the open transaction or group, if one is.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandResult<BlocksEdited> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_BLOCKS_EDIT,
+        kentos_contracts::CAD_BLOCKS_EDIT_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandResult<BlocksEdited> {
     let checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -163,7 +175,7 @@ impl Checked {
 fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
     let needs_block = input.operation != BlockEditOperation::Purge;
     if needs_block && input.block.is_none() {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NO_BLOCK,
             "Değiştirilecek blok verilmedi. Bloğun kimliğini verin.".into(),
             Some("block".into()),
@@ -184,7 +196,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         }
         BlockEditOperation::Rebase => {
             let Some(base) = input.base else {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::NO_BASE,
                     "Yeni taban noktası verilmedi. Bloğun taban noktasını verin.".into(),
                     Some("base".into()),
@@ -204,7 +216,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
     }
     let Some(old) = input.block.and_then(|id| doc.block(id)) else {
         let id = input.block.map(|b| b.to_text()).unwrap_or_default();
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::UNKNOWN_BLOCK,
             format!(
                 "“{id}” kimlikli blok çizimde tanımlı değil: silinmiş ya da başka bir çizimin olabilir. Çizimde tanımlı bir bloğun kimliğini verin."
@@ -245,7 +257,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         }
         BlockEditOperation::Remove => {
             if let Some(reason) = doc.block_removal_refused(old.id) {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::BLOCK_IN_USE,
                     reason,
                     Some("block".into()),
@@ -267,7 +279,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
 /// (exactly), a finite point and turn, a height above zero.
 fn attributes(list: Option<&[AttributeDefinition]>) -> Result<(), Stop> {
     let Some(list) = list else {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NO_ATTRIBUTES,
             "Öznitelik listesi verilmedi. Bloğun bütün özniteliklerini verin; boş liste hepsini kaldırır.".into(),
             Some("attributes".into()),
@@ -276,14 +288,14 @@ fn attributes(list: Option<&[AttributeDefinition]>) -> Result<(), Stop> {
     for (i, a) in list.iter().enumerate() {
         let at = format!("attributes[{i}]");
         if checks::is_blank(&a.tag) {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::EMPTY_TAG,
                 "Öznitelik etiketi boş olamaz; her özniteliğe bir etiket verin.".into(),
                 Some(format!("{at}.tag")),
             )));
         }
         if list[..i].iter().any(|b| b.tag == a.tag) {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::DUPLICATE_TAG,
                 format!(
                     "“{}” etiketi listede iki kez var; her etiket bir kez olmalı.",
@@ -301,7 +313,7 @@ fn attributes(list: Option<&[AttributeDefinition]>) -> Result<(), Stop> {
             &format!("{at}.rotation"),
         )?;
         if !(a.height.is_finite() && a.height > 0.0) {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::INVALID_HEIGHT,
                 format!(
                     "“{}” özniteliğinin yazı yüksekliği sıfırdan büyük, sonlu bir sayı olmalı (metre, bloğun kendi ölçüsünde).",
@@ -364,5 +376,5 @@ fn remove(doc: &mut Document, label: &str, ids: &[BlockId]) -> Result<(), Stop> 
         }
         Ok::<(), String>(())
     });
-    written.map_err(|message| Stop::Failed(error(codes::BLOCK_REFUSED, message, None)))
+    written.map_err(|message| Stop::failed(error(codes::BLOCK_REFUSED, message, None)))
 }

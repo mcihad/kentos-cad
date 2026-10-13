@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::{Bounds, DocumentSnapshotV1, LayerNode};
+use kentos_contracts::{Bounds, CallEnvelope, CommandResult, DocumentSnapshotV1, LayerNode};
 use kentos_domain::{Document, Group};
 use serde_json::{Value, json};
 
@@ -25,13 +25,15 @@ pub fn new_drawing(input: &Value) -> Result<NewDrawing, HeadlessError> {
         .map_err(|r| HeadlessError::new(r.code, r.message))
 }
 
-/// A drawing, where it was read from, and the script's open group.
+/// A drawing, where it was read from, the script's open group and the
+/// commands it runs as jobs.
 pub struct Session {
     doc: Document,
     path: Option<PathBuf>,
     /// Read from a v1 JSON file: saved only to a new path, never over it.
     legacy: bool,
     group: Option<Group>,
+    jobs: crate::rpc::Jobs,
 }
 
 impl Session {
@@ -63,6 +65,7 @@ impl Session {
             path,
             legacy,
             group: None,
+            jobs: crate::rpc::Jobs::default(),
         }
     }
 
@@ -113,65 +116,110 @@ impl Session {
     }
 
     /// The whole drawing as an AutoCAD 2007 DXF file at `path` (docs/adr/0252),
-    /// the desktop's DXF dışa aktar with Tümü: every object with its layers,
-    /// what DXF cannot hold carried as KentOS data. An export is not a save:
-    /// the drawing stays as dirty as it was. The answer counts what was
-    /// written and says what changed on the way (the writer's report).
-    pub fn export_dxf(&self, path: &Path) -> Result<Value, HeadlessError> {
-        let chosen = crate::export::by_layer(&self.doc, self.doc.entities());
-        if chosen.is_empty() {
-            return Err(HeadlessError::new(
-                "nothing_to_export",
-                "Çizimde nesne yok: DXF'e yazılacak bir şey çizin.",
-            ));
-        }
-        let input = crate::export::dxf_input(&self.doc, &chosen);
-        let layers = input.layers.len();
-        let (bytes, report) = kentos_formats::dxf::write(&input);
-        let written = files::write_bytes(&bytes, path)?;
-        Ok(json!({
-            "path": path.display().to_string(),
-            "bytes": written,
-            "objects": report.counts.values().sum::<u32>(),
-            "layers": layers,
-            "report": report,
-        }))
+    /// the desktop's DXF dışa aktar with Tümü: `file.export.dxf` (docs/adr/0253
+    /// §10), over a file that is there. An export is not a save: the drawing
+    /// stays as dirty as it was. The answer is the command's output.
+    pub fn export_dxf(&mut self, path: &Path) -> Result<Value, HeadlessError> {
+        self.file_command(
+            kentos_contracts::FILE_EXPORT_DXF,
+            json!({ "path": path.display().to_string(), "overwrite": true }),
+        )
     }
 
-    /// The project's sheet book as a PDF at `path` (docs/adr/0252 §3): the
-    /// sheets named (none: every sheet, in the book's order), a page each,
-    /// as the desktop's Dışa aktar › PDF writes them: the sheets' items, each
-    /// placed map frame as the shown layers' paths at its scale, GeoPDF where
-    /// the project's system is a transverse Mercator one. What a headless
+    /// The project's sheet book as a PDF at `path` (docs/adr/0252 §3):
+    /// `file.export.pdf` (docs/adr/0253 §10) of the sheets named (none: every
+    /// sheet, in the book's order), over a file that is there. What a headless
     /// host cannot draw (the maps' texts) is said in `notes`, the core's
     /// findings in `findings`. An export is not a save.
-    pub fn export_pdf(&self, path: &Path, sheets: &[String]) -> Result<Value, HeadlessError> {
-        let user = std::env::var("USER")
-            .or_else(|_| std::env::var("USERNAME"))
-            .unwrap_or_default();
-        let made = kentos_plot::book::book_pdf(
-            &self.doc,
-            sheets,
-            &user,
-            &kentos_plot::book::today(),
-        )
-        .map_err(|e| {
-            let code = match e.code.as_str() {
-                "no_sheets" => "no_sheets",
-                "pdf_unknown_sheet" => "unknown_sheet",
-                "pdf_no_sheets" => "no_sheets",
-                _ => "pdf_unwritable",
-            };
-            HeadlessError::new(code, e.message)
-        })?;
-        let written = files::write_bytes(&made.bytes, path)?;
-        Ok(json!({
-            "path": path.display().to_string(),
-            "bytes": written,
-            "sheets": made.sheets,
-            "findings": made.findings,
-            "notes": made.notes,
-        }))
+    pub fn export_pdf(&mut self, path: &Path, sheets: &[String]) -> Result<Value, HeadlessError> {
+        let mut input = json!({ "path": path.display().to_string(), "overwrite": true });
+        if !sheets.is_empty() {
+            input["sheets"] = json!(sheets);
+        }
+        self.file_command(kentos_contracts::FILE_EXPORT_PDF, input)
+    }
+
+    /// A file command's execute: its output, or its refusal as the host's error.
+    fn file_command(&mut self, command: &str, input: Value) -> Result<Value, HeadlessError> {
+        let answer = crate::file_commands::call(
+            &mut self.doc,
+            CallEnvelope {
+                command: command.to_owned(),
+                version: None,
+                op: kentos_contracts::CallOp::Execute,
+                input,
+                request_id: None,
+                expected: None,
+            },
+        );
+        match answer.result {
+            CommandResult::Completed { output, .. } => Ok(output),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                Err(HeadlessError::new(static_code(&error.code), error.message))
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {
+                Err(HeadlessError::new("file_unwritable", "Dosya yazılmadı."))
+            }
+        }
+    }
+
+    /// A command by the protocol (docs/adr/0253 §4): `envelope` is a
+    /// `CallEnvelope`'s JSON, the answer a `CallAnswer`'s.
+    pub fn call(&mut self, envelope: Value) -> Result<Value, HeadlessError> {
+        let envelope = crate::rpc::envelope(&envelope)?;
+        to_json(&crate::dispatch::call_envelope(
+            &mut self.doc,
+            None,
+            envelope,
+        ))
+    }
+
+    /// Starts a command as a job (docs/adr/0253 §9): computed on a copy of
+    /// the drawing on another thread; its `JobStatus`.
+    pub fn start(&mut self, envelope: Value) -> Result<Value, HeadlessError> {
+        let envelope = crate::rpc::envelope(&envelope)?;
+        to_json(&self.jobs.start(&self.doc, envelope))
+    }
+
+    /// A job as it is now; once computed, its write is in the drawing.
+    pub fn job(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        to_json(&self.jobs.status(&mut self.doc, id)?)
+    }
+
+    /// Waits for a job; its write is in the drawing then.
+    pub fn wait(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        to_json(&self.jobs.wait(&mut self.doc, id)?)
+    }
+
+    /// Asks a job to stop; refused once written (`already_committed`).
+    pub fn cancel(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        to_json(&self.jobs.cancel(&mut self.doc, id)?)
+    }
+
+    /// The drawing's journal (`kentos.replay/1`, docs/adr/0253 §3).
+    pub fn journal(&self) -> Value {
+        serde_json::to_value(kentos_native_application::replay::journal_of(&self.doc))
+            .unwrap_or(Value::Null)
+    }
+
+    /// Runs a journal's commands again on this drawing; the report. A row
+    /// that wrote a file is planned again and compared, not written.
+    pub fn replay(&mut self, journal: Value) -> Result<Value, HeadlessError> {
+        let journal: kentos_contracts::ReplayJournal =
+            serde_json::from_value(journal).map_err(|e| {
+                HeadlessError::new(
+                    "invalid_input",
+                    format!("kayıt bir kentos.replay/1 kaydı olarak okunamadı: {e}"),
+                )
+            })?;
+        to_json(&kentos_native_application::replay::replay_with(
+            &mut self.doc,
+            None,
+            &journal,
+            &mut crate::file_commands::replay_row,
+        ))
     }
 
     /// The `.kcad` v2 bytes of the drawing as it is now, verified.
@@ -248,7 +296,7 @@ impl Session {
                 format!("{uid} kimlikli nesne bu çizimde yok."),
             )
         })?;
-        Ok(json!({ "uid": uid, "entity": e }))
+        Ok(json!({ "uid": uid, "stamp": self.doc.stamp(slot), "entity": e }))
     }
 
     /// An object's area, length and box.
@@ -301,4 +349,15 @@ impl Session {
             None => false,
         }
     }
+}
+
+fn to_json<T: serde::Serialize>(value: &T) -> Result<Value, HeadlessError> {
+    serde_json::to_value(value).map_err(|e| {
+        HeadlessError::new("unwritable_result", format!("yanıt JSON'a yazılamadı: {e}"))
+    })
+}
+
+/// A command's code as the host's error code (the host's codes are static).
+fn static_code(code: &str) -> &'static str {
+    kentos_contracts::codes::info(code).map_or("file_unwritable", |c| c.code)
 }

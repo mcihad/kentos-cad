@@ -18,6 +18,7 @@ use kentos_contracts::{
     ProjectStyles, Vec2,
 };
 
+use crate::calls::Calls;
 use crate::history::History;
 use crate::identity::{Slot, Uuid};
 use crate::layers::LayerTree;
@@ -50,6 +51,9 @@ pub struct Document {
     /// The next slot to give out; u64 so the last `u32` can be given without overflow.
     pub(crate) next_slot: u64,
     pub(crate) history: History,
+    /// The journal of what was written and the ledger of requests executed
+    /// (calls.rs, docs/adr/0253 §3, §6).
+    pub(crate) calls: Calls,
     /// Counts changes to what a saved file holds (see `mark_saved`).
     pub(crate) edits: u64,
     /// Counts every change to what the drawing holds, changes from outside included.
@@ -197,6 +201,9 @@ impl Document {
             store: self.store.clone(),
             next_slot: self.next_slot,
             history: History::default(),
+            // A copy starts its own journal; the ledger it keeps, so a call
+            // on the copy (a plan, a job) knows the requests already executed.
+            calls: self.calls.reading_copy(),
             edits: self.edits,
             generation: self.generation,
             dirty: self.dirty,
@@ -212,8 +219,13 @@ impl Document {
         self.store.broken_dimensions()
     }
 
+    ///
+    /// While a command's step is open (`run_step`), it is the revision the
+    /// step makes once recorded: a command's answer, made before its step
+    /// is recorded, names the revision its write gives, as it did when each
+    /// command recorded its own step (docs/adr/0253 §1).
     pub fn revision(&self) -> u64 {
-        self.edits
+        self.edits + u64::from(self.step_will_record())
     }
 
     /// Changes with every change to what the drawing holds: this user's

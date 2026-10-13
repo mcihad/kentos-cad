@@ -1262,13 +1262,22 @@ impl App {
             &self.styles.library,
             &self.styles.images,
         );
-        let written = match host {
-            Some(host) => self.sheets.export_pdf_to(&path, &painter, host),
+        let made = match host {
+            Some(host) => self.sheets.export_pdf(&painter, host),
             None => self
                 .sheets
-                .export_to(kind, &path, &painter)
-                .map(|()| Vec::new()),
+                .export_bytes(kind, &painter)
+                .map(|bytes| (bytes, Vec::new())),
         };
+        // Whole or not at all (docs/adr/0253 §10): a failed write leaves the old file as it was.
+        let written = made.and_then(|(bytes, findings)| {
+            kentos_headless::files::write_bytes(&bytes, &path)
+                .map(|_| findings)
+                .map_err(|e| {
+                    self.sheets.export_failed(&e.message);
+                    e.message
+                })
+        });
         match written {
             Ok(findings) => {
                 self.output(format!("{} yazıldı.", path.display()));

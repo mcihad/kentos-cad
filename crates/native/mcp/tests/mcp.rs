@@ -821,6 +821,8 @@ fn stand_in_desktop(path: &std::path::Path) -> std::thread::JoinHandle<()> {
                     Op::parse(params["op"].as_str().unwrap_or("execute")).expect("op"),
                     params["input"].clone(),
                 ),
+                // The protocol's call (docs/adr/0253), as the desktop's agent link answers it.
+                "call" => session.call(params.clone()),
                 other => panic!("{other}"),
             };
             let answer = match result {
@@ -1098,5 +1100,106 @@ fn a_millimetre_cad_project_takes_metres_and_says_its_unit() {
     assert_eq!(
         unknown["structuredContent"]["error"]["code"],
         "unknown_system"
+    );
+}
+
+/// The protocol through MCP (docs/adr/0253): a command's summary and its
+/// stamps, a request sent again, what a call expects, a job, the journal.
+#[test]
+fn a_model_writes_by_the_protocol_with_requests_stamps_jobs_and_a_journal() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({ "srid": 5256 }));
+    let handle = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let layer = made["structuredContent"]["summary"]["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let args =
+        json!({ "drawing": handle, "layerId": layer, "pts": square(), "requestId": "model:1" });
+    let first = call(&mut server, "cad.polygon.create", args.clone());
+    assert_eq!(first["isError"], false, "{first}");
+    let answer = &first["structuredContent"];
+    let uid = answer["output"]["uid"].as_str().expect("a uid").to_owned();
+    assert_eq!(answer["summary"]["added"], json!([uid.clone()]));
+    let stamp = answer["summary"]["stamps"]["objects"][&uid]
+        .as_str()
+        .expect("a stamp")
+        .to_owned();
+    // Sent again: the same answer, written once.
+    let again = call(&mut server, "cad.polygon.create", args);
+    assert_eq!(again["structuredContent"]["replayed"], true);
+    let summary = call(&mut server, "drawing.summary", json!({ "drawing": handle }));
+    assert_eq!(summary["structuredContent"]["objects"], 1);
+    // A stale stamp writes nothing and names its object.
+    let moved = call(
+        &mut server,
+        "cad.entities.transform",
+        json!({ "drawing": handle, "uids": [uid], "transform": { "kind": "move", "dx": 1.0, "dy": 0.0 },
+                "expected": { "objects": { uid.clone(): stamp.clone() } } }),
+    );
+    assert_eq!(moved["isError"], false, "{moved}");
+    let stale = call(
+        &mut server,
+        "cad.entities.delete",
+        json!({ "drawing": handle, "uids": [uid], "expected": { "objects": { uid.clone(): stamp } } }),
+    );
+    assert_eq!(stale["isError"], true);
+    assert_eq!(stale["structuredContent"]["error"]["code"], "stale_state");
+    assert_eq!(
+        stale["structuredContent"]["error"]["uids"],
+        json!([uid.clone()])
+    );
+    assert_eq!(stale["structuredContent"]["error"]["retryable"], true);
+    // A job.
+    let started = call(
+        &mut server,
+        "drawing.job.start",
+        json!({ "drawing": handle, "command": "cad.entities.transform",
+                "input": { "uids": [uid], "transform": { "kind": "move", "dx": 1.0, "dy": 0.0 } } }),
+    );
+    let id = started["structuredContent"]["id"]
+        .as_str()
+        .expect("a job")
+        .to_owned();
+    let done = call(
+        &mut server,
+        "drawing.job.wait",
+        json!({ "drawing": handle, "id": id }),
+    );
+    assert_eq!(done["structuredContent"]["phase"], "done", "{done}");
+    let late = call(
+        &mut server,
+        "drawing.job.cancel",
+        json!({ "drawing": handle, "id": id }),
+    );
+    assert_eq!(
+        late["structuredContent"]["error"]["code"],
+        "already_committed"
+    );
+    // The journal, replayed on a new drawing.
+    let journal = call(&mut server, "drawing.journal", json!({ "drawing": handle }));
+    let calls = journal["structuredContent"]["calls"]
+        .as_array()
+        .expect("rows")
+        .len();
+    assert!(calls >= 3, "{journal}");
+    let other = call(&mut server, "drawing.new", json!({ "srid": 5256 }));
+    let other = other["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    let report = call(
+        &mut server,
+        "drawing.replay",
+        json!({ "drawing": other, "journal": journal["structuredContent"] }),
+    );
+    assert_eq!(report["structuredContent"]["failed"], 0, "{report}");
+    assert!(
+        report["structuredContent"]["same"]
+            .as_u64()
+            .is_some_and(|n| n >= 3)
     );
 }

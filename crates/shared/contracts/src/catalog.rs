@@ -31,6 +31,28 @@ pub struct CommandCatalog {
     #[cfg_attr(feature = "ts", ts(type = "1"))]
     pub version: u32,
     pub commands: Vec<CommandDescriptor>,
+    /// What every code of the commands' answers means (docs/adr/0253 §7).
+    #[serde(default)]
+    pub codes: Vec<CatalogCode>,
+    /// The codes any call may answer with, whatever its command (the protocol's).
+    #[serde(default)]
+    pub protocol: Vec<String>,
+}
+
+/// A code of the commands' answers and what it means (`codes::CODES`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CatalogCode {
+    pub code: String,
+    /// `failed`, `conflict`, `needsInput`, `warning`, `failedOrWarning`, or
+    /// `host`: the host's own failure, not a command's answer.
+    pub kind: String,
+    /// Whether calling again may succeed (a conflict's).
+    pub retryable: bool,
+    /// Turkish.
+    pub meaning: String,
 }
 
 /// One product command (TODOS.md CMD-01).
@@ -71,6 +93,11 @@ pub struct CommandDescriptor {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
     pub plan: Option<serde_json::Value>,
+    /// The object kinds it takes, the codes it refuses with and warns with
+    /// (docs/adr/0253 §7); absent for a command only the server runs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub capabilities: Option<crate::capabilities::CommandCapabilities>,
     pub examples: Vec<CommandExample>,
 }
 
@@ -176,10 +203,7 @@ pub fn catalog() -> CommandCatalog {
         ProjectPermission, ProjectShare,
     };
     use serde_json::json;
-    CommandCatalog {
-        format: CATALOG_FORMAT.into(),
-        version: CATALOG_VERSION,
-        commands: vec![CommandDescriptor {
+    let mut commands = vec![CommandDescriptor {
             id: PROJECT_CHANGES.into(),
             version: PROJECT_CHANGES_VERSION,
             title: "Proje değişiklikleri".into(),
@@ -201,6 +225,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<ProjectChanges>(),
             output: schema::<CommitResult>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Yeni bir nokta ekle".into(),
                 input: json!({
@@ -237,6 +262,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<ProjectShare>(),
             output: schema::<ProjectAccessChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Bir meslektaşı düzenleyici yap".into(),
                 input: json!({ "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "role": "editor" }),
@@ -261,6 +287,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<ProjectAccessRevoke>(),
             output: schema::<ProjectAccessChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Paylaşımı kaldır".into(),
                 input: json!({ "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f" }),
@@ -289,6 +316,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectCreate>(),
             output: schema::<crate::ProjectInfo>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Boş bir ifraz projesi aç".into(),
                 input: json!({
@@ -323,6 +351,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectRename>(),
             output: schema::<crate::ProjectCatalogChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Projeye yeni bir ad ver".into(),
                 input: json!({ "name": "Ada 101 (revize)" }),
@@ -348,6 +377,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectMetadataUpdate>(),
             output: schema::<crate::ProjectCatalogChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Türü ve etiketleri değiştir, açıklama ekle".into(),
                 input: json!({
@@ -377,6 +407,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectDuplicate>(),
             output: schema::<crate::ProjectDuplicated>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Kişisel alana bir kopya".into(),
                 input: json!({ "name": "Ada 101 (deneme)", "tenantId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f" }),
@@ -401,6 +432,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EmptyInput>(),
             output: schema::<crate::ProjectCatalogChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Biten projeyi arşivle".into(),
                 input: json!({}),
@@ -425,6 +457,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EmptyInput>(),
             output: schema::<crate::ProjectCatalogChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Arşivden çıkar".into(),
                 input: json!({}),
@@ -450,6 +483,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EmptyInput>(),
             output: schema::<crate::ProjectCatalogChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Çöp kutusuna taşı".into(),
                 input: json!({}),
@@ -474,6 +508,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EmptyInput>(),
             output: schema::<crate::ProjectCatalogChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Geri yükle".into(),
                 input: json!({}),
@@ -499,6 +534,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectPurge>(),
             output: schema::<crate::ProjectPurged>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Adını yazarak kalıcı olarak sil".into(),
                 input: json!({ "confirmName": "Ada 101 (eski)" }),
@@ -522,6 +558,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectFavorite>(),
             output: schema::<crate::ProjectCatalogChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Favorilere ekle".into(),
                 input: json!({ "favorite": true }),
@@ -548,6 +585,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::FileCommit>(),
             output: schema::<crate::FileCommitted>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "İlk revizyonu kaydet".into(),
                 input: json!({ "uploadId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
@@ -575,6 +613,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectConvert>(),
             output: schema::<crate::ProjectDuplicated>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Dosya projesini PostGIS'e aktar".into(),
                 input: json!({ "to": "database" }),
@@ -604,6 +643,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectImport>(),
             output: schema::<crate::ProjectImported>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Yerel çizimi yeni projeye aktar".into(),
                 input: json!({ "uploadId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
@@ -630,6 +670,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ProjectInvite>(),
             output: schema::<crate::InvitationChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Belediyedeki mühendisi görüntüleyici olarak davet et".into(),
                 input: json!({ "email": "muhendis@belediye.gov.tr", "role": "viewer" }),
@@ -654,6 +695,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::InvitationRevoke>(),
             output: schema::<crate::InvitationChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Bekleyen daveti geri al".into(),
                 input: json!({ "invitationId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
@@ -680,6 +722,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::CheckpointCreate>(),
             output: schema::<crate::CheckpointChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Teslim öncesi".into(),
                 input: json!({ "name": "Belediyeye teslim", "note": "Ada 101 ifraz dosyası" }),
@@ -704,6 +747,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::CheckpointDelete>(),
             output: schema::<crate::CheckpointChange>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Kontrol noktasını kaldır".into(),
                 input: json!({ "checkpointId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
@@ -733,6 +777,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::CheckpointRestore>(),
             output: schema::<crate::ProjectDuplicated>(),
             plan: None,
+            capabilities: None,
             examples: vec![CommandExample {
                 title: "Teslim hâlinden yeni proje".into(),
                 input: json!({ "checkpointId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b", "name": "Ada 101 (teslim)" }),
@@ -761,6 +806,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<PolygonCreate>(),
             output: schema::<PolygonCreated>(),
             plan: Some(schema::<crate::PolygonPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Dikdörtgen bir alan".into(),
@@ -829,6 +875,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<LineCreate>(),
             output: schema::<LineCreated>(),
             plan: Some(schema::<crate::LinePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir çizgi".into(),
@@ -877,6 +924,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<PolylineCreate>(),
             output: schema::<PolylineCreated>(),
             plan: Some(schema::<crate::PolylinePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Üç noktalı çoklu çizgi".into(),
@@ -934,6 +982,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<EntitiesDelete>(),
             output: schema::<EntitiesDeleted>(),
             plan: Some(schema::<crate::EntitiesDeletePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "İki nesneyi sil".into(),
@@ -985,6 +1034,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<PointCreate>(),
             output: schema::<PointCreated>(),
             plan: Some(schema::<crate::PointPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir nokta".into(),
@@ -1033,6 +1083,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<CircleCreate>(),
             output: schema::<CircleCreated>(),
             plan: Some(schema::<crate::CirclePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Yarıçapı 12,5 m olan bir daire".into(),
@@ -1082,6 +1133,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<ArcCreate>(),
             output: schema::<ArcCreated>(),
             plan: Some(schema::<crate::ArcPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Doğudan kuzeye çeyrek yay".into(),
@@ -1138,6 +1190,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<EntitiesTransform>(),
             output: schema::<EntitiesTransformed>(),
             plan: Some(schema::<crate::EntitiesTransformPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "İki nesneyi 12,5 m doğuya, 7,25 m güneye taşıma".into(),
@@ -1221,6 +1274,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<EntitiesEdit>(),
             output: schema::<EntitiesEdited>(),
             plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Budama: çizginin kalan iki parçası; ilki çizginin kendisidir".into(),
@@ -1299,6 +1353,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<EntitiesArray>(),
             output: schema::<EntitiesArrayed>(),
             plan: Some(schema::<crate::EntitiesArrayPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir parseli 2 satır × 3 sütun diziye kopyalama: sütunlar 25 m, satırlar 40 m arayla".into(),
@@ -1362,6 +1417,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EntitiesOffset>(),
             output: schema::<crate::EntitiesOffsetMade>(),
             plan: Some(schema::<crate::EntitiesOffsetPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir yol kenarını 0,2 m doğuya ötelemek".into(),
@@ -1422,6 +1478,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::DimensionsReassociate>(),
             output: schema::<crate::DimensionsReassociated>(),
             plan: Some(schema::<crate::DimensionsReassociatePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Ölçünün iki ucunu bir duvarın iki köşesine bağla".into(),
@@ -1437,6 +1494,57 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Bir ucu serbest bırak".into(),
                     input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "points": [{ "point": "b", "to": null }] }),
+                    output: None,
+                },
+            ],
+        },
+        // Ölçülendirme by what it measures (docs/adr/0255), held together by
+        // fixtures/commands/v1/cad.dimensions.create.json; the desktop's alone while the web is paused.
+        CommandDescriptor {
+            id: crate::CAD_DIMENSIONS_CREATE.into(),
+            version: crate::CAD_DIMENSIONS_CREATE_VERSION,
+            title: "Ölçü ekle".into(),
+            summary: "measure'ın ölçtüğünü at'nin yerine ölçü olarak yazar; layerId'ye cad.entities.create'in kurallarıyla tek adımda, adı “Ekle”. \
+                      Ölçülen noktalar koordinat (kind at) ya da nesnenin yeri (kind place: kalıcı kimlik ve yer: node, start, end, center, vertex, mid) olarak verilir; kenarlar nesnenin kimliği ve tıklanan yerle (of, first, second: uid, near), o yere en yakın düz kenar, yay ya da daire ölçülür. \
+                      Türler: aligned (Hizalı), linear (Doğrusal; angle 0 ΔY, 90 ΔX, yoksa at'ye göre), ordinate (Koordinat; çizgisi at'de biter), azimuth (Semt), slope (Eğim; za, zb ya da yerin köşesinin kotu), angle (iki düz kenar), angleVertex (köşe ve iki kol noktası), angleArc (yayın kendi açısı), radius, diameter, arcLength (between ile yayın iki nokta arası parçası), jogged (Kırıklı yarıçap: shownCentre ve on). \
+                      at ölçü çizgisinin, yayının ya da çizgisinin geçtiği yerdir; offset verilirse onun yerine yazılan uzaklıktır (yarıçap, çap ve koordinat almaz: invalid_offset). dimensionStyle projenin ölçü stilinin adıdır (yoksa Standart); height verilmezse stilin yüksekliği, Standart'ta projenin Ölçü yüksekliği. \
+                      Hizalı, Doğrusal, Koordinat, Semt ve Eğim'de yer olarak verilen noktalar bağlanır: nesnesi değişince ölçü izler (ilişkili ölçü). Ölçülendirme aracı ölçüyü bu komutla yazar: araç, Python ve ajan aynı girdiye aynı ölçüyü alır. \
+                      Ölçü oluşmuyorsa (noktalar çakışıyor, kenarlar paralel, yay boş) no_dimension; nesnede aranan türde kenar yoksa not_measurable. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DimensionsCreate>(),
+            output: schema::<crate::EntitiesCreated>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Duvarın iki köşesi arasına hizalı ölçü, 2 m dışarıda; köşelere bağlı".into(),
+                    input: json!({
+                        "measure": {
+                            "kind": "aligned",
+                            "a": { "kind": "place", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "place": { "kind": "vertex", "part": 0, "ring": 0, "index": 0 } },
+                            "b": { "kind": "place", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "place": { "kind": "vertex", "part": 0, "ring": 0, "index": 1 } }
+                        },
+                        "at": { "x": 500005.0, "y": 4400002.0 },
+                        "layerId": "olcu"
+                    }),
+                    output: Some(json!({ "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4401"], "ids": [71], "revision": "67" })),
+                },
+                CommandExample {
+                    title: "Dairenin yarıçapı, kuzeydoğuya doğru".into(),
+                    input: json!({
+                        "measure": { "kind": "radius", "of": { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003", "near": { "x": 500020.0, "y": 4400010.0 } } },
+                        "at": { "x": 500030.0, "y": 4400020.0 },
+                        "layerId": "olcu",
+                        "dimensionStyle": "Mimari"
+                    }),
                     output: None,
                 },
             ],
@@ -1465,6 +1573,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EntitiesTrim>(),
             output: schema::<crate::EntitiesTrimmed>(),
             plan: Some(schema::<crate::EntitiesTrimPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir duvar çizgisini iki kesen arasında buda".into(),
@@ -1497,6 +1606,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EntitiesTrim>(),
             output: schema::<crate::EntitiesTrimmed>(),
             plan: Some(schema::<crate::EntitiesTrimPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir çizginin sağ ucunu ilk sınıra uzat".into(),
@@ -1525,6 +1635,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EntitiesFillet>(),
             output: schema::<crate::EntitiesCornered>(),
             plan: Some(schema::<crate::EntitiesCornerPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir parselin üçüncü köşesini 2 m yarıçapla yuvarla".into(),
@@ -1557,11 +1668,220 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EntitiesChamfer>(),
             output: schema::<crate::EntitiesCornered>(),
             plan: Some(schema::<crate::EntitiesCornerPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir alanın bütün köşelerine 0,5 m pah".into(),
                     input: json!({ "corner": { "kind": "all", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"] }, "distance": 0.5 }),
                     output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": [], "done": 4, "skipped": 0, "revision": "55" })),
+                },
+            ],
+        },
+        // Esnet, Kır, Birleştir, Böl, Alan oluştur and Tarama by their meaning (docs/adr/0254),
+        // held together by fixtures/commands/v1/cad.entities.{stretch,break,join,divide,boundary,hatch}.json;
+        // the desktop's alone while the web is paused.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_STRETCH.into(),
+            version: crate::CAD_ENTITIES_STRETCH_VERSION,
+            title: "Nesneleri esnet".into(),
+            summary: "Pencerenin (window) içindeki köşeleri dx, dy kadar taşır, öbürlerini bırakır; tek geri alma adımı “Esnet”. Yay bükümünü korur. \
+                      uids verilirse yalnız onlar (seçim); penceresinde köşesi olmayan outside_window uyarısıyla atlanır. Verilmezse pencereye değen görünen nesneler. Kilitli katmandakiler locked_skipped uyarısıyla atlanır; hiçbiri kalmazsa nothing_to_stretch. \
+                      topology verilirse (Topolojik düzenleme) taşınan köşeleri paylaşan görünen komşular aynı adımda izler; points noktaları da köşe sayar. Kilitli ya da geçersiz kalacak komşu uyarıyla değişmez. \
+                      Yer değiştirme sıfırsa hiçbir şey yazılmaz. Yeni şekilleri paylaşılan geometri çekirdeği bulur: Esnet aracı, Python ve ajan aynı isteğe aynı şekilleri alır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesStretch>(),
+            output: schema::<crate::EntitiesStretched>(),
+            plan: Some(schema::<crate::EntitiesStretchPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir duvarın ucunu 2 m doğuya çek".into(),
+                    input: json!({ "window": { "min": { "x": 500018.0, "y": 4399998.0 }, "max": { "x": 500022.0, "y": 4400002.0 } }, "dx": 2.0, "dy": 0.0 }),
+                    output: Some(json!({ "stretched": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "followed": [], "revision": "61" })),
+                },
+                CommandExample {
+                    title: "Yalnız seçilen parselin köşesi, ortak sınırlı komşularıyla".into(),
+                    input: json!({ "window": { "min": { "x": 500039.0, "y": 4400029.0 }, "max": { "x": 500041.0, "y": 4400031.0 } }, "dx": 0.5, "dy": 0.5, "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"], "topology": {} }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_BREAK.into(),
+            version: crate::CAD_ENTITIES_BREAK_VERSION,
+            title: "Nesneyi kır".into(),
+            summary: "Kalıcı kimliğiyle verilen nesnenin first ile second arasındaki kısmını siler; second yoksa nesneyi first'te ikiye böler. Tek geri alma adımı “Kır”. \
+                      Çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ve ışın kırılır; öbürleri not_breakable. Kilitli katmandaki nesne kırılmaz. \
+                      Nesnenin yerini ilk parça alır, öbür parçalar ondan yeni nesnelerdir; tek parça kalırsa özellikleri korunur (kapalı alan değilse). Parçaları paylaşılan geometri çekirdeği bulur; bulamadığında break_failed çekirdeğin sözüyle döner. \
+                      Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesBreak>(),
+            output: schema::<crate::EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir çizginin iki noktası arasını sil".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "first": { "x": 500004.0, "y": 4400000.0 }, "second": { "x": 500006.0, "y": 4400000.0 } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003"], "removed": [], "revision": "62" })),
+                },
+                CommandExample {
+                    title: "Bir çizgiyi bir noktada ikiye böl".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "first": { "x": 500005.0, "y": 4400000.0 } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_JOIN.into(),
+            version: crate::CAD_ENTITIES_JOIN_VERSION,
+            title: "Nesneleri birleştir".into(),
+            summary: "Kalıcı kimlikleriyle verilen çizgi, yay ve açık çoklu çizgilerden uç uca buluşanları her zincir için tek nesne yapar; kapanan zincir kapalı alan olur. Tek geri alma adımı “Birleştir”. \
+                      Zincir ilk nesnesinin yerini, kimliğini ve verisini alır, öbürleri silinir. tolerance uçların aralığıdır (metre, varsayılan 0,001). Kilitli katmandakiler locked_skipped uyarısıyla dışarıda kalır; hiç zincir kurulamazsa nothing_to_join. \
+                      chain verilirse (Zincir) uids tek nesnedir, tohum: ona uç uca bağlı nesneler chain'in nesneleri arasında (all, area ya da objects) serbest uca, kavşağa, kilitli nesneye ya da başa dönene kadar onunla birleşir; tohum yerini, kimliğini ve verisini verir. \
+                      Zincirleri paylaşılan geometri çekirdeği bulur. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesJoin>(),
+            output: schema::<crate::EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Uç uca iki çizgiyi bir çoklu çizgi yap".into(),
+                    input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"] }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": [], "removed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"], "revision": "63" })),
+                },
+                CommandExample {
+                    title: "Zincir: tıklanan çizgiye bağlı bütün görünen çizgiler".into(),
+                    input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "chain": { "kind": "all" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_DIVIDE.into(),
+            version: crate::CAD_ENTITIES_DIVIDE_VERSION,
+            title: "Nesneyi böl".into(),
+            summary: "Kalıcı kimliğiyle verilen nesnenin üstüne noktalar koyar: division eşit parçalar (parts, 2–10 000) ya da aralık (step, metre). Noktalar nesnenin başından, fromEnd ile sonundan ölçülür; layerId'ye cad.entities.create'in kurallarıyla yazılır. Tek geri alma adımı “Böl”. \
+                      Çizgi, çoklu çizgi, alan, yay, daire, elips ve eğri bölünür; öbürleri not_divisible. Aralık nesneden uzunsa no_points, 10 000'den çok nokta too_many_points. Noktaların yerini paylaşılan geometri çekirdeği bulur (elipsinkiler eğrinin üstünde). \
+                      color, lineWeight, attrs, label ve symbol noktaların görünüşü ve taşıdıklarıdır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesDivide>(),
+            output: schema::<crate::EntitiesCreated>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir yolu dört eşit parçaya böl".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "division": { "kind": "parts", "count": 4 }, "layerId": "nokta" }),
+                    output: Some(json!({ "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4102", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4103"], "ids": [51, 52, 53], "revision": "64" })),
+                },
+                CommandExample {
+                    title: "Sondan başlayarak her 20 metrede bir nokta".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "division": { "kind": "step", "length": 20.0 }, "fromEnd": true, "layerId": "nokta" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_BOUNDARY.into(),
+            version: crate::CAD_ENTITIES_BOUNDARY_VERSION,
+            title: "İçine tıklayarak alan".into(),
+            summary: "at noktasını çevreleyen ve sınırların çizgilerinin kapattığı bölgeyi layerId'de alan yapar; içindeki kapalı gruplar delik olur (islands, varsayılan açık). Tek geri alma adımı “Alan oluştur”. \
+                      boundaries sınırları söyler: all (varsayılan; görünen bütün nesneler), area (dikdörtgene değen görünen nesneler; aracın görünümü) ya da objects (verilen nesneler). boundaryLayer verilirse yalnız o katmanın çizgileri sayılır. Bölge yoksa not_enclosed. \
+                      Bölgeyi paylaşılan geometri çekirdeği bulur; alan cad.entities.create'in kurallarıyla yazılır (color, lineWeight, attrs, label, symbol). Çıktı ve plan cad.entities.create'inkidir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesBoundary>(),
+            output: schema::<crate::EntitiesCreated>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Çizgilerle çevrili odanın içine tıkla".into(),
+                    input: json!({ "at": { "x": 500002.0, "y": 4400001.5 }, "layerId": "alan" }),
+                    output: Some(json!({ "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4201"], "ids": [60], "revision": "65" })),
+                },
+                CommandExample {
+                    title: "Yalnız sınır katmanının çizgileriyle, adalar yok sayılarak".into(),
+                    input: json!({ "at": { "x": 500002.0, "y": 4400001.5 }, "layerId": "alan", "boundaryLayer": "sinir", "islands": false }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_HATCH.into(),
+            version: crate::CAD_ENTITIES_HATCH_VERSION,
+            title: "Tara".into(),
+            summary: "region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. \
+                      region point: at'yi çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; bir şeye bağlanmaz. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. \
+                      region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. \
+                      pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır), angle (derece), secondColor ve inverted (degrade). Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. \
+                      Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesHatch>(),
+            output: schema::<crate::EntitiesCreated>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parselin içine tıklayıp ANSI31 ile tara; binalar ada".into(),
+                    input: json!({ "region": { "kind": "point", "at": { "x": 500010.0, "y": 4400010.0 } }, "pattern": { "name": "ANSI31", "scale": 1.0 }, "layerId": "tarama" }),
+                    output: Some(json!({ "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4301"], "ids": [70], "revision": "66" })),
+                },
+                CommandExample {
+                    title: "Seçilen üç alanı dolu tara".into(),
+                    input: json!({ "region": { "kind": "objects", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003"] }, "pattern": { "name": "Dolu" }, "layerId": "tarama", "color": "#5FBF77" }),
+                    output: None,
                 },
             ],
         },
@@ -1590,6 +1910,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EntitiesCreate>(),
             output: schema::<crate::EntitiesCreated>(),
             plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bir elips: merkezi, büyük yarı ekseni (merkezden bir uca) ve küçük eksenin büyüğe oranı".into(),
@@ -1665,6 +1986,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::EntitiesSetProperties>(),
             output: schema::<crate::EntitiesPropertiesSet>(),
             plan: Some(schema::<crate::EntitiesSetPropertiesPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Katman değiştir: iki nesne Yol katmanına".into(),
@@ -1731,6 +2053,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::BlocksDefine>(),
             output: schema::<crate::BlockDefined>(),
             plan: Some(schema::<crate::BlocksDefinePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Rögar: bir çember ve yazısı, taban noktası çemberin merkezi".into(),
@@ -1785,6 +2108,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::BlocksEdit>(),
             output: schema::<crate::BlocksEdited>(),
             plan: Some(schema::<crate::BlocksEditPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Yeniden adlandır".into(),
@@ -1844,6 +2168,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersService>(),
             output: schema::<crate::LayersServiced>(),
             plan: Some(schema::<crate::LayersServicePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "OpenStreetMap altlığı en alta".into(),
@@ -1926,6 +2251,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::NetworkDefine>(),
             output: schema::<crate::NetworkDefined>(),
             plan: Some(schema::<crate::NetworkDefined>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Yol ağı: tek yönlü sokaklar ve hızla süre".into(),
@@ -1994,6 +2320,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::AddressesDefine>(),
             output: schema::<crate::AddressesDefined>(),
             plan: Some(schema::<crate::AddressesDefined>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Numarataj: kapı noktaları, yol orta hatları ve mahalle sınırları".into(),
@@ -2047,6 +2374,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersTime>(),
             output: schema::<crate::LayersTimed>(),
             plan: Some(schema::<crate::LayersTimePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Parsellerin geçerlilik aralığı, parsel numarası anahtar".into(),
@@ -2091,6 +2419,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::ScenariosEdit>(),
             output: schema::<crate::ScenariosEdited>(),
             plan: Some(schema::<crate::ScenariosEditPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Yol genişletme önerisi: yollar ve parseller kopyalanır".into(),
@@ -2138,6 +2467,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersFilter>(),
             output: schema::<crate::LayersFiltered>(),
             plan: Some(schema::<crate::LayersFilterPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Yalnız büyük arsalar".into(),
@@ -2180,6 +2510,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersCompose>(),
             output: schema::<crate::LayersComposed>(),
             plan: Some(schema::<crate::LayersComposePlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Gölgeli kabartma çoğaltarak, yarı saydam".into(),
@@ -2219,6 +2550,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersInfo>(),
             output: schema::<crate::LayersInformed>(),
             plan: Some(schema::<crate::LayersInfoPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Parselin kartı ve iki eylemi".into(),
@@ -2260,6 +2592,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersLabels>(),
             output: schema::<crate::LayersLabelled>(),
             plan: Some(schema::<crate::LayersLabelsPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Parsel numarası ve maliki, kurallı".into(),
@@ -2314,6 +2647,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LabelsPin>(),
             output: schema::<crate::LabelsPinned>(),
             plan: Some(schema::<crate::LabelsPinPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Parselin numarasını taşı ve döndür".into(),
@@ -2358,6 +2692,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersRenderer>(),
             output: schema::<crate::LayersRendered>(),
             plan: Some(schema::<crate::LayersRendererPlan>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Mahalleler nüfusa göre sürekli renk".into(),
@@ -2420,6 +2755,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersEdit>(),
             output: schema::<crate::LayersEdited>(),
             plan: Some(schema::<crate::LayersEdited>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Ofis şablonunun bir katmanı: Duvar, kırmızı, 0,5 mm, etkin".into(),
@@ -2464,6 +2800,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersSet>(),
             output: schema::<crate::LayersChanged>(),
             plan: Some(schema::<crate::LayersChanged>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Bina katmanını kilitle".into(),
@@ -2498,6 +2835,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::LayersStates>(),
             output: schema::<crate::LayerStatesDone>(),
             plan: Some(schema::<crate::LayerStatesDone>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Pafta görünümünü kilitleriyle kaydet".into(),
@@ -2533,6 +2871,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::StylesEdit>(),
             output: schema::<crate::StylesEdited>(),
             plan: Some(schema::<crate::StylesEdited>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Ada no yazı stili: Arimo, kalın, 3,5 mm".into(),
@@ -2572,6 +2911,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::SettingsSet>(),
             output: schema::<crate::SettingsChanged>(),
             plan: Some(schema::<crate::SettingsChanged>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "Mimari proje: CAD, 1:100, yerel ve milimetre".into(),
@@ -2609,6 +2949,7 @@ pub fn catalog() -> CommandCatalog {
             input: schema::<crate::SheetsEdit>(),
             output: schema::<crate::SheetsEdited>(),
             plan: Some(schema::<crate::SheetsEdited>()),
+            capabilities: None,
             examples: vec![
                 CommandExample {
                     title: "A3 yatay pafta, 1:50 haritayla".into(),
@@ -2640,8 +2981,137 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
-        }],
+        }];
+    commands.extend(protocol_commands());
+    for d in &mut commands {
+        if d.capabilities.is_none() {
+            d.capabilities = crate::capabilities::capabilities_of(&d.id);
+        }
     }
+    CommandCatalog {
+        format: CATALOG_FORMAT.into(),
+        version: CATALOG_VERSION,
+        commands,
+        codes: crate::codes::CODES
+            .iter()
+            .map(|c| CatalogCode {
+                code: c.code.into(),
+                kind: match c.kind {
+                    crate::codes::CodeKind::Failed => "failed",
+                    crate::codes::CodeKind::Conflict => "conflict",
+                    crate::codes::CodeKind::NeedsInput => "needsInput",
+                    crate::codes::CodeKind::Warning => "warning",
+                    crate::codes::CodeKind::FailedOrWarning => "failedOrWarning",
+                    crate::codes::CodeKind::Host => "host",
+                }
+                .into(),
+                retryable: c.retryable,
+                meaning: c.meaning.into(),
+            })
+            .collect(),
+        protocol: crate::capabilities::PROTOCOL_CODES
+            .iter()
+            .map(|c| (*c).to_owned())
+            .collect(),
+    }
+}
+
+/// The protocol's commands (docs/adr/0253 §8, §10): the change set, and the
+/// files a drawing is written to.
+#[cfg(feature = "schema")]
+fn protocol_commands() -> Vec<CommandDescriptor> {
+    use serde_json::json;
+    vec![
+        CommandDescriptor {
+            id: crate::CAD_CHANGESET_APPLY.into(),
+            version: crate::CAD_CHANGESET_APPLY_VERSION,
+            title: "Değişiklik kümesi".into(),
+            summary: "Birden çok komutu tek iş olarak yazar: steps sırayla, aynı adımın içinde çalışır; biri reddederse hepsi geri alınır, proje ayarları, stil kitaplığı ve pafta kitabı da. \
+                      Sonraki adım önceki bir adımın çıktısını tam değer olan bir metinle adlar: \"$ad\" o adımın uid'i, \"$ad[2]\" created[2]'si, \"$ad.layer\" layer'ı (ad, adımın as'i). \
+                      Bağlı yazılar, taramalar ve ölçüler son adımdan sonra bir kez izler, çizimin bütünlüğü o zaman denetlenir. Nesneler, katmanlar ve bloklar label adlı tek geri alma adımıdır; ayarlar, stiller ve pafta kitabı geri alma adımı değildir, özet hangisinin değiştiğini söyler. \
+                      İç içe küme ve dosyaya yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["degisiklik kumesi".into(), "changeset".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ChangesetApply>(),
+            output: schema::<crate::ChangesetApplied>(),
+            plan: Some(schema::<crate::ChangesetApplied>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Yeni katmana iki köşeli bir alan ve onu öteleyen bir kopya".into(),
+                input: json!({
+                    "label": "Parsel ve çekme hattı",
+                    "steps": [
+                        { "command": "cad.layers.edit", "as": "katman",
+                          "input": { "operation": "add", "name": "Çekme hattı" } },
+                        { "command": "cad.polygon.create", "as": "parsel",
+                          "input": { "layerId": "0", "pts": [ { "x": 0.0, "y": 0.0 }, { "x": 20.0, "y": 0.0 }, { "x": 20.0, "y": 30.0 }, { "x": 0.0, "y": 30.0 } ] } },
+                        { "command": "cad.entities.offset",
+                          "input": { "uids": ["$parsel"], "by": { "kind": "distance", "distance": 5.0, "side": { "x": 10.0, "y": 15.0 } }, "layerId": "$katman.layer" } }
+                    ]
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_DXF.into(),
+            version: crate::FILE_EXPORT_DXF_VERSION,
+            title: "DXF dışa aktar".into(),
+            summary: "Çizimi AutoCAD 2007 DXF dosyası olarak yazar: bütün nesneler ya da layers'ın katmanlarındakiler, katmanlarıyla; DXF'in tutamadıkları KentOS verisiyle. \
+                      Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri okunup denetlenir, sonra tek adımda yerine konur; eski dosya ancak yenisi tamsa gider. overwrite verilmezse var olan dosya reddedilir (file_exists). \
+                      plan dosyayı yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar, yazıcının raporu). Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz."
+                .into(),
+            aliases: vec!["dxf".into(), "dxfout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportDxf>(),
+            output: schema::<crate::DxfExported>(),
+            plan: Some(schema::<crate::DxfExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün çizim".into(),
+                input: json!({ "path": "/tmp/kat-plani.dxf", "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_PDF.into(),
+            version: crate::FILE_EXPORT_PDF_VERSION,
+            title: "PDF olarak yazdır".into(),
+            summary: "Projenin pafta kitabını PDF olarak yazar: sheets'teki paftalar (yoksa hepsi, kitabın sırasıyla), her biri bir sayfa; projenin sistemi transverse Mercator ise GeoPDF. \
+                      Pencere olmadan çizilemeyen (haritaların yazıları) notes'ta, pafta çekirdeğinin bulguları findings'te söylenir. Dosya DXF'teki gibi yarım kalmadan yazılır; overwrite verilmezse var olan dosya reddedilir. \
+                      plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz."
+                .into(),
+            aliases: vec!["pdf".into(), "yazdir".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Job,
+            input: schema::<crate::ExportPdf>(),
+            output: schema::<crate::PdfExported>(),
+            plan: Some(schema::<crate::PdfExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kitabın bütün paftaları".into(),
+                input: json!({ "path": "/tmp/paftalar.pdf" }),
+                output: None,
+            }],
+        },
+    ]
 }
 
 #[cfg(all(test, feature = "schema"))]
@@ -2809,6 +3279,10 @@ mod tests {
                         serde_json::from_value::<crate::DimensionsReassociate>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_DIMENSIONS_CREATE => {
+                        serde_json::from_value::<crate::DimensionsCreate>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {
                         serde_json::from_value::<crate::EntitiesTrim>(e.input.clone()).map(|_| ())
                     }
@@ -2818,6 +3292,26 @@ mod tests {
                     crate::CAD_ENTITIES_CHAMFER => {
                         serde_json::from_value::<crate::EntitiesChamfer>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_STRETCH => {
+                        serde_json::from_value::<crate::EntitiesStretch>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_BREAK => {
+                        serde_json::from_value::<crate::EntitiesBreak>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_JOIN => {
+                        serde_json::from_value::<crate::EntitiesJoin>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_DIVIDE => {
+                        serde_json::from_value::<crate::EntitiesDivide>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_BOUNDARY => {
+                        serde_json::from_value::<crate::EntitiesBoundary>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_HATCH => {
+                        serde_json::from_value::<crate::EntitiesHatch>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_CREATE => {
                         serde_json::from_value::<crate::EntitiesCreate>(e.input.clone()).map(|_| ())
@@ -2884,6 +3378,15 @@ mod tests {
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_CHANGESET_APPLY => {
+                        serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_DXF => {
+                        serde_json::from_value::<crate::ExportDxf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_PDF => {
+                        serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -2939,6 +3442,21 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_FILLET | crate::CAD_ENTITIES_CHAMFER => {
                             serde_json::from_value::<crate::EntitiesCornered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_STRETCH => {
+                            serde_json::from_value::<crate::EntitiesStretched>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_BREAK | crate::CAD_ENTITIES_JOIN => {
+                            serde_json::from_value::<crate::EntitiesEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_DIVIDE
+                        | crate::CAD_ENTITIES_BOUNDARY
+                        | crate::CAD_ENTITIES_HATCH
+                        | crate::CAD_DIMENSIONS_CREATE => {
+                            serde_json::from_value::<crate::EntitiesCreated>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_CREATE => {

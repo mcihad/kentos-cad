@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 25 | 77 | 38 | 38 | 178 |
-| geometry | 26 | 78 | 0 | 8 | 112 |
+| semantic | 32 | 81 | 38 | 38 | 189 |
+| geometry | 19 | 74 | 0 | 8 | 101 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 21 | 0 | 6 | 27 |
 | query | 0 | 21 | 1 | 4 | 26 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 450 satırdan 156'i: geometry 104, none 21, processing 13, query 18.
+CBS'ye özgü olmayan 450 satırdan 145'i: geometry 93, none 21, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 104
+### Sonucu çağıran hesaplar (geometry) — 93
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -59,8 +59,6 @@ CBS'ye özgü olmayan 450 satırdan 156'i: geometry 104, none 21, processing 13,
 | `tool.areaSplit` | Alan böl | shared | cad.entities.edit `areaSplit` |  |
 | `tool.areaSubtract` | Alan çıkar | shared | cad.entities.edit `areaSubtract` |  |
 | `tool.areaUnion` | Alan birleştir | shared | cad.entities.edit `areaUnion` |  |
-| `tool.boundary` | İçine tıklayarak alan | shared | cad.entities.create `boundary` |  |
-| `tool.break` | Kır | shared | cad.entities.edit `break` |  |
 | `tool.centerline` | Orta hat | shared | cad.entities.create `centerline` |  |
 | `tool.circle#2 nokta` | Daire: 2 nokta | shared | cad.circle.create |  |
 | `tool.circle#3 nokta` | Daire: 3 nokta | shared | cad.circle.create |  |
@@ -73,17 +71,10 @@ CBS'ye özgü olmayan 450 satırdan 156'i: geometry 104, none 21, processing 13,
 | `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
 | `tool.dimBaseline` | Baz ölçü | cad | cad.entities.create `dimensionBaseline` |  |
 | `tool.dimContinue` | Zincir ölçü | cad | cad.entities.create `dimensionChain` |  |
-| `tool.dimension#Kırıklı yarıçap` | Ölçülendirme: Kırıklı yarıçap | cad | cad.entities.create |  |
-| `tool.dimension#Yarıçap` | Ölçülendirme: Yarıçap | cad | cad.entities.create |  |
-| `tool.dimension#Yay uzunluğu` | Ölçülendirme: Yay uzunluğu | cad | cad.entities.create |  |
-| `tool.dimension#Çap` | Ölçülendirme: Çap | cad | cad.entities.create |  |
-| `tool.divide` | Böl | shared | cad.entities.create `divide` |  |
 | `tool.donut` | Halka | cad | cad.entities.create |  |
 | `tool.edgeShift` | Paralel kaydır | shared | cad.entities.edit `edgeShift` |  |
 | `tool.explode` | Patlat | shared | cad.entities.edit `explode` |  |
 | `tool.fourthCorner` | Dördüncü köşe | shared | cad.entities.create `fourthCorner` |  |
-| `tool.hatch` | Tarama | cad | cad.entities.create `hatch` | Bölge araçta bulunur; komut son taramayı alır. |
-| `tool.hatchSelected` | Çoklu tara | cad | cad.entities.create `hatch` |  |
 | `tool.holeAdd` | Delik ekle | shared | cad.entities.edit `holeAdd` |  |
 | `tool.holeFill` | Deliği doldur | shared | cad.entities.edit `holeFill` |  |
 | `tool.holeRemove` | Deliği sil | shared | cad.entities.edit `holeRemove` |  |
@@ -92,7 +83,6 @@ CBS'ye özgü olmayan 450 satırdan 156'i: geometry 104, none 21, processing 13,
 | `tool.intersectPoint#İki doğru` | Kesişim noktası: İki doğru | shared | cad.entities.create `intersectPoint` |  |
 | `tool.intersectPoint#İki doğrultu` | Kesişim noktası: İki doğrultu | shared | cad.entities.create `intersectPoint` |  |
 | `tool.intersectPoint#İki uzaklık` | Kesişim noktası: İki uzaklık | shared | cad.entities.create `intersectPoint` |  |
-| `tool.join` | Birleştir | shared | cad.entities.edit `join` |  |
 | `tool.labelsToText` | Etiketleri yazıya çevir | shared | cad.entities.create `labels` |  |
 | `tool.lengthen` | Uzat-kısalt | cad | cad.entities.edit `lengthen` |  |
 | `tool.medianClose` | Refüj kapat | shared | cad.entities.edit `medianClose` |  |
@@ -129,7 +119,6 @@ CBS'ye özgü olmayan 450 satırdan 156'i: geometry 104, none 21, processing 13,
 | `tool.split#Kesişimlerden` | Parçala: Kesişimlerden | shared | cad.entities.edit `split` |  |
 | `tool.split#Uzunluktan` | Parçala: Uzunluktan | shared | cad.entities.edit `split` |  |
 | `tool.stationLabels` | Km yaz | cad | cad.entities.create `stations` |  |
-| `tool.stretch` | Esnet | cad | cad.entities.edit `stretch` |  |
 | `tool.tangentLine` | İki daireye teğet | cad | cad.entities.create `tangentLine` |  |
 | `tool.textAlong` | Eğri boyunca yazı | shared | cad.entities.create `textAlong` |  |
 | `tool.textCurve` | Yazıyı eğriye oturt | shared | cad.entities.edit `textPath` |  |

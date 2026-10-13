@@ -29,7 +29,7 @@ struct Next {
 
 fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
     if input.ops.is_empty() {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NO_OPERATIONS,
             "Uygulanacak işlem yok: ops'a en az bir pafta işlemi verin.".into(),
             Some("ops".into()),
@@ -40,7 +40,7 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
         match serde_json::from_value::<Op>(raw.clone()) {
             Ok(op) => parsed.push(op),
             Err(e) => {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::INVALID_OPERATION,
                     format!(
                         "{}. işlem pafta çekirdeğinin bir işlemi olarak okunamadı: {e}. İşlemin op adını ve alanlarını kataloğun örneğine göre denetleyin.",
@@ -55,7 +55,7 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
     let (mut book, pictures) = match doc.sheets() {
         None => (SheetBook::default(), Vec::new()),
         Some(kept) => read_project_sheets(kept).map_err(|e| {
-            Stop::Failed(error(
+            Stop::failed(error(
                 codes::BOOK_UNREADABLE,
                 format!(
                     "Bu projenin pafta kitabı okunamadı: {} Kitap olduğu gibi duruyor; ona işlem yazılmaz.",
@@ -74,7 +74,7 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
                 Some(p) => format!("ops[{i}].{p}"),
                 None => format!("ops[{i}]"),
             };
-            Stop::Failed(error(&e.code, e.message, Some(at)))
+            Stop::failed(error(&e.code, e.message, Some(at)))
         })?;
         book = applied.book;
         labels.push(applied.label);
@@ -128,7 +128,9 @@ pub fn sheets_of(book: &SheetBook) -> Vec<SheetInfo> {
 pub fn sheets_in(doc: &Document) -> Option<Vec<SheetInfo>> {
     match doc.sheets() {
         None => Some(Vec::new()),
-        Some(kept) => read_project_sheets(kept).ok().map(|(book, _)| sheets_of(&book)),
+        Some(kept) => read_project_sheets(kept)
+            .ok()
+            .map(|(book, _)| sheets_of(&book)),
     }
 }
 
@@ -140,9 +142,9 @@ fn write(doc: &mut Document, next: Next) -> Result<SheetsEdited, Stop> {
             .map(|(_, b)| b.clone())
     };
     let kept = project_sheets(&next.book, bytes)
-        .map_err(|e| Stop::Failed(error(&e.code, e.message, e.path)))?;
+        .map_err(|e| Stop::failed(error(&e.code, e.message, e.path)))?;
     doc.set_sheets(kept)
-        .map_err(|e| Stop::Failed(error(codes::BOOK_UNREADABLE, e, None)))?;
+        .map_err(|e| Stop::failed(error(codes::BOOK_UNREADABLE, e, None)))?;
     Ok(SheetsEdited {
         label: next.label,
         inverse: next
@@ -186,6 +188,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SheetsEdit) -> CommandResult<Shee
 
 /// Writes the changed book into the project.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SheetsEdit) -> CommandResult<SheetsEdited> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_SHEETS_EDIT,
+        kentos_contracts::CAD_SHEETS_EDIT_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(cx: &mut ExecutionContext<'_>, input: SheetsEdit) -> CommandResult<SheetsEdited> {
     let next = match check(cx.doc, &input) {
         Ok(next) => next,
         Err(stop) => return stop.into(),

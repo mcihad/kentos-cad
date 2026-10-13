@@ -115,6 +115,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesTransform,
 ) -> CommandResult<EntitiesTransformed> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_ENTITIES_TRANSFORM,
+        kentos_contracts::CAD_ENTITIES_TRANSFORM_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesTransform,
+) -> CommandResult<EntitiesTransformed> {
     let copy = input.copy.unwrap_or(false);
     let checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
@@ -141,6 +156,7 @@ pub fn execute(
                         message: full.to_string(),
                         path: None,
                         revision: None,
+                        ..Default::default()
                     },
                 };
             }
@@ -243,7 +259,7 @@ fn check_align(
     target2: Option<kentos_contracts::Vec2>,
 ) -> Result<(), Stop> {
     let refuse = |message: &str, path: &str| {
-        Err(Stop::Failed(checks::error(
+        Err(Stop::failed(checks::error(
             codes::INVALID_ALIGN,
             message.into(),
             Some(path.into()),
@@ -318,7 +334,7 @@ fn check_arrange(mode: ArrangeMode, at: Option<f64>) -> Result<How, Stop> {
     }
     let mode = arrange_mode(mode);
     let refuse = |message: &str| {
-        Err(Stop::Failed(checks::error(
+        Err(Stop::failed(checks::error(
             codes::INVALID_TRANSFORM,
             message.into(),
             Some("transform.at".into()),
@@ -376,7 +392,7 @@ fn check_sheet(links: &[kentos_contracts::RubberLink]) -> Result<Sheet, Stop> {
         })
         .collect();
     Sheet::solve(&core).map_err(|e| {
-        Stop::Failed(checks::error(
+        Stop::failed(checks::error(
             codes::INVALID_LINKS,
             links_message(e),
             Some("transform.links".into()),
@@ -403,7 +419,7 @@ fn singular([a, b, c, d]: [f64; 4]) -> bool {
 }
 
 fn refuse_singular() -> Stop {
-    Stop::Failed(checks::error(
+    Stop::failed(checks::error(
         codes::INVALID_TRANSFORM,
         "Dönüşüm tekil: doğrusal kısmı nesneleri bir doğruya ya da noktaya ezer. Dönüşümün sayılarını denetleyin ya da başka bir dönüşüm türü seçin.".into(),
         Some("transform".into()),
@@ -515,7 +531,7 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
                 "transform.factor",
             )?;
             if factor <= 0.0 {
-                return Err(Stop::Failed(checks::error(
+                return Err(Stop::failed(checks::error(
                     codes::INVALID_FACTOR,
                     "Ölçek faktörü sıfırdan büyük olmalı. Pozitif bir faktör verin.".into(),
                     Some("transform.factor".into()),
@@ -528,7 +544,7 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
             // The core's own measure of the axis (`mirror`): zero leaves it no direction.
             let (dx, dy) = (b.x - a.x, b.y - a.y);
             if dx * dx + dy * dy == 0.0 {
-                return Err(Stop::Failed(checks::error(
+                return Err(Stop::failed(checks::error(
                     codes::INVALID_AXIS,
                     "Simetri ekseninin iki noktası aynı; eksenin yönü yok. Birbirinden ayrı iki nokta verin.".into(),
                     Some("transform.b".into()),
@@ -559,7 +575,7 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
         | Transform::Arrange { .. } => {}
     }
     affine(transform).map(How::Matrix).ok_or_else(|| {
-        Stop::Failed(checks::error(
+        Stop::failed(checks::error(
             codes::NOT_FINITE,
             "Dönüşüm kurulamadı.".into(),
             Some("transform".into()),
@@ -588,7 +604,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         // A cloud's place is its files' (docs/adr/0207 §3): no transform moves or copies it.
         if matches!(entity, Entity::PointCloud(_)) {
             let i = input.uids.iter().position(|u| u == uid).unwrap_or(0);
-            return Err(Stop::Failed(checks::error(
+            return Err(Stop::failed(checks::error(
                 codes::POINTCLOUD_FIXED,
                 "Nokta bulutu taşınmaz, döndürülmez, ölçeklenmez, aynalanmaz ve kopyalanmaz: konumu dosyasındadır. Bulutu seçimden çıkarın.".into(),
                 Some(format!("uids[{i}]")),
@@ -599,7 +615,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         let bends = matches!(&how, How::Sheet(_) | How::Warp(Warp::Projective { .. }));
         if bends && matches!(entity, Entity::Raster(_)) {
             let i = input.uids.iter().position(|u| u == uid).unwrap_or(0);
-            return Err(Stop::Failed(checks::error(
+            return Err(Stop::failed(checks::error(
                 codes::RASTER_NOT_WARPED,
                 "Raster projektif dönüşümle ya da kauçuk levhayla taşınmaz: pikselleri yeniden örneklenmeli. Rasteri seçimden çıkarın; Raster oturt ile oturtun.".into(),
                 Some(format!("uids[{i}]")),
@@ -667,7 +683,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         };
         // The core keeps an object's kind for the modify tools; a shape it cannot write would be its fault.
         let Some(e) = e else {
-            return Err(Stop::Failed(checks::error(
+            return Err(Stop::failed(checks::error(
                 codes::NOT_FINITE,
                 "Nesne dönüştürülemedi.".into(),
                 Some("transform".into()),
@@ -680,7 +696,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         && !arranged.is_empty()
     {
         if !mode.aligns() && arranged.len() < 3 {
-            return Err(Stop::Failed(checks::error(
+            return Err(Stop::failed(checks::error(
                 codes::TOO_FEW_OBJECTS,
                 format!(
                     "{} için en az üç nesne gerekir (kilitli katmandakiler sayılmaz). Dağıtılacak nesneleri seçin.",
@@ -699,7 +715,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             arranged.into_iter().zip(arrange::moves(&boxes, mode, at))
         {
             let m = similarity("move", &[d.x, d.y]).ok_or_else(|| {
-                Stop::Failed(checks::error(
+                Stop::failed(checks::error(
                     codes::NOT_FINITE,
                     "Dönüşüm kurulamadı.".into(),
                     Some("transform".into()),
@@ -708,7 +724,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             let after = transform_shape(&before, &m);
             overflow |= finite_shape(&before) && !finite_shape(&after);
             let Some(e) = with_shape(entity, after) else {
-                return Err(Stop::Failed(checks::error(
+                return Err(Stop::failed(checks::error(
                     codes::NOT_FINITE,
                     "Nesne dönüştürülemedi.".into(),
                     Some("transform".into()),
@@ -719,21 +735,21 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         }
     }
     if sources.is_empty() {
-        return Err(Stop::Failed(checks::error(
+        return Err(Stop::failed(checks::error(
             codes::LAYER_LOCKED,
             locked_message(locked.len()),
             Some("uids".into()),
         )));
     }
     if beyond {
-        return Err(Stop::Failed(checks::error(
+        return Err(Stop::failed(checks::error(
             codes::BEYOND_HORIZON,
             "Projektif dönüşümün ufku nesnelerin arasından geçiyor: bir nesnenin noktası ufkun ötesinde kalıyor, dönüştürülemez. O nesneleri dışarıda bırakın ya da kontrol noktalarını denetleyin.".into(),
             Some("transform".into()),
         )));
     }
     if overflow {
-        return Err(Stop::Failed(checks::error(
+        return Err(Stop::failed(checks::error(
             codes::NOT_FINITE,
             "Dönüşüm sonucunda sonlu olmayan bir değer çıktı (sayı taşması). Daha küçük bir değer verin.".into(),
             Some("transform".into()),

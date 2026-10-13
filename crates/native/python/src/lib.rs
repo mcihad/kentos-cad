@@ -131,8 +131,8 @@ impl PySession {
 
     /// The whole drawing as a DXF file at `path` (docs/adr/0252); the answer
     /// (`path`, `bytes`, `objects`, `layers`, `report`) as JSON text.
-    fn export_dxf(&self, py: Python<'_>, path: PathBuf) -> PyResult<String> {
-        let inner = &self.inner;
+    fn export_dxf(&mut self, py: Python<'_>, path: PathBuf) -> PyResult<String> {
+        let inner = &mut self.inner;
         let written = py.detach(|| inner.export_dxf(&path)).map_err(host)?;
         text(&written)
     }
@@ -142,15 +142,77 @@ impl PySession {
     /// `findings`, `notes`) as JSON text.
     #[pyo3(signature = (path, sheets = None))]
     fn export_pdf(
-        &self,
+        &mut self,
         py: Python<'_>,
         path: PathBuf,
         sheets: Option<Vec<String>>,
     ) -> PyResult<String> {
-        let inner = &self.inner;
+        let inner = &mut self.inner;
         let sheets = sheets.unwrap_or_default();
-        let written = py.detach(|| inner.export_pdf(&path, &sheets)).map_err(host)?;
+        let written = py
+            .detach(|| inner.export_pdf(&path, &sheets))
+            .map_err(host)?;
         text(&written)
+    }
+
+    /// A command by the protocol (docs/adr/0253 §4): the envelope's JSON
+    /// text in, the `CallAnswer`'s out (the summary and the plan's id with it).
+    fn call(&mut self, py: Python<'_>, envelope: &str) -> PyResult<String> {
+        let envelope: serde_json::Value = serde_json::from_str(envelope).map_err(|e| {
+            host(kentos_headless::HeadlessError::new(
+                "invalid_input",
+                format!("çağrı JSON olarak okunamadı: {e}"),
+            ))
+        })?;
+        let inner = &mut self.inner;
+        let answer = py.detach(|| inner.call(envelope)).map_err(host)?;
+        text(&answer)
+    }
+
+    /// Starts a command as a job (docs/adr/0253 §9); its status as JSON text.
+    fn start(&mut self, envelope: &str) -> PyResult<String> {
+        let envelope: serde_json::Value = serde_json::from_str(envelope).map_err(|e| {
+            host(kentos_headless::HeadlessError::new(
+                "invalid_input",
+                format!("çağrı JSON olarak okunamadı: {e}"),
+            ))
+        })?;
+        text(&self.inner.start(envelope).map_err(host)?)
+    }
+
+    /// A job's status as JSON text; once computed, its write is in the drawing.
+    fn job(&mut self, id: &str) -> PyResult<String> {
+        text(&self.inner.job(id).map_err(host)?)
+    }
+
+    /// Waits for a job (the interpreter's lock let go meanwhile); its status.
+    fn wait(&mut self, py: Python<'_>, id: &str) -> PyResult<String> {
+        let inner = &mut self.inner;
+        let status = py.detach(|| inner.wait(id)).map_err(host)?;
+        text(&status)
+    }
+
+    /// Asks a job to stop; refused once written (`already_committed`).
+    fn cancel(&mut self, id: &str) -> PyResult<String> {
+        text(&self.inner.cancel(id).map_err(host)?)
+    }
+
+    /// The drawing's journal (`kentos.replay/1`) as JSON text.
+    fn journal(&self) -> PyResult<String> {
+        text(&self.inner.journal())
+    }
+
+    /// Runs a journal's commands again on this drawing; the report as JSON text.
+    fn replay(&mut self, py: Python<'_>, journal: &str) -> PyResult<String> {
+        let journal: serde_json::Value = serde_json::from_str(journal).map_err(|e| {
+            host(kentos_headless::HeadlessError::new(
+                "invalid_input",
+                format!("kayıt JSON olarak okunamadı: {e}"),
+            ))
+        })?;
+        let inner = &mut self.inner;
+        let report = py.detach(|| inner.replay(journal)).map_err(host)?;
+        text(&report)
     }
 
     /// The `.kcad` v2 bytes of the drawing as it is now, verified.
@@ -247,7 +309,7 @@ fn catalog() -> PyResult<String> {
 /// The commands this host runs, as `(id, version)` pairs.
 #[pyfunction]
 fn local_commands() -> Vec<(&'static str, u32)> {
-    kentos_headless::DESKTOP.to_vec()
+    kentos_headless::commands()
 }
 
 #[pymodule(name = "_native")]

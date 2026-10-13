@@ -80,7 +80,9 @@ impl SubPlace {
     pub fn problem(&self) -> Option<String> {
         let big = |n: u32| n > SUBREF_INDEX_LIMIT;
         match *self {
-            SubPlace::Node { part } if big(part) => Some(format!("Yerin parçası {part}: çok büyük.")),
+            SubPlace::Node { part } if big(part) => {
+                Some(format!("Yerin parçası {part}: çok büyük."))
+            }
             SubPlace::Vertex { part, ring, index } | SubPlace::Mid { part, ring, index }
                 if big(part) || big(ring) || big(index) =>
             {
@@ -97,7 +99,11 @@ impl SubRef {
         if self.uid.0 == [0; 16] {
             return Some("Başvurunun nesne kimliği boş.".into());
         }
-        if let Some(b) = self.broken.as_deref().filter(|b| !SUBREF_BROKEN.contains(b)) {
+        if let Some(b) = self
+            .broken
+            .as_deref()
+            .filter(|b| !SUBREF_BROKEN.contains(b))
+        {
             return Some(format!("Başvurunun kopma nedeni “{b}” bilinmiyor."));
         }
         self.place.problem()
@@ -151,7 +157,11 @@ mod tests {
     fn r(broken: Option<&str>) -> SubRef {
         SubRef {
             uid: EntityId([7; 16]),
-            place: SubPlace::Vertex { part: 0, ring: 0, index: 2 },
+            place: SubPlace::Vertex {
+                part: 0,
+                ring: 0,
+                index: 2,
+            },
             broken: broken.map(str::to_owned),
         }
     }
@@ -159,7 +169,10 @@ mod tests {
     #[test]
     fn the_json_names_the_place_by_its_kind() {
         let text = serde_json::to_string(&r(None)).unwrap();
-        assert!(text.contains(r#""place":{"kind":"vertex","part":0,"ring":0,"index":2}"#), "{text}");
+        assert!(
+            text.contains(r#""place":{"kind":"vertex","part":0,"ring":0,"index":2}"#),
+            "{text}"
+        );
         assert!(!text.contains("broken"));
         let back: SubRef = serde_json::from_str(&text).unwrap();
         assert_eq!(back, r(None));
@@ -176,10 +189,17 @@ mod tests {
         z.uid = EntityId([0; 16]);
         assert!(z.problem().unwrap().contains("boş"));
         let mut big = r(None);
-        big.place = SubPlace::Vertex { part: 0, ring: 0, index: SUBREF_INDEX_LIMIT + 1 };
+        big.place = SubPlace::Vertex {
+            part: 0,
+            ring: 0,
+            index: SUBREF_INDEX_LIMIT + 1,
+        };
         assert!(big.problem().is_some());
         assert!(DimensionRefs::default().problem().unwrap().contains("boş"));
-        let refs = DimensionRefs { b: Some(r(None)), ..Default::default() };
+        let refs = DimensionRefs {
+            b: Some(r(None)),
+            ..Default::default()
+        };
         assert_eq!(refs.problem(), None);
         assert_eq!(refs.each().map(|(k, _)| k).collect::<Vec<_>>(), ["b"]);
     }

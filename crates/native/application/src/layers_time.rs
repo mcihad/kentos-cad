@@ -21,7 +21,7 @@ pub use crate::codes;
 pub const LABEL: &str = "Zaman ayarları";
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 fn check(doc: &Document, input: &LayersTime) -> Result<LayerNode, Stop> {
@@ -96,6 +96,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersTime) -> CommandResult<Laye
 
 /// Writes the setting as one undo step “Zaman ayarları” when it differs.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersTime) -> CommandResult<LayersTimed> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LAYERS_TIME,
+        kentos_contracts::CAD_LAYERS_TIME_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersTime) -> CommandResult<LayersTimed> {
     if let Err(stop) = check(cx.doc, &input) {
         return stop.into();
     }

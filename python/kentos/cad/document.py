@@ -20,8 +20,9 @@ from pathlib import Path
 from typing import Any, Literal, TypeVar
 
 from .. import _native
-from ._runtime import _enum_out, _Model, decode, dumps
+from ._runtime import Outcome, _enum_out, _Model, call_outcome, decode, dumps
 from .errors import NotRunHere, UnknownObject, host_error
+from .protocol import Expected, Job, ReplayReport, Stamps
 from .types import (
     BlockDefinition,
     Bounds,
@@ -104,6 +105,27 @@ class SessionBase:
     def cancel_group(self) -> bool:
         raise NotImplementedError
 
+    def call(self, envelope: str) -> str:
+        raise NotImplementedError
+
+    def start(self, envelope: str) -> str:
+        raise NotImplementedError
+
+    def job(self, id: str) -> str:
+        raise NotImplementedError
+
+    def wait(self, id: str) -> str:
+        raise NotImplementedError
+
+    def cancel(self, id: str) -> str:
+        raise NotImplementedError
+
+    def journal(self) -> str:
+        raise NotImplementedError
+
+    def replay(self, journal: str) -> str:
+        raise NotImplementedError
+
 
 _CURRENT: Document | None = None
 
@@ -130,10 +152,12 @@ def _host(call: Callable[..., T], *args: Any) -> T:
 
 @dataclass(frozen=True, slots=True)
 class Record:
-    """An object of the drawing with its persistent id."""
+    """An object of the drawing with its persistent id and its state stamp."""
 
     uid: str
     entity: Entity
+    stamp: str | None = None
+    """Its state stamp (docs/adr/0253 §2): ``Expected(objects={uid: stamp})`` writes only while it holds."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,13 +235,14 @@ class Saved:
 class Exported:
     """Where an export went, how many bytes, how many objects and layers, and
     what changed on the way (the writer's report: ``counts``, ``notes``,
-    ``skipped``)."""
+    ``skipped``); the file's SHA-256."""
 
     path: Path
     bytes: int
     objects: int
     layers: int
     report: dict[str, Any]
+    sha256: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -230,6 +255,7 @@ class Printed:
     sheets: list[str]
     findings: list[dict[str, Any]]
     notes: list[str]
+    sha256: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -249,6 +275,8 @@ class DocumentInfo:
     can_redo: bool
     units: Units
     """What the values are in: metres in the project's plane; ``units.drawing`` is the drawing unit."""
+    stamps: Stamps | None = None
+    """The project's parts' state stamps (``layers``, ``settings``, ``styles``, ``sheets``; docs/adr/0253 §2)."""
 
 
 BoundsLike = Bounds | Sequence[float]
@@ -360,7 +388,9 @@ class Document:
         dışa aktar writes it (the same writer): every object with its layers,
         what DXF cannot hold carried as KentOS data. An export is not a save."""
         raw = json.loads(_host(self._session.export_dxf, os.fspath(path)))
-        return Exported(Path(raw["path"]), int(raw["bytes"]), int(raw["objects"]), int(raw["layers"]), raw["report"])
+        return Exported(
+            Path(raw["path"]), int(raw["bytes"]), int(raw["objects"]), int(raw["layers"]), raw["report"], str(raw.get("sha256", ""))
+        )
 
     def export_pdf(self, path: str | os.PathLike[str], sheets: Sequence[str] | None = None) -> Printed:
         """The project's sheet book as a PDF: the sheets named (by id) or all, a page each, as the
@@ -368,7 +398,14 @@ class Document:
         transverse Mercator one). Sheets are made with ``kentos.cad.sheets.edit``. A headless
         host writes the maps' lines, areas and hatches but not their texts yet (``notes``)."""
         raw = json.loads(_host(self._session.export_pdf, os.fspath(path), None if sheets is None else list(sheets)))
-        return Printed(Path(raw["path"]), int(raw["bytes"]), list(raw["sheets"]), list(raw["findings"]), list(raw["notes"]))
+        return Printed(
+            Path(raw["path"]),
+            int(raw["bytes"]),
+            list(raw["sheets"]),
+            list(raw["findings"]),
+            list(raw["notes"]),
+            str(raw.get("sha256", "")),
+        )
 
     # ------------------------------------------------------------ the whole
 
@@ -386,6 +423,7 @@ class Document:
             can_undo=s["canUndo"],
             can_redo=s["canRedo"],
             units=_units(s.get("units")),
+            stamps=None if s.get("stamps") is None else Stamps.from_json(s["stamps"]),
         )
 
     def sheets(self) -> list[SheetInfo]:
@@ -495,7 +533,7 @@ class Document:
                 limit,
             )
         )
-        items = [Record(i["uid"], decode(Entity, i["entity"], "Document.page")) for i in raw["items"]]
+        items = [Record(i["uid"], decode(Entity, i["entity"], "Document.page"), i.get("stamp")) for i in raw["items"]]
         return Page(items, raw.get("next"))
 
     def entities(
@@ -520,7 +558,7 @@ class Document:
     def entity(self, uid: str) -> Record:
         """One object by its persistent id."""
         raw = json.loads(_host(self._session.entity, uid))
-        return Record(raw["uid"], decode(Entity, raw["entity"], "Document.entity"))
+        return Record(raw["uid"], decode(Entity, raw["entity"], "Document.entity"), raw.get("stamp"))
 
     def measure(self, uid: str) -> Measure:
         """An object's area, length and box from its source geometry."""
@@ -574,19 +612,104 @@ class Document:
         *,
         op: str = "execute",
         version: int | None = None,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> dict[str, Any]:
         """Any command of this host by its id: the input as the catalog's
         JSON (or a typed input), the whole ``CommandResult`` as JSON. The
         host refuses an unknown id, another version or input not of the
-        command's type (TODOS.md PY-11). The typed wrappers
-        (``kentos.cad.polygon.create``) are the usual way."""
+        command's type (TODOS.md PY-11). With ``request_id`` or ``expected``
+        the call goes by the protocol (docs/adr/0253) and the answer is the
+        whole ``CallAnswer`` (the summary, the plan's id, the journal row).
+        The typed wrappers (``kentos.cad.polygon.create``) are the usual way."""
         payload = input.to_json() if isinstance(input, _Model) else dict(input)
+        if request_id is not None or expected is not None:
+            return self._call(command, version, op, payload, request_id, expected)
         return self._command(command, version, op, payload)
+
+    def call(
+        self,
+        command: str,
+        input: Mapping[str, Any] | _Model,
+        *,
+        op: str = "execute",
+        version: int | None = None,
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """A command by the protocol (docs/adr/0253): validates, plans or
+        writes, and says what it touched (``summary``), the plan's id
+        (``plan_id``; ``expected=Expected(plan=…)`` makes the write equal
+        it), whether a request sent again was answered from before
+        (``replayed``), its journal row (``call``). A refusal is in the
+        answer (``error``, with ``uids`` and ``retryable``), not raised."""
+        payload = input.to_json() if isinstance(input, _Model) else dict(input)
+        return call_outcome(command, self._call(command, version, op, payload, request_id, expected), None)
+
+    def start(
+        self,
+        command: str,
+        input: Mapping[str, Any] | _Model,
+        *,
+        version: int | None = None,
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Job:
+        """Starts a command as a job (docs/adr/0253 §9): computed on a copy
+        of the drawing on another thread, the drawing free meanwhile; its
+        write comes in when the job is looked at (``job.wait()``)."""
+        payload = input.to_json() if isinstance(input, _Model) else dict(input)
+        envelope = _envelope(command, version, "execute", payload, request_id, expected)
+        raw = json.loads(_host(self._session.start, dumps(envelope)))
+        return Job(self, str(raw["id"]))
+
+    def journal(self) -> dict[str, Any]:
+        """The drawing's journal (``kentos.replay/1``, docs/adr/0253 §3):
+        every write in order, a command's with its input, its algorithm and
+        what it made; an edit made without a command too. JSON, to keep or
+        to :meth:`replay` on another drawing."""
+        raw: dict[str, Any] = json.loads(_host(self._session.journal))
+        return raw
+
+    def replay(self, journal: Mapping[str, Any]) -> ReplayReport:
+        """Runs a journal's commands again on this drawing, in order, the ids
+        earlier rows made mapped to the ones made here; what became of each."""
+        return ReplayReport.from_json(json.loads(_host(self._session.replay, json.dumps(dict(journal)))))
 
     def _command(self, command: str, version: int | None, op: str, payload: Any) -> dict[str, Any]:
         text = _host(self._session.run, command, op, dumps(payload), version)
         answer: dict[str, Any] = json.loads(text)
         return answer
+
+    def _call(
+        self,
+        command: str,
+        version: int | None,
+        op: str,
+        payload: Any,
+        request_id: str | None,
+        expected: Expected | None,
+    ) -> dict[str, Any]:
+        envelope = _envelope(command, version, op, payload, request_id, expected)
+        answer: dict[str, Any] = json.loads(_host(self._session.call, dumps(envelope)))
+        return answer
+
+    def _job(self, method: str, id: str) -> dict[str, Any]:
+        raw: dict[str, Any] = json.loads(_host(getattr(self._session, method), id))
+        return raw
+
+
+def _envelope(
+    command: str, version: int | None, op: str, payload: Any, request_id: str | None, expected: Expected | None
+) -> dict[str, Any]:
+    out: dict[str, Any] = {"command": command, "op": op, "input": payload}
+    if version is not None:
+        out["version"] = version
+    if request_id is not None:
+        out["requestId"] = request_id
+    if expected is not None:
+        out["expected"] = expected.to_json()
+    return out
 
 
 def _walk(nodes: Iterable[LayerNode]) -> Iterator[LayerNode]:

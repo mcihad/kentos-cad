@@ -26,10 +26,12 @@
 )]
 
 mod blocks;
+mod calls;
 mod changes;
 pub mod dimension_ties;
 mod document;
 mod edit;
+pub mod etag;
 pub mod exchange;
 mod external;
 pub mod fields;
@@ -37,11 +39,14 @@ mod hash;
 mod hatch_ties;
 mod history;
 mod identity;
+mod integrity;
 pub mod layer_purge;
 pub mod layer_states;
 mod layers;
 mod linked;
+mod patch;
 mod snapshot;
+mod step;
 mod store;
 
 pub use changes::{ChangeMark, Changes};
@@ -51,5 +56,8 @@ pub use external::{External, ExternalMeta};
 pub use hash::{SlotHasher, SlotMap};
 pub use history::{Group, LayerInfo, ServedBy, Temporal, UNDO_LIMIT};
 pub use identity::{Slot, Uuid, v1_entity_uids};
+pub use integrity::Fault;
 pub use kentos_contracts as contracts;
 pub use layers::{LayerTree, NewLayer, default_style};
+pub use patch::{Patch, PatchRefused};
+pub use step::{BlockChange, IdChanges, ObjectChange, Sealed, StepReport};

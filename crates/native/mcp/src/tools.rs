@@ -1,8 +1,11 @@
 //! The tools (docs/adr/0133): the catalog's drawing commands under their own
-//! ids, with the drawing's handle and the call's way (`op`) added to their
-//! input schemas, and the drawing's own tools: open, new, save, close, list,
-//! summary, layers, entities, entity, measure, undo, redo. Resources: the
-//! catalog and each open drawing.
+//! ids, with the drawing's handle, the call's way (`op`), the request's id
+//! and what the call expects added to their input schemas, each answered by
+//! the protocol (docs/adr/0253: the result with its summary, the plan's id,
+//! the journal row); and the drawing's own tools: open, new, save, close,
+//! list, summary, layers, entities, entity, measure, undo, redo, the jobs
+//! (`drawing.job.*`), the journal and its replay. Resources: the catalog and
+//! each open drawing.
 
 use std::path::Path;
 
@@ -230,6 +233,72 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             annotations(false, false),
         ),
     ];
+    let job_id = json!({ "type": "string", "description": "İşin kimliği (drawing.job.start'ın verdiği id)." });
+    tools.push(tool(
+        "drawing.job.start",
+        "İş başlat",
+        "Bir komutu iş olarak başlatır (docs/adr/0253 §9): çizimin bir kopyasında, ayrı iş parçacığında hesaplanır; \
+         çizim bu sırada serbesttir. Sonucu drawing.job.status ya da drawing.job.wait sorulunca çizime yazılır: \
+         çizim değişmediyse olduğu gibi, değiştiyse nesneler hâlâ işin gördüğü gibiyse kimlikleriyle; değilse \
+         document_changed ile hiçbir şey yazılmaz.",
+        object(
+            json!({
+                "drawing": drawing_arg(),
+                "command": { "type": "string", "description": "Komutun kimliği (cad.entities.transform …)." },
+                "input": { "type": "object", "description": "Komutun girdisi, kataloğun şemasıyla." },
+                "requestId": request_id_arg(),
+                "expected": expected_arg()
+            }),
+            &["drawing", "command", "input"],
+        ),
+        annotations(false, true),
+    ));
+    tools.push(tool(
+        "drawing.job.status",
+        "İşin durumu",
+        "İşin aşaması (queued, computing, staged, committing, done, failed, conflict, cancelled), ilerlemesi ve \
+         bittiyse cevabı. Hesap bittiyse sonuç bu soruda çizime yazılır.",
+        object(json!({ "drawing": drawing_arg(), "id": job_id }), &["drawing", "id"]),
+        annotations(false, false),
+    ));
+    tools.push(tool(
+        "drawing.job.wait",
+        "İşi bekle",
+        "İş bitene dek bekler, sonucunu çizime yazar ve durumunu verir. Masaüstündeki çizimde beklemez, durumu verir.",
+        object(json!({ "drawing": drawing_arg(), "id": job_id }), &["drawing", "id"]),
+        annotations(false, false),
+    ));
+    tools.push(tool(
+        "drawing.job.cancel",
+        "İşi durdur",
+        "İşin durmasını ister: zamanında gelirse hiçbir şey yazılmaz. Yazılmış iş durdurulamaz (already_committed): \
+         geri almak için drawing.undo.",
+        object(json!({ "drawing": drawing_arg(), "id": job_id }), &["drawing", "id"]),
+        annotations(false, false),
+    ));
+    tools.push(tool(
+        "drawing.journal",
+        "Kayıt",
+        "Çizimin bu oturumdaki kaydı (kentos.replay/1): yazılan her şey sırasıyla; komutların girdisi, algoritması, \
+         bağlamı (birim, sistem), yaptıkları ve uyarıları; komutsuz düzenlemeler de. drawing.replay ile başka bir \
+         çizimde yeniden oynatılır.",
+        object(json!({ "drawing": drawing_arg() }), &["drawing"]),
+        annotations(true, false),
+    ));
+    tools.push(tool(
+        "drawing.replay",
+        "Kaydı yeniden oynat",
+        "Bir kaydın (drawing.journal) komutlarını bu çizimde sırayla yeniden çalıştırır; önceki satırların yaptığı \
+         kimlikler burada yapılanlara eşlenir. Her satır için same, differs, failed ya da skipped.",
+        object(
+            json!({
+                "drawing": drawing_arg(),
+                "journal": { "type": "object", "description": "Bir kentos.replay/1 kaydı." }
+            }),
+            &["drawing", "journal"],
+        ),
+        annotations(false, true),
+    ));
     let commands: Vec<&Value> = catalog["commands"]
         .as_array()
         .into_iter()
@@ -341,7 +410,33 @@ fn server_tool(c: &Value) -> Value {
     })
 }
 
-/// A catalog command as a tool: its input schema with `drawing` and `op`.
+fn request_id_arg() -> Value {
+    json!({
+        "type": "string",
+        "description": "İsteğin kimliği (1–128 harf, rakam, . _ : -; yalnız execute): aynı çağrıyla yeniden gönderilirse ilk cevap döner, iş ikinci kez uygulanmaz; başka bir çağrıyla request_reused."
+    })
+}
+
+fn expected_arg() -> Value {
+    json!({
+        "type": "object",
+        "description": "Yazmanın dayandığı durum: tutmazsa hiçbir şey yazılmaz, sonuç conflict olur (revision_conflict, stale_state, plan_changed).",
+        "properties": {
+            "revision": { "type": "string", "description": "Çizimin sürümü (ondalık metin)." },
+            "objects": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Kalıcı kimlik → durum damgası (drawing.entities'in stamp'i, cevabın summary.stamps'i)." },
+            "blocks": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Blok kimliği → durum damgası." },
+            "layers": { "type": "string", "description": "Katman ağacının damgası (drawing.summary'nin stamps'i)." },
+            "settings": { "type": "string" },
+            "styles": { "type": "string" },
+            "sheets": { "type": "string" },
+            "plan": { "type": "string", "description": "op: plan'ın planId'si: yazma o plana eşit olmalı." }
+        },
+        "additionalProperties": false
+    })
+}
+
+/// A catalog command as a tool: its input schema with `drawing`, `op`,
+/// `requestId` and `expected`.
 fn command_tool(c: &Value) -> Value {
     let id = c["id"].as_str().unwrap_or_default();
     let mut schema = c["input"].clone();
@@ -355,6 +450,8 @@ fn command_tool(c: &Value) -> Value {
         "default": "execute",
         "description": "execute: tek geri alma adımı olarak yazar; plan: yazılacak olanı gösterir, hiçbir şey yazmaz; validate: yalnız denetler."
     });
+    schema["properties"]["requestId"] = request_id_arg();
+    schema["properties"]["expected"] = expected_arg();
     match schema["required"].as_array_mut() {
         Some(required) => required.insert(0, json!("drawing")),
         None => schema["required"] = json!(["drawing"]),
@@ -379,6 +476,11 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.extend"
             | "cad.entities.fillet"
             | "cad.entities.chamfer"
+            // They move vertices, replace an object by its pieces and delete the joined ones;
+            // Böl, Alan oluştur, Tarama and Ölçü ekle only add (docs/adr/0254, 0255).
+            | "cad.entities.stretch"
+            | "cad.entities.break"
+            | "cad.entities.join"
             // Its remove takes a service layer away (docs/adr/0208 §15).
             | "cad.layers.service"
             // Its remove takes a network's definition away (docs/adr/0209 §11).
@@ -408,13 +510,20 @@ fn command_tool(c: &Value) -> Value {
             | "cad.settings.set"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
+            // A change set runs any of these (docs/adr/0253 §8).
+            | "cad.changeset.apply"
+            // A file there is written over with `overwrite` (docs/adr/0253 §10).
+            | "file.export.dxf"
+            | "file.export.pdf"
     );
     let description = format!(
-        "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \
-         conflict (error: code, message, path). plan'ın revision'u expectedRevision olarak verilirse \
-         yalnız o plan yazılır. Koordinatlar x doğu (Y), y kuzey (X); koordinatlar, uzunluklar ve alanlar \
-         projenin düzleminde metre ve m²'dir (coğrafi sistemde derece), projenin çizim birimi mm ya da cm \
-         olsa da: 4000 mm 4 yazılır (docs/adr/0245).",
+        "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \
+         needs_input, conflict (error: code, message, path, uids, retryable); yanında summary (eklenen, değişen, \
+         silinen, onlarla değişen nesneler, kutu, önceki ve sonraki durum damgaları, geri alma adımı), planId \
+         (plan'ın kimliği: expected.plan olarak verilirse yalnız o plan yazılır), replayed, call (kaydın satırı). \
+         Koordinatlar x doğu (Y), y kuzey (X); koordinatlar, uzunluklar ve alanlar projenin düzleminde metre ve \
+         m²'dir (coğrafi sistemde derece), projenin çizim birimi mm ya da cm olsa da: 4000 mm 4 yazılır \
+         (docs/adr/0245).",
         c["summary"].as_str().unwrap_or_default()
     );
     json!({
@@ -521,17 +630,18 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
                 "Masaüstündeki çizimi kullanıcı kaydeder, geri alır ve dışa aktarır: ondan isteyin.",
             ));
         }
-        command if command.starts_with("cad.") => {
-            let mut input = args.clone();
-            if let Some(fields) = input.as_object_mut() {
-                fields.remove("drawing");
-                fields.remove("op");
-            }
-            (
-                "run",
-                json!({ "command": command, "op": text(args, "op").unwrap_or("execute"), "input": input }),
-            )
+        command if command.starts_with("file.") => {
+            return Err(refused(
+                "desktop_user",
+                format!("{command}: masaüstündeki çizimi kullanıcı dışa aktarır; ondan isteyin."),
+            ));
         }
+        command if command.starts_with("cad.") => ("call", envelope_of(command, args)),
+        "drawing.job.start" => ("start", job_envelope(args)),
+        "drawing.job.status" | "drawing.job.wait" => ("job", json!({ "id": args.get("id") })),
+        "drawing.job.cancel" => ("cancel", json!({ "id": args.get("id") })),
+        "drawing.journal" => ("journal", json!({})),
+        "drawing.replay" => ("replay", json!({ "journal": args.get("journal") })),
         other => {
             return Err(refused(
                 "not_on_desktop",
@@ -548,7 +658,7 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
     match link.ask(method, params) {
         Ok(value) if method == "layers" => Ok(answer(json!({ "layers": value }), false)),
         Ok(value) => {
-            let failed = method == "run" && value["status"] != "completed";
+            let failed = method == "call" && value["status"] != "completed";
             Ok(answer(value, failed))
         }
         Err((code, message)) => {
@@ -650,7 +760,12 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
             let sheets: Vec<String> = args
                 .get("sheets")
                 .and_then(Value::as_array)
-                .map(|a| a.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+                .map(|a| {
+                    a.iter()
+                        .filter_map(Value::as_str)
+                        .map(str::to_owned)
+                        .collect()
+                })
                 .unwrap_or_default();
             let written = s.export_pdf(Path::new(path), &sheets).map_err(host)?;
             Ok(answer(written, false))
@@ -783,19 +898,77 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
             };
             Ok(answer(json!({ "step": step }), false))
         }
+        "drawing.job.start" => {
+            let (s, _) = session(server, args)?;
+            Ok(answer(s.start(job_envelope(args)).map_err(host)?, false))
+        }
+        "drawing.job.status" | "drawing.job.wait" | "drawing.job.cancel" => {
+            let (s, _) = session(server, args)?;
+            let id = text(args, "id").ok_or_else(|| refused("invalid_input", "id gerekli."))?;
+            let status = match name {
+                "drawing.job.status" => s.job(id),
+                "drawing.job.wait" => s.wait(id),
+                _ => s.cancel(id),
+            }
+            .map_err(host)?;
+            let failed = matches!(status["phase"].as_str(), Some("failed" | "conflict"));
+            Ok(answer(status, failed))
+        }
+        "drawing.journal" => {
+            let (s, _) = session(server, args)?;
+            Ok(answer(s.journal(), false))
+        }
+        "drawing.replay" => {
+            let (s, _) = session(server, args)?;
+            let journal = args.get("journal").cloned().unwrap_or(Value::Null);
+            Ok(answer(s.replay(journal).map_err(host)?, false))
+        }
         command => {
             let (s, _) = session(server, args)?;
-            let op = Op::parse(text(args, "op").unwrap_or("execute")).map_err(host)?;
-            let mut input = args.clone();
-            if let Some(fields) = input.as_object_mut() {
-                fields.remove("drawing");
-                fields.remove("op");
-            }
-            let result = s.run(command, None, op, input).map_err(host)?;
+            // The call's way is checked as before; the protocol answers.
+            Op::parse(text(args, "op").unwrap_or("execute")).map_err(host)?;
+            let result = s.call(envelope_of(command, args)).map_err(host)?;
             let failed = result["status"] != "completed";
             Ok(answer(result, failed))
         }
     }
+}
+
+/// A command tool's arguments as the protocol's envelope: the drawing left
+/// out, the call's way, request id and expectations beside the input.
+fn envelope_of(command: &str, args: &Value) -> Value {
+    let mut input = args.clone();
+    if let Some(fields) = input.as_object_mut() {
+        for own in ["drawing", "op", "requestId", "expected"] {
+            fields.remove(own);
+        }
+    }
+    let mut envelope = json!({
+        "command": command,
+        "op": text(args, "op").unwrap_or("execute"),
+        "input": input,
+    });
+    for own in ["requestId", "expected"] {
+        if let Some(v) = args.get(own) {
+            envelope[own] = v.clone();
+        }
+    }
+    envelope
+}
+
+/// `drawing.job.start`'s arguments as the protocol's envelope.
+fn job_envelope(args: &Value) -> Value {
+    let mut envelope = json!({
+        "command": args.get("command"),
+        "op": "execute",
+        "input": args.get("input").cloned().unwrap_or_else(|| json!({})),
+    });
+    for own in ["requestId", "expected"] {
+        if let Some(v) = args.get(own) {
+            envelope[own] = v.clone();
+        }
+    }
+    envelope
 }
 
 /// The catalog, and each open drawing's summary and layers.

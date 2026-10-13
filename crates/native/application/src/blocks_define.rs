@@ -62,6 +62,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksDefine) -> CommandResult<Bl
 /// deletion and the insert, as one undo step “Blok tanımla”: into the open
 /// transaction or group, if one is.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: BlocksDefine) -> CommandResult<BlockDefined> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_BLOCKS_DEFINE,
+        kentos_contracts::CAD_BLOCKS_DEFINE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: BlocksDefine,
+) -> CommandResult<BlockDefined> {
     let mut checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -148,7 +163,7 @@ pub(crate) fn name(name: &str) -> Result<(), Stop> {
     if rules::name_ok(name) {
         return Ok(());
     }
-    Err(Stop::Failed(error(
+    Err(Stop::failed(error(
         codes::EMPTY_NAME,
         "Blok adı boş olamaz; bir ad yazın.".into(),
         Some("name".into()),
@@ -157,7 +172,7 @@ pub(crate) fn name(name: &str) -> Result<(), Stop> {
 
 /// `replace` without the layer the insert goes on (`no_layer`).
 pub(crate) fn no_layer() -> Stop {
-    Stop::Failed(error(
+    Stop::failed(error(
         codes::NO_LAYER,
         "Yerleştirmenin katmanı verilmedi. Seçilenleri blokla değiştirmek için bir katman verin (Blok oluştur etkin katmanı verir).".into(),
         Some("layerId".into()),
@@ -208,7 +223,7 @@ pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(),
         .iter()
         .find(|(_, _, e, _)| matches!(e, Entity::PointCloud(_)))
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::POINTCLOUD_IN_BLOCK,
             "Seçilenlerde nokta bulutu var; nokta bulutu bloğa konamaz. Bulutu seçimden çıkarın."
                 .into(),
@@ -220,7 +235,7 @@ pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(),
         .iter()
         .find(|(_, _, e, _)| matches!(e, Entity::Raster(_)))
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::RASTER_IN_BLOCK,
             "Seçilenlerde raster var; raster bloğa konamaz. Rasteri seçimden çıkarın.".into(),
             Some(format!("uids[{i}]")),
@@ -231,7 +246,7 @@ pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(),
         .iter()
         .find(|(_, _, e, _)| matches!(e, Entity::Image(_)))
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::IMAGE_IN_BLOCK,
             "Seçilenlerde resim var; resim bloğa konamaz. Resmi seçimden çıkarın.".into(),
             Some(format!("uids[{i}]")),
@@ -241,7 +256,7 @@ pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(),
         .iter()
         .find(|(_, _, e, _)| matches!(e, Entity::Table(_)))
     {
-        Some((i, ..)) => Err(Stop::Failed(error(
+        Some((i, ..)) => Err(Stop::failed(error(
             codes::TABLE_IN_BLOCK,
             "Seçilenlerde tablo var; tablo bloğa konamaz. Tabloyu seçimden çıkarın.".into(),
             Some(format!("uids[{i}]")),
@@ -273,21 +288,21 @@ pub(crate) fn block_rules(next: &[&BlockDefinition]) -> Result<(), Stop> {
             rules::BlockFault::UnknownBlock { .. } => (codes::UNKNOWN_BLOCK, "uids"),
             // `attributes` checks its list first: never expected.
             rules::BlockFault::EmptyTag { attribute, .. } => {
-                return Stop::Failed(error(
+                return Stop::failed(error(
                     codes::EMPTY_TAG,
                     message,
                     Some(format!("attributes[{attribute}].tag")),
                 ));
             }
             rules::BlockFault::DuplicateTag { attribute, .. } => {
-                return Stop::Failed(error(
+                return Stop::failed(error(
                     codes::DUPLICATE_TAG,
                     message,
                     Some(format!("attributes[{attribute}].tag")),
                 ));
             }
         };
-        Stop::Failed(error(code, message, Some(path.into())))
+        Stop::failed(error(code, message, Some(path.into())))
     })
 }
 
@@ -314,7 +329,7 @@ pub(crate) fn replaced(
         let id = &entity.base().layer_id;
         if layers.is_locked(id) {
             let name = layers.get(id).map_or(id.as_str(), |n| n.name.as_str());
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::LAYER_LOCKED,
                 format!(
                     "“{name}” katmanı kilitli; üzerindeki nesne bloğa alınır ama yerine yerleştirme konamaz. Kilidi Katmanlar panelinden açın ya da nesneleri yerinde bırakın."
@@ -385,7 +400,7 @@ pub(crate) fn write(
         Ok(slots.first().copied())
     });
     written.map_err(|w| match w {
-        Written::Refused(message) => Stop::Failed(error(codes::BLOCK_REFUSED, message, None)),
-        Written::Full(message) => Stop::Failed(error(codes::SLOTS_EXHAUSTED, message, None)),
+        Written::Refused(message) => Stop::failed(error(codes::BLOCK_REFUSED, message, None)),
+        Written::Full(message) => Stop::failed(error(codes::SLOTS_EXHAUSTED, message, None)),
     })
 }

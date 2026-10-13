@@ -109,6 +109,8 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
         project_id: Some(ProjectId(project.into_bytes())),
         migrated_from: None,
         sheets: info.sheets.clone(),
+        // A database project keeps no request ledger: the server has its own idempotency (docs/adr/0026).
+        requests: Vec::new(),
     }
 }
 

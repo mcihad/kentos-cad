@@ -352,7 +352,7 @@ struct Checked {
 }
 
 fn refuse(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.into())))
+    Stop::failed(error(code, message, Some(path.into())))
 }
 
 fn uid_of(doc: &Document, slot: Slot) -> String {

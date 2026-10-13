@@ -1,0 +1,51 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "İstekler",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": { "x": 500000.0, "y": 4400000.0 },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    { "kind": "point", "id": 1, "layerId": "0", "attrs": { "Ad": "P1" }, "p": { "x": 500001.25, "y": 4400002.5 } }
+  ],
+  "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10"],
+  "styles": { "items": [], "categories": [] },
+  "requests": [
+    {
+      "requestId": "ajan:2026-10-13:1",
+      "fingerprint": "5c1f0e9a3b7d4e2f8a6c1b0d9e7f3a25",
+      "command": "cad.point.create",
+      "version": 1,
+      "revision": "1",
+      "status": "done",
+      "answer": "{\"status\":\"completed\",\"output\":{\"id\":1,\"uid\":\"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10\",\"revision\":\"1\"},\"warnings\":[],\"call\":1}"
+    },
+    {
+      "requestId": "betik.otele-2",
+      "fingerprint": "00112233445566778899aabbccddeeff",
+      "command": "cad.entities.offset",
+      "version": 1,
+      "revision": "2",
+      "status": "undone"
+    }
+  ]
+}

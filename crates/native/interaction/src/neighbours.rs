@@ -9,105 +9,34 @@
 //! tool (Köşe tablosu, docs/adr/0172 §6) asks [`neighbours_in`] with its
 //! drawing and store, and says [`lines`].
 
-use kentos_contracts::EntityEdit;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::ops::topology_edit::{self, Change, Neighbour, SAME};
-use kentos_native_application::geometry::{edit_geometry, shape};
+use kentos_geometry_core::ops::topology_edit::Change;
+use kentos_native_application::topology_follow;
+pub use kentos_native_application::topology_follow::{Found, Neighbours};
 
 use crate::Vec2;
 use crate::log::Level;
 use crate::spatial::Spatial;
 use crate::tool::Context;
 
-/// The neighbours an edit puts right: their writes, their shapes for the
-/// preview, how many are locked or would be left invalid.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Neighbours {
-    pub changes: Vec<EntityEdit>,
-    pub shapes: Vec<Shape>,
-    pub locked: usize,
-    pub invalid: usize,
-}
-
-/// A neighbour found: its slot, its shape and whether its layer is locked.
-pub(crate) type Found = Vec<(Slot, Neighbour)>;
-
 /// The visible objects sharing a corner with the places `at` might be
 /// (lines, paths, areas; points with Noktalar da), the `edited` ones left
 /// out, in the order the store finds them (the web's `neighboursAt`).
 pub(crate) fn around(cx: &Context<'_>, at: &[Vec2], edited: &[Slot]) -> Found {
-    around_in(cx.doc, cx.spatial, cx.draft.topology_points, at, edited)
-}
-
-/// [`around`] in `doc` by `spatial` (in step with it); `points`: Noktalar da.
-fn around_in(
-    doc: &Document,
-    spatial: &Spatial,
-    points: bool,
-    at: &[Vec2],
-    edited: &[Slot],
-) -> Found {
-    let mut seen = edited.to_vec();
-    let mut found = Found::new();
-    for p in at {
-        let near = spatial.in_rect(
-            Vec2::new(p.x - SAME, p.y - SAME),
-            Vec2::new(p.x + SAME, p.y + SAME),
-            true,
-        );
-        for s in near {
-            if seen.contains(&s) {
-                continue;
-            }
-            seen.push(s);
-            let Some(e) = doc.get(s) else {
-                continue;
-            };
-            let shape = shape(e);
-            let shares = match shape {
-                Shape::Line { .. } | Shape::Polyline { .. } | Shape::Polygon { .. } => true,
-                Shape::Point { .. } => points,
-                _ => false,
-            };
-            if shares {
-                let locked = doc.layers().is_locked(&e.base().layer_id);
-                found.push((s, Neighbour { shape, locked }));
-            }
-        }
-    }
-    found
+    topology_follow::around(
+        cx.doc,
+        cx.spatial.store(),
+        cx.draft.topology_points,
+        at,
+        edited,
+    )
 }
 
 /// `found` put right by `changes` (the core's `apply`): their writes and
 /// shapes, the locked and invalid counts (the web's `putRight`).
 pub(crate) fn put_right(cx: &Context<'_>, found: &Found, changes: &[Change]) -> Neighbours {
-    put_right_in(cx.doc, cx.draft.topology_points, found, changes)
-}
-
-/// [`put_right`] in `doc`; `points`: Noktalar da.
-fn put_right_in(doc: &Document, points: bool, found: &Found, changes: &[Change]) -> Neighbours {
-    let list: Vec<Neighbour> = found.iter().map(|(_, n)| n.clone()).collect();
-    let answer = topology_edit::apply(&list, changes, points);
-    let mut out = Neighbours {
-        locked: answer.locked,
-        invalid: answer.invalid,
-        ..Neighbours::default()
-    };
-    for (index, shape) in answer.edited {
-        let Some(&(s, _)) = found.get(index) else {
-            continue;
-        };
-        let (Some(uid), Some(geometry)) = (doc.uid(s), edit_geometry(shape.clone())) else {
-            continue;
-        };
-        out.changes.push(EntityEdit::Update {
-            uid: uid.to_string(),
-            geometry,
-        });
-        out.shapes.push(shape);
-    }
-    out
+    topology_follow::put_right(cx.doc, cx.draft.topology_points, found, changes)
 }
 
 /// The neighbours the edited objects (each its slot, its shape before and
@@ -133,18 +62,7 @@ pub fn neighbours_in(
     points: bool,
     edits: &[(Slot, Shape, Shape)],
 ) -> Option<Neighbours> {
-    let changes: Vec<Change> = edits
-        .iter()
-        .filter(|(_, before, _)| points || !matches!(before, Shape::Point { .. }))
-        .flat_map(|(_, before, after)| topology_edit::changes(before, after))
-        .collect();
-    if changes.is_empty() {
-        return None;
-    }
-    let at: Vec<Vec2> = changes.iter().map(anchor).collect();
-    let edited: Vec<Slot> = edits.iter().map(|(slot, ..)| *slot).collect();
-    let found = around_in(doc, spatial, points, &at, &edited);
-    (!found.is_empty()).then(|| put_right_in(doc, points, &found, &changes))
+    topology_follow::neighbours(doc, spatial.store(), points, edits)
 }
 
 /// The neighbours the object at `slot` becoming `after` (from `before`)
@@ -225,13 +143,4 @@ pub(crate) fn corner_count(cx: &Context<'_>, own: Slot, at: Vec2) -> Option<usiz
     let n = put_right(cx, &found, &[Change::Move { at, to: at }]);
     let count = 1 + n.shapes.len() + n.locked;
     (count > 1).then_some(count)
-}
-
-/// Where a change's neighbours have a corner: a move's and a removal's
-/// vertex, an edge's first end.
-pub(crate) fn anchor(c: &Change) -> Vec2 {
-    match *c {
-        Change::Move { at, .. } | Change::Remove { at, .. } => at,
-        Change::Insert { a, .. } | Change::Bulge { a, .. } => a,
-    }
 }

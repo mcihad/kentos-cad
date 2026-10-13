@@ -7,21 +7,22 @@
 //!   noktadan böl (Enter) splits the object at the first point instead;
 //! - Esc drops the picked object; with none, the tool leaves.
 //!
-//! The object is replaced by its pieces, the first in its place, through
-//! `cad.entities.edit`: “Aradaki kısım silindi.”, “Nesne bölündü: 2 parça.”
-//! The pieces are the shared core's (`break_entity`).
+//! The product command `cad.entities.break` does the work (docs/adr/0254
+//! §3): its plan is the preview (the pieces that stay), its execute the
+//! write; the object is replaced by its pieces, the first in its place:
+//! “Aradaki kısım silindi.”, “Nesne bölündü: 2 parça.”
 
-use kentos_contracts::{EditOperation, Entity};
+use kentos_contracts::{CommandResult, EntitiesBreak, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::ops::breaking::break_entity;
-use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, entities_break};
 
 use crate::Vec2;
 use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
+use crate::points::{self, wire};
 use crate::prompt::Prompt;
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tone, Tool};
 
@@ -57,11 +58,14 @@ impl Break {
         Self::default()
     }
 
-    /// The pieces between `p1` and `p2`, from the core.
-    fn pieces(slot: Slot, p1: Vec2, p2: Vec2, cx: &Context<'_>) -> Option<Cut> {
-        cx.doc
-            .get(slot)
-            .map(|e| break_entity(&edge::core(e), p1, p2))
+    /// The command's input: the object between `p1` and `p2`.
+    fn request(slot: Slot, p1: Vec2, p2: Vec2, cx: &Context<'_>) -> Option<EntitiesBreak> {
+        Some(EntitiesBreak {
+            uid: cx.doc.uid(slot)?.to_string(),
+            first: wire(p1),
+            second: Some(wire(p2)),
+            expected_revision: None,
+        })
     }
 
     fn commit(&mut self, p2: Vec2, cx: &mut Context<'_>) {
@@ -69,20 +73,23 @@ impl Break {
             return;
         };
         self.drawn = Preview::default();
-        match Self::pieces(slot, p1, p2, cx) {
-            None => {}
-            Some(Cut::Error(error)) => cx.say(Level::Warn, error),
-            Some(Cut::Pieces(pieces)) => {
-                let shapes: Vec<_> = pieces.into_iter().map(|p| p.shape).collect();
-                if edge::replace(EditOperation::Break, slot, &shapes, cx) {
-                    let text = if dist(p1, p2) < 1e-9 {
-                        format!("Nesne bölündü: {} parça.", shapes.len())
-                    } else {
-                        "Aradaki kısım silindi.".to_owned()
-                    };
-                    cx.say(Level::Success, text);
-                }
-            }
+        let Some(input) = Self::request(slot, p1, p2, cx) else {
+            return;
+        };
+        let result = entities_break::execute(&mut ExecutionContext::new(cx.doc), input);
+        if let Some(out) = points::written(result, cx) {
+            let doc = &*cx.doc;
+            cx.selection.retain(|s| doc.get(s).is_some());
+            cx.selection.set_hover(None);
+            let text = if dist(p1, p2) < 1e-9 {
+                format!(
+                    "Nesne bölündü: {} parça.",
+                    out.changed.len() + out.created.len()
+                )
+            } else {
+                "Aradaki kısım silindi.".to_owned()
+            };
+            cx.say(Level::Success, text);
         }
     }
 }
@@ -131,15 +138,19 @@ impl Tool for Break {
             edge::hover(p, cx, editable);
             return;
         };
-        // The whole object dashed red, the pieces that stay solid on top.
+        // The whole object dashed red, the pieces that stay solid on top: the command's plan.
         self.drawn = Preview::default();
-        let Some(Cut::Pieces(pieces)) = Self::pieces(slot, p1, p.world, cx) else {
+        let Some(input) = Self::request(slot, p1, p.world, cx) else {
+            return;
+        };
+        let CommandResult::Completed { output, .. } = entities_break::plan_in(cx.doc, &input)
+        else {
             return;
         };
         let Some(e) = cx.doc.get(slot) else { return };
-        let out = pieces.iter().fold(
+        let out = output.changed.iter().chain(&output.created).fold(
             Outline::of(&shape(e), Some([5.0, 3.0]), 2.0, Tone::Danger),
-            |out, piece| out.and(Outline::of(&piece.shape, None, 1.5, Tone::Accent)),
+            |out, piece| out.and(Outline::of(&shape(piece), None, 1.5, Tone::Accent)),
         );
         self.drawn = Preview {
             strokes: out.strokes,

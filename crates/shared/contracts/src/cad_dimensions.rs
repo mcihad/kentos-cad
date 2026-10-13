@@ -1,10 +1,12 @@
-//! The associative dimension's command of the product command catalog
-//! (docs/adr/0249 §3): a dimension's points bound to new places on objects,
-//! or freed, as one undo step “Ölçüyü yeniden bağla”.
+//! The dimension commands of the product command catalog: a dimension made
+//! from what it measures and where it goes (docs/adr/0255; plan/cad.md
+//! CAD-CMD-05), and an associative dimension's points bound to new places
+//! on objects, or freed, as one undo step “Ölçüyü yeniden bağla” (docs/adr/0249 §3).
 //!
-//! Its input names places, not coordinates: the command reads each point
-//! from its place on the object now (`ops::subref::point`), so a tool,
-//! Python and an agent binding the same place get the same point.
+//! Their inputs name places and edges, not coordinates: the commands read
+//! each point from its place on the object now (`ops::subref::point`) and
+//! each edge from the object (the edge a click there picks), so a tool,
+//! Python and an agent asking the same get the same dimension.
 //! Coordinates are metres on the wire (x east (Y), y north (X)).
 
 use serde::{Deserialize, Serialize};
@@ -13,8 +15,191 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::entity::Entity;
+use crate::cad_region::NewLook;
+use crate::entity::{Entity, Vec2};
 use crate::subref::SubPlace;
+
+/// Makes a dimension from what it measures.
+pub const CAD_DIMENSIONS_CREATE: &str = "cad.dimensions.create";
+pub const CAD_DIMENSIONS_CREATE_VERSION: u32 = 1;
+
+/// A measured point: coordinates, or a place on an object.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum MeasuredPoint {
+    /// Coordinates: the point follows nothing.
+    At { at: Vec2 },
+    /// A place on an object: the point is the place's now. Hizalı's,
+    /// Doğrusal's, Koordinat's, Semt's and Eğim's points follow their places
+    /// from then on (docs/adr/0249 §3); the others' are read from them.
+    Place {
+        /// The object's persistent id (lowercase UUID text with hyphens).
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        uid: String,
+        place: SubPlace,
+    },
+}
+
+/// An object's edge as a click picks it: of the object's edges of the kind
+/// the measure takes (straight, an arc, a circle), the one nearest `near`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EdgeNear {
+    /// The object's persistent id (lowercase UUID text with hyphens).
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    /// Where it was clicked: its nearest edge is the one measured. An angle's
+    /// arms reach as far as their edges were clicked.
+    pub near: Vec2,
+}
+
+/// What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DimensionMeasure {
+    /// Hizalı: the distance from `a` to `b`.
+    Aligned { a: MeasuredPoint, b: MeasuredPoint },
+    /// Doğrusal: the distance from `a` to `b` along a direction, degrees
+    /// (0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies (AutoCAD's rule).
+    Linear {
+        a: MeasuredPoint,
+        b: MeasuredPoint,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        angle: Option<f64>,
+    },
+    /// Koordinat: `a`'s Y (angle 0) or X (90), its leader ending at `at`;
+    /// absent: the axis `at` lies further along.
+    Ordinate {
+        a: MeasuredPoint,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        angle: Option<f64>,
+    },
+    /// Semt: the direction from `a` to `b`, from north clockwise.
+    Azimuth { a: MeasuredPoint, b: MeasuredPoint },
+    /// Eğim: the slope from `a` at `za` to `b` at `zb`, metres; an
+    /// elevation absent: its place's vertex's (docs/adr/0142).
+    Slope {
+        a: MeasuredPoint,
+        b: MeasuredPoint,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        za: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        zb: Option<f64>,
+    },
+    /// Açı between two straight edges: their lines' crossing the vertex, the
+    /// sector the one `at` is in.
+    Angle { first: EdgeNear, second: EdgeNear },
+    /// Açı from its vertex `c` and a point on each arm (Köşeden; a circle's
+    /// centre and two points on it, Daireden): the arc from `a` to `b` the
+    /// way `at` lies.
+    AngleVertex {
+        c: MeasuredPoint,
+        a: MeasuredPoint,
+        b: MeasuredPoint,
+    },
+    /// Açı of an arc (Yaydan): its own angle about its centre.
+    AngleArc { of: EdgeNear },
+    /// Yarıçap of a circle, an arc or a path's arc segment, toward `at`.
+    Radius { of: EdgeNear },
+    /// Çap of a circle, an arc or a path's arc segment, toward `at`.
+    Diameter { of: EdgeNear },
+    /// Yay uzunluğu of an arc or a path's arc segment; with `between`, the
+    /// part between two points put on its circle (Kısmi).
+    ArcLength {
+        of: EdgeNear,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        between: Option<[Vec2; 2]>,
+    },
+    /// Kırıklı yarıçap of a circle, an arc or a path's arc segment: from the
+    /// centre shown to the circle toward `on`, its jog where `at` is.
+    Jogged {
+        of: EdgeNear,
+        #[serde(rename = "shownCentre")]
+        shown_centre: Vec2,
+        on: Vec2,
+    },
+}
+
+/// Input of `cad.dimensions.create` v1: the dimension `measure` names,
+/// placed at `at` (the dimension line, its arc or its leader through it),
+/// written on `layerId` by `cad.entities.create`'s rules as one undo step
+/// “Ekle”. The dimension is the one Ölçülendirme draws for the same picks:
+/// the tool writes it with this command. The points given as places on
+/// Hizalı, Doğrusal, Koordinat, Semt and Eğim are bound: they follow their
+/// objects (docs/adr/0249).
+///
+/// Refusals (`CommandError.code`), checked in this order: `not_finite`
+/// (`at`, `offset`, then the measure's numbers in their order),
+/// `invalid_height`, `invalid_uid` (each place's and edge's object, in
+/// order), `invalid_offset` (an `offset` for Yarıçap, Çap or Koordinat,
+/// which take none), `invalid_revision`, `revision_conflict` (status
+/// `conflict`), `entity_not_found`, `no_such_place`, `not_measurable` (the
+/// object has no edge of the kind the measure takes), `missing_elevation`
+/// (Eğim's point with no elevation given or kept), `unknown_style`,
+/// `no_dimension` (no dimension forms there: the points meet, the edges are
+/// parallel, the arc spans nothing), then the layer's and the look's as
+/// `cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,
+/// `layer_locked`, `invalid_line_weight`); a hidden layer gives a
+/// `layer_hidden` warning; on the desktop also `slots_exhausted`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DimensionsCreate {
+    pub measure: DimensionMeasure,
+    /// Where the dimension goes: its line, its arc or its leader through it.
+    pub at: Vec2,
+    /// Instead of `at`'s, the distance typed: Hizalı's, Semt's and Eğim's
+    /// signed (left of a→b positive), Doğrusal's along its direction's
+    /// normal, Açı's arc radius (its sign aside), Yay uzunluğu's from the arc
+    /// (out positive), Kırıklı yarıçap's jog along the radius from the
+    /// centre shown. Yarıçap, Çap and Koordinat take none: `at` places them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub offset: Option<f64>,
+    /// The layer the dimension goes to.
+    pub layer_id: String,
+    /// The project's dimension style by its name (docs/adr/0183); absent or
+    /// “Standart”: Standart.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dimension_style: Option<String>,
+    /// The value's height, metres; absent: the style's at the project's
+    /// scale, Standart's the project's Ölçü height (docs/adr/0205).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub height: Option<f64>,
+    /// The value drawn over the drawing's background (Zemin, docs/adr/0147).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mask: Option<bool>,
+    /// The dimension's colour, weight, attributes, label and symbol.
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub look: NewLook,
+    /// The document revision the input was prepared against, as decimal
+    /// text. When given and the document is no longer at it, nothing is
+    /// written and the answer is `conflict`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
 
 /// Binds a dimension's points to places on objects again.
 pub const CAD_DIMENSIONS_REASSOCIATE: &str = "cad.dimensions.reassociate";
@@ -164,5 +349,45 @@ mod tests {
         assert_eq!(input.points[0].point, DimensionPoint::A);
         assert_eq!(input.points[1].to, None);
         assert_eq!(input.points[1].point.name(), "b");
+    }
+
+    #[test]
+    fn a_measure_reads_its_points_and_edges_by_their_kind() {
+        let input: DimensionsCreate = serde_json::from_value(json!({
+            "measure": {
+                "kind": "aligned",
+                "a": { "kind": "place", "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "place": { "kind": "start" } },
+                "b": { "kind": "at", "at": { "x": 10.0, "y": 0.0 } }
+            },
+            "at": { "x": 5.0, "y": 2.0 }, "layerId": "olcu", "color": "#E5484D"
+        }))
+        .expect("reads");
+        assert!(matches!(
+            input.measure,
+            DimensionMeasure::Aligned {
+                a: MeasuredPoint::Place {
+                    place: SubPlace::Start,
+                    ..
+                },
+                ..
+            }
+        ));
+        assert_eq!(input.look.color.as_deref(), Some("#E5484D"));
+        let arc: DimensionsCreate = serde_json::from_value(json!({
+            "measure": { "kind": "arcLength", "of": { "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "near": { "x": 1.0, "y": 1.0 } },
+                "between": [{ "x": 1.0, "y": 0.0 }, { "x": 0.0, "y": 1.0 }] },
+            "at": { "x": 2.0, "y": 2.0 }, "layerId": "olcu"
+        }))
+        .expect("reads");
+        assert!(matches!(
+            arc.measure,
+            DimensionMeasure::ArcLength {
+                between: Some(_),
+                ..
+            }
+        ));
+        let jog = json!({ "kind": "jogged", "of": { "uid": "u", "near": { "x": 0.0, "y": 0.0 } },
+            "shownCentre": { "x": 1.0, "y": 1.0 }, "on": { "x": 2.0, "y": 2.0 } });
+        assert!(serde_json::from_value::<DimensionMeasure>(jog).is_ok());
     }
 }

@@ -75,6 +75,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesSetProperties,
 ) -> CommandResult<EntitiesPropertiesSet> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_ENTITIES_SET,
+        kentos_contracts::CAD_ENTITIES_SET_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesSetProperties,
+) -> CommandResult<EntitiesPropertiesSet> {
     let checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -207,7 +222,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         && input.attachments.is_none()
         && !input.unlink
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NOTHING_TO_SET,
             "Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin."
                 .into(),
@@ -215,7 +230,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         )));
     }
     if attrs.is_some_and(|a| a.keys().any(|k| is_blank(k))) {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_ATTRIBUTE,
             "Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin."
                 .into(),
@@ -224,7 +239,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     }
     checks::line_weight(input.line_weight.flatten(), "lineWeight")?;
     if let Some(problem) = input.attachments.as_deref().and_then(attachments_problem) {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_ATTACHMENTS,
             format!(
                 "Ekler: {problem}. Her eke bir ad ve tek bir kaynak (gömülü fotoğraf, dosya yolu ya da http/https adresi) verin."
@@ -239,7 +254,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         if let Some(asset) = &a.asset
             && !crate::edit::has_picture(doc, asset)
         {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::UNKNOWN_ASSET,
                 format!(
                     "“{asset}” kimlikli fotoğraf projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin."
@@ -254,7 +269,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         None => None,
         Some(id) => {
             let Some(node) = layers.get(id) else {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::LAYER_NOT_FOUND,
                     format!(
                         "“{id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."
@@ -263,7 +278,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
                 )));
             };
             if node.kind != LayerNodeType::Layer {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::NOT_A_LAYER,
                     format!(
                         "“{}” bir katman grubu; nesneler yalnız bir katmana taşınır. Grubun içinden bir katman seçin.",
@@ -282,7 +297,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             let name = layers
                 .get(layer)
                 .map_or(layer.as_str(), |n| n.name.as_str());
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::LAYER_LOCKED,
                 format!(
                     "“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
@@ -294,7 +309,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     if let Some((id, name)) = target
         && layers.is_locked(id)
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::LAYER_LOCKED,
             format!(
                 "“{name}” katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin."

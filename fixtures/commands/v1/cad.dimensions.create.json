@@ -1,0 +1,3694 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.dimensions.create",
+  "commandVersion": 1,
+  "title": "Ölçü ekle",
+  "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçü komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500,
+      "dimensionStyles": [
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+          "name": "Mimari",
+          "height": 3.5
+        }
+      ]
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "olcu",
+        "name": "Ölçü",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "alt",
+            "name": "Alt",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 10,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487002,
+          "y": 4420020
+        },
+        "z": 50
+      },
+      {
+        "kind": "line",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487012,
+          "y": 4420000
+        },
+        "za": 100,
+        "zb": 103
+      },
+      {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487020,
+            "y": 4420000
+          },
+          {
+            "x": 487028,
+            "y": 4420000
+          },
+          {
+            "x": 487028,
+            "y": 4420006
+          },
+          {
+            "x": 487020,
+            "y": 4420006
+          }
+        ]
+      },
+      {
+        "kind": "arc",
+        "id": 13,
+        "layerId": "yapi",
+        "attrs": {},
+        "c": {
+          "x": 487030,
+          "y": 4420030
+        },
+        "r": 5,
+        "a0": 0,
+        "a1": 1.5707963267948966
+      },
+      {
+        "kind": "circle",
+        "id": 14,
+        "layerId": "yapi",
+        "attrs": {},
+        "c": {
+          "x": 487050,
+          "y": 4420030
+        },
+        "r": 5
+      },
+      {
+        "kind": "line",
+        "id": 15,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "line",
+        "id": 16,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487005,
+          "y": 4420036
+        },
+        "b": {
+          "x": 487005,
+          "y": 4420048
+        }
+      },
+      {
+        "kind": "line",
+        "id": 17,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420050
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420050
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Hizalı: çizginin iki ucu yerleriyle, onlara bağlı; adım “Ekle”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "start"
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "end"
+                }
+              }
+            },
+            "at": {
+              "x": 487006,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "start"
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "end"
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hizalı: koordinatlarla, serbest; uzaklık yazılmış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487040,
+              "y": 4420040
+            },
+            "layerId": "olcu",
+            "offset": -2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487026,
+                  "y": 4420018
+                },
+                "offset": -2,
+                "height": 1.25
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrusal: imleç noktaların üstünde, ΔY; alanın köşelerine bağlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "linear",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 2
+                }
+              }
+            },
+            "at": {
+              "x": 487024,
+              "y": 4420010
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487028,
+                  "y": 4420006
+                },
+                "offset": 10,
+                "height": 1.25,
+                "style": "linear",
+                "angle": 0,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrusal: doğrultu verilmiş (90, ΔX)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "linear",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420000
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487028,
+                  "y": 4420006
+                }
+              },
+              "angle": 90
+            },
+            "at": {
+              "x": 487032,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487028,
+                  "y": 4420006
+                },
+                "offset": -12,
+                "height": 1.25,
+                "style": "linear",
+                "angle": 90
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat: noktanın yeri, eksen imlece göre (Y); noktaya bağlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "ordinate",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:10",
+                "place": {
+                  "kind": "node",
+                  "part": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487003,
+              "y": 4420026
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487002,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487003,
+                  "y": 4420026
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "ordinate",
+                "angle": 0,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:10",
+                    "place": {
+                      "kind": "node",
+                      "part": 0
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Semt: iki nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "azimuth",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487000,
+                  "y": 4420060
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487003,
+                  "y": 4420064
+                }
+              }
+            },
+            "at": {
+              "x": 487001,
+              "y": 4420063
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487003,
+                  "y": 4420064
+                },
+                "offset": 1,
+                "height": 1.25,
+                "style": "azimuth"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğim: kotlar yerlerin köşelerinden",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "slope",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "start"
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "end"
+                }
+              }
+            },
+            "at": {
+              "x": 487006,
+              "y": 4419998
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "offset": -2,
+                "height": 1.25,
+                "style": "slope",
+                "za": 100,
+                "zb": 103,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "start"
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "end"
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğim: kotlar verilmiş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "slope",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487000,
+                  "y": 4420070
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487008,
+                  "y": 4420070
+                }
+              },
+              "za": 10,
+              "zb": 12.5
+            },
+            "at": {
+              "x": 487004,
+              "y": 4420071
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420070
+                },
+                "b": {
+                  "x": 487008,
+                  "y": 4420070
+                },
+                "offset": 1,
+                "height": 1.25,
+                "style": "slope",
+                "za": 10,
+                "zb": 12.5
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açı: iki düz kenar, kollar tıklanan yere kadar, yay imlecin bölgesinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "angle",
+              "first": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487009,
+                  "y": 4420040
+                }
+              },
+              "second": {
+                "uid": "$uidOf:16",
+                "near": {
+                  "x": 487005,
+                  "y": 4420047
+                }
+              }
+            },
+            "at": {
+              "x": 487008,
+              "y": 4420044
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487009,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487005,
+                  "y": 4420047
+                },
+                "offset": 5,
+                "height": 1.25,
+                "style": "angular",
+                "c": {
+                  "x": 487005,
+                  "y": 4420040
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açı: köşeden, birinci koldan saat yönünün tersine",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "angleVertex",
+              "c": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420040
+                }
+              },
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487044,
+                  "y": 4420040
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420043
+                }
+              }
+            },
+            "at": {
+              "x": 487043,
+              "y": 4420044
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487044,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487040,
+                  "y": 4420043
+                },
+                "offset": 5,
+                "height": 1.25,
+                "style": "angular",
+                "c": {
+                  "x": 487040,
+                  "y": 4420040
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açı: köşeden, imleç öbür yanda: kollar yer değiştirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "angleVertex",
+              "c": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420040
+                }
+              },
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487044,
+                  "y": 4420040
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420043
+                }
+              }
+            },
+            "at": {
+              "x": 487037,
+              "y": 4420036
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487040,
+                  "y": 4420043
+                },
+                "b": {
+                  "x": 487044,
+                  "y": 4420040
+                },
+                "offset": 5,
+                "height": 1.25,
+                "style": "angular",
+                "c": {
+                  "x": 487040,
+                  "y": 4420040
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açı: yayın kendi açısı (Yaydan)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "angleArc",
+              "of": {
+                "uid": "$uidOf:13",
+                "near": {
+                  "x": 487034,
+                  "y": 4420033
+                }
+              }
+            },
+            "at": {
+              "x": 487036,
+              "y": 4420038
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487035,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420035
+                },
+                "offset": 10,
+                "height": 1.25,
+                "style": "angular",
+                "c": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yarıçap: daire, imlecin yönünde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "radius",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487056,
+              "y": 4420038
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487050,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487053,
+                  "y": 4420034
+                },
+                "offset": 5,
+                "height": 1.25,
+                "style": "radius"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çap: yayın dairesi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "diameter",
+              "of": {
+                "uid": "$uidOf:13",
+                "near": {
+                  "x": 487034,
+                  "y": 4420033
+                }
+              }
+            },
+            "at": {
+              "x": 487024,
+              "y": 4420038
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487027,
+                  "y": 4420034
+                },
+                "offset": 5,
+                "height": 1.25,
+                "style": "diameter"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yay uzunluğu: bütün yay, imlecin uzaklığında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "arcLength",
+              "of": {
+                "uid": "$uidOf:13",
+                "near": {
+                  "x": 487034,
+                  "y": 4420033
+                }
+              }
+            },
+            "at": {
+              "x": 487036,
+              "y": 4420038
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487035,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420035
+                },
+                "offset": 5,
+                "height": 1.25,
+                "style": "arcLength",
+                "c": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yay uzunluğu: Kısmi, iki nokta arası, uzaklık yazılmış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "arcLength",
+              "of": {
+                "uid": "$uidOf:13",
+                "near": {
+                  "x": 487034,
+                  "y": 4420033
+                }
+              },
+              "between": [
+                {
+                  "x": 487038,
+                  "y": 4420030
+                },
+                {
+                  "x": 487032,
+                  "y": 4420032
+                }
+              ]
+            },
+            "at": {
+              "x": 487036,
+              "y": 4420038
+            },
+            "layerId": "olcu",
+            "offset": 2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487035,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487033.53553390596,
+                  "y": 4420033.535533906
+                },
+                "offset": 2,
+                "height": 1.25,
+                "style": "arcLength",
+                "c": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kırıklı yarıçap: gösterilen merkezden, kırığı imleçte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "jogged",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              },
+              "shownCentre": {
+                "x": 487035,
+                "y": 4420032
+              },
+              "on": {
+                "x": 487060,
+                "y": 4420030
+              }
+            },
+            "at": {
+              "x": 487045,
+              "y": 4420033
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487050,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487055,
+                  "y": 4420030
+                },
+                "offset": 10,
+                "height": 1.25,
+                "style": "jogged",
+                "c": {
+                  "x": 487035,
+                  "y": 4420032
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü stiliyle (adı büyük küçük harf gözetmez): görünüşü ve yüksekliği stilin",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "dimensionStyle": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487026,
+                  "y": 4420018
+                },
+                "offset": 6,
+                "height": 1.75,
+                "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Standart adıyla: Standart'ın görünüşü ve projenin Ölçü yüksekliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "dimensionStyle": "Standart"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487026,
+                  "y": 4420018
+                },
+                "offset": 6,
+                "height": 1.25
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zemin, renk ve kalınlık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "mask": true,
+            "color": "#E5484D",
+            "lineWeight": 0.35
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "color": "#E5484D",
+                "lineWeight": 0.35,
+                "a": {
+                  "x": 487020,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487026,
+                  "y": 4420018
+                },
+                "offset": 6,
+                "height": 1.25,
+                "mask": true
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı yüksekliği verilmiş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "height": 2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487026,
+                  "y": 4420018
+                },
+                "offset": 6,
+                "height": 2
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana: layer_hidden uyarısıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "gizli"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "gizli",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487026,
+                  "y": 4420018
+                },
+                "offset": 6,
+                "height": 1.25
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: ölçü yazılacağı gibi, id 0; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "start"
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "end"
+                }
+              }
+            },
+            "at": {
+              "x": 487006,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "olcu",
+                  "attrs": {},
+                  "a": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "b": {
+                    "x": 487012,
+                    "y": 4420000
+                  },
+                  "offset": 3,
+                  "height": 1.25,
+                  "refs": {
+                    "a": {
+                      "uid": "$uidOf:11",
+                      "place": {
+                        "kind": "start"
+                      }
+                    },
+                    "b": {
+                      "uid": "$uidOf:11",
+                      "place": {
+                        "kind": "end"
+                      }
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeri sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu"
+          },
+          "nonFinite": {
+            "at.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Ölçünün yerinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "at.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazılan uzaklık sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "offset": 1
+          },
+          "nonFinite": {
+            "offset": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Uzaklık sonlu bir sayı değil (NaN ya da sonsuz). Uzaklığı metre olarak sonlu bir sayıyla verin.",
+              "path": "offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçülen nokta sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu"
+          },
+          "nonFinite": {
+            "measure.b.at.y": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Ölçülen noktanın kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "measure.b.at.y"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultu sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "linear",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487008,
+                  "y": 4420006
+                }
+              },
+              "angle": 0
+            },
+            "at": {
+              "x": 487004,
+              "y": 4420009
+            },
+            "layerId": "olcu"
+          },
+          "nonFinite": {
+            "measure.angle": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Ölçünün doğrultusu sonlu bir sayı değil (NaN ya da sonsuz). Açıyı derece olarak sonlu bir sayıyla verin.",
+              "path": "measure.angle"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenarın tıklandığı yer sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "radius",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487056,
+              "y": 4420038
+            },
+            "layerId": "olcu"
+          },
+          "nonFinite": {
+            "measure.of.near.x": "-Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Tıklanan noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "measure.of.near.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı yüksekliği sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "height": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_height",
+              "message": "Ölçü yazısının yüksekliği sıfırdan büyük, sonlu bir sayı olmalı (metre).",
+              "path": "height"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerin nesne kimliği geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "place",
+                "uid": "Yapı-01",
+                "place": {
+                  "kind": "start"
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“Yapı-01” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "measure.a.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenarın nesne kimliği geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "radius",
+              "of": {
+                "uid": "Yapı-01",
+                "near": {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“Yapı-01” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "measure.of.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yarıçap uzaklık almaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "radius",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487056,
+              "y": 4420038
+            },
+            "layerId": "olcu",
+            "offset": 2
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_offset",
+              "message": "Yarıçap, çap ve koordinat ölçüsü uzaklık almaz; yerini at verir. offset'i kaldırın.",
+              "path": "offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenarın nesnesi çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "radius",
+              "of": {
+                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                "near": {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "measure.of.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerin nesnesi çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                "place": {
+                  "kind": "end"
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "measure.b.uid"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alanın böyle bir köşesi yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 9
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_such_place",
+              "message": "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.",
+              "path": "measure.b.place"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizginin yarıçapı ölçülmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "radius",
+              "of": {
+                "uid": "$uidOf:11",
+                "near": {
+                  "x": 487006,
+                  "y": 4420000
+                }
+              }
+            },
+            "at": {
+              "x": 487006,
+              "y": 4420005
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_measurable",
+              "message": "Nesne daire değil: daireden, yaydan ya da çoklu çizginin yay parçasından ölçülür.",
+              "path": "measure.of"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tam dairenin yay uzunluğu ölçülmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "arcLength",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487060,
+              "y": 4420030
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_measurable",
+              "message": "Nesnenin uçları olan yayı yok: yaydan ya da çoklu çizginin ya da alanın yaylı kenarından ölçülür; tam daire için Yarıçap ya da Çap'ı kullanın.",
+              "path": "measure.of"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dairenin düz kenarı yok: iki kenar arası açı ölçülmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "angle",
+              "first": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              },
+              "second": {
+                "uid": "$uidOf:16",
+                "near": {
+                  "x": 487005,
+                  "y": 4420047
+                }
+              }
+            },
+            "at": {
+              "x": 487008,
+              "y": 4420044
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_measurable",
+              "message": "Nesnenin düz kenarı yok: açı iki düz kenar arasında ölçülür; yaydan ölçmek için angleArc, köşe noktasından angleVertex verin.",
+              "path": "measure.first"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğim: kot yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "slope",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487000,
+                  "y": 4420070
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487008,
+                  "y": 4420070
+                }
+              },
+              "zb": 2
+            },
+            "at": {
+              "x": 487004,
+              "y": 4420071
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "missing_elevation",
+              "message": "Eğim için noktanın kotu yok: kotu metre olarak verin ya da noktayı kotlu bir köşeye bağlayın.",
+              "path": "measure.za"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bilinmeyen ölçü stili",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "dimensionStyle": "Yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_style",
+              "message": "“Yok” adlı ölçü stili yok. Projenin ölçü stillerinden birinin adını verin ya da alanı kaldırın (Standart).",
+              "path": "dimensionStyle"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noktalar aynı yerde: ölçü oluşmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              }
+            },
+            "at": {
+              "x": 487008,
+              "y": 4420008
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_dimension",
+              "message": "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor ya da yay yarıçapı sıfır.",
+              "path": "at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel kenarlar arasında açı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "angle",
+              "first": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487009,
+                  "y": 4420040
+                }
+              },
+              "second": {
+                "uid": "$uidOf:17",
+                "near": {
+                  "x": 487009,
+                  "y": 4420050
+                }
+              }
+            },
+            "at": {
+              "x": 487008,
+              "y": 4420044
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_dimension",
+              "message": "Kenarlar paralel; aralarında açı yok.",
+              "path": "measure.second"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kısmi'nin iki noktası aynı yerde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "arcLength",
+              "of": {
+                "uid": "$uidOf:13",
+                "near": {
+                  "x": 487034,
+                  "y": 4420033
+                }
+              },
+              "between": [
+                {
+                  "x": 487032,
+                  "y": 4420032
+                },
+                {
+                  "x": 487034,
+                  "y": 4420034
+                }
+              ]
+            },
+            "at": {
+              "x": 487036,
+              "y": 4420038
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_dimension",
+              "message": "Bu yerde ölçü oluşmuyor; ölçü yayı merkeze ulaşıyor ya da iki nokta aynı yerde.",
+              "path": "at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katman yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup katman değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "grup"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmana yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "kilitli"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalınlık aralıkta değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "lineWeight": 200
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "radius",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487056,
+              "y": 4420038
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487020,
+                  "y": 4420010
+                }
+              },
+              "b": {
+                "kind": "at",
+                "at": {
+                  "x": 487026,
+                  "y": 4420018
+                }
+              }
+            },
+            "at": {
+              "x": 487020,
+              "y": 4420020
+            },
+            "layerId": "olcu",
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

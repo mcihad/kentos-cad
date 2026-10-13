@@ -61,6 +61,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: PolylineCreate,
 ) -> CommandResult<PolylineCreated> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_POLYLINE_CREATE,
+        kentos_contracts::CAD_POLYLINE_CREATE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: PolylineCreate,
+) -> CommandResult<PolylineCreated> {
     let warnings = match check(cx.doc, &input) {
         Ok(warnings) => warnings,
         Err(stop) => return stop.into(),
@@ -70,7 +85,7 @@ pub fn execute(
             output: PolylineCreated { uid, id, revision },
             warnings,
         },
-        Err(error) => CommandResult::Failed { error },
+        Err(stop) => stop.into(),
     }
 }
 
@@ -78,7 +93,7 @@ pub fn execute(
 fn check(doc: &Document, input: &PolylineCreate) -> Result<Vec<CommandWarning>, Stop> {
     let n = input.pts.len();
     if n < MIN_POINTS {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::TOO_FEW_POINTS,
             format!(
                 "Çoklu çizginin en az 2 noktası olmalı; {n} nokta verildi. Eksik noktaları ekleyin."
@@ -100,7 +115,7 @@ fn check(doc: &Document, input: &PolylineCreate) -> Result<Vec<CommandWarning>, 
     if let Some(bulges) = &input.bulges {
         let edges = n - 1;
         if bulges.len() != edges {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::BULGE_COUNT,
                 format!(
                     "Yay değerleri kenar sayısı kadar olmalı, her kenara bir değer: {n} nokta, {edges} kenar, {} yay değeri verildi. Eksik ya da fazla değerleri düzeltin.",
@@ -111,7 +126,7 @@ fn check(doc: &Document, input: &PolylineCreate) -> Result<Vec<CommandWarning>, 
         }
         for (i, b) in bulges.iter().enumerate() {
             if !b.is_finite() {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::NOT_FINITE,
                     format!(
                         "{}. kenarın yay değeri sonlu bir sayı değil (NaN ya da sonsuz). Düz kenar için 0, yay için tan(açı/4) verin.",

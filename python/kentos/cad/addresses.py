@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     AddressLocator,
     AddressesDefine,
@@ -53,6 +54,8 @@ class _AddressesDefine(LocalCommand[AddressesDefine, AddressesDefined, Addresses
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         locator: AddressLocator | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> AddressesDefined:
         """Adres verisi: Projenin adres verilerine bir tanım yazar (set: aynı kimliklinin
         yerini alır, yoksa sona eklenir) ya da birini siler (remove). Tanım, adres
@@ -73,6 +76,10 @@ class _AddressesDefine(LocalCommand[AddressesDefine, AddressesDefined, Addresses
             expected_revision: The document revision the input was prepared against, as decimal text.
             id:
             locator:
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             AddressesDefined
@@ -86,7 +93,7 @@ class _AddressesDefine(LocalCommand[AddressesDefine, AddressesDefined, Addresses
             expected_revision=expected_revision,
             id=id,
             locator=locator,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -127,6 +134,31 @@ class _AddressesDefine(LocalCommand[AddressesDefine, AddressesDefined, Addresses
             id=id,
             locator=locator,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        operation: AddressesDefineOperation | AddressesDefineOperationName,
+        expected_revision: str | None | Unset = UNSET,
+        id: str | None | Unset = UNSET,
+        locator: AddressLocator | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, AddressesDefine(
+            operation=operation,
+            expected_revision=expected_revision,
+            id=id,
+            locator=locator,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 define = _AddressesDefine()

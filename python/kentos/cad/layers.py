@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     BlendMode,
     BlendModeName,
@@ -103,6 +104,8 @@ class _LayersCompose(LocalCommand[LayersCompose, LayersComposed, LayersComposePl
         expected_revision: str | None | Unset = UNSET,
         mask: LayerMask | None | Unset = UNSET,
         opacity: float | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersComposed:
         """Katman çizimi: Katmanın çizime nasıl katıldığını yazar: saydamlığı (opacity, 0–1),
         karışım kipi (blend: normal, multiply, screen, overlay, darken, lighten, colorDodge,
@@ -125,6 +128,10 @@ class _LayersCompose(LocalCommand[LayersCompose, LayersComposed, LayersComposePl
             expected_revision: The document revision the input was prepared against, as decimal text.
             mask: The mask its labels and markers cut into other layers; absent, none.
             opacity: 0–1; absent, 1 (opaque).
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersComposed
@@ -139,7 +146,7 @@ class _LayersCompose(LocalCommand[LayersCompose, LayersComposed, LayersComposePl
             expected_revision=expected_revision,
             mask=mask,
             opacity=opacity,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -184,6 +191,33 @@ class _LayersCompose(LocalCommand[LayersCompose, LayersComposed, LayersComposePl
             mask=mask,
             opacity=opacity,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        layer: str,
+        blend: BlendMode | BlendModeName | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        mask: LayerMask | None | Unset = UNSET,
+        opacity: float | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersCompose(
+            layer=layer,
+            blend=blend,
+            expected_revision=expected_revision,
+            mask=mask,
+            opacity=opacity,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 compose = _LayersCompose()
@@ -245,6 +279,8 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         parent: str | None | Unset = UNSET,
         renames: Sequence[FieldRename] | None | Unset = UNSET,
         visible: bool | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersEdited:
         """Katman düzenle: Katman ağacını tek geri alma adımıyla değiştirir (operation): add
         yeni katman ya da grup ekler (kind; name verilmezse “Yeni katman”, “Yeni grup”,
@@ -287,6 +323,10 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             parent:
             renames:
             visible:
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersEdited
@@ -313,7 +353,7 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             parent=parent,
             renames=_opt(renames, lambda x: list(x)),
             visible=visible,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -407,6 +447,57 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
             visible=visible,
         ))
 
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        operation: LayerEditOperation | LayerEditOperationName,
+        activate: bool | None | Unset = UNSET,
+        blocks: Sequence[str] | None | Unset = UNSET,
+        color: str | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        fields: Sequence[LayerField] | None | Unset = UNSET,
+        index: int | None | Unset = UNSET,
+        kind: LayerNodeType | LayerNodeTypeName | None | Unset = UNSET,
+        layer: str | None | Unset = UNSET,
+        layers: Sequence[str] | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
+        line_weight: float | None | Unset = UNSET,
+        locked: bool | None | Unset = UNSET,
+        name: str | None | Unset = UNSET,
+        parent: str | None | Unset = UNSET,
+        renames: Sequence[FieldRename] | None | Unset = UNSET,
+        visible: bool | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersEdit(
+            operation=operation,
+            activate=activate,
+            blocks=_opt(blocks, lambda x: list(x)),
+            color=color,
+            expected_revision=expected_revision,
+            fields=_opt(fields, lambda x: list(x)),
+            index=index,
+            kind=kind,
+            layer=layer,
+            layers=_opt(layers, lambda x: list(x)),
+            line_type=line_type,
+            line_weight=line_weight,
+            locked=locked,
+            name=name,
+            parent=parent,
+            renames=_opt(renames, lambda x: list(x)),
+            visible=visible,
+        ), op=op, request_id=request_id, expected=expected)
+
 
 edit = _LayersEdit()
 """Katman düzenle (``cad.layers.edit``)."""
@@ -442,6 +533,8 @@ class _LayersFilter(LocalCommand[LayersFilter, LayersFiltered, LayersFilterPlan]
         layer: str,
         expected_revision: str | None | Unset = UNSET,
         filter: LayerFilter | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersFiltered:
         """Katman süzgeci: Katmanın süzgecini yazar ya da kaldırır (filter verilmezse ya da
         null ise): yalnız süzgeçten geçen nesneler çizilir, seçilir, kenetlenir, Öznitelik
@@ -460,6 +553,10 @@ class _LayersFilter(LocalCommand[LayersFilter, LayersFiltered, LayersFilterPlan]
             layer: The layer's id.
             expected_revision: The document revision the input was prepared against, as decimal text.
             filter: Its new filter; absent or null takes it away.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersFiltered
@@ -472,7 +569,7 @@ class _LayersFilter(LocalCommand[LayersFilter, LayersFiltered, LayersFilterPlan]
             layer=layer,
             expected_revision=expected_revision,
             filter=filter,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -509,6 +606,29 @@ class _LayersFilter(LocalCommand[LayersFilter, LayersFiltered, LayersFilterPlan]
             expected_revision=expected_revision,
             filter=filter,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        layer: str,
+        expected_revision: str | None | Unset = UNSET,
+        filter: LayerFilter | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersFilter(
+            layer=layer,
+            expected_revision=expected_revision,
+            filter=filter,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 filter = _LayersFilter()
@@ -547,6 +667,8 @@ class _LayersInfo(LocalCommand[LayersInfo, LayersInformed, LayersInfoPlan]):
         actions: Sequence[LayerAction] | Unset = UNSET,
         card: InfoCard | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersInformed:
         """Bilgi kartı ve eylemler: Katmanın eylemlerini ve bilgi kartını yazar. Eylem nesnenin
         açtığı adres ya da dosyadır: adı ve hedefi (http, https ya da mailto adresi ya da
@@ -566,6 +688,10 @@ class _LayersInfo(LocalCommand[LayersInfo, LayersInformed, LayersInfoPlan]):
             actions: Its actions, in order; absent or empty: none.
             card: Its information card; absent or null: the default card.
             expected_revision: The document revision the input was prepared against, as decimal text.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersInformed
@@ -579,7 +705,7 @@ class _LayersInfo(LocalCommand[LayersInfo, LayersInformed, LayersInfoPlan]):
             actions=_opt(actions, lambda x: list(x)),
             card=card,
             expected_revision=expected_revision,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -621,6 +747,31 @@ class _LayersInfo(LocalCommand[LayersInfo, LayersInformed, LayersInfoPlan]):
             expected_revision=expected_revision,
         ))
 
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        layer: str,
+        actions: Sequence[LayerAction] | Unset = UNSET,
+        card: InfoCard | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersInfo(
+            layer=layer,
+            actions=_opt(actions, lambda x: list(x)),
+            card=card,
+            expected_revision=expected_revision,
+        ), op=op, request_id=request_id, expected=expected)
+
 
 info = _LayersInfo()
 """Bilgi kartı ve eylemler (``cad.layers.info``)."""
@@ -659,6 +810,8 @@ class _LayersLabels(LocalCommand[LayersLabels, LayersLabelled, LayersLabelsPlan]
         expected_revision: str | None | Unset = UNSET,
         label: LabelStyle | None | Unset = UNSET,
         labels: LayerLabels | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersLabelled:
         """Etiketler: Katmanın etiketlemesini yazar: label tek etiketin stilidir (metin şablonu
         ya da ifadesi, boy, renk, hale, zemin, gölge, çağrı çizgisi; noktada çevresinde ya
@@ -680,6 +833,10 @@ class _LayersLabels(LocalCommand[LayersLabels, LayersLabelled, LayersLabelsPlan]
             expected_revision: The document revision the input was prepared against, as decimal text.
             label: Its single label's style; null: the kinds' default labels. Absent: unchanged.
             labels: How it is labelled; null: a single label. Absent: unchanged.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersLabelled
@@ -693,7 +850,7 @@ class _LayersLabels(LocalCommand[LayersLabels, LayersLabelled, LayersLabelsPlan]
             expected_revision=expected_revision,
             label=label,
             labels=labels,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -735,6 +892,31 @@ class _LayersLabels(LocalCommand[LayersLabels, LayersLabelled, LayersLabelsPlan]
             labels=labels,
         ))
 
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        layer: str,
+        expected_revision: str | None | Unset = UNSET,
+        label: LabelStyle | None | Unset = UNSET,
+        labels: LayerLabels | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersLabels(
+            layer=layer,
+            expected_revision=expected_revision,
+            label=label,
+            labels=labels,
+        ), op=op, request_id=request_id, expected=expected)
+
 
 labels = _LayersLabels()
 """Etiketler (``cad.layers.labels``)."""
@@ -774,6 +956,8 @@ class _LayersRenderer(LocalCommand[LayersRenderer, LayersRendered, LayersRendere
         layer: str,
         expected_revision: str | None | Unset = UNSET,
         renderer: Any | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersRendered:
         """Katman stili: Katmanın işleyicisini yazar ya da kaldırır (renderer verilmezse ya da
         null ise katmanın basit görünüşü): single (tek sembol), categorized, graduated,
@@ -796,6 +980,10 @@ class _LayersRenderer(LocalCommand[LayersRenderer, LayersRendered, LayersRendere
             layer: The layer's id.
             expected_revision: The document revision the input was prepared against, as decimal text.
             renderer: Its new renderer; absent or null takes it away.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersRendered
@@ -808,7 +996,7 @@ class _LayersRenderer(LocalCommand[LayersRenderer, LayersRendered, LayersRendere
             layer=layer,
             expected_revision=expected_revision,
             renderer=renderer,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -845,6 +1033,29 @@ class _LayersRenderer(LocalCommand[LayersRenderer, LayersRendered, LayersRendere
             expected_revision=expected_revision,
             renderer=renderer,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        layer: str,
+        expected_revision: str | None | Unset = UNSET,
+        renderer: Any | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersRenderer(
+            layer=layer,
+            expected_revision=expected_revision,
+            renderer=renderer,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 renderer = _LayersRenderer()
@@ -892,6 +1103,8 @@ class _LayersService(LocalCommand[LayersService, LayersServiced, LayersServicePl
         name: str | None | Unset = UNSET,
         parent: str | None | Unset = UNSET,
         service: ServiceLayer | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersServiced:
         """Servis katmanı: Katman ağacına bir harita servisinden çizilen katman ekler (add: XYZ
         ve TMS, WMTS, WMS, OGC API Tiles, ArcGIS REST, Google'ın 2B karoları, vektör
@@ -920,6 +1133,10 @@ class _LayersService(LocalCommand[LayersService, LayersServiced, LayersServicePl
             name: `add`, `addFeed`: the new layer's name; `update`: a new name.
             parent:
             service:
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersServiced
@@ -939,7 +1156,7 @@ class _LayersService(LocalCommand[LayersService, LayersServiced, LayersServicePl
             name=name,
             parent=parent,
             service=service,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -1005,6 +1222,43 @@ class _LayersService(LocalCommand[LayersService, LayersServiced, LayersServicePl
             service=service,
         ))
 
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        operation: LayerServiceOperation | LayerServiceOperationName,
+        connections: Sequence[ServiceConnection] | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        feed: FeatureFeed | None | Unset = UNSET,
+        fields: Sequence[LayerField] | None | Unset = UNSET,
+        index: int | None | Unset = UNSET,
+        layer: str | None | Unset = UNSET,
+        name: str | None | Unset = UNSET,
+        parent: str | None | Unset = UNSET,
+        service: ServiceLayer | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersService(
+            operation=operation,
+            connections=_opt(connections, lambda x: list(x)),
+            expected_revision=expected_revision,
+            feed=feed,
+            fields=_opt(fields, lambda x: list(x)),
+            index=index,
+            layer=layer,
+            name=name,
+            parent=parent,
+            service=service,
+        ), op=op, request_id=request_id, expected=expected)
+
 
 service = _LayersService()
 """Servis katmanı (``cad.layers.service``)."""
@@ -1041,6 +1295,8 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
         layers: Sequence[str] | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         value: bool | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersChanged:
         """Katman ağacı: Katmanlar panelinin göz, kilit, ad ve etkin katman değişikliklerini
         yapar (operation): rename (layer, name), visible ve locked (layer, value; grubun
@@ -1060,6 +1316,10 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
             layers:
             name:
             value:
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersChanged
@@ -1075,7 +1335,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
             layers=_opt(layers, lambda x: list(x)),
             name=name,
             value=value,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -1125,6 +1385,35 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
             value=value,
         ))
 
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        operation: LayerSetOperation | LayerSetOperationName,
+        expected_revision: str | None | Unset = UNSET,
+        layer: str | None | Unset = UNSET,
+        layers: Sequence[str] | None | Unset = UNSET,
+        name: str | None | Unset = UNSET,
+        value: bool | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersSet(
+            operation=operation,
+            expected_revision=expected_revision,
+            layer=layer,
+            layers=_opt(layers, lambda x: list(x)),
+            name=name,
+            value=value,
+        ), op=op, request_id=request_id, expected=expected)
+
 
 set = _LayersSet()
 """Katman ağacı (``cad.layers.set``)."""
@@ -1164,6 +1453,8 @@ class _LayersStates(LocalCommand[LayersStates, LayerStatesDone, LayerStatesDone]
         name: str | None | Unset = UNSET,
         state: str | None | Unset = UNSET,
         styles: bool | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayerStatesDone:
         """Katman durumları: Projenin adlı katman durumlarını yönetir (operation): save ağacın
         şimdiki görünürlüğünü, istenirse kilitlerini (locks) ve katmanların stillerini
@@ -1185,6 +1476,10 @@ class _LayersStates(LocalCommand[LayersStates, LayerStatesDone, LayerStatesDone]
             name:
             state: The state's id.
             styles:
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayerStatesDone
@@ -1200,7 +1495,7 @@ class _LayersStates(LocalCommand[LayersStates, LayerStatesDone, LayerStatesDone]
             name=name,
             state=state,
             styles=styles,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -1250,6 +1545,35 @@ class _LayersStates(LocalCommand[LayersStates, LayerStatesDone, LayerStatesDone]
             styles=styles,
         ))
 
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        operation: LayerStatesOperation | LayerStatesOperationName,
+        expected_revision: str | None | Unset = UNSET,
+        locks: bool | None | Unset = UNSET,
+        name: str | None | Unset = UNSET,
+        state: str | None | Unset = UNSET,
+        styles: bool | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersStates(
+            operation=operation,
+            expected_revision=expected_revision,
+            locks=locks,
+            name=name,
+            state=state,
+            styles=styles,
+        ), op=op, request_id=request_id, expected=expected)
+
 
 states = _LayersStates()
 """Katman durumları (``cad.layers.states``)."""
@@ -1284,6 +1608,8 @@ class _LayersTime(LocalCommand[LayersTime, LayersTimed, LayersTimePlan]):
         layer: str,
         expected_revision: str | None | Unset = UNSET,
         time: LayerTime | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LayersTimed:
         """Katmanın zamanı: Katmanın zaman ayarını yazar ya da kaldırır (time verilmezse ya da
         null ise): nesnelerin başlangıcı (anlık katmanda anı) ve bitişi hangi
@@ -1301,6 +1627,10 @@ class _LayersTime(LocalCommand[LayersTime, LayersTimed, LayersTimePlan]):
             layer: The layer's id.
             expected_revision: The document revision the input was prepared against, as decimal text.
             time: Its new time setting; absent or null takes it away.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LayersTimed
@@ -1313,7 +1643,7 @@ class _LayersTime(LocalCommand[LayersTime, LayersTimed, LayersTimePlan]):
             layer=layer,
             expected_revision=expected_revision,
             time=time,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -1350,6 +1680,29 @@ class _LayersTime(LocalCommand[LayersTime, LayersTimed, LayersTimePlan]):
             expected_revision=expected_revision,
             time=time,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        layer: str,
+        expected_revision: str | None | Unset = UNSET,
+        time: LayerTime | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LayersTime(
+            layer=layer,
+            expected_revision=expected_revision,
+            time=time,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 time = _LayersTime()

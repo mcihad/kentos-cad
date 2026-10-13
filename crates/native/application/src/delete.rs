@@ -66,6 +66,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesDelete,
 ) -> CommandResult<EntitiesDeleted> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_ENTITIES_DELETE,
+        kentos_contracts::CAD_ENTITIES_DELETE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesDelete,
+) -> CommandResult<EntitiesDeleted> {
     let checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -110,7 +125,7 @@ fn check(doc: &Document, input: &EntitiesDelete) -> Result<Checked, Stop> {
         )
     };
     if removed.is_empty() {
-        return Err(Stop::Failed(checks::error(
+        return Err(Stop::failed(checks::error(
             codes::LAYER_LOCKED,
             message(),
             Some("uids".into()),
