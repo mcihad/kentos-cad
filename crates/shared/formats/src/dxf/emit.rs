@@ -13,8 +13,8 @@ use kentos_contracts::{
     ArcEntity, AttributeDefinition, BlockDefinition, BlockId, Bounds, CircleEntity,
     ConstructionEntity, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern,
     HatchPatternType, InsertEntity, LineEntity, MAX_LINE_SPACING, MAX_LINE_WEIGHT,
-    MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity, PointEntity, RingGeometry,
-    SplineEntity, TableEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
+    MAX_WIDTH_FACTOR, MIN_LINE_SPACING, NurbsEntity, Paragraph, PathEntity, PointEntity,
+    RingGeometry, SplineEntity, TableEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
 };
 
 use super::aci;
@@ -471,6 +471,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
             vec![v(e.c.x - r, e.c.y - r), v(e.c.x + r, e.c.y + r)]
         }
         Entity::Spline(s) => s.pts.clone(),
+        Entity::Nurbs(n) => n.ctrl.clone(),
         Entity::Xline(x) | Entity::Ray(x) => vec![x.p],
         Entity::Text(t) => vec![t.p],
         Entity::Dimension(d) => vec![d.a, d.b],
@@ -1149,7 +1150,21 @@ impl<'l> Emitter<'l> {
                 weights,
                 ctrl,
                 fit,
-            } => self.spline(ctx, *flags, *degree, knots, weights, ctrl, fit, b(), e),
+                tangents,
+                fit_tolerance,
+            } => self.spline(
+                ctx,
+                *flags,
+                *degree,
+                knots,
+                weights,
+                ctrl,
+                fit,
+                *tangents,
+                *fit_tolerance,
+                b(),
+                e,
+            ),
             Kind::Text {
                 p,
                 p2,
@@ -1828,6 +1843,7 @@ impl<'l> Emitter<'l> {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments)]
     fn spline(
         &mut self,
         ctx: &Ctx,
@@ -1837,19 +1853,101 @@ impl<'l> Emitter<'l> {
         weights: &[f64],
         ctrl: &[P3],
         fit: &[P3],
+        tangents: [Option<P3>; 2],
+        fit_tolerance: Option<f64>,
         b: EntityBase,
         e: &Parsed,
     ) {
         // KentOS data: the curve is KentOS's own through the fit points, and whether it is closed.
         let own = e.meta.as_ref().and_then(|m| m.curve);
         let closed = own.unwrap_or(flags & 1 == 1);
-        if fit.len() >= 2 {
+        let fit_pts = |closed: bool| {
             let mut pts: Vec<Vec2> = fit.iter().map(|p| ctx.tf.apply(xy(*p))).collect();
             if closed && pts.len() > 2 && pts.first() == pts.last() {
                 pts.pop();
             }
+            pts
+        };
+        // A control-point curve is kept exactly as a NURBS curve (docs/adr/0259 §4): B-splines are
+        // affine-invariant, so the control points, fit points and tangents mapped by the insert's
+        // transform are the curve; the knots and weights are the file's.
+        if own.is_none() && ctrl.len() >= 2 {
+            let cps: Vec<Vec2> = ctrl.iter().map(|q| ctx.tf.apply(xy(*q))).collect();
+            let w = (flags & 4 != 0 && weights.len() == cps.len()).then(|| weights.to_vec());
+            if let Ok(d) = u32::try_from(degree) {
+                let tangent = |t: Option<P3>| {
+                    t.and_then(|t| {
+                        let d = ctx.tf.linear(xy(t));
+                        let l = (d.x * d.x + d.y * d.y).sqrt();
+                        (l > 0.0).then(|| v(d.x / l, d.y / l))
+                    })
+                };
+                let tangents = [tangent(tangents[0]), tangent(tangents[1])];
+                let n = NurbsEntity {
+                    base: b.clone(),
+                    degree: d,
+                    ctrl: cps.clone(),
+                    knots: knots.to_vec(),
+                    weights: w.clone(),
+                    closed,
+                    periodic: flags & 2 == 2,
+                    fit: (fit.len() >= 2).then(|| fit_pts(false)),
+                    tangents: tangents.iter().any(Option::is_some).then_some(tangents),
+                    fit_tolerance: fit_tolerance
+                        .filter(|t| t.is_finite() && *t >= 0.0)
+                        .map(|t| t * ctx.tf.similarity().map_or(1.0, |s| s.scale)),
+                };
+                if n.problem().is_none() {
+                    return self.push(Entity::Nurbs(n));
+                }
+            }
+            // Numbers no NURBS curve takes (a degree above 11, inconsistent knots): its points.
+            let Ok(p) = usize::try_from(degree) else {
+                return self.skip("Eğri (SPLINE)", "derecesi geçersiz", e.line);
+            };
+            if p > nurbs::MAX_DEGREE {
+                return self.skip(
+                    "Eğri (SPLINE)",
+                    &format!(
+                        "derecesi {p}; en çok {} okunur (AutoCAD en çok 11 yazar)",
+                        nurbs::MAX_DEGREE
+                    ),
+                    e.line,
+                );
+            }
+            if p == 0 || knots.len() != ctrl.len() + p + 1 {
+                return self.skip(
+                    "Eğri (SPLINE)",
+                    "denetim noktası ve düğüm sayıları tutarsız",
+                    e.line,
+                );
+            }
+            let pts = if p == 1 && w.is_none() {
+                cps
+            } else {
+                match nurbs::sample(p, knots, &cps, w.as_deref(), SAMPLE_TOLERANCE) {
+                    Some(pts) => {
+                        self.note(
+                            "Denetim noktalı eğri (SPLINE)",
+                            "NURBS eğrisi olarak alınamadı (derece 11'i aşıyor ya da düğümler kuralına uymuyor); 1 mm içinde çoklu çizgiye çevrildi",
+                            e.line,
+                        );
+                        pts
+                    }
+                    None => {
+                        return self.skip(
+                            "Eğri (SPLINE)",
+                            "eğri hesaplanamadı (düğümler geçersiz)",
+                            e.line,
+                        );
+                    }
+                }
+            };
+            return self.path(Tf::IDENTITY, pts, Vec::new(), closed, None, None, b, e);
+        }
+        if fit.len() >= 2 {
             if own.is_none() {
-                self.note("Eğri (SPLINE)", "geçiş noktalarından KentOS eğrisi (Catmull-Rom) olarak kuruldu; noktalar arasındaki biçim küçük farklar gösterebilir", e.line);
+                self.note("Eğri (SPLINE)", "yalnız geçiş noktaları vardı: KentOS eğrisi (Catmull-Rom) olarak kuruldu; noktalar arasındaki biçim küçük farklar gösterebilir", e.line);
             }
             if ctx.tf.similarity().is_none() {
                 self.note(
@@ -1860,55 +1958,11 @@ impl<'l> Emitter<'l> {
             }
             return self.push(Entity::Spline(SplineEntity {
                 base: b,
-                pts,
+                pts: fit_pts(closed),
                 closed,
             }));
         }
-        let Ok(p) = usize::try_from(degree) else {
-            return self.skip("Eğri (SPLINE)", "derecesi geçersiz", e.line);
-        };
-        if p > nurbs::MAX_DEGREE {
-            return self.skip(
-                "Eğri (SPLINE)",
-                &format!(
-                    "derecesi {p}; en çok {} okunur (AutoCAD en çok 11 yazar)",
-                    nurbs::MAX_DEGREE
-                ),
-                e.line,
-            );
-        }
-        if p == 0 || ctrl.len() < 2 || knots.len() != ctrl.len() + p + 1 {
-            return self.skip(
-                "Eğri (SPLINE)",
-                "denetim noktası ve düğüm sayıları tutarsız",
-                e.line,
-            );
-        }
-        // B-splines keep their shape under affine maps: transform the control points, then sample.
-        let cps: Vec<Vec2> = ctrl.iter().map(|q| ctx.tf.apply(xy(*q))).collect();
-        let w = (flags & 4 != 0 && weights.len() == cps.len()).then_some(weights);
-        let pts = if p == 1 && w.is_none() {
-            cps
-        } else {
-            match nurbs::sample(p, knots, &cps, w, SAMPLE_TOLERANCE) {
-                Some(pts) => {
-                    self.note(
-                        "Denetim noktalı eğri (SPLINE)",
-                        "1 mm içinde çoklu çizgiye çevrildi",
-                        e.line,
-                    );
-                    pts
-                }
-                None => {
-                    return self.skip(
-                        "Eğri (SPLINE)",
-                        "eğri hesaplanamadı (düğümler geçersiz)",
-                        e.line,
-                    );
-                }
-            }
-        };
-        self.path(Tf::IDENTITY, pts, Vec::new(), closed, None, None, b, e);
+        self.skip("Eğri (SPLINE)", "denetim ve geçiş noktası yok", e.line);
     }
 
     #[allow(clippy::too_many_arguments)]

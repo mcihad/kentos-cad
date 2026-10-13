@@ -968,6 +968,32 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 metres("Uzunluk", length_of.unwrap_or(0.0)),
             ]);
         }
+        // A NURBS curve (docs/adr/0259 §6): its degree, control and fit points, whether it is rational
+        // and closed, its length and, closed, the area it encloses.
+        Entity::Nurbs(n) => {
+            geo.extend([
+                Row::figure("Derece", n.degree.to_string()),
+                Row::figure("Denetim noktası", n.ctrl.len().to_string()),
+            ]);
+            if let Some(fit) = &n.fit {
+                geo.push(Row::figure("Geçiş noktası", fit.len().to_string()));
+            }
+            geo.extend([
+                Row::text(
+                    "Ağırlıklı",
+                    if n.weights.is_some() {
+                        "Evet"
+                    } else {
+                        "Hayır"
+                    },
+                ),
+                Row::text("Kapalı", if n.closed { "Evet" } else { "Hayır" }),
+                metres("Uzunluk", length_of.unwrap_or(0.0)),
+            ]);
+            if n.closed {
+                geo.extend(area(kentos_interaction::enclosed(e).unwrap_or(0.0)));
+            }
+        }
         Entity::Dimension(d) => {
             let style = d.style.unwrap_or(DimensionStyle::Aligned);
             geo.push(Row::text(

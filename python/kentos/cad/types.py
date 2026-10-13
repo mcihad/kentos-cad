@@ -1807,6 +1807,7 @@ class Entity(_Union):
     - :class:`ArcEntity` (``kind: arc``)
     - :class:`EllipseEntity` (``kind: ellipse``)
     - :class:`SplineEntity` (``kind: spline``)
+    - :class:`NurbsEntity` (``kind: nurbs``)
     - :class:`XlineEntity` (``kind: xline``)
     - :class:`RayEntity` (``kind: ray``)
     - :class:`TextEntity` (``kind: text``)
@@ -1884,6 +1885,7 @@ class EntityGeometry(_Union):
     - :class:`ArcEntityGeometry` (``kind: arc``)
     - :class:`EllipseEntityGeometry` (``kind: ellipse``)
     - :class:`SplineEntityGeometry` (``kind: spline``)
+    - :class:`NurbsEntityGeometry` (``kind: nurbs``)
     - :class:`XlineEntityGeometry` (``kind: xline``)
     - :class:`RayEntityGeometry` (``kind: ray``)
     - :class:`TextEntityGeometry` (``kind: text``)
@@ -2001,6 +2003,27 @@ class NetworkDirection(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> NetworkDirection:
         return _variant(_NETWORK_DIRECTION, "NetworkDirection", "kind", data).from_json(data)
+
+
+class NurbsBy(_Union):
+    """How the curve is given.
+
+    One of:
+
+    - :class:`ControlNurbsBy` (``kind: control``)
+    - :class:`FitNurbsBy` (``kind: fit``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NurbsBy:
+        return _variant(_NURBS_BY, "NurbsBy", "kind", data).from_json(data)
 
 
 class OffsetBy(_Union):
@@ -10470,6 +10493,248 @@ class NewObject(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NurbsCreate(_Model):
+    """Input of `cad.nurbs.create` v1: one NURBS curve on a named layer,
+    written as one undo step. The curve tools give what was drawn: the
+    control points or the points it passes, the degree, whether it is
+    closed; the command computes the curve (TODOS.md CMD-07: it reads no
+    active layer, colour or view).
+
+    An open curve by control points keeps them as given, with the knots
+    given or clamped and uniform. A closed one wraps its first `degree`
+    control points after the last and takes uniform knots: a periodic
+    curve, as smooth where it closes as anywhere. A curve through points
+    takes chord-length parameters and averaged knots (Piegl and Tiller's
+    global interpolation; a closed one periodic, its knots the parameters,
+    or their midpoints when the degree is even) and passes through every
+    point; the points are kept with it as its fit points.
+
+    Refusals (`CommandError.code`), checked in this order: `not_finite` (a
+    coordinate, weight or knot, at its place), `coincident_points` (two
+    points in a row at one place; a closed curve's last and first too),
+    `invalid_nurbs` (a degree, count or knot vector that makes no curve),
+    `invalid_line_weight`, `invalid_revision`, `revision_conflict` (status
+    `conflict`), `layer_not_found`, `not_a_layer`, `layer_locked`; on the
+    desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
+        by: The curve: by control points or through points.
+        attrs: GIS attributes, text in v1. Absent: none.
+        closed: Kapalı: the curve closes on itself, smoothly. Absent: open.
+        color: Colour override (`EntityBase.color`). Absent: the layer's colour.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+            When given and the document is no longer at it, nothing is written and
+            the answer is `conflict`.
+        label: The text shown beside it (`EntityBase.label`). Absent: none.
+        line_weight: Its own line weight, paper mm (0 to 100; docs/adr/0139). Absent: the layer's. Unit: paper-mm.
+        symbol: Its own symbol, a library item's id (`EntityBase.symbol`; docs/adr/0176). Absent: the layer's style.
+    """
+    layer_id: str
+    by: NurbsBy
+    attrs: dict[str, str] | None | Unset = UNSET
+    closed: bool | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["by"] = self.by.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NurbsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            by=NurbsBy.from_json(data["by"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            closed=data.get("closed", UNSET),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NurbsCreated(_Model):
+    """Output of `cad.nurbs.create` v1: the object written.
+    Attributes:
+        uid: Its persistent id (UUIDv7, docs/adr/0014).
+        id: Its slot in the open document (`Entity.id`). Unit: id.
+        revision: The document's revision after the write, as decimal text.
+    """
+    uid: str
+    id: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["id"] = self.id
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NurbsCreated:
+        return cls(
+            uid=data["uid"],
+            id=data["id"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NurbsEntity(Entity):
+    """Fields every object has. `id` is the object's local id inside a v1 file.
+    v1 keeps no persistent id: it is derived from the file's content when the
+    file is opened (`identity`, docs/adr/0014); the server's is a UUID in
+    PostgreSQL (`feature.id`).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        degree: The polynomial degree, 1 to 11. Unit: count.
+        ctrl: The control points, at least `degree + 1`. Unit: length.
+        knots: The knot vector: `ctrl.len() + degree + 1` numbers, never decreasing;
+            the curve runs over `knots[degree] .. knots[ctrl.len()]`, which is not empty. Unit: 1.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        closed: Its ends meet (AutoCAD's flag 1); the source's word, kept as written.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        fit: The points it was drawn through, kept with it; the control points are the source. Unit: length.
+        fit_tolerance: How far the curve may pass from its fit points, ≥ 0 (AutoCAD's 44). Unit: length.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        periodic: Periodic (AutoCAD's flag 2): kept as written.
+        symbol: Library symbol overriding the layer's style.
+        tangents: The fit points' start and end tangent directions; null where none was given. Unit: 1.
+        weights: Each control point's weight, above 0; absent: all 1 (not rational). Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "nurbs"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    degree: int
+    ctrl: list[Vec2]
+    knots: list[float]
+    attachments: list[Attachment] | Unset = UNSET
+    closed: bool | Unset = UNSET
+    color: str | None | Unset = UNSET
+    fit: list[Vec2] | None | Unset = UNSET
+    fit_tolerance: float | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    periodic: bool | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    tangents: list[Vec2 | None] | None | Unset = UNSET
+    weights: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "nurbs"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["degree"] = self.degree
+        out["ctrl"] = [_vec2_out(e0) for e0 in self.ctrl]
+        out["knots"] = [float(e0) for e0 in self.knots]
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.fit is not UNSET:
+            out["fit"] = None if self.fit is None else [_vec2_out(e0) for e0 in self.fit]
+        if self.fit_tolerance is not UNSET:
+            out["fitTolerance"] = None if self.fit_tolerance is None else float(self.fit_tolerance)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.periodic is not UNSET:
+            out["periodic"] = self.periodic
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.tangents is not UNSET:
+            out["tangents"] = None if self.tangents is None else [None if e0 is None else _vec2_out(e0) for e0 in self.tangents]
+        if self.weights is not UNSET:
+            out["weights"] = None if self.weights is None else [float(e0) for e0 in self.weights]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NurbsEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            degree=data["degree"],
+            ctrl=[Vec2.from_json(e0) for e0 in data["ctrl"]],
+            knots=[float(e0) for e0 in data["knots"]],
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            closed=data.get("closed", UNSET),
+            color=data.get("color", UNSET),
+            fit=UNSET if "fit" not in data else None if data["fit"] is None else [Vec2.from_json(e0) for e0 in data["fit"]],
+            fit_tolerance=UNSET if "fitTolerance" not in data else None if data["fitTolerance"] is None else float(data["fitTolerance"]),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            periodic=data.get("periodic", UNSET),
+            symbol=data.get("symbol", UNSET),
+            tangents=UNSET if "tangents" not in data else None if data["tangents"] is None else [None if e0 is None else Vec2.from_json(e0) for e0 in data["tangents"]],
+            weights=UNSET if "weights" not in data else None if data["weights"] is None else [float(e0) for e0 in data["weights"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NurbsPlan(_Model):
+    """What `cad.nurbs.create` would write (plan mode); nothing is written.
+    Attributes:
+        entity: The curve as it would be stored. Its `id` is 0: the slot is given when it is written.
+        revision: The document revision the plan was made against.
+    """
+    entity: Entity
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entity"] = self.entity.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NurbsPlan:
+        return cls(
+            entity=Entity.from_json(data["entity"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PathEntity(_Model):
     """Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
     Attributes:
@@ -16014,6 +16279,63 @@ class SplineEntityGeometry(EntityGeometry):
 
 
 @dataclass(kw_only=True, slots=True)
+class NurbsEntityGeometry(EntityGeometry):
+    """A general NURBS curve (docs/adr/0259): its source numbers as `NurbsEntity` holds them.
+    Attributes:
+        degree: Unit: count.
+        ctrl: Unit: length.
+        knots: Unit: 1.
+        fit: Unit: length.
+        fit_tolerance: Unit: length.
+        tangents: Unit: 1.
+        weights: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "nurbs"
+    degree: int
+    ctrl: list[Vec2]
+    knots: list[float]
+    closed: bool | Unset = UNSET
+    fit: list[Vec2] | None | Unset = UNSET
+    fit_tolerance: float | None | Unset = UNSET
+    periodic: bool | Unset = UNSET
+    tangents: list[Vec2 | None] | None | Unset = UNSET
+    weights: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "nurbs"}
+        out["degree"] = self.degree
+        out["ctrl"] = [_vec2_out(e0) for e0 in self.ctrl]
+        out["knots"] = [float(e0) for e0 in self.knots]
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.fit is not UNSET:
+            out["fit"] = None if self.fit is None else [_vec2_out(e0) for e0 in self.fit]
+        if self.fit_tolerance is not UNSET:
+            out["fitTolerance"] = None if self.fit_tolerance is None else float(self.fit_tolerance)
+        if self.periodic is not UNSET:
+            out["periodic"] = self.periodic
+        if self.tangents is not UNSET:
+            out["tangents"] = None if self.tangents is None else [None if e0 is None else _vec2_out(e0) for e0 in self.tangents]
+        if self.weights is not UNSET:
+            out["weights"] = None if self.weights is None else [float(e0) for e0 in self.weights]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NurbsEntityGeometry:
+        return cls(
+            degree=data["degree"],
+            ctrl=[Vec2.from_json(e0) for e0 in data["ctrl"]],
+            knots=[float(e0) for e0 in data["knots"]],
+            closed=data.get("closed", UNSET),
+            fit=UNSET if "fit" not in data else None if data["fit"] is None else [Vec2.from_json(e0) for e0 in data["fit"]],
+            fit_tolerance=UNSET if "fitTolerance" not in data else None if data["fitTolerance"] is None else float(data["fitTolerance"]),
+            periodic=data.get("periodic", UNSET),
+            tangents=UNSET if "tangents" not in data else None if data["tangents"] is None else [None if e0 is None else Vec2.from_json(e0) for e0 in data["tangents"]],
+            weights=UNSET if "weights" not in data else None if data["weights"] is None else [float(e0) for e0 in data["weights"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class XlineEntityGeometry(EntityGeometry):
     """A construction line through `p` along the unit direction `dir`.
     Attributes:
@@ -16844,6 +17166,74 @@ class FieldNetworkDirection(NetworkDirection):
 
 
 @dataclass(kw_only=True, slots=True)
+class ControlNurbsBy(NurbsBy):
+    """Denetim noktalı: the control points, the curve pulled towards them,
+    passing through the first and the last of an open one.
+    Attributes:
+        degree: The polynomial degree, 1 to 11; at least one less than the
+            control points of an open curve. Unit: count.
+        ctrl: The control points, in order. Unit: length.
+        knots: The knot vector of an open curve, `ctrl.len() + degree + 1`
+            numbers, never decreasing. Absent: clamped and uniform (the
+            curve starts at the first control point and ends at the last). A
+            closed curve's knots are the command's: give none. Unit: 1.
+        weights: Each control point's weight, above 0. Absent: all 1. Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "control"
+    degree: int
+    ctrl: list[Vec2]
+    knots: list[float] | None | Unset = UNSET
+    weights: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "control"}
+        out["degree"] = self.degree
+        out["ctrl"] = [_vec2_out(e0) for e0 in self.ctrl]
+        if self.knots is not UNSET:
+            out["knots"] = None if self.knots is None else [float(e0) for e0 in self.knots]
+        if self.weights is not UNSET:
+            out["weights"] = None if self.weights is None else [float(e0) for e0 in self.weights]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ControlNurbsBy:
+        return cls(
+            degree=data["degree"],
+            ctrl=[Vec2.from_json(e0) for e0 in data["ctrl"]],
+            knots=UNSET if "knots" not in data else None if data["knots"] is None else [float(e0) for e0 in data["knots"]],
+            weights=UNSET if "weights" not in data else None if data["weights"] is None else [float(e0) for e0 in data["weights"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FitNurbsBy(NurbsBy):
+    """Geçiş noktalı: the points the curve passes through, in order.
+    Attributes:
+        pts: The points, two or more (three or more for a closed curve); no
+            two in a row at the same place. Unit: length.
+        degree: The degree, 1 to 11. Absent: 3. Lowered to one less than the
+            points when they are fewer. Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "fit"
+    pts: list[Vec2]
+    degree: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fit"}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.degree is not UNSET:
+            out["degree"] = self.degree
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FitNurbsBy:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            degree=data.get("degree", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DistanceOffsetBy(OffsetBy):
     """`distance` metres (above zero) from each object, on the side of
     `side`: the side of a line or a path is judged at its edge nearest
@@ -17480,13 +17870,13 @@ _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimen
 _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivision}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
-_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry, "pointcloud": PointcloudEntityGeometry}
+_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "nurbs": NurbsEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry, "pointcloud": PointcloudEntityGeometry}
 
 
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
@@ -17499,6 +17889,9 @@ _MEASURED_POINT: dict[str, type[MeasuredPoint]] = {"at": AtMeasuredPoint, "place
 
 
 _NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDirection, "digitized": DigitizedNetworkDirection, "field": FieldNetworkDirection}
+
+
+_NURBS_BY: dict[str, type[NurbsBy]] = {"control": ControlNurbsBy, "fit": FitNurbsBy}
 
 
 _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
@@ -17611,6 +18004,7 @@ __all__ = [
     "CloudSource",
     "CommitResult",
     "ConstructionEntity",
+    "ControlNurbsBy",
     "Convention",
     "ConventionName",
     "CoordinatesTableSource",
@@ -17717,6 +18111,7 @@ __all__ = [
     "FileTableSource",
     "FileUnit",
     "FileUnitName",
+    "FitNurbsBy",
     "GeographicCrsSystem",
     "GeographicDefinition",
     "GradientShape",
@@ -17870,6 +18265,12 @@ __all__ = [
     "NetworkLayer",
     "NewObject",
     "NodeSubPlace",
+    "NurbsBy",
+    "NurbsCreate",
+    "NurbsCreated",
+    "NurbsEntity",
+    "NurbsEntityGeometry",
+    "NurbsPlan",
     "ObjectsHatchRegion",
     "ObjectsTrimBoundaries",
     "ObstacleKind",

@@ -695,6 +695,10 @@ pub struct Memory {
     /// Çoklu çizgi's Genişlik, metres: every edge's start and end width; 0 none
     /// (docs/adr/0258 §2). Kept for the session, as AutoCAD's PLINE keeps it.
     pub polyline_width: f64,
+    /// NURBS eğrisi's method (control points, else fit points) and degree
+    /// (docs/adr/0259 §6), kept for the session as AutoCAD's SPLINE keeps them.
+    pub nurbs_control: bool,
+    pub nurbs_degree: u32,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
@@ -1002,6 +1006,8 @@ impl Default for Memory {
             stream: false,
             stream_step: 1.0,
             polyline_width: 0.0,
+            nurbs_control: false,
+            nurbs_degree: 3,
             block_insert: None,
             block_scale: 1.0,
             block_rotation: 0.0,

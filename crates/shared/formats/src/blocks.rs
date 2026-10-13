@@ -9,8 +9,8 @@
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, HatchPatternType,
-    InsertEntity, LeaderArrow, LeaderEntity, LineEntity, PathEntity, PointEntity, RingGeometry,
-    SplineEntity, TableEntity, TextEntity, Vec2,
+    InsertEntity, LeaderArrow, LeaderEntity, LineEntity, NurbsEntity, PathEntity, PointEntity,
+    RingGeometry, SplineEntity, TableEntity, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::api::json::{FromJson, Json};
@@ -563,6 +563,17 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             pts: points(&s.pts),
             closed: s.closed,
         },
+        Entity::Nurbs(n) => Shape::Nurbs {
+            degree: n.degree as usize,
+            ctrl: points(&n.ctrl),
+            knots: n.knots.clone(),
+            weights: n.weights.clone(),
+            closed: n.closed,
+            periodic: n.periodic,
+            fit: n.fit.as_deref().map(points),
+            fit_tolerance: n.fit_tolerance,
+            tangents: n.tangents.map(|[a, b]| [a.map(core), b.map(core)]),
+        },
         Entity::Xline(x) => Shape::Xline {
             p: core(x.p),
             dir: core(x.dir),
@@ -808,6 +819,28 @@ fn entity(s: &Shape) -> Option<Entity> {
             base,
             pts: points_back(pts),
             closed: *closed,
+        }),
+        Shape::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            periodic,
+            fit,
+            fit_tolerance,
+            tangents,
+        } => Entity::Nurbs(NurbsEntity {
+            base,
+            degree: *degree as u32,
+            ctrl: points_back(ctrl),
+            knots: knots.clone(),
+            weights: weights.clone(),
+            closed: *closed,
+            periodic: *periodic,
+            fit: fit.as_deref().map(points_back),
+            tangents: tangents.map(|[a, b]| [a.map(back), b.map(back)]),
+            fit_tolerance: *fit_tolerance,
         }),
         Shape::Leader {
             pts,

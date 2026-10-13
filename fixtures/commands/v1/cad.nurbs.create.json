@@ -1,0 +1,4100 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.nurbs.create",
+  "commandVersion": 1,
+  "title": "NURBS eğrisi oluştur: denetim noktalarından ve geçiş noktalarından, açık ve kapalı; doğrulama, plan, yazma, geri alma",
+  "note": "ADR 0259 §3. Beklenen eğriler scripts/fixtures/nurbs_cases.py'nin IEEE çift duyarlıklı ikizinden (ADR'nin işlem sırasıyla, bit bit), 50 basamaklı kesin çözümle ve OpenCASCADE'le denetlenmiş. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "arsiv",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "eski",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "taslak",
+        "name": "Taslak",
+        "type": "group",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "notlar",
+            "name": "Notlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 4,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487001,
+          "y": 4420001
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 9,
+        "layerId": "sinir",
+        "attrs": {
+          "Ada": "101"
+        },
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420030
+          }
+        ]
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "geçiş noktalarından kübik eğri yazılır: her noktadan geçer, noktalar eğrinin geçiş noktalarıdır; tek adımda geri alınır, aynı kimlikle yinelenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "x": 487006.7011366649,
+                    "y": 4420016.888922584
+                  },
+                  {
+                    "x": 487027.60998119786,
+                    "y": 4419986.625753493
+                  },
+                  {
+                    "x": 487041.24620437116,
+                    "y": 4420022.192596471
+                  },
+                  {
+                    "x": 487052.0,
+                    "y": 4420006.25
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.4902046807508455,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420007.5
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487038,
+                    "y": 4420011
+                  },
+                  {
+                    "x": 487052,
+                    "y": 4420006.25
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "id": 10,
+          "as": "created"
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "x": 487006.7011366649,
+                    "y": 4420016.888922584
+                  },
+                  {
+                    "x": 487027.60998119786,
+                    "y": 4419986.625753493
+                  },
+                  {
+                    "x": 487041.24620437116,
+                    "y": 4420022.192596471
+                  },
+                  {
+                    "x": 487052.0,
+                    "y": 4420006.25
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.4902046807508455,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420007.5
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487038,
+                    "y": 4420011
+                  },
+                  {
+                    "x": 487052,
+                    "y": 4420006.25
+                  }
+                ]
+              }
+            },
+            "uids": {
+              "10": "created"
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki geçiş noktası: derece 1'e iner, düz bir parçadır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 1,
+                "ctrl": [
+                  {
+                    "x": 487000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "x": 487012.0,
+                    "y": 4420007.5
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420007.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "üç geçiş noktasıyla kübik istenirse derece 2'ye iner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                }
+              ],
+              "degree": 3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 2,
+                "ctrl": [
+                  {
+                    "x": 487000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "x": 487011.14664293674,
+                    "y": 4420013.460015246
+                  },
+                  {
+                    "x": 487025.0,
+                    "y": 4420003.0
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420007.5
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420003
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ikinci dereceden eğri altı noktadan geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ],
+              "degree": 2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 2,
+                "ctrl": [
+                  {
+                    "x": 487000.0,
+                    "y": 4420040.0
+                  },
+                  {
+                    "x": 487006.61999006494,
+                    "y": 4420051.634293352
+                  },
+                  {
+                    "x": 487016.2244526363,
+                    "y": 4420034.020825179
+                  },
+                  {
+                    "x": 487023.39999951684,
+                    "y": 4420050.412718366
+                  },
+                  {
+                    "x": 487033.2364969694,
+                    "y": 4420037.1599927405
+                  },
+                  {
+                    "x": 487040.0,
+                    "y": 4420044.0
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.301677521491005,
+                  0.5266834464967723,
+                  0.739033051221975,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487008,
+                    "y": 4420046
+                  },
+                  {
+                    "x": 487016,
+                    "y": 4420038
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420047
+                  },
+                  {
+                    "x": 487032,
+                    "y": 4420041
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420044
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "beşinci dereceden eğri altı noktadan geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ],
+              "degree": 5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 5,
+                "ctrl": [
+                  {
+                    "x": 487000.0,
+                    "y": 4420040.0
+                  },
+                  {
+                    "x": 487008.118510405,
+                    "y": 4420094.777046633
+                  },
+                  {
+                    "x": 487018.43667290185,
+                    "y": 4419932.97521455
+                  },
+                  {
+                    "x": 487019.2501550021,
+                    "y": 4420140.233199707
+                  },
+                  {
+                    "x": 487030.1521707136,
+                    "y": 4420006.823030412
+                  },
+                  {
+                    "x": 487040.0,
+                    "y": 4420044.0
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487008,
+                    "y": 4420046
+                  },
+                  {
+                    "x": 487016,
+                    "y": 4420038
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420047
+                  },
+                  {
+                    "x": 487032,
+                    "y": 4420041
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420044
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "birinci dereceden eğri noktaları düz parçalarla birleştirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ],
+              "degree": 1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 1,
+                "ctrl": [
+                  {
+                    "x": 487000.00000000006,
+                    "y": 4420040.000000001
+                  },
+                  {
+                    "x": 487008.0,
+                    "y": 4420046.0
+                  },
+                  {
+                    "x": 487016.0,
+                    "y": 4420038.0
+                  },
+                  {
+                    "x": 487024.0,
+                    "y": 4420047.0
+                  },
+                  {
+                    "x": 487032.0,
+                    "y": 4420041.0
+                  },
+                  {
+                    "x": 487040.0,
+                    "y": 4420044.0
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.19268080080696023,
+                  0.41067424217504983,
+                  0.6426926508184949,
+                  0.8353734516254552,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487008,
+                    "y": 4420046
+                  },
+                  {
+                    "x": 487016,
+                    "y": 4420038
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420047
+                  },
+                  {
+                    "x": 487032,
+                    "y": 4420041
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420044
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı kübik eğri beş noktadan geçer ve dikişte düzgündür (periyodik); düğümler parametrelerdedir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487030,
+                  "y": 4420008
+                },
+                {
+                  "x": 487036,
+                  "y": 4420022
+                },
+                {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                {
+                  "x": 487006,
+                  "y": 4420022
+                }
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487002.5544990989,
+                    "y": 4420024.522971804
+                  },
+                  {
+                    "x": 487009.63640076504,
+                    "y": 4420005.431098635
+                  },
+                  {
+                    "x": 487030.7622629561,
+                    "y": 4420002.974486627
+                  },
+                  {
+                    "x": 487040.6709396554,
+                    "y": 4420024.799816385
+                  },
+                  {
+                    "x": 487020.47999351175,
+                    "y": 4420032.972099764
+                  },
+                  {
+                    "x": 487002.5544990989,
+                    "y": 4420024.522971804
+                  },
+                  {
+                    "x": 487009.63640076504,
+                    "y": 4420005.431098635
+                  },
+                  {
+                    "x": 487030.7622629561,
+                    "y": 4420002.974486627
+                  }
+                ],
+                "knots": [
+                  -0.5690961905932658,
+                  -0.35092583648105014,
+                  -0.15426973684661793,
+                  0.0,
+                  0.24513844671833923,
+                  0.43090380940673423,
+                  0.6490741635189499,
+                  0.8457302631533821,
+                  1.0,
+                  1.2451384467183393,
+                  1.4309038094067343,
+                  1.6490741635189499
+                ],
+                "closed": true,
+                "periodic": true,
+                "fit": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487036,
+                    "y": 4420022
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420022
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı ikinci dereceden eğri: çift derecede düğümler parametrelerin ortalarındadır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487030,
+                  "y": 4420008
+                },
+                {
+                  "x": 487036,
+                  "y": 4420022
+                },
+                {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                {
+                  "x": 487006,
+                  "y": 4420022
+                }
+              ],
+              "degree": 2
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 2,
+                "ctrl": [
+                  {
+                    "x": 487009.72935875243,
+                    "y": 4420006.748023894
+                  },
+                  {
+                    "x": 487030.5731663903,
+                    "y": 4420004.569715452
+                  },
+                  {
+                    "x": 487039.17698450806,
+                    "y": 4420023.8467915915
+                  },
+                  {
+                    "x": 487020.36799782846,
+                    "y": 4420032.2244138075
+                  },
+                  {
+                    "x": 487003.6192445613,
+                    "y": 4420023.745577667
+                  },
+                  {
+                    "x": 487009.72935875243,
+                    "y": 4420006.748023894
+                  },
+                  {
+                    "x": 487030.5731663903,
+                    "y": 4420004.569715452
+                  }
+                ],
+                "knots": [
+                  -0.25259778666383403,
+                  -0.07713486842330897,
+                  0.12256922335916962,
+                  0.3380211280625367,
+                  0.539988986462842,
+                  0.747402213336166,
+                  0.922865131576691,
+                  1.1225692233591695,
+                  1.3380211280625367,
+                  1.539988986462842
+                ],
+                "closed": true,
+                "periodic": true,
+                "fit": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487036,
+                    "y": 4420022
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420022
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı eğrinin ilkiyle aynı yerdeki son noktası ilk noktadır: aynı eğri, geçiş noktaları yinelenmeden saklanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487030,
+                  "y": 4420008
+                },
+                {
+                  "x": 487036,
+                  "y": 4420022
+                },
+                {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                {
+                  "x": 487006,
+                  "y": 4420022
+                },
+                {
+                  "x": 487010,
+                  "y": 4420010
+                }
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487002.5544990989,
+                    "y": 4420024.522971804
+                  },
+                  {
+                    "x": 487009.63640076504,
+                    "y": 4420005.431098635
+                  },
+                  {
+                    "x": 487030.7622629561,
+                    "y": 4420002.974486627
+                  },
+                  {
+                    "x": 487040.6709396554,
+                    "y": 4420024.799816385
+                  },
+                  {
+                    "x": 487020.47999351175,
+                    "y": 4420032.972099764
+                  },
+                  {
+                    "x": 487002.5544990989,
+                    "y": 4420024.522971804
+                  },
+                  {
+                    "x": 487009.63640076504,
+                    "y": 4420005.431098635
+                  },
+                  {
+                    "x": 487030.7622629561,
+                    "y": 4420002.974486627
+                  }
+                ],
+                "knots": [
+                  -0.5690961905932658,
+                  -0.35092583648105014,
+                  -0.15426973684661793,
+                  0.0,
+                  0.24513844671833923,
+                  0.43090380940673423,
+                  0.6490741635189499,
+                  0.8457302631533821,
+                  1.0,
+                  1.2451384467183393,
+                  1.4309038094067343,
+                  1.6490741635189499
+                ],
+                "closed": true,
+                "periodic": true,
+                "fit": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487036,
+                    "y": 4420022
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420022
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı dördüncü dereceden eğri beş noktadan geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487030,
+                  "y": 4420008
+                },
+                {
+                  "x": 487036,
+                  "y": 4420022
+                },
+                {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                {
+                  "x": 487006,
+                  "y": 4420022
+                }
+              ],
+              "degree": 4
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 4,
+                "ctrl": [
+                  {
+                    "x": 487000.2429043147,
+                    "y": 4420025.6248636525
+                  },
+                  {
+                    "x": 487009.89109896583,
+                    "y": 4420004.022075272
+                  },
+                  {
+                    "x": 487031.0902040875,
+                    "y": 4420001.974337165
+                  },
+                  {
+                    "x": 487042.8624379036,
+                    "y": 4420025.699780085
+                  },
+                  {
+                    "x": 487021.18023726717,
+                    "y": 4420033.121627564
+                  },
+                  {
+                    "x": 487000.2429043147,
+                    "y": 4420025.6248636525
+                  },
+                  {
+                    "x": 487009.89109896583,
+                    "y": 4420004.022075272
+                  },
+                  {
+                    "x": 487031.0902040875,
+                    "y": 4420001.974337165
+                  },
+                  {
+                    "x": 487042.8624379036,
+                    "y": 4420025.699780085
+                  }
+                ],
+                "knots": [
+                  -0.6619788719374633,
+                  -0.460011013537158,
+                  -0.25259778666383403,
+                  -0.07713486842330897,
+                  0.12256922335916962,
+                  0.3380211280625367,
+                  0.539988986462842,
+                  0.747402213336166,
+                  0.922865131576691,
+                  1.1225692233591695,
+                  1.3380211280625367,
+                  1.539988986462842,
+                  1.747402213336166,
+                  1.9228651315766911
+                ],
+                "closed": true,
+                "periodic": true,
+                "fit": [
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487036,
+                    "y": 4420022
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420022
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "denetim noktalı kübik eğri: düğümler uçlara sıkıştırılmış ve eşit aralıklıdır, eğri ilk ve son noktada başlar ve biter",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 3,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487000,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487008,
+                    "y": 4420046
+                  },
+                  {
+                    "x": 487016,
+                    "y": 4420038
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420047
+                  },
+                  {
+                    "x": 487032,
+                    "y": 4420041
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420044
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  2.0,
+                  3.0,
+                  3.0,
+                  3.0,
+                  3.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ağırlıklı ikinci dereceden eğri olduğu gibi saklanır: tam bir çeyrek daire",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 2,
+              "ctrl": [
+                {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487000,
+                  "y": 4420010
+                }
+              ],
+              "weights": [
+                1,
+                0.7071067811865476,
+                1
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 2,
+                "ctrl": [
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420010
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "weights": [
+                  1.0,
+                  0.7071067811865476,
+                  1.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verilen düğümler olduğu gibi saklanır (eşit aralıklı olmayan)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 3,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ],
+              "knots": [
+                0,
+                0,
+                0,
+                0,
+                0.25,
+                0.75,
+                2,
+                2,
+                2,
+                2
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487000,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487008,
+                    "y": 4420046
+                  },
+                  {
+                    "x": 487016,
+                    "y": 4420038
+                  },
+                  {
+                    "x": 487024,
+                    "y": 4420047
+                  },
+                  {
+                    "x": 487032,
+                    "y": 4420041
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420044
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.25,
+                  0.75,
+                  2.0,
+                  2.0,
+                  2.0,
+                  2.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı denetim noktalı eğri: ilk derece kadar nokta sona sarılır, düğümler 0, 1, …; kapalı ve periyodik saklanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 3,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420006
+                },
+                {
+                  "x": 487000,
+                  "y": 4420006
+                }
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420006
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420006
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420006
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  1.0,
+                  2.0,
+                  3.0,
+                  4.0,
+                  5.0,
+                  6.0,
+                  7.0,
+                  8.0,
+                  9.0,
+                  10.0
+                ],
+                "closed": true,
+                "periodic": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı ağırlıklı eğride ağırlıklar da sarılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 2,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420006
+                },
+                {
+                  "x": 487000,
+                  "y": 4420006
+                }
+              ],
+              "weights": [
+                1,
+                2,
+                1,
+                0.5
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "yapi",
+                "attrs": {},
+                "degree": 2,
+                "ctrl": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420006
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420006
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420000
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  1.0,
+                  2.0,
+                  3.0,
+                  4.0,
+                  5.0,
+                  6.0,
+                  7.0,
+                  8.0
+                ],
+                "weights": [
+                  1,
+                  2,
+                  1,
+                  0.5,
+                  1,
+                  2
+                ],
+                "closed": true,
+                "periodic": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan yazılacak eğriyi gösterir ve hiçbir şey yazmaz; doğrulama yazmanın cevabını verir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "gizli",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            },
+            "color": "#3B82F6"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entity": {
+                "kind": "nurbs",
+                "id": 0,
+                "layerId": "gizli",
+                "color": "#3B82F6",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "x": 487006.7011366649,
+                    "y": 4420016.888922584
+                  },
+                  {
+                    "x": 487027.60998119786,
+                    "y": 4419986.625753493
+                  },
+                  {
+                    "x": 487041.24620437116,
+                    "y": 4420022.192596471
+                  },
+                  {
+                    "x": 487052.0,
+                    "y": 4420006.25
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.4902046807508455,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420007.5
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487038,
+                    "y": 4420011
+                  },
+                  {
+                    "x": 487052,
+                    "y": 4420006.25
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487030,
+                  "y": 4420008
+                },
+                {
+                  "x": 487036,
+                  "y": 4420022
+                },
+                {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                {
+                  "x": 487006,
+                  "y": 4420022
+                }
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "kilitli",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487030,
+                  "y": 4420008
+                },
+                {
+                  "x": 487036,
+                  "y": 4420022
+                },
+                {
+                  "x": 487020,
+                  "y": 4420030
+                },
+                {
+                  "x": 487006,
+                  "y": 4420022
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "degree": 3,
+                "ctrl": [
+                  {
+                    "x": 487000.0,
+                    "y": 4420000.0
+                  },
+                  {
+                    "x": 487010.6147511334,
+                    "y": 4420021.785450183
+                  },
+                  {
+                    "x": 487027.4384765752,
+                    "y": 4419988.148876151
+                  },
+                  {
+                    "x": 487038.0,
+                    "y": 4420011.0
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420007.5
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487038,
+                    "y": 4420011
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "renk, çizgi kalınlığı, öznitelikler, etiket ve sembol verildiği gibi yazılır; grubun içindeki katmana da",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "sinir",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ],
+              "degree": 2
+            },
+            "color": "#E5484D",
+            "lineWeight": 0.5,
+            "attrs": {
+              "Ad": "Dere"
+            },
+            "label": "Dere",
+            "symbol": "sys.dere"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "nurbs",
+                "id": 10,
+                "layerId": "sinir",
+                "color": "#E5484D",
+                "attrs": {
+                  "Ad": "Dere"
+                },
+                "label": "Dere",
+                "symbol": "sys.dere",
+                "lineWeight": 0.5,
+                "degree": 2,
+                "ctrl": [
+                  {
+                    "x": 487000.00000000006,
+                    "y": 4420000.000000001
+                  },
+                  {
+                    "x": 487008.20474484784,
+                    "y": 4420011.889351978
+                  },
+                  {
+                    "x": 487025.6457026592,
+                    "y": 4420000.254546806
+                  },
+                  {
+                    "x": 487040.64363458194,
+                    "y": 4420016.464134974
+                  },
+                  {
+                    "x": 487052.0,
+                    "y": 4420006.25
+                  }
+                ],
+                "knots": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.36285087533306937,
+                  0.6132232392674563,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "fit": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487012,
+                    "y": 4420007.5
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487038,
+                    "y": 4420011
+                  },
+                  {
+                    "x": 487052,
+                    "y": 4420006.25
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NaN ya da sonsuz değer yazılmaz; yol hangi değer olduğunu söyler: denetim noktası, ağırlık, düğüm, geçiş noktası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 3,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ]
+            }
+          },
+          "nonFinite": {
+            "by.ctrl[1].y": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "2. denetim noktasının kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "by.ctrl[1].y"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 2,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420006
+                }
+              ],
+              "weights": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "nonFinite": {
+            "by.weights[2]": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "3. ağırlık sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "by.weights[2]"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 1,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                }
+              ],
+              "knots": [
+                0,
+                0,
+                1,
+                1
+              ]
+            }
+          },
+          "nonFinite": {
+            "by.knots[3]": "-Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "4. düğüm sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "by.knots[3]"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            }
+          },
+          "nonFinite": {
+            "by.pts[4].x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "5. geçiş noktasının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "by.pts[4].x"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ardışık iki geçiş noktası aynı yerde olamaz; kapalı eğride ilk ikisi de",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "coincident_points",
+              "message": "2. ve 3. geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.",
+              "path": "by.pts[2]"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487030,
+                  "y": 4420008
+                },
+                {
+                  "x": 487036,
+                  "y": 4420022
+                }
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "coincident_points",
+              "message": "1. ve 2. geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.",
+              "path": "by.pts[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "derece 1 ile 11 arasında: sıfır ve on iki reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 0,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Derece 0; 1 ile 11 arasında olmalı.",
+              "path": "by.degree"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ],
+              "degree": 12
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Derece 12; 1 ile 11 arasında olmalı.",
+              "path": "by.degree"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "denetim ve geçiş noktası sayısı: açık eğride en az derece + 1 denetim noktası, kapalıda en az üç; açık eğri en az iki, kapalı en az üç noktadan geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 3,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "3. dereceden eğrinin en az 4 denetim noktası olur; 3 verildi.",
+              "path": "by.ctrl"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 2,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                }
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "2. dereceden kapalı eğrinin en az 3 denetim noktası olur; 2 verildi.",
+              "path": "by.ctrl"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Açık eğri en az 2 geçiş noktasından geçer; 1 verildi.",
+              "path": "by.pts"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                {
+                  "x": 487030,
+                  "y": 4420008
+                },
+                {
+                  "x": 487010,
+                  "y": 4420010
+                }
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Kapalı eğri en az 3 geçiş noktasından geçer; 2 verildi.",
+              "path": "by.pts"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "düğümler ve ağırlıklar kurala uymalı: sayı, azalmama, aralık, iç düğüm yinelenmesi, pozitif ağırlık; kapalı eğriye düğüm verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 3,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ],
+              "knots": [
+                0,
+                0,
+                0,
+                0,
+                1,
+                2,
+                2,
+                2,
+                2
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Düğüm sayısı denetim noktası sayısı + derece + 1 = 10 olmalı; 9 verildi.",
+              "path": "by.knots"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 3,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420040
+                },
+                {
+                  "x": 487008,
+                  "y": 4420046
+                },
+                {
+                  "x": 487016,
+                  "y": 4420038
+                },
+                {
+                  "x": 487024,
+                  "y": 4420047
+                },
+                {
+                  "x": 487032,
+                  "y": 4420041
+                },
+                {
+                  "x": 487040,
+                  "y": 4420044
+                }
+              ],
+              "knots": [
+                0,
+                0,
+                0,
+                0,
+                2,
+                1,
+                2,
+                2,
+                2,
+                2
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Düğümler azalmamalı: her düğüm bir öncekinden küçük olmaz.",
+              "path": "by.knots"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 1,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                }
+              ],
+              "knots": [
+                0,
+                1,
+                1,
+                2
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Eğrinin aralığı boş: düğümlerin ortası (derece. ile denetim noktası sayısı. arası) artmalı.",
+              "path": "by.knots"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 1,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420006
+                }
+              ],
+              "knots": [
+                0,
+                0,
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "İç düğüm 2 kez yinelenmiş; en çok derece (1) kez yinelenir.",
+              "path": "by.knots"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 2,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420006
+                }
+              ],
+              "weights": [
+                1,
+                0,
+                1
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Ağırlıklar sonlu ve sıfırdan büyük olmalı.",
+              "path": "by.weights"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 2,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420006
+                }
+              ],
+              "weights": [
+                1,
+                1
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Ağırlık sayısı (2) denetim noktası sayısından (3) farklı.",
+              "path": "by.weights"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "control",
+              "degree": 2,
+              "ctrl": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420000
+                },
+                {
+                  "x": 487006,
+                  "y": 4420006
+                },
+                {
+                  "x": 487000,
+                  "y": 4420006
+                }
+              ],
+              "knots": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            },
+            "closed": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Kapalı eğrinin düğümlerini komut kurar; düğüm vermeyin.",
+              "path": "by.knots"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "girdinin hatası sırayla söylenir: önce sonlu olmayan değer, sonra yinelenen nokta, sonra eğrinin kuralı, sonra kalınlık, sürüm ve katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                }
+              ],
+              "degree": 12
+            },
+            "lineWeight": 200,
+            "expectedRevision": "99"
+          },
+          "nonFinite": {
+            "by.pts[2].y": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "3. geçiş noktasının kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "by.pts[2].y"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                }
+              ],
+              "degree": 12
+            },
+            "lineWeight": 200,
+            "expectedRevision": "99"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "coincident_points",
+              "message": "1. ve 2. geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.",
+              "path": "by.pts[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ],
+              "degree": 12
+            },
+            "lineWeight": 200,
+            "expectedRevision": "99"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_nurbs",
+              "message": "Derece 12; 1 ile 11 arasında olmalı.",
+              "path": "by.degree"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            },
+            "lineWeight": 200,
+            "expectedRevision": "99"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "beklenen sürüm ondalık bir tamsayı yazısıdır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            },
+            "expectedRevision": "12.0"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “12.0” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            },
+            "expectedRevision": "01"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “01” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katmana, kilitli grubun katmanına, gruba ve olmayan katmana yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "eski",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Eski” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "note": "Girdi hazırlandıktan sonra çizim başka bir düzenlemeyle değişir.",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 10,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "by": {
+              "kind": "fit",
+              "pts": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                {
+                  "x": 487012,
+                  "y": 4420007.5
+                },
+                {
+                  "x": 487025,
+                  "y": 4420003
+                },
+                {
+                  "x": 487038,
+                  "y": 4420011
+                },
+                {
+                  "x": 487052,
+                  "y": 4420006.25
+                }
+              ]
+            },
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              4,
+              9,
+              10
+            ],
+            "canUndo": true,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

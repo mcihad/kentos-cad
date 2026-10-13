@@ -55,6 +55,8 @@ pub(super) enum Val<'d> {
     PointParts(&'d [PointPart]),
     /// A polyline's widths, a start and an end for each vertex's edge (§6.6, docs/adr/0258 §2).
     Widths(&'d [[f64; 2]]),
+    /// A NURBS curve's start and end tangents, each a point or null (docs/adr/0259).
+    Tangents(&'d [Option<Vec2>; 2]),
     Loops(&'d [Vec<Vec2>]),
     Pattern(&'d HatchPattern),
     /// The objects a hatch's region follows (docs/adr/0186 §6).
@@ -345,6 +347,34 @@ impl<'d> Encoder<'d> {
             Entity::Spline(e) => {
                 f.push(("pts", Val::Points(&e.pts)));
                 f.push(("closed", Val::Bool(e.closed)));
+            }
+            // A NURBS curve (docs/adr/0259): written only when its numbers make a curve.
+            Entity::Nurbs(e) => {
+                if let Some(problem) = e.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("degree", Val::Uint(u64::from(e.degree))));
+                f.push(("ctrl", Val::Points(&e.ctrl)));
+                f.push(("knots", Val::Floats(&e.knots)));
+                if let Some(w) = &e.weights {
+                    f.push(("weights", Val::Floats(w)));
+                }
+                if e.closed {
+                    f.push(("closed", Val::Bool(true)));
+                }
+                if e.periodic {
+                    f.push(("periodic", Val::Bool(true)));
+                }
+                if let Some(p) = &e.fit {
+                    f.push(("fit", Val::Points(p)));
+                }
+                if let Some(t) = &e.tangents {
+                    f.push(("tangents", Val::Tangents(t)));
+                }
+                if let Some(t) = e.fit_tolerance {
+                    f.push(("fitTolerance", Val::Float(t)));
+                }
             }
             Entity::Xline(e) | Entity::Ray(e) => {
                 f.push(("p", Val::Point(&e.p)));
@@ -1086,6 +1116,20 @@ impl<'d> Encoder<'d> {
                         e.float(*end)?;
                         e.close();
                         Ok(())
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Tangents(pair) => {
+                self.open(2, false)?;
+                for (i, t) in pair.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| match t {
+                        Some(p) => e.point(p),
+                        None => {
+                            e.w.null();
+                            Ok(())
+                        }
                     })?;
                 }
                 self.close();

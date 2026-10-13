@@ -85,6 +85,18 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
             let ring = *closed && out.len() > 2;
             path_edges(&out, ring)
         }
+        // A NURBS curve's chords within the drawing's tolerance (docs/adr/0259 §2); what is cut on
+        // them is cut on the curve itself (`ops::trim`, `ops::breaking`).
+        Shape::Nurbs { closed, .. } => {
+            // A closed curve's chords come back to its start: the ring leaves that end out.
+            let out = crate::geom::nurbs::outline(e);
+            let ring = *closed && out.len() > 3;
+            if ring {
+                path_edges(&out[..out.len() - 1], true)
+            } else {
+                path_edges(&out, false)
+            }
+        }
         Shape::Hatch { ring, holes, .. } => {
             let mut out = path_edges(ring, true);
             for h in holes.iter().flatten() {

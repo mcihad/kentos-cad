@@ -114,6 +114,7 @@ pub const TOOLS: &[&str] = &[
     // Drawing tools, round 3 (docs/adr/0057).
     ellipse::ID,
     spline::ID,
+    crate::nurbs_tool::ID,
     construction::XLINE_ID,
     construction::RAY_ID,
     // Çizim ekleri (docs/adr/0197).
@@ -353,6 +354,7 @@ impl Session {
             navigate::ZOOM_WINDOW_ID => Box::new(ZoomWindow::new()),
             ellipse::ID => Box::new(crate::ellipse::Ellipse::new()),
             spline::ID => Box::new(crate::spline::Spline::new()),
+            crate::nurbs_tool::ID => Box::new(crate::nurbs_tool::NurbsTool::new()),
             construction::XLINE_ID => Box::new(crate::construction::Xline::new()),
             construction::RAY_ID => Box::new(crate::construction::Ray::new()),
             crate::drawing_extras::TANGENT_ID => {

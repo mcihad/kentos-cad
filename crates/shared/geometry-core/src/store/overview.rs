@@ -374,6 +374,10 @@ impl Canvas {
                 let pts = spline_outline(pts, *closed);
                 self.path(&pts, *closed, c);
             }
+            Shape::Nurbs { .. } => {
+                let pts = crate::geom::nurbs::outline(s);
+                self.path(&pts, false, c);
+            }
             Shape::Hatch { ring, holes, .. } => {
                 let mut rings = vec![ring.clone()];
                 rings.extend(holes.iter().flatten().cloned());

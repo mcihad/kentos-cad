@@ -295,7 +295,11 @@ fn takes_part(e: &Entity) -> bool {
     corrected(e)
         || matches!(
             e,
-            Entity::Point(_) | Entity::Circle(_) | Entity::Ellipse(_) | Entity::Spline(_)
+            Entity::Point(_)
+                | Entity::Circle(_)
+                | Entity::Ellipse(_)
+                | Entity::Spline(_)
+                | Entity::Nurbs(_)
         )
 }
 
@@ -440,7 +444,7 @@ pub fn object(e: &Entity, fixed: bool) -> Option<TopoObject> {
             }],
         }),
         Entity::Circle(c) => Some(circle_object(v(&c.c), c.r)),
-        Entity::Ellipse(_) | Entity::Spline(_) => Some(TopoObject {
+        Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_) => Some(TopoObject {
             kind: "edges".into(),
             fixed: true,
             paths: entity_edges(&shape(e))

@@ -60,7 +60,7 @@ impl Store {
                     let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
                     (is_full_ellipse(&g) && inside_ellipse(&g, p)).then(|| ellipse_area(&g))
                 }
-                Shape::Spline { closed: true, .. } => {
+                Shape::Spline { closed: true, .. } | Shape::Nurbs { closed: true, .. } => {
                     let mut ring = entity_outline(e, 72.0);
                     ring.pop();
                     point_in_polygon(p, &ring).then(|| signed_area(&ring).abs())

@@ -185,6 +185,12 @@ codes! {
     /// pair for each vertex, not finite or below 0; a closed or wide polyline
     /// of more than one part; an area given either (docs/adr/0258).
     INVALID_POLYLINE = "invalid_polyline", Failed, false, "Kapalılık ya da genişlikler kurallara uymuyor: her köşeye bir başlangıç ve bir bitiş genişliği, sonlu ve sıfır ya da büyük; kapalı ya da genişlikli çizgi tek parçalı; alanın kapalılığı ve genişliği olmaz.";
+    /// A NURBS curve's numbers that make no curve: a degree outside 1 to 11,
+    /// too few control or fit points, knots that do not fit, a weight not
+    /// above 0, knots given for a closed curve (docs/adr/0259).
+    INVALID_NURBS = "invalid_nurbs", Failed, false, "Derece, denetim noktaları, ağırlıklar ya da düğümler bir NURBS eğrisi tanımlamıyor: derece 1 ile 11 arasında, en az derece + 1 denetim noktası, düğümler denetim noktası + derece + 1 tane ve azalmayan, ağırlıklar sıfırdan büyük; kapalı eğrinin düğümlerini komut kurar.";
+    /// Two points in a row at one place where a curve passes each once (docs/adr/0259).
+    COINCIDENT_POINTS = "coincident_points", Failed, false, "Ardışık iki geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.";
 
     // ── Properties, texts, links ────────────────────────────────────────
     /// A text whose text is empty or only white space.

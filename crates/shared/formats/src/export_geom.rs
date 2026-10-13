@@ -12,6 +12,7 @@ use kentos_geometry_core::entity::{ellipse_geom, polygon_ring, tessellate_circle
 use kentos_geometry_core::geom::arc::{ArcGeom, DEFAULT_STEP, tessellate_arc};
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geom::ellipse::{is_full_ellipse, tessellate_ellipse};
+use kentos_geometry_core::geom::nurbs::{Nurbs, TOLERANCE};
 use kentos_geometry_core::geom::spline::catmull_rom;
 
 use crate::blocks::Placing;
@@ -386,6 +387,26 @@ pub(crate) fn geometry(
                 *last = end;
             }
             curve(rep, "Eğri (spline)", Ring::flat(pts), w)
+        }
+        Entity::Nurbs(n) => {
+            // Chords within the drawing's 0,1 mm of the curve; its ends exact (docs/adr/0259 §4).
+            let ctrl = to_core(&n.ctrl);
+            let c = Nurbs {
+                degree: n.degree as usize,
+                ctrl: &ctrl,
+                knots: &n.knots,
+                weights: n.weights.as_deref(),
+            };
+            if !c.valid() {
+                rep.skip("NURBS eğrisi", "sayıları bir eğri tanımlamıyor", 0);
+                return None;
+            }
+            curve(
+                rep,
+                "NURBS eğrisi",
+                Ring::flat(from_core(c.tessellate(TOLERANCE))),
+                w,
+            )
         }
         Entity::Hatch(h) => {
             rep.note("Tarama", w.hatch, 0);

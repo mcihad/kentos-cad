@@ -2506,6 +2506,16 @@ cases.append({
     ],
 })
 
+cases.append({
+    "name": "NURBS eğrisi, reddedilen: eğri tanımlamayan sayılar (invalid_nurbs), çizimin durumundan önce",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(1), "geometry": {"kind": "nurbs", "degree": 1, "ctrl": W_PATH, "knots": [0, 0, 1, 2, 2], "weights": [1, -1, 1]}}]},
+         "result": failed("invalid_nurbs", "Ağırlıklar sonlu ve sıfırdan büyük olmalı.", "changes[0].geometry"),
+         "expect": {"ids": W_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",

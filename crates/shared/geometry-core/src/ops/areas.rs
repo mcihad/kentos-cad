@@ -86,6 +86,20 @@ pub fn area_of_entity(e: &Shape) -> Option<Area> {
                 holes: Vec::new(),
             }
         }),
+        // A closed NURBS curve's ring of chords within 0.1 mm (docs/adr/0259 §2).
+        Shape::Nurbs { closed: true, .. } => {
+            let mut ring = crate::geom::nurbs::outline(e);
+            if ring.len() > 3 {
+                ring.pop();
+            }
+            (ring.len() >= 3).then(|| Area {
+                outer: Ring {
+                    pts: ring,
+                    bulges: None,
+                },
+                holes: Vec::new(),
+            })
+        }
         // A closed polyline's ring, its last bulge the closing edge's (docs/adr/0258 §1).
         Shape::Polyline {
             pts,

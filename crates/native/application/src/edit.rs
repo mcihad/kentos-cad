@@ -870,6 +870,27 @@ pub(crate) fn check_geometry(
             )));
         }
     }
+    // A NURBS curve's numbers make a curve (docs/adr/0259 §1).
+    if let EntityGeometry::Nurbs {
+        degree,
+        ctrl,
+        knots,
+        weights,
+        fit,
+        fit_tolerance,
+        ..
+    } = g
+        && let Some(why) = kentos_contracts::nurbs_problem(
+            *degree,
+            ctrl,
+            knots,
+            weights.as_deref(),
+            fit.as_deref(),
+            *fit_tolerance,
+        )
+    {
+        return Err(Stop::failed(error(codes::INVALID_NURBS, why, at(""))));
+    }
     // A dimension its kind's rules and the core can draw (docs/adr/0147 §6).
     crate::dimension::check(g, &at)?;
     if let EntityGeometry::Circle { r, .. } | EntityGeometry::Arc { r, .. } = g
@@ -1422,6 +1443,22 @@ fn finite(g: &EntityGeometry) -> bool {
             t1,
         } => pt(c) && pt(major) && ratio.is_finite() && t0.is_finite() && t1.is_finite(),
         EntityGeometry::Spline { pts: p, .. } => pts(p),
+        EntityGeometry::Nurbs {
+            ctrl,
+            knots,
+            weights,
+            fit,
+            tangents,
+            fit_tolerance,
+            ..
+        } => {
+            pts(ctrl)
+                && knots.iter().all(|k| k.is_finite())
+                && weights.iter().flatten().all(|w| w.is_finite())
+                && fit.as_deref().is_none_or(pts)
+                && tangents.iter().flatten().flatten().all(pt)
+                && fit_tolerance.is_none_or(f64::is_finite)
+        }
         EntityGeometry::Xline { p, dir } | EntityGeometry::Ray { p, dir } => pt(p) && pt(dir),
         EntityGeometry::Text {
             p,

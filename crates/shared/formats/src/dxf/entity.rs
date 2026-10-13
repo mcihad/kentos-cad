@@ -102,6 +102,10 @@ pub enum Kind {
         weights: Vec<f64>,
         ctrl: Vec<P3>,
         fit: Vec<P3>,
+        /// The fit points' start and end tangents (12, 13), when the file gives them.
+        tangents: [Option<P3>; 2],
+        /// How far the curve may pass from its fit points (44).
+        fit_tolerance: Option<f64>,
     },
     Text {
         p: P3,
@@ -495,6 +499,8 @@ pub fn parse(
             weights: reals(list, 41)?,
             ctrl: points(list, 10)?,
             fit: points(list, 11)?,
+            tangents: [g.point(12)?, g.point(13)?],
+            fit_tolerance: g.num(44)?,
         },
         "TEXT" | "ATTRIB" | "ATTDEF" => {
             let attribute = name != "TEXT";

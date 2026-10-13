@@ -692,6 +692,21 @@ cases.append({
     ],
 })
 
+# A NURBS curve (docs/adr/0259): written as given; numbers that make no curve refused (invalid_nurbs), with the
+# contract's own words.
+NURBS = {"kind": "nurbs", "degree": 2, "ctrl": [P(487000, 4420130), P(487010, 4420140), P(487020, 4420130)], "knots": [0, 0, 0, 1, 1, 1], "weights": [1, 0.5, 1]}
+cases.append({
+    "name": "NURBS eğrisi yazıldığı gibi; eğri tanımlamayan sayılar reddedilir (invalid_nurbs)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(NURBS)]}, "result": done([3]),
+         "expect": {"ids": IDS + [3], "entities": {"3": {**NURBS, "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**NURBS, "knots": [0, 0, 1, 0, 1, 1]})]},
+         "result": failed("invalid_nurbs", "Düğümler azalmamalı: her düğüm bir öncekinden küçük olmaz.", "objects[0].geometry"), "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**NURBS, "degree": 3})]},
+         "result": failed("invalid_nurbs", "3. dereceden eğrinin en az 4 denetim noktası olur; 3 verildi.", "objects[0].geometry"), "expect": {"revision": "same"}},
+    ],
+})
+
 cases.append({
     "name": "girdinin hatası çizimin durumundan önce gelir: geometri, sürümden ve katmandan önce denetlenir",
     "steps": [

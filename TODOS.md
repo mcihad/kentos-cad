@@ -158,6 +158,10 @@ Liste:
   `io/apply.ts`'in uygulama katmanının kurallarıyla (`kentos_native_application::import_apply`) eşitliği; ortak durumlar
   `fixtures/commands/v1/file.import.dxf.json` (yeni beklentiler `fields`, `nodes`, yer tutucular `$fixture:`, `"$any"`) ve
   `fixtures/formats/v1/dxf-units/cases.json`; `FORMATS_VERSION` 58 (web'in kopyası 53).
+- [ ] `CAD-DATA-15`…`CAD-DATA-17` (ADR 0259, 13 Ekim): web'de gerekenler: `nurbs` türü belgede ve TS türlerinde (`NurbsEntity`,
+  `io/kcad.ts`'in KCAD şema 47'si ve tipli sütunların türü 19, `io/columns.ts`; `FORMATS_VERSION` 60); paketli biçimin türü 23
+  (`wasm/pack.ts`); çekirdeğin JSON API'si `tangents`'ı taşımaz; `cad.nurbs.create`'in web işleyicisi ve NURBS eğrisi aracı
+  (Yöntem, Derece, Kapat; önizleme planla); Öznitelikler'in satırları; seçim süzgecinde Eğri'nin NURBS'ü de tutması.
 - [ ] `CAD-DATA-18`, `CAD-DATA-19` (ADR 0258, 13 Ekim): web'de gerekenler: belgenin ve TS türlerinin çoklu çizgisinde `closed` ve
   `widths` (`model/document.ts`, `io/kcad.ts`'in KCAD şema 46'sı ve tipli sütunların yol bitleri 13 ve 14, `io/columns.ts`;
   `FORMATS_VERSION` 59, web'in kopyası 53); çekirdeğin JSON API'si `Shape::Polyline`'ın `closed`'ını ve `widths`'ini taşımaz (web'in

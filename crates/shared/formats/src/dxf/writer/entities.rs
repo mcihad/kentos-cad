@@ -30,8 +30,8 @@ use std::collections::{BTreeMap, HashMap};
 use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{
     BlockId, Bounds, DimensionArrow, DimensionEntity, DimensionStyle, Entity, EntityBase,
-    GradientShape, HatchEntity, HatchGradient, HatchPatternType, InsertEntity, PathEntity,
-    SplineEntity, TableAlign, TableEntity, TextAlign, TextEntity, Vec2,
+    GradientShape, HatchEntity, HatchGradient, HatchPatternType, InsertEntity, NurbsEntity,
+    PathEntity, SplineEntity, TableAlign, TableEntity, TextAlign, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::hatch_pattern::library_pattern;
@@ -69,6 +69,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Arc(_) => "Yay",
         Entity::Ellipse(_) => "Elips",
         Entity::Spline(_) => "Eğri",
+        Entity::Nurbs(_) => "NURBS eğrisi",
         Entity::Xline(_) => "Yardımcı çizgi",
         Entity::Ray(_) => "Işın",
         Entity::Text(_) => "Yazı",
@@ -156,6 +157,14 @@ fn finite(e: &Entity) -> bool {
         Entity::Arc(a) => ok(a.c) && nums_ok(&[a.r, a.a0, a.a1]),
         Entity::Ellipse(e) => ok(e.c) && ok(e.major) && nums_ok(&[e.ratio, e.t0, e.t1]),
         Entity::Spline(s) => all_ok(&s.pts),
+        Entity::Nurbs(n) => {
+            all_ok(&n.ctrl)
+                && nums_ok(&n.knots)
+                && n.weights.as_deref().is_none_or(nums_ok)
+                && n.fit.as_deref().is_none_or(all_ok)
+                && n.tangents.iter().flatten().flatten().all(|t| ok(*t))
+                && n.fit_tolerance.is_none_or(f64::is_finite)
+        }
         Entity::Xline(x) | Entity::Ray(x) => ok(x.p) && ok(x.dir),
         Entity::Text(t) => ok(t.p) && nums_ok(&[t.height, t.rotation]),
         Entity::Dimension(d) => {
@@ -566,6 +575,7 @@ impl Writer<'_> {
             }
             Entity::Ellipse(el) => self.ellipse(e, el),
             Entity::Spline(s) => self.spline(s),
+            Entity::Nurbs(n) => self.nurbs(n),
             Entity::Xline(x) | Entity::Ray(x) => {
                 if x.dir.x == 0.0 && x.dir.y == 0.0 {
                     return self
@@ -1093,6 +1103,56 @@ impl Writer<'_> {
     /// A SPLINE: the app's curve as a clamped cubic B-spline of Bézier spans
     /// (every span end is one of the app's points, bit for bit), the points
     /// as fit points, and the extended data saying it is KentOS's curve.
+    /// A NURBS curve as it is (docs/adr/0259 §4): its degree, knots, control points and weights, with
+    /// its fit points, end tangents and fit tolerance when it has them.
+    fn nurbs(&mut self, n: &NurbsEntity) -> bool {
+        if let Some(why) = n.problem() {
+            self.report.skip("NURBS eğrisi", &why, 0);
+            return false;
+        }
+        let fit = n.fit.as_deref().unwrap_or(&[]);
+        self.begin("SPLINE", &n.base);
+        self.out.str(100, "AcDbSpline");
+        self.out.real(210, 0.0);
+        self.out.real(220, 0.0);
+        self.out.real(230, 1.0);
+        let flags = 8
+            | i64::from(n.closed)
+            | (i64::from(n.periodic) << 1)
+            | (i64::from(n.weights.is_some()) << 2);
+        self.out.int(70, flags);
+        self.out.int(71, i64::from(n.degree));
+        self.out.int(72, n.knots.len() as i64);
+        self.out.int(73, n.ctrl.len() as i64);
+        self.out.int(74, fit.len() as i64);
+        if let Some(t) = n.fit_tolerance {
+            self.out.real(44, t);
+        }
+        if let Some([a, b]) = n.tangents {
+            if let Some(a) = a {
+                self.out.xyz(12, a);
+            }
+            if let Some(b) = b {
+                self.out.xyz(13, b);
+            }
+        }
+        for k in &n.knots {
+            self.out.real(40, *k);
+        }
+        for (i, p) in n.ctrl.iter().enumerate() {
+            self.out.xyz(10, *p);
+            self.grow(*p);
+            if let Some(w) = &n.weights {
+                self.out.real(41, w[i]);
+            }
+        }
+        for p in fit {
+            self.out.xyz(11, *p);
+        }
+        self.end(Self::base_meta(&n.base));
+        true
+    }
+
     fn spline(&mut self, s: &SplineEntity) -> bool {
         let pts: Vec<CoreVec2> = s.pts.iter().map(|p| core(*p)).collect();
         let spans = catmull_rom_beziers(&pts, s.closed);

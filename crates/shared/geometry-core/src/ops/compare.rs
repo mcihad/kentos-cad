@@ -321,6 +321,21 @@ fn defs(shape: &Shape) -> Defs {
             });
             others.push(Other::Flag(*closed));
         }
+        // Its control points as fixed places, its knots and weights as numbers (docs/adr/0259).
+        Shape::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            ..
+        } => {
+            comps.push(Comp::Fixed(ctrl.clone()));
+            others.push(Other::Num(*degree as f64));
+            others.extend(knots.iter().map(|k| Other::Num(*k)));
+            others.extend(weights.iter().flatten().map(|w| Other::Num(*w)));
+            others.push(Other::Flag(*closed));
+        }
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => {
             comps.push(Comp::Fixed(vec![*p]));
             others.extend([Other::Num(dir.x), Other::Num(dir.y)]);

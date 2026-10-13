@@ -29,6 +29,7 @@
 //! | 19 image | p.x, p.y, width, height, rotation, mirror, asset?, file?, clip (count, −1 none, then x, y each), opacity (NaN none) |
 //! | 20 raster | affine (6), width, height, bands, sample, asset?, file?, srid, style (its JSON text), opacity (NaN none) |
 //! | 22 closed polyline | path, holes (its last bulge the closing edge's; docs/adr/0258 §1) |
+//! | 23 NURBS curve | degree, control points, knots (values), weights (values), closed, periodic, fit points (−1 none, else points), fitTolerance (NaN none), tangents (4: NaN none) (docs/adr/0259) |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
@@ -201,7 +202,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 22.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 23.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -343,6 +344,35 @@ impl Reader<'_> {
                 pts: self.points()?,
                 closed: self.flag()?,
             },
+            23 => {
+                let degree = self.count()?;
+                let ctrl = self.points()?;
+                let knots = self.values()?.unwrap_or_default();
+                let weights = self.values()?;
+                let closed = self.flag()?;
+                let periodic = self.flag()?;
+                let has_fit = self.num()?;
+                let fit = if has_fit < 0.0 {
+                    None
+                } else {
+                    Some(self.points()?)
+                };
+                let t = self.num()?;
+                let tangent = |x: f64, y: f64| (!x.is_nan()).then_some(Vec2::new(x, y));
+                let (a, b, c, d) = (self.num()?, self.num()?, self.num()?, self.num()?);
+                let tangents = [tangent(a, b), tangent(c, d)];
+                Shape::Nurbs {
+                    degree,
+                    ctrl,
+                    knots,
+                    weights,
+                    closed,
+                    periodic,
+                    fit,
+                    fit_tolerance: (!t.is_nan()).then_some(t),
+                    tangents: tangents.iter().any(Option::is_some).then_some(tangents),
+                }
+            }
             10 => {
                 let (p, height, rotation) = (self.pt()?, self.num()?, self.num()?);
                 let text = self.string()?.unwrap_or_default();
@@ -950,6 +980,33 @@ impl Packer {
                 self.put(&[9.0]);
                 self.points(pts);
                 self.put(&[flag(*closed)]);
+            }
+            Shape::Nurbs {
+                degree,
+                ctrl,
+                knots,
+                weights,
+                closed,
+                periodic,
+                fit,
+                fit_tolerance,
+                tangents,
+            } => {
+                self.put(&[23.0, *degree as f64]);
+                self.points(ctrl);
+                self.values(Some(knots));
+                self.values(weights.as_deref());
+                self.put(&[flag(*closed), flag(*periodic)]);
+                match fit {
+                    Some(f) => {
+                        self.put(&[0.0]);
+                        self.points(f);
+                    }
+                    None => self.put(&[-1.0]),
+                }
+                let [a, b] = tangents.unwrap_or([None, None]);
+                let (a, b) = (a.unwrap_or(NONE), b.unwrap_or(NONE));
+                self.put(&[fit_tolerance.unwrap_or(f64::NAN), a.x, a.y, b.x, b.y]);
             }
             Shape::Text {
                 p,

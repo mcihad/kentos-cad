@@ -98,6 +98,8 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
             Vec2::new(p.x + dir.x * DIRECTION_GRIP, p.y + dir.y * DIRECTION_GRIP),
         ],
         Shape::Spline { pts, .. } => pts.clone(),
+        // Its control points (docs/adr/0259 §2): AutoCAD's control vertex grips.
+        Shape::Nurbs { ctrl, .. } => ctrl.clone(),
         // Its vertices, then the middle of each segment, as a polyline's (docs/adr/0146 §4).
         Shape::Leader { pts, .. } => {
             let mut out = pts.clone();
@@ -533,6 +535,26 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         Shape::Spline { pts, closed } => Shape::Spline {
             pts: replace_at(pts, index, p),
             closed: *closed,
+        },
+        // A control point moved: the curve follows it; its fit points no longer describe it (docs/adr/0259 §2).
+        Shape::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            periodic,
+            ..
+        } => Shape::Nurbs {
+            degree: *degree,
+            ctrl: replace_at(ctrl, index, p),
+            knots: knots.clone(),
+            weights: weights.clone(),
+            closed: *closed,
+            periodic: *periodic,
+            fit: None,
+            fit_tolerance: None,
+            tangents: None,
         },
         Shape::Hatch {
             ring,

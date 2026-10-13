@@ -202,6 +202,7 @@ fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Arc(x) => &mut x.base,
         Entity::Ellipse(x) => &mut x.base,
         Entity::Spline(x) => &mut x.base,
+        Entity::Nurbs(x) => &mut x.base,
         Entity::Xline(x) | Entity::Ray(x) => &mut x.base,
         Entity::Text(x) => &mut x.base,
         Entity::Dimension(x) => &mut x.base,

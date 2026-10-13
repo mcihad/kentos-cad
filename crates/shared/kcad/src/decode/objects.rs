@@ -44,7 +44,7 @@ use crate::{
     SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
-    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
+    SCHEMA_WITH_NURBS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
     SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_REQUESTS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS, SCHEMA_WITH_STYLES,
     SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
@@ -62,6 +62,7 @@ enum Kind {
     Arc,
     Ellipse,
     Spline,
+    Nurbs,
     Xline,
     Ray,
     Text,
@@ -87,6 +88,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("arc", Kind::Arc),
     ("ellipse", Kind::Ellipse),
     ("spline", Kind::Spline),
+    ("nurbs", Kind::Nurbs),
     ("xline", Kind::Xline),
     ("ray", Kind::Ray),
     ("text", Kind::Text),
@@ -194,6 +196,8 @@ pub(super) struct Features {
     pub(super) requests: bool,
     /// Schema 46: a polyline's `closed` and `widths` (docs/adr/0258).
     polyline_extras: bool,
+    /// Schema 47: the NURBS curve (docs/adr/0259).
+    nurbs: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -247,6 +251,7 @@ impl Features {
             sheets: schema >= SCHEMA_WITH_SHEETS,
             requests: schema >= SCHEMA_WITH_REQUESTS,
             polyline_extras: schema >= SCHEMA_WITH_POLYLINE_EXTRAS,
+            nurbs: schema >= SCHEMA_WITH_NURBS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -296,6 +301,10 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Arc => matches!(key, "c" | "r" | "a0" | "a1"),
             Kind::Ellipse => matches!(key, "c" | "major" | "ratio" | "t0" | "t1"),
             Kind::Spline => matches!(key, "pts" | "closed"),
+            Kind::Nurbs => matches!(
+                key,
+                "degree" | "ctrl" | "knots" | "weights" | "closed" | "periodic" | "fit" | "tangents" | "fitTolerance"
+            ),
             Kind::Xline | Kind::Ray => matches!(key, "p" | "dir"),
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
@@ -443,6 +452,15 @@ struct Fields {
     line_weight: Option<f64>,
     label_pins: Option<Vec<kentos_contracts::LabelPin>>,
     attachments: Option<Vec<kentos_contracts::Attachment>>,
+    /// A NURBS curve's numbers (docs/adr/0259).
+    degree: Option<u32>,
+    ctrl: Option<Vec<Vec2>>,
+    knots: Option<Vec<f64>>,
+    weights: Option<Vec<f64>>,
+    periodic: bool,
+    fit: Option<Vec<Vec2>>,
+    tangents: Option<[Option<Vec2>; 2]>,
+    fit_tolerance: Option<f64>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -650,6 +668,7 @@ pub(super) fn object(
             && (has.images || *kind != Kind::Image)
             && (has.rasters || *kind != Kind::Raster)
             && (has.point_clouds || *kind != Kind::PointCloud)
+            && (has.nurbs || *kind != Kind::Nurbs)
     }) else {
         return Err(r.fail(
             Code::UnknownKind,
@@ -887,6 +906,52 @@ pub(super) fn object(
                     ));
                 }
                 f.closed = Some(true);
+            }
+            // A NURBS curve's words are written only when true, as a closed polyline's (docs/adr/0259).
+            "closed" | "periodic" if kind == Kind::Nurbs => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("{key} false yazılmaz; alan yalnız true iken yazılır"),
+                    ));
+                }
+                if key == "closed" {
+                    f.closed = Some(true);
+                } else {
+                    f.periodic = true;
+                }
+            }
+            "degree" => {
+                f.degree = Some(r.uint(u64::from(kentos_contracts::MAX_NURBS_DEGREE))? as u32)
+            }
+            "ctrl" => f.ctrl = Some(points(r)?),
+            "knots" => f.knots = Some(floats(r)?),
+            "weights" => f.weights = Some(floats(r)?),
+            "fit" => f.fit = Some(points(r)?),
+            "fitTolerance" => f.fit_tolerance = Some(r.float()?),
+            "tangents" => {
+                let at = r.position();
+                let n = r.array()?;
+                if n != 2 {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("teğetler 2 öğe olmalı (başlangıç, bitiş), {n} var"),
+                    ));
+                }
+                let mut pair = [None, None];
+                for t in &mut pair {
+                    *t = if r.next_is_null() {
+                        r.float_or_null()?;
+                        None
+                    } else {
+                        Some(point(r)?)
+                    };
+                }
+                r.leave();
+                f.tangents = Some(pair);
             }
             "closed" => f.closed = Some(r.bool()?),
             "widths" => f.widths = Some(list(r, |r, _| width(r))?),
@@ -1320,6 +1385,24 @@ fn build(
             pts: required(r, f.pts.take(), "pts")?,
             closed: required(r, f.closed, "closed")?,
         }),
+        Kind::Nurbs => {
+            let e = kentos_contracts::NurbsEntity {
+                base,
+                degree: required(r, f.degree, "degree")?,
+                ctrl: required(r, f.ctrl.take(), "ctrl")?,
+                knots: required(r, f.knots.take(), "knots")?,
+                weights: f.weights.take(),
+                closed: f.closed.unwrap_or(false),
+                periodic: f.periodic,
+                fit: f.fit.take(),
+                tangents: f.tangents.take(),
+                fit_tolerance: f.fit_tolerance,
+            };
+            if let Some(problem) = e.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Nurbs(e)
+        }
         Kind::Xline | Kind::Ray => {
             let line = ConstructionEntity {
                 base,

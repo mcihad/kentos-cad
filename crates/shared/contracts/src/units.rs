@@ -284,6 +284,16 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             s.point(&mut el.major);
         }
         Entity::Spline(sp) => s.points(&mut sp.pts),
+        // Knots and weights have no unit; fit points and the tolerance are lengths, tangents directions.
+        Entity::Nurbs(n) => {
+            s.points(&mut n.ctrl);
+            if let Some(f) = &mut n.fit {
+                s.points(f);
+            }
+            if let Some(t) = &mut n.fit_tolerance {
+                *t = s.apply(*t);
+            }
+        }
         Entity::Xline(c) | Entity::Ray(c) => s.point(&mut c.p),
         Entity::Text(t) => {
             s.point(&mut t.p);

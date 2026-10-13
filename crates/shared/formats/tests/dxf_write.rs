@@ -11,8 +11,8 @@ use kentos_contracts::{
     ArcEntity, BlockDefinition, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, DrawingUnit, DxfReadOptions, DxfWriteInput, DxfWriteLayer, EllipseEntity,
     Entity, EntityBase, ExportReport, HatchEntity, HatchPattern, HatchPatternType, ImportResult,
-    InsertEntity, LineEntity, LineType, PathEntity, PointEntity, RingGeometry, SplineEntity,
-    TextEntity, Vec2,
+    InsertEntity, LineEntity, LineType, NurbsEntity, PathEntity, PointEntity, RingGeometry,
+    SplineEntity, TextEntity, Vec2,
 };
 use kentos_formats::dxf;
 use kentos_formats::math::{atan2, cos, sin};
@@ -267,6 +267,40 @@ fn objects() -> Vec<Entity> {
                 tm(-3.0, 60.0),
             ],
             closed: true,
+        }),
+        // NURBS curves as they are (docs/adr/0259 §4): a rational quarter circle with its fit points,
+        // end tangents and tolerance, and a closed periodic cubic.
+        Entity::Nurbs(NurbsEntity {
+            base: base("yol"),
+            degree: 2,
+            ctrl: vec![tm(20.0, 0.0), tm(20.0, 10.0), tm(10.0, 10.0)],
+            knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+            weights: Some(vec![1.0, std::f64::consts::FRAC_1_SQRT_2, 1.0]),
+            closed: false,
+            periodic: false,
+            fit: Some(vec![tm(20.0, 0.0), tm(10.0, 10.0)]),
+            tangents: Some([Some(v(0.0, 1.0)), None]),
+            fit_tolerance: Some(1e-10),
+        }),
+        Entity::Nurbs(NurbsEntity {
+            base: base("yol"),
+            degree: 3,
+            ctrl: vec![
+                tm(30.0, 0.0),
+                tm(40.0, 0.0),
+                tm(40.0, 10.0),
+                tm(30.0, 10.0),
+                tm(30.0, 0.0),
+                tm(40.0, 0.0),
+                tm(40.0, 10.0),
+            ],
+            knots: (0..11).map(f64::from).collect(),
+            weights: None,
+            closed: true,
+            periodic: true,
+            fit: None,
+            tangents: None,
+            fit_tolerance: None,
         }),
         Entity::Xline(ConstructionEntity {
             base: base("yol"),
@@ -1108,10 +1142,14 @@ fn fnv64(bytes: &[u8]) -> u64 {
 /// A drawing without elevations is the file it was before elevations were
 /// (docs/adr/0142): the same bytes, so nothing an old reader was given changes.
 /// The length and fingerprint are those the writer gave for `objects()` before
-/// the elevations existed.
+/// the elevations existed (without the NURBS curves, which came later, docs/adr/0259).
 #[test]
 fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
-    let (bytes, report) = dxf::write(&input(objects()));
+    let old: Vec<Entity> = objects()
+        .into_iter()
+        .filter(|e| !matches!(e, Entity::Nurbs(_)))
+        .collect();
+    let (bytes, report) = dxf::write(&input(old));
     assert_eq!((bytes.len(), fnv64(&bytes)), (38014, 0x5452_5a32_43b1_f0e6));
     // And it says nothing of elevations.
     assert!(

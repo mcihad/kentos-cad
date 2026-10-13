@@ -71,7 +71,8 @@ pub fn route_of(e: &Shape) -> Option<Shape> {
         | Shape::Arc { .. }
         | Shape::Circle { .. }
         | Shape::Ellipse { .. }
-        | Shape::Spline { .. } => Some(e.clone()),
+        | Shape::Spline { .. }
+        | Shape::Nurbs { .. } => Some(e.clone()),
         Shape::Polygon { pts, bulges, .. } => Some(Shape::Polygon {
             pts: pts.clone(),
             bulges: bulges.clone(),
@@ -211,6 +212,11 @@ fn curve_foot(e: &Shape, p: Vec2) -> Option<(Vec2, Vec2)> {
             Some((ellipse_point(&g, t), ellipse_derivative(&g, t)))
         }
         Shape::Spline { pts, closed } => spline_foot(pts, *closed, p),
+        // On the curve itself, with its tangent (docs/adr/0259 §2).
+        Shape::Nurbs { .. } => crate::geom::nurbs::of(e).map(|c| {
+            let d = c.derivs(c.closest(p), 1);
+            (d[0], d[1])
+        }),
         _ => None,
     }
 }

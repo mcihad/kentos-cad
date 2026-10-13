@@ -367,6 +367,7 @@ pub fn reverse(e: &Entity) -> Option<Entity> {
             pts: pts.iter().rev().copied().collect(),
             closed: *closed,
         },
+        Shape::Nurbs { .. } => crate::ops::nurbs_cuts::reversed(&e.shape)?,
         _ => return None,
     };
     Some(e.with(shape))

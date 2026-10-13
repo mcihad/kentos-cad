@@ -125,9 +125,11 @@ pub fn outline_points(s: &Shape) -> Vec<Vec2> {
 pub fn is_curved(s: &Shape) -> bool {
     let bent = |b: &Option<Vec<f64>>| b.iter().flatten().any(|v| is_arc_bulge(*v));
     match s {
-        Shape::Circle { .. } | Shape::Arc { .. } | Shape::Ellipse { .. } | Shape::Spline { .. } => {
-            true
-        }
+        Shape::Circle { .. }
+        | Shape::Arc { .. }
+        | Shape::Ellipse { .. }
+        | Shape::Spline { .. }
+        | Shape::Nurbs { .. } => true,
         Shape::Polygon { .. } | Shape::Polyline { .. } => area_parts(s).iter().any(|p| match p {
             Shape::Polygon { bulges, holes, .. } | Shape::Polyline { bulges, holes, .. } => {
                 bent(bulges) || holes.iter().flatten().any(|h| bent(&h.bulges))

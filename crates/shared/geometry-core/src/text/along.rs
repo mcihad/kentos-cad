@@ -589,7 +589,8 @@ pub fn paths_of(shape: &Shape) -> Vec<Path> {
         | Shape::Arc { .. }
         | Shape::Circle { .. }
         | Shape::Ellipse { .. }
-        | Shape::Spline { .. } => path_of(shape).into_iter().collect(),
+        | Shape::Spline { .. }
+        | Shape::Nurbs { .. } => path_of(shape).into_iter().collect(),
         _ => Vec::new(),
     }
 }

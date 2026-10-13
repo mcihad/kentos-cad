@@ -11,8 +11,8 @@ use kentos_contracts::{
     EntitiesHatch, EntitiesJoin, EntitiesOffset, EntitiesSetProperties, EntitiesStretch,
     EntitiesTransform, EntitiesTrim, ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter,
     LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
-    LineCreate, NetworkDefine, PointCreate, PolygonCreate, PolylineCreate, ScenariosEdit,
-    SettingsSet, SheetsEdit, StylesEdit, UnitsChange, codes,
+    LineCreate, NetworkDefine, NurbsCreate, PointCreate, PolygonCreate, PolylineCreate,
+    ScenariosEdit, SettingsSet, SheetsEdit, StylesEdit, UnitsChange, codes,
 };
 use serde_json::Value;
 
@@ -22,8 +22,9 @@ use crate::{
     entities_boundary, entities_break, entities_chamfer, entities_extend, entities_fillet,
     entities_hatch, entities_join, entities_trim, file_import, labels_pin, layers_compose,
     layers_edit, layers_filter, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_set, layers_states, layers_time, line, network_define, offset, point, polygon, polyline,
-    scenarios_edit, set, settings_set, sheets_edit, stretch, styles_edit, transform, units_change,
+    layers_set, layers_states, layers_time, line, network_define, nurbs, offset, point, polygon,
+    polyline, scenarios_edit, set, settings_set, sheets_edit, stretch, styles_edit, transform,
+    units_change,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its
@@ -86,6 +87,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_LAYERS_SERVICE => $then!(layers_service, LayersService),
             kentos_contracts::CAD_NETWORK_DEFINE => $then!(network_define, NetworkDefine),
             kentos_contracts::CAD_ENTITIES_OFFSET => $then!(offset, EntitiesOffset),
+            kentos_contracts::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
             kentos_contracts::CAD_ENTITIES_TRIM => $then!(entities_trim, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_EXTEND => $then!(entities_extend, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_FILLET => $then!(entities_fillet, EntitiesFillet),

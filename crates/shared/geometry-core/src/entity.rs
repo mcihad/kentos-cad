@@ -230,6 +230,21 @@ pub enum Shape {
         pts: Vec<Vec2>,
         closed: bool,
     },
+    /// A general NURBS curve (docs/adr/0259): its source numbers, never
+    /// rounded; `geom::nurbs` evaluates it. The fit points, their tangents and
+    /// tolerance are kept beside them and transformed with them; an edit that
+    /// changes the curve's shape drops them (AutoCAD's rule).
+    Nurbs {
+        degree: usize,
+        ctrl: Vec<Vec2>,
+        knots: Vec<f64>,
+        weights: Option<Vec<f64>>,
+        closed: bool,
+        periodic: bool,
+        fit: Option<Vec<Vec2>>,
+        fit_tolerance: Option<f64>,
+        tangents: Option<[Option<Vec2>; 2]>,
+    },
     Text {
         p: Vec2,
         text: String,
@@ -396,6 +411,8 @@ crate::json_tagged!(Shape, "kind",
     Xline => "xline" { p, dir },
     Ray => "ray" { p, dir },
     Spline => "spline" { pts, closed },
+    // A NURBS curve's tangents are the typed hosts' (docs/adr/0259): the JSON API reads it without them.
+    Nurbs => "nurbs" { degree, ctrl, knots, weights, closed, periodic, fit, fit_tolerance => "fitTolerance"; tangents },
     Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc },
@@ -585,6 +602,8 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         }
         Shape::Xline { p, .. } | Shape::Ray { p, .. } => vec![*p],
         Shape::Spline { pts, .. } => pts.clone(),
+        // Its control points: the grips and the coordinate table (docs/adr/0259 §2).
+        Shape::Nurbs { ctrl, .. } => ctrl.clone(),
         // The corners of the part shown (docs/adr/0192 §4).
         Shape::Image { .. } => crate::geom::image::shown(e),
         // Its frame's corners (docs/adr/0204 §7).
@@ -648,6 +667,7 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
             vec![start, Vec2::new(p.x + dir.x * r, p.y + dir.y * r)]
         }
         Shape::Spline { pts, closed } => catmull_rom(pts, *closed, 16.0),
+        Shape::Nurbs { .. } => crate::geom::nurbs::outline(e),
         // A closed polyline's runs back to its first point (docs/adr/0258 §1).
         Shape::Polyline {
             pts,
@@ -830,6 +850,10 @@ pub fn enclosed_area(e: &Shape) -> Option<f64> {
             closed: true,
             ..
         } => Some(bulge_ring_area(pts, bulges.as_deref()).abs()),
+        // A closed NURBS curve encloses what Green's theorem gives (docs/adr/0259 §2).
+        Shape::Nurbs { closed: true, .. } => {
+            crate::geom::nurbs::of(e).map(|n| n.signed_area().abs())
+        }
         _ => entity_area(e),
     }
 }
@@ -1529,6 +1553,11 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         Shape::Polyline { pts, .. } | Shape::Spline { pts, .. } | Shape::Leader { pts, .. } => {
             return pts.get(pts.len() / 2).copied();
         }
+        // The point halfway along the curve (docs/adr/0259 §2).
+        Shape::Nurbs { ctrl, .. } => match crate::geom::nurbs::of(e) {
+            Some(n) => n.point(n.param_at_length(n.length() / 2.0)),
+            None => return ctrl.get(ctrl.len() / 2).copied(),
+        },
         Shape::Dimension { a, .. } => layout_of(e).map_or(*a, |l| l.text_at),
         Shape::Hatch { ring, .. } => centroid(ring),
         Shape::Point { p, .. }
@@ -1582,6 +1611,7 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
         } => Some(ellipse_length(&ellipse_geom(*c, *major, *ratio, *t0, *t1))),
         // The curve itself, not the outline it is drawn with (docs/adr/0149 §3).
         Shape::Spline { pts, closed } => Some(spline_length(pts, *closed)),
+        Shape::Nurbs { .. } => crate::geom::nurbs::of(e).map(|n| n.length()),
         // Its vertices' length; the landing does not count (docs/adr/0146 §2).
         Shape::Leader { pts, .. } => Some(path_length(pts, false)),
         // The measured value when it is a length (an angle has none).

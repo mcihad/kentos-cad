@@ -741,6 +741,14 @@ fn finite(e: &Entity) -> bool {
             Entity::Arc(e) => p(&e.c) && fs(&[e.r, e.a0, e.a1]),
             Entity::Ellipse(e) => p(&e.c) && p(&e.major) && fs(&[e.ratio, e.t0, e.t1]),
             Entity::Spline(e) => ps(&e.pts),
+            Entity::Nurbs(e) => {
+                ps(&e.ctrl)
+                    && fs(&e.knots)
+                    && e.weights.as_deref().is_none_or(fs)
+                    && e.fit.as_deref().is_none_or(ps)
+                    && e.tangents.iter().flatten().flatten().all(p)
+                    && e.fit_tolerance.is_none_or(f64::is_finite)
+            }
             Entity::Xline(e) | Entity::Ray(e) => p(&e.p) && p(&e.dir),
             Entity::Text(e) => p(&e.p) && e.height.is_finite() && e.rotation.is_finite(),
             Entity::Dimension(e) => {

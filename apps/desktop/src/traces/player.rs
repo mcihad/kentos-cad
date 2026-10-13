@@ -159,6 +159,8 @@ impl Seen {
             // counter-clockwise) or an elliptical arc's start and end; a
             // construction line's point and one metre along it (docs/adr/0057).
             Entity::Spline(s) => (s.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            // A NURBS curve's control points (docs/adr/0259).
+            Entity::Nurbs(n) => (n.ctrl.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Ellipse(e) => {
                 let at = |t: f64| {
                     let (m, r) = (e.major, e.ratio);

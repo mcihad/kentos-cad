@@ -205,6 +205,43 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             pts: pts.iter().map(|&p| apply(m, p)).collect(),
             closed: *closed,
         },
+        // A NURBS curve is affine-invariant: its control points, fit points and tangents mapped,
+        // its knots and weights kept, are the transformed curve exactly (docs/adr/0259 §2).
+        Shape::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            periodic,
+            fit,
+            fit_tolerance,
+            tangents,
+        } => Shape::Nurbs {
+            degree: *degree,
+            ctrl: ctrl.iter().map(|&p| apply(m, p)).collect(),
+            knots: knots.clone(),
+            weights: weights.clone(),
+            closed: *closed,
+            periodic: *periodic,
+            fit: fit
+                .as_ref()
+                .map(|f| f.iter().map(|&p| apply(m, p)).collect()),
+            fit_tolerance: fit_tolerance.map(|t| t * s),
+            tangents: tangents.map(|ts| {
+                ts.map(|t| {
+                    t.map(|t| {
+                        let d = crate::geom::affine::apply_linear(m, t);
+                        let l = (d.x * d.x + d.y * d.y).sqrt();
+                        if l > 0.0 {
+                            Vec2::new(d.x / l, d.y / l)
+                        } else {
+                            d
+                        }
+                    })
+                })
+            }),
+        },
         Shape::Dimension {
             a,
             b,

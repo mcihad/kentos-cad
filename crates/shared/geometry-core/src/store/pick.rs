@@ -242,7 +242,7 @@ impl Store {
                     let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
                     is_full_ellipse(&g).then(|| tessellate_ellipse(&g, 256.0))
                 }
-                Shape::Spline { closed: true, .. } => {
+                Shape::Spline { closed: true, .. } | Shape::Nurbs { closed: true, .. } => {
                     let mut r = entity_outline(e, 72.0);
                     r.pop();
                     Some(r)

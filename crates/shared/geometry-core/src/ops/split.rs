@@ -385,6 +385,7 @@ fn anchor(s: &Shape) -> Option<f64> {
         | Shape::Polygon { pts, .. }
         | Shape::Spline { pts, .. }
         | Shape::Leader { pts, .. } => pts.first()?.x,
+        Shape::Nurbs { ctrl, .. } => ctrl.first()?.x,
         Shape::Circle { c, .. } | Shape::Arc { c, .. } | Shape::Ellipse { c, .. } => c.x,
         Shape::Xline { p, .. } | Shape::Ray { p, .. } => p.x,
         Shape::Dimension { a, .. } => a.x,

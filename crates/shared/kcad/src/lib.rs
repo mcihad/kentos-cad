@@ -382,9 +382,15 @@ pub const SCHEMA_WITH_REQUESTS: u32 = 45;
 /// drawing or of a block definition has one; older readers refuse such a file
 /// instead of opening the line open or narrow.
 pub const SCHEMA_WITH_POLYLINE_EXTRAS: u32 = 46;
+/// Schema 47 (docs/adr/0259): the general NURBS curve (`nurbs`: degree,
+/// control points, knots, weights, and the fit points, tangents and
+/// tolerance kept with them), written only when the drawing or a block
+/// definition has one; older readers refuse such a file instead of losing
+/// the curve.
+pub const SCHEMA_WITH_NURBS: u32 = 47;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 45] = [
+pub const SCHEMAS: [u32; 46] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -430,6 +436,7 @@ pub const SCHEMAS: [u32; 45] = [
     SCHEMA_WITH_SHEETS,
     SCHEMA_WITH_REQUESTS,
     SCHEMA_WITH_POLYLINE_EXTRAS,
+    SCHEMA_WITH_NURBS,
 ];
 
 /// The file a drawing is saved as.

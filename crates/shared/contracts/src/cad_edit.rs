@@ -337,6 +337,39 @@ pub enum EntityGeometry {
         pts: Vec<Vec2>,
         closed: bool,
     },
+    /// A general NURBS curve (docs/adr/0259): its source numbers as `NurbsEntity` holds them.
+    #[serde(rename_all = "camelCase")]
+    Nurbs {
+        #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 11)))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        degree: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        ctrl: Vec<Vec2>,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        knots: Vec<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        weights: Option<Vec<f64>>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        closed: bool,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        periodic: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        fit: Option<Vec<Vec2>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        tangents: Option<[Option<Vec2>; 2]>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        fit_tolerance: Option<f64>,
+    },
     /// A construction line through `p` along the unit direction `dir`.
     Xline {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

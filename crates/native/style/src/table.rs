@@ -30,6 +30,7 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Arc(_) => "Yay",
         Entity::Ellipse(_) => "Elips",
         Entity::Spline(_) => "Eğri",
+        Entity::Nurbs(_) => "NURBS eğrisi",
         Entity::Xline(_) => "Yardımcı çizgi",
         Entity::Ray(_) => "Işın",
         Entity::Text(_) => "Yazı",
@@ -62,6 +63,7 @@ pub fn vertex_count(e: &Entity) -> Option<f64> {
         }
         Entity::Line(_) => 2,
         Entity::Spline(s) => s.pts.len(),
+        Entity::Nurbs(n) => n.ctrl.len(),
         Entity::Point(_) => 1,
         Entity::Leader(l) => l.pts.len(),
         _ => return None,
