@@ -9114,6 +9114,86 @@
    "tests": 1
   },
   {
+   "id": "tool.ucsNamed",
+   "kind": "command",
+   "title": "Adlı UCS",
+   "level": "semantic",
+   "via": [
+    "cad.ucs.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ucs.set",
+   "mcp": "cad.ucs.set",
+   "note": "Ad named, save ya da delete ile komuta verilir (ADR 0261 §2).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.ucsObject",
+   "kind": "command",
+   "title": "Nesneye hizala",
+   "level": "semantic",
+   "via": [
+    "cad.ucs.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ucs.set",
+   "mcp": "cad.ucs.set",
+   "note": "Tıklanan nesnenin kalıcı kimliği ve yer komuta verilir; çerçeveyi komut bulur (ADR 0261 §3).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.ucsOrigin",
+   "kind": "command",
+   "title": "UCS orijini",
+   "level": "semantic",
+   "via": [
+    "cad.ucs.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ucs.set",
+   "mcp": "cad.ucs.set",
+   "note": "Yeni başlangıç komuta verilir; açı kalır (ADR 0261 §2).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.ucsRotate",
+   "kind": "command",
+   "title": "UCS'i döndür",
+   "level": "semantic",
+   "via": [
+    "cad.ucs.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ucs.set",
+   "mcp": "cad.ucs.set",
+   "note": "Yazılan açı rotate, tıklanan yön twoPoints olarak komuta verilir (ADR 0261 §2).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.ucsTwoPoints",
+   "kind": "command",
+   "title": "İki noktayla UCS",
+   "level": "semantic",
+   "via": [
+    "cad.ucs.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ucs.set",
+   "mcp": "cad.ucs.set",
+   "note": "Başlangıç ve x eksenindeki nokta komuta verilir (ADR 0261 §2).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.vertex",
    "kind": "tool",
    "title": "Köşe ekle/sil",
@@ -9248,6 +9328,38 @@
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "ucs.previous",
+   "kind": "command",
+   "title": "Önceki UCS",
+   "level": "semantic",
+   "via": [
+    "cad.ucs.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ucs.set",
+   "mcp": "cad.ucs.set",
+   "note": "Oturumun geçmişindeki UCS çerçeve (frame) olarak komuta verilir (ADR 0261 §1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "ucs.world",
+   "kind": "command",
+   "title": "Dünya UCS",
+   "level": "semantic",
+   "via": [
+    "cad.ucs.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ucs.set",
+   "mcp": "cad.ucs.set",
+   "note": "world komuta verilir; nesneler değişmez, UCS proje ayarıdır (ADR 0261 §2).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "view.annotationSize.legible",

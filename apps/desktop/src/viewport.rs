@@ -334,6 +334,8 @@ struct Grid {
     area: Bounds,
     spacing: (f64, f64),
     origin: Vec2,
+    /// The user coordinate system its lines follow: origin and angle (docs/adr/0261 §4).
+    frame: (Vec2, f64),
     canvas: Canvas,
     part: Arc<ScenePart>,
 }
@@ -425,13 +427,14 @@ impl Viewport {
     /// view with this zoom's spacing, origin and ground, so panning and
     /// zooming inside it upload nothing; else new lines three views wide
     /// around the view (the web's `gridExtent`).
-    fn grid(&self, canvas: Canvas, origin: Vec2) -> Arc<ScenePart> {
+    fn grid(&self, canvas: Canvas, origin: Vec2, frame: (Vec2, f64)) -> Arc<ScenePart> {
         let view = self.camera.visible_bounds();
         let spacing = scene::grid_spacing(self.camera.scale, GRID_MIN_PX);
         let mut cache = self.grid.borrow_mut();
         let covers = cache.as_ref().is_some_and(|g| {
             g.spacing == spacing
                 && g.origin == origin
+                && g.frame == frame
                 && g.canvas == canvas
                 && view.min_x >= g.area.min_x
                 && view.min_y >= g.area.min_y
@@ -450,12 +453,15 @@ impl Viewport {
                 area,
                 spacing,
                 origin,
+                frame,
                 canvas,
-                part: Arc::new(scene::build_grid(
+                part: Arc::new(scene::build_grid_framed(
                     &area,
                     spacing,
                     origin,
                     grid_colors(canvas),
+                    frame.0,
+                    frame.1,
                 )),
             });
         }
@@ -580,7 +586,8 @@ impl Viewport {
             self.highlights(doc, selection, accent, &fixed, &curves, &clip, spatial);
         // The grid under everything (Izgara, F7).
         let grid = if self.grid_shown {
-            self.grid(canvas, origin)
+            let u = doc.settings().ucs.unwrap_or(kentos_contracts::Ucs::WORLD);
+            self.grid(canvas, origin, (Vec2::new(u.origin.x, u.origin.y), u.angle))
         } else {
             Arc::default()
         };

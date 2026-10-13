@@ -142,6 +142,97 @@
       "shortcuts": [],
       "category": "Değiştir",
       "status": "implemented"
+    },
+    {
+      "id": "ucs.world",
+      "title": "Dünya UCS",
+      "icon": "ucsWorld",
+      "description": "Kullanıcı koordinat sistemini dünyaya döndürür: x doğu, y kuzey, başlangıç 0,0. Nesneler değişmez; cad.ucs.set'in world'ü.",
+      "aliases": [
+        "UCSDUNYA",
+        "UCSW"
+      ],
+      "shortcuts": [],
+      "category": "Koordinatlar",
+      "status": "implemented"
+    },
+    {
+      "id": "ucs.previous",
+      "title": "Önceki UCS",
+      "icon": "ucsPrevious",
+      "description": "Bu oturumda bir önceki UCS'e döner (en çok on adım geri). cad.ucs.set'in frame'iyle yazılır.",
+      "aliases": [
+        "UCSONCEKI",
+        "UCSP"
+      ],
+      "shortcuts": [],
+      "category": "Koordinatlar",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.ucsObject",
+      "title": "Nesneye hizala",
+      "icon": "ucsObject",
+      "description": "UCS'in eksenlerini tıklanan nesneye hizalar: çizgide yakın uç ve doğrultusu, çoklu çizgi ve alanda yakın kenar, yayda ve dairede merkez, yazı ve blokta dönüşü. cad.ucs.set'in object'i.",
+      "aliases": [
+        "UCSNESNE",
+        "UCSOB"
+      ],
+      "shortcuts": [],
+      "category": "Koordinatlar",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.ucsTwoPoints",
+      "title": "İki noktayla UCS",
+      "icon": "ucsTwoPoints",
+      "description": "Başlangıç noktası ve x ekseni üzerindeki bir noktayla UCS kurar. cad.ucs.set'in twoPoints'i.",
+      "aliases": [
+        "UCS2N",
+        "UCS3P"
+      ],
+      "shortcuts": [],
+      "category": "Koordinatlar",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.ucsOrigin",
+      "title": "UCS orijini",
+      "icon": "ucsOrigin",
+      "description": "UCS'in başlangıcını verilen noktaya taşır; eksenlerin açısı kalır. cad.ucs.set'in origin'i.",
+      "aliases": [
+        "UCSORIJIN",
+        "UCSO"
+      ],
+      "shortcuts": [],
+      "category": "Koordinatlar",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.ucsRotate",
+      "title": "UCS'i döndür",
+      "icon": "ucsRotate",
+      "description": "UCS'in eksenlerini başlangıcı çevresinde döndürür: yazılan açı (projenin birimi ve yönüyle) ya da tıklanan yön. cad.ucs.set'in rotate'i.",
+      "aliases": [
+        "UCSDONDUR",
+        "UCSZ"
+      ],
+      "shortcuts": [],
+      "category": "Koordinatlar",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.ucsNamed",
+      "title": "Adlı UCS",
+      "icon": "ucsNamed",
+      "description": "Adlı UCS'e geçer; Kaydet (K) geçerli UCS'i adla saklar, Sil (S) adlı UCS'i siler. cad.ucs.set'in named, save ve delete'i.",
+      "aliases": [
+        "UCSAD",
+        "UCSMAN"
+      ],
+      "shortcuts": [],
+      "category": "Koordinatlar",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -154,7 +245,14 @@
     "dimensionReassociate": "<path d=\"M3 3.5v8M17 3.5v8\"/><path d=\"M3 6.5h14\"/><path d=\"m5.2 5 -2.2 1.5 2.2 1.5M14.8 5l2.2 1.5-2.2 1.5\"/><path d=\"M9.2 16.4l-.6.6a2 2 0 0 1-2.8-2.8l1.4-1.4a2 2 0 0 1 2.8 0\"/><path d=\"M10.8 13.6l.6-.6a2 2 0 0 1 2.8 2.8l-1.4 1.4a2 2 0 0 1-2.8 0\"/>",
     "nurbs": "<path d=\"M3 16.5C5 9 8 4.5 10.5 7.5S15.5 15 17 3.5\"/><path d=\"M3 16.5 6.5 5l7 8.5L17 3.5\" stroke-dasharray=\"1.4 1.3\" stroke-width=\"1.1\"/><rect x=\"5.3\" y=\"3.8\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"12.3\" y=\"12.3\" width=\"2.4\" height=\"2.4\" fill=\"currentColor\" stroke=\"none\"/>",
     "bringToFront": "<rect x=\"2.5\" y=\"2.5\" width=\"9\" height=\"9\" rx=\"1\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1.1\"/><rect x=\"8.5\" y=\"8.5\" width=\"9\" height=\"9\" rx=\"1\" fill=\"currentColor\" fill-opacity=\"0.35\"/><path d=\"M13 6V2.5m-1.6 1.6L13 2.5l1.6 1.6\" stroke-width=\"1.2\"/>",
-    "sendToBack": "<rect x=\"8.5\" y=\"8.5\" width=\"9\" height=\"9\" rx=\"1\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1.1\"/><rect x=\"2.5\" y=\"2.5\" width=\"9\" height=\"9\" rx=\"1\" fill=\"currentColor\" fill-opacity=\"0.35\"/><path d=\"M7 14v3.5m-1.6-1.6L7 17.5l1.6-1.6\" stroke-width=\"1.2\"/>"
+    "sendToBack": "<rect x=\"8.5\" y=\"8.5\" width=\"9\" height=\"9\" rx=\"1\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1.1\"/><rect x=\"2.5\" y=\"2.5\" width=\"9\" height=\"9\" rx=\"1\" fill=\"currentColor\" fill-opacity=\"0.35\"/><path d=\"M7 14v3.5m-1.6-1.6L7 17.5l1.6-1.6\" stroke-width=\"1.2\"/>",
+    "ucsWorld": "<path d=\"M4.5 15.5V5m0 10.5H15\" stroke-width=\"1.3\"/><path d=\"M3 6.6L4.5 4 6 6.6M13.4 14l2.6 1.5-2.6 1.5\" stroke-width=\"1.1\"/><rect x=\"3\" y=\"14\" width=\"3\" height=\"3\" stroke-width=\"1.1\"/>",
+    "ucsPrevious": "<path d=\"M4.5 15.5V5m0 10.5H15\" stroke-width=\"1.3\"/><path d=\"M3 6.6L4.5 4 6 6.6M13.4 14l2.6 1.5-2.6 1.5\" stroke-width=\"1.1\"/><path d=\"M17.5 5.5a4 4 0 0 0-7 1.5m0-2.4v2.4h2.4\" stroke-width=\"1.2\"/>",
+    "ucsObject": "<path d=\"M3.5 13.5l11-7\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1.1\"/><path d=\"M5 15.5l10.5-6.7M5 15.5l-3-4.6\" stroke-width=\"1.3\"/><path d=\"M13.4 8.2l2.6-.3-1 2.4M1.6 12.9L1.5 10l2.1 1.4\" stroke-width=\"1.1\"/>",
+    "ucsTwoPoints": "<path d=\"M4.5 15.5l11-6\" stroke-width=\"1.3\"/><circle cx=\"4.5\" cy=\"15.5\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"15.5\" cy=\"9.5\" r=\"1.7\" fill=\"currentColor\"/><path d=\"M4.5 15.5L1.9 10.7\" stroke-width=\"1.1\" stroke-dasharray=\"1.4 1.1\"/>",
+    "ucsOrigin": "<path d=\"M4.5 15.5V5m0 10.5H15\" stroke-width=\"1.3\"/><path d=\"M3 6.6L4.5 4 6 6.6M13.4 14l2.6 1.5-2.6 1.5\" stroke-width=\"1.1\"/><circle cx=\"11.5\" cy=\"8.5\" r=\"2\" stroke-width=\"1.2\"/><path d=\"M6 14l4-4\" stroke-width=\"1\" stroke-dasharray=\"1.2 1\"/>",
+    "ucsRotate": "<path d=\"M4.5 15.5l9-5.2M4.5 15.5l-2.2-4.6\" stroke-width=\"1.3\"/><path d=\"M15 15.5a10.5 10.5 0 0 0-1-4.7m-1.5 1.1l1.5-1.1.6 1.8\" stroke-width=\"1.1\"/>",
+    "ucsNamed": "<path d=\"M4.5 15.5V5m0 10.5H15\" stroke-width=\"1.3\"/><path d=\"M3 6.6L4.5 4 6 6.6M13.4 14l2.6 1.5-2.6 1.5\" stroke-width=\"1.1\"/><path d=\"M10 3.5h5.5l2 2-2 2H10z\" stroke-width=\"1.1\"/>"
   },
   "ribbon": [
     {
@@ -290,6 +388,71 @@
           "command": "edit.sendToBack",
           "size": "small"
         }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "view",
+      "label": "Koordinatlar",
+      "icon": "ucsWorld",
+      "after": "Görünüm kipleri",
+      "items": [
+        {
+          "command": "ucs.world",
+          "size": "small"
+        },
+        {
+          "command": "ucs.previous",
+          "size": "small"
+        },
+        {
+          "command": "tool.ucsObject",
+          "size": "small"
+        },
+        {
+          "command": "tool.ucsTwoPoints",
+          "size": "small"
+        },
+        {
+          "command": "tool.ucsOrigin",
+          "size": "small"
+        },
+        {
+          "command": "tool.ucsRotate",
+          "size": "small"
+        },
+        {
+          "command": "tool.ucsNamed",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "view",
+      "label": "Koordinatlar",
+      "icon": "ucsWorld",
+      "after": "Görünüm kipleri",
+      "items": [
+        {
+          "command": "ucs.world",
+          "size": "small"
+        },
+        {
+          "command": "ucs.previous",
+          "size": "small"
+        }
+      ],
+      "overflow": [
+        "tool.ucsObject",
+        "tool.ucsTwoPoints",
+        "tool.ucsOrigin",
+        "tool.ucsRotate",
+        "tool.ucsNamed"
       ]
     }
   ]

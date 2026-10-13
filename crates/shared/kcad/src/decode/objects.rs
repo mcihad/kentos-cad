@@ -201,6 +201,8 @@ pub(super) struct Features {
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
+    /// Schema 49: the settings' `ucs` and `namedUcs` (docs/adr/0261).
+    pub(super) ucs: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -255,6 +257,7 @@ impl Features {
             requests: schema >= SCHEMA_WITH_REQUESTS,
             polyline_extras: schema >= SCHEMA_WITH_POLYLINE_EXTRAS,
             look: schema >= crate::SCHEMA_WITH_LOOK,
+            ucs: schema >= crate::SCHEMA_WITH_UCS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,

@@ -316,6 +316,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   bantları), katmanın `plot`'u (Yazdır / Yazdırma, pafta atlar); `.kcad` şema 48, `FORMATS_VERSION` 61, sunucuda göç 0018
   (`feature.look`); `cad.entities.set`'in üç işlemi, oluşturan komutların `lineType`'ı (şeridin Çizgi tipi yeni nesnelere), DXF'in 6, 48,
   440 ve 290'ı (ADR 0260);
+  kullanıcı koordinat sistemi (2B UCS): projenin `ucs`'i ve adlı UCS'leri (`namedUcs`; `.kcad` şema 49), `cad.ucs.set` (Dünya, Çerçeve,
+  Orijin, Döndür, İki nokta, Nesneye hizala, Adlı, Kaydet, Sil; ayar, geri alma adımı değil, nesneler değişmez); çekirdek `tools::ucs`
+  (`Frame`, `point_from_text_framed`, `constrain_cursor_in`, `object_frame`); yazılan nokta, Orto, kutupsal izleme, açı kilidi, ızgara,
+  Karelaj, Doğrusal ölçü ve yeni taramanın açısı UCS'in eksenleriyle; durum çubuğu ve Koordinat oku UCS'te, eksen simgesi döner;
+  Görünüm › Koordinatlar ve Önceki UCS (oturumun geçmişi); tel dünyadır: Python `Document.ucs`, `to_world`, `to_ucs`, MCP
+  `drawing.toWorld`, `drawing.toUcs`, özetin `conventions.ucs`'i (ADR 0261);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

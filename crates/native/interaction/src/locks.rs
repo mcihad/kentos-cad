@@ -225,6 +225,8 @@ mod tests {
     /// A CBS project in grads.
     fn cbs() -> Format {
         Format::of(&kentos_contracts::ProjectSettings {
+            named_ucs: Vec::new(),
+            ucs: None,
             srid: 5256,
             length_decimals: 3,
             area_decimals: 2,

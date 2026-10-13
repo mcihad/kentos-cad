@@ -28,6 +28,7 @@ mod services;
 mod sheets;
 mod styles;
 mod temporal;
+mod ucs;
 mod variables;
 
 use kentos_contracts::{
@@ -55,7 +56,7 @@ use crate::{
     SCHEMA_WITH_REQUESTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS,
     SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
     SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_UCS, SCHEMA_WITH_VARIABLES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, line_type, point_symbol, workspace,
@@ -353,8 +354,14 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.connections.is_empty())
             + usize::from(!s.networks.is_empty())
             + usize::from(!s.variables.is_empty())
-            + usize::from(!s.address_locators.is_empty());
+            + usize::from(!s.address_locators.is_empty())
+            + usize::from(s.ucs.is_some())
+            + usize::from(!s.named_ucs.is_empty());
         self.open(n, true)?;
+        if let Some(u) = &s.ucs {
+            self.key("ucs");
+            self.at(Seg::Name("ucs"), |e| e.ucs(u))?;
+        }
         self.key("srid");
         self.w.uint(u64::from(s.srid));
         if let Some(v) = &s.survey {
@@ -363,6 +370,10 @@ impl<'d> Encoder<'d> {
         }
         self.key("areaUnit");
         self.w.text(area_unit(s.area_unit));
+        if !s.named_ucs.is_empty() {
+            self.key("namedUcs");
+            self.at(Seg::Name("namedUcs"), |e| e.named_ucs(&s.named_ucs))?;
+        }
         if !s.networks.is_empty() {
             self.key("networks");
             self.at(Seg::Name("networks"), |e| e.networks(&s.networks))?;
@@ -1122,6 +1133,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 49 (docs/adr/0261): a user coordinate system, current or named.
+    if doc.settings.ucs.is_some() || !doc.settings.named_ucs.is_empty() {
+        return SCHEMA_WITH_UCS;
     }
     // Schema 48 (docs/adr/0260): an object's look, a block definition's too, or a layer not printed.
     fn unprinted(nodes: &[LayerNode]) -> bool {

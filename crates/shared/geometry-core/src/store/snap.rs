@@ -22,7 +22,7 @@ use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, on_edge_arc, perpendicular_foot, tangent_points,
 };
 use crate::geom::leader;
-use crate::jsmath::{PI, atan2, js_hypot, js_max, js_round, js_sign};
+use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_round, js_sign, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::vec2::Vec2;
@@ -179,6 +179,9 @@ pub struct SnapExtras {
     pub parallels: Vec<Vec2>,
     pub draft: Vec<Shape>,
     pub grid: Option<[f64; 2]>,
+    /// The user coordinate system Karelaj's nodes follow: origin and angle,
+    /// radians (docs/adr/0261 §4); none: the world's.
+    pub grid_frame: Option<(Vec2, f64)>,
 }
 
 /// An edge near the cursor, for crossings; `ell` when it is one of an ellipse's chords.
@@ -364,7 +367,19 @@ impl Store {
             let [gx, gy] = extras.grid?;
             (kinds & SnapKind::Grid.bit() != 0).then(|| SnapHit {
                 kind: SnapKind::Grid,
-                point: Vec2::new(grid_coord(p.x, gx), grid_coord(p.y, gy)),
+                point: match extras.grid_frame {
+                    // In a UCS the node is its axes' (docs/adr/0261 §4): into the frame, rounded, back.
+                    Some((o, a)) if a != 0.0 || o.x != 0.0 || o.y != 0.0 => {
+                        let (c, s) = (cos(a), sin(a));
+                        let (dx, dy) = (p.x - o.x, p.y - o.y);
+                        let (u, v) = (
+                            grid_coord(dx * c + dy * s, gx),
+                            grid_coord(-dx * s + dy * c, gy),
+                        );
+                        Vec2::new(o.x + u * c - v * s, o.y + u * s + v * c)
+                    }
+                    _ => Vec2::new(grid_coord(p.x, gx), grid_coord(p.y, gy)),
+                },
                 id: NO_OBJECT,
             })
         })

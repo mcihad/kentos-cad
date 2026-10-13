@@ -233,6 +233,10 @@ pub struct Draft {
     /// Karelaj's spacings, east (Y) and north (X), metres (`snap.gridEast`,
     /// `snap.gridNorth`, docs/adr/0163 §1).
     pub snap_grid: [f64; 2],
+    /// The drawing's user coordinate system, origin and angle (docs/adr/0261
+    /// §4): Karelaj's nodes are on its axes. The host keeps it with the
+    /// drawing's settings; none: the world's.
+    pub ucs: Option<(Vec2, f64)>,
     /// The object being drawn is snapped to too (`snap.self`, §3).
     pub snap_self: bool,
     /// The screen scales snapping works between, as 1:N denominators
@@ -284,6 +288,7 @@ impl Default for Draft {
     /// (app/state.ts, the settings schema).
     fn default() -> Self {
         Self {
+            ucs: None,
             ortho: false,
             right_angle: false,
             polar: None,
@@ -1059,6 +1064,18 @@ impl Default for Memory {
     }
 }
 
+/// A project's user coordinate system as the shared core's frame (docs/adr/0261 §1).
+pub fn frame_of(
+    settings: &kentos_contracts::ProjectSettings,
+) -> kentos_geometry_core::tools::ucs::Frame {
+    match settings.ucs {
+        Some(u) => {
+            kentos_geometry_core::tools::ucs::Frame::new(Vec2::new(u.origin.x, u.origin.y), u.angle)
+        }
+        None => kentos_geometry_core::tools::ucs::Frame::WORLD,
+    }
+}
+
 /// What a tool works with during one call.
 pub struct Context<'a> {
     /// The open drawing: the only way a tool changes anything.
@@ -1160,10 +1177,23 @@ impl Context<'_> {
         self.tracking.along(distance)
     }
 
+    /// The drawing's user coordinate system (docs/adr/0261 §1): the world's
+    /// without one.
+    pub fn frame(&self) -> kentos_geometry_core::tools::ucs::Frame {
+        frame_of(self.doc.settings())
+    }
+
+    /// How far the UCS's x axis is turned from east, degrees (docs/adr/0261 §4):
+    /// a new hatch's pattern angle is from it.
+    pub fn ucs_degrees(&self) -> f64 {
+        (self.frame().angle * 180.0) / kentos_geometry_core::jsmath::PI
+    }
+
     /// Typed point text (the web's `pointFromText`): an absolute, relative or
     /// polar point, or a distance along the tracking line or toward
     /// `cursor`; its lengths and coordinates typed in the project's unit
-    /// (docs/adr/0165 §2), a polar angle in its type's way and angle unit (§4).
+    /// (docs/adr/0165 §2), a polar angle in its type's way and angle unit (§4),
+    /// all in the drawing's UCS (docs/adr/0261 §4); the point in the world.
     pub fn typed_point(
         &self,
         text: &str,
@@ -1173,13 +1203,14 @@ impl Context<'_> {
         let format = self.format();
         // Relative input is measured from a reference point, when one is set (docs/adr/0166 §5).
         let last = self.locks.reference.or(last);
-        kentos_geometry_core::tools::point_text::point_from_text_in(
+        kentos_geometry_core::tools::ucs::point_from_text_framed(
             text,
             last,
             cursor,
             |d| self.track_along(d),
             |v| format.to_metres(v),
             format.angles(),
+            &self.frame(),
         )
     }
 

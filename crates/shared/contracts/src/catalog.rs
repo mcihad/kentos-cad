@@ -3073,6 +3073,55 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // The drawing's user coordinate system (docs/adr/0261), held together by
+        // fixtures/commands/v1/cad.ucs.set.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_UCS_SET.into(),
+            version: crate::CAD_UCS_SET_VERSION,
+            title: "Kullanıcı koordinat sistemi".into(),
+            summary: "Çizimin 2B kullanıcı koordinat sistemini (UCS) değiştirir: dünyada bir başlangıç ve x ekseninin doğudan saat yönünün tersine açısı (radyan, [0, 2π)). \
+                      to.kind: world (dünya), frame (origin ve angle verildiği gibi), origin (başlangıç point'e, açı kalır), rotate (açı angle kadar döner), twoPoints (başlangıç origin, x ekseni xPoint'e), \
+                      object (uid'li nesneye at'ta hizalı: çizgide yakın uç, çoklu çizgi, alan ve taramada yakın kenar, yayda ve dairede merkez, elipste büyük eksen, yazıda ve blokta yerleştirme ve dönüş, noktada açı kalır), \
+                      named (adlı UCS'e geçer), save (geçerli UCS'i adla saklar, aynı adlıyı değiştirir), delete (adlı UCS'i siler). \
+                      Nesneler değişmez; tel her zaman dünyadır: komutların noktaları ve ölçüler UCS'ten bağımsızdır, UCS yalnız arayüzün yazma ve gösterme eksenidir. \
+                      Proje ayarıdır, geri alma adımı değildir; aynı UCS'e geçmek bir şey değiştirmez (changed false). \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::UcsSet>(),
+            output: schema::<crate::UcsChanged>(),
+            plan: Some(schema::<crate::UcsChanged>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Eğik bir binanın duvarı boyunca: iki nokta".into(),
+                    input: json!({ "to": { "kind": "twoPoints", "origin": { "x": 487000.0, "y": 4420000.0 }, "xPoint": { "x": 487010.0, "y": 4420010.0 } } }),
+                    output: Some(json!({
+                        "ucs": { "origin": { "x": 487000.0, "y": 4420000.0 }, "angle": std::f64::consts::FRAC_PI_4 },
+                        "named": [],
+                        "changed": true,
+                        "revision": "12"
+                    })),
+                },
+                CommandExample {
+                    title: "Geçerli UCS'i “Bina” adıyla sakla".into(),
+                    input: json!({ "to": { "kind": "save", "name": "Bina" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Dünyaya dön".into(),
+                    input: json!({ "to": { "kind": "world" } }),
+                    output: None,
+                },
+            ],
+        },
         // A local project's unit, keeping the sizes or the numbers (docs/adr/0256 §1), held together
         // by fixtures/commands/v1/cad.units.change.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -3747,6 +3796,9 @@ mod tests {
                     crate::CAD_SETTINGS_SET => {
                         serde_json::from_value::<crate::SettingsSet>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_UCS_SET => {
+                        serde_json::from_value::<crate::UcsSet>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -3923,6 +3975,9 @@ mod tests {
                         crate::CAD_SETTINGS_SET => {
                             serde_json::from_value::<crate::SettingsChanged>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_UCS_SET => {
+                            serde_json::from_value::<crate::UcsChanged>(output.clone()).map(|_| ())
                         }
                         crate::CAD_SHEETS_EDIT => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())

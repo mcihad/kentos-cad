@@ -164,6 +164,10 @@ pub const JOIN_KINDS: &[&str] = &["line", "arc", "polyline"];
 pub const DIVIDE_KINDS: &[&str] = &[
     "line", "polyline", "polygon", "arc", "circle", "ellipse", "spline", "nurbs",
 ];
+/// The objects a UCS can be aligned to (docs/adr/0261 §3).
+pub const UCS_KINDS: &[&str] = &[
+    "line", "polyline", "polygon", "hatch", "arc", "circle", "ellipse", "text", "insert", "point",
+];
 /// The closed objects Çoklu tara hatches (docs/adr/0254 §7).
 pub const CLOSED_KINDS: &[&str] = &["polygon", "circle", "ellipse", "spline"];
 /// A new object's look, as `cad.entities.create` checks it.
@@ -529,6 +533,33 @@ const ENTRIES: &[Entry] = &[
         refusals: &[OBJECTS, &["order_limit"], REVISION],
         warnings: &[],
         targets: || vec![target(None, &["*"], &[], None, None)],
+    },
+    Entry {
+        id: "cad.ucs.set",
+        refusals: &[
+            &[
+                "not_finite",
+                "far_point",
+                "invalid_ucs_name",
+                "same_points",
+                "invalid_uid",
+                "entity_not_found",
+                "object_without_axis",
+                "unknown_ucs",
+                "too_many_ucs",
+            ],
+            REVISION,
+        ],
+        warnings: &["ucs_replaced"],
+        targets: || {
+            vec![target(
+                Some("object"),
+                UCS_KINDS,
+                &[],
+                Some("object_without_axis"),
+                None,
+            )]
+        },
     },
     Entry {
         id: "cad.nurbs.create",

@@ -132,7 +132,8 @@ pub(crate) async fn insert_objects(
         rows.iter().map(|(_, s)| s.label_pins.as_ref()).collect();
     let attachments: Vec<Option<&serde_json::Value>> =
         rows.iter().map(|(_, s)| s.attachments.as_ref()).collect();
-    let looks: Vec<Option<&serde_json::Value>> = rows.iter().map(|(_, s)| s.look.as_ref()).collect();
+    let looks: Vec<Option<&serde_json::Value>> =
+        rows.iter().map(|(_, s)| s.look.as_ref()).collect();
     sqlx::query(
         "insert into kentos.feature (tenant_id, project_id, id, layer_id, kind, source_kind, srid, geom, cad_definition, properties,
                                      label, color, symbol, line_weight, label_pins, attachments, look, projection_version, created_by, updated_by, version)

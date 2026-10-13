@@ -2975,11 +2975,24 @@ fn an_objects_look_and_a_layers_plot_go_out_and_come_back() {
     assert_eq!(looks[0].transparency, Some(0.9));
     assert_eq!(looks[1].line_type, Some(LineType::Dotted));
     assert_eq!(
-        (looks[2].line_type, looks[2].line_type_scale, looks[2].transparency),
+        (
+            looks[2].line_type,
+            looks[2].line_type_scale,
+            looks[2].transparency
+        ),
         (Some(LineType::Dashed), Some(2.5), Some(0.5))
     );
     assert!(looks.iter().all(|l| l.order.is_none()));
-    let yapi = r.layers.iter().find(|l| l.name == "Yapı").expect("the layer");
+    let yapi = r
+        .layers
+        .iter()
+        .find(|l| l.name == "Yapı")
+        .expect("the layer");
     assert_eq!(yapi.plot, Some(false));
-    assert!(r.layers.iter().filter(|l| l.name != "Yapı").all(|l| l.plot.is_none()));
+    assert!(
+        r.layers
+            .iter()
+            .filter(|l| l.name != "Yapı")
+            .all(|l| l.plot.is_none())
+    );
 }

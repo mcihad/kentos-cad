@@ -342,17 +342,12 @@ pub fn layer_call(
                         .flatten()
                 });
                 let color = color.as_deref().unwrap_or(color_of(base, style));
-                let weight = x
-                    .weights
-                    .get(i)
-                    .copied()
-                    .flatten()
-                    .unwrap_or(match own {
-                        Some((s, m)) if m & kentos_geometry_core::block::BY_LAYER_WEIGHT != 0 => {
-                            s.line_weight
-                        }
-                        _ => weight,
-                    });
+                let weight = x.weights.get(i).copied().flatten().unwrap_or(match own {
+                    Some((s, m)) if m & kentos_geometry_core::block::BY_LAYER_WEIGHT != 0 => {
+                        s.line_weight
+                    }
+                    _ => weight,
+                });
                 let style = piece_style;
                 let hatch = match shape {
                     Shape::Hatch { .. } => {
@@ -471,7 +466,10 @@ pub fn build_layer(
     let ids: Vec<f64> = entities.iter().map(|e| f64::from(e.base().id)).collect();
     // The draw order bands (docs/adr/0260 §3), only when an object has its own order.
     let bands: Vec<i32> = if entities.iter().any(|e| e.base().look.order.is_some()) {
-        entities.iter().map(|e| e.base().look.order.unwrap_or(0)).collect()
+        entities
+            .iter()
+            .map(|e| e.base().look.order.unwrap_or(0))
+            .collect()
     } else {
         Vec::new()
     };

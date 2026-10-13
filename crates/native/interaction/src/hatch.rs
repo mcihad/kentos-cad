@@ -72,6 +72,8 @@ pub struct Hatch {
     plot_scale: f64,
     /// What the session remembered, as of the last call.
     memory: Memory,
+    /// The UCS's turn, degrees (docs/adr/0261 §4).
+    turn: f64,
 }
 
 impl Hatch {
@@ -79,8 +81,16 @@ impl Hatch {
         Self::default()
     }
 
+    /// The session's options with the pattern's angle from the UCS's x axis.
+    fn turned(&self) -> Memory {
+        let mut m = self.memory;
+        m.hatch_angle += self.turn;
+        m
+    }
+
     fn see(&mut self, cx: &Context<'_>) {
         self.memory = *cx.memory;
+        self.turn = cx.ucs_degrees();
         self.plot_scale = cx.doc.settings().plot_scale;
         self.boundary_name = self.boundary.as_deref().map(|id| {
             cx.doc
@@ -93,7 +103,9 @@ impl Hatch {
     /// The command's input for a click at `p`: the way, the view's objects
     /// (or the boundary layer's), the options, the active layer and colour.
     fn request(&self, p: Vec2, cx: &Context<'_>) -> EntitiesHatch {
-        let m = *cx.memory;
+        let mut m = *cx.memory;
+        // The pattern's angle is from the UCS's x axis (docs/adr/0261 §4).
+        m.hatch_angle += cx.ucs_degrees();
         let view = cx.view.visible();
         EntitiesHatch {
             region: HatchRegion::Point {
@@ -141,9 +153,10 @@ impl Hatch {
     fn hover_at(&mut self, p: Vec2, cx: &Context<'_>) {
         self.hover = self.region(p, cx).map(|r| r.area);
         self.hover_lines.clear();
-        let (Some(area), Some(pattern)) =
-            (&self.hover, options::pattern(&self.memory, self.plot_scale))
-        else {
+        let (Some(area), Some(pattern)) = (
+            &self.hover,
+            options::pattern(&self.turned(), self.plot_scale),
+        ) else {
             return;
         };
         let ring = ring_points(&area.outer);

@@ -107,6 +107,7 @@ pub mod styles_edit;
 pub mod topology_follow;
 pub mod transform;
 pub mod trim;
+pub mod ucs_set;
 pub mod units_change;
 pub mod widths;
 
@@ -152,6 +153,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION),
     (CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION),
     (CAD_ENTITIES_ARRAY, CAD_ENTITIES_ARRAY_VERSION),
+    // The drawing's user coordinate system ([`ucs_set`], docs/adr/0261).
+    (
+        kentos_contracts::CAD_UCS_SET,
+        kentos_contracts::CAD_UCS_SET_VERSION,
+    ),
     // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
     (
         kentos_contracts::CAD_ENTITIES_ORDER,

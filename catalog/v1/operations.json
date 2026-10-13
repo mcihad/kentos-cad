@@ -872,6 +872,55 @@
         "cad.entities.order"
       ],
       "note": "Seçimin kalıcı kimlikleri ve yön komuta verilir (ADR 0260 §5)."
+    },
+    "ucs.world": {
+      "level": "semantic",
+      "via": [
+        "cad.ucs.set"
+      ],
+      "note": "world komuta verilir; nesneler değişmez, UCS proje ayarıdır (ADR 0261 §2)."
+    },
+    "ucs.previous": {
+      "level": "semantic",
+      "via": [
+        "cad.ucs.set"
+      ],
+      "note": "Oturumun geçmişindeki UCS çerçeve (frame) olarak komuta verilir (ADR 0261 §1)."
+    },
+    "tool.ucsObject": {
+      "level": "semantic",
+      "via": [
+        "cad.ucs.set"
+      ],
+      "note": "Tıklanan nesnenin kalıcı kimliği ve yer komuta verilir; çerçeveyi komut bulur (ADR 0261 §3)."
+    },
+    "tool.ucsTwoPoints": {
+      "level": "semantic",
+      "via": [
+        "cad.ucs.set"
+      ],
+      "note": "Başlangıç ve x eksenindeki nokta komuta verilir (ADR 0261 §2)."
+    },
+    "tool.ucsOrigin": {
+      "level": "semantic",
+      "via": [
+        "cad.ucs.set"
+      ],
+      "note": "Yeni başlangıç komuta verilir; açı kalır (ADR 0261 §2)."
+    },
+    "tool.ucsRotate": {
+      "level": "semantic",
+      "via": [
+        "cad.ucs.set"
+      ],
+      "note": "Yazılan açı rotate, tıklanan yön twoPoints olarak komuta verilir (ADR 0261 §2)."
+    },
+    "tool.ucsNamed": {
+      "level": "semantic",
+      "via": [
+        "cad.ucs.set"
+      ],
+      "note": "Ad named, save ya da delete ile komuta verilir (ADR 0261 §2)."
     }
   },
   "tools": {

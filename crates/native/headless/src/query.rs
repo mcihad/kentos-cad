@@ -234,6 +234,11 @@ pub struct Conventions {
     pub polar: Polar,
     /// The angle unit the windows show and take: `deg` or `grad`.
     pub angle_unit: AngleUnit,
+    /// The drawing's user coordinate system (docs/adr/0261 §5): how its
+    /// windows take and show points; absent, the world's. The wire stays
+    /// the world: a caller working in the UCS turns its points itself.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ucs: Option<kentos_contracts::UcsNow>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -276,6 +281,15 @@ pub fn conventions(settings: &ProjectSettings) -> Conventions {
             }
         },
         angle_unit: settings.angle_unit,
+        ucs: settings.ucs.map(|u| kentos_contracts::UcsNow {
+            origin: u.origin,
+            angle: u.angle,
+            name: settings
+                .named_ucs
+                .iter()
+                .find(|n| n.origin == u.origin && n.angle == u.angle)
+                .map(|n| n.name.clone()),
+        }),
     }
 }
 

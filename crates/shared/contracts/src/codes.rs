@@ -197,6 +197,20 @@ codes! {
     ORDER_LIMIT = "order_limit", Failed, false, "Katmanın çizim sırası sınıra geldi; öbür nesneleri ters yöne taşıyarak yer açın.";
     /// Two points in a row at one place where a curve passes each once (docs/adr/0259).
     COINCIDENT_POINTS = "coincident_points", Failed, false, "Ardışık iki geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.";
+    /// A UCS's point further than 10 000 km from the world's origin (docs/adr/0261 §2).
+    FAR_POINT = "far_point", Failed, false, "UCS'in noktası dünyanın başlangıcından 10 000 km'den uzak.";
+    /// A UCS name blank, longer than 64 characters or with a control character (docs/adr/0261 §1).
+    INVALID_UCS_NAME = "invalid_ucs_name", Failed, false, "UCS adı boş, 64 karakterden uzun ya da denetim karakterli.";
+    /// Two points nearer than 1 µm where a direction is wanted (docs/adr/0261 §2).
+    SAME_POINTS = "same_points", Failed, false, "İki nokta aynı yerde; aralarında bir yön yok.";
+    /// A named UCS the project has not (docs/adr/0261 §2).
+    UNKNOWN_UCS = "unknown_ucs", Failed, false, "Bu adla bir UCS yok.";
+    /// A 101st named UCS (docs/adr/0261 §1).
+    TOO_MANY_UCS = "too_many_ucs", Failed, false, "Projede en çok 100 adlı UCS olur.";
+    /// An object of a kind that gives no axes: a dimension, a curve, a table and the like (docs/adr/0261 §3).
+    OBJECT_WITHOUT_AXIS = "object_without_axis", Failed, false, "Bu türden nesneden UCS kurulamaz.";
+    /// A named UCS kept over one of the same name (docs/adr/0261 §2).
+    UCS_REPLACED = "ucs_replaced", Warning, false, "Aynı adlı UCS'in yerine geçerli UCS kaydedildi.";
 
     // ── Properties, texts, links ────────────────────────────────────────
     /// A text whose text is empty or only white space.

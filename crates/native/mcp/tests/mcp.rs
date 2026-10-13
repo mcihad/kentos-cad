@@ -1338,3 +1338,73 @@ fn an_agent_imports_a_dxf_in_its_unit() {
         .expect("warnings");
     assert_eq!(warnings[0]["code"], "unit_assumed", "{unitless}");
 }
+
+#[test]
+fn an_agent_sets_a_ucs_and_turns_its_points_explicitly() {
+    let mut server = Server::new();
+    let made = call(
+        &mut server,
+        "drawing.new",
+        json!({ "name": "Bina", "workspace": "cad", "drawingUnit": "m" }),
+    );
+    let drawing = made["structuredContent"]["drawing"]
+        .as_str()
+        .expect("a handle")
+        .to_owned();
+    assert!(made["structuredContent"]["summary"]["conventions"]["ucs"].is_null());
+    // The building's wall from (100, 200) going north: the UCS's x axis.
+    let set = call(
+        &mut server,
+        "cad.ucs.set",
+        json!({ "drawing": drawing, "to": { "kind": "twoPoints", "origin": { "x": 100.0, "y": 200.0 }, "xPoint": { "x": 100.0, "y": 210.0 } } }),
+    );
+    assert_eq!(set["isError"], false, "{set}");
+    let ucs = &set["structuredContent"]["output"]["ucs"];
+    assert_eq!(ucs["angle"], std::f64::consts::FRAC_PI_2);
+    let saved = call(
+        &mut server,
+        "cad.ucs.set",
+        json!({ "drawing": drawing, "to": { "kind": "save", "name": "Duvar" } }),
+    );
+    assert_eq!(
+        saved["structuredContent"]["output"]["named"],
+        json!(["Duvar"])
+    );
+    let summary = call(
+        &mut server,
+        "drawing.summary",
+        json!({ "drawing": drawing }),
+    );
+    assert_eq!(
+        summary["structuredContent"]["conventions"]["ucs"]["name"],
+        "Duvar"
+    );
+    // 10 along the UCS's x is 10 north in the world; and back.
+    let world = call(
+        &mut server,
+        "drawing.toWorld",
+        json!({ "drawing": drawing, "points": [{ "x": 10.0, "y": 0.0 }] }),
+    );
+    let p = &world["structuredContent"]["points"][0];
+    assert!((p["x"].as_f64().unwrap() - 100.0).abs() < 1e-9, "{p}");
+    assert!((p["y"].as_f64().unwrap() - 210.0).abs() < 1e-9, "{p}");
+    let back = call(
+        &mut server,
+        "drawing.toUcs",
+        json!({ "drawing": drawing, "points": [{ "x": 100.0, "y": 210.0 }], "name": "Duvar" }),
+    );
+    let q = &back["structuredContent"]["points"][0];
+    assert!((q["x"].as_f64().unwrap() - 10.0).abs() < 1e-9, "{q}");
+    assert!(q["y"].as_f64().unwrap().abs() < 1e-9, "{q}");
+    // The wire is the world: a line given in world points is where they say.
+    let layer = made["structuredContent"]["summary"]["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let line = call(
+        &mut server,
+        "cad.line.create",
+        json!({ "drawing": drawing, "layerId": layer, "a": { "x": 100.0, "y": 200.0 }, "b": { "x": 100.0, "y": 210.0 } }),
+    );
+    assert_eq!(line["isError"], false, "{line}");
+}

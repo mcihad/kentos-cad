@@ -5404,6 +5404,31 @@
             ],
             "type": "string"
           },
+          "NamedUcs": {
+            "additionalProperties": false,
+            "description": "A named UCS of the project.",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "origin",
+              "angle"
+            ],
+            "type": "object"
+          },
           "NetworkConnect": {
             "description": "Where edges connect (docs/adr/0209 §3).",
             "oneOf": [
@@ -6722,6 +6747,13 @@
                 "type": "integer",
                 "x-unit": "count"
               },
+              "namedUcs": {
+                "description": "The project's named UCSs, in the order they were kept.",
+                "items": {
+                  "$ref": "#/$defs/NamedUcs"
+                },
+                "type": "array"
+              },
               "networks": {
                 "description": "The project's networks (docs/adr/0209 §2).",
                 "items": {
@@ -6790,6 +6822,17 @@
                   }
                 ],
                 "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
+              },
+              "ucs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Ucs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The drawing's user coordinate system (docs/adr/0261 §1); none: the\nworld. How points are typed and shown, never where they are."
               },
               "variables": {
                 "description": "The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.",
@@ -9242,6 +9285,28 @@
                 "x-unit": "length"
               }
             },
+            "type": "object"
+          },
+          "Ucs": {
+            "additionalProperties": false,
+            "description": "A user coordinate system: its origin in the world and the angle of its x\naxis from the world's x (east), counter-clockwise, in radians, in\n[0, 2π). Its y axis is square to x, counter-clockwise; it neither scales\nnor mirrors. The world's is origin (0, 0), angle 0, kept as no setting.",
+            "properties": {
+              "angle": {
+                "description": "Its x axis from east, counter-clockwise.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its origin in the world.",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "origin",
+              "angle"
+            ],
             "type": "object"
           },
           "VariableKind": {
@@ -12224,6 +12289,31 @@
             ],
             "type": "object"
           },
+          "NamedUcs": {
+            "additionalProperties": false,
+            "description": "A named UCS of the project.",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "origin",
+              "angle"
+            ],
+            "type": "object"
+          },
           "NetworkConnect": {
             "description": "Where edges connect (docs/adr/0209 §3).",
             "oneOf": [
@@ -12606,6 +12696,13 @@
                 "type": "integer",
                 "x-unit": "count"
               },
+              "namedUcs": {
+                "description": "The project's named UCSs, in the order they were kept.",
+                "items": {
+                  "$ref": "#/$defs/NamedUcs"
+                },
+                "type": "array"
+              },
               "networks": {
                 "description": "The project's networks (docs/adr/0209 §2).",
                 "items": {
@@ -12674,6 +12771,17 @@
                   }
                 ],
                 "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
+              },
+              "ucs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Ucs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The drawing's user coordinate system (docs/adr/0261 §1); none: the\nworld. How points are typed and shown, never where they are."
               },
               "variables": {
                 "description": "The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.",
@@ -13684,6 +13792,28 @@
                 "x-unit": "length"
               }
             },
+            "type": "object"
+          },
+          "Ucs": {
+            "additionalProperties": false,
+            "description": "A user coordinate system: its origin in the world and the angle of its x\naxis from the world's x (east), counter-clockwise, in radians, in\n[0, 2π). Its y axis is square to x, counter-clockwise; it neither scales\nnor mirrors. The world's is origin (0, 0), angle 0, kept as no setting.",
+            "properties": {
+              "angle": {
+                "description": "Its x axis from east, counter-clockwise.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its origin in the world.",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "origin",
+              "angle"
+            ],
             "type": "object"
           },
           "VariableKind": {
@@ -19181,6 +19311,31 @@
             ],
             "type": "string"
           },
+          "NamedUcs": {
+            "additionalProperties": false,
+            "description": "A named UCS of the project.",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "name": {
+                "description": "Trimmed, 1–64 characters, no control characters; unique.",
+                "type": "string"
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "name",
+              "origin",
+              "angle"
+            ],
+            "type": "object"
+          },
           "NetworkConnect": {
             "description": "Where edges connect (docs/adr/0209 §3).",
             "oneOf": [
@@ -20538,6 +20693,13 @@
                 "type": "integer",
                 "x-unit": "count"
               },
+              "namedUcs": {
+                "description": "The project's named UCSs, in the order they were kept.",
+                "items": {
+                  "$ref": "#/$defs/NamedUcs"
+                },
+                "type": "array"
+              },
               "networks": {
                 "description": "The project's networks (docs/adr/0209 §2).",
                 "items": {
@@ -20606,6 +20768,17 @@
                   }
                 ],
                 "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1)."
+              },
+              "ucs": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Ucs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The drawing's user coordinate system (docs/adr/0261 §1); none: the\nworld. How points are typed and shown, never where they are."
               },
               "variables": {
                 "description": "The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.",
@@ -23110,6 +23283,28 @@
                 "x-unit": "length"
               }
             },
+            "type": "object"
+          },
+          "Ucs": {
+            "additionalProperties": false,
+            "description": "A user coordinate system: its origin in the world and the angle of its x\naxis from the world's x (east), counter-clockwise, in radians, in\n[0, 2π). Its y axis is square to x, counter-clockwise; it neither scales\nnor mirrors. The world's is origin (0, 0), angle 0, kept as no setting.",
+            "properties": {
+              "angle": {
+                "description": "Its x axis from east, counter-clockwise.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its origin in the world.",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "origin",
+              "angle"
+            ],
             "type": "object"
           },
           "VariableKind": {
@@ -208946,6 +209141,484 @@
       ]
     },
     {
+      "id": "cad.ucs.set",
+      "version": 1,
+      "title": "Kullanıcı koordinat sistemi",
+      "summary": "Çizimin 2B kullanıcı koordinat sistemini (UCS) değiştirir: dünyada bir başlangıç ve x ekseninin doğudan saat yönünün tersine açısı (radyan, [0, 2π)). to.kind: world (dünya), frame (origin ve angle verildiği gibi), origin (başlangıç point'e, açı kalır), rotate (açı angle kadar döner), twoPoints (başlangıç origin, x ekseni xPoint'e), object (uid'li nesneye at'ta hizalı: çizgide yakın uç, çoklu çizgi, alan ve taramada yakın kenar, yayda ve dairede merkez, elipste büyük eksen, yazıda ve blokta yerleştirme ve dönüş, noktada açı kalır), named (adlı UCS'e geçer), save (geçerli UCS'i adla saklar, aynı adlıyı değiştirir), delete (adlı UCS'i siler). Nesneler değişmez; tel her zaman dünyadır: komutların noktaları ve ölçüler UCS'ten bağımsızdır, UCS yalnız arayüzün yazma ve gösterme eksenidir. Proje ayarıdır, geri alma adımı değildir; aynı UCS'e geçmek bir şey değiştirmez (changed false). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "UcsTo": {
+            "description": "What the UCS becomes (docs/adr/0261 §2).",
+            "oneOf": [
+              {
+                "description": "Dünya: the world's axes.",
+                "properties": {
+                  "kind": {
+                    "const": "world",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A frame given as it is (Önceki, Python).",
+                "properties": {
+                  "angle": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "kind": {
+                    "const": "frame",
+                    "type": "string"
+                  },
+                  "origin": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "origin",
+                  "angle"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Orijin: the origin moves, the axes keep their angle.",
+                "properties": {
+                  "kind": {
+                    "const": "origin",
+                    "type": "string"
+                  },
+                  "point": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "point"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Döndür: the axes turn by `angle` about the origin.",
+                "properties": {
+                  "angle": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "rad"
+                  },
+                  "kind": {
+                    "const": "rotate",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "angle"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "İki nokta: the origin, and the x axis toward the second point.",
+                "properties": {
+                  "kind": {
+                    "const": "twoPoints",
+                    "type": "string"
+                  },
+                  "origin": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "xPoint": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "origin",
+                  "xPoint"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Nesne: aligned to an object, at the place clicked (§3).",
+                "properties": {
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "object",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid",
+                  "at"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Adlı UCS: a named one.",
+                "properties": {
+                  "kind": {
+                    "const": "named",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kaydet: the current UCS kept under a name; one of that name is replaced.",
+                "properties": {
+                  "kind": {
+                    "const": "save",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Sil: a named one removed; the current UCS stays.",
+                "properties": {
+                  "kind": {
+                    "const": "delete",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.ucs.set` v1.\n\nRefusals (`CommandError.code`), checked in this order: `non_finite`,\n`far_point`, `invalid_ucs_name`, `same_points`, `invalid_uid`;\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`entity_not_found`, `object_without_axis`, `unknown_ucs`,\n`too_many_ucs`. Warning: `ucs_replaced`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "to": {
+            "$ref": "#/$defs/UcsTo"
+          }
+        },
+        "required": [
+          "to"
+        ],
+        "title": "UcsSet",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "UcsNow": {
+            "description": "The current UCS as the command says it: its frame and, when a named one\nis the same frame, that name.",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "origin",
+              "angle"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.ucs.set` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the settings changed.",
+            "type": "boolean"
+          },
+          "named": {
+            "description": "The named UCSs' names, in order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "ucs": {
+            "$ref": "#/$defs/UcsNow",
+            "description": "The current UCS afterwards."
+          }
+        },
+        "required": [
+          "ucs",
+          "named",
+          "changed",
+          "revision"
+        ],
+        "title": "UcsChanged",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "UcsNow": {
+            "description": "The current UCS as the command says it: its frame and, when a named one\nis the same frame, that name.",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "rad"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "origin": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "origin",
+              "angle"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.ucs.set` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "description": "Whether the settings changed.",
+            "type": "boolean"
+          },
+          "named": {
+            "description": "The named UCSs' names, in order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "ucs": {
+            "$ref": "#/$defs/UcsNow",
+            "description": "The current UCS afterwards."
+          }
+        },
+        "required": [
+          "ucs",
+          "named",
+          "changed",
+          "revision"
+        ],
+        "title": "UcsChanged",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "operation": "object",
+            "kinds": [
+              "line",
+              "polyline",
+              "polygon",
+              "hatch",
+              "arc",
+              "circle",
+              "ellipse",
+              "text",
+              "insert",
+              "point"
+            ],
+            "refusedWith": "object_without_axis"
+          }
+        ],
+        "refusals": [
+          "not_finite",
+          "far_point",
+          "invalid_ucs_name",
+          "same_points",
+          "invalid_uid",
+          "entity_not_found",
+          "object_without_axis",
+          "unknown_ucs",
+          "too_many_ucs",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "ucs_replaced"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Eğik bir binanın duvarı boyunca: iki nokta",
+          "input": {
+            "to": {
+              "kind": "twoPoints",
+              "origin": {
+                "x": 487000.0,
+                "y": 4420000.0
+              },
+              "xPoint": {
+                "x": 487010.0,
+                "y": 4420010.0
+              }
+            }
+          },
+          "output": {
+            "changed": true,
+            "named": [],
+            "revision": "12",
+            "ucs": {
+              "angle": 0.7853981633974483,
+              "origin": {
+                "x": 487000.0,
+                "y": 4420000.0
+              }
+            }
+          }
+        },
+        {
+          "title": "Geçerli UCS'i “Bina” adıyla sakla",
+          "input": {
+            "to": {
+              "kind": "save",
+              "name": "Bina"
+            }
+          }
+        },
+        {
+          "title": "Dünyaya dön",
+          "input": {
+            "to": {
+              "kind": "world"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.units.change",
       "version": 1,
       "title": "Birimi değiştir",
@@ -211280,6 +211953,48 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Ardışık iki geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın."
+    },
+    {
+      "code": "far_point",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "UCS'in noktası dünyanın başlangıcından 10 000 km'den uzak."
+    },
+    {
+      "code": "invalid_ucs_name",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "UCS adı boş, 64 karakterden uzun ya da denetim karakterli."
+    },
+    {
+      "code": "same_points",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İki nokta aynı yerde; aralarında bir yön yok."
+    },
+    {
+      "code": "unknown_ucs",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adla bir UCS yok."
+    },
+    {
+      "code": "too_many_ucs",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede en çok 100 adlı UCS olur."
+    },
+    {
+      "code": "object_without_axis",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu türden nesneden UCS kurulamaz."
+    },
+    {
+      "code": "ucs_replaced",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aynı adlı UCS'in yerine geçerli UCS kaydedildi."
     },
     {
       "code": "empty_text",

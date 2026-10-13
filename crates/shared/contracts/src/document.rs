@@ -225,6 +225,15 @@ pub struct ProjectSettings {
         ts(as = "Option<Vec<crate::AddressLocator>>", optional)
     )]
     pub address_locators: Vec<crate::AddressLocator>,
+    /// The drawing's user coordinate system (docs/adr/0261 §1); none: the
+    /// world. How points are typed and shown, never where they are.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ucs: Option<crate::Ucs>,
+    /// The project's named UCSs, in the order they were kept.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NamedUcs>>", optional))]
+    pub named_ucs: Vec<crate::NamedUcs>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -650,6 +659,15 @@ impl ProjectSettings {
         self.variables = crate::sanitized_variables(std::mem::take(&mut self.variables));
         self.address_locators =
             crate::sanitized_address_locators(std::mem::take(&mut self.address_locators));
+        // A UCS the readers would refuse is the world's; named ones that do not hold are left out (docs/adr/0261 §1).
+        if self
+            .ucs
+            .as_ref()
+            .is_some_and(|u| crate::ucs_problem(Some(u), &[]).is_some())
+        {
+            self.ucs = None;
+        }
+        self.named_ucs = crate::sanitized_named_ucs(std::mem::take(&mut self.named_ucs));
         self
     }
 }

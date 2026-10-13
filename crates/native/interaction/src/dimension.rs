@@ -555,6 +555,26 @@ impl Dimension {
         typed: Option<f64>,
     ) -> DimensionsCreate {
         let settings = cx.doc.settings();
+        // Doğrusal's level or plumb is the UCS's (docs/adr/0261 §4): turned with its axes, unless given.
+        let frame = cx.frame();
+        let measure = match measure {
+            DimensionMeasure::Linear { a, b, angle: None }
+                if frame.angle != 0.0 && self.d.pts.len() >= 2 =>
+            {
+                let f = |p: Vec2| frame.to_frame(p);
+                let along = kentos_geometry_core::geom::dimension::linear_angle_for(
+                    f(self.d.pts[0]),
+                    f(self.d.pts[1]),
+                    f(at),
+                );
+                DimensionMeasure::Linear {
+                    a,
+                    b,
+                    angle: Some(along + (frame.angle * 180.0) / kentos_geometry_core::jsmath::PI),
+                }
+            }
+            other => other,
+        };
         DimensionsCreate {
             measure,
             at: wire(at),

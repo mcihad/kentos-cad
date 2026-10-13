@@ -5,10 +5,12 @@
 
 use kentos_contracts::CommandResult;
 use kentos_geometry_core::tools::locks::{Direction, constrain_locked, perpendicular};
-use kentos_geometry_core::tools::point_input::{Tracking, constrain_cursor};
+use kentos_geometry_core::tools::point_input::Tracking;
+use kentos_geometry_core::tools::ucs::constrain_cursor_in;
 use kentos_native_application::codes;
 
 use crate::Vec2;
+use crate::locks::Toward;
 use crate::log::Level;
 use crate::tool::{Context, Pointer};
 
@@ -47,9 +49,31 @@ pub(crate) fn constrain(
             u: perpendicular(t),
             both: true,
         });
+    // The drawing's UCS (docs/adr/0261 §4): ortho, polar tracking and a typed angle follow its axes.
+    let frame = cx.frame();
     if cx.locks.any() || square.is_some() {
         let mut locks = cx.locks.locks(cx.format().angles());
+        // A typed angle is from the UCS's axes; the other directions are the objects', in the world.
+        if let (Some(Toward::Angle(_)), Some(d)) = (cx.locks.toward, locks.direction.as_mut()) {
+            d.u = frame.dir_to_world(d.u);
+        }
         locks.direction = locks.direction.or(square);
+        if locks.direction.is_none() {
+            // A length alone: the cursor ruled in the UCS first, then held at the length.
+            let free = constrain_cursor_in(
+                &frame,
+                Some(from),
+                p.world,
+                exact,
+                ortho,
+                cx.draft.polar,
+                tol,
+            );
+            return match constrain_locked(Some(from), free.point, true, false, None, tol, locks) {
+                Some(c) => (c.point, free.tracking),
+                None => (from, None),
+            };
+        }
         return match constrain_locked(
             Some(from),
             p.world,
@@ -63,7 +87,15 @@ pub(crate) fn constrain(
             None => (from, None),
         };
     }
-    let c = constrain_cursor(Some(from), p.world, exact, ortho, cx.draft.polar, tol);
+    let c = constrain_cursor_in(
+        &frame,
+        Some(from),
+        p.world,
+        exact,
+        ortho,
+        cx.draft.polar,
+        tol,
+    );
     (c.point, c.tracking)
 }
 
