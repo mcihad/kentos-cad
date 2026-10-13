@@ -376,9 +376,11 @@ impl StationLabels {
                 }
                 _ => refused(cx, "Yükseklik sıfırdan büyük bir sayı olmalı (kâğıtta mm)"),
             },
-            Asking::Section => match parse_number(t) {
-                Some(n) if n >= 0.0 && n.is_finite() => {
-                    cx.memory.station_section = f.to_metres(n);
+            Asking::Section => match crate::points::plain_value(t, cx)
+                .or_else(|| parse_number(t).map(|n| (n, f.to_metres(n))))
+            {
+                Some((n, m)) if n >= 0.0 && n.is_finite() => {
+                    cx.memory.station_section = m;
                     self.asking = None;
                 }
                 _ => refused(
@@ -386,9 +388,11 @@ impl StationLabels {
                     "Enkesitin yarı genişliği sıfır ya da daha büyük bir uzunluk olmalı (0: yok)",
                 ),
             },
-            Asking::Point => match parse_number(t) {
-                Some(n) if n.is_finite() => {
-                    cx.memory.station_point = Some(f.to_metres(n));
+            Asking::Point => match crate::points::plain_value(t, cx)
+                .or_else(|| parse_number(t).map(|n| (n, f.to_metres(n))))
+            {
+                Some((n, m)) if n.is_finite() => {
+                    cx.memory.station_point = Some(m);
                     self.asking = None;
                 }
                 _ => refused(

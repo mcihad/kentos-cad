@@ -9,6 +9,8 @@
 //!                       counter-clockwise, a CBS project's semt from north, clockwise, in the
 //!                       project's angle unit (docs/adr/0165 §4)
 //! 18.4                  a distance along the tracking line, else towards the cursor
+//! 2.5m  250cm  0.4km    a length with its metric unit, in any project (docs/adr/0266 §1)
+//! (12.5+3*2)            a sum in brackets wherever a number goes (docs/adr/0266 §2)
 //! ```
 //!
 //! The web keeps its regular expressions; the desktop reads with this module
@@ -27,27 +29,30 @@
 use crate::tools::point_input::{Angles, polar_point_in, relative_point, toward_point};
 use crate::vec2::Vec2;
 
-/// A typed length: a number in the drawing's unit, or feet and inches with
-/// their marks (docs/adr/0262 §3), held in inches.
+/// A typed length: a number in the drawing's unit, feet and inches with
+/// their marks (docs/adr/0262 §3), held in inches, or a number with its
+/// metric unit (`mm`, `cm`, `m`, `km`; docs/adr/0266 §1), held in metres.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Len {
     Unit(f64),
     Inches(f64),
+    Metres(f64),
 }
 
 impl Len {
-    /// Metres: the unit's through `metres`, inches exactly (× 254 ÷ 10000).
+    /// Metres: the unit's through `metres`, inches exactly (× 254 ÷ 10000), metres as they are.
     pub fn metres(self, metres: impl Fn(f64) -> f64) -> f64 {
         match self {
             Len::Unit(v) => metres(v),
             Len::Inches(v) => v * 254.0 / 10_000.0,
+            Len::Metres(v) => v,
         }
     }
 
-    /// The number as typed, in its own unit.
+    /// The number as typed, in its own unit (metres for a metric one).
     pub fn value(self) -> f64 {
         match self {
-            Len::Unit(v) | Len::Inches(v) => v,
+            Len::Unit(v) | Len::Inches(v) | Len::Metres(v) => v,
         }
     }
 }
@@ -139,7 +144,14 @@ pub fn parse_length(text: &str) -> Option<Len> {
     if let Some((inches, "")) = crate::tools::imperial::feet_inches(t) {
         return Some(Len::Inches(inches));
     }
-    parse_number(t).map(Len::Unit)
+    whole_len(&t.replacen(',', ".", 1))
+}
+
+/// Two typed lengths as a pair of numbers is written (`a,b`, `a;b` or `a b`), each in the drawing's unit, with its
+/// own unit or a sum in brackets (docs/adr/0266): what a tool's two-length field (spacings, a size, two distances)
+/// reads.
+pub fn parse_length_pair(text: &str) -> Option<(Len, Len)> {
+    pair(js_trim(text))
 }
 
 /// A single number as the point grammar writes it (`[-+]?\d+(\.\d+)?`,
@@ -150,13 +162,14 @@ pub fn parse_plain_number(text: &str) -> Option<f64> {
 }
 
 /// Whether text starts like a number or a coordinate: a digit, `.`, `@`,
-/// `+`, `-`, `#` (a point's name, docs/adr/0152 §4) or `<` (a direction
-/// lock, docs/adr/0166 §6; the web's `looksLikeCoordinate`).
+/// `+`, `-`, `#` (a point's name, docs/adr/0152 §4), `<` (a direction
+/// lock, docs/adr/0166 §6; the web's `looksLikeCoordinate`) or `(` (a sum,
+/// docs/adr/0266 §2).
 pub fn looks_like_coordinate(text: &str) -> bool {
     js_trim(text)
         .chars()
         .next()
-        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#' | '<'))
+        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#' | '<' | '('))
 }
 
 /// `#ad`: a point's name typed for its place (docs/adr/0152 §4), the name
@@ -191,10 +204,22 @@ pub fn js_trim(text: &str) -> &str {
     text.trim_matches(is_js_space)
 }
 
-/// `[-+]?\d+(?:\.\d+)?` at the start of `s`: the number and what follows it.
-/// Greedy is exact here: what may follow a number in every form is never a
-/// digit or a point, so a shorter number could not match either.
+/// `[-+]?\d+(?:\.\d+)?` at the start of `s`, or a sum in brackets
+/// (docs/adr/0266 §2): the number and what follows it. Greedy is exact here:
+/// what may follow a number in every form is never a digit or a point, so a
+/// shorter number could not match either.
 fn number(s: &str) -> Option<(f64, &str)> {
+    let sign = usize::from(matches!(s.as_bytes().first(), Some(b'+' | b'-')));
+    if s[sign..].starts_with('(') {
+        let (value, rest) = bracket(&s[sign..])?;
+        let value = if s.starts_with('-') { -value } else { value };
+        return value.is_finite().then_some((value, rest));
+    }
+    decimal(s)
+}
+
+/// The plain decimal number of [`number`].
+fn decimal(s: &str) -> Option<(f64, &str)> {
     let bytes = s.as_bytes();
     let mut end = usize::from(matches!(bytes.first(), Some(b'+' | b'-')));
     let digits = |from: usize| {
@@ -220,19 +245,124 @@ fn number(s: &str) -> Option<(f64, &str)> {
     Some((value, &s[end..]))
 }
 
+/// The deepest brackets a sum may nest: deeper text is no number.
+const MAX_DEPTH: usize = 16;
+
+/// `( SUM )` at the start of `s` (docs/adr/0266 §2): `+`, `-`, `*`, `/`,
+/// a sign before a term, brackets inside, white space between; the value
+/// and what follows the closing bracket. Division by zero, a value that is
+/// not finite, and anything else in the brackets give none.
+fn bracket(s: &str) -> Option<(f64, &str)> {
+    let mut p = Sum { s, at: 0, depth: 0 };
+    let v = p.factor()?;
+    Some((v, &s[p.at..]))
+}
+
+struct Sum<'a> {
+    s: &'a str,
+    at: usize,
+    depth: usize,
+}
+
+impl Sum<'_> {
+    fn blank(&mut self) {
+        let rest = &self.s[self.at..];
+        self.at += rest.len() - rest.trim_start_matches(is_js_space).len();
+    }
+
+    fn peek(&mut self) -> Option<u8> {
+        self.blank();
+        self.s.as_bytes().get(self.at).copied()
+    }
+
+    fn sum(&mut self) -> Option<f64> {
+        let mut v = self.product()?;
+        while let Some(op @ (b'+' | b'-')) = self.peek() {
+            self.at += 1;
+            let w = self.product()?;
+            v = if op == b'+' { v + w } else { v - w };
+        }
+        v.is_finite().then_some(v)
+    }
+
+    fn product(&mut self) -> Option<f64> {
+        let mut v = self.factor()?;
+        while let Some(op @ (b'*' | b'/')) = self.peek() {
+            self.at += 1;
+            let w = self.factor()?;
+            if op == b'/' && w == 0.0 {
+                return None;
+            }
+            v = if op == b'*' { v * w } else { v / w };
+        }
+        v.is_finite().then_some(v)
+    }
+
+    fn factor(&mut self) -> Option<f64> {
+        match self.peek()? {
+            b'-' | b'+' => {
+                let minus = self.s.as_bytes()[self.at] == b'-';
+                self.at += 1;
+                let v = self.factor()?;
+                Some(if minus { -v } else { v })
+            }
+            b'(' => {
+                self.depth += 1;
+                if self.depth > MAX_DEPTH {
+                    return None;
+                }
+                self.at += 1;
+                let v = self.sum()?;
+                if self.peek()? != b')' {
+                    return None;
+                }
+                self.at += 1;
+                self.depth -= 1;
+                Some(v)
+            }
+            _ => {
+                let (v, rest) = decimal(&self.s[self.at..])?;
+                self.at = self.s.len() - rest.len();
+                Some(v)
+            }
+        }
+    }
+}
+
 /// `^NUM$`.
 fn whole(s: &str) -> Option<f64> {
     number(s).and_then(|(value, rest)| rest.is_empty().then_some(value))
 }
 
 /// A length at the start of `s`: feet and inches with their marks first
-/// (they start like a number), else a number in the unit.
+/// (they start like a number), else a number in the unit, or with its metric
+/// unit right after it (`mm`, `cm`, `m`, `km`; not followed by a letter).
 fn length(s: &str) -> Option<(Len, &str)> {
     if let Some((inches, rest)) = crate::tools::imperial::feet_inches(s) {
         return Some((Len::Inches(inches), rest));
     }
-    number(s).map(|(v, rest)| (Len::Unit(v), rest))
+    let (v, rest) = number(s)?;
+    for (mark, metres) in METRIC {
+        if let Some(after) = rest.strip_prefix(mark)
+            && !after.starts_with(|c: char| c.is_alphabetic())
+        {
+            return Some((Len::Metres(metres(v)), after));
+        }
+    }
+    Some((Len::Unit(v), rest))
 }
+
+/// A metric unit's mark and how a number in it becomes metres.
+type Metric = (&'static str, fn(f64) -> f64);
+
+/// The metric units a typed length may carry, longest first, and their metres (a division for the smaller
+/// ones, so 1mm is 0.001 exactly as typed).
+const METRIC: [Metric; 4] = [
+    ("mm", |v| v / 1000.0),
+    ("cm", |v| v / 100.0),
+    ("km", |v| v * 1000.0),
+    ("m", |v| v),
+];
 
 /// `^LEN$`.
 fn whole_len(s: &str) -> Option<Len> {

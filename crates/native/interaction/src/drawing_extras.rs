@@ -36,7 +36,7 @@ use kentos_native_application::geometry::shape;
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, Taken, plain_number, wire};
+use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
     Context, Cursor, Flow, Marker, MarkerShape, Memory, OptionChoice, Pointer, Preview, Stroke,
@@ -594,12 +594,11 @@ impl RangeRings {
 
     /// A value typed for the value asked; false when it is not a number.
     fn value(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(n) = plain_number(text) else {
+        let Some((n, metres)) = crate::points::plain_value(text, cx) else {
             return false;
         };
         match self.asking {
             Asking::Spacing => {
-                let metres = cx.format().to_metres(n);
                 if !(metres > 0.0 && metres.is_finite()) {
                     cx.say(Level::Warn, "Aralık sıfırdan büyük olmalı.");
                     return true;

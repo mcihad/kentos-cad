@@ -37,7 +37,7 @@ use crate::Vec2;
 use crate::edge::Outline;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, Taken, plain_number};
+use crate::points::{self, Taken};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
     Context, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
@@ -536,7 +536,7 @@ impl IntersectPoint {
         }
         match self.next() {
             Some(Value) => {
-                let Some(n) = plain_number(text) else {
+                let Some((n, metres)) = crate::points::plain_value(text, cx) else {
                     return false;
                 };
                 let f = self.format();
@@ -545,8 +545,8 @@ impl IntersectPoint {
                         cx.say(Level::Warn, "Uzaklık sıfırdan büyük olmalı.");
                         return true;
                     }
-                    // Typed in the project's unit (docs/adr/0165 §2).
-                    self.value(f.to_metres(n), false, cx);
+                    // Typed in the project's unit (docs/adr/0165 §2), or with its own (docs/adr/0266).
+                    self.value(metres, false, cx);
                 } else {
                     self.value(f.angle_from_typed(n).rem_euclid(TAU), false, cx);
                 }

@@ -348,9 +348,28 @@ pub(crate) fn plain_number(text: &str) -> Option<f64> {
 
 /// A plain number that is a length (a distance, a radius, a tolerance, an
 /// elevation), typed in the project's unit, in metres (docs/adr/0165 §2;
-/// the web's `parseLength`).
+/// the web's `parseLength`); with its own unit (`2.5m`, `5'6"`) or as a sum
+/// in brackets in any project (docs/adr/0262 §3, 0266).
 pub(crate) fn plain_length(text: &str, cx: &crate::tool::Context<'_>) -> Option<f64> {
-    plain_number(text).map(|n| cx.format().to_metres(n))
+    plain_value(text, cx).map(|(_, m)| m)
+}
+
+/// A plain typed value both ways: the number in the project's unit (for an
+/// angle, a count or a sign) and the length it is in metres. A length with its
+/// own unit gives the number its metres are in the project's unit
+/// (docs/adr/0266 §1); none for a point's text.
+pub(crate) fn plain_value(text: &str, cx: &crate::tool::Context<'_>) -> Option<(f64, f64)> {
+    if text.contains([',', ';', '@', '<']) && !text.trim_start().starts_with('(') {
+        return None;
+    }
+    let f = cx.format();
+    match kentos_geometry_core::tools::point_text::parse_length(text)? {
+        kentos_geometry_core::tools::point_text::Len::Unit(n) => Some((n, f.to_metres(n))),
+        other => {
+            let m = other.metres(|n| f.to_metres(n));
+            Some((f.from_metres(m), m))
+        }
+    }
 }
 
 /// What every point-input tool keeps (the web's `PointInputTool` fields,

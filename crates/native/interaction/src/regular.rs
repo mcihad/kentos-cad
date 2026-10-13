@@ -24,7 +24,7 @@ use kentos_geometry_core::tools::point_text::js_trim;
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, Taken, plain_number};
+use crate::points::{self, Taken};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow, Memory, Pointer, Preview, Stroke, Tag, Tool};
 
@@ -128,7 +128,7 @@ impl RegularPolygon {
         if self.option(&upper_tr(js_trim(text)), cx) {
             return true;
         }
-        if let Some(n) = plain_number(text) {
+        if let Some((n, metres)) = crate::points::plain_value(text, cx) {
             // Before any point, a bare number is the side count; after the centre, a radius.
             if self.ask_sides || self.d.pts.is_empty() {
                 if n.fract() != 0.0 || !(3.0..=1024.0).contains(&n) {
@@ -149,7 +149,7 @@ impl RegularPolygon {
                 let ring = regular_polygon_radius(
                     self.d.pts[0],
                     f64::from(m.polygon_sides),
-                    cx.format().to_metres(n),
+                    metres,
                     m.polygon_inscribed,
                 );
                 self.commit(ring, cx);

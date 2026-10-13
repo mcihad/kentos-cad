@@ -24,6 +24,7 @@ Her boyut (1440×900, 1100×650) ve tema (koyu, açık) senaryoyu baştan oynat�
 | `v1/polygon-accept.json` | §5 kabul izi: poligon başlat, tıkla, `12` yaz, Enter, sonraki nokta, kapat, geri al, yinele, kaydet ve aç |
 | `v1/polygon-signs.json` | Değer yazmaya `-` ya da `+` ile başlamak (`UX-04`) |
 | `v1/polygon-keys.json` | Esc, Geri (G), Ctrl+Z, sağ tık, çift tık, eksik nokta, Backspace, Tab (uzunluğu kilitler, ADR 0166 §6), Boşluk, son komutu yinele, odak (`UX-06`) |
+| `v1/value-entry.json` | Değer alanı ([ADR 0266](../../docs/adr/0266-typed-units-and-sums.md)): `(` alanı açar, parantezli toplam `(10+2.5)`, eksi göreli fark ve toplam `@-3,(2*2)`, birimin harfleri alana yazılır (`250cm`, seçenek harfi sayılmaz), Boşluk uygular, Tab birimli uzunluğu kilitler (`2m`), kapanmayan parantez uyarır ve aracı sürdürür, ilk Esc yalnız alanı kapatır; üç çeşitte (ABD, Türkçe Q, HiDPI) |
 | `v1/polygon-close.json` | İlk köşeye dönmek alanı kapatır: tıklama, yakınına tıklama, yazma, üç köşeden az, yayla kapatma |
 | `v1/line-chain.json` | Çizgi aracı ([ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md)): tıkla, `12` yaz, Enter, Geri (G), Ctrl+Z, Kapat (K), her parçanın ayrı geri alınması, sağ tık, tek noktayla onay |
 | `v1/polyline-arc.json` | Çoklu çizgi aracı (ADR 0027): tıkla, `12` yaz, Enter, yay parçası, Geri (G), düz parça, Ctrl+Z, sağ tıkla bitirme, tek adımda geri alma, Uzunluk (U) |

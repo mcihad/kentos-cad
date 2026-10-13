@@ -162,6 +162,9 @@ Liste:
   `io/kcad.ts`'in KCAD şema 47'si ve tipli sütunların türü 19, `io/columns.ts`; `FORMATS_VERSION` 60); paketli biçimin türü 23
   (`wasm/pack.ts`); çekirdeğin JSON API'si `tangents`'ı taşımaz; `cad.nurbs.create`'in web işleyicisi ve NURBS eğrisi aracı
   (Yöntem, Derece, Kapat; önizleme planla); Öznitelikler'in satırları; seçim süzgecinde Eğri'nin NURBS'ü de tutması.
+- [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
+  parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
+  birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
 - [ ] `CAD-DATA-13` (ADR 0263, 14 Ekim): web'de gerekenler: `SubPlace`'in `along`'u, `SubRef`'in ve `PlaceOn`'un `path`'i, `SubRange`
   (TS türleri, `io/kcad.ts`'in KCAD şema 51'i, `io/columns.ts`'in başvuru türü 6 ve blok yolu, `FORMATS_VERSION` 62), web belgesinin
   ilişkili ölçü izlemesinde `along` ve blok parçaları (çekirdeğin `follow_in`'i WASM'a), ölçü aracının Yakın, Dik, Teğet ve Çeyrek'te ve

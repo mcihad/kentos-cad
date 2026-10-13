@@ -34,7 +34,7 @@ use kentos_native_application::{ExecutionContext, arc};
 use crate::Vec2;
 use crate::format::{Format, degrees, fixed};
 use crate::log::Level;
-use crate::points::{self, Taken, plain_number, wire};
+use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::spatial::record;
 use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tag, Tool};
@@ -379,11 +379,11 @@ impl Tool for Arc {
         if self.ready()
             && self.mode != Mode::Continue
             && self.mode != Mode::Three
-            && let Some(n) = plain_number(text)
+            && let Some((n, length)) = crate::points::plain_value(text, cx)
         {
             let (p0, p1) = (self.d.pts[0], self.d.pts[1]);
-            // A chord or a radius is a length typed in the project's unit (docs/adr/0165 §2); an angle is not.
-            let length = cx.format().to_metres(n);
+            // A chord or a radius is a length typed in the project's unit (docs/adr/0165 §2), or with its own
+            // (docs/adr/0266); an angle is not.
             let g = match self.mode {
                 Mode::StartCenter | Mode::CenterStart => {
                     let (s, c) = self.start_center();

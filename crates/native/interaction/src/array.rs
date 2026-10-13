@@ -199,12 +199,14 @@ impl Stages for Array {
     }
 
     fn typed(&mut self, text: &str, cx: &mut Context<'_>) -> Option<Flow> {
-        let (a, b) = pair(text)?;
         if self.stage == Stage::Spacing {
-            // Spacings are typed in the project's unit (docs/adr/0165 §2).
+            // Spacings are typed in the project's unit (docs/adr/0165 §2), or with their own (docs/adr/0266).
+            let (a, b) = kentos_geometry_core::tools::point_text::parse_length_pair(text)?;
             let f = cx.format();
-            return Some(self.build(f.to_metres(a), f.to_metres(b), cx));
+            let m = |l: kentos_geometry_core::tools::point_text::Len| l.metres(|n| f.to_metres(n));
+            return Some(self.build(m(a), m(b), cx));
         }
+        let (a, b) = pair(text)?;
         let (r, c) = (js_round(a), js_round(b));
         if r < 1.0 || c < 1.0 || r * c < 2.0 || r * c > 10_000.0 {
             cx.say(Level::Warn, "Satır × sütun 2 ile 10 000 arasında olmalı.");

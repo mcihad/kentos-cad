@@ -175,11 +175,11 @@ impl ArrayPath {
         self.refresh(cx);
     }
 
-    fn typed_number(&mut self, n: f64, cx: &mut Context<'_>) {
+    fn typed_number(&mut self, n: f64, metres: f64, cx: &mut Context<'_>) {
         if self.last.path_by_spacing {
             if n > 0.0 {
-                // Typed in the project's unit (docs/adr/0165 §2).
-                cx.memory.path_spacing = cx.format().to_metres(n);
+                // Typed in the project's unit (docs/adr/0165 §2), or with its own (docs/adr/0266).
+                cx.memory.path_spacing = metres;
             } else {
                 cx.say(Level::Warn, "Aralık sıfırdan büyük olmalı.");
             }
@@ -266,11 +266,12 @@ impl Stages for ArrayPath {
             "A" => cx.memory.path_by_spacing = true,
             "H" => cx.memory.path_align = !cx.memory.path_align,
             _ => {
-                let n = parse_number(text)?;
+                let (n, metres) = crate::points::plain_value(text, cx)
+                    .or_else(|| parse_number(text).map(|n| (n, cx.format().to_metres(n))))?;
                 if self.path.is_none() {
                     cx.say(Level::Warn, "Önce dizinin yolunu seçin.");
                 } else {
-                    self.typed_number(n, cx);
+                    self.typed_number(n, metres, cx);
                 }
             }
         }

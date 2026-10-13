@@ -63,6 +63,17 @@ enum Stage {
     Size,
 }
 
+/// A typed chamfer size in metres: [`parse_cut`]'s numbers in the project's unit, or the lengths with their own
+/// unit or as sums (`2cm`, `(1+0.5),2`; docs/adr/0266).
+pub(crate) fn cut_lengths(text: &str, f: &kentos_project::format::Format) -> Option<(f64, f64)> {
+    use kentos_geometry_core::tools::point_text::{parse_length, parse_length_pair};
+    let m = |n: f64| f.to_metres(n);
+    parse_cut(text)
+        .map(|(a, b)| (m(a), m(b)))
+        .or_else(|| parse_length_pair(text).map(|(a, b)| (a.metres(m), b.metres(m))))
+        .or_else(|| parse_length(text).map(|a| (a.metres(m), a.metres(m))))
+}
+
 /// A typed chamfer size: `d` or `d1,d2`, plain decimals (the web's
 /// `/^(\d+(?:\.\d+)?)(?:\s*[,;]\s*(\d+(?:\.\d+)?))?$/`). Tüm köşelere pah reads its
 /// distances the same way.
@@ -186,9 +197,7 @@ impl CornerTool {
             Kind::Fillet => plain_number(text)
                 .filter(|n| *n >= 0.0)
                 .map(|n| Op::Radius(f.to_metres(n))),
-            Kind::Chamfer => {
-                parse_cut(text).map(|(d1, d2)| Op::Cut(f.to_metres(d1), f.to_metres(d2)))
-            }
+            Kind::Chamfer => cut_lengths(text, &f).map(|(d1, d2)| Op::Cut(d1, d2)),
         }
     }
 

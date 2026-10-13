@@ -74,7 +74,7 @@ use kentos_geometry_core::tools::drawing::{
 };
 use kentos_geometry_core::tools::locks::square_corner;
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, create, polygon, polyline};
 
 use crate::Vec2;
@@ -1814,13 +1814,14 @@ impl Tool for Path {
         if self.switch(&key, cx) || self.option(&key, cx) {
             return true;
         }
-        let number = parse_number(text);
-        let plain = number.filter(|_| !text.contains([',', ';', '@', '<']));
-        // Lengths are typed in the project's unit (docs/adr/0165 §2); an angle is not.
-        let unit = cx.format();
+        // Lengths are typed in the project's unit (docs/adr/0165 §2) or with their own (docs/adr/0266); an angle
+        // is not.
+        let value = crate::points::plain_value(text, cx);
+        let plain = value.map(|(n, _)| n);
+        let metres = value.map_or(f64::NAN, |(_, m)| m);
         if let Some(n) = plain.filter(|_| self.ask_width) {
             if n >= 0.0 {
-                cx.memory.polyline_width = unit.to_metres(n);
+                cx.memory.polyline_width = metres;
                 self.memory.polyline_width = cx.memory.polyline_width;
                 self.ask_width = false;
             } else {
@@ -1833,8 +1834,8 @@ impl Tool for Path {
         }
         if let Some(n) = plain.filter(|_| self.ask_step) {
             if n > 0.0 {
-                cx.memory.stream_step = unit.to_metres(n);
-                self.memory.stream_step = unit.to_metres(n);
+                cx.memory.stream_step = metres;
+                self.memory.stream_step = metres;
                 self.ask_step = false;
             } else {
                 cx.say(Level::Warn, "Adım boyu sıfırdan büyük olmalı.");
@@ -1846,7 +1847,7 @@ impl Tool for Path {
                 match (self.tangent(), self.last()) {
                     (Some(t), Some(last)) if n > 0.0 => {
                         self.ask_length = false;
-                        self.accept(offset_along(last, t, unit.to_metres(n)), cx);
+                        self.accept(offset_along(last, t, metres), cx);
                     }
                     _ => cx.say(Level::Warn, "Uzunluk sıfırdan büyük olmalı."),
                 }
@@ -1868,9 +1869,7 @@ impl Tool for Path {
                 && let Spec::Radius { r: None } = self.spec
             {
                 if n > 0.0 {
-                    self.spec = Spec::Radius {
-                        r: Some(unit.to_metres(n)),
-                    };
+                    self.spec = Spec::Radius { r: Some(metres) };
                 } else {
                     cx.say(Level::Warn, "Yarıçap sıfırdan büyük olmalı.");
                 }

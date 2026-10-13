@@ -28,7 +28,6 @@ use kentos_geometry_core::ops::reshape::{all_corners, reverse, simplify};
 use kentos_native_application::{ExecutionContext, entities_chamfer, entities_fillet};
 
 use crate::Vec2;
-use crate::corner::parse_cut;
 use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
@@ -174,10 +173,8 @@ impl Reshape {
                 }
             }
             Kind::ChamferAll => {
-                let (d1, d2) = parse_cut(text)?;
-                // Typed in the project's unit (docs/adr/0165 §2).
-                let f = cx.format();
-                let (d1, d2) = (f.to_metres(d1), f.to_metres(d2));
+                // Typed in the project's unit (docs/adr/0165 §2), or with their own (docs/adr/0266).
+                let (d1, d2) = crate::corner::cut_lengths(text, &cx.format())?;
                 if d1 > 0.0 && d2 > 0.0 {
                     cx.memory.chamfer = Some((d1, d2));
                 } else {

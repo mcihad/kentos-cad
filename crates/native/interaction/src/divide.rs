@@ -19,7 +19,7 @@
 use kentos_contracts::{EntitiesDivide, Entity, NewLook};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::path::{nearest_s, path_of};
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, divide};
 
@@ -254,12 +254,13 @@ impl Tool for Divide {
             self.see(cx);
             return true;
         }
-        let Some(n) = parse_number(text).filter(|n| *n > 0.0) else {
+        let Some((n, metres)) = crate::points::plain_value(text, cx).filter(|(n, _)| *n > 0.0)
+        else {
             return false;
         };
         if cx.memory.divide_by_step {
-            // Typed in the project's unit (docs/adr/0165 §2).
-            cx.memory.divide_step = cx.format().to_metres(n);
+            // Typed in the project's unit (docs/adr/0165 §2), or with its own (docs/adr/0266).
+            cx.memory.divide_step = metres;
         } else {
             if n.fract() != 0.0 || !(2.0..=MAX_POINTS as f64).contains(&n) {
                 cx.say(
