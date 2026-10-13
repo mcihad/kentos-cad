@@ -1,0 +1,60 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ayak ve inç",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 4,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 48.0,
+    "workspace": "cad",
+    "drawingUnit": "in",
+    "lengthStyle": "architectural"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "uids": [
+    "0192f5a1-25a0-7000-8000-000000000001"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "b": {
+        "x": 3.8227,
+        "y": 0.0
+      }
+    }
+  ]
+}

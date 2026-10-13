@@ -81,6 +81,7 @@ fn uid(i: usize) -> Uuid {
 
 fn opened(n: usize) -> Opened {
     let settings = ProjectSettings {
+        length_style: None,
         named_ucs: Vec::new(),
         ucs: None,
         srid: 5256,

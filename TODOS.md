@@ -162,6 +162,10 @@ Liste:
   `io/kcad.ts`'in KCAD şema 47'si ve tipli sütunların türü 19, `io/columns.ts`; `FORMATS_VERSION` 60); paketli biçimin türü 23
   (`wasm/pack.ts`); çekirdeğin JSON API'si `tangents`'ı taşımaz; `cad.nurbs.create`'in web işleyicisi ve NURBS eğrisi aracı
   (Yöntem, Derece, Kapat; önizleme planla); Öznitelikler'in satırları; seçim süzgecinde Eğri'nin NURBS'ü de tutması.
+- [ ] `CAD-DATA-12` (ADR 0262, 14 Ekim): web'de gerekenler: `DrawingUnit`'in `in` ve `ft`'si ve ayarların `lengthStyle`'ı (TS
+  türleri, `io/kcad.ts`'in KCAD şema 50'si), `Formatter`'ın tam oranla çevirisi ve ayak-inç biçimleri (çekirdeğin `tools::imperial`'i
+  WASM'a), yazılan nokta ve uzunlukta ayak ve inç işaretleri (`point_text`'in `Len`'i), Proje ayarları'nda İnç, Ayak ve Uzunluk biçimi,
+  sihirbazın iki yeni birim kartı, `cad.settings.set`'in `lengthStyle`'ı ve `cad.units.change`'in in ve ft çarpanları.
 - [ ] `CAD-DATA-09`…`CAD-DATA-11` (ADR 0261, 13 Ekim): web'de gerekenler: ayarların `ucs` ve `namedUcs`'i (TS türleri,
   `io/kcad.ts`'in KCAD şema 49'u); `cad.ucs.set`'in web işleyicisi; yazılan noktanın UCS'te okunması (çekirdeğin
   `point_from_text_framed`'i WASM'a), orto ve kutupsal izlemenin UCS'in eksenleriyle (`constrain_cursor_in`), ızgaranın ve karelajın

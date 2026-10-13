@@ -27,6 +27,8 @@ pub fn units(f: &Format) -> Units {
             DrawingUnit::Mm => rules::Unit::Mm,
             DrawingUnit::Cm => rules::Unit::Cm,
             DrawingUnit::M => rules::Unit::M,
+            DrawingUnit::In => rules::Unit::In,
+            DrawingUnit::Ft => rules::Unit::Ft,
         },
         area_unit: match f.area_unit {
             AreaUnit::Donum => rules::AreaUnit::Donum,

@@ -33,6 +33,8 @@ pub fn insunits_of(u: DrawingUnit) -> i64 {
         DrawingUnit::Mm => 4,
         DrawingUnit::Cm => 5,
         DrawingUnit::M => 6,
+        DrawingUnit::In => 1,
+        DrawingUnit::Ft => 2,
     }
 }
 
@@ -42,6 +44,8 @@ pub fn name_of(u: DrawingUnit) -> &'static str {
         DrawingUnit::Mm => "milimetre",
         DrawingUnit::Cm => "santimetre",
         DrawingUnit::M => "metre",
+        DrawingUnit::In => "inç",
+        DrawingUnit::Ft => "ayak",
     }
 }
 

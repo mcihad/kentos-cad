@@ -6,4 +6,4 @@
  * (typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A
  * project with a coordinate system has the system's unit.
  */
-export type DrawingUnit = "mm" | "cm" | "m";
+export type DrawingUnit = "mm" | "cm" | "m" | "in" | "ft";

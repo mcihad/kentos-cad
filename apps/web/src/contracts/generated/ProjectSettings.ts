@@ -9,6 +9,7 @@ import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
+import type { LengthStyle } from "./LengthStyle";
 import type { NamedUcs } from "./NamedUcs";
 import type { NetworkDef } from "./NetworkDef";
 import type { ProjectVariable } from "./ProjectVariable";
@@ -111,4 +112,9 @@ ucs?: Ucs,
 /**
  * The project's named UCSs, in the order they were kept.
  */
-namedUcs?: Array<NamedUcs>, };
+namedUcs?: Array<NamedUcs>, 
+/**
+ * How lengths are written (docs/adr/0262 §2): none, decimal; the others
+ * only in an inch or foot drawing.
+ */
+lengthStyle?: LengthStyle, };

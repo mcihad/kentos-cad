@@ -31,10 +31,13 @@ fn every_shared_case_reads_as_the_web_reads_it() {
             Some("point") => {
                 // A local project's drawing unit: typed in it, the point in metres, as
                 // the desktop's `Format::to_metres` divides (docs/adr/0165 §2).
-                let per_metre = match case["unit"].as_str() {
-                    None | Some("m") => 1.0,
-                    Some("cm") => 100.0,
-                    Some("mm") => 1000.0,
+                // An inch and a foot by their ratio of whole numbers (docs/adr/0262 §1).
+                let (mul, div) = match case["unit"].as_str() {
+                    None | Some("m") => (1.0, 1.0),
+                    Some("cm") => (1.0, 100.0),
+                    Some("mm") => (1.0, 1000.0),
+                    Some("in") => (254.0, 10_000.0),
+                    Some("ft") => (3048.0, 10_000.0),
                     Some(other) => panic!("{name}: bilinmeyen birim {other}"),
                 };
                 // A polar angle in the project's way and unit (docs/adr/0165 §4); CAD's and degrees by default.
@@ -63,7 +66,7 @@ fn every_shared_case_reads_as_the_web_reads_it() {
                     point(&case["last"]),
                     point(&case["cursor"]),
                     |_| None,
-                    |v| v / per_metre,
+                    |v| if mul == 1.0 { v / div } else { v * mul / div },
                     angles,
                     &frame,
                 );

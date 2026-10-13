@@ -521,13 +521,21 @@ class DrawingUnit(_StrEnum):
     Geometry stays in metres: the unit is where the user meets the numbers
     (typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A
     project with a coordinate system has the system's unit.
+
+    - ``mm``
+    - ``cm``
+    - ``m``
+    - ``in``: The inch, 0.0254 m exactly (docs/adr/0262 §1).
+    - ``ft``: The international foot, 0.3048 m exactly.
     """
     MM = "mm"
     CM = "cm"
     M = "m"
+    IN = "in"
+    FT = "ft"
 
 
-DrawingUnitName = Literal["mm", "cm", "m"]
+DrawingUnitName = Literal["mm", "cm", "m", "in", "ft"]
 """The names of :class:`DrawingUnit`, for a plain string."""
 
 
@@ -1036,6 +1044,25 @@ class LeaderArrow(_StrEnum):
 
 LeaderArrowName = Literal["open", "dot", "none", "closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled"]
 """The names of :class:`LeaderArrow`, for a plain string."""
+
+
+class LengthStyle(_StrEnum):
+    """How lengths are written (docs/adr/0262 §2); none (no setting) is decimal
+    in the drawing's unit. The three are an inch or foot drawing's.
+
+    - ``decimal``: Decimal in the drawing's unit: no setting, here for a command to say so.
+    - ``architectural``: `12'-6 1/2"`.
+    - ``engineering``: `12'-6.50"`.
+    - ``fractional``: `150 1/2"`.
+    """
+    DECIMAL = "decimal"
+    ARCHITECTURAL = "architectural"
+    ENGINEERING = "engineering"
+    FRACTIONAL = "fractional"
+
+
+LengthStyleName = Literal["decimal", "architectural", "engineering", "fractional"]
+"""The names of :class:`LengthStyle`, for a plain string."""
 
 
 class LineLabelMode(_StrEnum):
@@ -13129,6 +13156,8 @@ class ProjectSettings(_Model):
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
+        length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
+            only in an inch or foot drawing.
         named_ucs: The project's named UCSs, in the order they were kept.
         networks: The project's networks (docs/adr/0209 §2).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
@@ -13161,6 +13190,7 @@ class ProjectSettings(_Model):
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
+    length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
@@ -13198,6 +13228,8 @@ class ProjectSettings(_Model):
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
+        if self.length_style is not UNSET:
+            out["lengthStyle"] = None if self.length_style is None else _enum_out(self.length_style)
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.networks is not UNSET:
@@ -13238,6 +13270,7 @@ class ProjectSettings(_Model):
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
+            length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
@@ -14268,7 +14301,8 @@ class SettingsChanged(_Model):
     """Output of `cad.settings.set` v1, and what plan says it would do.
     Attributes:
         changed: The keys whose value changed, in the input's documented order
-            (`drawingUnit` too when a system made the unit metres).
+            (`drawingUnit` too when a system made the unit metres, `lengthStyle`
+            when a metric unit took it back to decimal).
         followed: The annotations that took the new plot scale's height (one undo step). Unit: count.
         locked: The annotations a locked layer kept at the old height. Unit: count.
         revision: The document's revision afterwards (plan: the one it was made
@@ -14313,7 +14347,11 @@ class SettingsSet(_Model):
     - `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the
       registry other than the project's own, or 0 for none; it takes the
       place of a defined second system;
-    - `drawingUnit`: a local project's unit (docs/adr/0165 §2);
+    - `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,
+      in or ft (docs/adr/0262 §1);
+    - `lengthStyle`: `decimal`, or in an inch or foot drawing
+      `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a
+      metric unit takes the style back to decimal;
     - `lengthDecimals`, `areaDecimals`: 0 to 4;
     - `areaUnit`, `angleUnit`;
     - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
@@ -14330,11 +14368,14 @@ class SettingsSet(_Model):
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `second_needs_system` (a second system for a project without one),
     `second_is_own` (the second system the project's own), `unit_needs_local`
-    (a unit other than metres for a project with a system).
+    (a unit other than metres for a project with a system),
+    `style_needs_imperial` (a feet-and-inches style for a metric unit).
     Attributes:
         area_decimals: Unit: count.
         expected_revision: The document revision the input was prepared against, as decimal text.
         length_decimals: Unit: count.
+        length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
+            engineering and fractional feet and inches in an inch or foot drawing.
         plot_scale: Unit: scale.
         second_srid: Unit: epsg.
         srid: Unit: epsg.
@@ -14346,6 +14387,7 @@ class SettingsSet(_Model):
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     length_decimals: int | None | Unset = UNSET
+    length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
     name: str | None | Unset = UNSET
     plot_scale: float | None | Unset = UNSET
     project_type: Workspace | WorkspaceName | None | Unset = UNSET
@@ -14368,6 +14410,8 @@ class SettingsSet(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.length_decimals is not UNSET:
             out["lengthDecimals"] = self.length_decimals
+        if self.length_style is not UNSET:
+            out["lengthStyle"] = None if self.length_style is None else _enum_out(self.length_style)
         if self.name is not UNSET:
             out["name"] = self.name
         if self.plot_scale is not UNSET:
@@ -14390,6 +14434,7 @@ class SettingsSet(_Model):
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             expected_revision=data.get("expectedRevision", UNSET),
             length_decimals=data.get("lengthDecimals", UNSET),
+            length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
             name=data.get("name", UNSET),
             plot_scale=UNSET if "plotScale" not in data else None if data["plotScale"] is None else float(data["plotScale"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
@@ -19326,6 +19371,8 @@ __all__ = [
     "LeaderArrowName",
     "LeaderEntity",
     "LeaderEntityGeometry",
+    "LengthStyle",
+    "LengthStyleName",
     "LineCreate",
     "LineCreated",
     "LineEntity",

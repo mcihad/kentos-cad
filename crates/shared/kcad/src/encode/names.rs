@@ -3,7 +3,7 @@
 
 use kentos_contracts::{
     AngleUnit, AreaUnit, DimensionStyle, DrawingFont, DrawingUnit, GradientShape, HatchPatternType,
-    LabelInk, LabelPlacement, LineType, PointSymbol, Workspace,
+    LabelInk, LabelPlacement, LengthStyle, LineType, PointSymbol, Workspace,
 };
 
 pub(crate) fn area_unit(u: AreaUnit) -> &'static str {
@@ -48,6 +48,17 @@ pub(crate) fn drawing_unit(u: DrawingUnit) -> &'static str {
         DrawingUnit::Mm => "mm",
         DrawingUnit::Cm => "cm",
         DrawingUnit::M => "m",
+        DrawingUnit::In => "in",
+        DrawingUnit::Ft => "ft",
+    }
+}
+
+pub(crate) fn length_style(s: LengthStyle) -> &'static str {
+    match s {
+        LengthStyle::Decimal => "decimal",
+        LengthStyle::Architectural => "architectural",
+        LengthStyle::Engineering => "engineering",
+        LengthStyle::Fractional => "fractional",
     }
 }
 

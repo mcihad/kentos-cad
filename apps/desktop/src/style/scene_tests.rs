@@ -124,6 +124,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         version: 1,
         name: "parcalar".into(),
         settings: ProjectSettings {
+            length_style: None,
             named_ucs: Vec::new(),
             ucs: None,
             srid: 5256,

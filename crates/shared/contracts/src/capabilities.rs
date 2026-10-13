@@ -1104,6 +1104,7 @@ const ENTRIES: &[Entry] = &[
                 "second_needs_system",
                 "second_is_own",
                 "unit_needs_local",
+                "style_needs_imperial",
             ],
             REVISION,
         ],

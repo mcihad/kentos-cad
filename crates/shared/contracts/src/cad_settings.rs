@@ -12,7 +12,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::document::{AngleUnit, AreaUnit, DrawingFont, DrawingUnit, Workspace};
+use crate::document::{AngleUnit, AreaUnit, DrawingFont, DrawingUnit, LengthStyle, Workspace};
 
 /// Changes project settings by key.
 pub const CAD_SETTINGS_SET: &str = "cad.settings.set";
@@ -37,7 +37,11 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// - `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the
 ///   registry other than the project's own, or 0 for none; it takes the
 ///   place of a defined second system;
-/// - `drawingUnit`: a local project's unit (docs/adr/0165 §2);
+/// - `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,
+///   in or ft (docs/adr/0262 §1);
+/// - `lengthStyle`: `decimal`, or in an inch or foot drawing
+///   `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a
+///   metric unit takes the style back to decimal;
 /// - `lengthDecimals`, `areaDecimals`: 0 to 4;
 /// - `areaUnit`, `angleUnit`;
 /// - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
@@ -54,7 +58,8 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
 /// `second_needs_system` (a second system for a project without one),
 /// `second_is_own` (the second system the project's own), `unit_needs_local`
-/// (a unit other than metres for a project with a system).
+/// (a unit other than metres for a project with a system),
+/// `style_needs_imperial` (a feet-and-inches style for a metric unit).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -78,6 +83,11 @@ pub struct SettingsSet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_unit: Option<DrawingUnit>,
+    /// How lengths are written (docs/adr/0262 §2): decimal, or architectural,
+    /// engineering and fractional feet and inches in an inch or foot drawing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub length_style: Option<LengthStyle>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -114,7 +124,8 @@ pub struct SettingsSet {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SettingsChanged {
     /// The keys whose value changed, in the input's documented order
-    /// (`drawingUnit` too when a system made the unit metres).
+    /// (`drawingUnit` too when a system made the unit metres, `lengthStyle`
+    /// when a metric unit took it back to decimal).
     pub changed: Vec<String>,
     /// The annotations that took the new plot scale's height (one undo step).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

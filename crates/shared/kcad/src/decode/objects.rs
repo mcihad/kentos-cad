@@ -203,6 +203,8 @@ pub(super) struct Features {
     pub(super) look: bool,
     /// Schema 49: the settings' `ucs` and `namedUcs` (docs/adr/0261).
     pub(super) ucs: bool,
+    /// Schema 50: the drawing units `in` and `ft` and the settings' `lengthStyle` (docs/adr/0262).
+    pub(super) imperial: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -258,6 +260,7 @@ impl Features {
             polyline_extras: schema >= SCHEMA_WITH_POLYLINE_EXTRAS,
             look: schema >= crate::SCHEMA_WITH_LOOK,
             ucs: schema >= crate::SCHEMA_WITH_UCS,
+            imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             nurbs: schema >= SCHEMA_WITH_NURBS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,

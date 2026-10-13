@@ -197,6 +197,8 @@ codes! {
     ORDER_LIMIT = "order_limit", Failed, false, "Katmanın çizim sırası sınıra geldi; öbür nesneleri ters yöne taşıyarak yer açın.";
     /// Two points in a row at one place where a curve passes each once (docs/adr/0259).
     COINCIDENT_POINTS = "coincident_points", Failed, false, "Ardışık iki geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.";
+    /// A feet-and-inches length style for a metric drawing (docs/adr/0262 §2).
+    STYLE_NEEDS_IMPERIAL = "style_needs_imperial", Failed, false, "Ayak ve inç biçimleri yalnız inç ya da ayak birimli projede seçilir.";
     /// A UCS's point further than 10 000 km from the world's origin (docs/adr/0261 §2).
     FAR_POINT = "far_point", Failed, false, "UCS'in noktası dünyanın başlangıcından 10 000 km'den uzak.";
     /// A UCS name blank, longer than 64 characters or with a control character (docs/adr/0261 §1).

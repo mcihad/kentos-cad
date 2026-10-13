@@ -490,7 +490,13 @@ fn settings() -> Vec<SettingDescriptor> {
         choice(
             "newProjects.drawingUnit",
             "m",
-            &[("mm", "Milimetre"), ("cm", "Santimetre"), ("m", "Metre")],
+            &[
+                ("mm", "Milimetre"),
+                ("cm", "Santimetre"),
+                ("m", "Metre"),
+                ("in", "İnç"),
+                ("ft", "Ayak"),
+            ],
         )
         .hosts(&[Web, Desktop])
         .text(

@@ -398,11 +398,15 @@ pub const SCHEMA_WITH_LOOK: u32 = 48;
 /// not the world's or a named one is kept; older readers refuse such a file
 /// instead of opening it in the world's axes.
 pub const SCHEMA_WITH_UCS: u32 = 49;
+/// Schema 50 (docs/adr/0262): the drawing units `in` and `ft` and the
+/// settings' `lengthStyle`, written only when the drawing has one; older
+/// readers refuse an inch drawing instead of reading it in metres.
+pub const SCHEMA_WITH_IMPERIAL: u32 = 50;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 48] = [
+pub const SCHEMAS: [u32; 49] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -451,6 +455,7 @@ pub const SCHEMAS: [u32; 48] = [
     SCHEMA_WITH_NURBS,
     SCHEMA_WITH_LOOK,
     SCHEMA_WITH_UCS,
+    SCHEMA_WITH_IMPERIAL,
 ];
 
 /// The file a drawing is saved as.

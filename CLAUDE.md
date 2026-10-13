@@ -322,6 +322,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Karelaj, Doğrusal ölçü ve yeni taramanın açısı UCS'in eksenleriyle; durum çubuğu ve Koordinat oku UCS'te, eksen simgesi döner;
   Görünüm › Koordinatlar ve Önceki UCS (oturumun geçmişi); tel dünyadır: Python `Document.ucs`, `to_world`, `to_ucs`, MCP
   `drawing.toWorld`, `drawing.toUcs`, özetin `conventions.ucs`'i (ADR 0261);
+  ayak ve inç: yerel projenin `in` ve `ft` birimleri (tam oran 254/10000 ve 3048/10000) ve `lengthStyle` (mimari `12'-6 1/2"`,
+  mühendislik `12'-6.50"`, kesirli `150 1/2"`; `.kcad` şema 50), yazılan uzunlukta ayak ve inç işaretleri her projede (`5'6-1/2"`,
+  çekirdeğin `tools::imperial`'i ve `point_text`'in `Len`'i), Proje ayarları ve sihirbazda İnç ve Ayak, `cad.settings.set`'in
+  `lengthStyle`'ı (`style_needs_imperial`), `cad.units.change`'in oranı, DXF'in `$INSUNITS` 1 ve 2'si (ADR 0262);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

@@ -218,6 +218,7 @@ mod tests {
 
     fn settings(srid: u32, second: Option<u32>) -> ProjectSettings {
         ProjectSettings {
+            length_style: None,
             named_ucs: Vec::new(),
             ucs: None,
             srid,

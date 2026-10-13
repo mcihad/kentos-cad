@@ -896,6 +896,8 @@ impl FileUnit {
             DrawingUnit::Mm => FileUnit::Mm,
             DrawingUnit::Cm => FileUnit::Cm,
             DrawingUnit::M => FileUnit::M,
+            DrawingUnit::In => FileUnit::In,
+            DrawingUnit::Ft => FileUnit::Ft,
         }
     }
 

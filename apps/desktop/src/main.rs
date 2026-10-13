@@ -72,6 +72,8 @@ mod icon_tour;
 mod icons;
 #[cfg(test)]
 mod image_scenes;
+#[cfg(test)]
+mod imperial_scenes;
 mod info_card;
 mod input;
 mod keys;

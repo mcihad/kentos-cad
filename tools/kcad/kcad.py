@@ -172,6 +172,8 @@ SCHEMA_WITH_NURBS = 47
 SCHEMA_WITH_LOOK = 48
 # Schema 49: schema 48 and the settings' `ucs` and `namedUcs`, the drawing's user coordinate systems (docs/adr/0261 §1).
 SCHEMA_WITH_UCS = 49
+# Schema 50: schema 49, the drawing units `in` and `ft` and the settings' `lengthStyle` (docs/adr/0262).
+SCHEMA_WITH_IMPERIAL = 50
 # A UCS's bounds (kentos_contracts::cad_ucs): an origin within 10 000 km, an angle in [0, 2π), at most 100 named, a name
 # trimmed, 1 to 64 characters, no control characters.
 UCS_REACH = 1.0e7
@@ -341,7 +343,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1834,6 +1836,7 @@ class _Schema:
         self.nurbs = version >= SCHEMA_WITH_NURBS
         self.look = version >= SCHEMA_WITH_LOOK
         self.ucs = version >= SCHEMA_WITH_UCS
+        self.imperial = version >= SCHEMA_WITH_IMPERIAL
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2039,7 +2042,7 @@ class _Schema:
                 "workspace": (self.enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 **({"secondSrid": (self.uint(32), False)} if self.second_srid else {}),
                 "drawingFont": (self.enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
-                **({"drawingUnit": (self.enum(("mm", "cm", "m")), False)} if self.drawing_unit else {}),
+                **({"drawingUnit": (self.enum(("mm", "cm", "m", "in", "ft") if self.imperial else ("mm", "cm", "m")), False)} if self.drawing_unit else {}),
                 "areaDecimals": (self.uint(32), True),
                 "lengthDecimals": (self.uint(32), True),
                 **(
@@ -2061,6 +2064,7 @@ class _Schema:
                 **({"variables": (self.variables_, False)} if self.variables else {}),
                 **({"addressLocators": (self.address_locators_, False)} if self.addresses else {}),
                 **({"ucs": (self.ucs_, False), "namedUcs": (self.named_ucs_, False)} if self.ucs else {}),
+                **({"lengthStyle": (self.enum(("architectural", "engineering", "fractional")), False)} if self.imperial else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -2070,6 +2074,10 @@ class _Schema:
         if second is not None and (second == 0 or not has_system or second == s["srid"]):
             self.path.append("secondSrid")
             self.fail("bad_value", "ikinci koordinat sistemi projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz")
+        # A feet-and-inches style is an inch or foot drawing's (docs/adr/0262 §2).
+        if "lengthStyle" in s and s.get("drawingUnit") not in ("in", "ft"):
+            self.path.append("lengthStyle")
+            self.fail("bad_value", "ayak ve inç biçimi yalnız inç ya da ayak birimli projede olur")
         if "customCrs" in s and s["srid"] != 0:
             self.path.append("customCrs")
             self.fail("bad_value", "projenin kendi tanımı yalnız EPSG kodu olmayan (srid 0) projede olur")

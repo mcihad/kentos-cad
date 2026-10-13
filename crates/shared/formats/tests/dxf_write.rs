@@ -2121,6 +2121,54 @@ fn a_local_project_is_written_in_its_unit_and_read_back_in_metres() {
     }
 }
 
+/// An inch project's drawing (docs/adr/0262 §1): $INSUNITS 1, a line's
+/// start in inches (metres × 10000 ÷ 254); read back into the same project
+/// it is the drawing in metres again.
+#[test]
+fn an_inch_project_is_written_in_inches_and_read_back_in_metres() {
+    let objects = objects();
+    let mut inch = input(objects.clone());
+    inch.unit = Some(DrawingUnit::In);
+    let (text, report) = write(&inch);
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+    let (metres, _) = write(&input(objects.clone()));
+    let (p, q) = (pairs(&text), pairs(&metres));
+    let units = |p: &[(i32, &str)]| -> f64 {
+        let i = p
+            .iter()
+            .position(|&x| x == (9, "$INSUNITS"))
+            .expect("$INSUNITS");
+        p[i..]
+            .iter()
+            .find(|x| x.0 == 70)
+            .map(|x| x.1.parse().expect("number"))
+            .expect("value")
+    };
+    assert_eq!(units(&p), 1.0);
+    let value = |p: &[(i32, &str)], kind: &str, code: i32| -> f64 {
+        entities_of(p, kind)
+            .iter()
+            .find_map(|e| e.iter().find(|x| x.0 == code))
+            .map(|x| x.1.parse().expect("number"))
+            .expect("value")
+    };
+    let (inches, m) = (value(&p, "LINE", 10), value(&q, "LINE", 10));
+    assert!((inches - m * 10_000.0 / 254.0).abs() < 1e-6, "{inches} {m}");
+    let r = dxf::read(
+        text.as_bytes(),
+        &DxfReadOptions {
+            unit: Some(DrawingUnit::In),
+            ..DxfReadOptions::default()
+        },
+    )
+    .expect("reads");
+    let want: Vec<Entity> = objects.iter().map(|e| expected(e, &layer_name)).collect();
+    assert_eq!(r.entities.len(), want.len());
+    for (got, want) in r.entities.iter().zip(&want) {
+        assert!(same_within(got, want), "{got:?}\n{want:?}");
+    }
+}
+
 /// The millimetre fixture (`fixtures/formats/v1/dxf-write/units.input.json`,
 /// docs/adr/0165 §2) goes out as its committed bytes, which
 /// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code:

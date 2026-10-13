@@ -7,6 +7,7 @@ use kentos_contracts::{AngleUnit, AreaUnit, DrawingUnit, ProjectSettings, Worksp
 use kentos_geometry_core::tools::point_input::{AngleFrom, Angles};
 
 use kentos_geometry_core::Vec2;
+use kentos_geometry_core::tools::imperial::{Style, format_inches};
 
 /// Grads per degree.
 const GRAD_PER_DEG: f64 = 400.0 / 360.0;
@@ -27,6 +28,9 @@ pub struct Format {
     /// angle (docs/adr/0261): where the status bar reads the pointer and how
     /// the axes' icon turns. Points are given in the world all the same.
     pub ucs: Option<[f64; 3]>,
+    /// How lengths and coordinates are written (docs/adr/0262 §2): decimal
+    /// in the unit, or feet and inches with their marks.
+    pub style: Style,
 }
 
 /// A project's axes and the way its angles run (docs/adr/0165 §4): a CBS
@@ -51,6 +55,7 @@ impl Default for Format {
             unit: DrawingUnit::M,
             axes: Axes::Gis,
             ucs: None,
+            style: Style::Decimal,
         }
     }
 }
@@ -69,6 +74,20 @@ impl Format {
                 Axes::Gis
             },
             ucs: settings.ucs.map(|u| [u.origin.x, u.origin.y, u.angle]),
+            style: match settings.length_style {
+                Some(kentos_contracts::LengthStyle::Architectural)
+                    if settings.unit().imperial() =>
+                {
+                    Style::Architectural
+                }
+                Some(kentos_contracts::LengthStyle::Engineering) if settings.unit().imperial() => {
+                    Style::Engineering
+                }
+                Some(kentos_contracts::LengthStyle::Fractional) if settings.unit().imperial() => {
+                    Style::Fractional
+                }
+                _ => Style::Decimal,
+            },
         }
     }
 
@@ -170,17 +189,24 @@ impl Format {
             .replace("X (yukarı)", "Y (yukarı)")
     }
 
-    /// A length or coordinate typed in the unit, in metres (what the geometry keeps).
+    /// A length or coordinate typed in the unit, in metres (what the geometry
+    /// keeps): the unit's ratio of whole numbers, as one product and one
+    /// division (an inch × 254 ÷ 10000; a millimetre ÷ 1000, docs/adr/0262 §1).
     pub fn to_metres(&self, typed: f64) -> f64 {
-        typed / self.unit.per_metre()
+        let (mul, div) = self.unit.metres();
+        if mul == 1.0 {
+            typed / div
+        } else {
+            typed * mul / div
+        }
     }
 
     /// An area typed in the project's area unit (m², dönüm, ha; a local
     /// project's mm² or cm²), in square metres (the web's `areaToSquareMetres`).
     pub fn area_to_square_metres(&self, typed: f64) -> f64 {
         if self.unit != DrawingUnit::M {
-            let k = self.unit.per_metre();
-            return typed / (k * k);
+            let (mul, div) = self.unit.metres();
+            return typed * (mul * mul) / (div * div);
         }
         match self.area_unit {
             AreaUnit::Donum => typed * 1000.0,
@@ -191,7 +217,26 @@ impl Format {
 
     /// A length or coordinate in metres, in the unit (a field's starting value).
     pub fn from_metres(&self, metres: f64) -> f64 {
-        metres * self.unit.per_metre()
+        let (mul, div) = self.unit.metres();
+        if mul == 1.0 {
+            metres * div
+        } else {
+            metres * div / mul
+        }
+    }
+
+    /// A length in metres as inches, for the feet-and-inches styles (docs/adr/0262 §2).
+    fn inches(metres: f64) -> f64 {
+        metres * 10_000.0 / 254.0
+    }
+
+    /// A length in the project's style: feet and inches with their marks, or
+    /// decimal in the unit without it.
+    fn styled(&self, metres: f64) -> String {
+        match self.style {
+            Style::Decimal => fixed(self.from_metres(metres), self.length_decimals),
+            style => format_inches(Self::inches(metres), style, self.length_decimals as u32),
+        }
     }
 
     /// A length in metres in the unit with the digits it needs, not rounded to
@@ -209,6 +254,8 @@ impl Format {
             DrawingUnit::Mm => "milimetre",
             DrawingUnit::Cm => "santimetre",
             DrawingUnit::M => "metre",
+            DrawingUnit::In => "inç",
+            DrawingUnit::Ft => "ayak",
         }
     }
 
@@ -219,26 +266,31 @@ impl Format {
 
     /// A grid coordinate (Y or X) without a unit.
     pub fn coord(&self, v: f64) -> String {
-        fixed(self.from_metres(v), self.length_decimals)
+        self.styled(v)
     }
 
+    /// A length with its unit; feet and inches carry their own marks (`12'-6 1/2"`).
     pub fn length(&self, metres: f64) -> String {
-        format!(
-            "{} {}",
-            fixed(self.from_metres(metres), self.length_decimals),
-            self.unit.mark()
-        )
+        match self.style {
+            Style::Decimal => format!("{} {}", self.styled(metres), self.unit.mark()),
+            _ => self.styled(metres),
+        }
     }
 
     /// A length without its unit (the web's `length(m, false)`): `20.000 × 10.000 m`.
     pub fn length_bare(&self, metres: f64) -> String {
-        fixed(self.from_metres(metres), self.length_decimals)
+        self.styled(metres)
     }
 
     /// An area in the unit squared, for a local project in millimetres or centimetres.
     fn square_units(&self, square_metres: f64) -> Option<String> {
-        let k = self.unit.per_metre();
-        (self.unit != DrawingUnit::M).then(|| fixed(square_metres * k * k, self.area_decimals))
+        let (mul, div) = self.unit.metres();
+        (self.unit != DrawingUnit::M).then(|| {
+            fixed(
+                square_metres * (div * div) / (mul * mul),
+                self.area_decimals,
+            )
+        })
     }
 
     /// An area in the project's unit without the unit (the web's `area(m2, false)`).
@@ -260,6 +312,8 @@ impl Format {
         match self.unit {
             DrawingUnit::Mm => return "mm²",
             DrawingUnit::Cm => return "cm²",
+            DrawingUnit::In => return "in²",
+            DrawingUnit::Ft => return "ft²",
             DrawingUnit::M => {}
         }
         match self.area_unit {
@@ -503,6 +557,7 @@ mod tests {
     #[test]
     fn a_projects_type_names_its_axes() {
         let mut settings = ProjectSettings {
+            length_style: None,
             named_ucs: Vec::new(),
             ucs: None,
             srid: 5256,
@@ -582,6 +637,7 @@ mod tests {
     #[test]
     fn a_local_project_reads_in_its_unit() {
         let mut settings = ProjectSettings {
+            length_style: None,
             named_ucs: Vec::new(),
             ucs: None,
             srid: 0,
@@ -630,6 +686,34 @@ mod tests {
             (f.length(0.12), f.to_metres(250.0)),
             ("0.120 m".to_owned(), 250.0)
         );
+    }
+
+    /// Feet and inches (docs/adr/0262): typed and shown by their exact
+    /// ratio, written in the project's style with their marks.
+    #[test]
+    fn an_inch_project_writes_feet_and_inches() {
+        let mut settings: ProjectSettings =
+            serde_json::from_value(serde_json::json!({
+                "srid": 0, "lengthDecimals": 4, "areaDecimals": 2, "areaUnit": "m2",
+                "angleUnit": "deg", "plotScale": 48.0, "drawingUnit": "in", "lengthStyle": "architectural"
+            }))
+            .expect("settings");
+        let f = Format::of(&settings);
+        assert_eq!(f.to_metres(10.0), 0.254);
+        assert_eq!(f.length(150.5 * 0.0254), "12'-6 1/2\"");
+        assert_eq!(f.length_unit_name(), "inç");
+        assert_eq!(f.area_unit_label(), "in²");
+        settings.length_style = Some(kentos_contracts::LengthStyle::Engineering);
+        settings.length_decimals = 2;
+        assert_eq!(Format::of(&settings).length(150.5 * 0.0254), "12'-6.50\"");
+        // Decimal in feet carries the unit's mark.
+        settings.length_style = None;
+        settings.drawing_unit = Some(DrawingUnit::Ft);
+        assert_eq!(Format::of(&settings).length(0.3048 * 12.5), "12.50 ft");
+        // A metric unit is decimal whatever the setting says.
+        settings.length_style = Some(kentos_contracts::LengthStyle::Fractional);
+        settings.drawing_unit = Some(DrawingUnit::Mm);
+        assert_eq!(Format::of(&settings).length(0.25), "250.00 mm");
     }
 
     /// The display rule (docs/adr/0149); every case of it is the core's

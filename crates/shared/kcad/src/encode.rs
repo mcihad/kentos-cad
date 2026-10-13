@@ -34,7 +34,7 @@ mod variables;
 use kentos_contracts::{
     AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
     DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, LayerField, LayerNode,
-    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, MigrationSource,
+    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LengthStyle, MigrationSource,
     ProjectSettings, SurveySettings, TopologySettings, Vec2, layer_fields_problem,
     layer_states_problem,
 };
@@ -47,8 +47,8 @@ use crate::{
     SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_BLOCKS,
     SCHEMA_WITH_COMPOSE, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSION_REFS,
     SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_FILTERS,
-    SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS,
-    SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
+    SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_IMPERIAL,
+    SCHEMA_WITH_LABELS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LOOK, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM,
     SCHEMA_WITH_NETWORKS, SCHEMA_WITH_NURBS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
@@ -59,7 +59,8 @@ use crate::{
     SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_UCS, SCHEMA_WITH_VARIABLES,
 };
 use names::{
-    angle_unit, area_unit, drawing_font, drawing_unit, line_type, point_symbol, workspace,
+    angle_unit, area_unit, drawing_font, drawing_unit, length_style, line_type, point_symbol,
+    workspace,
 };
 
 /// The payload of a drawing; `watch` hears the objects as they are written
@@ -341,6 +342,7 @@ impl<'d> Encoder<'d> {
             + usize::from(s.workspace.is_some())
             + usize::from(s.drawing_font.is_some())
             + usize::from(s.drawing_unit.is_some())
+            + usize::from(s.length_style.is_some())
             + usize::from(s.second_srid.is_some())
             + usize::from(s.custom_crs.is_some())
             + usize::from(s.second_custom_crs.is_some())
@@ -443,6 +445,19 @@ impl<'d> Encoder<'d> {
             self.key("layerStates");
             self.at(Seg::Name("layerStates"), |e| {
                 e.layer_states(&s.layer_states)
+            })?;
+        }
+        if let Some(style) = s.length_style {
+            self.key("lengthStyle");
+            self.at(Seg::Name("lengthStyle"), |e| {
+                if style == LengthStyle::Decimal || !s.drawing_unit.is_some_and(|u| u.imperial()) {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "ayak ve inç biçimi yalnız inç ya da ayak birimli projede olur; ondalık biçim yazılmaz",
+                    ));
+                }
+                e.w.text(length_style(style));
+                Ok(())
             })?;
         }
         self.key("areaDecimals");
@@ -1133,6 +1148,12 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 50 (docs/adr/0262): an inch or foot drawing, or a length style.
+    if doc.settings.drawing_unit.is_some_and(|u| u.imperial())
+        || doc.settings.length_style.is_some()
+    {
+        return SCHEMA_WITH_IMPERIAL;
     }
     // Schema 49 (docs/adr/0261): a user coordinate system, current or named.
     if doc.settings.ucs.is_some() || !doc.settings.named_ucs.is_empty() {

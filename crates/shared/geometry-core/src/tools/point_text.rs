@@ -27,18 +27,43 @@
 use crate::tools::point_input::{Angles, polar_point_in, relative_point, toward_point};
 use crate::vec2::Vec2;
 
+/// A typed length: a number in the drawing's unit, or feet and inches with
+/// their marks (docs/adr/0262 §3), held in inches.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Len {
+    Unit(f64),
+    Inches(f64),
+}
+
+impl Len {
+    /// Metres: the unit's through `metres`, inches exactly (× 254 ÷ 10000).
+    pub fn metres(self, metres: impl Fn(f64) -> f64) -> f64 {
+        match self {
+            Len::Unit(v) => metres(v),
+            Len::Inches(v) => v * 254.0 / 10_000.0,
+        }
+    }
+
+    /// The number as typed, in its own unit.
+    pub fn value(self) -> f64 {
+        match self {
+            Len::Unit(v) | Len::Inches(v) => v,
+        }
+    }
+}
+
 /// What typed point text says, before it is placed.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PointText {
     /// `Y,X`: an absolute point, east then north.
-    Absolute(Vec2),
+    Absolute(Len, Len),
     /// `@dY,dX`: the last point moved by the differences.
-    Relative { dx: f64, dy: f64 },
+    Relative { dx: Len, dy: Len },
     /// `@distance<angle`: from the last point, the angle as typed (its way
     /// and unit are the project's, [`Angles`]).
-    Polar { distance: f64, angle: f64 },
+    Polar { distance: Len, angle: f64 },
     /// A bare number: that far along the tracking line, else towards the cursor.
-    Distance(f64),
+    Distance(Len),
 }
 
 /// Reads point text; `None` when it is none of the forms. The forms are tried
@@ -54,9 +79,9 @@ pub fn parse_point_text(text: &str) -> Option<PointText> {
         return Some(PointText::Polar { distance, angle });
     }
     if let Some((x, y)) = pair(t) {
-        return Some(PointText::Absolute(Vec2::new(x, y)));
+        return Some(PointText::Absolute(x, y));
     }
-    whole(t).map(PointText::Distance)
+    whole_len(t).map(PointText::Distance)
 }
 
 /// The point typed text gives (the web's `parsePointInput`): `last` is the
@@ -86,16 +111,15 @@ pub fn point_from_text_in(
     metres: impl Fn(f64) -> f64,
     angles: Angles,
 ) -> Option<Vec2> {
+    let m = |l: Len| l.metres(&metres);
     match parse_point_text(text)? {
-        PointText::Relative { dx, dy } => {
-            last.map(|last| relative_point(last, metres(dx), metres(dy)))
-        }
+        PointText::Relative { dx, dy } => last.map(|last| relative_point(last, m(dx), m(dy))),
         PointText::Polar { distance, angle } => {
-            last.map(|last| polar_point_in(last, metres(distance), angle, angles))
+            last.map(|last| polar_point_in(last, m(distance), angle, angles))
         }
-        PointText::Absolute(p) => Some(Vec2::new(metres(p.x), metres(p.y))),
+        PointText::Absolute(x, y) => Some(Vec2::new(m(x), m(y))),
         PointText::Distance(d) => {
-            let d = metres(d);
+            let d = m(d);
             along(d).or_else(|| toward_point(last?, cursor?, d))
         }
     }
@@ -105,6 +129,17 @@ pub fn point_from_text_in(
 /// taken for the point, once (the web's `parseNumber`).
 pub fn parse_number(text: &str) -> Option<f64> {
     whole(&js_trim(text).replacen(',', ".", 1))
+}
+
+/// A single typed length (docs/adr/0262 §3): a number in the drawing's
+/// unit (a decimal comma taken for the point, once, as [`parse_number`]),
+/// or feet and inches with their marks.
+pub fn parse_length(text: &str) -> Option<Len> {
+    let t = js_trim(text);
+    if let Some((inches, "")) = crate::tools::imperial::feet_inches(t) {
+        return Some(Len::Inches(inches));
+    }
+    parse_number(t).map(Len::Unit)
 }
 
 /// A single number as the point grammar writes it (`[-+]?\d+(\.\d+)?`,
@@ -190,10 +225,24 @@ fn whole(s: &str) -> Option<f64> {
     number(s).and_then(|(value, rest)| rest.is_empty().then_some(value))
 }
 
+/// A length at the start of `s`: feet and inches with their marks first
+/// (they start like a number), else a number in the unit.
+fn length(s: &str) -> Option<(Len, &str)> {
+    if let Some((inches, rest)) = crate::tools::imperial::feet_inches(s) {
+        return Some((Len::Inches(inches), rest));
+    }
+    number(s).map(|(v, rest)| (Len::Unit(v), rest))
+}
+
+/// `^LEN$`.
+fn whole_len(s: &str) -> Option<Len> {
+    length(s).and_then(|(value, rest)| rest.is_empty().then_some(value))
+}
+
 /// `^NUM\s*[,; ]\s*NUM$`: between the numbers white space and exactly one
 /// separator; a plain space can be that separator.
-fn pair(s: &str) -> Option<(f64, f64)> {
-    let (a, rest) = number(s)?;
+fn pair(s: &str) -> Option<(Len, Len)> {
+    let (a, rest) = length(s)?;
     let between = rest.len()
         - rest
             .trim_start_matches(|c| is_js_space(c) || c == ',' || c == ';')
@@ -208,12 +257,12 @@ fn pair(s: &str) -> Option<(f64, f64)> {
     if !separated {
         return None;
     }
-    whole(rest).map(|b| (a, b))
+    whole_len(rest).map(|b| (a, b))
 }
 
 /// `^NUM\s*<\s*NUM$`.
-fn polar(s: &str) -> Option<(f64, f64)> {
-    let (a, rest) = number(s)?;
+fn polar(s: &str) -> Option<(Len, f64)> {
+    let (a, rest) = length(s)?;
     let between = rest.len()
         - rest
             .trim_start_matches(|c| is_js_space(c) || c == '<')
@@ -239,20 +288,29 @@ mod tests {
     fn the_four_forms_in_the_web_order() {
         assert_eq!(
             parse_point_text("486512.34,4420118.9"),
-            Some(PointText::Absolute(Vec2::new(486512.34, 4420118.9)))
+            Some(PointText::Absolute(
+                Len::Unit(486512.34),
+                Len::Unit(4420118.9)
+            ))
         );
         assert_eq!(
             parse_point_text("@5,-3"),
-            Some(PointText::Relative { dx: 5.0, dy: -3.0 })
+            Some(PointText::Relative {
+                dx: Len::Unit(5.0),
+                dy: Len::Unit(-3.0)
+            })
         );
         assert_eq!(
             parse_point_text("25<45"),
             Some(PointText::Polar {
-                distance: 25.0,
+                distance: Len::Unit(25.0),
                 angle: 45.0
             })
         );
-        assert_eq!(parse_point_text(" -4 "), Some(PointText::Distance(-4.0)));
+        assert_eq!(
+            parse_point_text(" -4 "),
+            Some(PointText::Distance(Len::Unit(-4.0)))
+        );
         assert_eq!(parse_point_text("abc"), None);
     }
 

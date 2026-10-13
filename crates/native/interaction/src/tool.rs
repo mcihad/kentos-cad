@@ -1219,8 +1219,10 @@ impl Context<'_> {
     /// number. Counts, angles, factors and paper millimetres are read with
     /// `parse_number`.
     pub fn typed_length(&self, text: &str) -> Option<f64> {
-        kentos_geometry_core::tools::point_text::parse_number(text)
-            .map(|n| self.format().to_metres(n))
+        // Feet and inches with their marks in any project (docs/adr/0262 §3).
+        let format = self.format();
+        kentos_geometry_core::tools::point_text::parse_length(text)
+            .map(|l| l.metres(|n| format.to_metres(n)))
     }
 
     pub(crate) fn say(&mut self, level: Level, text: impl Into<String>) {

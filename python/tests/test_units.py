@@ -139,3 +139,22 @@ class DxfUnit(unittest.TestCase):
         self.assertEqual(doc.info().can_undo, False)
         chosen = doc.import_dxf(self.FILES / "unitless.dxf", file_unit="cm", group="")
         self.assertEqual((chosen.unit.used, chosen.unit.factor, chosen.group), (5, 0.01, cad.UNSET))
+
+
+class FeetAndInches(unittest.TestCase):
+    """Feet and inches (docs/adr/0262): an inch drawing keeps metres on the wire, its unit and style are said."""
+
+    def test_an_inch_drawing_takes_metres_and_says_its_unit(self) -> None:
+        doc = cad.Document.new("Ofis", workspace="cad", drawing_unit="in")
+        self.assertEqual(doc.units.drawing, cad.DrawingUnit.IN)
+        # 150.5 inches typed is 3.8227 m on the wire.
+        width = doc.units.to_metres(150.5)
+        self.assertAlmostEqual(width, 3.8227, places=12)
+        made = cad.line.create(doc, layer_id=doc.active_layer, a=cad.Vec2(0.0, 0.0), b=cad.Vec2(width, 0.0))
+        self.assertAlmostEqual(doc.measure(made.uid).length or 0.0, 3.8227, places=12)
+        changed = cad.settings.set(doc, length_style=cad.LengthStyle.ARCHITECTURAL)
+        self.assertEqual(changed.changed, ["lengthStyle"])
+        self.assertEqual(doc.settings.length_style, cad.LengthStyle.ARCHITECTURAL)
+        with self.assertRaises(cad.CommandFailed) as metric:
+            cad.settings.set(doc, drawing_unit=cad.DrawingUnit.MM, length_style=cad.LengthStyle.FRACTIONAL)
+        self.assertEqual(metric.exception.code, "style_needs_imperial")

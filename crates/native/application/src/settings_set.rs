@@ -12,8 +12,8 @@
 use std::sync::OnceLock;
 
 use kentos_contracts::{
-    CommandResult, DrawingUnit, MAX_PLOT_SCALE, MAX_SHOWN_DECIMALS, ProjectSettings, ScaleChange,
-    SettingsChanged, SettingsSet, Workspace,
+    CommandResult, DrawingUnit, LengthStyle, MAX_PLOT_SCALE, MAX_SHOWN_DECIMALS, ProjectSettings,
+    ScaleChange, SettingsChanged, SettingsSet, Workspace,
 };
 use kentos_domain::Document;
 
@@ -58,6 +58,7 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
         || input.srid.is_some()
         || input.second_srid.is_some()
         || input.drawing_unit.is_some()
+        || input.length_style.is_some()
         || input.length_decimals.is_some()
         || input.area_decimals.is_some()
         || input.area_unit.is_some()
@@ -162,7 +163,7 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
         if unit != DrawingUnit::M && s.has_system() {
             return Err(fail(
                 codes::UNIT_NEEDS_LOCAL,
-                "Koordinat sistemi olan projenin birimi metredir; mm ya da cm yalnız sistemsiz yerel projede seçilir."
+                "Koordinat sistemi olan projenin birimi metredir; mm, cm, inç ya da ayak yalnız sistemsiz yerel projede seçilir."
                     .into(),
                 "drawingUnit",
             ));
@@ -172,6 +173,22 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
     // A drawing unit is a local project's (docs/adr/0165 §2): one given a system is in metres.
     if s.has_system() {
         s.drawing_unit = None;
+    }
+    // A feet-and-inches style is an inch or foot drawing's (docs/adr/0262 §2): one given
+    // for a metric unit is refused, one the unit leaves goes back to decimal.
+    if let Some(style) = input.length_style {
+        if style != LengthStyle::Decimal && !s.unit().imperial() {
+            return Err(fail(
+                codes::STYLE_NEEDS_IMPERIAL,
+                "Ayak ve inç biçimleri (mimari, mühendislik, kesirli) yalnız inç ya da ayak biriminde seçilir; önce birimi inç ya da ayak yapın."
+                    .into(),
+                "lengthStyle",
+            ));
+        }
+        s.length_style = (style != LengthStyle::Decimal).then_some(style);
+    }
+    if !s.unit().imperial() {
+        s.length_style = None;
     }
     if let Some(d) = input.length_decimals {
         s.length_decimals = d;
@@ -282,6 +299,7 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
         "secondSrid",
     );
     key(before.drawing_unit != after.drawing_unit, "drawingUnit");
+    key(before.length_style != after.length_style, "lengthStyle");
     key(
         before.length_decimals != after.length_decimals,
         "lengthDecimals",
