@@ -212,3 +212,120 @@ fn feet_and_kilometres_too() {
     );
     assert_eq!(line_end(&r), v(10_000.0, 0.0));
 }
+
+/// The shared cases of a DXF's unit (docs/adr/0257 §1, §2;
+/// `fixtures/formats/v1/dxf-units`, written by `dxf_units_cases.py` from the
+/// ADR and the DXF reference): each file read in a local project (`mm`, `cm`,
+/// `m`) or one with a coordinate system (`crs`), a unit chosen or not; the
+/// decision, what a command says of it and the objects in metres, exactly.
+#[test]
+fn the_shared_unit_cases_hold() {
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/dxf-units");
+    let cases: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(dir.join("cases.json")).expect("the cases"))
+            .expect("JSON");
+    let all = cases["cases"].as_array().expect("cases");
+    assert!(all.len() >= 20, "{} cases", all.len());
+    let pair = |v: Vec2| serde_json::json!([v.x, v.y]);
+    for case in all {
+        let file = case["file"].as_str().expect("a file");
+        let project = case["project"].as_str().expect("a project");
+        let at = format!("{file} › {project} › {}", case["fileUnit"]);
+        let unit = match project {
+            "mm" => Some(DrawingUnit::Mm),
+            "cm" => Some(DrawingUnit::Cm),
+            "m" => Some(DrawingUnit::M),
+            _ => None,
+        };
+        let file_unit = serde_json::from_value(case["fileUnit"].clone()).expect("a unit");
+        let r = dxf::read(
+            &std::fs::read(dir.join(file)).expect("the file"),
+            &DxfReadOptions {
+                unit,
+                file_unit,
+                ..DxfReadOptions::default()
+            },
+        )
+        .unwrap_or_else(|e| panic!("{at}: {e}"));
+        let want = &case["expect"];
+        let decision = r.unit.clone().expect("a decision");
+        assert_eq!(
+            serde_json::to_value(&decision).expect("JSON"),
+            want["unit"],
+            "{at}"
+        );
+        let codes: Vec<&str> = decision.warnings().iter().map(|(c, _)| *c).collect();
+        assert_eq!(serde_json::json!(codes), want["warnings"], "{at}");
+        let line = r.entities.iter().find_map(|e| match e {
+            Entity::Line(l) => Some(l),
+            _ => None,
+        });
+        let block_line = |name: &str| {
+            let b = r
+                .blocks
+                .iter()
+                .find(|b| b.name == name)
+                .unwrap_or_else(|| panic!("{at}: no block {name}"));
+            match b.entities.first() {
+                Some(Entity::Line(l)) => serde_json::json!([pair(l.a), pair(l.b)]),
+                e => panic!("{at}: {name}'s first object is not a line: {e:?}"),
+            }
+        };
+        let insert = || {
+            r.entities
+                .iter()
+                .find_map(|e| match e {
+                    Entity::Insert(i) => {
+                        Some(serde_json::json!({ "p": pair(i.p), "scale": i.scale }))
+                    }
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("{at}: no insert"))
+        };
+        let circle = || {
+            r.entities
+                .iter()
+                .find_map(|e| match e {
+                    Entity::Circle(c) => Some(serde_json::json!({ "c": pair(c.c), "r": c.r })),
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("{at}: no circle"))
+        };
+        let line = || {
+            let l = line.unwrap_or_else(|| panic!("{at}: no line"));
+            serde_json::json!([pair(l.a), pair(l.b)])
+        };
+        if let Some(room) = want.get("room") {
+            let text = |words: &str| {
+                r.entities
+                    .iter()
+                    .find_map(|e| match e {
+                        Entity::Text(t) if t.text == words => Some(t),
+                        _ => None,
+                    })
+                    .unwrap_or_else(|| panic!("{at}: no text “{words}”"))
+            };
+            let label = text("Salon");
+            let note = text("Not kutusu");
+            let got = serde_json::json!({
+                "line": line(),
+                "circle": circle(),
+                "text": { "p": pair(label.p), "height": label.height },
+                "mtext": { "p": pair(note.p), "height": note.height, "boxWidth": note.paragraph.box_width },
+                "insert": insert(),
+                "block": { "KAPI": block_line("KAPI") },
+            });
+            assert_eq!(&got, room, "{at}");
+            continue;
+        }
+        assert_eq!(line(), want["line"], "{at}");
+        if want.get("circle").is_some() {
+            assert_eq!(circle(), want["circle"], "{at}");
+        }
+        if want.get("insert").is_some() {
+            assert_eq!(insert(), want["insert"], "{at}");
+            assert_eq!(block_line("PANO"), want["block"]["PANO"], "{at}");
+        }
+    }
+}

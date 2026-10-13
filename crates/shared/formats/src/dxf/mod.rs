@@ -35,7 +35,9 @@ pub use writer::{WriteInput, input_from_json, write};
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use kentos_contracts::{DrawingUnit, DxfReadOptions, ImportLayer, ImportResult, LineType};
+use kentos_contracts::{
+    BlockUnit, DxfReadOptions, ImportLayer, ImportResult, LineType, UnitDecision, UnitSource,
+};
 
 use crate::num::{parse_int, parse_real};
 use crate::report::Report;
@@ -102,47 +104,124 @@ fn units_name(u: i64) -> &'static str {
     }
 }
 
-/// The scale from the file's values to metres, and what the report says of
-/// it (docs/adr/0165 §2). A project with a coordinate system (`project`
-/// none) takes the values as metres and is told of another declared unit;
-/// a local project takes them in the unit the file declares, or in its own
-/// when the file declares none.
-fn units_in(declared: Option<i64>, project: Option<DrawingUnit>, report: &mut Report) -> Scale {
+/// The unit the file's values are read in, the scale from them to metres
+/// and what the report says of it (docs/adr/0257 §1, docs/adr/0165 §2):
+///
+/// - a unit chosen (`fileUnit`) is the values' unit, whatever the file says;
+/// - else a project with a coordinate system (`unit` none) reads metres and is
+///   told of another declared unit;
+/// - else a local project takes the unit the file declares;
+/// - a file that declares none, or a code no one defines, is not scaled: its
+///   numbers are in the local project's unit (metres with a system), assumed.
+///
+/// `records` are the block records' units (BLOCK_RECORD's group 70, docs/adr/0257
+/// §2): those other than the file's are listed; an insert's scale holds the
+/// ratio, so a block is scaled with the drawing alone.
+fn decide_units(
+    declared: Option<i64>,
+    opts: &DxfReadOptions,
+    records: &[(String, i64)],
+    report: &mut Report,
+) -> (Scale, UnitDecision) {
     if let Some(u) = declared {
         report.fact("Birim ($INSUNITS)", units_name(u));
     }
-    let Some(project) = project else {
-        if let Some(u) = declared.filter(|u| *u != 0 && *u != 6) {
-            report.about(
-                "Birim",
-                &format!("dosya birimini {} olarak bildiriyor; koordinatlar ölçeklenmeden alındı (metre sayıldı)", units_name(u)),
-            );
+    let known = declared.and_then(|u| units::insunits(u).map(|(s, name)| (u, s, name)));
+    let (used, scale, name, source, assumed) = match (opts.file_unit, opts.unit) {
+        (Some(chosen), project) => {
+            let code = chosen.code();
+            let (scale, name) = units::insunits(code).unwrap_or((Scale::ONE, "metre"));
+            let said = match known {
+                Some((u, _, declared_name)) if u != code => Some(format!(
+                    "dosya {declared_name} bildiriyor; değerler seçilen birimde, {name} okundu"
+                )),
+                Some(_) => None,
+                None => Some(format!(
+                    "dosya birim bildirmiyor; değerler seçilen birimde, {name} okundu"
+                )),
+            };
+            // A local project in the chosen unit itself has nothing more to say.
+            if let Some(said) = said.filter(|_| {
+                project.is_none_or(|p| units::insunits_of(p) != code) || known.is_some()
+            }) {
+                report.about("Birim", &said);
+            }
+            (code, scale, name, UnitSource::Chosen, false)
         }
-        return Scale::ONE;
-    };
-    let own = units::name_of(project);
-    match declared.and_then(units::insunits) {
-        Some((scale, name)) => {
-            if name != own {
+        (None, None) => {
+            if let Some(u) = declared.filter(|u| *u != 0 && *u != 6) {
                 report.about(
                     "Birim",
-                    &format!("dosya {name} biriminde; değerler çizimin birimine, {own}ye çevrildi"),
+                    &format!("dosya birimini {} olarak bildiriyor; koordinatlar ölçeklenmeden alındı (metre sayıldı)", units_name(u)),
                 );
             }
-            scale
+            (6, Scale::ONE, "metre", UnitSource::Metres, known.is_none())
         }
-        None => {
-            let why = match declared {
-                Some(0) | None => "dosya birim bildirmiyor".to_owned(),
-                Some(u) => format!("dosyanın bildirdiği birim ({u}) tanınmıyor"),
-            };
-            report.about(
-                "Birim",
-                &format!("{why}; değerler çizimin biriminde ({own}) sayıldı"),
-            );
-            units::from_unit(project)
+        (None, Some(project)) => {
+            let own = units::name_of(project);
+            match known {
+                Some((u, scale, name)) => {
+                    if name != own {
+                        report.about(
+                            "Birim",
+                            &format!("dosya {name} biriminde; değerler çizimin birimine, {own}ye çevrildi"),
+                        );
+                    }
+                    (u, scale, name, UnitSource::Declared, false)
+                }
+                None => {
+                    let why = match declared {
+                        Some(0) | None => "dosya birim bildirmiyor".to_owned(),
+                        Some(u) => format!("dosyanın bildirdiği birim ({u}) tanınmıyor"),
+                    };
+                    report.about(
+                        "Birim",
+                        &format!("{why}; değerler çizimin biriminde ({own}) sayıldı"),
+                    );
+                    (
+                        units::insunits_of(project),
+                        units::from_unit(project),
+                        own,
+                        UnitSource::Project,
+                        true,
+                    )
+                }
+            }
         }
+    };
+    // AutoCAD's own blocks (model and paper space, a dimension's or a table's) are in the drawing's unit.
+    let file = declared.unwrap_or(0);
+    let blocks: Vec<BlockUnit> = records
+        .iter()
+        .filter(|(name, code)| *code != 0 && *code != file && !name.starts_with('*'))
+        .map(|(name, code)| BlockUnit {
+            name: name.clone(),
+            code: *code,
+        })
+        .collect();
+    if !blocks.is_empty() {
+        let listed: Vec<String> = blocks
+            .iter()
+            .map(|b| format!("{} ({})", b.name, units_name(b.code)))
+            .collect();
+        report.about(
+            "Blok birimi",
+            &format!(
+                "{}: bloğun birimi dosyanınkinden başka; yerleştirmelerin ölçeği oranı taşır, blok ayrıca ölçeklenmedi",
+                listed.join(", ")
+            ),
+        );
     }
+    let decision = UnitDecision {
+        declared: declared.filter(|u| *u != 0),
+        used,
+        name: name.to_owned(),
+        source,
+        factor: scale.factor(),
+        assumed,
+        blocks,
+    };
+    (scale, decision)
 }
 
 /// A line type from its LTYPE pattern (dash lengths: positive dash, negative gap, zero dot).
@@ -309,6 +388,12 @@ impl<'a> Reader<'a> {
                 "BLOCK_RECORD" => {
                     if let Some(h) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
                         self.lib.block_records.insert(h, name());
+                    }
+                    // The block's insertion unit (docs/adr/0257 §2).
+                    if let Some(code) = g(70).and_then(|x| parse_int(x.text()))
+                        && code != 0
+                    {
+                        self.lib.block_units.push((name(), code));
                     }
                 }
                 _ => {}
@@ -664,7 +749,7 @@ fn read_once(
     }
     out.report.fact("Sürüm", version_name(&rd.version));
     out.report.fact("Karakter kodlaması", rd.dec.enc.label());
-    let scale = units_in(rd.units, opts.unit, &mut out.report);
+    let (scale, unit) = decide_units(rd.units, opts, &lib.block_units, &mut out.report);
     let mut blocks = blocks;
     if !scale.is_one() {
         // The drawing in metres: every object, every definition, the extent (docs/adr/0165 §2).
@@ -760,6 +845,7 @@ fn read_once(
         blocks,
         text_styles,
         dimension_styles,
+        unit: Some(unit),
     };
     crate::import::summarise(&mut result);
     Ok(Some(result))

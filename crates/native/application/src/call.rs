@@ -984,6 +984,38 @@ pub fn record_effect(
     doc.record_call(row, request)
 }
 
+/// The journal row of a command's write its host made itself, over several
+/// frames, as one undo group (the desktop's large DXF import, docs/adr/0257
+/// §4, written a slice at a time as docs/adr/0138 asks): the command, its
+/// input, the step's name, the objects it made and what it said, as
+/// [`recorded`] writes for a write made in one step. `base` is the revision
+/// before the write.
+#[allow(clippy::too_many_arguments)]
+pub fn record_written(
+    doc: &mut Document,
+    command: &str,
+    version: u32,
+    input: &Value,
+    label: &str,
+    created: &[kentos_domain::Slot],
+    warnings: &[CommandWarning],
+    base: u64,
+) -> u64 {
+    let report = StepReport {
+        label: Some(label.to_owned()),
+        ..StepReport::default()
+    };
+    let mut row = row_of(doc, &report, command, version, input, warnings, None, base);
+    row.truncated = created.len() > JOURNAL_IDS;
+    row.created = created
+        .iter()
+        .filter_map(|s| doc.uid(*s))
+        .take(JOURNAL_IDS)
+        .map(|u| u.to_string())
+        .collect();
+    doc.record_call(row, None)
+}
+
 /// [`enrich`] for a host's own answer (a file command's).
 pub fn complete(answer: &mut CallAnswer, input: &Value) {
     enrich(answer, input);

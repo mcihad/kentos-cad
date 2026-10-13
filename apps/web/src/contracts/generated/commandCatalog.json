@@ -168418,6 +168418,644 @@
       ]
     },
     {
+      "id": "file.import.dxf",
+      "version": 1,
+      "title": "DXF içe aktar",
+      "summary": "path'teki DXF dosyasını açık çizime alır, masaüstünün DXF içe aktar penceresi gibi: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "dxfin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "FileUnit": {
+            "description": "A unit a file's lengths may be read in, whatever the file says\n(docs/adr/0257 §1): DXF's `$INSUNITS` most used.",
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "dm",
+                  "m",
+                  "km",
+                  "yd",
+                  "mi"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The international inch (25.4 mm).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot (0.3048 m).",
+                "type": "string"
+              },
+              {
+                "const": "usFt",
+                "description": "The US survey foot (1200/3937 m).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or\nbroken), `layer_not_found` and `not_a_layer` (a target of `layers`, at\n`layers.<name>`), `layer_locked` (a target the objects cannot go onto),\n`nothing_to_import` (no object left to take). Warnings: `unit_assumed`,\n`unit_ignored`, `block_units_differ`, `import_losses`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The drawing's revision the input was prepared against.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "explodeBlocks": {
+            "description": "Blokları patlat: every insert opened into its objects, no block\ndefinitions taken (docs/adr/0144 §5).",
+            "type": "boolean"
+          },
+          "fileUnit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/FileUnit"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The unit the file's values are in, whatever it declares (docs/adr/0257\n§1). Absent: a local project takes the unit the file declares, a\nproject with a coordinate system metres; a file that declares none is\nin the project's unit, its numbers kept."
+          },
+          "group": {
+            "description": "The group at the top of the tree the new layers go into, found by its\nname or made. Absent: one named after the file; empty: the top of the tree.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A file's layer (its name in the file) → the drawing's layer (its id)\nits objects go onto. A layer not named here goes onto the drawing's\nlayer of the same name (case and Turkish marks aside), else onto a new\nlayer with the file's look.",
+            "type": "object"
+          },
+          "path": {
+            "description": "The file to read, an absolute path.",
+            "type": "string"
+          },
+          "skipLayers": {
+            "description": "The file's layers (by their names in the file) whose objects are left out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportDxf",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "BlockUnit": {
+            "description": "A block whose record names another unit than the file's (DXF\nBLOCK_RECORD's group 70): its inserts' scale holds the ratio\n(docs/adr/0257 §2).",
+            "properties": {
+              "code": {
+                "description": "Its `$INSUNITS` code.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "code"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "RenamedBlock": {
+            "description": "A block whose name the drawing had: as the file names it, as it went in.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "UnitDecision": {
+            "description": "How a file's lengths were read (docs/adr/0257 §1): what the file\ndeclares, the unit the values were taken in and why, and the blocks\nwhose unit is another.",
+            "properties": {
+              "assumed": {
+                "description": "Neither declared nor chosen: the project's unit (metres with a\ncoordinate system) taken, the numbers kept.",
+                "type": "boolean"
+              },
+              "blocks": {
+                "description": "The blocks whose unit is another than the file's, in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/BlockUnit"
+                },
+                "type": "array"
+              },
+              "declared": {
+                "description": "The `$INSUNITS` code the file declares; none for 0 or no header.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "insunits"
+              },
+              "factor": {
+                "description": "Metres in one of `used`: the values were multiplied by it.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "name": {
+                "description": "Its name: “milimetre”, “inç”.",
+                "type": "string"
+              },
+              "source": {
+                "$ref": "#/$defs/UnitSource"
+              },
+              "used": {
+                "description": "The `$INSUNITS` code of the unit the values were read in.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              }
+            },
+            "required": [
+              "used",
+              "name",
+              "source",
+              "factor",
+              "assumed"
+            ],
+            "type": "object"
+          },
+          "UnitSource": {
+            "description": "Why a file's lengths were read in the unit they were (docs/adr/0257 §1).",
+            "oneOf": [
+              {
+                "const": "chosen",
+                "description": "The user or the caller chose it (`fileUnit`).",
+                "type": "string"
+              },
+              {
+                "const": "declared",
+                "description": "The file declares it, and a local project takes it.",
+                "type": "string"
+              },
+              {
+                "const": "metres",
+                "description": "A project with a coordinate system reads metres.",
+                "type": "string"
+              },
+              {
+                "const": "project",
+                "description": "The file declares none, or a code no one defines: a local project's\nown unit, the numbers kept.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.dxf` took in, or with `plan` would take.",
+        "properties": {
+          "blocks": {
+            "description": "The block definitions taken, and the names changed on the way: as\nthe file says, as the drawing has it (“Kapı” → “Kapı (2)”).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "dimensionStyles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (64 hex digits): what\nwas read, so a replay can tell the same file.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The objects taken.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "renamed": {
+            "items": {
+              "$ref": "#/$defs/RenamedBlock"
+            },
+            "type": "array"
+          },
+          "report": {
+            "description": "The reader's report: the file's facts, what was skipped and why."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The file's layer (its name in the file) → the drawing's layer its\nobjects went onto; the layers left out are not here.",
+            "type": "object"
+          },
+          "textStyles": {
+            "description": "The text and dimension styles added to the project (docs/adr/0183 §7).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unit": {
+            "$ref": "#/$defs/UnitDecision",
+            "description": "The unit the file's lengths were read in and why (docs/adr/0257 §1)."
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "unit",
+          "objects",
+          "targets",
+          "layers",
+          "blocks",
+          "textStyles",
+          "dimensionStyles",
+          "report",
+          "revision"
+        ],
+        "title": "DxfImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "BlockUnit": {
+            "description": "A block whose record names another unit than the file's (DXF\nBLOCK_RECORD's group 70): its inserts' scale holds the ratio\n(docs/adr/0257 §2).",
+            "properties": {
+              "code": {
+                "description": "Its `$INSUNITS` code.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "code"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "RenamedBlock": {
+            "description": "A block whose name the drawing had: as the file names it, as it went in.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "UnitDecision": {
+            "description": "How a file's lengths were read (docs/adr/0257 §1): what the file\ndeclares, the unit the values were taken in and why, and the blocks\nwhose unit is another.",
+            "properties": {
+              "assumed": {
+                "description": "Neither declared nor chosen: the project's unit (metres with a\ncoordinate system) taken, the numbers kept.",
+                "type": "boolean"
+              },
+              "blocks": {
+                "description": "The blocks whose unit is another than the file's, in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/BlockUnit"
+                },
+                "type": "array"
+              },
+              "declared": {
+                "description": "The `$INSUNITS` code the file declares; none for 0 or no header.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "insunits"
+              },
+              "factor": {
+                "description": "Metres in one of `used`: the values were multiplied by it.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "name": {
+                "description": "Its name: “milimetre”, “inç”.",
+                "type": "string"
+              },
+              "source": {
+                "$ref": "#/$defs/UnitSource"
+              },
+              "used": {
+                "description": "The `$INSUNITS` code of the unit the values were read in.",
+                "format": "int64",
+                "type": "integer",
+                "x-unit": "insunits"
+              }
+            },
+            "required": [
+              "used",
+              "name",
+              "source",
+              "factor",
+              "assumed"
+            ],
+            "type": "object"
+          },
+          "UnitSource": {
+            "description": "Why a file's lengths were read in the unit they were (docs/adr/0257 §1).",
+            "oneOf": [
+              {
+                "const": "chosen",
+                "description": "The user or the caller chose it (`fileUnit`).",
+                "type": "string"
+              },
+              {
+                "const": "declared",
+                "description": "The file declares it, and a local project takes it.",
+                "type": "string"
+              },
+              {
+                "const": "metres",
+                "description": "A project with a coordinate system reads metres.",
+                "type": "string"
+              },
+              {
+                "const": "project",
+                "description": "The file declares none, or a code no one defines: a local project's\nown unit, the numbers kept.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.dxf` took in, or with `plan` would take.",
+        "properties": {
+          "blocks": {
+            "description": "The block definitions taken, and the names changed on the way: as\nthe file says, as the drawing has it (“Kapı” → “Kapı (2)”).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "dimensionStyles": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (64 hex digits): what\nwas read, so a replay can tell the same file.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The objects taken.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "renamed": {
+            "items": {
+              "$ref": "#/$defs/RenamedBlock"
+            },
+            "type": "array"
+          },
+          "report": {
+            "description": "The reader's report: the file's facts, what was skipped and why."
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The file's layer (its name in the file) → the drawing's layer its\nobjects went onto; the layers left out are not here.",
+            "type": "object"
+          },
+          "textStyles": {
+            "description": "The text and dimension styles added to the project (docs/adr/0183 §7).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unit": {
+            "$ref": "#/$defs/UnitDecision",
+            "description": "The unit the file's lengths were read in and why (docs/adr/0257 §1)."
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "unit",
+          "objects",
+          "targets",
+          "layers",
+          "blocks",
+          "textStyles",
+          "dimensionStyles",
+          "report",
+          "revision"
+        ],
+        "title": "DxfImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "invalid_revision",
+          "revision_conflict",
+          "file_not_found",
+          "import_unreadable",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "unit_assumed",
+          "unit_ignored",
+          "block_units_differ",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Milimetrelik plan metrelik projeye",
+          "input": {
+            "path": "/plan/kat-plani.dxf"
+          },
+          "output": {
+            "blocks": 2,
+            "bytes": 48213,
+            "dimensionStyles": 0,
+            "file": "kat-plani.dxf",
+            "group": "import-kat-plani-dxf",
+            "layers": [
+              {
+                "id": "import-duvar",
+                "name": "DUVAR"
+              }
+            ],
+            "objects": 312,
+            "report": {},
+            "revision": "12",
+            "sha256": "9f2c4c0e1b7a3d5e8f6a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e",
+            "targets": {
+              "0": "cizim",
+              "DUVAR": "import-duvar"
+            },
+            "textStyles": 1,
+            "unit": {
+              "assumed": false,
+              "declared": 4,
+              "factor": 0.001,
+              "name": "milimetre",
+              "source": "declared",
+              "used": 4
+            }
+          }
+        },
+        {
+          "title": "Birim bildirmeyen dosya, santimetre olduğu bilinerek, ağacın üstüne",
+          "input": {
+            "fileUnit": "cm",
+            "group": "",
+            "path": "/plan/eski.dxf",
+            "skipLayers": [
+              "DEFPOINTS"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.sheets.edit",
       "version": 1,
       "title": "Pafta kitabı",
@@ -170750,6 +171388,48 @@
       "meaning": "Projenin pafta kitabında pafta yok."
     },
     {
+      "code": "file_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Okunacak dosya yok."
+    },
+    {
+      "code": "import_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosya okunamadı ya da biçimi bozuk; hiçbir şey alınmadı."
+    },
+    {
+      "code": "nothing_to_import",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyada ya da seçilen katmanlarında alınacak nesne yok."
+    },
+    {
+      "code": "unit_assumed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dosya birim bildirmiyor; değerler ölçeklenmeden projenin biriminde (sistemli projede metre) sayıldı."
+    },
+    {
+      "code": "unit_ignored",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dosya başka bir birim bildiriyor; koordinat sistemi olan proje onu metre okudu, değerler ölçeklenmedi."
+    },
+    {
+      "code": "block_units_differ",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı blokların birimi dosyanınkinden başka; yerleştirmelerin ölçeği oranı taşır."
+    },
+    {
+      "code": "import_losses",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Okuyucu dosyanın bazı nesnelerini ya da özelliklerini alamadı; rapor nedenlerini söyler."
+    },
+    {
       "code": "pdf_unwritable",
       "kind": "failed",
       "retryable": false,
@@ -170930,6 +171610,10 @@
     {
       "unit": "id",
       "meaning": "Çizimdeki yuva numarası (kalıcı kimlik değil)."
+    },
+    {
+      "unit": "insunits",
+      "meaning": "DXF'in $INSUNITS birim kodu: 1 inç, 2 fit, 4 mm, 5 cm, 6 m, 21 ABD ölçme fiti …; 0 birimsiz."
     },
     {
       "unit": "epsg",

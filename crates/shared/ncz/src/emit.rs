@@ -1165,6 +1165,7 @@ pub fn read(
         blocks: Vec::new(),
         text_styles: Vec::new(),
         dimension_styles: Vec::new(),
+        unit: None,
     };
     kentos_formats::import::summarise(&mut result);
     let _ = watch.step(crate::PROGRESS_TOTAL, crate::PROGRESS_TOTAL);
@@ -1303,6 +1304,7 @@ mod tests {
             blocks: Vec::new(),
             text_styles: Vec::new(),
             dimension_styles: Vec::new(),
+            unit: None,
         };
         kentos_formats::import::summarise(&mut result);
         assert!(

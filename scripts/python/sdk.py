@@ -818,6 +818,9 @@ def commands_of(catalog: dict) -> list[Command]:
         else:
             scope = "tenant"
         attr = parts[-1] + "_" if keyword.iskeyword(parts[-1]) else parts[-1]
+        # A namespace that is a keyword is a module with a trailing underscore: `file.import.dxf` is
+        # `kentos.cad.file.import_.dxf` (docs/adr/0257 §3).
+        path = [p + "_" if keyword.iskeyword(p) else p for p in parts[:-1]]
         out.append(
             Command(
                 id=c["id"],
@@ -829,7 +832,7 @@ def commands_of(catalog: dict) -> list[Command]:
                 input=c["input"]["title"],
                 output=c["output"]["title"],
                 plan=c["plan"]["title"] if "plan" in c else None,
-                path=parts[:-1],
+                path=path,
                 attr=attr,
             )
         )
@@ -891,7 +894,7 @@ def emit_command(em: Emit, c: Command) -> str:
     if s is None:
         raise Fail(f"{c.id}: its input {c.input} is not a struct")
     fields = s.fields
-    cls = "_" + "".join(pascal(p) for p in c.path + [c.attr.rstrip("_")])
+    cls = "_" + "".join(pascal(p.rstrip("_")) for p in c.path + [c.attr.rstrip("_")])
     if c.local:
         first = ("doc", "Document", "The drawing it works on.")
     elif c.scope == "project":

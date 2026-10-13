@@ -133,7 +133,10 @@ use crate::layer::LineType;
 /// 57: the request ledger (docs/adr/0253 §6): `.kcad` document schema 45, the document's
 ///    `requests` (the requests a drawing executed: id, fingerprint, command, version, revision,
 ///    status and the answer then). The web's copy stays 53 while the web is paused.
-pub const FORMATS_VERSION: u32 = 57;
+/// 58: a DXF's unit (docs/adr/0257 §1): the reader's `fileUnit` (the unit its values are in, the
+///    user's or the caller's) and the import's `unit` (`UnitDecision`: what the file declares, the
+///    unit read in and why, the blocks in another unit). The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 58;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -296,6 +299,11 @@ pub struct ImportResult {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
     pub dimension_styles: Vec<DimensionStyleDef>,
+    /// The unit the file's lengths were read in and why (a DXF's,
+    /// docs/adr/0257 §1); none for a format without units.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<UnitDecision>,
 }
 
 // ── Coordinate lists (Netcad NCN, TXT, CSV) ─────────────────────────────
@@ -766,6 +774,12 @@ pub struct DxfReadOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
+    /// The unit the file's values are in, chosen by the user or the caller
+    /// (docs/adr/0257 §1): whatever the file declares, its values are taken
+    /// in it and turned into metres. None: the rule of `unit`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file_unit: Option<FileUnit>,
     /// The project's plot scale denominator (docs/adr/0183 §7): a style's
     /// heights and sizes, in drawing units in the file, are paper mm at it;
     /// none: 1000.
@@ -777,6 +791,214 @@ pub struct DxfReadOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
+}
+
+/// A unit a file's lengths may be read in, whatever the file says
+/// (docs/adr/0257 §1): DXF's `$INSUNITS` most used.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FileUnit {
+    Mm,
+    Cm,
+    Dm,
+    M,
+    Km,
+    /// The international inch (25.4 mm).
+    In,
+    /// The international foot (0.3048 m).
+    Ft,
+    Yd,
+    Mi,
+    /// The US survey foot (1200/3937 m).
+    UsFt,
+}
+
+impl FileUnit {
+    pub const ALL: [FileUnit; 10] = [
+        FileUnit::Mm,
+        FileUnit::Cm,
+        FileUnit::Dm,
+        FileUnit::M,
+        FileUnit::Km,
+        FileUnit::In,
+        FileUnit::Ft,
+        FileUnit::Yd,
+        FileUnit::Mi,
+        FileUnit::UsFt,
+    ];
+
+    /// Its `$INSUNITS` code.
+    pub fn code(self) -> i64 {
+        match self {
+            FileUnit::In => 1,
+            FileUnit::Ft => 2,
+            FileUnit::Mi => 3,
+            FileUnit::Mm => 4,
+            FileUnit::Cm => 5,
+            FileUnit::M => 6,
+            FileUnit::Km => 7,
+            FileUnit::Yd => 10,
+            FileUnit::Dm => 14,
+            FileUnit::UsFt => 21,
+        }
+    }
+
+    /// The unit of a `$INSUNITS` code; none for another.
+    pub fn of_code(code: i64) -> Option<FileUnit> {
+        Self::ALL.into_iter().find(|u| u.code() == code)
+    }
+
+    /// A local project's drawing unit as a file unit.
+    pub fn of_drawing(u: DrawingUnit) -> FileUnit {
+        match u {
+            DrawingUnit::Mm => FileUnit::Mm,
+            DrawingUnit::Cm => FileUnit::Cm,
+            DrawingUnit::M => FileUnit::M,
+        }
+    }
+
+    /// Its mark: `mm`, `in`, `ft (ABD)`.
+    pub fn mark(self) -> &'static str {
+        match self {
+            FileUnit::Mm => "mm",
+            FileUnit::Cm => "cm",
+            FileUnit::Dm => "dm",
+            FileUnit::M => "m",
+            FileUnit::Km => "km",
+            FileUnit::In => "in",
+            FileUnit::Ft => "ft",
+            FileUnit::Yd => "yd",
+            FileUnit::Mi => "mi",
+            FileUnit::UsFt => "ft (ABD)",
+        }
+    }
+}
+
+/// Why a file's lengths were read in the unit they were (docs/adr/0257 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum UnitSource {
+    /// The user or the caller chose it (`fileUnit`).
+    Chosen,
+    /// The file declares it, and a local project takes it.
+    Declared,
+    /// A project with a coordinate system reads metres.
+    Metres,
+    /// The file declares none, or a code no one defines: a local project's
+    /// own unit, the numbers kept.
+    Project,
+}
+
+/// A block whose record names another unit than the file's (DXF
+/// BLOCK_RECORD's group 70): its inserts' scale holds the ratio
+/// (docs/adr/0257 §2).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockUnit {
+    pub name: String,
+    /// Its `$INSUNITS` code.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "insunits")))]
+    pub code: i64,
+}
+
+/// How a file's lengths were read (docs/adr/0257 §1): what the file
+/// declares, the unit the values were taken in and why, and the blocks
+/// whose unit is another.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct UnitDecision {
+    /// The `$INSUNITS` code the file declares; none for 0 or no header.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "insunits")))]
+    pub declared: Option<i64>,
+    /// The `$INSUNITS` code of the unit the values were read in.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "insunits")))]
+    pub used: i64,
+    /// Its name: “milimetre”, “inç”.
+    pub name: String,
+    pub source: UnitSource,
+    /// Metres in one of `used`: the values were multiplied by it.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub factor: f64,
+    /// Neither declared nor chosen: the project's unit (metres with a
+    /// coordinate system) taken, the numbers kept.
+    pub assumed: bool,
+    /// The blocks whose unit is another than the file's, in the file's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockUnit>>", optional))]
+    pub blocks: Vec<BlockUnit>,
+}
+
+impl UnitDecision {
+    /// What a command says of the decision (docs/adr/0257 §1, §2), as
+    /// `(code, message)`: `unit_assumed`, `unit_ignored`,
+    /// `block_units_differ`.
+    pub fn warnings(&self) -> Vec<(&'static str, String)> {
+        let mut out = Vec::new();
+        let named = |code: i64| crate::units::insunits(code).map(|(_, name)| name);
+        if self.assumed {
+            let why = match self.declared {
+                None => "Dosya birim bildirmiyor".to_owned(),
+                Some(code) => format!("Dosyanın bildirdiği birim kodu ({code}) tanınmıyor"),
+            };
+            out.push((
+                crate::codes::UNIT_ASSUMED,
+                format!(
+                    "{why}; değerler ölçeklenmeden {} sayıldı. Dosyanın birimi başkaysa onu seçin (fileUnit).",
+                    if self.source == UnitSource::Metres {
+                        "metre".to_owned()
+                    } else {
+                        format!("çizimin biriminde ({})", self.name)
+                    }
+                ),
+            ));
+        }
+        if self.source == UnitSource::Metres
+            && let Some(code) = self.declared
+            && code != 6
+            && let Some(name) = named(code)
+        {
+            out.push((
+                crate::codes::UNIT_IGNORED,
+                format!(
+                    "Dosya birimini {name} olarak bildiriyor; koordinat sistemi olan proje dosyayı metre okur, değerler ölçeklenmedi. Ölçeklemek için dosyanın birimini seçin (fileUnit)."
+                ),
+            ));
+        }
+        if !self.blocks.is_empty() {
+            let listed: Vec<String> = self
+                .blocks
+                .iter()
+                .map(|b| {
+                    format!(
+                        "{} ({})",
+                        b.name,
+                        named(b.code).unwrap_or("bilinmeyen birim")
+                    )
+                })
+                .collect();
+            out.push((
+                crate::codes::BLOCK_UNITS_DIFFER,
+                format!(
+                    "Bazı blokların birimi dosyanınkinden başka: {}. Yerleştirmelerin ölçeği bu oranı taşır; bloklar ayrıca ölçeklenmedi.",
+                    listed.join(", ")
+                ),
+            ));
+        }
+        out
+    }
 }
 
 /// A layer as the DXF writer receives it. DXF layers are flat and their

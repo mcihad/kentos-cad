@@ -58,6 +58,7 @@ COMMANDS: dict[str, Any] = {
     "cad.units.change": units.change,
     "file.export.dxf": file.export.dxf,
     "file.export.pdf": file.export.pdf,
+    "file.import.dxf": file.import_.dxf,
     "project.access.revoke": project.access.revoke,
     "project.archive": project.archive,
     "project.changes": project.changes,

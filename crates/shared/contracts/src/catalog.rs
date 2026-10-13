@@ -2978,6 +2978,51 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A DXF into the drawing, its unit decided by one rule (docs/adr/0257), held together by
+        // fixtures/commands/v1/file.import.dxf.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_DXF.into(),
+            version: crate::FILE_IMPORT_DXF_VERSION,
+            title: "DXF içe aktar".into(),
+            summary: "path'teki DXF dosyasını açık çizime alır, masaüstünün DXF içe aktar penceresi gibi: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; \
+                      yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. \
+                      Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. \
+                      Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). \
+                      Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. \
+                      Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["dxfin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportDxf>(),
+            output: schema::<crate::DxfImported>(),
+            plan: Some(schema::<crate::DxfImported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Milimetrelik plan metrelik projeye".into(),
+                    input: json!({ "path": "/plan/kat-plani.dxf" }),
+                    output: Some(json!({
+                        "file": "kat-plani.dxf", "bytes": 48213, "sha256": "9f2c4c0e1b7a3d5e8f6a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e",
+                        "unit": { "declared": 4, "used": 4, "name": "milimetre", "source": "declared", "factor": 0.001, "assumed": false },
+                        "objects": 312, "targets": { "DUVAR": "import-duvar", "0": "cizim" },
+                        "layers": [{ "id": "import-duvar", "name": "DUVAR" }], "group": "import-kat-plani-dxf",
+                        "blocks": 2, "textStyles": 1, "dimensionStyles": 0, "report": {}, "revision": "12"
+                    })),
+                },
+                CommandExample {
+                    title: "Birim bildirmeyen dosya, santimetre olduğu bilinerek, ağacın üstüne".into(),
+                    input: json!({ "path": "/plan/eski.dxf", "fileUnit": "cm", "group": "", "skipLayers": ["DEFPOINTS"] }),
+                    output: None,
+                },
+            ],
+        },
         // The sheet book by the sheet core's own operations (docs/adr/0252 §2), held together by
         // fixtures/commands/v1/cad.sheets.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -3567,6 +3612,9 @@ mod tests {
                     crate::CAD_UNITS_CHANGE => {
                         serde_json::from_value::<crate::UnitsChange>(e.input.clone()).map(|_| ())
                     }
+                    crate::FILE_IMPORT_DXF => {
+                        serde_json::from_value::<crate::ImportDxf>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())
                     }
@@ -3734,6 +3782,9 @@ mod tests {
                         crate::CAD_UNITS_CHANGE => {
                             serde_json::from_value::<crate::UnitsChanged>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::FILE_IMPORT_DXF => {
+                            serde_json::from_value::<crate::DxfImported>(output.clone()).map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

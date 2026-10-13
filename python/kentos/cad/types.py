@@ -57,6 +57,7 @@ UNITS: dict[str, str] = {
     "count": "Adet.",
     "index": "0'dan başlayan sıra.",
     "id": "Çizimdeki yuva numarası (kalıcı kimlik değil).",
+    "insunits": "DXF'in $INSUNITS birim kodu: 1 inç, 2 fit, 4 mm, 5 cm, 6 m, 21 ABD ölçme fiti …; 0 birimsiz.",
     "epsg": "Koordinat sisteminin EPSG kodu; 0: yok (yerel proje).",
     "scale": "Ölçeğin paydası: 1:N'nin N'si.",
     "zoom": "Karo düzeyi.",
@@ -654,6 +655,37 @@ class FeedKind(_StrEnum):
 
 FeedKindName = Literal["wfs", "ogcFeatures", "arcgis", "geojson"]
 """The names of :class:`FeedKind`, for a plain string."""
+
+
+class FileUnit(_StrEnum):
+    """A unit a file's lengths may be read in, whatever the file says
+    (docs/adr/0257 §1): DXF's `$INSUNITS` most used.
+
+    - ``mm``
+    - ``cm``
+    - ``dm``
+    - ``m``
+    - ``km``
+    - ``yd``
+    - ``mi``
+    - ``in``: The international inch (25.4 mm).
+    - ``ft``: The international foot (0.3048 m).
+    - ``usFt``: The US survey foot (1200/3937 m).
+    """
+    MM = "mm"
+    CM = "cm"
+    DM = "dm"
+    M = "m"
+    KM = "km"
+    YD = "yd"
+    MI = "mi"
+    IN = "in"
+    FT = "ft"
+    US_FT = "usFt"
+
+
+FileUnitName = Literal["mm", "cm", "dm", "m", "km", "yd", "mi", "in", "ft", "usFt"]
+"""The names of :class:`FileUnit`, for a plain string."""
 
 
 class GradientShape(_StrEnum):
@@ -1524,6 +1556,24 @@ class UnitGeometry(_StrEnum):
 
 UnitGeometryName = Literal["keep", "scale"]
 """The names of :class:`UnitGeometry`, for a plain string."""
+
+
+class UnitSource(_StrEnum):
+    """Why a file's lengths were read in the unit they were (docs/adr/0257 §1).
+
+    - ``chosen``: The user or the caller chose it (`fileUnit`).
+    - ``declared``: The file declares it, and a local project takes it.
+    - ``metres``: A project with a coordinate system reads metres.
+    - ``project``: The file declares none, or a code no one defines: a local project's
+    """
+    CHOSEN = "chosen"
+    DECLARED = "declared"
+    METRES = "metres"
+    PROJECT = "project"
+
+
+UnitSourceName = Literal["chosen", "declared", "metres", "project"]
+"""The names of :class:`UnitSource`, for a plain string."""
 
 
 class VariableKind(_StrEnum):
@@ -2742,6 +2792,31 @@ class BlockRecord(_Model):
         return cls(
             version=data["version"],
             block=BlockDefinition.from_json(data["block"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockUnit(_Model):
+    """A block whose record names another unit than the file's (DXF
+    BLOCK_RECORD's group 70): its inserts' scale holds the ratio
+    (docs/adr/0257 §2).
+    Attributes:
+        code: Its `$INSUNITS` code. Unit: insunits.
+    """
+    name: str
+    code: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["code"] = self.code
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockUnit:
+        return cls(
+            name=data["name"],
+            code=data["code"],
         )
 
 
@@ -4557,6 +4632,80 @@ class DxfExported(_Model):
             layers=data["layers"],
             replaced=data["replaced"],
             report=data["report"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DxfImported(_Model):
+    """What `file.import.dxf` took in, or with `plan` would take.
+    Attributes:
+        file: The file's name, its bytes and their SHA-256 (64 hex digits): what
+            was read, so a replay can tell the same file.
+        bytes: Unit: bytes.
+        unit: The unit the file's lengths were read in and why (docs/adr/0257 §1).
+        objects: The objects taken. Unit: count.
+        targets: The file's layer (its name in the file) → the drawing's layer its
+            objects went onto; the layers left out are not here.
+        layers: The layers made, in the tree's order, and the group they went into.
+        blocks: The block definitions taken, and the names changed on the way: as
+            the file says, as the drawing has it (“Kapı” → “Kapı (2)”). Unit: count.
+        text_styles: The text and dimension styles added to the project (docs/adr/0183 §7). Unit: count.
+        dimension_styles: Unit: count.
+        report: The reader's report: the file's facts, what was skipped and why.
+        revision: The drawing's revision after the step (plan: before it).
+    """
+    file: str
+    bytes: int
+    sha256: str
+    unit: UnitDecision
+    objects: int
+    targets: dict[str, str]
+    layers: list[ImportedLayer]
+    blocks: int
+    text_styles: int
+    dimension_styles: int
+    report: Any
+    revision: str
+    group: str | None | Unset = UNSET
+    renamed: list[RenamedBlock] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["unit"] = self.unit.to_json()
+        out["objects"] = self.objects
+        out["targets"] = dict(self.targets)
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["blocks"] = self.blocks
+        out["textStyles"] = self.text_styles
+        out["dimensionStyles"] = self.dimension_styles
+        out["report"] = self.report
+        out["revision"] = self.revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.renamed is not UNSET:
+            out["renamed"] = [e0.to_json() for e0 in self.renamed]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DxfImported:
+        return cls(
+            file=data["file"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            unit=UnitDecision.from_json(data["unit"]),
+            objects=data["objects"],
+            targets=dict(data["targets"]),
+            layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
+            blocks=data["blocks"],
+            text_styles=data["textStyles"],
+            dimension_styles=data["dimensionStyles"],
+            report=data["report"],
+            revision=data["revision"],
+            group=data.get("group", UNSET),
+            renamed=[RenamedBlock.from_json(e0) for e0 in data["renamed"]] if "renamed" in data else UNSET,
         )
 
 
@@ -7172,6 +7321,90 @@ class ImageFields(_Model):
             file=data.get("file", UNSET),
             mirror=data.get("mirror", UNSET),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportDxf(_Model):
+    """Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:
+    `invalid_file_path` (empty, relative, a directory), `invalid_revision`,
+    `revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or
+    broken), `layer_not_found` and `not_a_layer` (a target of `layers`, at
+    `layers.<name>`), `layer_locked` (a target the objects cannot go onto),
+    `nothing_to_import` (no object left to take). Warnings: `unit_assumed`,
+    `unit_ignored`, `block_units_differ`, `import_losses`.
+    Attributes:
+        path: The file to read, an absolute path.
+        expected_revision: The drawing's revision the input was prepared against.
+        explode_blocks: Blokları patlat: every insert opened into its objects, no block
+            definitions taken (docs/adr/0144 §5).
+        file_unit: The unit the file's values are in, whatever it declares (docs/adr/0257
+            §1). Absent: a local project takes the unit the file declares, a
+            project with a coordinate system metres; a file that declares none is
+            in the project's unit, its numbers kept.
+        group: The group at the top of the tree the new layers go into, found by its
+            name or made. Absent: one named after the file; empty: the top of the tree.
+        layers: A file's layer (its name in the file) → the drawing's layer (its id)
+            its objects go onto. A layer not named here goes onto the drawing's
+            layer of the same name (case and Turkish marks aside), else onto a new
+            layer with the file's look.
+        skip_layers: The file's layers (by their names in the file) whose objects are left out.
+    """
+    path: str
+    expected_revision: str | None | Unset = UNSET
+    explode_blocks: bool | Unset = UNSET
+    file_unit: FileUnit | FileUnitName | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+    layers: dict[str, str] | Unset = UNSET
+    skip_layers: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.explode_blocks is not UNSET:
+            out["explodeBlocks"] = self.explode_blocks
+        if self.file_unit is not UNSET:
+            out["fileUnit"] = None if self.file_unit is None else _enum_out(self.file_unit)
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        if self.skip_layers is not UNSET:
+            out["skipLayers"] = list(self.skip_layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportDxf:
+        return cls(
+            path=data["path"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            explode_blocks=data.get("explodeBlocks", UNSET),
+            file_unit=UNSET if "fileUnit" not in data else None if data["fileUnit"] is None else _enum_in(FileUnit, data["fileUnit"]),
+            group=data.get("group", UNSET),
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportedLayer(_Model):
+    """A layer an import made."""
+    id: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportedLayer:
+        return cls(
+            id=data["id"],
+            name=data["name"],
         )
 
 
@@ -12547,6 +12780,26 @@ class RasterStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RenamedBlock(_Model):
+    """A block whose name the drawing had: as the file names it, as it went in."""
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenamedBlock:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RingGeometry(_Model):
     """A closed ring in vertex + bulge form (a polygon hole).
     Attributes:
@@ -14384,6 +14637,54 @@ class TrimPick(_Model):
         return cls(
             uid=data["uid"],
             at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnitDecision(_Model):
+    """How a file's lengths were read (docs/adr/0257 §1): what the file
+    declares, the unit the values were taken in and why, and the blocks
+    whose unit is another.
+    Attributes:
+        used: The `$INSUNITS` code of the unit the values were read in. Unit: insunits.
+        name: Its name: “milimetre”, “inç”.
+        factor: Metres in one of `used`: the values were multiplied by it. Unit: 1.
+        assumed: Neither declared nor chosen: the project's unit (metres with a
+            coordinate system) taken, the numbers kept.
+        blocks: The blocks whose unit is another than the file's, in the file's order.
+        declared: The `$INSUNITS` code the file declares; none for 0 or no header. Unit: insunits.
+    """
+    used: int
+    name: str
+    source: UnitSource | UnitSourceName
+    factor: float
+    assumed: bool
+    blocks: list[BlockUnit] | Unset = UNSET
+    declared: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["used"] = self.used
+        out["name"] = self.name
+        out["source"] = _enum_out(self.source)
+        out["factor"] = float(self.factor)
+        out["assumed"] = self.assumed
+        if self.blocks is not UNSET:
+            out["blocks"] = [e0.to_json() for e0 in self.blocks]
+        if self.declared is not UNSET:
+            out["declared"] = self.declared
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnitDecision:
+        return cls(
+            used=data["used"],
+            name=data["name"],
+            source=_enum_in(UnitSource, data["source"]),
+            factor=float(data["factor"]),
+            assumed=data["assumed"],
+            blocks=[BlockUnit.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
+            declared=data.get("declared", UNSET),
         )
 
 
@@ -17198,6 +17499,7 @@ __all__ = [
     "BlockEditOperation",
     "BlockEditOperationName",
     "BlockRecord",
+    "BlockUnit",
     "BlocksDefine",
     "BlocksDefinePlan",
     "BlocksEdit",
@@ -17276,6 +17578,7 @@ __all__ = [
     "DrawingUnit",
     "DrawingUnitName",
     "DxfExported",
+    "DxfImported",
     "EdgeNear",
     "EditOperation",
     "EditOperationName",
@@ -17335,6 +17638,8 @@ __all__ = [
     "FileCommit",
     "FileCommitted",
     "FileTableSource",
+    "FileUnit",
+    "FileUnitName",
     "GeographicCrsSystem",
     "GeographicDefinition",
     "GradientShape",
@@ -17358,6 +17663,8 @@ __all__ = [
     "ImageEntity",
     "ImageEntityGeometry",
     "ImageFields",
+    "ImportDxf",
+    "ImportedLayer",
     "InfoCard",
     "InsertEntity",
     "InsertEntityGeometry",
@@ -17592,6 +17899,7 @@ __all__ = [
     "RegistryDatum",
     "RegistryDatumName",
     "RemoveEntityEdit",
+    "RenamedBlock",
     "ReplaceEntityEdit",
     "RingGeometry",
     "RotateTransform",
@@ -17668,8 +17976,11 @@ __all__ = [
     "Transform",
     "TrimBoundaries",
     "TrimPick",
+    "UnitDecision",
     "UnitGeometry",
     "UnitGeometryName",
+    "UnitSource",
+    "UnitSourceName",
     "UnitsChange",
     "UnitsChanged",
     "UpdateBlockChange",

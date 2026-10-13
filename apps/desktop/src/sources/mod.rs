@@ -158,6 +158,7 @@ fn read_parts(folder: &Path, file: &SourceFile) -> Result<Vec<Picked>, String> {
                 .map(|bytes| Picked {
                     name: name.clone(),
                     bytes: bytes.into(),
+                    path: Some(folder.join(name)),
                 })
                 .map_err(|e| {
                     format!("“{name}” okunamadı: {e}. Dosya taşınmış ya da silinmiş olabilir; klasörü kapatıp açın.")

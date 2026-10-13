@@ -470,6 +470,7 @@ impl Collect {
             blocks: Vec::new(),
             text_styles: Vec::new(),
             dimension_styles: Vec::new(),
+            unit: None,
         };
         crate::import::summarise(&mut result);
         result

@@ -152,6 +152,12 @@ Liste:
   `fixtures/commands/v1/cad.units.change.json`; katalogda `hosts`'a Web; web'in DXF yazıcısının çevirisi aynı çekirdektendir
   (kutu, çerçeve, eğri artık ölçeklenir: `dxf-write/units` yeni nesneleriyle web'in koşucusunda da geçmeli); bilinen bozulmalar:
   web'in komut koşucusunda bir dosya kayıtsız komut, `CommandCatalog.ts`'in `units`'i (`CatalogUnit`) web'de okunmuyor.
+- [ ] `CAD-DATA-07` (ADR 0257, 13 Ekim): web'de gerekenler: DXF içe aktarma penceresinde “Dosyanın birimi” (`ui/io/DrawingImportDialog.ts`:
+  liste, kararın sözü, seçimde yeniden okuma; okuyucunun `fileUnit`'i WASM'a geçer), özette birimi başka bloklar; içe almanın
+  `file.import.dxf` ile yazması (web'in komut koşucusu dosyayı yol yerine baytlarla alır: `CAD-IO-26`'nın dosya tutamacı) ve
+  `io/apply.ts`'in uygulama katmanının kurallarıyla (`kentos_native_application::import_apply`) eşitliği; ortak durumlar
+  `fixtures/commands/v1/file.import.dxf.json` (yeni beklentiler `fields`, `nodes`, yer tutucular `$fixture:`, `"$any"`) ve
+  `fixtures/formats/v1/dxf-units/cases.json`; `FORMATS_VERSION` 58 (web'in kopyası 53).
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek

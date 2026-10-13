@@ -1,0 +1,4183 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "file.import.dxf",
+  "commandVersion": 1,
+  "title": "DXF içe aktar",
+  "note": "Written by scripts/fixtures/dxf_import_command_cases.py from docs/adr/0257 and the DXF reference; do not edit by hand. The files are fixtures/formats/v1/dxf-units (dxf_units_cases.py) and dxf-import.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İçe alma",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 100,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "ic",
+            "name": "İç",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "mm DXF metrelik projeye: dosyanın bildirdiği mm, nesneler metrede; DUVAR çizimin Duvar katmanına",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "mm DXF mm projesine: aynı metreler, sayılar aynen",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "mm DXF koordinat sistemli projeye: metre sayılır, ölçeklenmez, unit_ignored söyler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 6,
+                "name": "metre",
+                "source": "metres",
+                "factor": 1.0,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unit_ignored",
+                "path": "fileUnit",
+                "message": "Dosya birimini milimetre olarak bildiriyor; koordinat sistemi olan proje dosyayı metre okur, değerler ölçeklenmedi. Ölçeklemek için dosyanın birimini seçin (fileUnit)."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4000.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1000.0,
+                  "y": 500.0
+                },
+                "r": 250.0
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 100.0,
+                  "y": 3000.0
+                },
+                "height": 250.0
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 100.0,
+                  "y": 2500.0
+                },
+                "height": 200.0,
+                "boxWidth": 3000.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1000.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "mm DXF koordinat sistemli projeye, birimi seçilerek: mm'den metreye çevrilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "fileUnit": "mm"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "chosen",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Birim bildirmeyen DXF mm projesine: sayılar projenin biriminde, unit_assumed",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/unitless.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "unitless.dxf",
+              "bytes": 987,
+              "sha256": "d1ba5a242a2fa2317e920e379fd68138fd6cac3deea9d6cdad6d2293744cebfc",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "project",
+                "factor": 0.001,
+                "assumed": true
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unit_assumed",
+                "path": "fileUnit",
+                "message": "Dosya birim bildirmiyor; değerler ölçeklenmeden çizimin biriminde (milimetre) sayıldı. Dosyanın birimi başkaysa onu seçin (fileUnit)."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Birim bildirmeyen DXF koordinat sistemli projeye: metre sayılır, unit_assumed",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/unitless.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "unitless.dxf",
+              "bytes": 987,
+              "sha256": "d1ba5a242a2fa2317e920e379fd68138fd6cac3deea9d6cdad6d2293744cebfc",
+              "unit": {
+                "used": 6,
+                "name": "metre",
+                "source": "metres",
+                "factor": 1.0,
+                "assumed": true
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unit_assumed",
+                "path": "fileUnit",
+                "message": "Dosya birim bildirmiyor; değerler ölçeklenmeden metre sayıldı. Dosyanın birimi başkaysa onu seçin (fileUnit)."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4000.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1000.0,
+                  "y": 500.0
+                },
+                "r": 250.0
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 100.0,
+                  "y": 3000.0
+                },
+                "height": 250.0
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 100.0,
+                  "y": 2500.0
+                },
+                "height": 200.0,
+                "boxWidth": 3000.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1000.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Birim bildirmeyen DXF, santimetre seçilerek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/unitless.dxf",
+            "fileUnit": "cm"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "unitless.dxf",
+              "bytes": 987,
+              "sha256": "d1ba5a242a2fa2317e920e379fd68138fd6cac3deea9d6cdad6d2293744cebfc",
+              "unit": {
+                "used": 5,
+                "name": "santimetre",
+                "source": "chosen",
+                "factor": 0.01,
+                "assumed": false
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 40.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 10.0,
+                  "y": 5.0
+                },
+                "r": 2.5
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 1.0,
+                  "y": 30.0
+                },
+                "height": 2.5
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 1.0,
+                  "y": 25.0
+                },
+                "height": 2.0,
+                "boxWidth": 30.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 10.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başlığı olmayan DXF cm projesine: projenin cm'si",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/no-header.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "no-header.dxf",
+              "bytes": 967,
+              "sha256": "5b43fda10150ff91126b7575b2796b6759dfa5f8eb21edcafd98c0f5f5170f2d",
+              "unit": {
+                "used": 5,
+                "name": "santimetre",
+                "source": "project",
+                "factor": 0.01,
+                "assumed": true
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unit_assumed",
+                "path": "fileUnit",
+                "message": "Dosya birim bildirmiyor; değerler ölçeklenmeden çizimin biriminde (santimetre) sayıldı. Dosyanın birimi başkaysa onu seçin (fileUnit)."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 40.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 10.0,
+                  "y": 5.0
+                },
+                "r": 2.5
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 1.0,
+                  "y": 30.0
+                },
+                "height": 2.5
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 1.0,
+                  "y": 25.0
+                },
+                "height": 2.0,
+                "boxWidth": 30.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 10.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "drawingUnit": "cm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Tanınmayan birim kodu (99): projenin birimi, unit_assumed kodu söyler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/unknown-code.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "unknown-code.dxf",
+              "bytes": 988,
+              "sha256": "6f743d14393e99c350380500e40e69bcef5458ba2dac5da68e6aa0b951b36176",
+              "unit": {
+                "used": 6,
+                "name": "metre",
+                "source": "project",
+                "factor": 1.0,
+                "assumed": true,
+                "declared": 99
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unit_assumed",
+                "path": "fileUnit",
+                "message": "Dosyanın bildirdiği birim kodu (99) tanınmıyor; değerler ölçeklenmeden çizimin biriminde (metre) sayıldı. Dosyanın birimi başkaysa onu seçin (fileUnit)."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4000.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1000.0,
+                  "y": 500.0
+                },
+                "r": 250.0
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 100.0,
+                  "y": 3000.0
+                },
+                "height": 250.0
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 100.0,
+                  "y": 2500.0
+                },
+                "height": 200.0,
+                "boxWidth": 3000.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1000.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "İnç DXF metrelik projeye: 25,4 mm'lik inç",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/inches.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "inches.dxf",
+              "bytes": 473,
+              "sha256": "f57fcc75e5bf00fff3c0c53df8e40d2041e1bac18decb4b02f46552201da1487",
+              "unit": {
+                "used": 1,
+                "name": "inç",
+                "source": "declared",
+                "factor": 0.0254,
+                "assumed": false,
+                "declared": 1
+              },
+              "objects": 2,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 2.54,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 0.254,
+                  "y": 0.254
+                },
+                "r": 0.127
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ABD ölçme fiti bildiren DXF, uluslararası fit seçilerek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/us-feet.dxf",
+            "fileUnit": "ft"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "us-feet.dxf",
+              "bytes": 420,
+              "sha256": "2a50a9588f54894648c59a69a9f21b1d959a5c712d9f67754a702a812b8ec4dd",
+              "unit": {
+                "used": 2,
+                "name": "fit",
+                "source": "chosen",
+                "factor": 0.3048,
+                "assumed": false,
+                "declared": 21
+              },
+              "objects": 1,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 1199.9976,
+                  "y": 0.0
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bloğu milimetrede metrelik DXF: block_units_differ; *Model_Space söylenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/block-units.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "block-units.dxf",
+              "bytes": 942,
+              "sha256": "3592f368702c0b16944f0593a4fd2452f5cf9efc3292dac51394321f9c7656b7",
+              "unit": {
+                "used": 6,
+                "name": "metre",
+                "source": "declared",
+                "factor": 1.0,
+                "assumed": false,
+                "declared": 6,
+                "blocks": [
+                  {
+                    "name": "PANO",
+                    "code": 4
+                  }
+                ]
+              },
+              "objects": 2,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "block_units_differ",
+                "path": "fileUnit",
+                "message": "Bazı blokların birimi dosyanınkinden başka: PANO (milimetre). Yerleştirmelerin ölçeği bu oranı taşır; bloklar ayrıca ölçeklenmedi."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 12.5,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:PANO",
+                "p": {
+                  "x": 5.0,
+                  "y": 5.0
+                },
+                "scale": 0.001
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "PANO": "new"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mikrometre bildiren DXF koordinat sistemli projeye: AutoCAD'in tanıdığı birim, unit_ignored",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/micrometres.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "micrometres.dxf",
+              "bytes": 423,
+              "sha256": "ca029dfc60b3b0c3175a09927c3f85a7dddade64026fe885b458590204e6c5c8",
+              "unit": {
+                "used": 6,
+                "name": "metre",
+                "source": "metres",
+                "factor": 1.0,
+                "assumed": false,
+                "declared": 13
+              },
+              "objects": 1,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unit_ignored",
+                "path": "fileUnit",
+                "message": "Dosya birimini mikrometre olarak bildiriyor; koordinat sistemi olan proje dosyayı metre okur, değerler ölçeklenmedi. Ölçeklemek için dosyanın birimini seçin (fileUnit)."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 2500000.0,
+                  "y": 0.0
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "plan dosyayı okur, hiçbir şey yazmaz, execute'un aynısını söyler",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tek geri alma adımı: “DXF: mm.dxf”, geri alınca nesneler ve blok gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "DXF: mm.dxf",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimde aynı adlı katman yok: yeni DUVAR katmanı dosyanın adındaki grupta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "import-duvar"
+              },
+              "layers": [
+                {
+                  "id": "import-duvar",
+                  "name": "DUVAR"
+                }
+              ],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current",
+              "group": "import-mm-dxf"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "import-duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "import-duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "import-duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "import-duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "import-duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "nodes": {
+              "import-duvar": {
+                "name": "DUVAR",
+                "type": "layer",
+                "parent": "import-mm-dxf"
+              },
+              "import-mm-dxf": {
+                "name": "mm.dxf",
+                "type": "group",
+                "parent": null
+              }
+            },
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "group boş: yeni katman ağacın üstünde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "group": ""
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "import-duvar"
+              },
+              "layers": [
+                {
+                  "id": "import-duvar",
+                  "name": "DUVAR"
+                }
+              ],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "import-duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "import-duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "import-duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "import-duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "import-duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "nodes": {
+              "import-duvar": {
+                "name": "DUVAR",
+                "type": "layer",
+                "parent": null
+              }
+            },
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "group var olan grubu adıyla bulur (büyük küçük harf ayırmadan)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "group": "MİMARİ"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "import-duvar"
+              },
+              "layers": [
+                {
+                  "id": "import-duvar",
+                  "name": "DUVAR"
+                }
+              ],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current",
+              "group": "mimari"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "import-duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "import-duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "import-duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "import-duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "import-duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "nodes": {
+              "import-duvar": {
+                "name": "DUVAR",
+                "type": "layer",
+                "parent": "mimari"
+              }
+            },
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "group yoksa açılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "group": "Mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "import-duvar"
+              },
+              "layers": [
+                {
+                  "id": "import-duvar",
+                  "name": "DUVAR"
+                }
+              ],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current",
+              "group": "import-mimari"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "import-duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "import-duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "import-duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "import-duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "import-duvar",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "nodes": {
+              "import-duvar": {
+                "name": "DUVAR",
+                "type": "layer",
+                "parent": "import-mimari"
+              },
+              "import-mimari": {
+                "name": "Mimari",
+                "type": "group",
+                "parent": null
+              }
+            },
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "layers DUVAR'ı Çizim katmanına yönlendirir (kaynak adı büyük küçük harf ayırmadan)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "layers": {
+              "Duvar": "cizim"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "cizim"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "cizim",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "cizim",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "cizim",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "cizim",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "cizim",
+                "block": "$blockOf:KAPI",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI": "new"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "explodeBlocks: bloklar patlatılır, tanım gelmez; kapının çizgisi yerleştirmenin katmanında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "explodeBlocks": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 1.9,
+                  "y": 0.0
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimde KAPI bloğu var: gelen blok “KAPI (2)” adıyla, renamed söyler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "mm.dxf",
+              "bytes": 993,
+              "sha256": "48e6515a906794cf4f0269b1ab9f39f6c81a9a89bc727af32ee1399f85df75fe",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 5,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 1,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current",
+              "renamed": [
+                {
+                  "from": "KAPI",
+                  "to": "KAPI (2)"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                }
+              },
+              "3": {
+                "kind": "circle",
+                "layerId": "duvar",
+                "c": {
+                  "x": 1.0,
+                  "y": 0.5
+                },
+                "r": 0.25
+              },
+              "4": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Salon",
+                "p": {
+                  "x": 0.1,
+                  "y": 3.0
+                },
+                "height": 0.25
+              },
+              "5": {
+                "kind": "text",
+                "layerId": "duvar",
+                "text": "Not kutusu",
+                "p": {
+                  "x": 0.1,
+                  "y": 2.5
+                },
+                "height": 0.2,
+                "boxWidth": 3.0
+              },
+              "6": {
+                "kind": "insert",
+                "layerId": "duvar",
+                "block": "$blockOf:KAPI (2)",
+                "p": {
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                "scale": 1.0
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "blockIds": {
+              "KAPI (2)": "new"
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [
+          {
+            "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+            "name": "KAPI",
+            "base": {
+              "x": 0,
+              "y": 0
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "a": {
+                  "x": 0,
+                  "y": 0
+                },
+                "b": {
+                  "x": 1,
+                  "y": 0
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Okuyucunun alamadığı nesne (3DSOLID): import_losses",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-import/losses.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "losses.dxf",
+              "bytes": 495,
+              "sha256": "95c2759f469cab9b871d03e86576e5d939cbddd9d57c1504da9458cd9e02b3d0",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "objects": 1,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "import_losses",
+                "message": "Okuyucu dosyanın 1 öğesini alamadı (3DSOLID); nedenleri report.skipped'te."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "fields": {
+              "2": {
+                "kind": "line",
+                "layerId": "duvar",
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 2.5,
+                  "y": 0.0
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Göreli yol: invalid_file_path",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "mm.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "“mm.dxf” mutlak bir dosya yolu değil; okunacak dosyanın tam yolunu verin (/klasör/ad.dxf).",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Klasör: invalid_file_path",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$fixture:formats/v1/dxf-units bir klasör; okunacak DXF dosyasının adını da verin.",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz beklenen sürüm: invalid_revision",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizim değişmiş: revision_conflict, hiçbir şey okunmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "expectedRevision": "99"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosya yok: file_not_found",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/yok.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "file_not_found",
+              "message": "$fixture:formats/v1/dxf-units/yok.dxf yok; dosyanın yolunu denetleyin.",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "DXF değil: import_unreadable (okuyucunun nedeniyle)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/cases.json"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "import_unreadable",
+              "message": "$any",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "layers olmayan katmana: layer_not_found",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "layers": {
+              "DUVAR": "yok"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok; “DUVAR” katmanının nesnelerini var olan bir katmanın kimliğine yönlendirin.",
+              "path": "layers.DUVAR"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "layers bir gruba: not_a_layer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "layers": {
+              "DUVAR": "grup"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir grup; nesneler yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+              "path": "layers.DUVAR"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "layers kilitli katmana: layer_locked",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "layers": {
+              "DUVAR": "kilitli"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+              "path": "layers.DUVAR"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı adlı katman kilitli: layer_locked",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "Dosyanın “DUVAR” katmanı çizimdeki aynı adlı “Duvar” katmanına gider ama o katman kilitli. Kilidi açın, katmanı skipLayers ile dışarıda bırakın ya da layers ile başka bir katmana yönlendirin.",
+              "path": "layers"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Bütün katmanlar dışarıda: nothing_to_import",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-units/mm.dxf",
+            "skipLayers": [
+              "duvar"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_import",
+              "message": "mm.dxf dosyasının seçilen katmanlarında nesne yok; skipLayers'ı denetleyin.",
+              "path": "skipLayers"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesnesi olmayan DXF: nothing_to_import",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-import/empty.dxf"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_import",
+              "message": "empty.dxf dosyasında alınacak nesne yok.",
+              "path": "path"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    }
+  ]
+}

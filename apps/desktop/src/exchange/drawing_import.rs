@@ -11,8 +11,15 @@
 //! a new layer in a group named after the file), the report, and the
 //! coordinate system question.
 //!
+//! A DXF's unit is decided by one rule and can be chosen (docs/adr/0257 §1,
+//! §4): the window says what the file declares and how its numbers are
+//! taken, “Dosyanın birimi” reads it again in another unit.
+//!
 //! Everything chosen goes in as one undo step, the block definitions with
-//! it, each under a name the drawing does not have yet (“Kapı (2)”). A small file goes in at once;
+//! it, each under a name the drawing does not have yet (“Kapı (2)”). A DXF
+//! goes in by `file.import.dxf` with the file the window read
+//! (`file_import::execute_read`), so the journal names the command as a
+//! script's would. A small file goes in at once;
 //! a large one a slice of time at a time, one slice per frame
 //! (`apply::Progressive`): the window closes, the drawing fills in as the
 //! objects arrive, a panel counts them and Durdur takes everything back.
@@ -28,14 +35,18 @@ use iced::widget::{Column, column, container, row};
 use iced::{Bottom, Center, Element, Fill, Length, Right, Task};
 use kentos_contracts::blocks::import_names;
 use kentos_contracts::{
-    DxfReadOptions, ImportLayer, ImportResult, LayerStyle, NczReadOptions, ReportItem,
+    CommandResult, CommandWarning, DrawingUnit, FileUnit, ImportDxf, ImportLayer, ImportResult,
+    LayerStyle, NczReadOptions, ReportItem, UnitDecision, UnitSource,
 };
 use kentos_domain::Slot;
 use kentos_formats::import;
 use kentos_formats::watch::{STOPPED, Steps};
 use kentos_interaction::{Format, Level};
+use kentos_native_application::ExecutionContext;
+use kentos_native_application::file_import::{self, ReadDxf};
 use kentos_ui::label;
 use kentos_ui::widget::progress::{self, Task as Job, TaskList};
+use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
 use kentos_ui::widget::tree_view::{Check, check_box};
 use kentos_ui::widget::{Dialog, overlay, swatch};
@@ -67,6 +78,87 @@ const EXPLODE: &str = "Blokları patlat";
 const EXPLODE_HINT: &str = "Kapalıyken bloklar çizime blok tanımı olarak girer, yerleştirmeleri blok kalır; açıkken yerlerine içlerindeki nesneler alınır. Değiştirince dosya yeniden okunur.";
 /// Renamed blocks named in a line, at most.
 const RENAMES_SHOWN: usize = 5;
+/// Dosyanın birimi (docs/adr/0257 §4).
+const FILE_UNIT: &str = "Dosyanın birimi";
+
+/// A file unit as the list says it.
+fn unit_label(u: FileUnit) -> &'static str {
+    match u {
+        FileUnit::Mm => "Milimetre (mm)",
+        FileUnit::Cm => "Santimetre (cm)",
+        FileUnit::Dm => "Desimetre (dm)",
+        FileUnit::M => "Metre (m)",
+        FileUnit::Km => "Kilometre (km)",
+        FileUnit::In => "İnç (in)",
+        FileUnit::Ft => "Fit (ft)",
+        FileUnit::Yd => "Yarda (yd)",
+        FileUnit::Mi => "Mil (mi)",
+        FileUnit::UsFt => "ABD ölçme fiti (ft)",
+    }
+}
+
+/// A factor as the window writes it: at most seven decimals, a comma.
+fn factor_text(f: f64) -> String {
+    let text = format!("{f:.7}");
+    let text = text.trim_end_matches('0').trim_end_matches('.');
+    text.replace('.', ",")
+}
+
+/// What the window says of the unit the values were read in (docs/adr/0257
+/// §4): what the file declares, and how its numbers go into the drawing's
+/// unit (`drawing`; metres with a coordinate system).
+pub(crate) fn unit_said(d: &UnitDecision, drawing: DrawingUnit) -> String {
+    let declared = d.declared.map(|code| {
+        kentos_contracts::units::insunits(code).map_or_else(
+            || format!("tanınmayan bir birim kodu ({code})"),
+            |(_, name)| format!("{name} ($INSUNITS {code})"),
+        )
+    });
+    let first = match (d.source, &declared) {
+        (UnitSource::Chosen, Some(declared)) => {
+            format!(
+                "Dosya {declared} bildiriyor; değerler seçilen birimde, {} okunur.",
+                d.name
+            )
+        }
+        (UnitSource::Chosen, None) => {
+            format!(
+                "Dosya birim bildirmiyor; değerler seçilen birimde, {} okunur.",
+                d.name
+            )
+        }
+        (UnitSource::Declared, Some(declared)) => format!("Dosya {declared} bildiriyor."),
+        (UnitSource::Metres, Some(declared)) if d.assumed => format!(
+            "Dosya {declared} bildiriyor; değerler ölçeklenmeden metre sayıldı. Birimi biliyorsanız seçin."
+        ),
+        (UnitSource::Metres, Some(declared)) if d.declared != Some(6) => format!(
+            "Dosya {declared} bildiriyor; koordinat sistemli proje dosyayı metre okur, değerler ölçeklenmedi. Ölçeklemek için dosyanın birimini seçin."
+        ),
+        (UnitSource::Metres, Some(declared)) => format!("Dosya {declared} bildiriyor."),
+        (UnitSource::Metres, None) => {
+            "Dosya birim bildirmiyor; değerler metre sayıldı. Birimi biliyorsanız seçin.".to_owned()
+        }
+        (_, Some(declared)) => format!(
+            "Dosya {declared} bildiriyor; değerler ölçeklenmeden çizimin biriminde ({}) sayıldı. Birimi biliyorsanız seçin.",
+            drawing.mark()
+        ),
+        (_, None) => format!(
+            "Dosya birim bildirmiyor; değerler ölçeklenmeden çizimin biriminde ({}) sayıldı. Birimi biliyorsanız seçin.",
+            drawing.mark()
+        ),
+    };
+    let to_drawing = d.factor * drawing.per_metre();
+    let second = if (to_drawing - 1.0).abs() <= 1e-12 {
+        "Sayılar aynen alınır.".to_owned()
+    } else {
+        format!(
+            "Sayılar ×{} ile çizimin birimine ({}) çevrilir.",
+            factor_text(to_drawing),
+            drawing.mark()
+        )
+    };
+    format!("{first} {second}")
+}
 
 /// The file's format: what it is read with and what the window says.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -121,6 +213,8 @@ pub struct State {
     excluded: BTreeSet<String>,
     /// Blokları patlat (a DXF's): its inserts opened into their objects.
     explode: bool,
+    /// The unit chosen for a DXF's values (docs/adr/0257 §4); none: the rule's.
+    file_unit: Option<FileUnit>,
     crs: CrsQuestion,
     /// What the footer says, and whether it is an error.
     status: Option<(bool, String)>,
@@ -151,6 +245,8 @@ pub enum Event {
     ToggleAll,
     /// Blokları patlat on or off: the file is read again.
     Explode,
+    /// Dosyanın birimi chosen (none: the rule's): the file is read again.
+    FileUnit(Option<FileUnit>),
     Crs(u32),
     Another,
     Run,
@@ -212,6 +308,9 @@ pub struct Importing {
     layers: usize,
     work: Progressive,
     skipped: Vec<ReportItem>,
+    /// A DXF's command, what it said and the revision before it: the
+    /// journal's row once every object is in (docs/adr/0257 §4).
+    command: Option<(ImportDxf, Vec<CommandWarning>, u64)>,
     /// When the last slice ended: the frame's own time is what passed since.
     last: Option<Instant>,
 }
@@ -267,12 +366,14 @@ impl App {
             .unwrap_or_default()
     }
 
-    /// A local project's unit, for the DXF reader (docs/adr/0165 §2): a
-    /// file's declared unit is turned into metres, one that declares none is
-    /// in the project's; a project with a coordinate system reads metres.
-    fn dxf_unit(&self) -> Option<kentos_contracts::DrawingUnit> {
-        let settings = self.document.as_ref()?.settings();
-        (!settings.has_system()).then(|| settings.unit())
+    /// The unit the drawing's numbers are read in (docs/adr/0165 §2): a local
+    /// project's own, metres with a coordinate system.
+    fn drawing_unit(&self) -> DrawingUnit {
+        self.document
+            .as_ref()
+            .map(|d| d.settings())
+            .filter(|s| !s.has_system())
+            .map_or(DrawingUnit::M, kentos_contracts::ProjectSettings::unit)
     }
 
     /// Opens the window on `file` and reads it on a thread of its own.
@@ -298,6 +399,7 @@ impl App {
             unusable: None,
             excluded: BTreeSet::new(),
             explode,
+            file_unit: None,
             crs,
             status: None,
         }));
@@ -308,11 +410,13 @@ impl App {
     /// read under way stops, and its late answer is dropped.
     fn read_drawing(&mut self) -> Task<Message> {
         let font = self.drawing_font_id();
-        let unit = self.dxf_unit();
-        // The styles' sizes are paper mm at the project's scale, their missing typefaces the project's (docs/adr/0183 §7).
-        let (scale, typeface) = self.document.as_ref().map_or((None, None), |d| {
-            (Some(d.settings().plot_scale), d.settings().drawing_font)
-        });
+        // The command's options (docs/adr/0257 §3): the project's unit, the chosen one, its scale and typeface.
+        let options = match (&self.document, &self.exchange) {
+            (Some(d), Some(Window::DrawingImport(s))) => {
+                file_import::read_options(&d.model, s.file_unit, s.explode)
+            }
+            _ => kentos_contracts::DxfReadOptions::default(),
+        };
         let Some(Window::DrawingImport(s)) = &mut self.exchange else {
             return Task::none();
         };
@@ -325,7 +429,7 @@ impl App {
         s.failed = None;
         s.unusable = None;
         s.status = None;
-        let (source, bytes, explode) = (s.source, s.file.bytes.clone(), s.explode);
+        let (source, bytes) = (s.source, s.file.bytes.clone());
         let (out, replies) = mpsc::unbounded::<Event>();
         let spawned = std::thread::Builder::new()
             .name("kentos-ice-aktar".into())
@@ -345,17 +449,7 @@ impl App {
                     true
                 });
                 let result = match source {
-                    Source::Dxf => kentos_formats::dxf::read_watched(
-                        &bytes,
-                        &DxfReadOptions {
-                            max_entities: 0,
-                            explode_blocks: explode,
-                            unit,
-                            scale,
-                            drawing_font: typeface,
-                        },
-                        &mut watch,
-                    ),
+                    Source::Dxf => kentos_formats::dxf::read_watched(&bytes, &options, &mut watch),
                     Source::Ncz => kentos_ncz::read(
                         &bytes,
                         &NczReadOptions {
@@ -401,6 +495,12 @@ impl App {
             Event::Explode => {
                 if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                     s.explode = !s.explode;
+                }
+                return self.read_drawing();
+            }
+            Event::FileUnit(unit) => {
+                if let Some(Window::DrawingImport(s)) = &mut self.exchange {
+                    s.file_unit = unit;
                 }
                 return self.read_drawing();
             }
@@ -472,6 +572,7 @@ impl App {
             Event::Another
             | Event::Run
             | Event::Explode
+            | Event::FileUnit(_)
             | Event::Cancel
             | Event::Frame
             | Event::Stop => {}
@@ -498,6 +599,9 @@ impl App {
         let Some(result) = s.result.clone() else {
             return Task::none();
         };
+        if s.source == Source::Dxf {
+            return self.run_dxf_import(result);
+        }
         let (name, source) = (s.file.name.clone(), s.source);
         let layers: Vec<(String, LayerTarget)> = self
             .drawing_included(s)
@@ -525,12 +629,121 @@ impl App {
                 (l.name.clone(), target)
             })
             .collect();
-        let chosen = layers.len();
         let plan = ImportPlan {
             label: format!("{}: {name}", source.prefix()),
             layers,
             group: Some(name.clone()),
         };
+        self.write_import(&name, result, plan, None)
+    }
+
+    /// A DXF in by `file.import.dxf` (docs/adr/0257 §3, §4): the input says
+    /// what the window chose, the file is the one it read. A small file goes
+    /// in at once by the command; a large one a frame at a time by the
+    /// command's plan, its journal row the command's.
+    fn run_dxf_import(&mut self, result: Arc<ImportResult>) -> Task<Message> {
+        let Some(Window::DrawingImport(s)) = &self.exchange else {
+            return Task::none();
+        };
+        let included: BTreeSet<&str> = self
+            .drawing_included(s)
+            .into_iter()
+            .map(|l| l.name.as_str())
+            .collect();
+        let input = ImportDxf {
+            path: s
+                .file
+                .path
+                .as_ref()
+                .map_or_else(|| s.file.name.clone(), |p| p.display().to_string()),
+            file_unit: s.file_unit,
+            explode_blocks: s.explode,
+            skip_layers: result
+                .layers
+                .iter()
+                .filter(|l| !included.contains(l.name.as_str()))
+                .map(|l| l.name.clone())
+                .collect(),
+            layers: std::collections::BTreeMap::new(),
+            group: None,
+            expected_revision: None,
+        };
+        let (name, bytes) = (s.file.name.clone(), s.file.bytes.clone());
+        let chosen = included.len();
+        let Some(doc) = &mut self.document else {
+            return Task::none();
+        };
+        if result.entities.len() > AT_ONCE {
+            let plan = match file_import::import_plan(&doc.model, &input, &result.layers, &name) {
+                Ok(plan) => plan,
+                Err(error) => {
+                    if let Some(Window::DrawingImport(s)) = &mut self.exchange {
+                        s.status = Some((true, error.message));
+                    }
+                    return Task::none();
+                }
+            };
+            let said = file_import::warnings_of_read(&result);
+            let base = doc.model.revision();
+            return self.write_import(&name, result, plan, Some((input, said, base)));
+        }
+        let first = doc.model.next_slot();
+        let read = ReadDxf::of(&name, &bytes, (*result).clone());
+        let answer =
+            file_import::execute_read(&mut ExecutionContext::new(&mut doc.model), input, read);
+        let output = match answer {
+            CommandResult::Completed { output, .. } => output,
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                if let Some(Window::DrawingImport(s)) = &mut self.exchange {
+                    s.status = Some((true, error.message));
+                }
+                return Task::none();
+            }
+            other => {
+                if let Some(Window::DrawingImport(s)) = &mut self.exchange {
+                    s.status = Some((true, format!("İçe aktarılamadı: {other:?}")));
+                }
+                return Task::none();
+            }
+        };
+        let last = doc.model.next_slot();
+        let slots: Vec<Slot> = (first..last)
+            .filter_map(|n| u32::try_from(n).ok())
+            .map(Slot)
+            .filter(|s| doc.model.get(*s).is_some())
+            .collect();
+        let created: Vec<String> = output.layers.iter().map(|l| l.name.clone()).collect();
+        let renamed: Vec<(String, String)> = output
+            .renamed
+            .iter()
+            .map(|r| (r.from.clone(), r.to.clone()))
+            .collect();
+        let skipped = result.report.skipped.clone();
+        self.close_exchange();
+        let made = Made {
+            layers: &created,
+            blocks: output.blocks as usize,
+            renamed: &renamed,
+            styles: (
+                output.text_styles as usize,
+                output.dimension_styles as usize,
+            ),
+        };
+        self.import_done(&name, chosen, &slots, &made, &skipped);
+        Task::none()
+    }
+
+    /// Writes `result` by `plan`: at once when small, else a frame at a time
+    /// (`apply::Progressive`); a DXF's `command` is its journal row then.
+    fn write_import(
+        &mut self,
+        name: &str,
+        result: Arc<ImportResult>,
+        plan: ImportPlan,
+        command: Option<(ImportDxf, Vec<CommandWarning>, u64)>,
+    ) -> Task<Message> {
+        let name = name.to_owned();
+        let chosen = plan.layers.len();
         let skipped = result.report.skipped.clone();
         // The file's text and dimension styles (docs/adr/0183 §7).
         let styles = Styles {
@@ -605,6 +818,7 @@ impl App {
                     layers: chosen,
                     work,
                     skipped,
+                    command,
                     last: None,
                 });
                 Task::none()
@@ -626,6 +840,17 @@ impl App {
             Ok(false) => {}
             Ok(true) => {
                 if let Some(job) = self.importing.take() {
+                    // A DXF's write is the command's: its row in the journal (docs/adr/0257 §4).
+                    if let Some((input, said, base)) = &job.command {
+                        file_import::record_progressive(
+                            &mut doc.model,
+                            input,
+                            &job.name,
+                            &job.work.slots,
+                            said,
+                            *base,
+                        );
+                    }
                     // The view went there when the writing began (and the user may have moved it since).
                     let made = Made {
                         layers: &job.work.created,
@@ -811,11 +1036,18 @@ impl App {
             .spacing(12)
             .push(words::file_line(&s.file.name, meta));
         if s.source == Source::Dxf {
-            body = body.push(words::field(
-                "Bloklar",
-                words::check(s.explode, EXPLODE, Some(event(Event::Explode))),
-                Some(EXPLODE_HINT.to_owned()),
-            ));
+            body = body.push(
+                row![
+                    container(self.unit_field(s)).width(Length::FillPortion(3)),
+                    container(words::field(
+                        "Bloklar",
+                        words::check(s.explode, EXPLODE, Some(event(Event::Explode))),
+                        Some(EXPLODE_HINT.to_owned()),
+                    ))
+                    .width(Length::FillPortion(2)),
+                ]
+                .spacing(24),
+            );
         }
         body = body
             .push(self.drawing_layers(s))
@@ -840,6 +1072,31 @@ impl App {
                 .width(900.0)
                 .max_height(820.0),
         )
+    }
+
+    /// Dosyanın birimi (docs/adr/0257 §4): the file's own (the rule's) or a
+    /// unit chosen, and under it what the file declares and how its numbers
+    /// go into the drawing.
+    fn unit_field<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
+        let decided = s.result.as_ref().and_then(|r| r.unit.as_ref());
+        let automatic = match (s.file_unit, decided) {
+            (None, Some(d)) => format!("Dosyaya göre ({})", d.name),
+            _ => "Dosyaya göre".to_owned(),
+        };
+        let choices = std::iter::once(Choice::new(automatic))
+            .chain(FileUnit::ALL.iter().map(|u| Choice::new(unit_label(*u))));
+        let current = s
+            .file_unit
+            .and_then(|u| FileUnit::ALL.iter().position(|x| *x == u))
+            .map_or(0, |i| i + 1);
+        let select = Select::new(choices, Some(current), |i| {
+            event(Event::FileUnit(
+                i.checked_sub(1).and_then(|k| FileUnit::ALL.get(k).copied()),
+            ))
+        })
+        .searchable(false);
+        let said = decided.map(|d| unit_said(d, self.drawing_unit()));
+        words::field(FILE_UNIT, select, said)
     }
 
     fn drawing_layers<'a>(&'a self, s: &'a State) -> Element<'a, Message> {

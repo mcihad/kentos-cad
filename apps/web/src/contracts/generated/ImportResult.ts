@@ -7,6 +7,7 @@ import type { Entity } from "./Entity";
 import type { ImportLayer } from "./ImportLayer";
 import type { ImportReport } from "./ImportReport";
 import type { TextStyleDef } from "./TextStyleDef";
+import type { UnitDecision } from "./UnitDecision";
 
 /**
  * What a reader produced. Objects have id 0 (the app numbers them when it
@@ -41,4 +42,9 @@ blocks?: Array<BlockDefinition>,
  * gave. The app takes a style of a name the project has as that one,
  * and gives the others new ids and names the project does not have yet.
  */
-textStyles?: Array<TextStyleDef>, dimensionStyles?: Array<DimensionStyleDef>, };
+textStyles?: Array<TextStyleDef>, dimensionStyles?: Array<DimensionStyleDef>, 
+/**
+ * The unit the file's lengths were read in and why (a DXF's,
+ * docs/adr/0257 §1); none for a format without units.
+ */
+unit?: UnitDecision, };
