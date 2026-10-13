@@ -3,6 +3,7 @@ import type { AngleUnit } from "./AngleUnit";
 import type { AreaUnit } from "./AreaUnit";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { LengthStyle } from "./LengthStyle";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -20,7 +21,11 @@ import type { Workspace } from "./Workspace";
  * - `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the
  *   registry other than the project's own, or 0 for none; it takes the
  *   place of a defined second system;
- * - `drawingUnit`: a local project's unit (docs/adr/0165 §2);
+ * - `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,
+ *   in or ft (docs/adr/0262 §1);
+ * - `lengthStyle`: `decimal`, or in an inch or foot drawing
+ *   `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a
+ *   metric unit takes the style back to decimal;
  * - `lengthDecimals`, `areaDecimals`: 0 to 4;
  * - `areaUnit`, `angleUnit`;
  * - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
@@ -37,9 +42,15 @@ import type { Workspace } from "./Workspace";
  * `invalid_revision`, `revision_conflict` (status `conflict`);
  * `second_needs_system` (a second system for a project without one),
  * `second_is_own` (the second system the project's own), `unit_needs_local`
- * (a unit other than metres for a project with a system).
+ * (a unit other than metres for a project with a system),
+ * `style_needs_imperial` (a feet-and-inches style for a metric unit).
  */
-export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number, drawingUnit?: DrawingUnit, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, 
+export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number, drawingUnit?: DrawingUnit, 
+/**
+ * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
+ * engineering and fractional feet and inches in an inch or foot drawing.
+ */
+lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

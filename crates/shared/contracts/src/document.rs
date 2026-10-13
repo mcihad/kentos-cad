@@ -96,26 +96,65 @@ pub enum DrawingUnit {
     Cm,
     #[default]
     M,
+    /// The inch, 0.0254 m exactly (docs/adr/0262 §1).
+    In,
+    /// The international foot, 0.3048 m exactly.
+    Ft,
 }
 
 impl DrawingUnit {
-    /// How many of the unit make a metre.
-    pub fn per_metre(self) -> f64 {
+    /// The unit in metres as a ratio of whole numbers, `(mul, div)`: a value
+    /// in the unit × mul ÷ div is metres (an inch 254/10000, a foot 3048/10000).
+    pub fn metres(self) -> (f64, f64) {
         match self {
-            Self::Mm => 1000.0,
-            Self::Cm => 100.0,
-            Self::M => 1.0,
+            Self::Mm => (1.0, 1000.0),
+            Self::Cm => (1.0, 100.0),
+            Self::M => (1.0, 1.0),
+            Self::In => (254.0, 10_000.0),
+            Self::Ft => (3048.0, 10_000.0),
         }
     }
 
-    /// The unit's mark: `mm`, `cm`, `m`.
+    /// How many of the unit make a metre (an inch's and a foot's the nearest
+    /// double; turning values uses [`DrawingUnit::metres`]' ratio).
+    pub fn per_metre(self) -> f64 {
+        let (mul, div) = self.metres();
+        div / mul
+    }
+
+    /// The unit's mark: `mm`, `cm`, `m`, `in`, `ft`.
     pub fn mark(self) -> &'static str {
         match self {
             Self::Mm => "mm",
             Self::Cm => "cm",
             Self::M => "m",
+            Self::In => "in",
+            Self::Ft => "ft",
         }
     }
+
+    /// Inches or feet (docs/adr/0262).
+    pub fn imperial(self) -> bool {
+        matches!(self, Self::In | Self::Ft)
+    }
+}
+
+/// How lengths are written (docs/adr/0262 §2); none (no setting) is decimal
+/// in the drawing's unit. The three are an inch or foot drawing's.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LengthStyle {
+    /// Decimal in the drawing's unit: no setting, here for a command to say so.
+    Decimal,
+    /// `12'-6 1/2"`.
+    Architectural,
+    /// `12'-6.50"`.
+    Engineering,
+    /// `150 1/2"`.
+    Fractional,
 }
 
 /// Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
@@ -234,6 +273,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NamedUcs>>", optional))]
     pub named_ucs: Vec<crate::NamedUcs>,
+    /// How lengths are written (docs/adr/0262 §2): none, decimal; the others
+    /// only in an inch or foot drawing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub length_style: Option<LengthStyle>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -668,6 +712,10 @@ impl ProjectSettings {
             self.ucs = None;
         }
         self.named_ucs = crate::sanitized_named_ucs(std::mem::take(&mut self.named_ucs));
+        // A feet-and-inches style is an inch or foot drawing's; decimal is no setting (docs/adr/0262 §2).
+        if self.length_style == Some(LengthStyle::Decimal) || !self.unit().imperial() {
+            self.length_style = None;
+        }
         self
     }
 }

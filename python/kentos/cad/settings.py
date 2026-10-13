@@ -19,6 +19,8 @@ from .types import (  # noqa: F401
     DrawingFontName,
     DrawingUnit,
     DrawingUnitName,
+    LengthStyle,
+    LengthStyleName,
     SettingsChanged,
     SettingsSet,
     Workspace,
@@ -65,6 +67,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
+        length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
@@ -96,6 +99,8 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             drawing_unit:
             expected_revision: The document revision the input was prepared against, as decimal text.
             length_decimals: Unit: count.
+            length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
+                engineering and fractional feet and inches in an inch or foot drawing.
             name:
             plot_scale: Unit: scale.
             project_type:
@@ -121,6 +126,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             drawing_unit=drawing_unit,
             expected_revision=expected_revision,
             length_decimals=length_decimals,
+            length_style=length_style,
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
@@ -140,6 +146,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
+        length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
@@ -157,6 +164,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             drawing_unit=drawing_unit,
             expected_revision=expected_revision,
             length_decimals=length_decimals,
+            length_style=length_style,
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
@@ -176,6 +184,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
+        length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
@@ -193,6 +202,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             drawing_unit=drawing_unit,
             expected_revision=expected_revision,
             length_decimals=length_decimals,
+            length_style=length_style,
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
@@ -212,6 +222,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
+        length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
@@ -234,6 +245,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             drawing_unit=drawing_unit,
             expected_revision=expected_revision,
             length_decimals=length_decimals,
+            length_style=length_style,
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,

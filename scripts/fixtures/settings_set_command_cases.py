@@ -147,6 +147,24 @@ def cases():
     out.append({"name": "Birim metre: yazılmaz",
                 "setup": setup(srid=0, secondSrid=None, drawingUnit="cm"),
                 "steps": [step("execute", {"drawingUnit": "m"}, done(["drawingUnit"]), {**FLAGS, "settings": {"drawingUnit": None}})]})
+    # Feet and inches (docs/adr/0262): a local project's in and ft, and the length styles they allow.
+    out.append({"name": "İnç birimi ve mimari biçim (ADR 0262)",
+                "setup": setup(srid=0, secondSrid=None),
+                "steps": [step("execute", {"drawingUnit": "in", "lengthStyle": "architectural"}, done(["drawingUnit", "lengthStyle"]),
+                               {**FLAGS, "settings": {"drawingUnit": "in", "lengthStyle": "architectural"}})]})
+    out.append({"name": "Ayak birimi, mühendislik biçimi; ondalık biçim yazılmaz",
+                "setup": setup(srid=0, secondSrid=None),
+                "steps": [step("execute", {"drawingUnit": "ft", "lengthStyle": "engineering"}, done(["drawingUnit", "lengthStyle"]),
+                               {**FLAGS, "settings": {"drawingUnit": "ft", "lengthStyle": "engineering"}}),
+                          step("execute", {"lengthStyle": "decimal"}, done(["lengthStyle"]), {"settings": {"drawingUnit": "ft", "lengthStyle": None}, "revision": "changed"})]})
+    out.append({"name": "Metrik birime dönünce ayak ve inç biçimi ondalık olur",
+                "setup": setup(srid=0, secondSrid=None, drawingUnit="in", lengthStyle="fractional"),
+                "steps": [step("execute", {"drawingUnit": "mm"}, done(["drawingUnit", "lengthStyle"]),
+                               {**FLAGS, "settings": {"drawingUnit": "mm", "lengthStyle": None}})]})
+    out.append({"name": "İnç projesine sistem atanınca birim metre, biçim ondalık olur",
+                "setup": setup(srid=0, secondSrid=None, drawingUnit="in", lengthStyle="architectural"),
+                "steps": [step("execute", {"srid": 5256}, done(["srid", "drawingUnit", "lengthStyle"]),
+                               {**FLAGS, "settings": {"srid": 5256, "drawingUnit": None, "lengthStyle": None}})]})
     out.append({"name": "İkinci sistem: başka bir sistem; 0 kaldırır",
                 "steps": [step("execute", {"secondSrid": 2321}, done(["secondSrid"]), {**FLAGS, "settings": {"secondSrid": 2321}}),
                           step("execute", {"secondSrid": 0}, done(["secondSrid"]), {"settings": {"secondSrid": None}, "revision": "changed"})]})
@@ -179,7 +197,13 @@ def cases():
     out.append(refused("ikinci sistem projenin kendisi", {"secondSrid": 5256}, "second_is_own",
                        "EPSG:5256 projenin kendi sistemi; ikinci sistem başka bir sistem olmalı.", "secondSrid"))
     out.append(refused("sistemi olan projede mm", {"drawingUnit": "mm"}, "unit_needs_local",
-                       "Koordinat sistemi olan projenin birimi metredir; mm ya da cm yalnız sistemsiz yerel projede seçilir.", "drawingUnit"))
+                       "Koordinat sistemi olan projenin birimi metredir; mm, cm, inç ya da ayak yalnız sistemsiz yerel projede seçilir.", "drawingUnit"))
+    out.append(refused("sistemi olan projede inç", {"drawingUnit": "in"}, "unit_needs_local",
+                       "Koordinat sistemi olan projenin birimi metredir; mm, cm, inç ya da ayak yalnız sistemsiz yerel projede seçilir.", "drawingUnit"))
+    out.append(refused("metre projesinde mimari biçim", {"lengthStyle": "architectural"}, "style_needs_imperial",
+                       "Ayak ve inç biçimleri (mimari, mühendislik, kesirli) yalnız inç ya da ayak biriminde seçilir; önce birimi inç ya da ayak yapın.", "lengthStyle"))
+    out.append(refused("mm'ye geçerken kesirli biçim", {"srid": 0, "drawingUnit": "mm", "lengthStyle": "fractional"}, "style_needs_imperial",
+                       "Ayak ve inç biçimleri (mimari, mühendislik, kesirli) yalnız inç ya da ayak biriminde seçilir; önce birimi inç ya da ayak yapın.", "lengthStyle"))
     out.append(refused("girdinin kuralları sürümden önce", {"lengthDecimals": 7, "expectedRevision": "on iki"}, "invalid_decimals",
                        "Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı.", "lengthDecimals"))
     out.append(refused("geçersiz beklenen sürüm", {"srid": 5255, "expectedRevision": "on iki"}, "invalid_revision", INVALID_REVISION, "expectedRevision"))

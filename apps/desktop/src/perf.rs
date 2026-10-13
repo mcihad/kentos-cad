@@ -97,6 +97,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         version: 2,
         name: format!("olcum-{n}"),
         settings: ProjectSettings {
+            length_style: None,
             named_ucs: Vec::new(),
             ucs: None,
             srid: 5256,

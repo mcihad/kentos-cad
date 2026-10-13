@@ -12,6 +12,7 @@ pub mod drawing;
 pub mod drawing_extras;
 pub mod editing;
 pub mod hatch;
+pub mod imperial;
 pub mod locks;
 pub mod navigation;
 pub mod object_tracking;

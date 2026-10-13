@@ -172,7 +172,7 @@ pub fn attribute_names(records: &[Record]) -> Vec<String> {
 /// point, a distance or a word).
 pub fn typed_place(text: &str, to_metres: impl Fn(f64) -> f64) -> Option<Vec2> {
     match parse_point_text(text)? {
-        PointText::Absolute(p) => Some(Vec2::new(to_metres(p.x), to_metres(p.y))),
+        PointText::Absolute(x, y) => Some(Vec2::new(x.metres(&to_metres), y.metres(&to_metres))),
         _ => None,
     }
 }

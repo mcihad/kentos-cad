@@ -97,7 +97,7 @@ pub struct UnitChoice {
     pub note: &'static str,
 }
 
-pub const UNITS: [UnitChoice; 3] = [
+pub const UNITS: [UnitChoice; 5] = [
     UnitChoice {
         id: DrawingUnit::Mm,
         name: "Milimetre",
@@ -115,6 +115,19 @@ pub const UNITS: [UnitChoice; 3] = [
         name: "Metre",
         mark: "m",
         note: "Mimari plan, vaziyet ve altyapı",
+    },
+    // Feet and inches (docs/adr/0262 §1).
+    UnitChoice {
+        id: DrawingUnit::In,
+        name: "İnç",
+        mark: "in",
+        note: "Ayak ve inçle çalışan ofisler, imalat",
+    },
+    UnitChoice {
+        id: DrawingUnit::Ft,
+        name: "Ayak",
+        mark: "ft",
+        note: "Ayak ve inçle mimari ve vaziyet",
     },
 ];
 

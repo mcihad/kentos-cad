@@ -164,6 +164,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
         version: 1,
         name,
         settings: ProjectSettings {
+            length_style: None,
             named_ucs: Vec::new(),
             ucs: None,
             srid: 5256,

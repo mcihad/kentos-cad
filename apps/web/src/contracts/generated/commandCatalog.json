@@ -2169,12 +2169,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -5179,6 +5193,31 @@
             ],
             "type": "object"
           },
+          "LengthStyle": {
+            "description": "How lengths are written (docs/adr/0262 §2); none (no setting) is decimal\nin the drawing's unit. The three are an inch or foot drawing's.",
+            "oneOf": [
+              {
+                "const": "decimal",
+                "description": "Decimal in the drawing's unit: no setting, here for a command to say so.",
+                "type": "string"
+              },
+              {
+                "const": "architectural",
+                "description": "`12'-6 1/2\"`.",
+                "type": "string"
+              },
+              {
+                "const": "engineering",
+                "description": "`12'-6.50\"`.",
+                "type": "string"
+              },
+              {
+                "const": "fractional",
+                "description": "`150 1/2\"`.",
+                "type": "string"
+              }
+            ]
+          },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -6746,6 +6785,17 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "count"
+              },
+              "lengthStyle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LengthStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How lengths are written (docs/adr/0262 §2): none, decimal; the others\nonly in an inch or foot drawing."
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -10642,12 +10692,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "Ellipsoid": {
             "description": "An ellipsoid: its name, semi-major axis (m) and inverse flattening.",
@@ -12239,6 +12303,31 @@
             ],
             "type": "object"
           },
+          "LengthStyle": {
+            "description": "How lengths are written (docs/adr/0262 §2); none (no setting) is decimal\nin the drawing's unit. The three are an inch or foot drawing's.",
+            "oneOf": [
+              {
+                "const": "decimal",
+                "description": "Decimal in the drawing's unit: no setting, here for a command to say so.",
+                "type": "string"
+              },
+              {
+                "const": "architectural",
+                "description": "`12'-6 1/2\"`.",
+                "type": "string"
+              },
+              {
+                "const": "engineering",
+                "description": "`12'-6.50\"`.",
+                "type": "string"
+              },
+              {
+                "const": "fractional",
+                "description": "`150 1/2\"`.",
+                "type": "string"
+              }
+            ]
+          },
           "LineLabelMode": {
             "description": "Where a line's label goes.",
             "oneOf": [
@@ -12695,6 +12784,17 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "count"
+              },
+              "lengthStyle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LengthStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How lengths are written (docs/adr/0262 §2): none, decimal; the others\nonly in an inch or foot drawing."
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -16138,12 +16238,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -19086,6 +19200,31 @@
             ],
             "type": "object"
           },
+          "LengthStyle": {
+            "description": "How lengths are written (docs/adr/0262 §2); none (no setting) is decimal\nin the drawing's unit. The three are an inch or foot drawing's.",
+            "oneOf": [
+              {
+                "const": "decimal",
+                "description": "Decimal in the drawing's unit: no setting, here for a command to say so.",
+                "type": "string"
+              },
+              {
+                "const": "architectural",
+                "description": "`12'-6 1/2\"`.",
+                "type": "string"
+              },
+              {
+                "const": "engineering",
+                "description": "`12'-6.50\"`.",
+                "type": "string"
+              },
+              {
+                "const": "fractional",
+                "description": "`150 1/2\"`.",
+                "type": "string"
+              }
+            ]
+          },
           "LineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -20692,6 +20831,17 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "count"
+              },
+              "lengthStyle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LengthStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How lengths are written (docs/adr/0262 §2): none, decimal; the others\nonly in an inch or foot drawing."
               },
               "namedUcs": {
                 "description": "The project's named UCSs, in the order they were kept.",
@@ -30210,12 +30360,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -35636,12 +35800,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -41042,12 +41220,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -46607,12 +46799,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -51976,12 +52182,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -57359,12 +57579,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -63015,12 +63249,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -67524,12 +67772,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EditOperation": {
             "description": "The modify tool an edit comes from; it names the undo step.",
@@ -71770,12 +72032,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -77291,12 +77567,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -82732,12 +83022,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -88118,12 +88422,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -93581,12 +93899,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -99125,12 +99457,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -105041,12 +105387,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -110505,12 +110865,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -115955,12 +116329,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -121392,12 +121780,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -126878,12 +127280,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -132280,12 +132696,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -137643,12 +138073,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -143070,12 +143514,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -148495,12 +148953,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -153957,12 +154429,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -159551,12 +160037,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -164158,12 +164658,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EntityGeometry": {
             "description": "A drawing object's geometry alone: its kind and the fields that place and\nshape it, without the fields every object has (layer, colour, attributes,\nlabel, symbol). Coordinates are x east (Y), y north (X), in the project's\nunits (m), float64; angles in radians unless said otherwise.",
@@ -168063,12 +168577,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -173693,12 +174221,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -179191,12 +179733,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -184867,12 +185423,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -208550,12 +209120,26 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "LineType": {
             "enum": [
@@ -208877,12 +209461,51 @@
           },
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
+          },
+          "LengthStyle": {
+            "description": "How lengths are written (docs/adr/0262 §2); none (no setting) is decimal\nin the drawing's unit. The three are an inch or foot drawing's.",
+            "oneOf": [
+              {
+                "const": "decimal",
+                "description": "Decimal in the drawing's unit: no setting, here for a command to say so.",
+                "type": "string"
+              },
+              {
+                "const": "architectural",
+                "description": "`12'-6 1/2\"`.",
+                "type": "string"
+              },
+              {
+                "const": "engineering",
+                "description": "`12'-6.50\"`.",
+                "type": "string"
+              },
+              {
+                "const": "fractional",
+                "description": "`150 1/2\"`.",
+                "type": "string"
+              }
+            ]
           },
           "Workspace": {
             "description": "A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each\nwith its own scene, axes and ribbon; every command still runs in both.\n`plan3d` and `disaster` are announced (\"Yakında\") and cannot be chosen yet;\na file naming them shows as CBS. There is no hybrid type any more.",
@@ -208901,7 +209524,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet);\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2);\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system).",
+        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet);\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit).",
         "properties": {
           "angleUnit": {
             "anyOf": [
@@ -208969,6 +209592,17 @@
             ],
             "x-unit": "count"
           },
+          "lengthStyle": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LengthStyle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How lengths are written (docs/adr/0262 §2): decimal, or architectural,\nengineering and fractional feet and inches in an inch or foot drawing."
+          },
           "name": {
             "type": [
               "string",
@@ -209020,7 +209654,7 @@
         "description": "Output of `cad.settings.set` v1, and what plan says it would do.",
         "properties": {
           "changed": {
-            "description": "The keys whose value changed, in the input's documented order\n(`drawingUnit` too when a system made the unit metres).",
+            "description": "The keys whose value changed, in the input's documented order\n(`drawingUnit` too when a system made the unit metres, `lengthStyle`\nwhen a metric unit took it back to decimal).",
             "items": {
               "type": "string"
             },
@@ -209060,7 +209694,7 @@
         "description": "Output of `cad.settings.set` v1, and what plan says it would do.",
         "properties": {
           "changed": {
-            "description": "The keys whose value changed, in the input's documented order\n(`drawingUnit` too when a system made the unit metres).",
+            "description": "The keys whose value changed, in the input's documented order\n(`drawingUnit` too when a system made the unit metres, `lengthStyle`\nwhen a metric unit took it back to decimal).",
             "items": {
               "type": "string"
             },
@@ -209106,6 +209740,7 @@
           "second_needs_system",
           "second_is_own",
           "unit_needs_local",
+          "style_needs_imperial",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -209639,12 +210274,26 @@
         "$defs": {
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "UnitGeometry": {
             "description": "What becomes of the drawing when its unit changes.",
@@ -209699,12 +210348,26 @@
         "$defs": {
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "UnitGeometry": {
             "description": "What becomes of the drawing when its unit changes.",
@@ -209776,12 +210439,26 @@
         "$defs": {
           "DrawingUnit": {
             "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
-            "enum": [
-              "mm",
-              "cm",
-              "m"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
           },
           "UnitGeometry": {
             "description": "What becomes of the drawing when its unit changes.",
@@ -211953,6 +212630,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Ardışık iki geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın."
+    },
+    {
+      "code": "style_needs_imperial",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ayak ve inç biçimleri yalnız inç ya da ayak birimli projede seçilir."
     },
     {
       "code": "far_point",

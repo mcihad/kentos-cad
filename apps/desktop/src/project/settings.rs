@@ -135,6 +135,22 @@ impl fmt::Display for Unit {
     }
 }
 
+/// A length style as the segmented control writes it (docs/adr/0262 §2).
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Style(kentos_contracts::LengthStyle);
+
+impl fmt::Display for Style {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use kentos_contracts::LengthStyle as L;
+        f.write_str(match self.0 {
+            L::Decimal => "Ondalık",
+            L::Architectural => "Mimari",
+            L::Engineering => "Mühendislik",
+            L::Fractional => "Kesirli",
+        })
+    }
+}
+
 impl fmt::Display for Angle {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self.0 {
@@ -201,6 +217,8 @@ pub enum Event {
     AngleUnit(AngleUnit),
     /// A local project's drawing unit (docs/adr/0165 §2); metres are kept as none.
     DrawingUnit(DrawingUnit),
+    /// How lengths are written in an inch or foot drawing (docs/adr/0262 §2); decimal is kept as none.
+    LengthStyle(kentos_contracts::LengthStyle),
     /// İkinci koordinat sistemi (docs/adr/0167 §1); none: Yok. Either takes
     /// the place of a second definition (docs/adr/0168 §1).
     Second(Option<u32>),
@@ -439,7 +457,16 @@ impl App {
                     s.reduce,
                 );
             }
-            Event::DrawingUnit(u) => d.drawing_unit = (u != DrawingUnit::M).then_some(u),
+            Event::DrawingUnit(u) => {
+                d.drawing_unit = (u != DrawingUnit::M).then_some(u);
+                // A metric unit writes decimal (docs/adr/0262 §2).
+                if !u.imperial() {
+                    d.length_style = None;
+                }
+            }
+            Event::LengthStyle(style) => {
+                d.length_style = (style != kentos_contracts::LengthStyle::Decimal).then_some(style);
+            }
             // The draft takes the rows that hold (docs/adr/0214 §4).
             Event::Variable(i, edit) => {
                 super::variables::edit(&mut s.variables, i, edit);
@@ -1115,10 +1142,25 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
             Unit(DrawingUnit::Mm),
             Unit(DrawingUnit::Cm),
             Unit(DrawingUnit::M),
+            Unit(DrawingUnit::In),
+            Unit(DrawingUnit::Ft),
         ],
         Unit(d.drawing_unit.unwrap_or_default()),
         |u| event(Event::DrawingUnit(u.0)),
     );
+    let style = {
+        use kentos_contracts::LengthStyle as L;
+        Segmented::new(
+            [
+                Style(L::Decimal),
+                Style(L::Architectural),
+                Style(L::Engineering),
+                Style(L::Fractional),
+            ],
+            Style(d.length_style.unwrap_or(L::Decimal)),
+            |s| event(Event::LengthStyle(s.0)),
+        )
+    };
     let f = Format::of(d);
     let preview = container(
         Column::new()
@@ -1171,9 +1213,27 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
             unit,
         ));
     }
+    // Feet and inches (docs/adr/0262 §2): an inch or foot drawing's style, its precision a fraction's.
+    let imperial = local && d.drawing_unit.is_some_and(|u| u.imperial());
+    if imperial {
+        lengths = lengths.push(setting(
+            "Uzunluk biçimi",
+            Some("Mimari 12'-6 1/2\", mühendislik 12'-6.50\", kesirli 150 1/2\"; ondalık birimin kendisiyle."),
+            style,
+        ));
+    }
+    let precision = if imperial && d.length_style.is_some() {
+        Some("Kesirli biçimlerde paydanın üssü: 0 tam inç, 4 on altıda bir.")
+    } else {
+        Some("Koordinatlar, kenar uzunlukları ve mesafeler.")
+    };
     let lengths = lengths.push(setting(
-        "Ondalık basamak",
-        Some("Koordinatlar, kenar uzunlukları ve mesafeler."),
+        if imperial && d.length_style.is_some() {
+            "Duyarlık"
+        } else {
+            "Ondalık basamak"
+        },
+        precision,
         decimals(d.length_decimals, Event::LengthDecimals),
     ));
     // A local project in millimetres or centimetres reads its areas in the unit squared: no area unit to choose.

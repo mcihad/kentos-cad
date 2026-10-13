@@ -1035,6 +1035,14 @@
         {
           "value": "m",
           "label": "Metre"
+        },
+        {
+          "value": "in",
+          "label": "İnç"
+        },
+        {
+          "value": "ft",
+          "label": "Ayak"
         }
       ],
       "scope": "user",

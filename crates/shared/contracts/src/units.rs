@@ -137,6 +137,11 @@ pub fn insunits(code: i64) -> Option<(Scale, &'static str)> {
     })
 }
 
+/// The greatest common divisor.
+fn gcd(a: u64, b: u64) -> u64 {
+    if b == 0 { a } else { gcd(b, a % b) }
+}
+
 /// `value × mul ÷ div`: one length unit in another.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Scale {
@@ -149,37 +154,29 @@ impl Scale {
 
     /// A local project's unit in metres: a value in `u` × this is metres.
     pub fn from_unit(u: DrawingUnit) -> Scale {
-        Scale {
-            mul: 1.0,
-            div: u.per_metre(),
-        }
+        let (mul, div) = u.metres();
+        Scale { mul, div }
     }
 
     /// Metres in a local project's unit.
     pub fn to_unit(u: DrawingUnit) -> Scale {
-        Scale {
-            mul: u.per_metre(),
-            div: 1.0,
-        }
+        let (mul, div) = u.metres();
+        Scale { mul: div, div: mul }
     }
 
     /// What keeps a drawing's numbers when its unit goes from `from` to
     /// `to` (docs/adr/0256 §1): the metres a number stood for in `from`
-    /// become the metres it stands for in `to`. One whole-number factor
-    /// (the units are powers of ten apart): ×1000 from mm to m, ÷10 from
-    /// cm to mm.
+    /// become the metres it stands for in `to`. The units' ratio of whole
+    /// numbers in lowest terms: ×1000 from mm to m, ÷10 from cm to mm,
+    /// ×127 ÷5 from mm to in (docs/adr/0262 §1).
     pub fn keeping_numbers(from: DrawingUnit, to: DrawingUnit) -> Scale {
-        let (a, b) = (from.per_metre(), to.per_metre());
-        if a >= b {
-            Scale {
-                mul: a / b,
-                div: 1.0,
-            }
-        } else {
-            Scale {
-                mul: 1.0,
-                div: b / a,
-            }
+        let ((fm, fd), (tm, td)) = (from.metres(), to.metres());
+        // Whole numbers below 2^53: exact in a float64, and in a u64.
+        let (mul, div) = ((tm * fd) as u64, (td * fm) as u64);
+        let g = gcd(mul, div).max(1);
+        Scale {
+            mul: (mul / g) as f64,
+            div: (div / g) as f64,
         }
     }
 
@@ -402,6 +399,24 @@ mod tests {
 
     /// The factor keeping the numbers is one whole number each way, so a
     /// value goes there and back unchanged.
+    /// Inches and feet keep the numbers by their ratio in lowest terms
+    /// (docs/adr/0262 §1): an inch is 25.4 mm, a foot 12 inches.
+    #[test]
+    fn inches_and_feet_keep_the_numbers_by_their_ratio() {
+        use DrawingUnit::{Ft, In, M, Mm};
+        for (from, to, mul, div) in [
+            (Mm, In, 127.0, 5.0),
+            (In, Mm, 5.0, 127.0),
+            (In, Ft, 12.0, 1.0),
+            (Ft, M, 1250.0, 381.0),
+        ] {
+            let s = Scale::keeping_numbers(from, to);
+            assert_eq!((s.mul, s.div), (mul, div), "{from:?} → {to:?}");
+        }
+        assert_eq!(Scale::from_unit(In).apply(10.0), 0.254);
+        assert_eq!(Scale::from_unit(Ft).apply(1.0), 0.3048);
+    }
+
     #[test]
     fn keeping_the_numbers_is_one_whole_factor() {
         use DrawingUnit::{Cm, M, Mm};

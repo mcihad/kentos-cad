@@ -189,15 +189,25 @@ class Units:
     """The project's drawing unit: a local project's own, else metres."""
 
     def from_metres(self, value: float) -> float:
-        """A length in metres in the drawing unit (4.0 m is 4000.0 in mm)."""
-        return value * _PER_METRE[self.drawing]
+        """A length in metres in the drawing unit (4.0 m is 4000.0 in mm); by the unit's ratio of whole numbers, as
+        the desktop turns them (an inch is 254/10000 m, docs/adr/0262 §1)."""
+        mul, div = _METRES[self.drawing]
+        return value * div if mul == 1.0 else value * div / mul
 
     def to_metres(self, value: float) -> float:
-        """A length in the drawing unit in metres (4000.0 mm is 4.0 m)."""
-        return value / _PER_METRE[self.drawing]
+        """A length in the drawing unit in metres (4000.0 mm is 4.0 m; 150.5 in is 3.8227 m)."""
+        mul, div = _METRES[self.drawing]
+        return value / div if mul == 1.0 else value * mul / div
 
 
-_PER_METRE = {DrawingUnit.MM: 1000.0, DrawingUnit.CM: 100.0, DrawingUnit.M: 1.0}
+# A unit's metres as a ratio of whole numbers (kentos_contracts::DrawingUnit::metres).
+_METRES = {
+    DrawingUnit.MM: (1.0, 1000.0),
+    DrawingUnit.CM: (1.0, 100.0),
+    DrawingUnit.M: (1.0, 1.0),
+    DrawingUnit.IN: (254.0, 10000.0),
+    DrawingUnit.FT: (3048.0, 10000.0),
+}
 
 
 def _units(raw: Mapping[str, Any] | None) -> Units:

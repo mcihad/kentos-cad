@@ -27,10 +27,10 @@ use kentos_contracts::{
     AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
     DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit,
     FieldChoice, LayerField, LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState,
-    LayerStateNode, LayerStyle, LineType, MAX_ANNOTATION_MM, MigrationSource, PointStyle,
-    PointSymbol, ProjectId, ProjectSettings, ProjectStyles, SurveySettings, TopologyException,
-    TopologyRule, TopologyRuleKind, TopologySettings, Vec2, Workspace, annotation_mm_holds,
-    layer_fields_problem, layer_states_problem,
+    LayerStateNode, LayerStyle, LengthStyle, LineType, MAX_ANNOTATION_MM, MigrationSource,
+    PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, SurveySettings,
+    TopologyException, TopologyRule, TopologyRuleKind, TopologySettings, Vec2, Workspace,
+    annotation_mm_holds, layer_fields_problem, layer_states_problem,
 };
 
 use crate::SCHEMAS;
@@ -432,6 +432,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut variables = Vec::new();
     let mut address_locators = Vec::new();
     let (mut ucs, mut named_ucs) = (None, Vec::new());
+    let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
@@ -483,12 +484,30 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 )?)
             }
             "drawingUnit" if has.drawing_unit => {
+                // Inches and feet are schema 50's (docs/adr/0262 §1).
+                let units = [
+                    ("mm", DrawingUnit::Mm),
+                    ("cm", DrawingUnit::Cm),
+                    ("m", DrawingUnit::M),
+                    ("in", DrawingUnit::In),
+                    ("ft", DrawingUnit::Ft),
+                ];
                 drawing_unit = Some(named(
                     r,
+                    if has.imperial {
+                        &units[..]
+                    } else {
+                        &units[..3]
+                    },
+                )?)
+            }
+            "lengthStyle" if has.imperial => {
+                length_style = Some(named(
+                    r,
                     &[
-                        ("mm", DrawingUnit::Mm),
-                        ("cm", DrawingUnit::Cm),
-                        ("m", DrawingUnit::M),
+                        ("architectural", LengthStyle::Architectural),
+                        ("engineering", LengthStyle::Engineering),
+                        ("fractional", LengthStyle::Fractional),
                     ],
                 )?)
             }
@@ -543,6 +562,14 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         r.pop();
         e
     };
+    // A feet-and-inches style is an inch or foot drawing's (docs/adr/0262 §2).
+    if length_style.is_some() && !drawing_unit.is_some_and(|u: DrawingUnit| u.imperial()) {
+        return Err(relation(
+            "lengthStyle",
+            "ayak ve inç biçimi yalnız inç ya da ayak birimli projede olur",
+            r,
+        ));
+    }
     if custom_crs.is_some() && srid != 0 {
         return Err(relation(
             "customCrs",
@@ -584,6 +611,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         address_locators,
         ucs,
         named_ucs,
+        length_style,
     })
 }
 

@@ -435,6 +435,8 @@ impl App {
                         kentos_contracts::DrawingUnit::Mm => "milimetre",
                         kentos_contracts::DrawingUnit::Cm => "santimetre",
                         kentos_contracts::DrawingUnit::M => "metre",
+                        kentos_contracts::DrawingUnit::In => "inç",
+                        kentos_contracts::DrawingUnit::Ft => "ayak",
                     };
                     format!(
                         "Yeni yerel CAD projeleri {name} biriminde başlayacak. Açık projenin birimi değişmedi."

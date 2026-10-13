@@ -15,6 +15,7 @@ mod filters;
 mod fixtures;
 mod hatches;
 mod images;
+mod imperial;
 mod layer_states;
 mod leaders;
 mod line_parts;

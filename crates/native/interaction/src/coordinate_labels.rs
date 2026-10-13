@@ -26,9 +26,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
-    AnnotationKind, CreateOperation, DrawingUnit, Entity, EntityGeometry, TextFace,
-};
+use kentos_contracts::{AnnotationKind, CreateOperation, Entity, EntityGeometry, TextFace};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::ops::coordinate_labels::{
@@ -160,11 +158,7 @@ fn look(cx: &Context<'_>) -> Look {
     };
     let units = LabelUnits {
         cad: f.axes == Axes::Cad,
-        per_metre: match f.unit {
-            DrawingUnit::M => 1.0,
-            DrawingUnit::Cm => 100.0,
-            DrawingUnit::Mm => 1000.0,
-        },
+        per_metre: f.unit.per_metre(),
     };
     Look {
         options,

@@ -6,7 +6,8 @@
 export type SettingsChanged = { 
 /**
  * The keys whose value changed, in the input's documented order
- * (`drawingUnit` too when a system made the unit metres).
+ * (`drawingUnit` too when a system made the unit metres, `lengthStyle`
+ * when a metric unit took it back to decimal).
  */
 changed: Array<string>, 
 /**

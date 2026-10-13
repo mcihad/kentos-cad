@@ -18,6 +18,7 @@ The expectations are built here from the ADR's rule, without KentOS code:
 """
 import copy
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -26,6 +27,8 @@ OUT = ROOT / "fixtures/commands/v1/cad.units.change.json"
 
 STEP = "Birimi değiştir"
 PER_METRE = {"mm": 1000.0, "cm": 100.0, "m": 1.0}
+# A unit's metres as a ratio of whole numbers (docs/adr/0262 §1): an inch is 254/10000 m, a foot 3048/10000.
+METRES = {"mm": (1, 1000), "cm": (1, 100), "m": (1, 1), "in": (254, 10000), "ft": (3048, 10000)}
 
 INVALID_REVISION = "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın."
 CONFLICT = "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın."
@@ -37,11 +40,18 @@ class Factor:
     """The units' ratio as the ADR writes it: one whole number, multiplied or divided by (`mul` or `div` is 1)."""
 
     def __init__(self, src, dst):
-        a, b = PER_METRE[src], PER_METRE[dst]
-        self.mul, self.div = (a / b, 1.0) if a >= b else (1.0, b / a)
+        # The metres a number stood for in `src` become those it stands for in `dst`: the ratio in lowest terms.
+        (sn, sd), (dn, dd) = METRES[src], METRES[dst]
+        mul, div = dn * sd, dd * sn
+        g = math.gcd(mul, div)
+        self.mul, self.div = float(mul // g), float(div // g)
 
     def __call__(self, v):
-        return v * self.mul if self.div == 1.0 else v / self.div
+        if self.mul == 1.0:
+            return v / self.div
+        if self.div == 1.0:
+            return v * self.mul
+        return v * self.mul / self.div
 
     @property
     def value(self):
@@ -329,6 +339,18 @@ def cases():
                     "setup": setup(unit=src),
                     "steps": [step("execute", {"from": src, "to": dst, "geometry": "scale"}, done(output(src, dst, "scale", f.value, n, nb), warnings_for(ENTITIES)),
                                    {**scaled_expect(ENTITIES, src, dst), "canUndo": True})]})
+
+    # Feet and inches (docs/adr/0262 §1): the ratio of whole numbers, applied as one product and one division.
+    for src, dst in (("mm", "in"), ("in", "ft"), ("ft", "m")):
+        f = Factor(src, dst)
+        out.append({"name": f"{src}'den {dst}'ye, sayılar korunur: çarpan {int(f.mul)}/{int(f.div)} (ADR 0262)",
+                    "setup": setup(unit=src),
+                    "steps": [step("execute", {"from": src, "to": dst, "geometry": "scale"}, done(output(src, dst, "scale", f.value, n, nb), warnings_for(ENTITIES)),
+                                   {**scaled_expect(ENTITIES, src, dst), "canUndo": True})]})
+    out.append({"name": "inç'ten ayağa, boylar korunur (ADR 0262)",
+                "setup": setup(unit="in"),
+                "steps": [step("execute", {"from": "in", "to": "ft", "geometry": "keep"}, done(output("in", "ft", "keep", 1.0, 0, 0)),
+                               {**unchanged_expect(ENTITIES, "ft"), "canUndo": True})]})
 
     out.append({"name": "m'den mm'ye, boylar korunur",
                 "setup": setup(unit="m"),

@@ -281,6 +281,7 @@ def settings(s):
     # §1; a definition of its own is one, 0168 §1).
     assert second is None or (second != 0 and has_system and second != s["srid"]), "ikinci sistem projeninkinden başka olmalı"
     assert "customCrs" not in s or s["srid"] == 0, "kendi tanımı yalnız srid 0 projede"
+    assert "lengthStyle" not in s or s.get("drawingUnit") in ("in", "ft"), "ayak ve inç biçimi yalnız inç ya da ayak biriminde"
     assert "secondCustomCrs" not in s or (second is None and has_system), "ikinci tanım ikinci EPSG koduyla birlikte olmaz"
     return cmap(
         fields(
@@ -294,7 +295,8 @@ def settings(s):
                 "plotScale": (f64, True),
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
-                "drawingUnit": (enum(("mm", "cm", "m")), False),
+                # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
+                "drawingUnit": (enum(("mm", "cm", "m", "in", "ft")), False),
                 "secondSrid": (uint, False),
                 "customCrs": (crs_definition, False),
                 "secondCustomCrs": (crs_definition, False),
@@ -316,6 +318,8 @@ def settings(s):
                 # Schema 49 (docs/adr/0261 §1): the current UCS (none: the world) and the named ones.
                 "ucs": (ucs, False),
                 "namedUcs": (named_ucs, False),
+                # Schema 50 (docs/adr/0262 §2): how lengths are written; decimal is no setting.
+                "lengthStyle": (enum(("architectural", "engineering", "fractional")), False),
             },
             "settings",
         )
@@ -1771,6 +1775,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 50 (docs/adr/0262): a drawing in inches or feet, or a length style.
+    if settings and (settings.get("drawingUnit") in ("in", "ft") or "lengthStyle" in settings):
+        return 50
     # Schema 49 (docs/adr/0261): the current UCS or a named one.
     if settings and ("ucs" in settings or "namedUcs" in settings):
         return 49
@@ -2078,7 +2085,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-50.kcad"] = container(root(cmap(parts), version=uint(50)))
+    files["schema-version-51.kcad"] = container(root(cmap(parts), version=uint(51)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2407,6 +2414,13 @@ def broken(minimal_content, minimal_file):
         return cmap({**more, "origin": point({"x": x, "y": y}), "angle": f64(a)})
 
     files["ucs-in-schema-48.kcad"] = with_ucs({"ucs": frame_of()}, schema=48)
+    # Inches, feet and a length style are schema 50's (docs/adr/0262): in schema 49 an inch is an unknown unit and the
+    # style an unknown field; a style other than the three refused, decimal too (it is no setting).
+    local = {"srid": uint(0)}
+    files["drawing-unit-in-in-schema-49.kcad"] = with_ucs({**local, "drawingUnit": text("in")}, schema=49)
+    files["length-style-in-schema-49.kcad"] = with_ucs({**local, "drawingUnit": text("mm"), "lengthStyle": text("fractional")}, schema=49)
+    files["length-style-decimal.kcad"] = with_ucs({**local, "drawingUnit": text("in"), "lengthStyle": text("decimal")}, schema=50)
+    files["length-style-metric.kcad"] = with_ucs({**local, "drawingUnit": text("mm"), "lengthStyle": text("architectural")}, schema=50)
     files["ucs-world.kcad"] = with_ucs({"ucs": frame_of(0.0, 0.0, 0.0)})
     files["ucs-angle-tau.kcad"] = with_ucs({"ucs": frame_of(a=TAU)})
     files["ucs-far.kcad"] = with_ucs({"ucs": frame_of(x=2.0e7)})
@@ -3284,6 +3298,7 @@ def build():
     out["nurbs.kcad"] = container(document(load("nurbs.json")))
     out["look.kcad"] = container(document(load("look.json")))
     out["ucs.kcad"] = container(document(load("ucs.json")))
+    out["imperial.kcad"] = container(document(load("imperial.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

@@ -224,6 +224,9 @@ pub enum Unit {
     M,
     Cm,
     Mm,
+    /// Inches and feet (docs/adr/0262 §1): a schedule writes them decimal.
+    In,
+    Ft,
 }
 
 /// The project's area unit (a metric project's).
@@ -264,6 +267,8 @@ impl FromJson for Units {
             unit: match unit.as_str() {
                 "cm" => Unit::Cm,
                 "mm" => Unit::Mm,
+                "in" => Unit::In,
+                "ft" => Unit::Ft,
                 _ => Unit::M,
             },
             area_unit: match area.as_str() {
@@ -278,17 +283,31 @@ impl FromJson for Units {
 }
 
 impl Units {
-    fn per_metre(&self) -> f64 {
+    /// The unit's metres as a ratio of whole numbers (an inch 254/10000 m).
+    fn metres(&self) -> (f64, f64) {
         match self.unit {
-            Unit::M => 1.0,
-            Unit::Cm => 100.0,
-            Unit::Mm => 1000.0,
+            Unit::M => (1.0, 1.0),
+            Unit::Cm => (1.0, 100.0),
+            Unit::Mm => (1.0, 1000.0),
+            Unit::In => (254.0, 10_000.0),
+            Unit::Ft => (3048.0, 10_000.0),
         }
+    }
+
+    fn per_metre(&self) -> f64 {
+        let (mul, div) = self.metres();
+        div / mul
     }
 
     /// A length or a coordinate, metres, in the unit.
     fn length(&self, metres: f64) -> String {
-        fixed(metres * self.per_metre(), self.length_decimals)
+        let (mul, div) = self.metres();
+        let v = if mul == 1.0 {
+            metres * div
+        } else {
+            metres * div / mul
+        };
+        fixed(v, self.length_decimals)
     }
 
     /// An area, square metres, in the area unit (a local project's unit squared).
@@ -310,6 +329,8 @@ impl Units {
             Unit::M => "m",
             Unit::Cm => "cm",
             Unit::Mm => "mm",
+            Unit::In => "in",
+            Unit::Ft => "ft",
         }
     }
 
@@ -317,6 +338,8 @@ impl Units {
         match (self.unit, self.area_unit) {
             (Unit::Cm, _) => "cm²",
             (Unit::Mm, _) => "mm²",
+            (Unit::In, _) => "in²",
+            (Unit::Ft, _) => "ft²",
             (Unit::M, AreaUnit::M2) => "m²",
             (Unit::M, AreaUnit::Donum) => "dönüm",
             (Unit::M, AreaUnit::Ha) => "ha",
