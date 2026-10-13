@@ -126,9 +126,14 @@ pub(crate) fn start_tool<M: Send + 'static>(
     to: impl Fn(u64, Reply) -> M + Send + 'static,
 ) -> (Running, Task<M>) {
     let work = job.clone();
-    start(id, Work::Tool(Box::new(job)), session, files, to, move |feedback| {
-        Answer::Tool(Runner::compute(&work, &copy, feedback))
-    })
+    start(
+        id,
+        Work::Tool(Box::new(job)),
+        session,
+        files,
+        to,
+        move |feedback| Answer::Tool(Runner::compute(&work, &copy, feedback)),
+    )
 }
 
 /// Starts running a model on `copy` with the selection and the view it
@@ -146,25 +151,32 @@ pub(crate) fn start_model<M: Send + 'static>(
     to: impl Fn(u64, Reply) -> M + Send + 'static,
 ) -> (Running, Task<M>) {
     let there = run.clone();
-    start(id, Work::Model(Box::new(run)), session, files, to, move |feedback| {
-        let mut host = Copy {
-            doc: copy,
-            selection,
-            view,
-            variables,
-        };
-        let lookup = |id: &str| there.tool(id);
-        let mut log = Vec::new();
-        let steps = record_model(
-            &there.model,
-            &there.inputs,
-            &mut host,
-            &lookup,
-            feedback,
-            &mut log,
-        );
-        Answer::Model { steps, log }
-    })
+    start(
+        id,
+        Work::Model(Box::new(run)),
+        session,
+        files,
+        to,
+        move |feedback| {
+            let mut host = Copy {
+                doc: copy,
+                selection,
+                view,
+                variables,
+            };
+            let lookup = |id: &str| there.tool(id);
+            let mut log = Vec::new();
+            let steps = record_model(
+                &there.model,
+                &there.inputs,
+                &mut host,
+                &lookup,
+                feedback,
+                &mut log,
+            );
+            Answer::Model { steps, log }
+        },
+    )
 }
 
 /// Runs `compute` on a thread of its own, the answer put aside for the

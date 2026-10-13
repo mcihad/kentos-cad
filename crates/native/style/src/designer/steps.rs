@@ -5,9 +5,9 @@
 
 use serde_json::{Value, json};
 
+use super::Choice;
 use super::default_for_kind;
 use super::summary::num;
-use super::Choice;
 use kentos_style_core::js::text::lower_tr;
 
 /// The steps in the menu's order: points, lines, areas, then moves (`STEP_KINDS`).
@@ -59,7 +59,11 @@ pub const VERTEX_CHOICES: [Choice; 5] = [
     ("ends", "İki uç"),
 ];
 
-pub const BUFFER_SIDES: [Choice; 3] = [("both", "İki yan"), ("left", "Sol yan"), ("right", "Sağ yan")];
+pub const BUFFER_SIDES: [Choice; 3] = [
+    ("both", "İki yan"),
+    ("left", "Sol yan"),
+    ("right", "Sağ yan"),
+];
 
 /// A new step of a kind, with numbers that show at once (`newStep`).
 pub fn new_step(kind: &str) -> Value {
@@ -144,8 +148,16 @@ pub fn step_summary(step: &Value, unit: &str) -> String {
             format!("{name} · {} {unit}{tail}", num(g("distance")))
         }
         "circle" => format!("{name} · {} {unit}", num(g("radius"))),
-        "wedge" => format!("{name} · {}° · {} {unit}", num(g("width")), num(g("radius"))),
-        "polygon" => format!("{name} · {} köşe · {} {unit}", num(g("sides")), num(g("radius"))),
+        "wedge" => format!(
+            "{name} · {}° · {} {unit}",
+            num(g("width")),
+            num(g("radius"))
+        ),
+        "polygon" => format!(
+            "{name} · {} köşe · {} {unit}",
+            num(g("sides")),
+            num(g("radius"))
+        ),
         "translate" => format!(
             "{name} · {}, {} {unit}",
             num_or(g("dx"), 0.0),

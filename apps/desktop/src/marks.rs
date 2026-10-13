@@ -1106,4 +1106,3 @@ mod crosshair_tests {
         }
     }
 }
-

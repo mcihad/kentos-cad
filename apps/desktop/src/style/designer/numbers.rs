@@ -80,7 +80,10 @@ fn step_spec(layer: &Value, i: usize, field: &str) -> Option<Spec> {
     let step = layer.get("steps")?.get(i)?;
     let kind = step.get("kind").and_then(Value::as_str).unwrap_or("");
     // A new step's own number is what an empty field shows.
-    let start = new_step(kind).get(field).and_then(Value::as_f64).unwrap_or(0.0);
+    let start = new_step(kind)
+        .get(field)
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
     Some(match field {
         "distance" => length("Uzaklık", start),
         "start" => size("Baştan", 0.0, start),
@@ -101,7 +104,10 @@ fn step_spec(layer: &Value, i: usize, field: &str) -> Option<Spec> {
 }
 
 fn effect_spec(kind: &str, field: &str) -> Option<Spec> {
-    let start = new_effect(kind).get(field).and_then(Value::as_f64).unwrap_or(0.0);
+    let start = new_effect(kind)
+        .get(field)
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
     Some(match field {
         "distance" => size("Uzaklık", 0.0, start),
         "angle" => degrees("Açı", start),
@@ -219,8 +225,14 @@ pub fn keys_of(layer: &Value) -> Vec<String> {
         .flatten()
         .enumerate()
     {
-        if let Some(o) = new_step(step.get("kind").and_then(Value::as_str).unwrap_or("")).as_object() {
-            out.extend(o.keys().filter(|k| *k != "kind").map(|k| format!("step.{i}.{k}")));
+        if let Some(o) =
+            new_step(step.get("kind").and_then(Value::as_str).unwrap_or("")).as_object()
+        {
+            out.extend(
+                o.keys()
+                    .filter(|k| *k != "kind")
+                    .map(|k| format!("step.{i}.{k}")),
+            );
         }
         for extra in ["inner", "rotation", "x", "y"] {
             out.push(format!("step.{i}.{extra}"));
@@ -255,7 +267,9 @@ pub fn read(layer: &Value, key: &str) -> Option<f64> {
     if let Some((kind, field)) = effect_key(key) {
         let e = effect_of(layer, kind)?;
         return if field == "transparency" {
-            Some(js_round((1.0 - number(e.get("opacity")).unwrap_or(0.5)) * 100.0))
+            Some(js_round(
+                (1.0 - number(e.get("opacity")).unwrap_or(0.5)) * 100.0,
+            ))
         } else {
             number(e.get(field))
         };
@@ -330,10 +344,15 @@ pub fn write(layer: &Value, key: &str, v: f64) -> Patch {
         return set("steps", next.get("steps").cloned().unwrap_or(Value::Null));
     }
     if let Some((kind, field)) = effect_key(key) {
-        let mut e = effect_of(layer, kind).cloned().unwrap_or_else(|| new_effect(kind));
+        let mut e = effect_of(layer, kind)
+            .cloned()
+            .unwrap_or_else(|| new_effect(kind));
         if let Some(o) = e.as_object_mut() {
             if field == "transparency" {
-                o.insert("opacity".into(), js_value(1.0 - v.clamp(0.0, 100.0) / 100.0));
+                o.insert(
+                    "opacity".into(),
+                    js_value(1.0 - v.clamp(0.0, 100.0) / 100.0),
+                );
             } else {
                 o.insert(field.to_owned(), js_value(v));
             }

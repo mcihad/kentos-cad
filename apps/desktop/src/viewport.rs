@@ -168,7 +168,12 @@ pub struct Styling<'a> {
     pub view_colors: kentos_native_style::color::ViewColors,
     /// The labels placed this frame: the masks cutting with a layer's labels take
     /// their boxes (docs/adr/0226 §3).
-    pub labels: Option<&'a [(kentos_interaction::LabelSpot, kentos_interaction::spatial::Grow)]>,
+    pub labels: Option<
+        &'a [(
+            kentos_interaction::LabelSpot,
+            kentos_interaction::spatial::Grow,
+        )],
+    >,
 }
 
 /// The scene with its masks' label boxes (docs/adr/0226 §3): each source layer's
@@ -177,7 +182,12 @@ pub struct Styling<'a> {
 fn with_mask_labels(
     mut scene: StyledScene,
     asks: &[(usize, usize, String)],
-    spots: Option<&[(kentos_interaction::LabelSpot, kentos_interaction::spatial::Grow)]>,
+    spots: Option<
+        &[(
+            kentos_interaction::LabelSpot,
+            kentos_interaction::spatial::Grow,
+        )],
+    >,
     doc: &kentos_domain::Document,
     origin: kentos_render_wgpu::Vec2,
 ) -> StyledScene {
@@ -187,8 +197,10 @@ fn with_mask_labels(
     let Some(spots) = spots.filter(|_| !asks.is_empty()) else {
         return scene;
     };
-    let wanted: std::collections::HashSet<&str> = asks.iter().map(|(_, _, id)| id.as_str()).collect();
-    let mut boxes: std::collections::HashMap<String, Vec<LabelBox>> = std::collections::HashMap::new();
+    let wanted: std::collections::HashSet<&str> =
+        asks.iter().map(|(_, _, id)| id.as_str()).collect();
+    let mut boxes: std::collections::HashMap<String, Vec<LabelBox>> =
+        std::collections::HashMap::new();
     // A curved label is its letters; a hidden or unplaced one, and its letters, is none.
     let mut skip = false;
     for (spot, grow) in spots {

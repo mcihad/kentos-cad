@@ -11,7 +11,13 @@ use kentos_style_core::js::text::lower_tr;
 use super::list::LayerPath;
 
 /// The effects in the order they are drawn (`EFFECT_TYPES`).
-pub const EFFECT_TYPES: [&str; 5] = ["dropShadow", "outerGlow", "blur", "innerShadow", "innerGlow"];
+pub const EFFECT_TYPES: [&str; 5] = [
+    "dropShadow",
+    "outerGlow",
+    "blur",
+    "innerShadow",
+    "innerGlow",
+];
 
 /// An effect's name (`EFFECT_LABEL`).
 pub fn effect_label(kind: &str) -> &'static str {
@@ -37,7 +43,9 @@ pub fn new_effect(kind: &str) -> Value {
         "outerGlow" => {
             json!({ "type": kind, "spread": 0.5, "blur": 1.5, "color": "#FFFFFF", "opacity": 0.5 })
         }
-        "innerGlow" => json!({ "type": kind, "spread": 0.5, "blur": 1, "color": "#FFFFFF", "opacity": 0.5 }),
+        "innerGlow" => {
+            json!({ "type": kind, "spread": 0.5, "blur": 1, "color": "#FFFFFF", "opacity": 0.5 })
+        }
         _ => json!({ "type": kind, "blur": 1 }),
     }
 }
@@ -65,7 +73,12 @@ pub fn effect_of<'a>(layer: &'a Value, kind: &str) -> Option<&'a Value> {
 
 /// The layer with its effects in their drawn order; none as no list.
 fn with_effects(layer: &Value, mut effects: Vec<Value>) -> Value {
-    let place = |e: &Value| EFFECT_TYPES.iter().position(|t| *t == type_of(e)).unwrap_or(usize::MAX);
+    let place = |e: &Value| {
+        EFFECT_TYPES
+            .iter()
+            .position(|t| *t == type_of(e))
+            .unwrap_or(usize::MAX)
+    };
     effects.sort_by_key(place);
     let mut out = layer.clone();
     if let Some(o) = out.as_object_mut() {
@@ -80,7 +93,10 @@ fn with_effects(layer: &Value, mut effects: Vec<Value>) -> Value {
 /// A layer with an effect switched on (added with its defaults, or its
 /// `enabled` taken off) or off (taken away) (`setEffect`).
 pub fn set_effect(layer: &Value, kind: &str, on: bool) -> Value {
-    let rest: Vec<Value> = effects_of(layer).into_iter().filter(|e| type_of(e) != kind).collect();
+    let rest: Vec<Value> = effects_of(layer)
+        .into_iter()
+        .filter(|e| type_of(e) != kind)
+        .collect();
     if !on {
         return with_effects(layer, rest);
     }
@@ -102,7 +118,10 @@ pub fn set_effect(layer: &Value, kind: &str, on: bool) -> Value {
 /// A layer with its effect of the same type replaced (`putEffect`).
 pub fn put_effect(layer: &Value, effect: Value) -> Value {
     let kind = type_of(&effect).to_owned();
-    let mut all: Vec<Value> = effects_of(layer).into_iter().filter(|e| type_of(e) != kind).collect();
+    let mut all: Vec<Value> = effects_of(layer)
+        .into_iter()
+        .filter(|e| type_of(e) != kind)
+        .collect();
     all.push(effect);
     with_effects(layer, all)
 }
@@ -117,7 +136,9 @@ pub fn takes_effects(p: LayerPath) -> bool {
 pub fn effects_summary(layer: &Value) -> String {
     EFFECT_TYPES
         .iter()
-        .filter(|t| effect_of(layer, t).is_some_and(|e| e.get("enabled") != Some(&Value::Bool(false))))
+        .filter(|t| {
+            effect_of(layer, t).is_some_and(|e| e.get("enabled") != Some(&Value::Bool(false)))
+        })
         .map(|t| lower_tr(effect_label(t)))
         .collect::<Vec<_>>()
         .join(", ")

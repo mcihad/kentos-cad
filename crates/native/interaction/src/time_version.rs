@@ -162,7 +162,11 @@ impl TimeVersion {
                         && (f.name == rule.start || Some(&f.name) == rule.end.as_ref())
                 })
             });
-            let at = if days { time::floor_to(d, Unit::Day) } else { d };
+            let at = if days {
+                time::floor_to(d, Unit::Day)
+            } else {
+                d
+            };
             if !(start < at && at < end) {
                 outside += 1;
             }

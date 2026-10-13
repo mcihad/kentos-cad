@@ -233,10 +233,7 @@ fn run(v: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> 
             Some(_) => {
                 let shape = shape_of(e);
                 let list = others.entry(key).or_default();
-                let found = list
-                    .iter()
-                    .copied()
-                    .find(|&k| shape_of(inputs[k]) == shape);
+                let found = list.iter().copied().find(|&k| shape_of(inputs[k]) == shape);
                 if found.is_none() {
                     list.push(i);
                 }

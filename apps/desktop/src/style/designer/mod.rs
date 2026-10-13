@@ -106,7 +106,10 @@ pub enum Event {
     /// A geometry generator's step chosen (docs/adr/0226 §1).
     ChooseStep(usize),
     /// A geometry generator's steps changed (one added, moved or gone), the step chosen after it.
-    Steps { steps: Value, choose: usize },
+    Steps {
+        steps: Value,
+        choose: usize,
+    },
     /// ↑ or ↓ with no field holding the keyboard: the row above or below.
     Step(bool),
     /// Katman ekle: a layer type, into the symbol or into the marker of a layer.

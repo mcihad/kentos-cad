@@ -1528,7 +1528,11 @@ impl ViewStyled {
         &self,
         l: u32,
         b: u32,
-    ) -> Option<(bool, f64, Option<&Arc<kentos_native_style::batches::Effect>>)> {
+    ) -> Option<(
+        bool,
+        f64,
+        Option<&Arc<kentos_native_style::batches::Effect>>,
+    )> {
         let layer = self.layers.get(l as usize)?;
         let g = layer.batches.get(b as usize)?;
         let source = layer.source.layer.batches.get(b as usize)?;
@@ -1555,7 +1559,11 @@ impl ViewStyled {
             f64::from(u.offset[1]) + f64::from(u.offset_lo[1]),
         ];
         let (vw, vh) = (f64::from(u.viewport[0]), f64::from(u.viewport[1]));
-        for layer in self.layers.get(layers.start as usize..layers.end as usize).unwrap_or(&[]) {
+        for layer in self
+            .layers
+            .get(layers.start as usize..layers.end as usize)
+            .unwrap_or(&[])
+        {
             let data = &layer.source.layer.data;
             for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
                 let BatchKind::Marker {
@@ -1574,9 +1582,10 @@ impl ViewStyled {
                 let k = if *unit == Unit::World { px_per_m } else { dpr };
                 // An image's proportions come from the atlas (`set_aspect`); a text gives its height.
                 let (fit, aspect) = match look {
-                    MarkerLook::Image { fit_height, .. } => {
-                        (if *fit_height { 2 } else { 1 }, f64::from(g.block.f[24]).max(1e-6))
-                    }
+                    MarkerLook::Image { fit_height, .. } => (
+                        if *fit_height { 2 } else { 1 },
+                        f64::from(g.block.f[24]).max(1e-6),
+                    ),
                     MarkerLook::Shape { .. } => (0, 1.0),
                 };
                 let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
