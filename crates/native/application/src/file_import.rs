@@ -18,8 +18,9 @@ use std::path::Path;
 
 use kentos_contracts::encoding::sha256_hex;
 use kentos_contracts::{
-    CommandResult, CommandWarning, DxfImported, DxfReadOptions, FileUnit, ImportDxf, ImportLayer,
-    ImportResult, ImportedLayer, LayerNodeType, LayerStyle, RenamedBlock, UnitDecision, UnitSource,
+    ClosedPolylines, CommandResult, CommandWarning, DxfImported, DxfReadOptions, FileUnit,
+    ImportDxf, ImportLayer, ImportResult, ImportedLayer, LayerNodeType, LayerStyle, RenamedBlock,
+    UnitDecision, UnitSource, Workspace,
 };
 use kentos_domain::Document;
 use serde_json::Value;
@@ -59,8 +60,15 @@ impl ReadDxf {
 /// How the drawing reads a DXF, the window's and the command's alike: a local
 /// project's unit, none with a coordinate system (docs/adr/0165 §2); the unit
 /// chosen for the file (docs/adr/0257 §1); the plot scale its styles are
-/// paper mm at and the typeface a missing one takes (docs/adr/0183 §7).
-pub fn read_options(doc: &Document, file_unit: Option<FileUnit>, explode: bool) -> DxfReadOptions {
+/// paper mm at and the typeface a missing one takes (docs/adr/0183 §7); what
+/// its closed polylines become, the project's type's choice when none is given
+/// (docs/adr/0258 §1).
+pub fn read_options(
+    doc: &Document,
+    file_unit: Option<FileUnit>,
+    explode: bool,
+    closed: Option<ClosedPolylines>,
+) -> DxfReadOptions {
     let settings = doc.settings();
     DxfReadOptions {
         max_entities: 0,
@@ -69,6 +77,16 @@ pub fn read_options(doc: &Document, file_unit: Option<FileUnit>, explode: bool) 
         file_unit,
         scale: Some(settings.plot_scale),
         drawing_font: settings.drawing_font,
+        closed_polylines: closed.unwrap_or_else(|| closed_by_type(doc)),
+    }
+}
+
+/// What a project's type makes of a file's closed polylines (docs/adr/0258 §1): a CAD
+/// drawing's stay lines, any other project takes them as areas.
+pub fn closed_by_type(doc: &Document) -> ClosedPolylines {
+    match doc.settings().project_type() {
+        Some(Workspace::Cad) => ClosedPolylines::Line,
+        _ => ClosedPolylines::Area,
     }
 }
 
@@ -125,7 +143,12 @@ fn read_file(doc: &Document, input: &ImportDxf) -> Result<ReadDxf, Stop> {
     let name = path
         .file_name()
         .map_or_else(|| input.path.clone(), |n| n.to_string_lossy().into_owned());
-    let options = read_options(doc, input.file_unit, input.explode_blocks);
+    let options = read_options(
+        doc,
+        input.file_unit,
+        input.explode_blocks,
+        input.closed_polylines,
+    );
     let result = kentos_formats::dxf::read(&bytes, &options).map_err(|e| {
         refuse(
             codes::IMPORT_UNREADABLE,
@@ -329,6 +352,9 @@ fn metres() -> UnitDecision {
 /// Puts `read` into `doc` by `input` (one step: the layers, the blocks, the
 /// objects and the styles).
 fn write(doc: &mut Document, input: &ImportDxf, read: ReadDxf) -> CommandResult<DxfImported> {
+    let closed_polylines = input
+        .closed_polylines
+        .unwrap_or_else(|| closed_by_type(doc));
     let plan = match plan_of(doc, input, &read.result.layers, &read.file) {
         Ok(plan) => plan,
         Err(stop) => return stop.into(),
@@ -356,6 +382,7 @@ fn write(doc: &mut Document, input: &ImportDxf, read: ReadDxf) -> CommandResult<
                 bytes,
                 sha256,
                 unit,
+                closed_polylines,
                 objects: u32::try_from(applied.slots.len()).unwrap_or(u32::MAX),
                 targets: applied.targets.into_iter().collect::<BTreeMap<_, _>>(),
                 layers: applied

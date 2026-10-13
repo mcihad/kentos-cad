@@ -4,6 +4,7 @@ pub mod affine;
 pub mod arc;
 pub mod arrangement;
 pub mod arrowhead;
+pub mod band;
 pub mod bulge;
 pub mod centroid;
 pub mod curve_outline;

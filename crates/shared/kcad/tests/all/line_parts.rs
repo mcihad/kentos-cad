@@ -70,6 +70,8 @@ fn polyline(parts: Option<Vec<AreaPart>>) -> Entity {
         holes: None,
         zs: None,
         parts,
+        closed: false,
+        widths: None,
     })
 }
 

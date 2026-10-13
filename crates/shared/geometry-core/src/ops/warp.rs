@@ -392,8 +392,11 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
             bulges,
             holes,
             parts,
+            closed,
+            widths,
         } => {
-            let (pts2, z, dense) = warp_ring(warp, pts, bulges, zs.first(), false)?;
+            // A closed line's closing edge bends as a ring's (docs/adr/0258 §1).
+            let (pts2, z, dense) = warp_ring(warp, pts, bulges, zs.first(), *closed)?;
             let mut out_zs = vec![z];
             let mut curves = dense;
             // Every part of a multi-part polyline, its elevations after the first's (docs/adr/0174).
@@ -421,6 +424,9 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
                     bulges: if dense { None } else { bulges.clone() },
                     holes: holes.clone(),
                     parts,
+                    closed: *closed,
+                    // Its widths stay with its vertices while no arc became vertices (docs/adr/0258 §2).
+                    widths: if curves { None } else { widths.clone() },
                 },
                 zs: out_zs,
                 curves,
@@ -836,6 +842,8 @@ fn curve(
                 bulges: None,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             },
             zs: Vec::new(),
             curves: true,
@@ -955,6 +963,8 @@ pub fn sheet_shape(shape: &Shape, zs: &[Vec<Option<f64>>], sheet: &Sheet) -> (Wa
             bulges,
             holes,
             parts,
+            closed,
+            widths,
         } => plain(Shape::Polyline {
             pts: map(pts),
             bulges: bulges.clone(),
@@ -969,6 +979,8 @@ pub fn sheet_shape(shape: &Shape, zs: &[Vec<Option<f64>>], sheet: &Sheet) -> (Wa
                     })
                     .collect()
             }),
+            closed: *closed,
+            widths: widths.clone(),
         }),
         Shape::Polygon {
             pts,

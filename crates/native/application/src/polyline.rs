@@ -1,19 +1,22 @@
-//! `cad.polyline.create` v1 (docs/adr/0027): one open polyline on a named
-//! layer, as one undo step. The desktop's handler over the native document;
+//! `cad.polyline.create` v1 (docs/adr/0027): one polyline on a named layer,
+//! open or closed and with or without widths (docs/adr/0258), as one undo step. The desktop's handler over the native document;
 //! the web's is `apps/web/src/product/polylineCreate.ts`. Both pass the shared
 //! cases in `fixtures/commands/v1/cad.polyline.create.json`.
 //!
 //! The checks, in order (the first that fails answers):
 //! 1. at least 2 points, every coordinate finite (x before y), one bulge per
-//!    edge when bulges are given (one fewer than the points), every bulge
-//!    finite; then the line weight from 0 to 100 mm when given;
+//!    edge when bulges are given (one fewer than the points, as many on a
+//!    closed line), every bulge finite; one width pair per edge when widths
+//!    are given, finite and 0 or above; then the line weight from 0 to 100 mm
+//!    when given;
 //! 2. the expected revision, 3. the layer: every create command's
 //!    (`checks.rs`), for the reasons `polygon.rs` gives.
 //!
-//! Bulges are given one per edge; the document keeps one per point, as DXF's
-//! LWPOLYLINE does, so the polyline is stored with a 0 after them for the
-//! closing edge it does not have: what the polyline tool always wrote.
-//! Otherwise the input is stored as given (zero bulges too).
+//! Bulges and widths are given one per edge; the document keeps one per
+//! point, as DXF's LWPOLYLINE does, so an open polyline is stored with a 0
+//! (and `[0, 0]`) after them for the closing edge it does not have: what the
+//! polyline tool always wrote. Widths all 0 are none. Otherwise the input is
+//! stored as given (zero bulges too).
 
 use kentos_contracts::{
     CommandResult, CommandWarning, Entity, EntityBase, PathEntity, PolylineCreate, PolylineCreated,
@@ -112,8 +115,9 @@ fn check(doc: &Document, input: &PolylineCreate) -> Result<Vec<CommandWarning>, 
             }
         }
     }
+    // A closed line has the closing edge too (docs/adr/0258 §1).
+    let edges = if input.closed { n } else { n - 1 };
     if let Some(bulges) = &input.bulges {
-        let edges = n - 1;
         if bulges.len() != edges {
             return Err(Stop::failed(error(
                 codes::BULGE_COUNT,
@@ -133,6 +137,40 @@ fn check(doc: &Document, input: &PolylineCreate) -> Result<Vec<CommandWarning>, 
                         i + 1
                     ),
                     Some(format!("bulges[{i}]")),
+                )));
+            }
+        }
+    }
+    if let Some(widths) = &input.widths {
+        if widths.len() != edges {
+            return Err(Stop::failed(error(
+                codes::INVALID_POLYLINE,
+                format!(
+                    "Genişlikler kenar sayısı kadar olmalı, her kenara bir başlangıç ve bir bitiş genişliği: {n} nokta, {edges} kenar, {} genişlik verildi.",
+                    widths.len()
+                ),
+                Some("widths".into()),
+            )));
+        }
+        for (i, [a, b]) in widths.iter().enumerate() {
+            if !(a.is_finite() && b.is_finite()) {
+                return Err(Stop::failed(error(
+                    codes::NOT_FINITE,
+                    format!(
+                        "{}. kenarın genişliği sonlu bir sayı değil (NaN ya da sonsuz). Genişliği çizim biriminde, sıfır ya da büyük verin.",
+                        i + 1
+                    ),
+                    Some(format!("widths[{i}]")),
+                )));
+            }
+            if *a < 0.0 || *b < 0.0 {
+                return Err(Stop::failed(error(
+                    codes::INVALID_POLYLINE,
+                    format!(
+                        "{}. kenarın genişliği eksi olamaz: genişlik sıfır ya da büyük olmalı (çizim biriminde).",
+                        i + 1
+                    ),
+                    Some(format!("widths[{i}]")),
                 )));
             }
         }
@@ -160,11 +198,23 @@ fn polyline(input: PolylineCreate, id: u32) -> Entity {
         },
         pts: input.pts,
         bulges: input.bulges.map(|mut bulges| {
-            bulges.push(0.0);
+            if !input.closed {
+                bulges.push(0.0);
+            }
             bulges
         }),
         holes: None,
         zs: None,
         parts: None,
+        closed: input.closed,
+        widths: input
+            .widths
+            .filter(|w| w.iter().any(|[a, b]| *a != 0.0 || *b != 0.0))
+            .map(|mut widths| {
+                if !input.closed {
+                    widths.push([0.0, 0.0]);
+                }
+                widths
+            }),
     })
 }

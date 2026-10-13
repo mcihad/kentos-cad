@@ -314,6 +314,8 @@ pub fn line_entities(lines: &[PlacedLine]) -> Vec<Entity> {
                 holes: None,
                 zs,
                 parts: (!parts.is_empty()).then_some(parts),
+                closed: false,
+                widths: None,
             }))
         })
         .collect()

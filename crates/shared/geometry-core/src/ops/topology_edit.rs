@@ -131,18 +131,31 @@ pub(crate) fn paths_of(shape: &Shape) -> Option<(Vec<Path>, Plan)> {
             Plan::Line,
         )),
         // A multi-part polyline's parts after its own path (docs/adr/0174).
+        // Its widths are the application's to carry (docs/adr/0258 §2).
         Shape::Polyline {
             pts,
             bulges,
             holes,
             parts,
+            closed,
+            ..
         } => {
             let path = |pts: &Vec<Vec2>, bulges: &Option<Vec<f64>>| Path {
                 pts: pts.clone(),
                 bulges: padded(bulges, pts.len().saturating_sub(1)),
                 closed: false,
             };
-            let mut out = vec![path(pts, bulges)];
+            // A closed line's first path is a ring, its closing edge's bulge with it (docs/adr/0258 §1).
+            let first = if *closed {
+                Path {
+                    pts: pts.clone(),
+                    bulges: padded(bulges, pts.len()),
+                    closed: true,
+                }
+            } else {
+                path(pts, bulges)
+            };
+            let mut out = vec![first];
             out.extend(parts.iter().flatten().map(|q| path(&q.pts, &q.bulges)));
             let n = out.len() - 1;
             Some((out, Plan::Polyline(holes.clone(), n)))
@@ -186,7 +199,11 @@ pub(crate) fn shape_of(paths: Vec<Path>, plan: Plan) -> Shape {
     let mut paths = paths.into_iter();
     match plan {
         Plan::Line | Plan::Polyline(..) => {
-            let Path { pts, bulges, .. } = paths.next().unwrap_or(Path {
+            let Path {
+                pts,
+                bulges,
+                closed,
+            } = paths.next().unwrap_or(Path {
                 pts: Vec::new(),
                 bulges: Vec::new(),
                 closed: false,
@@ -211,6 +228,8 @@ pub(crate) fn shape_of(paths: Vec<Path>, plan: Plan) -> Shape {
                         bulges: Some(bulges),
                         holes,
                         parts: (n > 0).then_some(parts),
+                        closed,
+                        widths: None,
                     }
                 }
                 _ => Shape::Polyline {
@@ -218,6 +237,8 @@ pub(crate) fn shape_of(paths: Vec<Path>, plan: Plan) -> Shape {
                     bulges: Some(bulges),
                     holes: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 },
             }
         }

@@ -3,7 +3,9 @@
 //! arc length; cuts are the s values where boundaries cross it.
 
 use crate::api::Op;
-use crate::entity::{Entity, MULTI_PART_REFUSED, Shape, is_multi_part, leader_refused};
+use crate::entity::{
+    CLOSED_HAS_NO_END, Entity, MULTI_PART_REFUSED, Shape, is_multi_part, leader_refused,
+};
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
 use crate::geom::intersect::{
@@ -91,6 +93,9 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
     if is_multi_part(s) {
         return Geometry::Error(MULTI_PART_REFUSED.into());
     }
+    if let Shape::Polyline { closed: true, .. } = s {
+        return Geometry::Error(CLOSED_HAS_NO_END.into());
+    }
     if let Some(g) = ellipse_of(s) {
         return extend_ellipse(&g, pick, boundaries);
     }
@@ -144,6 +149,8 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
                     bulges: Some(b),
                     holes: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 }));
             }
             let tip = if at_end { pts[n - 1] } else { pts[0] };
@@ -179,6 +186,8 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
                 bulges,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }))
         }
         Shape::Arc { c, r, a0, a1 } => {

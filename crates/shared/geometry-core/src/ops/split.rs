@@ -241,21 +241,28 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 bulges,
                 holes,
                 parts,
+                closed,
+                widths,
             },
             Shape::Polyline {
                 pts: p2,
                 bulges: b2,
                 holes: h2,
                 parts: q2,
+                closed: c2,
+                widths: w2,
             },
         ) => {
-            // A multi-part polyline's parts in order too (docs/adr/0174).
+            // A multi-part polyline's parts in order too (docs/adr/0174); a closed one is not
+            // the open one on its vertices (docs/adr/0258 §1).
             let none = Vec::new();
             let (mine, theirs) = (
                 parts.as_ref().unwrap_or(&none),
                 q2.as_ref().unwrap_or(&none),
             );
-            same_pts(pts, p2)
+            closed == c2
+                && widths == w2
+                && same_pts(pts, p2)
                 && same_bulges(bulges.as_deref(), b2.as_deref())
                 && same_rings(holes.as_deref(), h2.as_deref())
                 && mine.len() == theirs.len()
@@ -465,6 +472,8 @@ pub fn cleanup_findings(list: &[Entity]) -> Findings {
                                     bulges: c.bulges,
                                     holes: None,
                                     parts: None,
+                                    closed: false,
+                                    widths: None,
                                 }
                             })
                         }
@@ -484,13 +493,21 @@ pub fn cleanup_findings(list: &[Entity]) -> Findings {
                     })
                     .flatten()
             }
+            // A closed polyline's last vertex repeating its first is dropped as a ring's
+            // (docs/adr/0258 §1).
             Shape::Polyline {
-                pts, bulges, holes, ..
-            } => without_repeats(pts, bulges.as_deref(), false).map(|c| Shape::Polyline {
+                pts,
+                bulges,
+                holes,
+                closed,
+                ..
+            } => without_repeats(pts, bulges.as_deref(), *closed).map(|c| Shape::Polyline {
                 pts: c.pts,
                 bulges: c.bulges,
                 holes: holes.clone(),
                 parts: None,
+                closed: *closed,
+                widths: None,
             }),
             // A multi-part area: every part's repeats (docs/adr/0143).
             Shape::Polygon { .. } if is_multi_part(&e.shape) => {
@@ -738,6 +755,8 @@ mod tests {
             bulges: Some(vec![0.0, 1.0, 0.0]),
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         });
         let parts = split_equal(&p, 2.0).expect("two");
         assert_eq!(parts.len(), 2);
@@ -804,6 +823,8 @@ mod tests {
                     bulges: None,
                     holes: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 },
             ),
         ];

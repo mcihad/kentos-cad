@@ -106,6 +106,8 @@ pub fn join_lines(slots: &[Slot], cx: &mut Context<'_>) {
         bulges: first.bulges,
         zs: first.zs,
         parts: Some(parts.collect()),
+        closed: false,
+        widths: None,
     };
     let uid = edge::uid(doc, slots[0]);
     let mut changes = vec![match doc.get(slots[0]) {
@@ -192,6 +194,8 @@ pub fn split(e: &Entity, uid: &str) -> Option<(Vec<EntityEdit>, usize)> {
                     bulges: p.bulges.clone(),
                     zs: p.zs.clone(),
                     parts: None,
+                    closed: false,
+                    widths: None,
                 },
             }];
             changes.extend(parts.iter().map(|q| {
@@ -201,6 +205,8 @@ pub fn split(e: &Entity, uid: &str) -> Option<(Vec<EntityEdit>, usize)> {
                     bulges: q.bulges.clone(),
                     zs: q.zs.clone(),
                     parts: None,
+                    closed: false,
+                    widths: None,
                 })
             }));
             Some((changes, parts.len()))

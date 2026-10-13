@@ -85,6 +85,8 @@ fn rooms(app: &mut App, unit: DrawingUnit) -> String {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }))
             .expect("an area");
     }
@@ -97,6 +99,8 @@ fn rooms(app: &mut App, unit: DrawingUnit) -> String {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }))
         .expect("a path");
     doc.model

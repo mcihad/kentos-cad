@@ -408,6 +408,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }),
             2 => Entity::Polygon(PathEntity {
                 ms: None,
@@ -425,6 +427,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 }),
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }),
             3 => Entity::Circle(CircleEntity {
                 base: b,
@@ -733,6 +737,8 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
                 holes: Some(vec![]),
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             })
         },
         Code::BadValue,

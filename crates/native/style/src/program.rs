@@ -326,6 +326,12 @@ pub fn layer_call(
                 MODE_SET,
                 it.set(leader_symbols_of(style, color, weight, opts.hairlines)),
             ),
+            // A wide polyline's band solid in its colour, its edges without width its line, as
+            // AutoCAD draws one; its widths are its look (docs/adr/0258 §2).
+            Entity::Polyline(p) if p.widths.is_some() => (
+                MODE_SET,
+                it.set(leader_symbols_of(style, color, weight, opts.hairlines)),
+            ),
             _ => match &base.symbol {
                 Some(id) => (MODE_OWN, it.own(id)),
                 None if style.renderer.is_none() => (MODE_SET, s),

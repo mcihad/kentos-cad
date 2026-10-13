@@ -136,7 +136,11 @@ use crate::layer::LineType;
 /// 58: a DXF's unit (docs/adr/0257 §1): the reader's `fileUnit` (the unit its values are in, the
 ///    user's or the caller's) and the import's `unit` (`UnitDecision`: what the file declares, the
 ///    unit read in and why, the blocks in another unit). The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 58;
+/// 59: closed and wide polylines (docs/adr/0258): `.kcad` document schema 46, a polyline's
+///    `closed` and `widths` (the typed columns' path bits 13 and 14); the DXF reader's
+///    `closedPolylines` (a closed LWPOLYLINE or POLYLINE as an area or as a closed line). The
+///    web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 59;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -791,6 +795,32 @@ pub struct DxfReadOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
+    /// What a closed LWPOLYLINE or POLYLINE becomes unless KentOS marked it a
+    /// closed line (docs/adr/0258 §1): an area (the default) or a closed
+    /// line. One with too few vertices for an area is a closed line either way.
+    #[serde(default, skip_serializing_if = "ClosedPolylines::is_area")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<ClosedPolylines>", optional))]
+    pub closed_polylines: ClosedPolylines,
+}
+
+/// What a file's closed polyline becomes (docs/adr/0258 §1).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ClosedPolylines {
+    /// An area: what a GIS project wants of a parcel's boundary.
+    #[default]
+    Area,
+    /// A closed line: a CAD drawing's polyline stays a line.
+    Line,
+}
+
+impl ClosedPolylines {
+    pub fn is_area(&self) -> bool {
+        *self == ClosedPolylines::Area
+    }
 }
 
 /// A unit a file's lengths may be read in, whatever the file says

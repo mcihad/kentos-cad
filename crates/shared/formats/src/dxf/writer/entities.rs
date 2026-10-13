@@ -142,7 +142,11 @@ fn finite(e: &Entity) -> bool {
                     .flatten()
                     .all(|h| ring(&h.pts, &h.zs, h.bulges.as_deref()))
             };
-            ring(&p.pts, &p.zs, p.bulges.as_deref())
+            p.widths
+                .iter()
+                .flatten()
+                .all(|[a, b]| a.is_finite() && b.is_finite())
+                && ring(&p.pts, &p.zs, p.bulges.as_deref())
                 && holes(&p.holes)
                 && p.parts.iter().flatten().all(|part| {
                     ring(&part.pts, &part.zs, part.bulges.as_deref()) && holes(&part.holes)
@@ -772,7 +776,10 @@ impl Writer<'_> {
         self.grow_round(c, r);
     }
 
-    /// A LWPOLYLINE; `elevation` is its one elevation (group 38), when it has one.
+    /// A LWPOLYLINE; `elevation` is its one elevation (group 38), when it has one;
+    /// `widths` a polyline's (docs/adr/0258 §2): one constant width (43) when
+    /// every edge starts and ends with it, else each vertex's start and end (40, 41).
+    #[allow(clippy::too_many_arguments)]
     fn lwpolyline(
         &mut self,
         base: &EntityBase,
@@ -780,17 +787,43 @@ impl Writer<'_> {
         bulges: Option<&[f64]>,
         closed: bool,
         elevation: Option<f64>,
+        widths: Option<&[[f64; 2]]>,
         meta: Meta,
     ) -> u64 {
         let h = self.begin("LWPOLYLINE", base);
         self.out.str(100, "AcDbPolyline");
         self.out.int(90, pts.len() as i64);
         self.out.int(70, i64::from(closed));
+        let edges = if closed {
+            pts.len()
+        } else {
+            pts.len().saturating_sub(1)
+        };
+        let constant = widths.and_then(|w| {
+            let first = w.first()?[0];
+            w.get(..edges)?
+                .iter()
+                .all(|[a, b]| *a == first && *b == first)
+                .then_some(first)
+        });
+        if let Some(c) = constant {
+            self.out.real(43, c);
+        }
         if let Some(z) = elevation {
             self.out.real(38, z);
         }
         for (i, p) in pts.iter().enumerate() {
             self.out.xy(10, *p);
+            if constant.is_none()
+                && let Some([start, end]) = widths.and_then(|w| w.get(i)).copied()
+            {
+                if start != 0.0 {
+                    self.out.real(40, start);
+                }
+                if end != 0.0 {
+                    self.out.real(41, end);
+                }
+            }
             let b = bulges.and_then(|b| b.get(i)).copied().unwrap_or(0.0);
             // An open path has no segment after its last vertex.
             if b != 0.0 && (closed || i + 1 < pts.len()) {
@@ -860,12 +893,14 @@ impl Writer<'_> {
     /// them at the vertex only in a 3D POLYLINE, which has no arcs: a path with arcs keeps its
     /// arcs and holds one elevation for all its vertices (a LWPOLYLINE's 38) when they share
     /// it, else it is written without (both said).
+    #[allow(clippy::too_many_arguments)]
     fn elevated(
         &mut self,
         (base, pts, bulges): (&EntityBase, &[Vec2], Option<&[f64]>),
         zs: &[Option<f64>],
         closed: bool,
         outline: bool,
+        widths: Option<&[[f64; 2]]>,
         mut meta: Meta,
     ) -> u64 {
         if !bulges.is_some_and(has_arcs) {
@@ -874,6 +909,14 @@ impl Writer<'_> {
                 self.report.note(
                     "Kot (Z)",
                     "kotlu çoklu çizgi ve alanlar 3B çoklu çizgi (POLYLINE) olarak yazıldı",
+                    0,
+                );
+            }
+            // A 3D polyline has no widths (docs/adr/0258 §2).
+            if widths.is_some() {
+                self.report.note(
+                    "Genişlikli çoklu çizgi",
+                    "köşe kotları için 3B çoklu çizgi olarak yazıldı; DXF'in 3B çoklu çizgisi genişlik taşımadığı için genişliği yazılmadı",
                     0,
                 );
             }
@@ -895,7 +938,7 @@ impl Writer<'_> {
                     );
                 }
                 meta.z = z == 0.0;
-                self.lwpolyline(base, pts, bulges, closed, Some(z), meta)
+                self.lwpolyline(base, pts, bulges, closed, Some(z), widths, meta)
             }
             None => {
                 if outline {
@@ -905,14 +948,16 @@ impl Writer<'_> {
                         0,
                     );
                 }
-                self.lwpolyline(base, pts, bulges, closed, None, meta)
+                self.lwpolyline(base, pts, bulges, closed, None, widths, meta)
             }
         }
     }
 
-    /// A polyline or polygon; a polygon's holes follow as closed polylines naming it.
-    fn path(&mut self, p: &PathEntity, closed: bool) -> bool {
-        let what = if closed {
+    /// A polyline or polygon (`area`); a polygon's holes follow as closed polylines naming
+    /// it. A closed polyline is a closed LWPOLYLINE that KentOS marks a line (docs/adr/0258 §1),
+    /// its widths 43 or 40 and 41.
+    fn path(&mut self, p: &PathEntity, area: bool) -> bool {
+        let what = if area {
             "Kapalı alan"
         } else {
             "Çoklu çizgi"
@@ -921,18 +966,30 @@ impl Writer<'_> {
             self.report.skip(what, "iki köşesi yok; yazılmadı", 0);
             return false;
         }
-        let meta = Self::base_meta(&p.base);
+        let closed = area || p.closed;
+        let widths = if area { None } else { p.widths.as_deref() };
+        let mut meta = Self::base_meta(&p.base);
+        meta.line = !area && p.closed;
         let owner = match elevations(&p.zs, p.pts.len()) {
             Some(zs) => self.elevated(
                 (&p.base, &p.pts, p.bulges.as_deref()),
                 zs,
                 closed,
                 true,
+                widths,
                 meta,
             ),
-            None => self.lwpolyline(&p.base, &p.pts, p.bulges.as_deref(), closed, None, meta),
+            None => self.lwpolyline(
+                &p.base,
+                &p.pts,
+                p.bulges.as_deref(),
+                closed,
+                None,
+                widths,
+                meta,
+            ),
         };
-        let holes = if closed {
+        let holes = if area {
             p.holes.as_deref().unwrap_or(&[])
         } else {
             &[]
@@ -948,8 +1005,8 @@ impl Writer<'_> {
             };
             let ring = (&p.base, hole.pts.as_slice(), hole.bulges.as_deref());
             match elevations(&hole.zs, hole.pts.len()) {
-                Some(zs) => self.elevated(ring, zs, true, false, meta),
-                None => self.lwpolyline(ring.0, ring.1, ring.2, true, None, meta),
+                Some(zs) => self.elevated(ring, zs, true, false, None, meta),
+                None => self.lwpolyline(ring.0, ring.1, ring.2, true, None, None, meta),
             };
         }
         if !holes.is_empty() {
@@ -971,10 +1028,12 @@ impl Writer<'_> {
                 holes: part.holes.clone(),
                 zs: part.zs.clone(),
                 parts: None,
+                closed: false,
+                widths: None,
             };
-            self.path(&part, closed);
+            self.path(&part, area);
         }
-        if !parts.is_empty() && closed {
+        if !parts.is_empty() && area {
             self.report.note(
                 "Çok parçalı alan",
                 "DXF'te çok parçalı alan yok: her parça nesnenin verisini taşıyan ayrı kapalı çoklu çizgi olarak yazıldı (KentOS'a geri okununca ayrı alanlar olur)",

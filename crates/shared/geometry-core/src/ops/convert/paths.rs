@@ -113,6 +113,8 @@ pub fn rings_as_lines(s: &Shape, zs: Option<&Zs>) -> Vec<RingLine> {
                         bulges,
                         holes: None,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     },
                     zs: kept(vec![ring_zs]),
                 },
@@ -153,15 +155,17 @@ pub fn line_area(s: &Shape, zs: Option<&Zs>, close: bool) -> Result<Elevations, 
     if n < 2 {
         return Err(NoArea::Empty);
     }
+    // A closed polyline is its ring, its last bulge the closing edge's (docs/adr/0258 §1).
+    let ring = matches!(s, Shape::Polyline { closed: true, .. });
     let (f, l) = (pts[0], pts[n - 1]);
-    let meets = js_hypot(f.x - l.x, f.y - l.y) <= CLOSE_TOL;
-    if !meets && !close {
+    let meets = !ring && js_hypot(f.x - l.x, f.y - l.y) <= CLOSE_TOL;
+    if !ring && !meets && !close {
         return Err(NoArea::Open);
     }
     let m = if meets { n - 1 } else { n };
     let ring_bulges: Vec<f64> = (0..m)
         .map(|i| {
-            if meets || i + 1 < n {
+            if ring || meets || i + 1 < n {
                 bulges
                     .as_ref()
                     .and_then(|b| b.get(i))
@@ -231,6 +235,8 @@ fn as_path(s: &Shape) -> Shape {
             bulges: None,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         },
         other => other.clone(),
     }
@@ -319,7 +325,7 @@ pub(crate) fn rebuild(s: &Shape, new: Vec<(Vec<Vec2>, Vec<f64>)>) -> Shape {
         (pts, bulged(b))
     };
     match s {
-        Shape::Polyline { parts, .. } => {
+        Shape::Polyline { parts, closed, .. } => {
             let (pts, bulges) = take();
             let mut new_parts = Vec::new();
             for _ in parts.iter().flatten() {
@@ -335,6 +341,8 @@ pub(crate) fn rebuild(s: &Shape, new: Vec<(Vec<Vec2>, Vec<f64>)>) -> Shape {
                 bulges,
                 holes: None,
                 parts: parts.as_ref().map(|_| new_parts),
+                closed: *closed,
+                widths: None,
             }
         }
         Shape::Polygon { holes, parts, .. } => {
@@ -384,6 +392,8 @@ mod tests {
             bulges: None,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
         let zs = vec![vec![Some(0.0), Some(10.0), Some(20.0)]];
         let got = substring(&s, Some(&zs), 5.0, 15.0).expect("a piece");
@@ -402,6 +412,8 @@ mod tests {
             bulges: None,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
         assert_eq!(line_area(&open, None, false), Err(NoArea::Open));
         let area = line_area(&open, None, true).expect("an area");
@@ -411,6 +423,8 @@ mod tests {
             bulges: None,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
         assert_eq!(line_area(&flat, None, true), Err(NoArea::Empty));
     }

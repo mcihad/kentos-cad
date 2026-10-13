@@ -360,6 +360,8 @@ pub fn line_objects(lines: &[Line], texts: &[String], layer: &str) -> Vec<Entity
                 holes: None,
                 zs: Some(vec![Some(l.value); l.pts.len()]),
                 parts: None,
+                closed: false,
+                widths: None,
             })
         })
         .collect()

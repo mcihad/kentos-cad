@@ -363,8 +363,11 @@ fn geometry_is_source(e: &Entity) -> bool {
             .is_none_or(|ps| !ps.is_empty() && x.z.is_none() && ps.iter().all(|q| q.z.is_none())),
         // A route's measures (docs/adr/0224 §1) are the source's as its elevations are: the projection is 2D.
         Entity::Line(x) => x.za.is_none() && x.zb.is_none() && x.ma.is_none() && x.mb.is_none(),
+        // A closed or wide polyline (docs/adr/0258) keeps its definition: the geometry holds neither.
         Entity::Polyline(x) => {
             flat(&x.bulges, &x.zs)
+                && !x.closed
+                && x.widths.is_none()
                 && x.ms.is_none()
                 && x.holes.is_none()
                 && x.parts.as_ref().is_none_or(|ps| {
@@ -428,17 +431,25 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         },
         Entity::Line(x) => Geometry::LineString(vec![p(x.a), p(x.b)]),
         Entity::Polyline(x) => {
+            // A closed polyline's line returns to its start (docs/adr/0258 §1); its parts are open.
+            let mut own = bulge_path(&pts(&x.pts), x.bulges.as_deref(), x.closed, tol);
+            // A ring leaves its first point out; the line repeats it to close.
+            if x.closed
+                && let Some(&first) = own.first()
+            {
+                own.push(first);
+            }
             let path = |pts_: &[kentos_contracts::Vec2], b: &Option<Vec<f64>>| {
                 bulge_path(&pts(pts_), b.as_deref(), false, tol)
             };
             match x.parts.as_deref() {
                 // A multi-part polyline is a MultiLineString, its own path the first member (docs/adr/0174).
                 Some(parts) if !parts.is_empty() => Geometry::MultiLineString(
-                    std::iter::once(path(&x.pts, &x.bulges))
+                    std::iter::once(own)
                         .chain(parts.iter().map(|q| path(&q.pts, &q.bulges)))
                         .collect(),
                 ),
-                _ => Geometry::LineString(path(&x.pts, &x.bulges)),
+                _ => Geometry::LineString(own),
             }
         }
         Entity::Polygon(x) => {
@@ -1027,6 +1038,45 @@ mod tests {
         let mut again = from_stored(s).unwrap();
         again.base_mut().id = id;
         again
+    }
+
+    /// A closed or wide polyline (docs/adr/0258): straight as it is, its
+    /// definition is its source, as the geometry holds neither; a closed
+    /// one's line returns to its start.
+    #[test]
+    fn a_closed_or_wide_polyline_keeps_its_definition() {
+        let pts = serde_json::json!([{ "x": 0, "y": 0 }, { "x": 4, "y": 0 }, { "x": 4, "y": 3 }]);
+        let closed = entity(
+            serde_json::json!({ "kind": "polyline", "id": 3, "layerId": "c", "attrs": {},
+            "pts": pts, "closed": true }),
+        );
+        let wide = entity(
+            serde_json::json!({ "kind": "polyline", "id": 3, "layerId": "c", "attrs": {},
+            "pts": pts, "widths": [[0.5, 0.5], [0.5, 0.25], [0, 0]] }),
+        );
+        for e in [&closed, &wide] {
+            let s = to_stored(e, 5256, &none()).unwrap();
+            assert_eq!((s.source_kind, s.kind.as_str()), ("cad", "polyline"));
+            assert_eq!(&back(&s, 3), e);
+        }
+        let line = |e: &Entity| {
+            let s = to_stored(e, 5256, &none()).unwrap();
+            ewkb::decode(s.geom.as_deref().unwrap()).unwrap().0
+        };
+        let corner = |x: f64, y: f64| P::new(x, y);
+        assert_eq!(
+            line(&closed),
+            Geometry::LineString(vec![
+                corner(0.0, 0.0),
+                corner(4.0, 0.0),
+                corner(4.0, 3.0),
+                corner(0.0, 0.0)
+            ])
+        );
+        assert_eq!(
+            line(&wide),
+            Geometry::LineString(vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0)])
+        );
     }
 
     #[test]

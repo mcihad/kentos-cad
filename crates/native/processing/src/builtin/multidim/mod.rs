@@ -170,6 +170,8 @@ pub fn run_profile(
                         holes: None,
                         zs: Some(p.points.iter().map(|q| Some(q[2])).collect()),
                         parts: None,
+                        closed: false,
+                        widths: None,
                     })
                 })
                 .collect()

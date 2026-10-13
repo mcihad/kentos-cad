@@ -94,6 +94,8 @@ pub fn objects_of(
                         bulges: None,
                         holes: None,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     },
                     layer,
                     attrs(k),

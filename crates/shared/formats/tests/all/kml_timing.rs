@@ -68,6 +68,8 @@ fn scene() -> Vec<Entity> {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }));
     }
     for i in 0..30_000u32 {
@@ -83,6 +85,8 @@ fn scene() -> Vec<Entity> {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }));
     }
     for i in 0..30_000u32 {

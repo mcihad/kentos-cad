@@ -1195,6 +1195,8 @@ fn shape(entity: &Entity) -> Shape {
                     })
                     .collect()
             }),
+            closed: false,
+            widths: None,
         },
         Entity::Polygon(p) => Shape::Polygon {
             pts: points(&p.pts),

@@ -237,8 +237,8 @@ Her mutating istekte uygun `expectedRevision`, idempotency ve actor/scope bilgis
 - [ ] **CAD-DATA-15:** Daire/yay/elips kaynakları analitik kalsın; ölçme, snap ve trim çizilen kırık çizgi üzerinden yapılmasın.
 - [ ] **CAD-DATA-16:** Genel NURBS için derece, knot dizisi, kontrol noktaları, ağırlıklar, periodic/closed, fit/tangent ve tolerans alanlarını ekle.
 - [ ] **CAD-DATA-17:** Mevcut Catmull–Rom eğrisi yeni NURBS modeline tahminsiz göç etsin veya açık ayrı subtype olarak korunsun; eski çizimin biçimi değişmesin.
-- [ ] **CAD-DATA-18:** Polyline sabit genişlik ve segment başlangıç/bitiş genişliği ekle; width ile kâğıt lineweight aynı alan olmasın.
-- [ ] **CAD-DATA-19:** Açık/kapalı polyline ile polygon/region ayrımını koru; CAD polyline'ın kapalı olması onu zorunlu GIS alanı yapmasın.
+- [x] **CAD-DATA-18:** Polyline sabit genişlik ve segment başlangıç/bitiş genişliği ekle; width ile kâğıt lineweight aynı alan olmasın. — *13 Ekim; [ADR 0258](../docs/adr/0258-closed-and-wide-polylines.md) §2: köşe başına başlangıç ve bitiş genişliği (`widths`), çizim uzunluğunda; şerit olarak çizilir; düzenlemelerde kotun kurallarıyla taşınır; KCAD şema 46, DXF 43 ve 40/41.*
+- [x] **CAD-DATA-19:** Açık/kapalı polyline ile polygon/region ayrımını koru; CAD polyline'ın kapalı olması onu zorunlu GIS alanı yapmasın. — *13 Ekim; ADR 0258 §1: kapalı çoklu çizgi (`closed`) alan değildir; DXF'in kapalı LWPOLYLINE'ı CAD projesinde kapalı çizgi, CBS'de alan (`closedPolylines`); kapalı eğrinin Patlat'ı web'le birlikte (§5).*
 - [ ] **CAD-DATA-20:** CAD solid fill, region, wipeout, center mark/centerline, multileader ve ileri nesneler için önce kaynak model ve düzenleme semantiğini tanımla.
 - [ ] **CAD-DATA-21:** Nesne görünüşünde ByLayer/ByBlock/explicit ayrımını, linetype, linetype scale, transparency, plot ve draw order alanlarını tasarla.
 - [ ] **CAD-DATA-22:** Nesne/alt nesne/ilişki modelinin `.kcad`, tipli sütunlar, WASM, cloud kaynak tanımı ve Python tiplerine birlikte taşınmasını sağla.

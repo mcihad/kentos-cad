@@ -49,6 +49,8 @@ fn block(b: &mut Bench, zs: Option<Vec<Option<f64>>>) {
             holes: None,
             zs,
             parts: None,
+            closed: false,
+            widths: None,
         }),
     );
     b.add_line("cizim", [20.0, 0.0], [20.0, 30.0]);

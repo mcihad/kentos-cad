@@ -197,7 +197,12 @@ fn path(shape: &Shape) -> Option<(Vec<Vec2>, Vec<f64>)> {
     }
     match shape {
         Shape::Line { a, b } => (dist(*a, *b) > SAME).then(|| (vec![*a, *b], vec![0.0])),
-        Shape::Polyline { pts, bulges, .. } => {
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed: false,
+            ..
+        } => {
             let n = pts.len();
             if n < 2 || dist(pts[0], pts[n - 1]) <= SAME {
                 return None;
@@ -631,6 +636,8 @@ fn put(member: &Member, targets: [Option<Vec2>; 2], method: Method) -> Option<Pu
             bulges: Some(bulges),
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         }
     };
     Some((shape, zs))

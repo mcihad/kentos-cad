@@ -922,7 +922,9 @@ pub fn catalog() -> CommandCatalog {
             id: CAD_POLYLINE_CREATE.into(),
             version: CAD_POLYLINE_CREATE_VERSION,
             title: "Çoklu çizgi oluştur".into(),
-            summary: "Açık çizimde verilen katmana noktaları ve isteğe bağlı yay değerleriyle (kenar başına bir tane) açık bir çoklu çizgi ekler; tek geri alma adımıdır. \
+            summary: "Açık çizimde verilen katmana noktaları ve isteğe bağlı yay değerleriyle (kenar başına bir tane) bir çoklu çizgi ekler; tek geri alma adımıdır. \
+                      closed: true son noktayı ilkine bağlar (kapalı çizgi; alan değildir). widths kenar başına başlangıç ve bitiş genişliğidir, \
+                      çizimin uzunluğunda; kâğıdın çizgi kalınlığı (lineWeight) ayrıdır (ADR 0258). \
                       Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
@@ -968,6 +970,21 @@ pub fn catalog() -> CommandCatalog {
                         "bulges": [0.0, 0.41421356237309503],
                         "color": "#E5484D",
                         "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "25 cm genişliğinde kapalı duvar ekseni: kapanan kenar da genişlikli".into(),
+                    input: json!({
+                        "layerId": "duvar",
+                        "pts": [
+                            { "x": 0.0, "y": 0.0 },
+                            { "x": 6.0, "y": 0.0 },
+                            { "x": 6.0, "y": 4.5 },
+                            { "x": 0.0, "y": 4.5 }
+                        ],
+                        "closed": true,
+                        "widths": [[0.25, 0.25], [0.25, 0.25], [0.25, 0.25], [0.25, 0.25]]
                     }),
                     output: None,
                 },
@@ -3011,6 +3028,7 @@ pub fn catalog() -> CommandCatalog {
                     output: Some(json!({
                         "file": "kat-plani.dxf", "bytes": 48213, "sha256": "9f2c4c0e1b7a3d5e8f6a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e",
                         "unit": { "declared": 4, "used": 4, "name": "milimetre", "source": "declared", "factor": 0.001, "assumed": false },
+                        "closedPolylines": "line",
                         "objects": 312, "targets": { "DUVAR": "import-duvar", "0": "cizim" },
                         "layers": [{ "id": "import-duvar", "name": "DUVAR" }], "group": "import-kat-plani-dxf",
                         "blocks": 2, "textStyles": 1, "dimensionStyles": 0, "report": {}, "revision": "12"

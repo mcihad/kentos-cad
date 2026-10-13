@@ -76,6 +76,8 @@ fn path(ms: Option<Vec<Option<f64>>>, parts: Option<Vec<AreaPart>>) -> PathEntit
         zs: None,
         ms,
         parts,
+        closed: false,
+        widths: None,
     }
 }
 

@@ -46,6 +46,8 @@ fn parcel(i: usize) -> Entity {
         zs: None,
         ms: None,
         parts: None,
+        closed: false,
+        widths: None,
     })
 }
 

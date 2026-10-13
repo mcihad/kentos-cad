@@ -633,6 +633,9 @@ pub fn shape(entity: &Entity) -> Shape {
             holes: p.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
             // Every part of a multi-part polyline (docs/adr/0174).
             parts: p.parts.as_ref().map(|ps| ps.iter().map(part).collect()),
+            // A closed and a wide polyline as they are (docs/adr/0258).
+            closed: p.closed,
+            widths: p.widths.clone(),
         },
         Entity::Polygon(p) => Shape::Polygon {
             pts: points(&p.pts),
@@ -868,10 +871,15 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 bulges,
                 holes,
                 parts,
+                closed,
+                widths,
             },
         ) => {
             e.pts = back(pts);
             e.bulges = bulges;
+            // The transforms keep a closed line closed and scale its widths with it (docs/adr/0258).
+            e.closed = closed;
+            e.widths = widths;
             let before = e.holes.take();
             e.holes = holes_back(holes, before.as_deref());
             // Every part too, with its elevations and measures (docs/adr/0174, 0224).
@@ -1166,6 +1174,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             zs,
             ms,
             parts,
+            closed,
+            widths,
         } => Entity::Polyline(PathEntity {
             base,
             pts,
@@ -1184,6 +1194,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                     })
                     .collect()
             }),
+            closed,
+            // All 0 is none (docs/adr/0258 §2).
+            widths: widths.filter(|w| w.iter().any(|[a, b]| *a != 0.0 || *b != 0.0)),
         }),
         EntityGeometry::Polygon {
             pts,
@@ -1219,6 +1232,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                         })
                         .collect()
                 }),
+                closed: false,
+                widths: None,
             })
         }
         EntityGeometry::Circle { c, r } => Entity::Circle(CircleEntity { base, c, r }),
@@ -1406,8 +1421,14 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             zs: None,
             ms: None,
         },
+        // The core's widths when it kept them; none: the edit carries them (docs/adr/0258 §2).
         Shape::Polyline {
-            pts, bulges, parts, ..
+            pts,
+            bulges,
+            parts,
+            closed,
+            widths,
+            ..
         } => EntityGeometry::Polyline {
             pts: back(pts),
             bulges,
@@ -1421,6 +1442,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                     })
                     .collect()
             }),
+            closed,
+            widths,
         },
         Shape::Polygon {
             pts,

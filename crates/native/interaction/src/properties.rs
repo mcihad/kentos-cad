@@ -11,7 +11,7 @@
 
 use kentos_contracts::{
     CommandResult, DimensionEntity, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity,
-    EntityEdit, LeaderEntity, TextAlign, TextEntity,
+    EntityEdit, EntityGeometry, LeaderEntity, TextAlign, TextEntity,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::TextPlace;
@@ -228,6 +228,111 @@ pub fn set_text_mask(doc: &mut Document, slots: &[Slot], mask: bool) -> Vec<Stri
     change_texts(doc, slots, |t, _| {
         (t.mask != mask).then(|| TextEntity { mask, ..t.clone() })
     })
+}
+
+/// The one-part polylines in `slots` closed or opened (docs/adr/0258 §1), in
+/// one step “Değiştir”: a closed one's closing edge is straight, its widths
+/// from its last edge's end to its first edge's start; an opened one's
+/// closing edge goes, with its bulge and widths. Elevations and measures stay
+/// with their vertices. What to say: the command's refusal.
+pub fn set_polyline_closed(doc: &mut Document, slots: &[Slot], closed: bool) -> Vec<String> {
+    let changes: Vec<EntityEdit> = slots
+        .iter()
+        .filter_map(|&slot| {
+            let Some(Entity::Polyline(p)) = doc.get(slot) else {
+                return None;
+            };
+            if p.closed == closed || p.parts.is_some() || p.pts.len() < 2 {
+                return None;
+            }
+            let n = p.pts.len();
+            let bulges = p.bulges.clone().map(|mut b| {
+                b.resize(n, 0.0);
+                b[n - 1] = 0.0;
+                b
+            });
+            let widths = p.widths.clone().map(|mut w| {
+                w.resize(n, [0.0, 0.0]);
+                w[n - 1] = if closed {
+                    [w[n - 2][1], w[0][0]]
+                } else {
+                    [0.0, 0.0]
+                };
+                w
+            });
+            Some(EntityEdit::Update {
+                uid: doc.uid(slot)?.to_string(),
+                geometry: EntityGeometry::Polyline {
+                    pts: p.pts.clone(),
+                    bulges,
+                    zs: None,
+                    ms: None,
+                    parts: None,
+                    closed,
+                    widths,
+                },
+            })
+        })
+        .collect();
+    write_properties(doc, changes)
+}
+
+/// The one-part polylines in `slots` with every edge's start and end width
+/// `width`, metres (0: none; docs/adr/0258 §2), in one step “Değiştir”; the
+/// command refuses one below 0 and says why.
+pub fn set_polyline_width(doc: &mut Document, slots: &[Slot], width: f64) -> Vec<String> {
+    let changes: Vec<EntityEdit> = slots
+        .iter()
+        .filter_map(|&slot| {
+            let Some(Entity::Polyline(p)) = doc.get(slot) else {
+                return None;
+            };
+            if p.parts.is_some() {
+                return None;
+            }
+            let n = p.pts.len();
+            let edges = if p.closed { n } else { n.saturating_sub(1) };
+            let widths: Vec<[f64; 2]> = (0..n)
+                .map(|i| {
+                    if i < edges {
+                        [width, width]
+                    } else {
+                        [0.0, 0.0]
+                    }
+                })
+                .collect();
+            let now = p.widths.clone().unwrap_or_else(|| vec![[0.0, 0.0]; n]);
+            if now == widths {
+                return None;
+            }
+            Some(EntityEdit::Update {
+                uid: doc.uid(slot)?.to_string(),
+                geometry: EntityGeometry::Polyline {
+                    pts: p.pts.clone(),
+                    bulges: p.bulges.clone(),
+                    zs: None,
+                    ms: None,
+                    parts: None,
+                    closed: p.closed,
+                    widths: Some(widths),
+                },
+            })
+        })
+        .collect();
+    write_properties(doc, changes)
+}
+
+/// `changes` written as Öznitelikler writes: `cad.entities.edit`'s `properties`, one step “Değiştir”.
+fn write_properties(doc: &mut Document, changes: Vec<EntityEdit>) -> Vec<String> {
+    if changes.is_empty() {
+        return Vec::new();
+    }
+    let input = EntitiesEdit {
+        operation: EditOperation::Properties,
+        changes,
+        expected_revision: None,
+    };
+    said(edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
 /// The leaders in `slots`, each changed by `change` (none: it has the value

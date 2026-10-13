@@ -496,6 +496,9 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
                 bulges: bulges_of(p.pts.len(), p.bulges.as_deref()),
                 zs: Some(p.zs.clone()),
                 parts: (!parts.is_empty()).then_some(parts),
+                // A closed line stays closed; its widths are carried (docs/adr/0258).
+                closed: p.closed,
+                widths: None,
             })
         }
         Entity::Polygon(area) => {

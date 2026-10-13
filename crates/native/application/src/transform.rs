@@ -854,9 +854,15 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             bulges,
             holes,
             parts,
+            widths,
+            ..
         } => {
             pts(p)
                 && values(bulges)
+                && widths
+                    .iter()
+                    .flatten()
+                    .all(|[a, b]| a.is_finite() && b.is_finite())
                 && holes
                     .iter()
                     .flatten()

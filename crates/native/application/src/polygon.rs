@@ -224,5 +224,7 @@ fn polygon(input: PolygonCreate, id: u32) -> Entity {
         holes: input.holes,
         zs: None,
         parts: None,
+        closed: false,
+        widths: None,
     })
 }

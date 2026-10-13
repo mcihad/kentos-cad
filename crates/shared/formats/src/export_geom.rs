@@ -225,30 +225,52 @@ pub(crate) fn geometry(
             if p.holes.as_ref().is_some_and(|h| !h.is_empty()) {
                 rep.note("Çoklu çizginin delikleri", w.path_holes, 0);
             }
-            let one = |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs, rep: &mut Report| {
-                let zs = heights(zs, pts.len());
-                match bulges {
-                    Some(b) if has_arcs(b) => {
-                        let out = from_core(bulge_path_outline(
-                            &to_core(pts),
-                            Some(b),
-                            false,
-                            DEFAULT_STEP,
-                        ));
-                        let zs = zs.map(|z| bulge_path_zs(pts, b, z, false));
-                        curve(
-                            rep,
-                            "Yaylı çoklu çizgi",
-                            Ring::new(out, zs.into_iter().flatten()),
-                            w,
-                        )
+            // A wide polyline's widths are drawing, not geometry: the line goes (docs/adr/0258 §2).
+            if p.widths.is_some() {
+                rep.note(
+                    "Genişlikli çoklu çizgi",
+                    "genişlik bu biçimde yok; çizgi ekseniyle yazıldı",
+                    0,
+                );
+            }
+            let one =
+                |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs, closed: bool, rep: &mut Report| {
+                    let zs = heights(zs, pts.len());
+                    // A closed line runs back to its first vertex: a line string whose last point is its first.
+                    let back = |mut out: Vec<Vec2>, mut zs: Option<Vec<Option<f64>>>| {
+                        if closed && let Some(&first) = out.first() {
+                            out.push(first);
+                            if let Some(z) = zs.as_mut() {
+                                let z0 = z.first().copied().flatten();
+                                z.push(z0);
+                            }
+                        }
+                        (out, zs)
+                    };
+                    match bulges {
+                        Some(b) if has_arcs(b) => {
+                            let out = from_core(bulge_path_outline(
+                                &to_core(pts),
+                                Some(b),
+                                closed,
+                                DEFAULT_STEP,
+                            ));
+                            let zs = zs.map(|z| bulge_path_zs(pts, b, z, closed));
+                            let (out, zs) = back(out, zs);
+                            curve(
+                                rep,
+                                "Yaylı çoklu çizgi",
+                                Ring::new(out, zs.into_iter().flatten()),
+                                w,
+                            )
+                        }
+                        _ => (pts.len() >= 2).then(|| {
+                            let (out, zs) = back(pts.to_vec(), zs.map(<[Option<f64>]>::to_vec));
+                            Geometry::Line(Ring::new(out, zs.into_iter().flatten()))
+                        }),
                     }
-                    _ => (pts.len() >= 2).then(|| {
-                        Geometry::Line(Ring::new(pts.to_vec(), zs.into_iter().flatten().copied()))
-                    }),
-                }
-            };
-            let first = one(&p.pts, p.bulges.as_deref(), &p.zs, rep);
+                };
+            let first = one(&p.pts, p.bulges.as_deref(), &p.zs, p.closed, rep);
             match p.parts.as_deref() {
                 // A multi-part polyline is a MultiLineString, its own path the first member (docs/adr/0174).
                 Some(parts) if !parts.is_empty() => {
@@ -256,7 +278,7 @@ pub(crate) fn geometry(
                     let members = std::iter::once(first).chain(
                         parts
                             .iter()
-                            .map(|q| one(&q.pts, q.bulges.as_deref(), &q.zs, rep)),
+                            .map(|q| one(&q.pts, q.bulges.as_deref(), &q.zs, false, rep)),
                     );
                     for member in members.collect::<Vec<_>>() {
                         match member {

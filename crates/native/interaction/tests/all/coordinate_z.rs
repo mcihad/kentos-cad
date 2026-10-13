@@ -35,6 +35,8 @@ fn polyline(b: &mut Bench) -> Slot {
             holes: None,
             zs: zs(&[Some(1.5), None, Some(3.25)]),
             parts: None,
+            closed: false,
+            widths: None,
         }))
         .expect("a slot")
 }
@@ -55,6 +57,8 @@ fn area(b: &mut Bench) -> Slot {
             }]),
             zs: zs(&[Some(1.0), Some(2.0), Some(3.0), Some(4.0)]),
             parts: None,
+            closed: false,
+            widths: None,
         }))
         .expect("a slot")
 }
@@ -109,6 +113,8 @@ fn an_edge_s_middle_is_no_vertex_and_reads_without_one() {
             holes: None,
             zs: zs(&[Some(10.0), Some(20.0)]),
             parts: None,
+            closed: false,
+            widths: None,
         }))
         .expect("a slot");
     b.start("crsQuery");

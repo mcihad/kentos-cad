@@ -25,7 +25,21 @@ ms?: Array<number | null>,
  * fields above; absent for one part (docs/adr/0143, 0174). A
  * polyline's parts are open, of two vertices or more, without holes.
  */
-parts?: Array<AreaPart>, id: number, layerId: string, 
+parts?: Array<AreaPart>, 
+/**
+ * A polyline whose last vertex joins its first: a closed line, not an
+ * area (docs/adr/0258 §1); its closing edge's bulge is the last of
+ * `bulges`. One part only. A polygon is a ring without saying so.
+ */
+closed?: boolean, 
+/**
+ * A polyline's widths: the start and the end of the edge from each
+ * vertex, as many as `pts` (the last is the closing edge's, `[0, 0]`
+ * on an open polyline), in the drawing's length, not the paper's line
+ * weight (docs/adr/0258 §2). Absent: none, the line is drawn with its
+ * line weight. One part only.
+ */
+widths?: Array<[number, number]>, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

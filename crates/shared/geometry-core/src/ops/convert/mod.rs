@@ -58,10 +58,15 @@ pub fn paths(s: &Shape) -> Vec<PathOf> {
             let bulge = Some(vec![bulge_of_sweep(arc_sweep(*a0, *a1)), 0.0]);
             vec![path(&[at(*a0), at(*a1)], &bulge, false, 1, 0)]
         }
+        // A closed polyline's path runs round as a ring (docs/adr/0258 §1).
         Shape::Polyline {
-            pts, bulges, parts, ..
+            pts,
+            bulges,
+            parts,
+            closed,
+            ..
         } => {
-            let mut out = vec![path(pts, bulges, false, 1, 0)];
+            let mut out = vec![path(pts, bulges, *closed, 1, 0)];
             for (p, part) in parts.iter().flatten().zip(2..) {
                 out.push(path(&p.pts, &p.bulges, false, part, 0));
             }

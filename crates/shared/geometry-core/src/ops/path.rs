@@ -47,7 +47,8 @@ pub fn path_of(e: &Shape) -> Option<Path> {
     }
     // A full ellipse runs round like a circle (the TypeScript counted it open: Böl put n − 1 points).
     let closed = match *e {
-        Shape::Polygon { .. } | Shape::Circle { .. } => true,
+        // A closed polyline runs round as an area's ring (docs/adr/0258 §1).
+        Shape::Polygon { .. } | Shape::Circle { .. } | Shape::Polyline { closed: true, .. } => true,
         Shape::Spline { closed, .. } => closed,
         Shape::Ellipse {
             c,
@@ -198,6 +199,8 @@ pub fn sub_path(path: &Path, s0: f64, s1: f64, source: &Shape) -> Entity {
         bulges: clean.bulges,
         holes: None,
         parts: None,
+        closed: false,
+        widths: None,
     })
 }
 

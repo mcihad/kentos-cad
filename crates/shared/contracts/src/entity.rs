@@ -232,6 +232,21 @@ pub struct PathEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parts: Option<Vec<AreaPart>>,
+    /// A polyline whose last vertex joins its first: a closed line, not an
+    /// area (docs/adr/0258 §1); its closing edge's bulge is the last of
+    /// `bulges`. One part only. A polygon is a ring without saying so.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub closed: bool,
+    /// A polyline's widths: the start and the end of the edge from each
+    /// vertex, as many as `pts` (the last is the closing edge's, `[0, 0]`
+    /// on an open polyline), in the drawing's length, not the paper's line
+    /// weight (docs/adr/0258 §2). Absent: none, the line is drawn with its
+    /// line weight. One part only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub widths: Option<Vec<[f64; 2]>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -462,6 +477,88 @@ pub fn text_path_problem(
         );
     }
     None
+}
+
+/// What is wrong with a path's `closed` and `widths` (docs/adr/0258): an
+/// area has neither (its ring is closed without saying so); a closed or a
+/// wide polyline is of one part; a closed one has two vertices or more; its
+/// widths are one pair for each vertex, finite and not below 0, the last pair
+/// 0 on an open line (no edge runs from its last vertex) and not all 0 (a line
+/// without widths has none). `None` when they may be written.
+pub fn path_extras_problem(
+    vertices: usize,
+    closed: bool,
+    widths: Option<&[[f64; 2]]>,
+    parts: bool,
+    area: bool,
+) -> Option<String> {
+    if area {
+        if closed {
+            return Some(
+                "Kapalı alanın “closed” alanı olmaz: halkası zaten kapalıdır. Kapalı çizgi için çoklu çizgi kullanın."
+                    .into(),
+            );
+        }
+        if widths.is_some() {
+            return Some(
+                "Kapalı alanın genişliği olmaz; genişlik yalnız çoklu çizginindir.".into(),
+            );
+        }
+        return None;
+    }
+    if (closed || widths.is_some()) && parts {
+        return Some(
+            "Kapalı ya da genişlikli çoklu çizgi tek parçalıdır. Önce Parçalara ayır ile parçalarına ayırın."
+                .into(),
+        );
+    }
+    if closed && vertices < 2 {
+        return Some(format!(
+            "Kapalı çoklu çizginin {vertices} köşesi var; en az iki olmalı."
+        ));
+    }
+    if let Some(w) = widths {
+        if w.len() != vertices {
+            return Some(format!(
+                "Genişlik sayısı ({}) köşe sayısından ({vertices}) farklı. Her köşeden çıkan kenara bir başlangıç ve bir bitiş genişliği verin.",
+                w.len()
+            ));
+        }
+        if let Some(i) = w
+            .iter()
+            .position(|[a, b]| !(a.is_finite() && b.is_finite() && *a >= 0.0 && *b >= 0.0))
+        {
+            return Some(format!(
+                "{}. kenarın genişliği geçersiz: genişlik sonlu ve sıfır ya da daha büyük olmalı.",
+                i + 1
+            ));
+        }
+        if !closed && w.last().is_some_and(|[a, b]| *a != 0.0 || *b != 0.0) {
+            return Some(
+                "Açık çoklu çizginin son köşesinden kenar çıkmaz: son genişlik [0, 0] olmalı."
+                    .into(),
+            );
+        }
+        if w.iter().all(|[a, b]| *a == 0.0 && *b == 0.0) {
+            return Some(
+                "Bütün genişlikler sıfır: genişliksiz çizginin genişlik alanı yazılmaz.".into(),
+            );
+        }
+    }
+    None
+}
+
+impl PathEntity {
+    /// [`path_extras_problem`] of this path, an area's (`area`) or a polyline's.
+    pub fn extras_problem(&self, area: bool) -> Option<String> {
+        path_extras_problem(
+            self.pts.len(),
+            self.closed,
+            self.widths.as_deref(),
+            self.parts.is_some(),
+            area,
+        )
+    }
 }
 
 /// A multi-line text's own fields (docs/adr/0182 §1): the width its lines

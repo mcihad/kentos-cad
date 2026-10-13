@@ -55,6 +55,8 @@ fn drawing() -> Bench {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }))
             .expect("a slot")
     };
@@ -79,6 +81,8 @@ fn drawing() -> Bench {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }))
         .expect("a slot");
     b

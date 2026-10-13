@@ -67,7 +67,21 @@ ms?: Array<number | null>,
  * is the whole polyline: absent, it has one part, so an edit of a
  * multi-part polyline writes every part.
  */
-parts?: Array<AreaPart>, } | { "kind": "polygon", pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, 
+parts?: Array<AreaPart>, 
+/**
+ * A closed line, not an area (docs/adr/0258 §1): its last vertex
+ * joins its first by the edge the last of `bulges` bends. Absent:
+ * open. One part only.
+ */
+closed?: boolean, 
+/**
+ * The edges' widths as written (docs/adr/0258 §2): a start and an
+ * end for each vertex's edge, in the drawing's length (the last
+ * `[0, 0]` on an open line); all 0: none. Absent: each edge takes
+ * its widths from the objects the edit names, where it runs along
+ * one of their edges, as elevations do. One part only.
+ */
+widths?: Array<[number, number]>, } | { "kind": "polygon", pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, 
 /**
  * The vertices' elevations as written (docs/adr/0142): as many as
  * the vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:

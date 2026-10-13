@@ -511,6 +511,9 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                         })
                         .collect()
                 }),
+                // A closed and a wide polyline as they are (docs/adr/0258).
+                closed: p.closed,
+                widths: p.widths.clone(),
             }
         }
         Entity::Polygon(p) => {
@@ -694,6 +697,8 @@ fn entity(s: &Shape) -> Option<Entity> {
             holes: holes.as_ref().map(|hs| hs.iter().map(ring_back).collect()),
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
     Some(match s {
         Shape::Point { p, z, parts } => Entity::Point(PointEntity {
@@ -723,7 +728,11 @@ fn entity(s: &Shape) -> Option<Entity> {
             bulges,
             holes,
             parts,
+            closed,
+            widths,
         } => Entity::Polyline(PathEntity {
+            closed: *closed,
+            widths: widths.clone(),
             parts: parts.as_ref().map(|ps| {
                 ps.iter()
                     .map(|part| AreaPart {

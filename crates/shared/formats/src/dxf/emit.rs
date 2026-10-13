@@ -516,6 +516,9 @@ pub struct Emitter<'l> {
     /// What AutoCAD's own blocks (“_…”) said while read: the drawing's only
     /// if an insert places them (`keep_used`), a leader's arrow block not.
     aside: HashMap<BlockId, Report>,
+    /// A closed LWPOLYLINE or POLYLINE KentOS did not mark is a closed line,
+    /// not an area (the reader's `closedPolylines`; docs/adr/0258 §1).
+    pub closed_lines: bool,
 }
 
 impl<'l> Emitter<'l> {
@@ -532,6 +535,7 @@ impl<'l> Emitter<'l> {
             text_used: Vec::new(),
             dim_used: Vec::new(),
             aside: HashMap::new(),
+            closed_lines: false,
         }
     }
 
@@ -1118,18 +1122,11 @@ impl<'l> Emitter<'l> {
                 bulges,
                 closed,
                 elevation,
-                width,
+                widths,
             } => {
                 let Some(m) = ocs(ctx, ext, *elevation) else {
                     return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
                 };
-                if *width {
-                    self.note(
-                        "Genişlikli çoklu çizgi",
-                        "genişlik (kalınlık) alınmadı; çizgi ekseniyle geldi",
-                        e.line,
-                    );
-                }
                 // An elevation of the plane is every vertex's (a mirrored plane's Z runs the other way).
                 let zs = Self::heights(
                     ctx,
@@ -1138,14 +1135,13 @@ impl<'l> Emitter<'l> {
                     *elevation != 0.0,
                 );
                 let pts: Vec<Vec2> = pts.iter().map(|p| v(p[0], p[1])).collect();
-                self.path(m, pts, bulges.clone(), *closed, zs, b(), e);
+                self.path(m, pts, bulges.clone(), *closed, zs, widths.clone(), b(), e);
             }
             Kind::Polyline {
                 flags,
                 verts,
                 elevation,
-                width,
-            } => self.polyline(ctx, ext, *flags, verts, *elevation, *width, b(), e),
+            } => self.polyline(ctx, ext, *flags, verts, *elevation, b(), e),
             Kind::Spline {
                 flags,
                 degree,
@@ -1282,6 +1278,8 @@ impl<'l> Emitter<'l> {
                     holes: None,
                     zs: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 }));
                 if *solid {
                     self.note(
@@ -1630,8 +1628,11 @@ impl<'l> Emitter<'l> {
     }
 
     /// A vertex path (LWPOLYLINE, POLYLINE) in object coordinates, with the
-    /// elevation of each vertex when it has them (`heights`): bulges kept while
-    /// the map keeps shapes.
+    /// elevation of each vertex when it has them (`heights`) and its edges'
+    /// widths (docs/adr/0258 §2): bulges and widths kept while the map keeps
+    /// shapes. A closed one is an area unless KentOS marked it a closed line,
+    /// or the reader reads closed polylines as lines, or it has too few
+    /// vertices for an area (docs/adr/0258 §1).
     #[allow(clippy::too_many_arguments)]
     fn path(
         &mut self,
@@ -1640,16 +1641,21 @@ impl<'l> Emitter<'l> {
         mut bulges: Vec<f64>,
         closed: bool,
         zs: Option<Vec<Option<f64>>>,
+        widths: Option<Vec<[f64; 2]>>,
         b: EntityBase,
         e: &Parsed,
     ) {
         let mut pts = pts;
         let mut zs = zs.filter(|z| z.len() == pts.len());
+        let mut widths = widths.filter(|w| w.len() == pts.len());
         bulges.resize(pts.len(), 0.0);
         // A closed path that repeats its first vertex: the repeat is not a corner.
         if closed && pts.len() > 1 && pts.first() == pts.last() {
             pts.pop();
             bulges.pop();
+            if let Some(w) = widths.as_mut() {
+                w.pop();
+            }
             if let Some(z) = zs.as_mut() {
                 // Its own height goes with it; the first vertex keeps its own, and that is said when they differ.
                 let last = z.pop().flatten();
@@ -1661,7 +1667,8 @@ impl<'l> Emitter<'l> {
         if pts.len() < 2 {
             return self.skip(&e.name, "iki köşesi yok", e.line);
         }
-        let (pts, bulges, zs) = match (has_arcs(&bulges), m.similarity()) {
+        let wide = widths.is_some();
+        let (pts, bulges, zs, widths) = match (has_arcs(&bulges), m.similarity()) {
             (_, Some(s)) => {
                 let pts: Vec<Vec2> = pts.iter().map(|p| m.apply(*p)).collect();
                 let bulges: Vec<f64> = if s.mirror {
@@ -1669,9 +1676,15 @@ impl<'l> Emitter<'l> {
                 } else {
                     bulges
                 };
-                (pts, bulges, zs)
+                // Widths are lengths: the map's scale (a block's, the file's unit) is theirs.
+                let widths = widths.map(|w| {
+                    w.iter()
+                        .map(|[a, b]| [a * s.scale, b * s.scale])
+                        .collect::<Vec<_>>()
+                });
+                (pts, bulges, zs, widths)
             }
-            (false, None) => (pts.iter().map(|p| m.apply(*p)).collect(), bulges, zs),
+            (false, None) => (pts.iter().map(|p| m.apply(*p)).collect(), bulges, zs, None),
             (true, None) => {
                 // A stretched arc is an elliptic arc; the model's paths hold circular arcs only.
                 let ring = bulge_path_points(&pts, &bulges, closed);
@@ -1683,9 +1696,21 @@ impl<'l> Emitter<'l> {
                     e.line,
                 );
                 let n = ring.len();
-                (ring.iter().map(|p| m.apply(*p)).collect(), vec![0.0; n], zs)
+                (
+                    ring.iter().map(|p| m.apply(*p)).collect(),
+                    vec![0.0; n],
+                    zs,
+                    None,
+                )
             }
         };
+        if wide && widths.is_none() {
+            self.note(
+                "Genişlikli çoklu çizgi",
+                "eşit olmayan ölçekle eklendiği için genişliği alınmadı; çizgi ekseniyle geldi",
+                e.line,
+            );
+        }
         let zs = zs.filter(|z| z.len() == pts.len() && z.iter().any(Option::is_some));
         let open = !closed;
         let mut bulges = bulges;
@@ -1693,7 +1718,15 @@ impl<'l> Emitter<'l> {
             bulges.truncate(pts.len().saturating_sub(1));
         }
         let bulges = bulges.iter().any(|&x| x != 0.0).then_some(bulges);
-        if closed && (pts.len() >= 3 || bulges.is_some()) {
+        let line = self.closed_lines || e.meta.as_ref().is_some_and(|m| m.line);
+        if closed && !line && (pts.len() >= 3 || bulges.is_some()) {
+            if widths.is_some() {
+                self.note(
+                    "Genişlikli kapalı çoklu çizgi",
+                    "kapalı alan olarak alındığı için genişliği alınmadı; genişliğiyle almak için kapalı çoklu çizgileri çizgi olarak alın",
+                    e.line,
+                );
+            }
             self.push(Entity::Polygon(PathEntity {
                 ms: None,
                 base: b,
@@ -1702,8 +1735,37 @@ impl<'l> Emitter<'l> {
                 holes: None,
                 zs,
                 parts: None,
+                closed: false,
+                widths: None,
             }));
         } else {
+            // An open line's last vertex has no edge; widths all 0, or out of their rule, are none.
+            let mut widths = widths;
+            if open && let Some(last) = widths.as_mut().and_then(|w| w.last_mut()) {
+                *last = [0.0, 0.0];
+            }
+            let closed = closed && pts.len() >= 2;
+            let widths = widths.filter(|w| w.iter().any(|[a, b]| *a != 0.0 || *b != 0.0));
+            let widths = match widths {
+                Some(w)
+                    if kentos_contracts::path_extras_problem(
+                        pts.len(),
+                        closed,
+                        Some(&w),
+                        false,
+                        false,
+                    )
+                    .is_some() =>
+                {
+                    self.note(
+                        "Genişlikli çoklu çizgi",
+                        "genişlikleri geçersiz (eksi ya da sonsuz) olduğu için alınmadı",
+                        e.line,
+                    );
+                    None
+                }
+                w => w,
+            };
             self.push(Entity::Polyline(PathEntity {
                 ms: None,
                 base: b,
@@ -1712,6 +1774,8 @@ impl<'l> Emitter<'l> {
                 holes: None,
                 zs,
                 parts: None,
+                closed,
+                widths,
             }));
         }
     }
@@ -1724,7 +1788,6 @@ impl<'l> Emitter<'l> {
         flags: i64,
         verts: &[Vertex],
         elevation: f64,
-        width: bool,
         b: EntityBase,
         e: &Parsed,
     ) {
@@ -1738,18 +1801,11 @@ impl<'l> Emitter<'l> {
         // Spline frame control points are not on the curve.
         let verts: Vec<&Vertex> = verts.iter().filter(|x| x.flags & 16 == 0).collect();
         let closed = flags & 1 == 1;
-        if width {
-            self.note(
-                "Genişlikli çoklu çizgi",
-                "genişlik (kalınlık) alınmadı; çizgi ekseniyle geldi",
-                e.line,
-            );
-        }
         if flags & 8 != 0 {
-            // 3D polyline: world coordinates, straight segments, a height at each vertex.
+            // 3D polyline: world coordinates, straight segments, a height at each vertex; no widths.
             let pts: Vec<Vec2> = verts.iter().map(|x| xy(x.p)).collect();
             let zs = Self::heights(ctx, e, verts.iter().map(|x| x.p[2]), false);
-            return self.path(ctx.tf, pts, Vec::new(), closed, zs, b, e);
+            return self.path(ctx.tf, pts, Vec::new(), closed, zs, None, b, e);
         }
         let Some(m) = ocs(ctx, ext, elevation) else {
             return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
@@ -1763,7 +1819,12 @@ impl<'l> Emitter<'l> {
         );
         let pts: Vec<Vec2> = verts.iter().map(|x| xy(x.p)).collect();
         let bulges: Vec<f64> = verts.iter().map(|x| x.bulge).collect();
-        self.path(m, pts, bulges, closed, zs, b, e);
+        // Its vertices' widths (docs/adr/0258 §2).
+        let widths = verts
+            .iter()
+            .any(|x| x.widths != [0.0, 0.0])
+            .then(|| verts.iter().map(|x| x.widths).collect());
+        self.path(m, pts, bulges, closed, zs, widths, b, e);
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1847,7 +1908,7 @@ impl<'l> Emitter<'l> {
                 }
             }
         };
-        self.path(Tf::IDENTITY, pts, Vec::new(), closed, None, b, e);
+        self.path(Tf::IDENTITY, pts, Vec::new(), closed, None, None, b, e);
     }
 
     #[allow(clippy::too_many_arguments)]

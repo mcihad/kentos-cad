@@ -302,6 +302,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   70'i; DXF içe aktarma penceresinde “Dosyanın birimi” (kararın sözü, seçim dosyayı yeniden okur); `file.import.dxf` (pencere
   okuduğu dosyayla komutla yazar, büyük dosya kare kare komutun planı ve kaydıyla; Python `Document.import_dxf`, MCP); içe almanın
   kuralları uygulama katmanında (`import_apply`) (ADR 0257);
+  kapalı ve genişlikli çoklu çizgi: çoklu çizginin `closed`'ı (kapalı çizgi, alan değil; gösterilen alanı `enclosed_area`) ve `widths`'i
+  (köşe başına başlangıç ve bitiş genişliği, çizim uzunluğunda, kâğıt kalınlığından ayrı; `.kcad` şema 46, `FORMATS_VERSION` 59);
+  çekirdekte yolun kapalılığı `is_closed_path`, şerit `geom::band` (`MIXED` kaydı, nesnenin renginde dolu), genişliğin taşınması
+  `ops::widths` (`widths_lost`); `cad.polyline.create`'in `closed` ve `widths`'i, `invalid_polyline`; Çoklu çizgi'de Kapat (K) ve
+  Genişlik (E), Öznitelikler'de Kapalı ve Genişlik; DXF'in 43, 40 ve 41'i ve `closedPolylines` (CAD projesinde kapalı çizgi) (ADR 0258);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -790,6 +795,7 @@ python3 scripts/fixtures/reshape_command_cases.py --check; python3 scripts/fixtu
 KENTOS_TRACES_ONLY=usage-semantic-tools cargo test -p kentos-desktop every_trace_passes; ./target/debug/kentos-cad kullan usage-semantic-tools   # araçların anlamsal komutlarla önizlemesi ve yazması, .run/shots/kullanim/masaustu-usage-semantic-tools-* (ADR 0254, 0255)
 python3 scripts/fixtures/dxf_units_cases.py --check; python3 scripts/fixtures/dxf_import_command_cases.py --check   # DXF'in biriminin kararını (fixtures/formats/v1/dxf-units: 8 dosya, 24 durum) ve file.import.dxf'in 36 durumunu KentOS kodu olmadan ADR'nin kuralından ve DXF başvurusundan denetle (ADR 0257)
 cargo test -p kentos-desktop exchange::tests::unit_screens -- --ignored --nocapture   # DXF içe aktarma penceresinin Dosyanın birimi satırı (bildirilen, bildirmeyen, seçilen, sistemli, blok birimi), .run/shots/aktar-*-2[2-7]-dxf-* (ADR 0257 §4)
+python3 scripts/fixtures/polyline_extras_cases.py --check   # cad.polyline.create'in kapalı ve genişlikli 22 durumunu (kenar başına büküm ve genişlik, saklanan biçim, retlerin sırası ve iletileri) KentOS kodu olmadan ADR'nin kuralından denetle; durumlar fixtures/commands/v1/cad.polyline.create.json'ın “Kapalı ve genişlikli:” durumları (ADR 0258)
 python3 scripts/fixtures/units_change_cases.py --check   # Birimi değiştir'in durumlarını (her nesne türünün uzunluk ve uzunluk olmayan alanları, beş yönün çarpanları, metre sanılan milimetrelik oda, kilitli katman, retler) KentOS kodu olmadan ADR'nin kuralından denetle; durumlar fixtures/commands/v1/cad.units.change.json (ADR 0256)
 cargo test -p kentos-desktop project::unit_change::tests::screens -- --ignored --nocapture   # Proje ayarları'nın birim sorusu, .run/shots/birim-sorusu-* (ADR 0256 §2)
 python3 scripts/cad/manifest.py --check   # CAD işlem manifesti: her arayüz komutunun, aracının ve yönteminin düzeyi (catalog/v1/operations.json), Python ve MCP karşılığı ve CAD tarafının boşlukları; eşlenmemiş öğe, olmayan komut ya da işlem ve eski çıktı düşer; --check'siz docs/cad/manifest.{json,md}'yi yazar (ADR 0244)

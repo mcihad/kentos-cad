@@ -320,6 +320,8 @@ pub fn grip_elevation(e: &Entity, index: usize) -> Option<f64> {
                 holes: part.holes.clone(),
                 zs: part.zs.clone(),
                 parts: None,
+                closed: false,
+                widths: None,
             }
         };
         return grip_elevation(
@@ -538,6 +540,8 @@ mod tests {
             }]),
             zs,
             parts: None,
+            closed: false,
+            widths: None,
         })
     }
 
@@ -550,6 +554,8 @@ mod tests {
             holes: None,
             zs,
             parts: None,
+            closed: false,
+            widths: None,
         })
     }
 

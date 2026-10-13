@@ -34,14 +34,21 @@ pub fn walked_lines(objects: Vec<Shape>) -> Vec<Shape> {
     let mut out = Vec::new();
     for s in objects {
         match s {
+            // A closed line is walked round to its first vertex (docs/adr/0258 §1).
             Shape::Polyline {
-                pts, bulges, parts, ..
+                pts,
+                bulges,
+                parts,
+                closed,
+                ..
             } => {
                 out.push(Shape::Polyline {
                     pts,
                     bulges,
                     holes: None,
                     parts: None,
+                    closed,
+                    widths: None,
                 });
                 for p in parts.unwrap_or_default() {
                     out.push(Shape::Polyline {
@@ -49,6 +56,8 @@ pub fn walked_lines(objects: Vec<Shape>) -> Vec<Shape> {
                         bulges: p.bulges,
                         holes: None,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     });
                 }
             }

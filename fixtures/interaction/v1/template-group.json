@@ -25,7 +25,7 @@
     {"click": [0, 10]},
     {"key": "Enter", "note": "Komşu parsel: ortak iki köşede nokta var, yalnız iki yeni nokta (P5, P6); numara 102", "expect": {"entities": 10, "logged": ["Parsel: 3 üye nesnesi yazıldı."], "newest": {"kind": "text", "points": [[10, 0]], "text": "102", "layer": "Yazılar"}}},
     {"key": "Esc", "expect": {"tool": "select"}},
-    {"template": "g-yol", "note": "Yol ekseni ve iki yanında 5 m'de yol kenarları", "expect": {"prompt": "Yol · Çoklu çizgi: ilk noktayı belirtin", "tool": "polyline", "activeLayer": ["Ulaşım", "Yol ekseni"]}},
+    {"template": "g-yol", "note": "Yol ekseni ve iki yanında 5 m'de yol kenarları", "expect": {"prompt": "Yol · Çoklu çizgi: ilk noktayı belirtin [Genişlik (E): 0.000 m]", "tool": "polyline", "activeLayer": ["Ulaşım", "Yol ekseni"]}},
     {"click": [-20, 20]},
     {"click": [20, 20]},
     {"key": "Enter", "expect": {"entities": 13, "logged": ["Yol: 2 üye nesnesi yazıldı."], "newest": {"kind": "polyline", "points": [[-20, 15], [20, 15]], "layer": "Yol kenarı", "attrs": {"Tür": "Yol kenarı"}}}},

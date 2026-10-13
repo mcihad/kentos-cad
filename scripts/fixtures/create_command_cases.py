@@ -677,6 +677,21 @@ cases.append({
     ],
 })
 
+# A closed and a wide polyline (docs/adr/0258): written as given, an open one's last widths 0; out of their rules
+# refused (invalid_polyline).
+WIDE = {"kind": "polyline", "pts": [P(487000, 4420110), P(487010, 4420110), P(487010, 4420120)]}
+cases.append({
+    "name": "kapalı ve genişlikli çoklu çizgi yazıldığı gibi; kuralı dışı genişlik ve parçalı kapalı çizgi reddedilir (invalid_polyline)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**WIDE, "closed": True, "widths": [[0.5, 0.5], [0.5, 1], [1, 0.5]]})]}, "result": done([3]),
+         "expect": {"ids": IDS + [3], "entities": {"3": {**WIDE, "id": 3, "layerId": "yapi", "attrs": {}, "closed": True, "widths": [[0.5, 0.5], [0.5, 1], [1, 0.5]]}}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**WIDE, "widths": [[1, 1], [1, 1]]})]},
+         "result": failed("invalid_polyline", "Genişlik sayısı (2) köşe sayısından (3) farklı. Her köşeden çıkan kenara bir başlangıç ve bir bitiş genişliği verin.", "objects[0].geometry.widths"), "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**WIDE, "closed": True, "parts": [{"pts": [P(487020, 4420110), P(487030, 4420110)]}]})]},
+         "result": failed("invalid_polyline", "Kapalı ya da genişlikli çoklu çizgi tek parçalıdır. Önce Parçalara ayır ile parçalarına ayırın.", "objects[0].geometry.closed"), "expect": {"revision": "same"}},
+    ],
+})
+
 cases.append({
     "name": "girdinin hatası çizimin durumundan önce gelir: geometri, sürümden ve katmandan önce denetlenir",
     "steps": [

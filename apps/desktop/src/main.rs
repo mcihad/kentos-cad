@@ -130,6 +130,8 @@ mod point_calc;
 mod point_calc_scenes;
 mod pointclouds;
 mod points;
+#[cfg(test)]
+mod polyline_scenes;
 mod preview;
 mod processing;
 mod project;

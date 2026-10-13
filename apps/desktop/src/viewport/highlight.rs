@@ -306,6 +306,8 @@ mod tests {
                         holes: None,
                         zs: None,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     }));
                     id += 1;
                 }

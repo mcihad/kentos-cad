@@ -316,6 +316,8 @@ impl Collect {
                 zs: r.zs,
                 ms: r.ms,
                 parts: None,
+                closed: false,
+                widths: None,
             }),
             // The first path is the polyline's own fields, the others its parts (docs/adr/0174).
             Shape::Lines(paths) => {
@@ -341,6 +343,8 @@ impl Collect {
                             })
                             .collect(),
                     ),
+                    closed: false,
+                    widths: None,
                 })
             }
             // The first point is the object's own fields, the others its parts (docs/adr/0174).
@@ -364,6 +368,8 @@ impl Collect {
                 holes: holes_of(holes),
                 zs: r.zs,
                 parts: None,
+                closed: false,
+                widths: None,
             }),
             // The first part is the area's own fields, the others its parts.
             Shape::Parts(parts) => {
@@ -389,6 +395,8 @@ impl Collect {
                             })
                             .collect(),
                     ),
+                    closed: false,
+                    widths: None,
                 })
             }
         });

@@ -52,7 +52,7 @@ pub fn edge_path(s: &Shape) -> Option<EdgePath<'_>> {
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             Some(EdgePath {
                 pts: Cow::Borrowed(pts),
-                closed: matches!(s, Shape::Polygon { .. }),
+                closed: crate::entity::is_closed_path(s),
                 bulges: bulges.as_deref(),
             })
         }

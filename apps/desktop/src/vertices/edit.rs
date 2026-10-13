@@ -281,6 +281,9 @@ pub fn geometry_of(e: &Entity, kind: Kind, paths: &[Elevated]) -> Option<EntityG
                 bulges: r.bulges,
                 zs: r.zs,
                 parts: (!parts.is_empty()).then_some(parts),
+                // A closed line stays closed; its widths are carried by the edit (docs/adr/0258).
+                closed: first.closed,
+                widths: None,
             }
         }
         Kind::Polygon => {

@@ -248,16 +248,23 @@ pub fn all_corners(e: &Entity, op: &CornerOp) -> Option<Reshaped> {
         });
     }
     let (shape, done, skipped) = match &e.shape {
+        // A closed polyline's first vertex is a corner too (docs/adr/0258 §1).
         Shape::Polyline {
-            pts, bulges, holes, ..
+            pts,
+            bulges,
+            holes,
+            closed,
+            ..
         } => {
-            let (p, done, skipped) = all_corners_of_path(pts, bulges.as_deref(), false, op);
+            let (p, done, skipped) = all_corners_of_path(pts, bulges.as_deref(), *closed, op);
             (
                 Shape::Polyline {
                     pts: p.pts,
                     bulges: p.bulges,
                     holes: holes.clone(),
                     parts: None,
+                    closed: *closed,
+                    widths: None,
                 },
                 done,
                 skipped,
@@ -317,15 +324,22 @@ pub fn reverse(e: &Entity) -> Option<Entity> {
     }
     let shape = match &e.shape {
         Shape::Line { a, b } => Shape::Line { a: *b, b: *a },
+        // A closed polyline turns as an area's ring (docs/adr/0258 §1).
         Shape::Polyline {
-            pts, bulges, holes, ..
+            pts,
+            bulges,
+            holes,
+            closed,
+            ..
         } => {
-            let r = reverse_bulge_path(pts, bulges.as_deref(), false);
+            let r = reverse_bulge_path(pts, bulges.as_deref(), *closed);
             Shape::Polyline {
                 pts: r.pts,
                 bulges: bulges.as_ref().and(r.bulges),
                 holes: holes.clone(),
                 parts: None,
+                closed: *closed,
+                widths: None,
             }
         }
         Shape::Polygon {
@@ -513,15 +527,21 @@ pub fn simplify(e: &Entity, tol: f64) -> Option<Reshaped> {
     }
     let (shape, removed, deviation) = match &e.shape {
         Shape::Polyline {
-            pts, bulges, holes, ..
+            pts,
+            bulges,
+            holes,
+            closed,
+            ..
         } => {
-            let (p, removed, dev) = simplify_path(pts, bulges.as_deref(), false, tol);
+            let (p, removed, dev) = simplify_path(pts, bulges.as_deref(), *closed, tol);
             (
                 Shape::Polyline {
                     pts: p.pts,
                     bulges: p.bulges,
                     holes: holes.clone(),
                     parts: None,
+                    closed: *closed,
+                    widths: None,
                 },
                 removed,
                 dev,
@@ -595,6 +615,8 @@ mod tests {
             bulges: None,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         })
     }
 
@@ -677,6 +699,8 @@ mod tests {
             bulges: Some(vec![0.0, 0.5, 0.0, 0.0]),
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         });
         let r = all_corners(&p, &CornerOp::Radius(1.0)).expect("answered");
         // Both vertices of the arc edge meet it at an angle: left.
@@ -712,6 +736,8 @@ mod tests {
             bulges: Some(vec![0.4, 0.0, 0.0]),
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         });
         let r = reverse(&p).expect("reversed");
         let Shape::Polyline { pts, bulges, .. } = &r.shape else {
@@ -767,6 +793,8 @@ mod tests {
             bulges: Some(vec![0.0, 0.0, 0.3, 0.0]),
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         });
         let s = simplify(&a, 0.01).expect("simplified");
         let Shape::Polyline { pts, bulges, .. } = &s.entity.shape else {

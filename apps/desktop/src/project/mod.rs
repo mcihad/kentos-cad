@@ -501,6 +501,8 @@ mod tests {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         });
         let hole = Entity::Circle(CircleEntity {
             base: base(),

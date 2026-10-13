@@ -31,7 +31,7 @@
     { "run": "tool.polyline" },
     { "click": [0, 0] },
     { "click": [5, 0] },
-    { "click": [5, 5], "note": "Çoklu çizgi halka değil: Dik kapat yok.", "expect": { "points": 3, "options": ["Y", "U", "İ", "A", "G", "Enter"] } },
+    { "click": [5, 5], "note": "Çoklu çizgi halka değil: Dik kapat yok.", "expect": { "points": 3, "options": ["Y", "U", "İ", "A", "E", "K", "G", "Enter"] } },
     { "key": "Esc", "note": "Esc bitmemiş çizgiyi bırakır.", "expect": { "tool": "select", "entities": 2 } }
   ]
 }

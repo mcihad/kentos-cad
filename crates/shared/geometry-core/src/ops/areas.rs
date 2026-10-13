@@ -86,6 +86,16 @@ pub fn area_of_entity(e: &Shape) -> Option<Area> {
                 holes: Vec::new(),
             }
         }),
+        // A closed polyline's ring, its last bulge the closing edge's (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed: true,
+            ..
+        } => (pts.len() >= 2).then(|| Area {
+            outer: ring(pts.clone(), bulges.clone()),
+            holes: Vec::new(),
+        }),
         Shape::Polyline { pts, bulges, .. } => {
             let n = pts.len();
             if n < 3 {
@@ -158,6 +168,8 @@ pub fn polylines_of_polygon(e: &Shape) -> Result<Vec<Entity>, String> {
                 bulges,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }))
         })
         .collect()

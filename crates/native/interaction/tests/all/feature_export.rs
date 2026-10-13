@@ -34,6 +34,8 @@ fn object(o: &Value, id: u32) -> Entity {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }),
         _ => Entity::Point(PointEntity {
             base,

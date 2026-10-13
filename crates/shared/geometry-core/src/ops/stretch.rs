@@ -93,6 +93,8 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             bulges,
             holes,
             parts,
+            closed,
+            widths,
         } => {
             (any(pts) || parts.iter().flatten().any(|q| any(&q.pts))).then(|| Shape::Polyline {
                 pts: pts.iter().map(|&p| mv(p)).collect(),
@@ -107,6 +109,8 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
                         })
                         .collect()
                 }),
+                closed: *closed,
+                widths: widths.clone(),
             })?
         }
         Shape::Spline { pts, closed } => any(pts).then(|| Shape::Spline {

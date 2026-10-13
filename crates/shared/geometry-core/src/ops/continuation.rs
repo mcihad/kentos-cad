@@ -38,12 +38,15 @@ crate::json_struct!(Ends {
 fn path_of(e: &Shape) -> Option<(Vec<Vec2>, Vec<f64>)> {
     match e {
         Shape::Line { a, b } => Some((vec![*a, *b], vec![0.0, 0.0])),
-        // One part: a multi-part polyline is not continued (docs/adr/0174 §3).
+        // One part: a multi-part polyline is not continued (docs/adr/0174 §3); a closed one has
+        // no free end (docs/adr/0258 §1).
         Shape::Polyline {
             pts,
             bulges,
             holes: None,
             parts,
+            closed: false,
+            ..
         } if pts.len() >= 2 && parts.as_ref().is_none_or(Vec::is_empty) => {
             let b = (0..pts.len())
                 .map(|i| bulge_at(bulges.as_deref(), i))
@@ -108,6 +111,8 @@ pub fn continue_path(e: &Shape, from_first: bool, drawn: &[Vec2], bulges: &[f64]
         bulges: clean.bulges,
         holes: None,
         parts: None,
+        closed: false,
+        widths: None,
     })
 }
 

@@ -81,6 +81,8 @@ fn extras(v: &Value) -> SnapExtras {
                     .map(|b| b.iter().map(num).collect()),
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }]
         })
         .unwrap_or_default();

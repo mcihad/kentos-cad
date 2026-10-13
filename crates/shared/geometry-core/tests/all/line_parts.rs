@@ -32,6 +32,8 @@ fn road() -> Shape {
             bulges: None,
             holes: None,
         }]),
+        closed: false,
+        widths: None,
     }
 }
 
@@ -71,6 +73,8 @@ fn a_multi_part_object_is_measured_part_by_part() {
         bulges: None,
         holes: None,
         parts,
+        closed: false,
+        widths: None,
     };
     assert_eq!(entity_anchor(&long_second), Some(v(36.0, 0.0)));
     // The parts come back as one-part objects of the same kind, the first the object's own fields.
@@ -282,6 +286,8 @@ fn toplu_alan_takes_a_part_as_a_path_of_its_own() {
             bulges: None,
             holes: None,
         }]),
+        closed: false,
+        widths: None,
     };
     let found = polygonize(&[Entity::new(corner)], &[], false);
     assert!(found.regions.is_empty());

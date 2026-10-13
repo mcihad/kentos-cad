@@ -28,6 +28,7 @@
 //! | 17 multi-point object | x, y, hasZ, z, point count, then per point: x, y, hasZ, z |
 //! | 19 image | p.x, p.y, width, height, rotation, mirror, asset?, file?, clip (count, −1 none, then x, y each), opacity (NaN none) |
 //! | 20 raster | affine (6), width, height, bands, sample, asset?, file?, srid, style (its JSON text), opacity (NaN none) |
+//! | 22 closed polyline | path, holes (its last bulge the closing edge's; docs/adr/0258 §1) |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
@@ -200,7 +201,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 21.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 22.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -239,14 +240,16 @@ impl Reader<'_> {
                 a: self.pt()?,
                 b: self.pt()?,
             },
-            2 | 3 => {
+            2 | 3 | 22 => {
                 let (pts, bulges, holes) = self.path()?;
-                if kind == 2.0 {
+                if kind != 3.0 {
                     Shape::Polyline {
                         pts,
                         bulges,
                         holes,
                         parts: None,
+                        closed: kind == 22.0,
+                        widths: None,
                     }
                 } else {
                     Shape::Polygon {
@@ -299,6 +302,8 @@ impl Reader<'_> {
                         bulges,
                         holes,
                         parts: Some(parts),
+                        closed: false,
+                        widths: None,
                     }
                 } else {
                     Shape::Polygon {
@@ -898,12 +903,14 @@ impl Packer {
                     self.path(&p.pts, p.bulges.as_deref(), p.holes.as_deref());
                 }
             }
-            // A multi-part polyline (docs/adr/0174): kind 16, as an area's kind 13.
+            // A multi-part polyline (docs/adr/0174): kind 16, as an area's kind 13. A closed
+            // line has one part (docs/adr/0258 §1).
             Shape::Polyline {
                 pts,
                 bulges,
                 holes,
                 parts: Some(parts),
+                ..
             } if !parts.is_empty() => {
                 self.put(&[16.0]);
                 self.path(pts, bulges.as_deref(), holes.as_deref());
@@ -918,8 +925,12 @@ impl Packer {
             | Shape::Polygon {
                 pts, bulges, holes, ..
             } => {
-                let polygon = matches!(shape, Shape::Polygon { .. });
-                self.put(&[if polygon { 3.0 } else { 2.0 }]);
+                let kind = match shape {
+                    Shape::Polygon { .. } => 3.0,
+                    Shape::Polyline { closed: true, .. } => 22.0,
+                    _ => 2.0,
+                };
+                self.put(&[kind]);
                 self.path(pts, bulges.as_deref(), holes.as_deref());
             }
             Shape::Circle { c, r } => self.put(&[4.0, c.x, c.y, *r]),

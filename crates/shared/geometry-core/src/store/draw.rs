@@ -24,7 +24,8 @@
 //!   given. The host draws each with the piece's own colour and line weight
 //!   when it has them (`Store::block_pieces_json`), else the insert's;
 //! - `MIXED`, then a `LINE` record's paths and a `FILL` record's rings (0
-//!   for none), their points always given: a leader's (docs/adr/0146 §5),
+//!   for none), their points always given: a wide polyline's (docs/adr/0258
+//!   §2), its edges without width and its band; a leader's (docs/adr/0146 §5),
 //!   its line on to its landing's end and an open arrowhead's sides, then
 //!   its filled arrowhead or dot; a dimension's layout lines and its filled
 //!   arrowheads or dots (docs/adr/0183 §3). The host strokes the paths and
@@ -269,6 +270,51 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
                     Shape::Polyline { pts, .. } => path(out, false, pts),
                     _ => path(out, false, &[]),
                 }
+            }
+        }
+        // A wide polyline (docs/adr/0258 §2): its edges without width as its line, its band's
+        // rings, each filled on its own, in its colour.
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            widths: Some(widths),
+            ..
+        } if widths.iter().any(|[a, b]| *a > 0.0 || *b > 0.0) => {
+            let band = crate::geom::band::band(pts, bulges.as_deref(), *closed, widths);
+            out.extend([
+                if band.rings.is_empty() { LINE } else { MIXED },
+                band.thin.len() as f64,
+            ]);
+            for run in &band.thin {
+                path(out, false, run);
+            }
+            if !band.rings.is_empty() {
+                out.push(band.rings.len() as f64);
+                for r in &band.rings {
+                    ring(out, r, false, oriented.then_some(true));
+                }
+            }
+        }
+        // A closed polyline is one closed path (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed: true,
+            ..
+        } => {
+            out.extend([LINE, 1.0]);
+            if bulges.is_some() {
+                let step = crate::jsmath::TAU / OUTLINE_SEGMENTS;
+                path(
+                    out,
+                    true,
+                    &crate::geom::bulge::bulge_path_outline(pts, bulges.as_deref(), true, step),
+                );
+            } else if refs {
+                out.extend([1.0, SOURCE]);
+            } else {
+                path(out, true, pts);
             }
         }
         Shape::Polyline { pts, bulges, .. } => {
