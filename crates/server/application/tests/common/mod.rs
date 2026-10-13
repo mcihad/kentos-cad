@@ -63,6 +63,7 @@ pub async fn new_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
             "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] })).unwrap()],
         active_layer: "cizim".into(),
         styles: s.styles,
+        sheets: None,
         description: None,
         project_type: None,
         tags: None,

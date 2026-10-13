@@ -25,7 +25,9 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use kentos_contracts::{BlockDefinition, Entity, LayerNode, ProjectSettings, ProjectStyles};
+use kentos_contracts::{
+    BlockDefinition, Entity, LayerNode, ProjectSettings, ProjectSheets, ProjectStyles,
+};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -41,6 +43,8 @@ pub struct ExternalMeta {
     /// A new layer tree; this user's active layer stays when it is still a layer in it.
     pub layers: Option<Vec<LayerNode>>,
     pub styles: Option<ProjectStyles>,
+    /// The sheet book and its pictures (docs/adr/0251); `Some(None)`: the project has none any more.
+    pub sheets: Option<Option<ProjectSheets>>,
 }
 
 /// What came from outside.
@@ -204,6 +208,9 @@ impl Document {
             }
             if let Some(styles) = meta.styles {
                 self.styles = styles;
+            }
+            if let Some(sheets) = meta.sheets {
+                self.sheets = sheets.map(Arc::new);
             }
         }
         self.forget_history_of(&slots, &named);

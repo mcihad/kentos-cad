@@ -10152,6 +10152,7 @@ class ProjectCreate(_Model):
     Attributes:
         description: The catalog's description (docs/adr/0028); absent: none.
         project_type: Absent: the general type (`cad`).
+        sheets: The project's sheet book and its pictures (docs/adr/0251); absent: none.
         storage: How the project is kept, for good (docs/adr/0031); absent: object by
             object in PostGIS (`database`). A `file` project gets its content
             from its first committed revision.
@@ -10165,6 +10166,7 @@ class ProjectCreate(_Model):
     description: str | None | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
     project_type: ProjectType | ProjectTypeName | None | Unset = UNSET
+    sheets: ProjectSheets | None | Unset = UNSET
     storage: ProjectStorage | ProjectStorageName | None | Unset = UNSET
     tags: list[str] | None | Unset = UNSET
 
@@ -10182,6 +10184,8 @@ class ProjectCreate(_Model):
             out["homeView"] = None if self.home_view is None else self.home_view.to_json()
         if self.project_type is not UNSET:
             out["projectType"] = None if self.project_type is None else _enum_out(self.project_type)
+        if self.sheets is not UNSET:
+            out["sheets"] = None if self.sheets is None else self.sheets.to_json()
         if self.storage is not UNSET:
             out["storage"] = None if self.storage is None else _enum_out(self.storage)
         if self.tags is not UNSET:
@@ -10200,6 +10204,7 @@ class ProjectCreate(_Model):
             description=data.get("description", UNSET),
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(ProjectType, data["projectType"]),
+            sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else ProjectSheets.from_json(data["sheets"]),
             storage=UNSET if "storage" not in data else None if data["storage"] is None else _enum_in(ProjectStorage, data["storage"]),
             tags=UNSET if "tags" not in data else None if data["tags"] is None else list(data["tags"]),
         )
@@ -10375,6 +10380,8 @@ class ProjectInfo(_Model):
         blocks: A database project's block definitions with their versions
             (docs/adr/0144 §5), in the order they were made. An older server's
             answer without them has none.
+        sheets: A database project's sheet book and its pictures (docs/adr/0251); an
+            older server's answer without it has none.
         storage: How it keeps its content: a file project opens from its newest
             revision (`GET …/files`), not from `…/features` (docs/adr/0031). An
             older server's answer without it is a database project.
@@ -10397,6 +10404,7 @@ class ProjectInfo(_Model):
     event_cursor: str
     blocks: list[BlockRecord] | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
+    sheets: ProjectSheets | None | Unset = UNSET
     storage: ProjectStorage | ProjectStorageName = ProjectStorage.DATABASE
 
     def to_json(self) -> dict[str, Any]:
@@ -10421,6 +10429,8 @@ class ProjectInfo(_Model):
             out["blocks"] = [e0.to_json() for e0 in self.blocks]
         if self.home_view is not UNSET:
             out["homeView"] = None if self.home_view is None else self.home_view.to_json()
+        if self.sheets is not UNSET:
+            out["sheets"] = None if self.sheets is None else self.sheets.to_json()
         out["storage"] = _enum_out(self.storage)
         return out
 
@@ -10445,6 +10455,7 @@ class ProjectInfo(_Model):
             event_cursor=data["eventCursor"],
             blocks=[BlockRecord.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
+            sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else ProjectSheets.from_json(data["sheets"]),
             storage=_enum_in(ProjectStorage, data["storage"]) if "storage" in data else ProjectStorage.DATABASE,
         )
 
@@ -10569,11 +10580,17 @@ class ProjectMetadataUpdate(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ProjectPatch(_Model):
-    """Metadata to replace; absent fields stay. Needs `expectedVersions["@project"]`."""
+    """Metadata to replace; absent fields stay. Needs `expectedVersions["@project"]`.
+    Attributes:
+        sheets: The sheet book and its pictures, whole (docs/adr/0251); null: the
+            project has none any more. Held to the file format's rules
+            (`sheets_problem`).
+    """
     active_layer: str | None | Unset = UNSET
     layers: list[LayerNode] | None | Unset = UNSET
     name: str | None | Unset = UNSET
     settings: ProjectSettings | None | Unset = UNSET
+    sheets: ProjectSheets | None | Unset = UNSET
     styles: ProjectStyles | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -10586,6 +10603,8 @@ class ProjectPatch(_Model):
             out["name"] = self.name
         if self.settings is not UNSET:
             out["settings"] = None if self.settings is None else self.settings.to_json()
+        if self.sheets is not UNSET:
+            out["sheets"] = None if self.sheets is None else self.sheets.to_json()
         if self.styles is not UNSET:
             out["styles"] = None if self.styles is None else self.styles.to_json()
         return out
@@ -10597,6 +10616,7 @@ class ProjectPatch(_Model):
             layers=UNSET if "layers" not in data else None if data["layers"] is None else [LayerNode.from_json(e0) for e0 in data["layers"]],
             name=data.get("name", UNSET),
             settings=UNSET if "settings" not in data else None if data["settings"] is None else ProjectSettings.from_json(data["settings"]),
+            sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else ProjectSheets.from_json(data["sheets"]),
             styles=UNSET if "styles" not in data else None if data["styles"] is None else ProjectStyles.from_json(data["styles"]),
         )
 
@@ -10822,6 +10842,31 @@ class ProjectShare(_Model):
             user_id=data["userId"],
             role=_enum_in(GrantRole, data["role"]),
             expires_at=data.get("expiresAt", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProjectSheets(_Model):
+    """The sheet book of a project and its pictures' bytes.
+    Attributes:
+        book: The sheet core's book (`kentos.sheet/1`): an object, opaque here.
+        pictures: The bytes of the book's pictures; none when it has none.
+    """
+    book: Any
+    pictures: list[SheetPicture] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["book"] = self.book
+        if self.pictures is not UNSET:
+            out["pictures"] = [e0.to_json() for e0 in self.pictures]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectSheets:
+        return cls(
+            book=data["book"],
+            pictures=[SheetPicture.from_json(e0) for e0 in data["pictures"]] if "pictures" in data else UNSET,
         )
 
 
@@ -11844,6 +11889,30 @@ class SettingsSet(_Model):
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
             second_srid=data.get("secondSrid", UNSET),
             srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetPicture(_Model):
+    """A picture's bytes under the SHA-256 the book names it by.
+    Attributes:
+        sha256: SHA-256 of `bytes`, 64 lowercase hexadecimal digits.
+        bytes: The file's bytes; base64 (RFC 4648, with padding) in JSON.
+    """
+    sha256: str
+    bytes: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sha256"] = self.sha256
+        out["bytes"] = self.bytes
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetPicture:
+        return cls(
+            sha256=data["sha256"],
+            bytes=data["bytes"],
         )
 
 
@@ -15255,6 +15324,7 @@ __all__ = [
     "ProjectRoleName",
     "ProjectSettings",
     "ProjectShare",
+    "ProjectSheets",
     "ProjectState",
     "ProjectStateName",
     "ProjectStorage",
@@ -15305,6 +15375,7 @@ __all__ = [
     "ServiceParam",
     "SettingsChanged",
     "SettingsSet",
+    "SheetPicture",
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SplineEntity",

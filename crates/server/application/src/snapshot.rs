@@ -30,8 +30,8 @@ use crate::files::verifying;
 use crate::projects::{FEATURE_COLUMNS, FeatureRow, gone, record, storage_of};
 
 /// What a new project takes from a drawing besides its objects: its
-/// settings, origin, view, layers, active layer, styles and block
-/// definitions (docs/adr/0144 §5).
+/// settings, origin, view, layers, active layer, styles, block definitions
+/// (docs/adr/0144 §5) and sheet book (docs/adr/0251).
 #[derive(Clone, Debug)]
 pub struct DrawingMeta {
     pub settings: ProjectSettings,
@@ -41,6 +41,7 @@ pub struct DrawingMeta {
     pub active_layer: String,
     pub styles: ProjectStyles,
     pub blocks: Vec<BlockDefinition>,
+    pub sheets: Option<kentos_contracts::ProjectSheets>,
 }
 
 impl DrawingMeta {
@@ -53,6 +54,7 @@ impl DrawingMeta {
             active_layer: doc.active_layer.clone(),
             styles: doc.styles.clone(),
             blocks: doc.blocks.clone(),
+            sheets: doc.sheets.clone(),
         }
     }
 }
@@ -139,6 +141,7 @@ type SnapshotRow = (
     i64,
     String,
     bool,
+    Option<Value>,
 );
 
 /// The drawing of the project in scope, its data revision and its event
@@ -152,7 +155,7 @@ pub async fn read(
         "select p.name, p.settings, p.layers, p.active_layer, p.origin_x, p.origin_y, p.home_view, p.styles, p.data_revision,
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
-                p.storage, p.deleted_at is not null
+                p.storage, p.deleted_at is not null, p.sheets
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -172,6 +175,7 @@ pub async fn read(
         cursor,
         storage,
         deleted,
+        sheets,
     ) = row.ok_or_else(not_found)?;
     if deleted {
         return Err(gone(&name));
@@ -219,7 +223,10 @@ pub async fn read(
             .collect(),
         project_id: Some(ProjectId(*access.project.as_bytes())),
         migrated_from: None,
-        sheets: None,
+        sheets: sheets
+            .map(serde_json::from_value)
+            .transpose()
+            .map_err(bad)?,
     };
     Ok((doc, revision, cursor))
 }

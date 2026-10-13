@@ -37,6 +37,7 @@ from ..types import (  # noqa: F401
     ProjectRename,
     ProjectSettings,
     ProjectShare,
+    ProjectSheets,
     ProjectStorage,
     ProjectStorageName,
     ProjectStyles,
@@ -271,6 +272,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
         description: str | None | Unset = UNSET,
         home_view: Bounds | None | Unset = UNSET,
         project_type: ProjectType | ProjectTypeName | None | Unset = UNSET,
+        sheets: ProjectSheets | None | Unset = UNSET,
         storage: ProjectStorage | ProjectStorageName | None | Unset = UNSET,
         tags: Sequence[str] | None | Unset = UNSET,
         expected_versions: Mapping[str, str] | None = None,
@@ -294,6 +296,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             description: The catalog's description (docs/adr/0028); absent: none.
             home_view:
             project_type: Absent: the general type (`cad`).
+            sheets: The project's sheet book and its pictures (docs/adr/0251); absent: none.
             storage: How the project is kept, for good (docs/adr/0031); absent: object by
                 object in PostGIS (`database`). A `file` project gets its content
                 from its first committed revision.
@@ -321,6 +324,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             description=description,
             home_view=home_view,
             project_type=project_type,
+            sheets=sheets,
             storage=storage,
             tags=_opt(tags, lambda x: list(x)),
         ),

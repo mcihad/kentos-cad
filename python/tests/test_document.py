@@ -68,6 +68,25 @@ class Acceptance(unittest.TestCase):
             self.assertEqual(record.entity.layer_id, target.id)
             self.assertEqual(cad.Document.from_bytes(back.to_bytes()).measure(made.uid).area, 250.0)
 
+    def test_the_sheet_book_is_kept_by_open_and_save(self) -> None:
+        """The project's sheet book (docs/adr/0251) goes with the drawing: opened, edited and saved, the file still
+        holds it bit for bit, as the independent reader (tools/kcad/kcad.py) reads it."""
+        import sys
+
+        sys.path.insert(0, str(ROOT / "tools/kcad"))
+        import kcad  # noqa: PLC0415  (the independent reader)
+
+        sample = ROOT / "fixtures/kcad/v2/sheets.kcad"
+        want = kcad.read(sample.read_bytes())[1]["sheets"]
+        doc = cad.Document.open(sample)
+        cad.point.create(doc, layer_id=doc.active_layer, p=(500010, 4400010))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "paftali.kcad"
+            doc.save(path)
+            got = kcad.read(path.read_bytes())[1]
+        self.assertEqual(got["sheets"], want)
+        self.assertEqual(len(got["entities"]), 2)
+
     def test_a_plan_written_later_is_a_conflict(self) -> None:
         doc = new()
         plan = cad.polygon.create.plan(doc, layer_id=doc.active_layer, pts=SQUARE)

@@ -165,6 +165,10 @@ impl Meta {
                 .unwrap_or_else(|| self.settings.clone()),
             layers: patch.layers.clone().unwrap_or_else(|| self.layers.clone()),
             styles: patch.styles.clone().unwrap_or_else(|| self.styles.clone()),
+            sheets: match &patch.sheets {
+                Some(sheets) => sheets.clone().map(std::sync::Arc::new),
+                None => self.sheets.clone(),
+            },
         }
     }
 }
@@ -520,6 +524,7 @@ impl ProjectSync {
                 settings: Some(after.settings),
                 layers: Some(after.layers),
                 styles: Some(after.styles),
+                sheets: Some(after.sheets.as_deref().cloned()),
             });
             if m.base != self.meta_version {
                 meta_conflict = Some((m.base.clone(), self.meta_version.clone()));

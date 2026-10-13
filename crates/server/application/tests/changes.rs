@@ -64,6 +64,7 @@ async fn new_project(db: &TestDb, who: &Access) -> Uuid {
         layers: unlocked(&s.layers),
         active_layer: s.active_layer,
         styles: s.styles,
+        sheets: None,
         description: None,
         project_type: None,
         tags: None,

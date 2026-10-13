@@ -127,6 +127,7 @@ pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) ->
         layers: s.layers,
         active_layer: s.active_layer,
         styles: s.styles,
+        sheets: None,
         meta_version: "4".into(),
         data_revision: "7".into(),
         feature_count: "13".into(),

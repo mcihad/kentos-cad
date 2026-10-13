@@ -4,6 +4,7 @@ import type { Bounds } from "./Bounds";
 import type { LayerNode } from "./LayerNode";
 import type { ProjectAccessView } from "./ProjectAccessView";
 import type { ProjectSettings } from "./ProjectSettings";
+import type { ProjectSheets } from "./ProjectSheets";
 import type { ProjectState } from "./ProjectState";
 import type { ProjectStorage } from "./ProjectStorage";
 import type { ProjectStyles } from "./ProjectStyles";
@@ -21,7 +22,12 @@ access: ProjectAccessView,
 /**
  * Active or archived (an archived project opens read-only; one in the trash does not open).
  */
-state: ProjectState, name: string, settings: ProjectSettings, origin: Vec2, homeView?: Bounds, layers: Array<LayerNode>, activeLayer: string, styles: ProjectStyles, metaVersion: string, dataRevision: string, featureCount: string, 
+state: ProjectState, name: string, settings: ProjectSettings, origin: Vec2, homeView?: Bounds, layers: Array<LayerNode>, activeLayer: string, styles: ProjectStyles, 
+/**
+ * A database project's sheet book and its pictures (docs/adr/0251); an
+ * older server's answer without it has none.
+ */
+sheets?: ProjectSheets, metaVersion: string, dataRevision: string, featureCount: string, 
 /**
  * Event cursor at the moment this was read: subscribe after it to miss nothing.
  */

@@ -161,6 +161,7 @@ async fn scenario(storage: ProjectStorage) {
             "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }])).unwrap(),
         active_layer: "cizim".into(),
         styles: s.styles,
+        sheets: None,
         description: Some("Kabul seti".into()),
         project_type: Some(ProjectType::LandReadjustment),
         tags: None,

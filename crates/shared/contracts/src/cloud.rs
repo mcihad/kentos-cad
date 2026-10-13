@@ -436,6 +436,10 @@ pub struct ProjectCreate {
     pub layers: Vec<LayerNode>,
     pub active_layer: String,
     pub styles: ProjectStyles,
+    /// The project's sheet book and its pictures (docs/adr/0251); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sheets: Option<crate::sheets::ProjectSheets>,
     /// The catalog's description (docs/adr/0028); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -479,6 +483,11 @@ pub struct ProjectInfo {
     pub layers: Vec<LayerNode>,
     pub active_layer: String,
     pub styles: ProjectStyles,
+    /// A database project's sheet book and its pictures (docs/adr/0251); an
+    /// older server's answer without it has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sheets: Option<crate::sheets::ProjectSheets>,
     pub meta_version: String,
     pub data_revision: String,
     pub feature_count: String,
@@ -628,6 +637,23 @@ pub struct ProjectPatch {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub styles: Option<ProjectStyles>,
+    /// The sheet book and its pictures, whole (docs/adr/0251); null: the
+    /// project has none any more. Held to the file format's rules
+    /// (`sheets_problem`).
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Option<crate::sheets::ProjectSheets>>", optional)
+    )]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<crate::sheets::ProjectSheets>")
+    )]
+    pub sheets: Option<Option<crate::sheets::ProjectSheets>>,
 }
 
 /// The committed result; a retry with the same idempotency key gets the same one (`replayed`).

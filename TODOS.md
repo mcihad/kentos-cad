@@ -110,6 +110,13 @@ Liste:
   Köşe yuvarla, Pah ve tüm köşeler araçlarının önizlemeyi planla, yazmayı komutla yapması; `cad.entities.create`'in ilişkili ölçüsü
   yerleriyle (`placed_points`); katalogda `hosts`'a Web; oynatılacak iz `edge-commands.json`; bilinen bozulmalar: komut kataloğunda dört
   komut (yalnız `Desktop`), `fixtures/commands/v1`'de dört dosya ve `cad.entities.create.json`'un iki yeni durumu web'in koşucusunda.
+- [ ] `CADP-09` (ADR 0251, 13 Ekim): web'de gerekenler: `.kcad` şema 44'ün okunması ve yazılması (`io/kcad.ts`'in başı ve
+  `FORMATS_VERSION` 56; web'in WASM'ı 53'te olduğu için web şema 44'lü dosyayı açmaz), belgenin kitabı tutması (`model/` ve
+  `set_sheets`'in karşılığı, geri alma adımı değil), pafta kipinin kitabı IndexedDB `kentos.sheets.v1`'in yerine belgeden alması ve
+  ona yazması, IndexedDB'deki kitapların masaüstününkiyle aynı kuralla göçü (anahtar, kaydedince kenara alma, boş kitapla ezmeme),
+  bulut istemcisinin `ProjectPatch.sheets`'i göndermesi ve `ProjectInfo.sheets`'i alması; pafta çekirdeğinin `project` modülü WASM'a
+  (`sheet-wasm`); bilinen bozulmalar: örnek `fixtures/kcad/v2/sheets.kcad` ve dokuz bozuk dosya web'in okuyucusunda şema 44 olarak
+  reddedilir.
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
@@ -1051,7 +1058,14 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   `cad.styles.edit`, `cad.settings.set`; masaüstünün Katmanlar paneli ve pencereleri bunlarla yazar; 157 ortak durum üç bağımsız
   betikten; Python ve MCP. Temizle altlığı boş katman saymaz; değişmeyen stil kaydı adım yazmaz. Açık: geri alınabilir ayar ve stil
   tabloları ile ortak değişiklik kümesi (`CAD-CMD-14`), dondurma ve çizim bayrakları, katman durumlarının alışverişi.
-- [ ] `CADP-09` Pafta kitabı `.kcad`'in kaynağında; cihaz kitaplarından göç (plan §17.1).
+- [x] `CADP-09` Pafta kitabı `.kcad`'in kaynağında; cihaz kitaplarından göç (plan §17.1). — **13 Ekim,
+  [ADR 0251](docs/adr/0251-sheet-book-in-the-project-file.md):** `.kcad` şema 44'ün `sheets`'i (kitap opak, resimlerin baytları
+  SHA-256'larıyla; spesifikasyon §6.12, bağımsız Python okuyucu ve yazıcısı, örnek `sheets.kcad`, dokuz bozuk dosya), `FORMATS_VERSION`
+  56; belgede kitap (düzenleme, geri alma adımı değil); pafta çekirdeğinin `project`'i; masaüstünde kitap çizimle gider, cihazdaki
+  kitap projeye alınır ve kaydedilince `kitaplar/tasindi/`'ye ayrılır, okunamayan kitap olduğu gibi kalır; veritabanı projesinde göç
+  0017 (`project.sheets`), bilgi, oluşturma, `ProjectPatch.sheets`, görüntü, içe aktarma, kopya ve geri yükleme; masaüstünün bulut
+  eşitlemesi kitabı meta olarak gönderir ve alır. Açık: pafta işlemleri katalogda ve başsız sunucuda (`CAD-SHEET-06`, `07`), modeli ve
+  kâğıdı birlikte yazan betik işlemi (`CAD-SHEET-05`'in kalanı).
 - [ ] `CADP-10` Uygulamanın gerçek AI yüzeyi ve çizimin bağlam, sorgu, plan ve yürütme zinciri (plan §19).
 - [ ] `CADP-11` DWG karar matrisi ve gerçek ofis dosyalarıyla kodek denemesi; seçim ayrı ADR'de (plan §16.1, `DEC-01`).
 - [ ] `CADP-12` İlk uçtan uca kabul çizimi: oda, düzeltme, ölçü ve tarama, 1:50 pafta, PDF ve DXF, başka ortamda yeniden açma

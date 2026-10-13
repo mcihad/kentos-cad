@@ -2,6 +2,7 @@
 import type { Bounds } from "./Bounds";
 import type { LayerNode } from "./LayerNode";
 import type { ProjectSettings } from "./ProjectSettings";
+import type { ProjectSheets } from "./ProjectSheets";
 import type { ProjectStorage } from "./ProjectStorage";
 import type { ProjectStyles } from "./ProjectStyles";
 import type { ProjectType } from "./ProjectType";
@@ -11,6 +12,10 @@ import type { Vec2 } from "./Vec2";
  * `POST /v1/tenants/{tenant}/projects`: a new project's metadata (its objects follow as commands).
  */
 export type ProjectCreate = { name: string, settings: ProjectSettings, origin: Vec2, homeView?: Bounds, layers: Array<LayerNode>, activeLayer: string, styles: ProjectStyles, 
+/**
+ * The project's sheet book and its pictures (docs/adr/0251); absent: none.
+ */
+sheets?: ProjectSheets, 
 /**
  * The catalog's description (docs/adr/0028); absent: none.
  */

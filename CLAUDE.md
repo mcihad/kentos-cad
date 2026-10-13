@@ -269,6 +269,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   dikdörtgen ya da verilenler; Çit'in sırası), `.fillet` ve `.chamfer` (yolun köşesi, iki çizgi ya da bütün köşeler; Kırp); komut
   bağlamı ev sahibinin geometri deposunu taşır (`ExecutionContext::with_store`), başsız sunucu kendisininkini kurar; araçlar
   önizlemeyi planla, yazmayı komutla yapar; `cad.entities.create` ilişkili ölçünün bağlı noktalarını yerlerinden yazar (ADR 0250);
+  pafta kitabı projenin dosyasında: `.kcad` şema 44'ün `sheets`'i (pafta çekirdeğinin kitabı opak, resimlerin baytları SHA-256'larıyla;
+  `FORMATS_VERSION` 56), belgede düzenleme ama geri alma adımı değil (`set_sheets`), pafta çekirdeğinin `project`'i; masaüstünde kitap
+  çizimle açılır ve paftadaki her değişiklik çizime yazılır (`sheet_book.rs`), cihazda eski yerinde kalan kitap projeye alınır ve
+  kaydedilince `pafta/kitaplar/tasindi/`'ye ayrılır, okunamayan kitap olduğu gibi kalır; veritabanı projesinde `project.sheets` (göç
+  0017), `ProjectPatch.sheets`, kopya ve geri yükleme; bulut eşitlemesi onu meta olarak taşır (ADR 0251);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş
@@ -745,6 +750,8 @@ python3 scripts/fixtures/subref_cases.py --check; python3 scripts/fixtures/dimen
 KENTOS_TRACES_ONLY=dimension-refs cargo test -p kentos-desktop every_trace_passes; ./target/debug/kentos-cad kullan dimension-refs   # ilişkili ölçünün izi (bağ, tutamaçla izleme, silmede kopma, Yeniden bağla) ve resimleri, .run/shots/kullanim/masaustu-dimension-refs-* (ADR 0249)
 python3 scripts/fixtures/edge_command_cases.py --check   # Buda, Uzat, Köşe yuvarla ve Pah'ın ortak durumlarını (sınırların üç biçimi, Çit sırası, uyarılar, yolun köşesi, iki çizgi, Kırp, tüm köşeler, retler) KentOS kodu olmadan, kesirlerle ve 60 basamaklı aşkın değerlerle denetle; durumlar fixtures/commands/v1/cad.entities.{trim,extend,fillet,chamfer}.json (ADR 0250)
 KENTOS_TRACES_ONLY=edge-commands cargo test -p kentos-desktop every_trace_passes; ./target/debug/kentos-cad kullan edge-commands   # araçların komutla önizlemesi ve yazması, .run/shots/kullanim/masaustu-edge-commands-* (ADR 0250)
+cargo test -p kentos-desktop sheet_book; cargo test -p kentos-desktop sheet_book::tests::screens -- --ignored --nocapture   # pafta kitabı projenin dosyasında: dosyadan açma, paftadaki değişikliğin çizime yazılması, kaydedip yeniden açma, cihazdaki kitabın göçü ve kenara ayrılması, okunamayan kitap; resimler .run/shots/pafta-kitabi-* (ADR 0251)
+KENTOS_TEST_DB=required cargo test -p kentos-application --test project_sheets   # veritabanı projesinin pafta kitabı: bilgi, görüntü, ProjectPatch.sheets (koru, değiştir, kaldır, ret), kopya ve kontrol noktasından geri yükleme; geçici veritabanında (ADR 0251)
 python3 scripts/cad/manifest.py --check   # CAD işlem manifesti: her arayüz komutunun, aracının ve yönteminin düzeyi (catalog/v1/operations.json), Python ve MCP karşılığı ve CAD tarafının boşlukları; eşlenmemiş öğe, olmayan komut ya da işlem ve eski çıktı düşer; --check'siz docs/cad/manifest.{json,md}'yi yazar (ADR 0244)
 cargo test --release -p kentos-formats --test all exif::timing -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all info_templates -- --ignored --nocapture; cargo test --release -p kentos-desktop a_card_opens_in_a_frame -- --ignored --nocapture   # 1 000 fotoğrafın EXIF'i, 10 000 nesnenin kart metni ve bir kartın açılması bütçeleriyle (ADR 0225 §7); web'inkiler: KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm; KENTOS_WASM_PROFILE=wasm pnpm -s rust:wasm:formats; ATTACH_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/attachments.test.ts --disable-console-intercept; rm apps/web/src/wasm/pkg/.stamp apps/web/src/io/pkg/.stamp
 python3 scripts/fixtures/generalize_cases.py --check   # genelleştirmenin durumlarını (Chaikin, iD'nin dik açılandırması, Ruas'ın bina sadeleştirmesi, parçalar ve delikler, katılma, kapsama grafı ve Visvalingam–Whyatt, kümelerin kapanışı elle çözülmüş alanlarla ve GEOS'la çapraz) KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/generalize.json ve generalize.kcad (ADR 0221)
@@ -898,12 +905,13 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
   `kitaplik-okunamadi-<zaman>.kstil` olarak ayrılır, üzerine yazılmaz (ADR 0092).
   Yerel çizimin kaydedilmemiş işinin kurtarma kopyaları IndexedDB `kentos.recovery/copies`'tedir;
   masaüstünde `$XDG_DATA_HOME/kentos-cad/kurtarma` (yoksa `~/.local/share/kentos-cad/kurtarma`)
-  altında, her çalışan KentOS'un kilitli klasöründe (ADR 0030). Pafta kitapları, bu cihazdaki pafta
-  şablonları ve paftalardaki resimlerin baytları IndexedDB `kentos.sheets.v1`'dedir (sürüm 2: `books`,
-  anahtarı `bulut/…`, `proje/…`, `dosya/…`, `oturum/…`; `templates`, hesabın bulut kitaplığının kopyaları
-  da; `assets`, anahtarı SHA-256, yazılırken özeti denetlenir; sürüm 1'den yükseltme yalnız eksik depoyu
-  açar); masaüstünde `$XDG_DATA_HOME/kentos-cad/pafta/` (yoksa `~/.local/share/kentos-cad/pafta/`;
-  ADR 0164). NTv2 ızgaraları cihazındır, projeninki değil: IndexedDB `kentos.grids` (`grids` bilgiler, `bytes` baytlar; anahtar
+  altında, her çalışan KentOS'un kilitli klasöründe (ADR 0030). Pafta kitabı masaüstünde projenin `.kcad`'indedir
+  (ADR 0251); bu cihazdaki pafta şablonları ve şablon resimlerinin baytları `$XDG_DATA_HOME/kentos-cad/pafta/`'dadır (yoksa
+  `~/.local/share/kentos-cad/pafta/`; ADR 0164); oradaki `kitaplar/<anahtar>.json` eski sürümlerin kitaplarıdır, proje açılınca
+  projeye alınır ve kaydedilince `kitaplar/tasindi/`'ye ayrılır, silinmez. Web'in kitapları, şablonları ve resimleri hâlâ IndexedDB
+  `kentos.sheets.v1`'dedir (sürüm 2: `books`, anahtarı `bulut/…`, `proje/…`, `dosya/…`, `oturum/…`; `templates`, hesabın bulut
+  kitaplığının kopyaları da; `assets`, anahtarı SHA-256, yazılırken özeti denetlenir; sürüm 1'den yükseltme yalnız eksik depoyu
+  açar; göçü TODOS.md §0.2'de). NTv2 ızgaraları cihazındır, projeninki değil: IndexedDB `kentos.grids` (`grids` bilgiler, `bytes` baytlar; anahtar
   SHA-256), masaüstünde `$XDG_DATA_HOME/kentos-cad/izgara/<sha256>.gsb` ve yanında `<sha256>.json` (ADR 0168 §4).
   Harita servislerinin bağlantılarının gizli değerleri çizime yazılmaz: web'de localStorage `kentos.connections.v1`, masaüstünde
   `~/.config/kentos-cad/baglantilar.json` (0600); okunamayan kayıt `…#unreadable-<zaman>` olarak ayrılır. Masaüstünün servis önbelleği

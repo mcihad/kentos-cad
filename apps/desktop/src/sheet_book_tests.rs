@@ -236,3 +236,139 @@ fn a_book_the_core_does_not_read_is_kept_as_it_is() {
     assert_eq!(model.sheets(), Some(&sheets), "kept as it is");
     assert!(!model.is_dirty());
 }
+
+/// Pictures of the book in the project's file for the owner (docs/adr/0251):
+/// a sheet saved in the drawing and opened in another window, the book this
+/// device kept moved into its project (the line in the history and the
+/// drawing's unsaved mark), and a book the core does not read (the warning).
+/// `cargo test -p kentos-desktop sheet_book::tests::screens -- --ignored --nocapture`
+/// writes `.run/shots/pafta-kitabi-*.png`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens() {
+    use iced::Size;
+    use kentos_render_wgpu::Vec2;
+
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let shoot = |app: &mut App, name: &str| {
+        // The GPU's renderer: the drawing area too (run by hand, alone).
+        let mut snapshot =
+            kentos_ui::snapshot::Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(app, App::view, &mut update);
+        let file = out.join(format!("pafta-kitabi-{name}.png"));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
+        println!("{}", file.display());
+    };
+    let look_at_drawing = |app: &mut App| {
+        if let Some(b) =
+            kentos_render_wgpu::scene::extents(app.document.as_ref().expect("a drawing"))
+        {
+            app.viewport.camera.center =
+                Vec2::new((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0);
+        }
+    };
+
+    // A sheet made over the demo drawing and saved in its file.
+    let dir = scratch("pafta-kitabi-resim");
+    let path = dir.join("ada-101.kcad");
+    let mut app = crate::files_testing::app_with_drawing();
+    app.sheet_store =
+        Some(kentos_sheet_ui::Store::open(&scratch("pafta-kitabi-depo")).expect("a store"));
+    look_at_drawing(&mut app);
+    let _ = app.update(Message::Sheet(Sheet::NewSheet));
+    // The template's questions answered as an office would answer them.
+    let answers: Vec<(usize, &str)> = app
+        .sheets
+        .questions()
+        .map(|q| {
+            q.template_variables()
+                .iter()
+                .enumerate()
+                .filter_map(|(i, v)| {
+                    let answer = match v.name.as_str() {
+                        "harita_basligi" => "Ada 101 Parsel 7 aplikasyon krokisi",
+                        "alt_baslik" => "Örnek Mahallesi, Merkez / Sivas",
+                        "kaynak" => "Sivas Belediyesi Harita Müdürlüğü",
+                        _ => return None,
+                    };
+                    Some((i, answer))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    for (i, answer) in answers {
+        let _ = app.update(Message::Sheet(Sheet::Questions(
+            kentos_sheet_ui::questions::QuestionsMessage::Text(i, answer.into()),
+        )));
+    }
+    if app.sheets.questions().is_some() {
+        let _ = app.update(Message::Sheet(Sheet::Questions(
+            kentos_sheet_ui::questions::QuestionsMessage::Make,
+        )));
+    }
+    let id = app.sheets.book().sheets[0].id.clone();
+    for v in app
+        .sheets
+        .questions()
+        .into_iter()
+        .flat_map(|q| q.template_variables())
+    {
+        println!("soru: {}", v.name);
+    }
+    sheet(
+        &mut app,
+        Sheet::RenameSheet(id, "Ada 101 aplikasyon".into()),
+    );
+    let snapshot = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .to_snapshot_v2();
+    crate::document::write(&snapshot, &path).expect("saved");
+    let book = kept(&app).expect("a book");
+
+    // Opened in another window: the file's sheet.
+    let (mut again, _) = app_with_store("pafta-kitabi-resim-2");
+    open(&mut again, &path);
+    look_at_drawing(&mut again);
+    sheet(&mut again, Sheet::Tab(1));
+    shoot(&mut again, "dosyadan");
+
+    // The same drawing without its book, the book where an older build kept it: moved in.
+    let (mut moved, store) = app_with_store("pafta-kitabi-resim-goc");
+    let bare_path = dir.join("ada-102.kcad");
+    let mut bare = snapshot.clone();
+    bare.sheets = None;
+    bare.project_id = None;
+    crate::document::write(&bare, &bare_path).expect("saved");
+    store
+        .save_book(&key_of(&bare, "ada-102.kcad"), &book)
+        .expect("kept");
+    open(&mut moved, &bare_path);
+    look_at_drawing(&mut moved);
+    let _ = moved.update(Message::BottomTab(crate::bottom::BottomTab::History));
+    shoot(&mut moved, "goc");
+
+    // A book of a newer build: kept as it is, said once.
+    let (mut newer, _) = app_with_store("pafta-kitabi-resim-yeni");
+    let newer_path = dir.join("ada-103.kcad");
+    let mut later = snapshot;
+    if let Some(s) = later.sheets.as_mut() {
+        s.book["schema"] = "kentos.sheet/9".into();
+    }
+    crate::document::write(&later, &newer_path).expect("saved");
+    open(&mut newer, &newer_path);
+    look_at_drawing(&mut newer);
+    let _ = newer.update(Message::BottomTab(crate::bottom::BottomTab::Messages));
+    shoot(&mut newer, "okunamayan");
+}

@@ -526,6 +526,7 @@ impl Replica {
                         snapshot.settings = m.settings;
                         snapshot.layers = m.layers;
                         snapshot.styles = m.styles;
+                        snapshot.sheets = m.sheets;
                     }
                     if let Some(list) = step.blocks {
                         head.blocks = list
@@ -566,6 +567,7 @@ impl Replica {
             info.settings = snapshot.settings.clone();
             info.layers = snapshot.layers.clone();
             info.styles = snapshot.styles.clone();
+            info.sheets = snapshot.sheets.clone();
             info.meta_version = head.meta_version;
         }
         info.event_cursor = head.cursor;

@@ -30,7 +30,7 @@ use std::time::Duration;
 use kentos_contracts::{
     BlockId, BlockRecord, CommandEnvelope, CommitResult, ConflictReason, Entity, FeatureChange,
     FeatureRecord, LayerNode, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, ProjectChanges,
-    ProjectPatch, ProjectSettings, ProjectStyles,
+    ProjectPatch, ProjectSettings, ProjectSheets, ProjectStyles,
 };
 use kentos_domain::{ChangeMark, Changes, Document, Slot};
 use std::sync::Arc;
@@ -155,6 +155,8 @@ struct Meta {
     settings: ProjectSettings,
     layers: Vec<LayerNode>,
     styles: ProjectStyles,
+    /// The sheet book (docs/adr/0251), shared with the drawing's.
+    sheets: Option<Arc<ProjectSheets>>,
 }
 
 impl Meta {
@@ -164,6 +166,7 @@ impl Meta {
             settings: doc.settings().clone(),
             layers: doc.layers().nodes().to_vec(),
             styles: doc.styles().clone(),
+            sheets: doc.sheets_shared().cloned(),
         }
     }
 
@@ -183,6 +186,9 @@ impl Meta {
         }
         if *doc.styles() != self.styles {
             patch.styles = Some(doc.styles().clone());
+        }
+        if doc.sheets() != self.sheets.as_deref() {
+            patch.sheets = Some(doc.sheets().cloned());
         }
         (patch != ProjectPatch::default()).then_some(patch)
     }

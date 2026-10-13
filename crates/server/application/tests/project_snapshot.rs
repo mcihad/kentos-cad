@@ -52,6 +52,7 @@ fn create_input(source: &DocumentSnapshotV2, name: &str, layers: Vec<LayerNode>)
         layers,
         active_layer: source.active_layer.clone(),
         styles: source.styles.clone(),
+        sheets: None,
         description: None,
         project_type: None,
         tags: None,

@@ -44,6 +44,7 @@ async fn file_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
         layers: s.layers,
         active_layer: s.active_layer,
         styles: s.styles,
+        sheets: None,
         description: None,
         project_type: None,
         tags: None,
