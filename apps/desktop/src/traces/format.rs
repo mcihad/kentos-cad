@@ -150,6 +150,20 @@ pub struct Step {
     pub(super) note: Option<String>,
 }
 
+/// What a trace's journal must be (`journal.rs`).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct JournalExpect {
+    /// Rows written without a product command; `0`: every write went through one.
+    pub(super) edits: Option<usize>,
+    /// Command rows done (not undone).
+    pub(super) commands: Option<usize>,
+    /// It replays on the trace's drawing opened anew: every command row
+    /// `same`, the same drawing.
+    #[serde(default)]
+    pub(super) replays: bool,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Expect {
@@ -258,6 +272,9 @@ pub struct Expect {
     /// `null` when it is closed.
     #[serde(default, deserialize_with = "present")]
     pub(super) magnifier: Option<Option<MagnifierExpect>>,
+    /// The drawing's journal (docs/adr/0253 §3): edits made without a
+    /// command, command rows done, and that it replays to the same drawing.
+    pub(super) journal: Option<JournalExpect>,
     /// Zaman sürgüsü (docs/adr/0210 §5): what its position shows, its position and its last, exact; `null`
     /// when it is closed, and absent differ.
     #[serde(default, deserialize_with = "present")]

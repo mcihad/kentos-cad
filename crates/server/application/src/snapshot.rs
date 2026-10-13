@@ -227,6 +227,8 @@ pub async fn read(
             .map(serde_json::from_value)
             .transpose()
             .map_err(bad)?,
+        // The server keeps its own idempotency (docs/adr/0026); a drawing's ledger is the file's.
+        requests: Vec::new(),
     };
     Ok((doc, revision, cursor))
 }

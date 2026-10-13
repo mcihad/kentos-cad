@@ -26,6 +26,33 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.styles.edit.json` | `cad.styles.edit` v1 (ADR 0248: yazı ve ölçü stilleri; masaüstünün) | 25 |
 | `v1/cad.settings.set.json` | `cad.settings.set` v1 (ADR 0248: proje ayarları anahtarla; masaüstünün) | 28 |
 | `v1/cad.sheets.edit.json` | `cad.sheets.edit` v1 (ADR 0252: pafta çekirdeğinin işlemleri; masaüstünün) | 20 |
+| `v1/cad.addresses.define.json` | `cad.addresses.define` v1 (ADR 0229: adres verisinin tanımı; masaüstünün) | 22 |
+| `v1/cad.layers.service.json` | `cad.layers.service` v1 (ADR 0208 §15: servis katmanı ve veri kaynağı; masaüstünün) | 36 |
+| `v1/cad.network.define.json` | `cad.network.define` v1 (ADR 0209 §11: projenin ağları; masaüstünün) | 21 |
+| `v1/cad.layers.time.json` | `cad.layers.time` v1 (ADR 0210 §11: katmanın zaman ayarı; masaüstünün) | 29 |
+| `v1/cad.scenarios.edit.json` | `cad.scenarios.edit` v1 (ADR 0210 §11: senaryolar; masaüstünün) | 39 |
+| `v1/cad.layers.filter.json` | `cad.layers.filter` v1 (ADR 0211 §5: katman süzgeci; masaüstünün) | 30 |
+| `v1/cad.layers.labels.json` | `cad.layers.labels` v1 (ADR 0212 §5: katmanın etiketlemesi; masaüstünün) | 31 |
+| `v1/cad.labels.pin.json` | `cad.labels.pin` v1 (ADR 0212 §5: etiket iğneleri; masaüstünün) | 26 |
+| `v1/cad.layers.renderer.json` | `cad.layers.renderer` v1 (ADR 0213 §5: Katman stili'nin işleyicileri; masaüstünün) | 45 |
+| `v1/cad.layers.info.json` | `cad.layers.info` v1 (ADR 0225 §4, §5: eylemler ve bilgi kartı; masaüstünün) | 35 |
+| `v1/cad.layers.compose.json` | `cad.layers.compose` v1 (ADR 0226 §3: Katman çizimi; masaüstünün) | 31 |
+| `v1/cad.entities.offset.json` | `cad.entities.offset` v1 (ADR 0246: Ötele; masaüstünün) | 30 |
+| `v1/cad.dimensions.reassociate.json` | `cad.dimensions.reassociate` v1 (ADR 0249 §3: Ölçüyü yeniden bağla; masaüstünün) | 24 |
+| `v1/cad.entities.trim.json` | `cad.entities.trim` v1 (ADR 0250: Buda; masaüstünün) | 21 |
+| `v1/cad.entities.extend.json` | `cad.entities.extend` v1 (ADR 0250: Uzat; masaüstünün) | 20 |
+| `v1/cad.entities.fillet.json` | `cad.entities.fillet` v1 (ADR 0250: Köşe yuvarla; masaüstünün) | 22 |
+| `v1/cad.entities.chamfer.json` | `cad.entities.chamfer` v1 (ADR 0250: Pah; masaüstünün) | 22 |
+| `v1/cad.changeset.apply.json` | `cad.changeset.apply` v1 (ADR 0253 §8: ortak değişiklik kümesi; masaüstünün) | 24 |
+| `v1/cad.entities.stretch.json` | `cad.entities.stretch` v1 (ADR 0254 §2: Esnet, Topoloji'nin komşularıyla; masaüstünün) | 20 |
+| `v1/cad.entities.break.json` | `cad.entities.break` v1 (ADR 0254 §3: Kır; masaüstünün) | 20 |
+| `v1/cad.entities.join.json` | `cad.entities.join` v1 (ADR 0254 §4: Birleştir ve Zincir; masaüstünün) | 23 |
+| `v1/cad.entities.divide.json` | `cad.entities.divide` v1 (ADR 0254 §5: Böl; masaüstünün) | 22 |
+| `v1/cad.entities.boundary.json` | `cad.entities.boundary` v1 (ADR 0254 §6: Alan oluştur; masaüstünün) | 25 |
+| `v1/cad.entities.hatch.json` | `cad.entities.hatch` v1 (ADR 0254 §7: Tarama ve Çoklu tara; masaüstünün) | 34 |
+| `v1/cad.dimensions.create.json` | `cad.dimensions.create` v1 (ADR 0255: Ölçülendirme'nin on türü; masaüstünün) | 49 |
+
+Masaüstüne özgü dosyaların durumlarını KentOS kodu olmadan sözleşmenin ve işlemlerin tanımından şu betikler yazar (`--check` farkı arar): `edge_command_cases.py` (Buda, Uzat, Köşe yuvarla, Pah), `offset_command_cases.py`, `reshape_command_cases.py` (Esnet, Kır, Birleştir, Böl), `region_command_cases.py` (Alan oluştur, Tarama), `dimension_create_cases.py` (Ölçü ekle), `changeset_command_cases.py` (değişiklik kümesi) ve öbürlerinin kendi betikleri (`scripts/fixtures/`).
 
 **Yalnız masaüstünün durumları** `v1/desktop/`'tadır ([ADR 0207](../../docs/adr/0207-point-clouds-and-large-data.md) §10): nokta bulutunu şimdilik yalnız masaüstü ekler, çizer ve işler (sahibin kararı, 8 Ekim 2026), web'in koşucusu bu klasörü okumaz (`v1/*.json`). Biçim aynıdır; masaüstünün koşucusu (`the_desktops_own_cases_match_its_handlers`) dosya başına 20 durum aramaz. Durumları KentOS kodu olmadan sözleşmenin kurallarından `scripts/fixtures/pointcloud_command_cases.py` yazar (`--check` farkı arar). Web nokta bulutunu alınca durumlar yukarıdaki dosyalara taşınır.
 
@@ -86,6 +113,7 @@ Sürüm ve kalıcı kimlik iki uygulamada aynı sayı değildir; dosya onları a
 | `"$blockOf:Ad"` | çizimdeki o adlı bloğun kimliği (Türkçe harf katlamasıyla) | aynı, adımdan sonra: az önce tanımlanan bloğun kimliği; `expect.entities`'te de (yerleştirmenin `block`'u) |
 | `"$block:ad"` | `captureBlock` ile `ad` adıyla alınan blok kimliği | aynı; `expect.entities`'te de |
 | `"$layer"` | son komutun eklediği katman | `output.layer` ya da `output.node.id`'de: komutun eklediği (plan: ekleyeceği), ağaçta olmayan bir `layer-N` (ADR 0208 §15); `expect.layers`'ta da |
+| `"$$…"` | `"$…"` metninin kendisi: değişiklik kümesinin önceki bir adıma başvurusu (`"$$nokta"` → `"$nokta"`, ADR 0253 §8) | aynı; `expect.entities`'te de |
 | `"$layer:2"` | katman ekleyen son komutun ikinci yeni katmanı | sonuçta adımdan önce ağaçta olmayan `layer-N`'ler sayılarına göre sıralı; execute'ta ağaçta, plan'da ağaçta değil; katman eklemeyen komut önceki bağı bırakır (ADR 0210 §11); `expect.layers` ve `expect.entities`'te de |
 
 **Sürüm neden yalnız karşılaştırılır?** Sürüm bir sayaçtır; sözleşmesi eşitliktir. Web açılışı bir kez sayar, masaüstü saymaz (ADR 0020). Kimlik yeni nesnede rastgeledir (UUIDv7, ADR 0014).

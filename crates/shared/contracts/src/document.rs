@@ -770,6 +770,14 @@ pub struct DocumentSnapshotV2 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<crate::sheets::ProjectSheets>,
+    /// The requests the drawing executed (docs/adr/0253 §6), oldest first,
+    /// the last `REQUEST_LEDGER`; none when it executed none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::command_call::RequestRecord>>")
+    )]
+    pub requests: Vec<crate::command_call::RequestRecord>,
 }
 
 /// The two fields a reader checks before the rest; every other field is skipped unread.

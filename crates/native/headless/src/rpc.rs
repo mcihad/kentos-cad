@@ -11,19 +11,147 @@
 //!   `bbox` is `[min_x, min_y, max_x, max_y]`;
 //! - `entity` `{uid}`, `measure` `{uid}`: one object, its measures.
 //!
+//! - `call` `{command, op?, input, version?, requestId?, expected?}`: a
+//!   command by the protocol (docs/adr/0253 §4): its `CallAnswer`, the
+//!   summary and the plan's id with it;
+//! - `journal`: the drawing's journal (`kentos.replay/1`); `replay`
+//!   `{journal}`: runs a journal's commands again, its report;
+//! - `start` `{…call}`, `job` `{id}`, `wait` `{id}`, `cancel` `{id}`: a
+//!   command as a job (docs/adr/0253 §9), when the host keeps jobs ([`call_with`]).
+//!
 //! Undo, redo, groups and files belong to the host (the desktop keeps its
 //! own history and its own Save); they are not requests here.
 
-use kentos_contracts::Bounds;
+use std::collections::BTreeMap;
+
+use kentos_contracts::{Bounds, CallEnvelope, JobStatus, ReplayJournal};
 use kentos_domain::Document;
+use kentos_native_application::jobs::Job;
+use kentos_native_application::replay::{journal_of, replay_with};
 use serde_json::{Value, json};
 
 use crate::HeadlessError;
-use crate::dispatch::{self, Op};
+use crate::dispatch::{self, Op, call_envelope};
+use crate::file_commands;
 use crate::query::{self, Filter};
 
-/// Answers `method` with `params` on `doc`.
+/// The jobs a host keeps (docs/adr/0253 §9), by id.
+#[derive(Default)]
+pub struct Jobs {
+    list: BTreeMap<String, Job>,
+    given: u64,
+}
+
+impl Jobs {
+    /// Starts `envelope` as a job on a reading copy of `doc`; its status.
+    pub fn start(&mut self, doc: &Document, envelope: CallEnvelope) -> JobStatus {
+        self.given += 1;
+        let id = format!("is-{}", self.given);
+        let job = if file_commands::is_file_command(&envelope.command) {
+            let (command, request) = (envelope.command.clone(), envelope.request_id.clone());
+            Job::start_with(
+                id.clone(),
+                command,
+                request,
+                doc,
+                file_commands::job_work(envelope),
+            )
+        } else {
+            Job::start(id.clone(), doc, envelope)
+        };
+        let status = job.peek();
+        self.list.insert(id, job);
+        status
+    }
+
+    fn get(&mut self, id: &str) -> Result<&mut Job, HeadlessError> {
+        self.list
+            .get_mut(id)
+            .ok_or_else(|| HeadlessError::new("unknown_job", format!("“{id}” kimlikli iş yok.")))
+    }
+
+    /// The job as it is now (its result written to `doc` once computed).
+    pub fn status(&mut self, doc: &mut Document, id: &str) -> Result<JobStatus, HeadlessError> {
+        Ok(self.get(id)?.status(doc))
+    }
+
+    /// Waits for the job and writes it to `doc`.
+    pub fn wait(&mut self, doc: &mut Document, id: &str) -> Result<JobStatus, HeadlessError> {
+        Ok(self.get(id)?.wait(doc))
+    }
+
+    /// Asks the job to stop; refused once it was written (`already_committed`).
+    pub fn cancel(&mut self, doc: &mut Document, id: &str) -> Result<JobStatus, HeadlessError> {
+        let job = self.get(id)?;
+        let status = job.status(doc);
+        if status.phase == kentos_contracts::JobPhase::Done {
+            return Err(HeadlessError::new(
+                "already_committed",
+                "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır. Geri almak için Geri al'ı kullanın.",
+            ));
+        }
+        job.cancel();
+        Ok(job.status(doc))
+    }
+}
+
+/// Answers `method` with `params` on `doc`; the job requests are refused
+/// (a host that keeps jobs answers with [`call_with`]).
 pub fn call(doc: &mut Document, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+    call_with(doc, None, method, params)
+}
+
+/// Answers `method` with `params` on `doc`, the host's jobs in `jobs`.
+pub fn call_with(
+    doc: &mut Document,
+    jobs: Option<&mut Jobs>,
+    method: &str,
+    params: &Value,
+) -> Result<Value, HeadlessError> {
+    match method {
+        "call" => to_value(&call_envelope(doc, None, envelope(params)?)),
+        "journal" => to_value(&journal_of(doc)),
+        "replay" => {
+            let journal: ReplayJournal =
+                serde_json::from_value(params.get("journal").cloned().unwrap_or(Value::Null))
+                    .map_err(|e| {
+                        invalid(&format!("journal bir kentos.replay/1 kaydı olmalı: {e}"))
+                    })?;
+            to_value(&replay_with(
+                doc,
+                None,
+                &journal,
+                &mut crate::file_commands::replay_row,
+            ))
+        }
+        "start" | "job" | "wait" | "cancel" => {
+            let jobs = jobs.ok_or_else(|| {
+                HeadlessError::new(
+                    "unknown_method",
+                    "Bu bağlantı iş tutmuyor; komutu call ile çağırın.",
+                )
+            })?;
+            match method {
+                "start" => to_value(&jobs.start(doc, envelope(params)?)),
+                "job" => to_value(&jobs.status(doc, text(params, "id")?)?),
+                "wait" => to_value(&jobs.wait(doc, text(params, "id")?)?),
+                _ => to_value(&jobs.cancel(doc, text(params, "id")?)?),
+            }
+        }
+        _ => plain(doc, method, params),
+    }
+}
+
+/// A call's envelope from the request's parameters.
+pub fn envelope(params: &Value) -> Result<CallEnvelope, HeadlessError> {
+    serde_json::from_value(params.clone()).map_err(|e| {
+        invalid(&format!(
+            "çağrı okunamadı: {e}. command, op, input, version, requestId ve expected alanlarını denetleyin."
+        ))
+    })
+}
+
+fn plain(doc: &mut Document, method: &str, params: &Value) -> Result<Value, HeadlessError> {
     match method {
         "run" => {
             let command = text(params, "command")?;
@@ -82,13 +210,13 @@ pub fn call(doc: &mut Document, method: &str, params: &Value) -> Result<Value, H
                     format!("{uid} kimlikli nesne bu çizimde yok."),
                 )
             })?;
-            Ok(json!({ "uid": uid, "entity": entity }))
+            Ok(json!({ "uid": uid, "stamp": doc.stamp(slot), "entity": entity }))
         }
         "measure" => to_value(&query::measure(doc, text(params, "uid")?)?),
         other => Err(HeadlessError::new(
             "unknown_method",
             format!(
-                "“{other}” bir istek değil: run, summary, layers, entities, entity ya da measure."
+                "“{other}” bir istek değil: run, call, summary, layers, entities, entity, measure, journal, replay, start, job, wait ya da cancel."
             ),
         )),
     }
@@ -109,6 +237,13 @@ pub fn summary(doc: &Document) -> Value {
         "canRedo": doc.can_redo(),
         // The sheet book's sheets (docs/adr/0252 §2); null for a book the core cannot read.
         "sheets": kentos_native_application::sheets_edit::sheets_in(doc),
+        // The project's parts' state stamps (docs/adr/0253 §2): what a call expects of them.
+        "stamps": {
+            "layers": doc.layers_stamp(),
+            "settings": doc.settings_stamp(),
+            "styles": doc.styles_stamp(),
+            "sheets": doc.sheets_stamp(),
+        },
     })
 }
 

@@ -10,6 +10,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use kentos_domain::contracts::ChangesetApply;
 use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
@@ -24,8 +25,11 @@ use kentos_domain::contracts::{
     EntitiesArray, EntitiesDelete, EntitiesEdit, EntitiesTransform, EntityEdit, EntityGeometry,
     LineCreate, PointCreate, PolygonCreate, PolylineCreate, Transform,
 };
+use kentos_domain::contracts::{
+    DimensionMeasure, DimensionsCreate, Division, EntitiesBoundary, EntitiesBreak, EntitiesDivide,
+    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, MeasuredPoint,
+};
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
     circle, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
@@ -33,6 +37,10 @@ use kentos_native_application::{
     layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
     layers_time, line, network_define, offset, point, polygon, polyline, scenarios_edit, set,
     settings_set, sheets_edit, styles_edit, transform,
+};
+use kentos_native_application::{
+    changeset, create, dimensions_create, divide, entities_boundary, entities_break,
+    entities_hatch, entities_join, stretch,
 };
 use serde_json::{Value, json};
 
@@ -101,6 +109,8 @@ fn expect_same(got: &Value, want: &Value, what: &str, at: &str) -> Outcome<()> {
 /// their numbers (docs/adr/0210 §11).
 fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value> {
     Ok(match value {
+        // “$$…” is the text “$…” itself (a change set's reference to a step, docs/adr/0253 §8).
+        Value::String(text) if text.starts_with("$$") => Value::String(text[1..].to_owned()),
         Value::String(text) if text.starts_with("$blockOf:") => {
             let name = &text["$blockOf:".len()..];
             let block = doc
@@ -184,7 +194,8 @@ fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<
             if text.starts_with("$blockOf:")
                 || text.starts_with("$block:")
                 || text.starts_with("$uidOf:")
-                || text.starts_with("$layer:") =>
+                || text.starts_with("$layer:")
+                || text.starts_with("$$") =>
         {
             fill(value, doc, state, at)?
         }
@@ -397,6 +408,187 @@ impl Input for EntitiesTrim {
     }
 }
 
+/// `min.x` … `max.y` of a rectangle given as `TrimBoundaries::Area`.
+fn area_number<'a>(
+    b: &'a mut Option<kentos_domain::contracts::TrimBoundaries>,
+    rest: &str,
+) -> Option<&'a mut f64> {
+    let Some(kentos_domain::contracts::TrimBoundaries::Area { min, max }) = b else {
+        return None;
+    };
+    match rest {
+        "min.x" => Some(&mut min.x),
+        "min.y" => Some(&mut min.y),
+        "max.x" => Some(&mut max.x),
+        "max.y" => Some(&mut max.y),
+        _ => None,
+    }
+}
+
+impl Input for EntitiesStretch {
+    /// `window.min.x` … `window.max.y`, `dx`, `dy`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "dx" => Some(&mut self.dx),
+            "dy" => Some(&mut self.dy),
+            "window.min.x" => Some(&mut self.window.min.x),
+            "window.min.y" => Some(&mut self.window.min.y),
+            "window.max.x" => Some(&mut self.window.max.x),
+            "window.max.y" => Some(&mut self.window.max.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for EntitiesBreak {
+    /// `first.x` … `second.y` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "first.x" => Some(&mut self.first.x),
+            "first.y" => Some(&mut self.first.y),
+            "second.x" => self.second.as_mut().map(|p| &mut p.x),
+            "second.y" => self.second.as_mut().map(|p| &mut p.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for EntitiesJoin {
+    /// `tolerance`, `chain.min.x` … (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "tolerance" {
+            return self.tolerance.as_mut();
+        }
+        area_number(&mut self.chain, path.strip_prefix("chain.")?)
+    }
+}
+
+impl Input for EntitiesDivide {
+    /// `division.length`, `lineWeight` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match (path, &mut self.division) {
+            ("division.length", Division::Step { length }) => Some(length),
+            ("lineWeight", _) => self.look.line_weight.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for DimensionsCreate {
+    /// `at.x`, `offset`, `height`, `lineWeight`, `measure.a.at.x`, `measure.angle`,
+    /// `measure.za`, `measure.of.near.y`, `measure.between[1].x`, `measure.shownCentre.x`, `measure.on.y` …
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        fn xy<'a>(p: &'a mut kentos_contracts::Vec2, rest: &str) -> Option<&'a mut f64> {
+            match rest {
+                "x" => Some(&mut p.x),
+                "y" => Some(&mut p.y),
+                _ => None,
+            }
+        }
+        match path {
+            "offset" => return self.offset.as_mut(),
+            "height" => return self.height.as_mut(),
+            "lineWeight" => return self.look.line_weight.as_mut(),
+            _ => {}
+        }
+        if let Some(rest) = path.strip_prefix("at.") {
+            return xy(&mut self.at, rest);
+        }
+        let rest = path.strip_prefix("measure.")?;
+        let (field, rest) = rest.split_once('.').unwrap_or((rest, ""));
+        fn point(p: &mut MeasuredPoint) -> Option<&mut kentos_contracts::Vec2> {
+            match p {
+                MeasuredPoint::At { at } => Some(at),
+                MeasuredPoint::Place { .. } => None,
+            }
+        }
+        match (&mut self.measure, field) {
+            (DimensionMeasure::Aligned { a, .. } | DimensionMeasure::Azimuth { a, .. }, "a")
+            | (DimensionMeasure::Linear { a, .. } | DimensionMeasure::Slope { a, .. }, "a")
+            | (
+                DimensionMeasure::Ordinate { a, .. } | DimensionMeasure::AngleVertex { a, .. },
+                "a",
+            ) => xy(point(a)?, rest.strip_prefix("at.")?),
+            (DimensionMeasure::Aligned { b, .. } | DimensionMeasure::Azimuth { b, .. }, "b")
+            | (DimensionMeasure::Linear { b, .. } | DimensionMeasure::Slope { b, .. }, "b")
+            | (DimensionMeasure::AngleVertex { b, .. }, "b") => {
+                xy(point(b)?, rest.strip_prefix("at.")?)
+            }
+            (DimensionMeasure::AngleVertex { c, .. }, "c") => {
+                xy(point(c)?, rest.strip_prefix("at.")?)
+            }
+            (
+                DimensionMeasure::Linear { angle, .. } | DimensionMeasure::Ordinate { angle, .. },
+                "angle",
+            ) => angle.as_mut(),
+            (DimensionMeasure::Slope { za, .. }, "za") => za.as_mut(),
+            (DimensionMeasure::Slope { zb, .. }, "zb") => zb.as_mut(),
+            (DimensionMeasure::Angle { first, .. }, "first") => {
+                xy(&mut first.near, rest.strip_prefix("near.")?)
+            }
+            (DimensionMeasure::Angle { second, .. }, "second") => {
+                xy(&mut second.near, rest.strip_prefix("near.")?)
+            }
+            (
+                DimensionMeasure::AngleArc { of }
+                | DimensionMeasure::Radius { of }
+                | DimensionMeasure::Diameter { of }
+                | DimensionMeasure::ArcLength { of, .. }
+                | DimensionMeasure::Jogged { of, .. },
+                "of",
+            ) => xy(&mut of.near, rest.strip_prefix("near.")?),
+            (
+                DimensionMeasure::ArcLength {
+                    between: Some([p, q]),
+                    ..
+                },
+                f,
+            ) if f.starts_with("between[") => match f {
+                "between[0]" => xy(p, rest),
+                "between[1]" => xy(q, rest),
+                _ => None,
+            },
+            (DimensionMeasure::Jogged { shown_centre, .. }, "shownCentre") => {
+                xy(shown_centre, rest)
+            }
+            (DimensionMeasure::Jogged { on, .. }, "on") => xy(on, rest),
+            _ => None,
+        }
+    }
+}
+
+impl Input for EntitiesBoundary {
+    /// `at.x`, `at.y`, `boundaries.min.x` …, `lineWeight`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => Some(&mut self.at.x),
+            "at.y" => Some(&mut self.at.y),
+            "lineWeight" => self.look.line_weight.as_mut(),
+            _ => area_number(&mut self.boundaries, path.strip_prefix("boundaries.")?),
+        }
+    }
+}
+
+impl Input for EntitiesHatch {
+    /// `pattern.scale`, `pattern.angle`, `region.at.x`, `region.boundaries.min.x` …
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "pattern.scale" => return self.pattern.scale.as_mut(),
+            "pattern.angle" => return self.pattern.angle.as_mut(),
+            "lineWeight" => return self.look.line_weight.as_mut(),
+            _ => {}
+        }
+        let HatchRegion::Point { at, boundaries, .. } = &mut self.region else {
+            return None;
+        };
+        match path {
+            "region.at.x" => Some(&mut at.x),
+            "region.at.y" => Some(&mut at.y),
+            _ => area_number(boundaries, path.strip_prefix("region.boundaries.")?),
+        }
+    }
+}
+
 impl Input for EntitiesFillet {
     /// `radius` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -460,6 +652,13 @@ impl Input for StylesEdit {
 }
 
 impl Input for SheetsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for ChangesetApply {
+    /// A step's numbers cross as JSON, which carries no NaN: none here.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -1046,8 +1245,19 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),
         kentos_domain::contracts::CAD_ENTITIES_FILLET => run!(entities_fillet, EntitiesFillet),
         kentos_domain::contracts::CAD_ENTITIES_CHAMFER => run!(entities_chamfer, EntitiesChamfer),
+        kentos_domain::contracts::CAD_ENTITIES_STRETCH => run!(stretch, EntitiesStretch),
+        kentos_domain::contracts::CAD_ENTITIES_BREAK => run!(entities_break, EntitiesBreak),
+        kentos_domain::contracts::CAD_ENTITIES_JOIN => run!(entities_join, EntitiesJoin),
+        kentos_domain::contracts::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
+        kentos_domain::contracts::CAD_ENTITIES_BOUNDARY => {
+            run!(entities_boundary, EntitiesBoundary)
+        }
+        kentos_domain::contracts::CAD_ENTITIES_HATCH => run!(entities_hatch, EntitiesHatch),
         kentos_domain::contracts::CAD_DIMENSIONS_REASSOCIATE => {
             run!(dimensions_reassociate, DimensionsReassociate)
+        }
+        kentos_domain::contracts::CAD_DIMENSIONS_CREATE => {
+            run!(dimensions_create, DimensionsCreate)
         }
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
@@ -1070,6 +1280,7 @@ fn run_op(
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
+        kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
@@ -1378,8 +1589,9 @@ fn check(
             "name" => expect_same(&json!(doc.name()), want, "çizimin adı", at)?,
             // The sheet book's sheets as the command lists them (docs/adr/0252 §2).
             "sheets" => {
-                let got = serde_json::to_value(kentos_native_application::sheets_edit::sheets_in(doc))
-                    .map_err(|e| format!("{at}: {e}"))?;
+                let got =
+                    serde_json::to_value(kentos_native_application::sheets_edit::sheets_in(doc))
+                        .map_err(|e| format!("{at}: {e}"))?;
                 expect_same(&got, want, "paftalar", at)?;
             }
             // The project's settings, only the keys given; an absent one is null (docs/adr/0248).
@@ -1486,6 +1698,12 @@ fn run_folder(dir: &std::path::Path, least: usize) -> (Vec<String>, usize, Vec<S
 fn every_command_case_matches_the_desktop_handlers() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1");
     let (commands, cases, problems) = run_folder(&dir, 20);
+    assert!(
+        problems.is_empty(),
+        "{} of {cases} cases failed:\n{}",
+        problems.len(),
+        problems.join("\n")
+    );
     // Every command the desktop runs has its cases.
     for (id, _) in DESKTOP_COMMANDS {
         assert!(
@@ -1493,12 +1711,6 @@ fn every_command_case_matches_the_desktop_handlers() {
             "{id}: no file in fixtures/commands/v1"
         );
     }
-    assert!(
-        problems.is_empty(),
-        "{} of {cases} cases failed:\n{}",
-        problems.len(),
-        problems.join("\n")
-    );
 }
 
 /// The desktop's own cases (fixtures/commands/v1/desktop, docs/adr/0207 §10):

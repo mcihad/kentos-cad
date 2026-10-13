@@ -1,0 +1,2130 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.boundary",
+  "commandVersion": 1,
+  "title": "İçine tıklayarak alan",
+  "note": "Written by scripts/fixtures/region_command_cases.py from the operations' definitions (docs/adr/0062, 0065, 0186, 0254); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bölge komutları",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "sinir",
+        "name": "Sınır",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "alan",
+        "name": "Alan",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "tarama",
+        "name": "Tarama",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "alt",
+            "name": "Alt",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 10,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 13,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 14,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487004,
+            "y": 4420003
+          },
+          {
+            "x": 487006,
+            "y": 4420003
+          },
+          {
+            "x": 487006,
+            "y": 4420005
+          },
+          {
+            "x": 487004,
+            "y": 4420005
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 15,
+        "layerId": "sinir",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 16,
+        "layerId": "sinir",
+        "attrs": {},
+        "a": {
+          "x": 487030,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 17,
+        "layerId": "sinir",
+        "attrs": {},
+        "a": {
+          "x": 487030,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 18,
+        "layerId": "sinir",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 19,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487025,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487025,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 20,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "5"
+        },
+        "pts": [
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487060,
+            "y": 4420000
+          },
+          {
+            "x": 487060,
+            "y": 4420020
+          },
+          {
+            "x": 487040,
+            "y": 4420020
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 21,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487044,
+            "y": 4420004
+          },
+          {
+            "x": 487048,
+            "y": 4420004
+          },
+          {
+            "x": 487048,
+            "y": 4420008
+          },
+          {
+            "x": 487044,
+            "y": 4420008
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 22,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487070,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487080,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 23,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487080,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487080,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 24,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487080,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487070,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 25,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487070,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487070,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 26,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487090,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487100,
+          "y": 4420000
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Çizgilerin kapattığı oda alan olur; içindeki kapalı nesne delik; adım “Alan oluştur”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "alan",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420008
+                  }
+                ],
+                "holes": [
+                  {
+                    "pts": [
+                      {
+                        "x": 487004,
+                        "y": 4420003
+                      },
+                      {
+                        "x": 487004,
+                        "y": 4420005
+                      },
+                      {
+                        "x": 487006,
+                        "y": 4420005
+                      },
+                      {
+                        "x": 487006,
+                        "y": 4420003
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Alan oluştur",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adalar kapalı: delik yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "islands": false
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "alan",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420008
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adanın içi kendi bölgesidir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487005,
+              "y": 4420004
+            },
+            "layerId": "alan"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "alan",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420003
+                  },
+                  {
+                    "x": 487006,
+                    "y": 4420005
+                  },
+                  {
+                    "x": 487004,
+                    "y": 4420005
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bütün görünen çizgiler: ara çizgi odayı böler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487022,
+              "y": 4420004
+            },
+            "layerId": "alan"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "alan",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420008
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınır katmanı: yalnız onun çizgileri sayılır, ara çizgi sayılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487022,
+              "y": 4420004
+            },
+            "layerId": "alan",
+            "boundaryLayer": "sinir"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "alan",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420008
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dikdörtgene değen görünen nesneler (aracın görünümü)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487022,
+              "y": 4420004
+            },
+            "layerId": "alan",
+            "boundaries": {
+              "kind": "area",
+              "min": {
+                "x": 487019,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487026,
+                "y": 4420009
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "alan",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487025,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420008
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verilen nesneler, gizli katmanda olsalar da",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487075,
+              "y": 4420004
+            },
+            "layerId": "alan",
+            "boundaries": {
+              "kind": "objects",
+              "uids": [
+                "$uidOf:22",
+                "$uidOf:23",
+                "$uidOf:24",
+                "$uidOf:25"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "alan",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487070,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487070,
+                    "y": 4420008
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Renk ve kalınlıkla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "color": "#30A46C",
+            "lineWeight": 0.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "alan",
+                "attrs": {},
+                "color": "#30A46C",
+                "lineWeight": 0.5,
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420008
+                  }
+                ],
+                "holes": [
+                  {
+                    "pts": [
+                      {
+                        "x": 487004,
+                        "y": 4420003
+                      },
+                      {
+                        "x": 487004,
+                        "y": 4420005
+                      },
+                      {
+                        "x": 487006,
+                        "y": 4420005
+                      },
+                      {
+                        "x": 487006,
+                        "y": 4420003
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana: layer_hidden uyarısıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "gizli"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "polygon",
+                "id": 27,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420008
+                  }
+                ],
+                "holes": [
+                  {
+                    "pts": [
+                      {
+                        "x": 487004,
+                        "y": 4420003
+                      },
+                      {
+                        "x": 487004,
+                        "y": 4420005
+                      },
+                      {
+                        "x": 487006,
+                        "y": 4420005
+                      },
+                      {
+                        "x": 487006,
+                        "y": 4420003
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: alan yazılacağı gibi, id 0; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "polygon",
+                  "id": 0,
+                  "layerId": "alan",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 487000,
+                      "y": 4420000
+                    },
+                    {
+                      "x": 487010,
+                      "y": 4420000
+                    },
+                    {
+                      "x": 487010,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487000,
+                      "y": 4420008
+                    }
+                  ],
+                  "holes": [
+                    {
+                      "pts": [
+                        {
+                          "x": 487004,
+                          "y": 4420003
+                        },
+                        {
+                          "x": 487004,
+                          "y": 4420005
+                        },
+                        {
+                          "x": 487006,
+                          "y": 4420005
+                        },
+                        {
+                          "x": 487006,
+                          "y": 4420003
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nokta sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan"
+          },
+          "nonFinite": {
+            "at.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Tıklanan noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "at.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınır listesi boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "boundaries": {
+              "kind": "objects",
+              "uids": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Sınır nesnesi yok. Sınırları verin ya da bütün görünen nesneler için “all”u kullanın.",
+              "path": "boundaries.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınırın kimliği geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "boundaries": {
+              "kind": "objects",
+              "uids": [
+                "Yapı-01"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“Yapı-01” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "boundaries.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dikdörtgenin köşesi sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "boundaries": {
+              "kind": "area",
+              "min": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "max": {
+                "x": 487010,
+                "y": 4420010
+              }
+            }
+          },
+          "nonFinite": {
+            "boundaries.max.y": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Dikdörtgenin köşesinin kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "boundaries.max.y"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınır çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "boundaries": {
+              "kind": "objects",
+              "uids": [
+                "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "boundaries.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınır katmanı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "boundaryLayer": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "boundaryLayer"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hiçbir bölgenin içinde değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487200,
+              "y": 4420200
+            },
+            "layerId": "alan"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_enclosed",
+              "message": "Nokta kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli.",
+              "path": "at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmanın çizgileri görünmez: bölge kapanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487075,
+              "y": 4420004
+            },
+            "layerId": "alan"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_enclosed",
+              "message": "Nokta kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli.",
+              "path": "at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dikdörtgen bölgeyi saran çizgileri dışarıda bırakır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487022,
+              "y": 4420004
+            },
+            "layerId": "alan",
+            "boundaries": {
+              "kind": "area",
+              "min": {
+                "x": 487021,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487024,
+                "y": 4420009
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_enclosed",
+              "message": "Nokta kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli.",
+              "path": "at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katman yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup katman değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "grup"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmana yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "kilitli"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalınlık aralıkta değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "lineWeight": 200
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487005,
+              "y": 4420004
+            },
+            "layerId": "alan"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "at": {
+              "x": 487002,
+              "y": 4420002
+            },
+            "layerId": "alan",
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -19,7 +19,7 @@ use crate::codes;
 use crate::style_tables;
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 /// One table, text or dimension, as the command changes it.
@@ -218,6 +218,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &StylesEdit) -> CommandResult<Styl
 
 /// Saves the table, then the objects that follow, in one undo step.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: StylesEdit) -> CommandResult<StylesEdited> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_STYLES_EDIT,
+        kentos_contracts::CAD_STYLES_EDIT_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(cx: &mut ExecutionContext<'_>, input: StylesEdit) -> CommandResult<StylesEdited> {
     let fresh = Uuid::now_v7().to_string();
     match check(cx.doc, &input, &fresh) {
         Ok((table, id)) => CommandResult::Completed {

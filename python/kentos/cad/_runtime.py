@@ -165,7 +165,9 @@ _ERRORS: dict[str, type[CommandError]] = {
 @dataclass(frozen=True, slots=True)
 class Outcome(Generic[O]):
     """A command's whole answer (its ``CommandResult``), when the caller
-    wants it rather than a raised refusal (``wrapper.run``)."""
+    wants it rather than a raised refusal (``wrapper.run``); by the protocol
+    (``wrapper.answer``, ``Document.call``, docs/adr/0253) with what it
+    touched, the plan's id and its journal row."""
 
     command: str
     status: str
@@ -174,6 +176,16 @@ class Outcome(Generic[O]):
     warnings: tuple[CommandNote, ...] = ()
     error: CommandError | None = None
     job_id: str | None = None
+    summary: Any = None
+    """What a plan or a write touched (:class:`kentos.cad.protocol.Summary`); by the protocol only."""
+    plan_id: str | None = None
+    """A plan's id: given as ``expected=Expected(plan=…)``, the write must equal it."""
+    replayed: bool = False
+    """The request was executed before: this is its answer then, nothing was applied now."""
+    undone: bool = False
+    """The request's write was undone since (only with ``replayed``)."""
+    call: int | None = None
+    """The journal's row of the write."""
 
     @property
     def ok(self) -> bool:
@@ -208,7 +220,37 @@ def outcome(command: str, answer: Mapping[str, Any], output_type: type[Any] | No
     return Outcome(
         command,
         str(status),
-        error=cls(command, e.get("code", "unknown"), e.get("message", ""), e.get("path"), e.get("revision")),
+        error=cls(
+            command,
+            e.get("code", "unknown"),
+            e.get("message", ""),
+            e.get("path"),
+            e.get("revision"),
+            tuple(e.get("uids") or ()),
+            bool(e.get("retryable", False)),
+        ),
+    )
+
+
+def call_outcome(command: str, answer: Mapping[str, Any], output_type: type[Any] | None) -> Outcome[Any]:
+    """The protocol's answer (``CallAnswer``, docs/adr/0253): the command's
+    result with its summary, plan id, replay and journal row."""
+    from .protocol import Summary  # noqa: PLC0415 - the protocol's types read the runtime's
+
+    base = outcome(command, answer, output_type)
+    raw = answer.get("summary")
+    return Outcome(
+        base.command,
+        base.status,
+        base.output,
+        base.warnings,
+        base.error,
+        base.job_id,
+        summary=None if raw is None else Summary.from_json(raw),
+        plan_id=answer.get("planId"),
+        replayed=bool(answer.get("replayed", False)),
+        undone=bool(answer.get("undone", False)),
+        call=answer.get("call"),
     )
 
 
@@ -235,19 +277,49 @@ class LocalCommand(Generic[I, O, P]):
     output_type: ClassVar[type[Any]]
     plan_type: ClassVar[type[Any]]
 
-    def run(self, doc: Document, input: I, /, *, op: str = "execute") -> Outcome[Any]:
+    def run(
+        self,
+        doc: Document,
+        input: I,
+        /,
+        *,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Any = None,
+    ) -> Outcome[Any]:
         """Runs ``op`` (``execute``, ``plan`` or ``validate``) with a built
-        input; a refusal is in the answer, not raised."""
+        input; a refusal is in the answer, not raised. With ``request_id``
+        or ``expected`` (:class:`kentos.cad.protocol.Expected`) the call goes
+        by the protocol (docs/adr/0253) and the answer carries its summary."""
         if not isinstance(input, self.input_type):
             raise TypeError(f"{self.id} girdisi {self.input_type.__name__} olmalı, {type(input).__name__} değil.")
         types = {"execute": self.output_type, "plan": self.plan_type, "validate": None}
         if op not in types:
             raise ValueError(f"“{op}” bir çağrı biçimi değil: execute, plan ya da validate.")
+        if request_id is not None or expected is not None:
+            return self.answer_input(doc, input, op=op, request_id=request_id, expected=expected)
         answer = doc._command(self.id, self.version, op, input.to_json())
         return outcome(self.id, answer, types[op])
 
-    def execute_input(self, doc: Document, input: I, /) -> O:
-        result = self.run(doc, input)
+    def answer_input(
+        self,
+        doc: Document,
+        input: I,
+        /,
+        *,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Any = None,
+    ) -> Outcome[Any]:
+        """``op`` by the protocol (docs/adr/0253): the answer with what it
+        touched (``summary``), the plan's id (``plan_id``), whether the
+        request was answered before (``replayed``), its journal row (``call``)."""
+        types = {"execute": self.output_type, "plan": self.plan_type, "validate": None}
+        answer = doc._call(self.id, self.version, op, input.to_json(), request_id, expected)
+        return call_outcome(self.id, answer, types[op])
+
+    def execute_input(self, doc: Document, input: I, /, *, request_id: str | None = None, expected: Any = None) -> O:
+        result = self.run(doc, input, request_id=request_id, expected=expected)
         _warn(result)
         return result.unwrap()  # type: ignore[no-any-return]
 

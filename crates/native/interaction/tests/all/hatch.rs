@@ -304,7 +304,7 @@ fn too_dense_a_pattern_is_refused() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Desen bu alan için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin."
+            "Desen bu bölge için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin."
         )
     );
     // Solid has no lines.

@@ -6,7 +6,7 @@
 use std::path::PathBuf;
 
 use kentos_contracts::{DrawingFont, Workspace};
-use kentos_headless::{DESKTOP, NewDrawing, Op, Session, catalog};
+use kentos_headless::{NewDrawing, Op, Session, catalog};
 use serde_json::{Value, json};
 
 fn scratch(name: &str) -> PathBuf {
@@ -207,7 +207,10 @@ fn every_command_marked_desktop_runs_here_and_the_catalog_lists_them_all() {
             )
         })
         .collect();
-    let mut here: Vec<(&str, u64)> = DESKTOP.iter().map(|(n, v)| (*n, u64::from(*v))).collect();
+    let mut here: Vec<(&str, u64)> = kentos_headless::commands()
+        .iter()
+        .map(|(n, v)| (*n, u64::from(*v)))
+        .collect();
     let mut listed = desktop.clone();
     here.sort_unstable();
     listed.sort_unstable();
@@ -344,4 +347,212 @@ fn a_millimetre_cad_project_is_drawn_and_measured_in_metres() {
     let refused = kentos_headless::new_drawing(&json!({ "srid": 5256, "drawingUnit": "cm" }))
         .expect_err("refused");
     assert_eq!(refused.code, "invalid_input");
+}
+
+// ── The protocol (docs/adr/0253) ────────────────────────────────────────
+
+#[test]
+fn a_call_answers_with_its_summary_and_a_page_gives_each_object_its_stamp() {
+    let mut s = new_drawing();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let answer = s
+        .call(json!({ "command": "cad.polygon.create", "input": square(&layer), "requestId": "betik:1" }))
+        .expect("answers");
+    let uid = created(&answer);
+    assert_eq!(answer["summary"]["added"], json!([uid.clone()]));
+    let call = answer["call"].as_u64().expect("a journal row");
+    // The page's stamp is the summary's.
+    let page = s.entities(None, None, None, None, None).expect("a page");
+    let item = page.items.iter().find(|i| i.uid == uid).expect("listed");
+    assert_eq!(
+        answer["summary"]["stamps"]["objects"][&uid],
+        json!(item.stamp)
+    );
+    // The summary of the drawing gives the parts' stamps.
+    let stamps = &s.summary()["stamps"];
+    for part in ["layers", "settings", "styles", "sheets"] {
+        assert_eq!(stamps[part].as_str().map(str::len), Some(16), "{part}");
+    }
+    // Sent again: answered as before, applied once.
+    let again = s
+        .call(json!({ "command": "cad.polygon.create", "input": square(&layer), "requestId": "betik:1" }))
+        .expect("answers");
+    assert_eq!(again["replayed"], true);
+    assert_eq!(s.summary()["objects"], 1);
+    // The journal has the row, and replays on a new drawing.
+    let journal = s.journal();
+    assert_eq!(journal["format"], "kentos.replay/1");
+    assert_eq!(journal["calls"][0]["seq"].as_u64(), Some(call));
+    let mut other = new_drawing();
+    let report = other.replay(journal).expect("replays");
+    assert_eq!(
+        (report["same"].as_u64(), report["failed"].as_u64()),
+        (Some(1), Some(0))
+    );
+    assert_eq!(other.summary()["objects"], 1);
+}
+
+#[test]
+fn a_command_runs_as_a_job_and_its_write_comes_in() {
+    let mut s = new_drawing();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let started = s
+        .start(json!({ "command": "cad.polygon.create", "input": square(&layer) }))
+        .expect("starts");
+    let id = started["id"].as_str().expect("an id").to_owned();
+    assert!(matches!(
+        started["phase"].as_str(),
+        Some("queued" | "computing" | "staged" | "done")
+    ));
+    let done = s.wait(&id).expect("waits");
+    assert_eq!(done["phase"], "done", "{done}");
+    assert_eq!(s.summary()["objects"], 1);
+    // Stopping it now: the write stands.
+    let refused = s.cancel(&id).expect_err("refused");
+    assert_eq!(refused.code, "already_committed");
+    assert_eq!(s.job("yok").expect_err("unknown").code, "unknown_job");
+}
+
+#[test]
+fn a_file_is_planned_without_writing_and_written_whole() {
+    let dir = scratch("files");
+    let mut s = new_drawing();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    created(
+        &s.run("cad.polygon.create", None, Op::Execute, square(&layer))
+            .expect("runs"),
+    );
+    let path = dir.join("cizim.dxf");
+    let p = path.display().to_string();
+    // The plan says what it would write; nothing is.
+    let planned = s
+        .call(json!({ "command": "file.export.dxf", "op": "plan", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert!(planned["output"]["bytes"].as_u64().is_some_and(|b| b > 0));
+    assert_eq!(planned["output"]["objects"], 1);
+    assert!(!path.exists());
+    // Written: the bytes and the digest are the plan's.
+    let written = s
+        .call(json!({ "command": "file.export.dxf", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(written["output"]["sha256"], planned["output"]["sha256"]);
+    let bytes = std::fs::read(&path).expect("written");
+    assert_eq!(
+        bytes.len() as u64,
+        written["output"]["bytes"].as_u64().expect("bytes")
+    );
+    assert_eq!(
+        kentos_contracts::encoding::sha256_hex(&bytes),
+        written["output"]["sha256"].as_str().expect("sha256")
+    );
+    // No temporary file is left beside it.
+    let left: Vec<_> = std::fs::read_dir(&dir)
+        .expect("lists")
+        .filter_map(Result::ok)
+        .collect();
+    assert_eq!(left.len(), 1);
+    // A file there is not written over unless asked; the journal names the file written.
+    let again = s
+        .call(json!({ "command": "file.export.dxf", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists");
+    let journal = s.journal();
+    let rows = journal["calls"].as_array().expect("rows");
+    let row = rows
+        .iter()
+        .find(|r| r["command"] == "file.export.dxf")
+        .expect("a row");
+    assert_eq!(row["effects"][0]["path"], p);
+    assert_eq!(row["effects"][0]["sha256"], written["output"]["sha256"]);
+    // Replayed on another drawing: the file is planned again, not written, and is the same file.
+    let before = std::fs::metadata(&path)
+        .expect("there")
+        .modified()
+        .expect("a time");
+    let mut other = new_drawing();
+    let report = other.replay(journal.clone()).expect("replays");
+    let file_row = report["steps"]
+        .as_array()
+        .expect("steps")
+        .iter()
+        .find(|r| r["command"] == "file.export.dxf")
+        .expect("the file's row")
+        .clone();
+    assert_eq!(file_row["outcome"], "same", "{report}");
+    assert_eq!(
+        std::fs::metadata(&path)
+            .expect("there")
+            .modified()
+            .expect("a time"),
+        before
+    );
+    // A drawing that would write another file: it differs; nothing is written.
+    let mut changed = new_drawing();
+    created(
+        &changed
+            .run(
+                "cad.point.create",
+                None,
+                Op::Execute,
+                json!({ "layerId": layer, "p": { "x": 9.0, "y": 9.0 } }),
+            )
+            .expect("runs"),
+    );
+    let report = changed.replay(journal.clone()).expect("replays");
+    let file_row = report["steps"]
+        .as_array()
+        .expect("steps")
+        .iter()
+        .find(|r| r["command"] == "file.export.dxf")
+        .expect("the row")
+        .clone();
+    assert_eq!(file_row["outcome"], "differs", "{report}");
+    // The writes the drawing does not have: refused with their places.
+    for (input, code, path) in [
+        (json!({ "path": "goreli.dxf" }), "invalid_file_path", "path"),
+        (
+            json!({ "path": dir.join("yok/a.dxf").display().to_string() }),
+            "invalid_file_path",
+            "path",
+        ),
+        (
+            json!({ "path": dir.display().to_string() }),
+            "invalid_file_path",
+            "path",
+        ),
+        (
+            json!({ "path": dir.join("b.dxf").display().to_string(), "layers": ["yok"] }),
+            "layer_not_found",
+            "layers[0]",
+        ),
+    ] {
+        let a = s
+            .call(json!({ "command": "file.export.dxf", "input": input }))
+            .expect("answers");
+        assert_eq!(
+            (a["error"]["code"].as_str(), a["error"]["path"].as_str()),
+            (Some(code), Some(path)),
+            "{a}"
+        );
+    }
+    // A drawing without sheets has no PDF; a file command cannot go into a change set.
+    let pdf = s
+        .call(json!({ "command": "file.export.pdf", "input": { "path": dir.join("p.pdf").display().to_string() } }))
+        .expect("answers");
+    assert_eq!(pdf["error"]["code"], "no_sheets");
+    let set = s
+        .call(json!({ "command": "cad.changeset.apply", "input": { "steps": [{ "command": "file.export.dxf", "input": { "path": p } }] } }))
+        .expect("answers");
+    assert_eq!(set["error"]["code"], "side_effect_in_changeset");
+    let _ = std::fs::remove_dir_all(&dir);
 }

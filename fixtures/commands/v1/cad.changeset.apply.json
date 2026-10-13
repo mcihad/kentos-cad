@@ -1,0 +1,1680 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.changeset.apply",
+ "commandVersion": 1,
+ "title": "Değişiklik kümesi: birden çok komut tek iş olarak",
+ "note": "docs/adr/0253 §8. Adımlar sırayla, tek değişiklikte; biri reddederse hepsi geri alınır (proje ayarları ve katman bayrakları da). Nesneler tek geri alma adımıdır, ayarlar değildir. Başvurular: “$ad”, “$ad[i]”, “$ad.alan”. Bu dosyayı scripts/fixtures/changeset_command_cases.py yazar.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Değişiklik kümesi",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "cad",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli katman",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli katman",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "yapi",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "yapi",
+    "attrs": {},
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487010,
+     "y": 4420000
+    }
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "yapi",
+    "attrs": {},
+    "p": {
+     "x": 487005,
+     "y": 4420005
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "İki nokta tek değişiklik: çıktılar sırayla, tek geri alma adımı “Değişiklik kümesi”",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        }
+       },
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487030,
+          "y": 4420030
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:3",
+          "id": 3,
+          "revision": "$current"
+         }
+        },
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:4",
+          "id": 4,
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "entities": {
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+         "x": 487020,
+         "y": 4420020
+        }
+       },
+       "4": {
+        "kind": "point",
+        "id": 4,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+         "x": 487030,
+         "y": 4420030
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değişiklik kümesi",
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canRedo": true
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Değişiklik kümesi",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adı verilen küme o adla geri alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "label": "Röper noktaları",
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Röper noktaları",
+       "steps": [
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:3",
+          "id": 3,
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ]
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Röper noktaları",
+     "expect": {
+      "ids": [
+       1,
+       2
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş ya da yalnız boşluk ad verilmemiş gibidir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "label": " \t ",
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:3",
+          "id": 3,
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değişiklik kümesi"
+    }
+   ]
+  },
+  {
+   "name": "“$ad” önceki adımın uid'i: yeni nokta aynı kümede boyanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        },
+        "as": "nokta"
+       },
+       {
+        "command": "cad.entities.set",
+        "input": {
+         "uids": [
+          "$$nokta"
+         ],
+         "color": "#E5484D",
+         "operation": "color"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:3",
+          "id": 3,
+          "revision": "$current"
+         }
+        },
+        {
+         "command": "cad.entities.set",
+         "output": {
+          "changed": [
+           "$uidOf:3"
+          ],
+          "ids": [
+           3
+          ],
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "entities": {
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "yapi",
+        "color": "#E5484D",
+        "attrs": {},
+        "p": {
+         "x": 487020,
+         "y": 4420020
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değişiklik kümesi",
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "“$ad[i]” önceki adımın created[i]'si: ikinci yeni nokta aynı kümede boyanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.entities.create",
+        "as": "yeni",
+        "input": {
+         "layerId": "yapi",
+         "objects": [
+          {
+           "geometry": {
+            "kind": "point",
+            "p": {
+             "x": 487040,
+             "y": 4420040
+            }
+           }
+          },
+          {
+           "geometry": {
+            "kind": "point",
+            "p": {
+             "x": 487050,
+             "y": 4420050
+            }
+           }
+          }
+         ]
+        }
+       },
+       {
+        "command": "cad.entities.set",
+        "input": {
+         "uids": [
+          "$$yeni[1]"
+         ],
+         "color": "#30A46C",
+         "operation": "color"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.entities.create",
+         "output": {
+          "created": [
+           "$uidOf:3",
+           "$uidOf:4"
+          ],
+          "ids": [
+           3,
+           4
+          ],
+          "revision": "$current"
+         }
+        },
+        {
+         "command": "cad.entities.set",
+         "output": {
+          "changed": [
+           "$uidOf:4"
+          ],
+          "ids": [
+           4
+          ],
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "entities": {
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+         "x": 487040,
+         "y": 4420040
+        }
+       },
+       "4": {
+        "kind": "point",
+        "id": 4,
+        "layerId": "yapi",
+        "color": "#30A46C",
+        "attrs": {},
+        "p": {
+         "x": 487050,
+         "y": 4420050
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir adım reddederse küme reddeder: kod adımın, yol ve ileti adımın, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        }
+       },
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "kilitli",
+         "p": {
+          "x": 487030,
+          "y": 4420030
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "2. adım: “Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+       "path": "steps[1].input.layerId"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Reddedilen küme proje ayarlarını ve katman bayraklarını da geri alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.settings.set",
+        "input": {
+         "plotScale": 500
+        }
+       },
+       {
+        "command": "cad.layers.set",
+        "input": {
+         "operation": "visible",
+         "layer": "yapi",
+         "value": false
+        }
+       },
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yok",
+         "p": {
+          "x": 487030,
+          "y": 4420030
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "3. adım: “yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "steps[2].input.layerId"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "settings": {
+       "plotScale": 1000
+      },
+      "layers": [
+       {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ayar ve görünürlük geri alma adımı değildir; nesneler tek adımdır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.layers.set",
+        "input": {
+         "operation": "visible",
+         "layer": "gizli",
+         "value": true
+        }
+       },
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        }
+       },
+       {
+        "command": "cad.settings.set",
+        "input": {
+         "plotScale": 500
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.layers.set",
+         "output": {
+          "changed": true,
+          "active": "yapi",
+          "revision": "$current"
+         }
+        },
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:3",
+          "id": 3,
+          "revision": "$current"
+         }
+        },
+        {
+         "command": "cad.settings.set",
+         "output": {
+          "changed": [
+           "plotScale"
+          ],
+          "followed": 0,
+          "locked": 0,
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "settings": {
+       "plotScale": 500
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değişiklik kümesi",
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "settings": {
+       "plotScale": 500
+      },
+      "layers": [
+       {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adımın uyarısı kümenin cevabında adımın yoluyla, adımın çıktısında kendi yoluyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "gizli",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:3",
+          "id": 3,
+          "revision": "$current"
+         },
+         "warnings": [
+          {
+           "code": "layer_hidden",
+           "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+           "path": "layerId"
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_hidden",
+        "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+        "path": "steps[0].input.layerId"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adımsız küme reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_steps",
+       "message": "Değişiklik kümesinde hiç adım yok; en az bir komut verin.",
+       "path": "steps"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Küme iç içe verilemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 1,
+          "y": 1
+         }
+        }
+       },
+       {
+        "command": "cad.changeset.apply",
+        "input": {
+         "steps": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nested_changeset",
+       "message": "Değişiklik kümesi iç içe verilemez; adımlarını bu kümeye ekleyin.",
+       "path": "steps[1].command"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyaya yazan komut kümeye giremez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "file.export.dxf",
+        "input": {
+         "path": "/tmp/a.dxf"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "side_effect_in_changeset",
+       "message": "file.export.dxf dosyaya yazar; yan etkisi geri alınamadığı için değişiklik kümesine giremez. Kümeden sonra ayrıca çağırın.",
+       "path": "steps[0].command"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bilinmeyen komut adımın komut yoluyla reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 1,
+          "y": 1
+         }
+        }
+       },
+       {
+        "command": "cad.ufo.create",
+        "input": {}
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_command",
+       "message": "“cad.ufo.create” bu çizimde çalışan bir komut değil.",
+       "path": "steps[1].command"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka sürüm reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 1,
+          "y": 1
+         }
+        },
+        "version": 2
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_version",
+       "message": "cad.point.create için 2. sürüm yok; bu sürüm 1. sürümü çalıştırır.",
+       "path": "steps[0].version"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adımın adı harf ya da _ ile başlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 1,
+          "y": 1
+         }
+        },
+        "as": "1nokta"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Adımın adı “1nokta” olamaz: bir harf ya da _ ile başlamalı, harf, rakam ve _ içermeli ve bir kez verilmeli.",
+       "path": "steps[0].as"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir ad iki adıma verilemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 1,
+          "y": 1
+         }
+        },
+        "as": "n"
+       },
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 2,
+          "y": 2
+         }
+        },
+        "as": "n"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Adımın adı “n” olamaz: bir harf ya da _ ile başlamalı, harf, rakam ve _ içermeli ve bir kez verilmeli.",
+       "path": "steps[1].as"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sonraki adımın adı önceden anılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.entities.set",
+        "input": {
+         "uids": [
+          "$$sonra"
+         ],
+         "color": "#E5484D",
+         "operation": "color"
+        }
+       },
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        },
+        "as": "sonra"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_reference",
+       "message": "1. adımın “$sonra” başvurusu daha önceki bir adımın çıktısını adlamıyor: adı önceki bir adımın “as”'i olmalı, alanı ve sırası o adımın çıktısında bulunmalı.",
+       "path": "steps[0].input.uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Önceki adımın çıktısında olmayan alan anılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        },
+        "as": "n"
+       },
+       {
+        "command": "cad.entities.set",
+        "input": {
+         "uids": [
+          "$$n.yok"
+         ],
+         "color": "#E5484D",
+         "operation": "color"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_reference",
+       "message": "2. adımın “$n.yok” başvurusu daha önceki bir adımın çıktısını adlamıyor: adı önceki bir adımın “as”'i olmalı, alanı ve sırası o adımın çıktısında bulunmalı.",
+       "path": "steps[1].input.uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir adımın adı olmayan “$…” metni metindir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         },
+         "attrs": {
+          "Fiyat": "$$5",
+          "Not": "$$yok",
+          "Kod": "$$a b"
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:3",
+          "id": 3,
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "entities": {
+       "3": {
+        "kind": "point",
+        "id": 3,
+        "layerId": "yapi",
+        "attrs": {
+         "Fiyat": "$$5",
+         "Kod": "$$a b",
+         "Not": "$$yok"
+        },
+        "p": {
+         "x": 487020,
+         "y": 4420020
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizim beklenen sürümde değilse hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 1,
+          "y": 1
+         }
+        }
+       }
+      ],
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm ondalık bir tamsayı yazısıdır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 1,
+          "y": 1
+         }
+        }
+       }
+      ],
+      "expectedRevision": "x"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “x” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm tutarsa yazılır",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "hazir"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        }
+       }
+      ],
+      "expectedRevision": "$hazir"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.point.create",
+         "output": {
+          "uid": "$uidOf:3",
+          "id": 3,
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan kümeyi kopyada çalıştırır: adımların çıktıları ve beklenecek sürüm; hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "nokta"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.entities.set",
+        "input": {
+         "uids": [
+          "$uid:nokta"
+         ],
+         "color": "#30A46C",
+         "operation": "color"
+        }
+       },
+       {
+        "command": "cad.layers.set",
+        "input": {
+         "operation": "visible",
+         "layer": "gizli",
+         "value": true
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "label": "Değişiklik kümesi",
+       "steps": [
+        {
+         "command": "cad.entities.set",
+         "output": {
+          "changed": [
+           "$uid:nokta"
+          ],
+          "ids": [
+           2
+          ],
+          "revision": "$current"
+         }
+        },
+        {
+         "command": "cad.layers.set",
+         "output": {
+          "changed": true,
+          "active": "yapi",
+          "revision": "$current"
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "layers": [
+       {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ],
+      "entities": {
+       "2": {
+        "kind": "point",
+        "id": 2,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+         "x": 487005,
+         "y": 4420005
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama kümeyi denetler, uyarıları verir, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "gizli",
+         "p": {
+          "x": 487020,
+          "y": 4420020
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": [
+       {
+        "code": "layer_hidden",
+        "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+        "path": "steps[0].input.layerId"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "validate",
+     "input": {
+      "steps": [
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "yapi",
+         "p": {
+          "x": 1,
+          "y": 1
+         }
+        }
+       },
+       {
+        "command": "cad.point.create",
+        "input": {
+         "layerId": "kilitli",
+         "p": {
+          "x": 2,
+          "y": 2
+         }
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "2. adım: “Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+       "path": "steps[1].input.layerId"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -423,6 +423,7 @@ pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, St
         project_id: Some(ProjectId(ids.project)),
         migrated_from: Some(MigrationSource::v1(ids.source_sha256)),
         sheets: None,
+        requests: Vec::new(),
     })
 }
 

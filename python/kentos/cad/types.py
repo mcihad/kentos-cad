@@ -668,6 +668,20 @@ HatchPatternTypeName = Literal["solid", "lines", "cross", "pattern", "gradient"]
 """The names of :class:`HatchPatternType`, for a plain string."""
 
 
+class HatchWay(_StrEnum):
+    """How Tarama finds the region around a point.
+
+    - ``object``: Kapalı nesne (Netcad's): the smallest closed object around the point,
+    - ``lines``: Çizgiler (AutoCAD's): the face the boundaries' line work closes
+    """
+    OBJECT = "object"
+    LINES = "lines"
+
+
+HatchWayName = Literal["object", "lines"]
+"""The names of :class:`HatchWay`, for a plain string."""
+
+
 class InvitationState(_StrEnum):
     """Where an invitation is.
 
@@ -1616,6 +1630,58 @@ class CrsSystem(_Union):
         return _variant(_CRS_SYSTEM, "CrsSystem", "kind", data).from_json(data)
 
 
+class DimensionMeasure(_Union):
+    """What a dimension measures: Ölçülendirme's ten kinds (docs/adr/0061, 0147).
+
+    One of:
+
+    - :class:`AlignedDimensionMeasure` (``kind: aligned``)
+    - :class:`LinearDimensionMeasure` (``kind: linear``)
+    - :class:`OrdinateDimensionMeasure` (``kind: ordinate``)
+    - :class:`AzimuthDimensionMeasure` (``kind: azimuth``)
+    - :class:`SlopeDimensionMeasure` (``kind: slope``)
+    - :class:`AngleDimensionMeasure` (``kind: angle``)
+    - :class:`AngleVertexDimensionMeasure` (``kind: angleVertex``)
+    - :class:`AngleArcDimensionMeasure` (``kind: angleArc``)
+    - :class:`RadiusDimensionMeasure` (``kind: radius``)
+    - :class:`DiameterDimensionMeasure` (``kind: diameter``)
+    - :class:`ArcLengthDimensionMeasure` (``kind: arcLength``)
+    - :class:`JoggedDimensionMeasure` (``kind: jogged``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionMeasure:
+        return _variant(_DIMENSION_MEASURE, "DimensionMeasure", "kind", data).from_json(data)
+
+
+class Division(_Union):
+    """How the object is divided.
+
+    One of:
+
+    - :class:`PartsDivision` (``kind: parts``)
+    - :class:`StepDivision` (``kind: step``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Division:
+        return _variant(_DIVISION, "Division", "kind", data).from_json(data)
+
+
 class Entity(_Union):
     """Any drawing object, tagged by `kind` as in the TypeScript model.
 
@@ -1753,6 +1819,54 @@ class FeatureChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> FeatureChange:
         return _variant(_FEATURE_CHANGE, "FeatureChange", "op", data).from_json(data)
+
+
+class HatchRegion(_Union):
+    """Where Tarama hatches.
+
+    One of:
+
+    - :class:`PointHatchRegion` (``kind: point``)
+    - :class:`ObjectsHatchRegion` (``kind: objects``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        associative: bool | None | Unset
+        islands: bool | None | Unset
+        texts: bool | None | Unset
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchRegion:
+        return _variant(_HATCH_REGION, "HatchRegion", "kind", data).from_json(data)
+
+
+class MeasuredPoint(_Union):
+    """A measured point: coordinates, or a place on an object.
+
+    One of:
+
+    - :class:`AtMeasuredPoint` (``kind: at``)
+    - :class:`PlaceMeasuredPoint` (``kind: place``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeasuredPoint:
+        return _variant(_MEASURED_POINT, "MeasuredPoint", "kind", data).from_json(data)
 
 
 class NetworkDirection(_Union):
@@ -2893,6 +3007,147 @@ class CellRange(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ChangesetApplied(_Model):
+    """Output of `cad.changeset.apply` v1, and what its plan says it would be.
+    Attributes:
+        label: The undo step's name.
+        revision: After execute, the document's revision after the write; after plan,
+            the revision the input should expect for exactly this.
+    """
+    label: str
+    steps: list[ChangesetStepDone]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChangesetApplied:
+        return cls(
+            label=data["label"],
+            steps=[ChangesetStepDone.from_json(e0) for e0 in data["steps"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChangesetApply(_Model):
+    """Input of `cad.changeset.apply` v1: the steps, in order, each a command of
+    this host with its input as its catalog says. A later step names an
+    earlier one's output by a text that is the whole value: `"$ad"` its
+    `uid`, `"$ad[2]"` its `created[2]`, `"$ad.layer"` its `layer`,
+    `"$ad.created[0]"` the same as `"$ad[0]"`, where `ad` is the earlier
+    step's `as`. A text that names a step not before it is refused
+    (`unknown_reference`); any other text is the text.
+
+    Every step runs in the one change: a step refused refuses the set (its
+    code, at `steps[i].input.…`), and nothing of any step is written. The
+    linked texts, hatches and dimensions follow once, after the last step;
+    the document's integrity is checked then. Objects, layers and blocks are
+    one undo step named `label`; the project's settings, its style library
+    and its sheet book are no undo step (docs/adr/0248, 0251), the answer's
+    summary says which changed.
+
+    Refusals, in this order: `no_steps`; per step, in order, `nested_changeset`
+    (a change set inside), `side_effect_in_changeset` (a `file.*` command),
+    `unknown_command`, `unknown_version`; `invalid_revision`,
+    `revision_conflict`; then the steps' own, and `unknown_reference`.
+    Attributes:
+        steps: At least one.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+        label: The undo step's name; “Değişiklik kümesi” when absent.
+    """
+    steps: list[ChangesetStep]
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChangesetApply:
+        return cls(
+            steps=[ChangesetStep.from_json(e0) for e0 in data["steps"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChangesetStep(_Model):
+    """A step of a change set.
+    Attributes:
+        command: The command's id (`cad.polygon.create`).
+        input: Its input, its catalog's schema, with references to earlier steps.
+        as_: The name later steps refer to its output by: a letter or `_`, then
+            letters, digits and `_`; each once.
+        version: Its version; the host's when absent.
+    """
+    command: str
+    input: Any
+    as_: str | None | Unset = UNSET
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["command"] = self.command
+        out["input"] = self.input
+        if self.as_ is not UNSET:
+            out["as"] = self.as_
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChangesetStep:
+        return cls(
+            command=data["command"],
+            input=data["input"],
+            as_=data.get("as", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChangesetStepDone(_Model):
+    """A step written: its command and its output, as the command answers.
+    Attributes:
+        warnings: The step's warnings (the set's answer has them too, at `steps[i]…`).
+    """
+    command: str
+    output: Any
+    warnings: list[StepWarning] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["command"] = self.command
+        out["output"] = self.output
+        if self.warnings is not UNSET:
+            out["warnings"] = [e0.to_json() for e0 in self.warnings]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChangesetStepDone:
+        return cls(
+            command=data["command"],
+            output=data["output"],
+            warnings=[StepWarning.from_json(e0) for e0 in data["warnings"]] if "warnings" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Checkpoint(_Model):
     """One checkpoint of a project.
     Attributes:
@@ -3895,6 +4150,112 @@ class DimensionStyleDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DimensionsCreate(_Model):
+    """Input of `cad.dimensions.create` v1: the dimension `measure` names,
+    placed at `at` (the dimension line, its arc or its leader through it),
+    written on `layerId` by `cad.entities.create`'s rules as one undo step
+    “Ekle”. The dimension is the one Ölçülendirme draws for the same picks:
+    the tool writes it with this command. The points given as places on
+    Hizalı, Doğrusal, Koordinat, Semt and Eğim are bound: they follow their
+    objects (docs/adr/0249).
+
+    Refusals (`CommandError.code`), checked in this order: `not_finite`
+    (`at`, `offset`, then the measure's numbers in their order),
+    `invalid_height`, `invalid_uid` (each place's and edge's object, in
+    order), `invalid_offset` (an `offset` for Yarıçap, Çap or Koordinat,
+    which take none), `invalid_revision`, `revision_conflict` (status
+    `conflict`), `entity_not_found`, `no_such_place`, `not_measurable` (the
+    object has no edge of the kind the measure takes), `missing_elevation`
+    (Eğim's point with no elevation given or kept), `unknown_style`,
+    `no_dimension` (no dimension forms there: the points meet, the edges are
+    parallel, the arc spans nothing), then the layer's and the look's as
+    `cad.entities.create` checks them (`layer_not_found`, `not_a_layer`,
+    `layer_locked`, `invalid_line_weight`); a hidden layer gives a
+    `layer_hidden` warning; on the desktop also `slots_exhausted`.
+    Attributes:
+        at: Where the dimension goes: its line, its arc or its leader through it.
+        layer_id: The layer the dimension goes to.
+        attrs: GIS attributes, text in v1. Absent: none.
+        color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+        dimension_style: The project's dimension style by its name (docs/adr/0183); absent or
+            “Standart”: Standart.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+        height: The value's height, metres; absent: the style's at the project's
+            scale, Standart's the project's Ölçü height (docs/adr/0205).
+        label: The text shown beside it. Absent: none.
+        line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
+            is drawn with lines. Absent: the layer's.
+        mask: The value drawn over the drawing's background (Zemin, docs/adr/0147).
+        offset: Instead of `at`'s, the distance typed: Hizalı's, Semt's and Eğim's
+            signed (left of a→b positive), Doğrusal's along its direction's
+            normal, Açı's arc radius (its sign aside), Yay uzunluğu's from the arc
+            (out positive), Kırıklı yarıçap's jog along the radius from the
+            centre shown. Yarıçap, Çap and Koordinat take none: `at` places them.
+        symbol: Its own symbol, a library item's id. Absent: the layer's style.
+    """
+    measure: DimensionMeasure
+    at: Vec2
+    layer_id: str
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    dimension_style: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    mask: bool | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["measure"] = self.measure.to_json()
+        out["at"] = _vec2_out(self.at)
+        out["layerId"] = self.layer_id
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.dimension_style is not UNSET:
+            out["dimensionStyle"] = self.dimension_style
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.mask is not UNSET:
+            out["mask"] = self.mask
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsCreate:
+        return cls(
+            measure=DimensionMeasure.from_json(data["measure"]),
+            at=Vec2.from_json(data["at"]),
+            layer_id=data["layerId"],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            dimension_style=data.get("dimensionStyle", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            mask=data.get("mask", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DimensionsReassociate(_Model):
     """Input of `cad.dimensions.reassociate` v1: a dimension's points bound to
     places on objects, or freed, as one undo step “Ölçüyü yeniden bağla”. A
@@ -4059,6 +4420,74 @@ class DoorSource(_Model):
             neighbourhood=data.get("neighbourhood", UNSET),
             postcode=data.get("postcode", UNSET),
             province=data.get("province", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DxfExported(_Model):
+    """What `file.export.dxf` wrote, or with `plan` would write.
+    Attributes:
+        bytes: The file's bytes: written, or the size the plan would write.
+        sha256: SHA-256 of the bytes, 64 hex digits.
+        objects: The objects written and the layers they are on.
+        replaced: Whether a file was there (and is written over).
+        report: The writer's report: what each kind became, what changed on the way.
+    """
+    path: str
+    bytes: int
+    sha256: str
+    objects: int
+    layers: int
+    replaced: bool
+    report: Any
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["objects"] = self.objects
+        out["layers"] = self.layers
+        out["replaced"] = self.replaced
+        out["report"] = self.report
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DxfExported:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            objects=data["objects"],
+            layers=data["layers"],
+            replaced=data["replaced"],
+            report=data["report"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EdgeNear(_Model):
+    """An object's edge as a click picks it: of the object's edges of the kind
+    the measure takes (straight, an arc, a circle), the one nearest `near`.
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+        near: Where it was clicked: its nearest edge is the one measured. An angle's
+            arms reach as far as their edges were clicked.
+    """
+    uid: str
+    near: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["near"] = _vec2_out(self.near)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EdgeNear:
+        return cls(
+            uid=data["uid"],
+            near=Vec2.from_json(data["near"]),
         )
 
 
@@ -4301,6 +4730,141 @@ class EntitiesArrayed(_Model):
             created=list(data["created"]),
             locked=list(data["locked"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesBoundary(_Model):
+    """Input of `cad.entities.boundary` v1: the region around `at` that the
+    boundaries' line work closes becomes an area on `layerId`, closed groups
+    inside it holes unless `islands` is false. One undo step “Alan oluştur”,
+    written by `cad.entities.create`'s rules.
+
+    Refusals (`CommandError.code`), checked in this order: `not_finite`
+    (`at`, then the rectangle's corners), `no_entities` (`boundaries.uids`
+    empty), `invalid_uid` (at `boundaries.uids[i]`), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found` (at
+    `boundaries.uids[i]`), `layer_not_found` (`boundaryLayer`),
+    `not_enclosed` (no region closes around `at`), then the layer's and the
+    look's as `cad.entities.create` checks them (`layer_not_found`,
+    `not_a_layer`, `layer_locked`, `invalid_line_weight`); a hidden layer
+    gives a `layer_hidden` warning; on the desktop also `slots_exhausted`.
+    Attributes:
+        at: A point inside the region.
+        layer_id: The layer the area goes to.
+        attrs: GIS attributes, text in v1. Absent: none.
+        boundaries: Whose line work closes the region; absent: every shown object (`all`).
+        boundary_layer: Sınır katmanı: only this layer's line work counts.
+        color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+        islands: Adalar: closed groups inside the region are holes; absent: true.
+        label: The text shown beside it. Absent: none.
+        line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
+            is drawn with lines. Absent: the layer's.
+        symbol: Its own symbol, a library item's id. Absent: the layer's style.
+    """
+    at: Vec2
+    layer_id: str
+    attrs: dict[str, str] | None | Unset = UNSET
+    boundaries: TrimBoundaries | None | Unset = UNSET
+    boundary_layer: str | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    islands: bool | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = _vec2_out(self.at)
+        out["layerId"] = self.layer_id
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.boundaries is not UNSET:
+            out["boundaries"] = None if self.boundaries is None else self.boundaries.to_json()
+        if self.boundary_layer is not UNSET:
+            out["boundaryLayer"] = self.boundary_layer
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.islands is not UNSET:
+            out["islands"] = self.islands
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesBoundary:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            layer_id=data["layerId"],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            boundaries=UNSET if "boundaries" not in data else None if data["boundaries"] is None else TrimBoundaries.from_json(data["boundaries"]),
+            boundary_layer=data.get("boundaryLayer", UNSET),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            islands=data.get("islands", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesBreak(_Model):
+    """Input of `cad.entities.break` v1: the part of the object between `first`
+    and `second` goes; without `second` (or with it on `first`) the object
+    splits at `first`. One undo step “Kır”. The object is replaced by its
+    pieces, the first in its place keeping its id (its data kept when one
+    piece is left, not for a closed area), the others new objects from it.
+    Lines, polylines, areas, arcs, circles, ellipses, construction lines and
+    rays break.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid`,
+    `not_finite` (`first`, then `second`), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found`,
+    `not_breakable` (another kind; an area with holes, which would lose
+    them), `layer_locked`, `break_failed` (the
+    core's words: the points off the object, a closed object split at one
+    point); on the desktop also `slots_exhausted`.
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+        first: The first break point, on or near the object.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+        second: The second; absent: the object splits at `first`.
+    """
+    uid: str
+    first: Vec2
+    expected_revision: str | None | Unset = UNSET
+    second: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["first"] = _vec2_out(self.first)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.second is not UNSET:
+            out["second"] = None if self.second is None else _vec2_out(self.second)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesBreak:
+        return cls(
+            uid=data["uid"],
+            first=Vec2.from_json(data["first"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            second=UNSET if "second" not in data else None if data["second"] is None else Vec2.from_json(data["second"]),
         )
 
 
@@ -4651,6 +5215,86 @@ class EntitiesDeleted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesDivide(_Model):
+    """Input of `cad.entities.divide` v1: points along the object at
+    `division`, measured from its start (or its end, `fromEnd`), on
+    `layerId`, as one undo step “Böl” written by `cad.entities.create`'s
+    rules. Lines, polylines, areas, arcs, circles, ellipses and splines divide.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_uid`,
+    `invalid_count` (parts out of 2 to 10 000), `invalid_distance` (a step
+    not over 0 or not finite), `invalid_revision`, `revision_conflict`
+    (status `conflict`), `entity_not_found`, `not_divisible` (another kind),
+    `no_points` (a step longer than the object), `too_many_points` (over
+    10 000), then the layer's and the look's as `cad.entities.create` checks
+    them (`layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_line_weight`);
+    a hidden layer gives a `layer_hidden` warning; on the desktop also
+    `slots_exhausted`.
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+        division: Into parts, or at a step.
+        layer_id: The layer the points go to.
+        attrs: GIS attributes, text in v1. Absent: none.
+        color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+        from_end: The points are measured from the object's end, not its start (the
+            tool: from the end nearer the click).
+        label: The text shown beside it. Absent: none.
+        line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
+            is drawn with lines. Absent: the layer's.
+        symbol: Its own symbol, a library item's id. Absent: the layer's style.
+    """
+    uid: str
+    division: Division
+    layer_id: str
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    from_end: bool | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["division"] = self.division.to_json()
+        out["layerId"] = self.layer_id
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.from_end is not UNSET:
+            out["fromEnd"] = self.from_end
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesDivide:
+        return cls(
+            uid=data["uid"],
+            division=Division.from_json(data["division"]),
+            layer_id=data["layerId"],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            from_end=data.get("fromEnd", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesEdit(_Model):
     """Input of `cad.entities.edit` v1: changes to objects named by their
     persistent ids, written as one undo step named after `operation`. The
@@ -4831,6 +5475,141 @@ class EntitiesFillet(_Model):
             radius=float(data["radius"]),
             expected_revision=data.get("expectedRevision", UNSET),
             trim=data.get("trim", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesHatch(_Model):
+    """Input of `cad.entities.hatch` v1: the regions of `region` hatched with
+    `pattern` on `layerId`, one hatch each, as one undo step “Tarama”,
+    written by `cad.entities.create`'s rules. Çoklu tara's objects that are
+    not closed are left out with a `not_closed` warning at `region.uids[i]`.
+
+    Refusals (`CommandError.code`), checked in this order: the pattern's
+    (`unknown_pattern` at `pattern.name`, `invalid_scale` at `pattern.scale`
+    when not over 0, not finite or over 10 000, `not_finite` at
+    `pattern.angle`, `invalid_color` at `pattern.secondColor`), then the
+    region's (`not_finite` at `region.at` and the rectangle's corners;
+    `no_entities` when `region.uids` or `boundaries.uids` is empty,
+    `invalid_uid`), `invalid_revision`, `revision_conflict` (status
+    `conflict`), `entity_not_found`, `layer_not_found` (`boundaryLayer`),
+    `not_enclosed` (no region around `at`; Çoklu tara: the islands and the
+    texts cover every object), `not_closed` (none of the objects closed),
+    `pattern_too_dense` (the pattern too dense for a region), then the
+    layer's and the look's as `cad.entities.create` checks them; on the
+    desktop also `slots_exhausted`.
+    Attributes:
+        region: Where to hatch.
+        pattern: With what.
+        layer_id: The layer the hatches go to.
+        attrs: GIS attributes, text in v1. Absent: none.
+        color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+        label: The text shown beside it. Absent: none.
+        line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
+            is drawn with lines. Absent: the layer's.
+        symbol: Its own symbol, a library item's id. Absent: the layer's style.
+    """
+    region: HatchRegion
+    pattern: HatchPatternSpec
+    layer_id: str
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["region"] = self.region.to_json()
+        out["pattern"] = self.pattern.to_json()
+        out["layerId"] = self.layer_id
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesHatch:
+        return cls(
+            region=HatchRegion.from_json(data["region"]),
+            pattern=HatchPatternSpec.from_json(data["pattern"]),
+            layer_id=data["layerId"],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesJoin(_Model):
+    """Input of `cad.entities.join` v1: the lines, arcs and open polylines of
+    `uids` meeting end to end within `tolerance` become one object each
+    chain (a chain that closes, a closed area), in the place and with the
+    persistent id and the data of its first object; the others go. One undo
+    step “Birleştir”. Those on a locked layer are left out with a
+    `locked_skipped` warning at `uids[i]`.
+
+    Zincir (`chain`, docs/adr/0161 §2): `uids` is one object, the seed; the
+    objects joined end to end with it among `chain`'s objects (lines, arcs,
+    open polylines) are joined with it, up to a free end, a junction, a
+    locked object (a `chain_stopped` warning) or the start again. The seed
+    keeps its place, its id and its data.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities`
+    (no id; with `chain` more than one), `invalid_uid` (at `uids[i]`), then
+    `chain`'s ids, `invalid_distance` (`tolerance` not over 0 or not
+    finite), `not_finite` (`chain`'s rectangle), `invalid_revision`,
+    `revision_conflict` (status `conflict`), `entity_not_found`,
+    `not_joinable` (a seed that is not a line, an arc or an open polyline),
+    `layer_locked` (the seed), `nothing_to_join` (no chain of two),
+    `join_failed` (the core's words); on the desktop also `slots_exhausted`.
+    Attributes:
+        uids: The objects to join; with `chain`, the seed alone.
+        chain: Zincir: the objects the seed's chain walks over; absent: the objects of `uids`.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+        tolerance: How far apart two ends may be and still meet, metres; absent: 0.001.
+    """
+    uids: list[str]
+    chain: TrimBoundaries | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.chain is not UNSET:
+            out["chain"] = None if self.chain is None else self.chain.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesJoin:
+        return cls(
+            uids=list(data["uids"]),
+            chain=UNSET if "chain" not in data else None if data["chain"] is None else TrimBoundaries.from_json(data["chain"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
 
@@ -5169,6 +5948,123 @@ class EntitiesSetPropertiesPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesStretch(_Model):
+    """Input of `cad.entities.stretch` v1: the vertices inside `window` move by
+    (`dx`, `dy`), the others stay, as one undo step “Esnet”.
+
+    The objects: those of `uids` (the selection), each without a vertex in
+    the window left out with an `outside_window` warning at `uids[i]`; or,
+    with no `uids`, every shown object meeting the window that has a vertex
+    in it. Those on a locked layer are left out with a `locked_skipped`
+    warning (at `uids[i]` when listed). With `topology`, the shown objects
+    sharing a moved vertex follow; a locked one does not (`neighbour_locked`
+    warning), nor one it would leave invalid (`neighbour_invalid`). A zero
+    displacement writes nothing.
+
+    Refusals (`CommandError.code`), checked in this order: `not_finite` (the
+    window's corners, then `dx`, `dy`), `no_entities` (`uids` given empty),
+    `invalid_uid` (at `uids[i]`), `invalid_revision`, `revision_conflict`
+    (status `conflict`), `entity_not_found` (at `uids[i]`),
+    `nothing_to_stretch` (no object left to stretch); on the desktop also
+    `slots_exhausted`.
+    Attributes:
+        window: The window over the vertices to move, metres.
+        dx: How far east (Y) the vertices move, metres.
+        dy: How far north (X) the vertices move, metres.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+        topology: Topolojik düzenleme: the neighbours sharing a moved vertex follow; absent: they stay.
+        uids: Only these objects (the selection); absent: every shown object the window meets.
+    """
+    window: StretchWindow
+    dx: float
+    dy: float
+    expected_revision: str | None | Unset = UNSET
+    topology: StretchTopology | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["window"] = self.window.to_json()
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.topology is not UNSET:
+            out["topology"] = None if self.topology is None else self.topology.to_json()
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesStretch:
+        return cls(
+            window=StretchWindow.from_json(data["window"]),
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            topology=UNSET if "topology" not in data else None if data["topology"] is None else StretchTopology.from_json(data["topology"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesStretchPlan(_Model):
+    """What `cad.entities.stretch` would write (plan mode); nothing is written.
+    Attributes:
+        stretched: The objects as they would be, with their slots.
+        followed: The neighbours as they would be.
+    """
+    stretched: list[Entity]
+    followed: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["stretched"] = [e0.to_json() for e0 in self.stretched]
+        out["followed"] = [e0.to_json() for e0 in self.followed]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesStretchPlan:
+        return cls(
+            stretched=[Entity.from_json(e0) for e0 in data["stretched"]],
+            followed=[Entity.from_json(e0) for e0 in data["followed"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesStretched(_Model):
+    """Output of `cad.entities.stretch` v1.
+    Attributes:
+        stretched: The objects stretched, in the input's (or the drawing's) order.
+        followed: The neighbours that followed them (Topolojik düzenleme).
+        revision: The document's revision after the write, as decimal text.
+    """
+    stretched: list[str]
+    followed: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["stretched"] = list(self.stretched)
+        out["followed"] = list(self.followed)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesStretched:
+        return cls(
+            stretched=list(data["stretched"]),
+            followed=list(data["followed"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesTransform(_Model):
     """Input of `cad.entities.transform` v1: objects named by their persistent
     ids (docs/adr/0014) moved by one transform as one undo step, in place or
@@ -5441,6 +6337,70 @@ class EntitiesTrimmed(_Model):
             created=list(data["created"]),
             removed=list(data["removed"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportDxf(_Model):
+    """Input of `file.export.dxf` v1. Refusals (`CommandError.code`), in order:
+    `invalid_file_path` (empty, relative, a directory, no directory to go
+    into), `file_exists` (there is a file and `overwrite` is not set),
+    `layer_not_found` (a layer named the drawing does not have, at
+    `layers[i]`), `nothing_to_export` (no object to write), `file_unwritable`.
+    Attributes:
+        path: The file to write, an absolute path.
+        layers: The layers whose objects to write (ids); every object when absent.
+        overwrite: Write over a file that is there.
+    """
+    path: str
+    layers: list[str] | None | Unset = UNSET
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportDxf:
+        return cls(
+            path=data["path"],
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportPdf(_Model):
+    """Input of `file.export.pdf` v1. Refusals: `invalid_file_path`,
+    `file_exists`, `no_sheets` (the project has no sheet), `unknown_sheet`
+    (at `sheets[i]`), `book_unreadable`, `pdf_unwritable`, `file_unwritable`.
+    Attributes:
+        path: The file to write, an absolute path.
+        overwrite: Write over a file that is there.
+        sheets: The sheets to print, by id, a page each; every sheet in the book's order when absent.
+    """
+    path: str
+    overwrite: bool = False
+    sheets: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["overwrite"] = self.overwrite
+        if self.sheets is not UNSET:
+            out["sheets"] = None if self.sheets is None else list(self.sheets)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportPdf:
+        return cls(
+            path=data["path"],
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else list(data["sheets"]),
         )
 
 
@@ -5849,6 +6809,48 @@ class HatchPattern(_Model):
             lines=UNSET if "lines" not in data else None if data["lines"] is None else [PatternLine.from_json(e0) for e0 in data["lines"]],
             name=data.get("name", UNSET),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HatchPatternSpec(_Model):
+    """The pattern by its name, as Tarama's Desen lists it, and its options.
+    Attributes:
+        name: The pattern's name: Çizgili, Çapraz, Dolu, a library pattern (ANSI31,
+            ISO02W100 …) or a gradient (Degrade doğrusal, silindir, küre); its
+            case aside, Turkish, and a gradient by its shape's word too.
+        angle: Açı, degrees; absent: 0.
+        inverted: Ters: a gradient's colours swapped; absent: false.
+        scale: Ölçek: on paper, times the project's plot scale; absent: 1.
+        second_color: İkinci renk of a gradient, `#RRGGBB` or a colour's name; absent: white.
+    """
+    name: str
+    angle: float | None | Unset = UNSET
+    inverted: bool | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    second_color: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.inverted is not UNSET:
+            out["inverted"] = self.inverted
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.second_color is not UNSET:
+            out["secondColor"] = self.second_color
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchPatternSpec:
+        return cls(
+            name=data["name"],
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            inverted=data.get("inverted", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            second_color=data.get("secondColor", UNSET),
         )
 
 
@@ -9193,6 +10195,46 @@ class PatternLine(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PdfExported(_Model):
+    """What `file.export.pdf` wrote, or with `plan` would write.
+    Attributes:
+        sheets: The sheets printed, by id, in page order.
+        findings: The sheet core's findings (preflight).
+        notes: What a host without a window cannot draw, said in words.
+    """
+    path: str
+    bytes: int
+    sha256: str
+    sheets: list[str]
+    replaced: bool
+    findings: Any
+    notes: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["sheets"] = list(self.sheets)
+        out["replaced"] = self.replaced
+        out["findings"] = self.findings
+        out["notes"] = list(self.notes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfExported:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            sheets=list(data["sheets"]),
+            replaced=data["replaced"],
+            findings=data["findings"],
+            notes=list(data["notes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PinnedObject(_Model):
     """An object's pins as `cad.labels.pin` would leave them."""
     uid: str
@@ -12128,6 +13170,35 @@ class SplineEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class StepWarning(_Model):
+    """Something a completed command wants the caller to know.
+    Attributes:
+        code: Stable, lowercase with underscores (`layer_hidden`).
+        message: Turkish, for people.
+        path: The input field it is about; absent when none is.
+    """
+    code: str
+    message: str
+    path: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["message"] = self.message
+        if self.path is not UNSET:
+            out["path"] = self.path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StepWarning:
+        return cls(
+            code=data["code"],
+            message=data["message"],
+            path=data.get("path", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StreetSource(_Model):
     """The streets' layer and which of its attributes say what.
     Attributes:
@@ -12155,6 +13226,48 @@ class StreetSource(_Model):
             name=data["name"],
             district=data.get("district", UNSET),
             neighbourhood=data.get("neighbourhood", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StretchTopology(_Model):
+    """Topolojik düzenleme (docs/adr/0160 §3): the shown objects sharing a
+    moved vertex go with the stretched ones, in the same step.
+    Attributes:
+        points: Noktalar da: a point is a corner too.
+    """
+    points: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.points is not UNSET:
+            out["points"] = self.points
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StretchTopology:
+        return cls(
+            points=data.get("points", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StretchWindow(_Model):
+    """The window: the vertices inside it move (its edges count as inside)."""
+    min: Vec2
+    max: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["min"] = _vec2_out(self.min)
+        out["max"] = _vec2_out(self.max)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StretchWindow:
+        return cls(
+            min=Vec2.from_json(data["min"]),
+            max=Vec2.from_json(data["max"]),
         )
 
 
@@ -13387,6 +14500,322 @@ class LocalCrsSystem(LocalDefinition, CrsSystem):
 
 
 @dataclass(kw_only=True, slots=True)
+class AlignedDimensionMeasure(DimensionMeasure):
+    """Hizalı: the distance from `a` to `b`."""
+    TAG_VALUE: ClassVar[str] = "aligned"
+    a: MeasuredPoint
+    b: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "aligned"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignedDimensionMeasure:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinearDimensionMeasure(DimensionMeasure):
+    """Doğrusal: the distance from `a` to `b` along a direction, degrees
+    (0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies (AutoCAD's rule).
+    """
+    TAG_VALUE: ClassVar[str] = "linear"
+    a: MeasuredPoint
+    b: MeasuredPoint
+    angle: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "linear"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinearDimensionMeasure:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrdinateDimensionMeasure(DimensionMeasure):
+    """Koordinat: `a`'s Y (angle 0) or X (90), its leader ending at `at`;
+    absent: the axis `at` lies further along.
+    """
+    TAG_VALUE: ClassVar[str] = "ordinate"
+    a: MeasuredPoint
+    angle: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "ordinate"}
+        out["a"] = self.a.to_json()
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrdinateDimensionMeasure:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AzimuthDimensionMeasure(DimensionMeasure):
+    """Semt: the direction from `a` to `b`, from north clockwise."""
+    TAG_VALUE: ClassVar[str] = "azimuth"
+    a: MeasuredPoint
+    b: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "azimuth"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AzimuthDimensionMeasure:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlopeDimensionMeasure(DimensionMeasure):
+    """Eğim: the slope from `a` at `za` to `b` at `zb`, metres; an
+    elevation absent: its place's vertex's (docs/adr/0142).
+    """
+    TAG_VALUE: ClassVar[str] = "slope"
+    a: MeasuredPoint
+    b: MeasuredPoint
+    za: float | None | Unset = UNSET
+    zb: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "slope"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        if self.za is not UNSET:
+            out["za"] = None if self.za is None else float(self.za)
+        if self.zb is not UNSET:
+            out["zb"] = None if self.zb is None else float(self.zb)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlopeDimensionMeasure:
+        return cls(
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+            za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
+            zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AngleDimensionMeasure(DimensionMeasure):
+    """Açı between two straight edges: their lines' crossing the vertex, the
+    sector the one `at` is in.
+    """
+    TAG_VALUE: ClassVar[str] = "angle"
+    first: EdgeNear
+    second: EdgeNear
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "angle"}
+        out["first"] = self.first.to_json()
+        out["second"] = self.second.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AngleDimensionMeasure:
+        return cls(
+            first=EdgeNear.from_json(data["first"]),
+            second=EdgeNear.from_json(data["second"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AngleVertexDimensionMeasure(DimensionMeasure):
+    """Açı from its vertex `c` and a point on each arm (Köşeden; a circle's
+    centre and two points on it, Daireden): the arc from `a` to `b` the
+    way `at` lies.
+    """
+    TAG_VALUE: ClassVar[str] = "angleVertex"
+    c: MeasuredPoint
+    a: MeasuredPoint
+    b: MeasuredPoint
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "angleVertex"}
+        out["c"] = self.c.to_json()
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AngleVertexDimensionMeasure:
+        return cls(
+            c=MeasuredPoint.from_json(data["c"]),
+            a=MeasuredPoint.from_json(data["a"]),
+            b=MeasuredPoint.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AngleArcDimensionMeasure(DimensionMeasure):
+    """Açı of an arc (Yaydan): its own angle about its centre."""
+    TAG_VALUE: ClassVar[str] = "angleArc"
+    of: EdgeNear
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "angleArc"}
+        out["of"] = self.of.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AngleArcDimensionMeasure:
+        return cls(
+            of=EdgeNear.from_json(data["of"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RadiusDimensionMeasure(DimensionMeasure):
+    """Yarıçap of a circle, an arc or a path's arc segment, toward `at`."""
+    TAG_VALUE: ClassVar[str] = "radius"
+    of: EdgeNear
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "radius"}
+        out["of"] = self.of.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RadiusDimensionMeasure:
+        return cls(
+            of=EdgeNear.from_json(data["of"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DiameterDimensionMeasure(DimensionMeasure):
+    """Çap of a circle, an arc or a path's arc segment, toward `at`."""
+    TAG_VALUE: ClassVar[str] = "diameter"
+    of: EdgeNear
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "diameter"}
+        out["of"] = self.of.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DiameterDimensionMeasure:
+        return cls(
+            of=EdgeNear.from_json(data["of"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArcLengthDimensionMeasure(DimensionMeasure):
+    """Yay uzunluğu of an arc or a path's arc segment; with `between`, the
+    part between two points put on its circle (Kısmi).
+    """
+    TAG_VALUE: ClassVar[str] = "arcLength"
+    of: EdgeNear
+    between: list[Vec2] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "arcLength"}
+        out["of"] = self.of.to_json()
+        if self.between is not UNSET:
+            out["between"] = None if self.between is None else [_vec2_out(e0) for e0 in self.between]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArcLengthDimensionMeasure:
+        return cls(
+            of=EdgeNear.from_json(data["of"]),
+            between=UNSET if "between" not in data else None if data["between"] is None else [Vec2.from_json(e0) for e0 in data["between"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoggedDimensionMeasure(DimensionMeasure):
+    """Kırıklı yarıçap of a circle, an arc or a path's arc segment: from the
+    centre shown to the circle toward `on`, its jog where `at` is.
+    """
+    TAG_VALUE: ClassVar[str] = "jogged"
+    of: EdgeNear
+    shown_centre: Vec2
+    on: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "jogged"}
+        out["of"] = self.of.to_json()
+        out["shownCentre"] = _vec2_out(self.shown_centre)
+        out["on"] = _vec2_out(self.on)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoggedDimensionMeasure:
+        return cls(
+            of=EdgeNear.from_json(data["of"]),
+            shown_centre=Vec2.from_json(data["shownCentre"]),
+            on=Vec2.from_json(data["on"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PartsDivision(Division):
+    """Into `count` equal parts (2 to 10 000): a point between each two, and
+    on a closed object one at its start too.
+    """
+    TAG_VALUE: ClassVar[str] = "parts"
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "parts"}
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PartsDivision:
+        return cls(
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StepDivision(Division):
+    """A point every `length` metres from the start (over 0)."""
+    TAG_VALUE: ClassVar[str] = "step"
+    length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "step"}
+        out["length"] = float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StepDivision:
+        return cls(
+            length=float(data["length"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PolylineEntity(PathEntity, Entity):
     """Entity ``polyline``: a :class:`PathEntity`."""
     TAG_VALUE: ClassVar[str] = "polyline"
@@ -14424,6 +15853,137 @@ class DeleteFeatureChange(FeatureChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointHatchRegion(HatchRegion):
+    """The region around `at`.
+    Attributes:
+        associative: İlişkili (`object` only): the hatch follows its objects; absent: true.
+        boundaries: `lines`: whose line work closes the region; absent: every shown object.
+        boundary_layer: `lines`: only this layer's line work counts (Sınır katmanı).
+        islands: Adalar: the islands are left unhatched; absent: true.
+        texts: Yazılar: the texts and inserts in the region are left open, each
+            its box a little wider; absent: false.
+        way: How the region is found; absent: `object`.
+    """
+    TAG_VALUE: ClassVar[str] = "point"
+    at: Vec2
+    associative: bool | None | Unset = UNSET
+    boundaries: TrimBoundaries | None | Unset = UNSET
+    boundary_layer: str | None | Unset = UNSET
+    islands: bool | None | Unset = UNSET
+    texts: bool | None | Unset = UNSET
+    way: HatchWay | HatchWayName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "point"}
+        out["at"] = _vec2_out(self.at)
+        if self.associative is not UNSET:
+            out["associative"] = self.associative
+        if self.boundaries is not UNSET:
+            out["boundaries"] = None if self.boundaries is None else self.boundaries.to_json()
+        if self.boundary_layer is not UNSET:
+            out["boundaryLayer"] = self.boundary_layer
+        if self.islands is not UNSET:
+            out["islands"] = self.islands
+        if self.texts is not UNSET:
+            out["texts"] = self.texts
+        if self.way is not UNSET:
+            out["way"] = None if self.way is None else _enum_out(self.way)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointHatchRegion:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            associative=data.get("associative", UNSET),
+            boundaries=UNSET if "boundaries" not in data else None if data["boundaries"] is None else TrimBoundaries.from_json(data["boundaries"]),
+            boundary_layer=data.get("boundaryLayer", UNSET),
+            islands=data.get("islands", UNSET),
+            texts=data.get("texts", UNSET),
+            way=UNSET if "way" not in data else None if data["way"] is None else _enum_in(HatchWay, data["way"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectsHatchRegion(HatchRegion):
+    """Çoklu tara: each closed object (each part of a multi-part area)
+    hatched by itself, from a point inside it.
+    Attributes:
+        associative: İlişkili; absent: true.
+        islands: Adalar; absent: true.
+        texts: Yazılar; absent: false.
+    """
+    TAG_VALUE: ClassVar[str] = "objects"
+    uids: list[str]
+    associative: bool | None | Unset = UNSET
+    islands: bool | None | Unset = UNSET
+    texts: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "objects"}
+        out["uids"] = list(self.uids)
+        if self.associative is not UNSET:
+            out["associative"] = self.associative
+        if self.islands is not UNSET:
+            out["islands"] = self.islands
+        if self.texts is not UNSET:
+            out["texts"] = self.texts
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectsHatchRegion:
+        return cls(
+            uids=list(data["uids"]),
+            associative=data.get("associative", UNSET),
+            islands=data.get("islands", UNSET),
+            texts=data.get("texts", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtMeasuredPoint(MeasuredPoint):
+    """Coordinates: the point follows nothing."""
+    TAG_VALUE: ClassVar[str] = "at"
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "at"}
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtMeasuredPoint:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlaceMeasuredPoint(MeasuredPoint):
+    """A place on an object: the point is the place's now. Hizalı's,
+    Doğrusal's, Koordinat's, Semt's and Eğim's points follow their places
+    from then on (docs/adr/0249 §3); the others' are read from them.
+    Attributes:
+        uid: The object's persistent id (lowercase UUID text with hyphens).
+    """
+    TAG_VALUE: ClassVar[str] = "place"
+    uid: str
+    place: SubPlace
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "place"}
+        out["uid"] = self.uid
+        out["place"] = self.place.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlaceMeasuredPoint:
+        return cls(
+            uid=data["uid"],
+            place=SubPlace.from_json(data["place"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BothNetworkDirection(NetworkDirection):
     """Every edge both ways."""
     TAG_VALUE: ClassVar[str] = "both"
@@ -15055,6 +16615,12 @@ _CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affi
 _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": GeographicCrsSystem, "local": LocalCrsSystem}
 
 
+_DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimensionMeasure, "linear": LinearDimensionMeasure, "ordinate": OrdinateDimensionMeasure, "azimuth": AzimuthDimensionMeasure, "slope": SlopeDimensionMeasure, "angle": AngleDimensionMeasure, "angleVertex": AngleVertexDimensionMeasure, "angleArc": AngleArcDimensionMeasure, "radius": RadiusDimensionMeasure, "diameter": DiameterDimensionMeasure, "arcLength": ArcLengthDimensionMeasure, "jogged": JoggedDimensionMeasure}
+
+
+_DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivision}
+
+
 _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity}
 
 
@@ -15065,6 +16631,12 @@ _ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometr
 
 
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
+
+
+_HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
+
+
+_MEASURED_POINT: dict[str, type[MeasuredPoint]] = {"at": AtMeasuredPoint, "place": PlaceMeasuredPoint}
 
 
 _NETWORK_DIRECTION: dict[str, type[NetworkDirection]] = {"both": BothNetworkDirection, "digitized": DigitizedNetworkDirection, "field": FieldNetworkDirection}
@@ -15097,10 +16669,14 @@ __all__ = [
     "AffineCrsPlane",
     "AffineTransform",
     "AlignTransform",
+    "AlignedDimensionMeasure",
     "AllCornerPick",
     "AllTrimBoundaries",
+    "AngleArcDimensionMeasure",
+    "AngleDimensionMeasure",
     "AngleUnit",
     "AngleUnitName",
+    "AngleVertexDimensionMeasure",
     "AnnotationHeights",
     "AnnotationStyleKind",
     "AnnotationStyleKindName",
@@ -15108,6 +16684,7 @@ __all__ = [
     "ArcCreated",
     "ArcEntity",
     "ArcEntityGeometry",
+    "ArcLengthDimensionMeasure",
     "ArcPlan",
     "AreaLabelMode",
     "AreaLabelModeName",
@@ -15123,11 +16700,13 @@ __all__ = [
     "ArrangeModeName",
     "ArrangeTransform",
     "ArrayLayout",
+    "AtMeasuredPoint",
     "Attachment",
     "AttributeDefinition",
     "AttributesTableSource",
     "AuthKind",
     "AuthKindName",
+    "AzimuthDimensionMeasure",
     "BlendMode",
     "BlendModeName",
     "BlockChange",
@@ -15147,6 +16726,10 @@ __all__ = [
     "CalloutKindName",
     "CellRange",
     "CenterSubPlace",
+    "ChangesetApplied",
+    "ChangesetApply",
+    "ChangesetStep",
+    "ChangesetStepDone",
     "Checkpoint",
     "CheckpointChange",
     "CheckpointCreate",
@@ -15183,11 +16766,13 @@ __all__ = [
     "DatumTransform",
     "DeleteBlockChange",
     "DeleteFeatureChange",
+    "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
     "DimensionArrow",
     "DimensionArrowName",
     "DimensionEntity",
     "DimensionEntityGeometry",
+    "DimensionMeasure",
     "DimensionPoint",
     "DimensionPointName",
     "DimensionRefs",
@@ -15196,15 +16781,19 @@ __all__ = [
     "DimensionStyleName",
     "DimensionTextPlace",
     "DimensionTextPlaceName",
+    "DimensionsCreate",
     "DimensionsReassociate",
     "DimensionsReassociatePlan",
     "DimensionsReassociated",
     "DistanceOffsetBy",
+    "Division",
     "DoorSource",
     "DrawingFont",
     "DrawingFontName",
     "DrawingUnit",
     "DrawingUnitName",
+    "DxfExported",
+    "EdgeNear",
     "EditOperation",
     "EditOperationName",
     "EllipseEntity",
@@ -15215,6 +16804,8 @@ __all__ = [
     "EntitiesArray",
     "EntitiesArrayPlan",
     "EntitiesArrayed",
+    "EntitiesBoundary",
+    "EntitiesBreak",
     "EntitiesChamfer",
     "EntitiesCornerPlan",
     "EntitiesCornered",
@@ -15224,16 +16815,22 @@ __all__ = [
     "EntitiesDelete",
     "EntitiesDeletePlan",
     "EntitiesDeleted",
+    "EntitiesDivide",
     "EntitiesEdit",
     "EntitiesEditPlan",
     "EntitiesEdited",
     "EntitiesFillet",
+    "EntitiesHatch",
+    "EntitiesJoin",
     "EntitiesOffset",
     "EntitiesOffsetMade",
     "EntitiesOffsetPlan",
     "EntitiesPropertiesSet",
     "EntitiesSetProperties",
     "EntitiesSetPropertiesPlan",
+    "EntitiesStretch",
+    "EntitiesStretchPlan",
+    "EntitiesStretched",
     "EntitiesTransform",
     "EntitiesTransformPlan",
     "EntitiesTransformed",
@@ -15243,6 +16840,8 @@ __all__ = [
     "Entity",
     "EntityEdit",
     "EntityGeometry",
+    "ExportDxf",
+    "ExportPdf",
     "FeatureChange",
     "FeatureFeed",
     "FeedKind",
@@ -15266,8 +16865,12 @@ __all__ = [
     "HatchEntityGeometry",
     "HatchGradient",
     "HatchPattern",
+    "HatchPatternSpec",
     "HatchPatternType",
     "HatchPatternTypeName",
+    "HatchRegion",
+    "HatchWay",
+    "HatchWayName",
     "Helmert",
     "ImageEntity",
     "ImageEntityGeometry",
@@ -15279,6 +16882,7 @@ __all__ = [
     "InvitationRevoke",
     "InvitationState",
     "InvitationStateName",
+    "JoggedDimensionMeasure",
     "JunctionLayer",
     "JunctionRole",
     "JunctionRoleName",
@@ -15375,9 +16979,11 @@ __all__ = [
     "LinePlan",
     "LineType",
     "LineTypeName",
+    "LinearDimensionMeasure",
     "LinesCornerPick",
     "LocalCrsSystem",
     "LocalDefinition",
+    "MeasuredPoint",
     "MidSubPlace",
     "MirrorTransform",
     "MoveTransform",
@@ -15397,14 +17003,19 @@ __all__ = [
     "NetworkLayer",
     "NewObject",
     "NodeSubPlace",
+    "ObjectsHatchRegion",
     "ObjectsTrimBoundaries",
     "ObstacleKind",
     "ObstacleKindName",
     "OffsetBy",
+    "OrdinateDimensionMeasure",
+    "PartsDivision",
     "PathArrayLayout",
     "PathEntity",
     "PatternLine",
+    "PdfExported",
     "PinnedObject",
+    "PlaceMeasuredPoint",
     "PlaceOn",
     "PointBinding",
     "PointCloudEntity",
@@ -15414,6 +17025,7 @@ __all__ = [
     "PointCreated",
     "PointEntity",
     "PointEntityGeometry",
+    "PointHatchRegion",
     "PointLabelMode",
     "PointLabelModeName",
     "PointPart",
@@ -15478,6 +17090,7 @@ __all__ = [
     "ProjectiveTransform",
     "PropertiesOperation",
     "PropertiesOperationName",
+    "RadiusDimensionMeasure",
     "RasterDataset",
     "RasterEntity",
     "RasterEntityGeometry",
@@ -15523,12 +17136,17 @@ __all__ = [
     "SheetsEdited",
     "SimilarityCrsPlane",
     "SimilarityTransform",
+    "SlopeDimensionMeasure",
     "SplineEntity",
     "SplineEntityGeometry",
     "StackMode",
     "StackModeName",
     "StartSubPlace",
+    "StepDivision",
+    "StepWarning",
     "StreetSource",
+    "StretchTopology",
+    "StretchWindow",
     "StyleEditOperation",
     "StyleEditOperationName",
     "StylesEdit",

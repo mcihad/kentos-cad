@@ -28,7 +28,7 @@ use crate::info_templates::compile_template;
 pub const LABEL: &str = "Bilgi kartı";
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 /// The input as the layer will keep it: a card with nothing in it is none.
@@ -142,6 +142,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersInfo) -> CommandResult<Laye
 
 /// Writes the actions and the card as one undo step “Bilgi kartı” when they differ.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersInfo) -> CommandResult<LayersInformed> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LAYERS_INFO,
+        kentos_contracts::CAD_LAYERS_INFO_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersInfo,
+) -> CommandResult<LayersInformed> {
     if let Err(stop) = check(cx.doc, &input) {
         return stop.into();
     }

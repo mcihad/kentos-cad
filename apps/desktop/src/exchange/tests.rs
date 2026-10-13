@@ -171,7 +171,10 @@ fn a_workbook_in_the_coordinate_list_window_points_to_tablodan_nokta() {
     };
     let read = state.last_read().expect("read");
     assert_eq!((read.points, read.data_lines), (0, 0));
-    assert_eq!(read.hints, vec![kentos_formats::coords::NOT_TEXT.to_owned()]);
+    assert_eq!(
+        read.hints,
+        vec![kentos_formats::coords::NOT_TEXT.to_owned()]
+    );
     send(&mut app, Event::CoordImport(coord_import::Event::Run));
     assert_eq!(count(&app), before, "nothing is imported");
 }

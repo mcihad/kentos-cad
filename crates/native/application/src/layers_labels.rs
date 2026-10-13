@@ -27,7 +27,7 @@ use crate::label_texts::compile_label_expression;
 pub const LABEL: &str = "Etiketler";
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 /// The expressions' compiling: a text or a condition that does not compile
@@ -151,6 +151,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersLabels) -> CommandResult<La
 
 /// Writes the labelling as one undo step “Etiketler” when it differs.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersLabels,
+) -> CommandResult<LayersLabelled> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LAYERS_LABELS,
+        kentos_contracts::CAD_LAYERS_LABELS_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: LayersLabels,
 ) -> CommandResult<LayersLabelled> {

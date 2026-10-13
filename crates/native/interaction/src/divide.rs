@@ -11,21 +11,23 @@
 //!   values stay for as long as the app lives;
 //! - Esc drops the picked object; with none, the tool leaves.
 //!
-//! The points go on the active layer through `cad.entities.create` as one
-//! undo step, “Böl”: “4 nokta kondu.” Where they fall is the shared core's
-//! (`division_points`); an ellipse's land on the true curve.
+//! The product command `cad.entities.divide` does the work (docs/adr/0254
+//! §5): the points to come are its own (`divide::points_of`, the shared
+//! core's `division_points`; an ellipse's land on the true curve), and they
+//! go on the active layer through it as one undo step, “Böl”: “4 nokta kondu.”
 
-use kentos_contracts::{CreateOperation, Entity, EntityGeometry};
+use kentos_contracts::{EntitiesDivide, Entity, NewLook};
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::ops::path::{Division, division_points, nearest_s, path_of};
+use kentos_geometry_core::ops::path::{nearest_s, path_of};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, divide};
 
 use crate::Vec2;
 use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, wire};
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
     Context, Cursor, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Tone, Tool,
@@ -103,7 +105,21 @@ impl Divide {
         };
     }
 
-    /// The points along the picked object, by the core: all of them in one call.
+    /// The division the session remembers, as the command takes it.
+    fn division(cx: &Context<'_>) -> kentos_contracts::Division {
+        let m = *cx.memory;
+        if m.divide_by_step {
+            kentos_contracts::Division::Step {
+                length: m.divide_step,
+            }
+        } else {
+            kentos_contracts::Division::Parts {
+                count: m.divide_parts,
+            }
+        }
+    }
+
+    /// The points along the picked object, the command's: all of them in one call.
     fn points(&self, cx: &Context<'_>) -> Vec<Vec2> {
         let Some(target) = self.target else {
             return Vec::new();
@@ -111,40 +127,42 @@ impl Divide {
         let Some(e) = cx.doc.get(target.slot) else {
             return Vec::new();
         };
-        let m = *cx.memory;
-        let by = if m.divide_by_step {
-            Division::Step(m.divide_step)
-        } else {
-            Division::Parts(f64::from(m.divide_parts))
-        };
-        division_points(&shape(e), &by, target.from_end)
+        divide::points_of(e, Self::division(cx), target.from_end)
+            .into_iter()
+            .map(|p| Vec2::new(p.x, p.y))
+            .collect()
     }
 
     /// Places the points on the active layer, one undo step “Böl”; the object is let go.
     fn commit(&mut self, cx: &mut Context<'_>) {
-        let pts = self.points(cx);
-        if pts.is_empty() {
-            cx.say(Level::Warn, "Aralık nesne boyundan uzun; nokta konmadı.");
-        } else if pts.len() > MAX_POINTS {
+        let Some(target) = self.target.take() else {
+            return;
+        };
+        let Some(uid) = cx.doc.uid(target.slot) else {
+            return;
+        };
+        let input = EntitiesDivide {
+            uid: uid.to_string(),
+            division: Self::division(cx),
+            from_end: target.from_end,
+            layer_id: cx.doc.layers().active().to_owned(),
+            // The current colour; an object template's attributes, label and symbol (docs/adr/0176 §3).
+            look: NewLook {
+                color: cx.draft.color_text(),
+                line_weight: None,
+                attrs: cx.template_attrs(None),
+                label: cx.template_label(),
+                symbol: cx.template_symbol(),
+            },
+            expected_revision: None,
+        };
+        let result = divide::execute(&mut ExecutionContext::new(cx.doc), input);
+        if let Some(out) = points::written(result, cx) {
             cx.say(
-                Level::Warn,
-                "10 000’den fazla nokta oluşacak; daha büyük bir aralık girin.",
+                Level::Success,
+                format!("{} nokta kondu.", out.created.len()),
             );
-        } else {
-            let n = pts.len();
-            let objects = pts
-                .into_iter()
-                .map(|p| EntityGeometry::Point {
-                    p: wire(p),
-                    z: None,
-                    parts: None,
-                })
-                .collect();
-            if points::write_objects(objects, Some(CreateOperation::Divide), cx).is_some() {
-                cx.say(Level::Success, format!("{n} nokta kondu."));
-            }
         }
-        self.target = None;
     }
 }
 

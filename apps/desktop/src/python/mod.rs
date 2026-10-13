@@ -118,6 +118,9 @@ pub struct Console {
     pub link: Option<link::Link>,
     /// The programs connected through it, by connection.
     agents: std::collections::BTreeMap<u64, link::Answerer>,
+    /// The commands the agents run as jobs (docs/adr/0253 §9): computed on
+    /// a copy of the drawing, written when an agent asks how they are.
+    pub(crate) jobs: kentos_headless::rpc::Jobs,
 }
 
 impl Default for Console {
@@ -136,6 +139,7 @@ impl Default for Console {
             asked_signature: 0,
             link: None,
             agents: std::collections::BTreeMap::new(),
+            jobs: kentos_headless::rpc::Jobs::default(),
         }
     }
 }
@@ -497,7 +501,15 @@ impl App {
         if run.session != doc.session {
             return Err(no_document());
         }
-        let writes = method == "run" && params.get("op").and_then(Value::as_str) == Some("execute");
+        // A command's execute (by `run`, or by the protocol's `call`, whose form is execute when not
+        // given) and a replay write: the run's step opens with the first.
+        let op = params.get("op").and_then(Value::as_str);
+        let writes = match method {
+            "run" => op == Some("execute"),
+            "call" => op.is_none_or(|o| o == "execute"),
+            "replay" => true,
+            _ => false,
+        };
         if writes && run.group.is_none() {
             run.group = Some(doc.model.begin_group(run.label.as_deref().unwrap_or(STEP)));
         }

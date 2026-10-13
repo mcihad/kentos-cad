@@ -20,4 +20,16 @@ path?: string,
 /**
  * The document's revision now (decimal text), when the error is about it: a conflict.
  */
-revision?: string, };
+revision?: string, 
+/**
+ * The persistent ids of the objects it is about (docs/adr/0253 §7): the
+ * protocol's answer names them, from `path` when that leads to an id of
+ * the input, or from the check that failed (`stale_state`).
+ */
+uids?: Array<string>, 
+/**
+ * Whether calling again may succeed as it is (a conflict: prepare the
+ * input again or send it again), as opposed to an input that is wrong
+ * in itself. The protocol's answer sets it by the code (`kentos_contracts::codes`).
+ */
+retryable?: boolean, };

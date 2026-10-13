@@ -23,7 +23,7 @@ pub fn apply_label(name: &str) -> String {
 }
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 fn check(doc: &Document, input: &LayersStates) -> Result<(), Stop> {
@@ -95,6 +95,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersStates) -> CommandResult<La
 
 /// Saves, updates, renames, removes or applies the state.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersStates,
+) -> CommandResult<LayerStatesDone> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LAYERS_STATES,
+        kentos_contracts::CAD_LAYERS_STATES_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: LayersStates,
 ) -> CommandResult<LayerStatesDone> {

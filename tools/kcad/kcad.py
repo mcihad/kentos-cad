@@ -159,6 +159,11 @@ SCHEMA_WITH_ADDRESSES = 42
 SCHEMA_WITH_DIMENSION_REFS = 43
 # Schema 44: schema 43 and the document's `sheets`, the project's sheet book and its pictures' bytes (docs/adr/0251).
 SCHEMA_WITH_SHEETS = 44
+# Schema 45: schema 44 and the document's `requests`, the requests the drawing executed (docs/adr/0253 §6).
+SCHEMA_WITH_REQUESTS = 45
+# The request ledger's bounds (kentos_contracts::command_call).
+REQUEST_LEDGER = 256
+REQUEST_ANSWER_LIMIT = 64 * 1024
 # A reference's places and how many numbers (part, ring, index) each has; the codes of a broken one
 # (kentos_contracts::subref).
 SUBREF_PLACES = {"node": 1, "start": 0, "end": 0, "center": 0, "vertex": 3, "mid": 3}
@@ -316,7 +321,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1804,6 +1809,7 @@ class _Schema:
         self.addresses = version >= SCHEMA_WITH_ADDRESSES
         self.dim_refs = version >= SCHEMA_WITH_DIMENSION_REFS
         self.sheets = version >= SCHEMA_WITH_SHEETS
+        self.requests = version >= SCHEMA_WITH_REQUESTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -1845,6 +1851,7 @@ class _Schema:
                 "activeLayer": (self.text, True),
                 "migratedFrom": (self.source, False),
                 **({"sheets": (self.sheets_, False)} if self.sheets else {}),
+                **({"requests": (self.requests_, False)} if self.requests else {}),
             }
         )(v)
         # Schema 32's links (docs/adr/0208 §2).
@@ -1900,7 +1907,72 @@ class _Schema:
             out["migratedFrom"] = d["migratedFrom"]
         if "sheets" in d:
             out["sheets"] = d["sheets"]
+        if "requests" in d:
+            out["requests"] = d["requests"]
         return out
+
+    def requests_(self, v):
+        """The request ledger (schema 45, docs/adr/0253 §6): not empty, at most 256; each request's id 1–128 of letters,
+        digits and `. _ : -`, none twice; its fingerprint 16 bytes (32 hex digits in the JSON form); a command named,
+        a version from 1, the revision decimal digits, its status done or undone, an answer of at most 64 KiB."""
+        seen = set()
+
+        def request(r):
+            q = self.fields(
+                {
+                    "answer": (self.text, False),
+                    "status": (self.enum(("done", "undone")), True),
+                    "command": (self.text, True),
+                    "version": (self.uint(32), True),
+                    "revision": (self.text, True),
+                    "requestId": (self.text, True),
+                    "fingerprint": (self.fingerprint_, True),
+                }
+            )(r)
+            rid = q["requestId"]
+            if not (1 <= len(rid) <= 128 and all(c.isascii() and (c.isalnum() or c in "._:-") for c in rid)):
+                self.path.append("requestId")
+                self.fail("bad_value", "istek kimliği 1–128 karakter, yalnız harf, rakam ve . _ : - olmalı")
+            if rid in seen:
+                self.path.append("requestId")
+                self.fail("bad_value", "aynı istek iki kez yazılmış")
+            seen.add(rid)
+            if not q["command"]:
+                self.path.append("command")
+                self.fail("bad_value", "komut adı boş")
+            if q["version"] == 0:
+                self.path.append("version")
+                self.fail("bad_value", "sürüm 1'den başlar")
+            if not q["revision"] or not all("0" <= c <= "9" for c in q["revision"]):
+                self.path.append("revision")
+                self.fail("bad_value", "sürüm ondalık bir sayı metni olmalı")
+            if "answer" in q and len(q["answer"].encode("utf-8")) > REQUEST_ANSWER_LIMIT:
+                self.path.append("answer")
+                self.fail("bad_value", "cevap en çok 65536 bayt olabilir")
+            out = {
+                "requestId": rid,
+                "fingerprint": q["fingerprint"],
+                "command": q["command"],
+                "version": q["version"],
+                "revision": q["revision"],
+                "status": q["status"],
+            }
+            if "answer" in q:
+                out["answer"] = q["answer"]
+            return out
+
+        if type(v) is list and not v:
+            self.fail("bad_value", "boş istek listesi yazılmaz")
+        if type(v) is list and len(v) > REQUEST_LEDGER:
+            self.fail("bad_value", "en çok 256 istek yazılır")
+        return self.array(request)(v)
+
+    def fingerprint_(self, v):
+        if type(v) is not bytes:
+            self.fail("wrong_type", "16 baytlık bayt dizgisi olmalı")
+        if len(v) != 16:
+            self.fail("bad_value", f"{len(v)} bayt; parmak izi 16 bayt olmalı")
+        return v.hex()
 
     def sheets_(self, v):
         """The project's sheet book (schema 44, docs/adr/0251): the book an opaque map; each picture's bytes held to

@@ -1,0 +1,3136 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.hatch",
+  "commandVersion": 1,
+  "title": "Tara",
+  "note": "Written by scripts/fixtures/region_command_cases.py from the operations' definitions (docs/adr/0062, 0065, 0186, 0254); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bölge komutları",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "sinir",
+        "name": "Sınır",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "alan",
+        "name": "Alan",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "tarama",
+        "name": "Tarama",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "alt",
+            "name": "Alt",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 10,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 13,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 14,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487004,
+            "y": 4420003
+          },
+          {
+            "x": 487006,
+            "y": 4420003
+          },
+          {
+            "x": 487006,
+            "y": 4420005
+          },
+          {
+            "x": 487004,
+            "y": 4420005
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 15,
+        "layerId": "sinir",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 16,
+        "layerId": "sinir",
+        "attrs": {},
+        "a": {
+          "x": 487030,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 17,
+        "layerId": "sinir",
+        "attrs": {},
+        "a": {
+          "x": 487030,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 18,
+        "layerId": "sinir",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 19,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487025,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487025,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 20,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "5"
+        },
+        "pts": [
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487060,
+            "y": 4420000
+          },
+          {
+            "x": 487060,
+            "y": 4420020
+          },
+          {
+            "x": 487040,
+            "y": 4420020
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 21,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487044,
+            "y": 4420004
+          },
+          {
+            "x": 487048,
+            "y": 4420004
+          },
+          {
+            "x": 487048,
+            "y": 4420008
+          },
+          {
+            "x": 487044,
+            "y": 4420008
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 22,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487070,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487080,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 23,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487080,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487080,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 24,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487080,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487070,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 25,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487070,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487070,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 26,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487090,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487100,
+          "y": 4420000
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Kapalı nesne: parselin içine tıklanır, bina ada, tarama nesnelerine bağlı; adım “Tarama”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:20",
+                  "islands": [
+                    "$uidOf:21"
+                  ],
+                  "seed": {
+                    "x": 487042,
+                    "y": 4420002
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Tarama",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adalar kapalı: bina taranır, ilişkide ada yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "islands": false
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:20",
+                  "seed": {
+                    "x": 487042,
+                    "y": 4420002
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "İlişkisiz: tarama nesnelerini izlemez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Binanın içi: noktayı çevreleyen en küçük kapalı nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487046,
+                "y": 4420006
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487044,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487048,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487048,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420008
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:21",
+                  "seed": {
+                    "x": 487046,
+                    "y": 4420006
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizgiler: odanın yüzü, içindeki kapalı nesne delik; bir şeye bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487002,
+                "y": 4420002
+              },
+              "way": "lines"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420008
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487004,
+                      "y": 4420003
+                    },
+                    {
+                      "x": 487004,
+                      "y": 4420005
+                    },
+                    {
+                      "x": 487006,
+                      "y": 4420005
+                    },
+                    {
+                      "x": 487006,
+                      "y": 4420003
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizgiler ve sınır katmanı: ara çizgi sayılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487022,
+                "y": 4420004
+              },
+              "way": "lines",
+              "boundaryLayer": "sinir"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487020,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420008
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizgili: 45° + açı, kâğıtta 3 mm × ölçek × çizim ölçeği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "Çizgili",
+              "scale": 2,
+              "angle": 15
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 60.0,
+                  "spacing": 3.0
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kitaplık deseni adıyla (büyük küçük harf fark etmez)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ansi31"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Degrade adının son sözcüğüyle; ikinci renk adıyla, ters",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "küre",
+              "secondColor": "Kırmızı",
+              "inverted": true
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "gradient",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "gradient": {
+                    "shape": "spherical",
+                    "color2": "#E5484D",
+                    "inverted": true
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu tara: her kapalı nesne kendi içinden, tek adımda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "objects",
+              "uids": [
+                "$uidOf:20",
+                "$uidOf:21"
+              ]
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27",
+                "$uidOf:28"
+              ],
+              "ids": [
+                27,
+                28
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:20",
+                  "islands": [
+                    "$uidOf:21"
+                  ],
+                  "seed": {
+                    "x": 487050,
+                    "y": 4420010
+                  }
+                }
+              },
+              "28": {
+                "kind": "hatch",
+                "id": 28,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487044,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487048,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487048,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420008
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:21",
+                  "seed": {
+                    "x": 487046,
+                    "y": 4420006
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu tara: kapalı olmayan not_closed uyarısıyla atlanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "objects",
+              "uids": [
+                "$uidOf:26",
+                "$uidOf:21"
+              ],
+              "associative": false
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "not_closed",
+                "message": "Nesne kapalı değil; taranmadı.",
+                "path": "region.uids[0]"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487044,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487048,
+                    "y": 4420004
+                  },
+                  {
+                    "x": 487048,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420008
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Renkle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama",
+            "color": "#30A46C"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "tarama",
+                "attrs": {},
+                "color": "#30A46C",
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana: layer_hidden uyarısıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "gizli"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27
+            ],
+            "entities": {
+              "27": {
+                "kind": "hatch",
+                "id": 27,
+                "layerId": "gizli",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: tarama yazılacağı gibi, id 0; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "hatch",
+                  "id": 0,
+                  "layerId": "tarama",
+                  "attrs": {},
+                  "ring": [
+                    {
+                      "x": 487040,
+                      "y": 4420000
+                    },
+                    {
+                      "x": 487060,
+                      "y": 4420000
+                    },
+                    {
+                      "x": 487060,
+                      "y": 4420020
+                    },
+                    {
+                      "x": 487040,
+                      "y": 4420020
+                    }
+                  ],
+                  "holes": [
+                    [
+                      {
+                        "x": 487044,
+                        "y": 4420004
+                      },
+                      {
+                        "x": 487044,
+                        "y": 4420008
+                      },
+                      {
+                        "x": 487048,
+                        "y": 4420008
+                      },
+                      {
+                        "x": 487048,
+                        "y": 4420004
+                      }
+                    ]
+                  ],
+                  "pattern": {
+                    "type": "solid",
+                    "angle": 0,
+                    "spacing": 1
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bilinmeyen desen",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Yok"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_pattern",
+              "message": "“Yok” adında desen yok. Desen kitaplığındaki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).",
+              "path": "pattern.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçek sıfır olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "ANSI31",
+              "scale": 0
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_scale",
+              "message": "Desenin ölçeği sıfırdan büyük, en çok 10 000 olan sonlu bir sayı olmalı.",
+              "path": "pattern.scale"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçek 10 000'i aşamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "ANSI31",
+              "scale": 20000
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_scale",
+              "message": "Desenin ölçeği sıfırdan büyük, en çok 10 000 olan sonlu bir sayı olmalı.",
+              "path": "pattern.scale"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açı sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "ANSI31",
+              "angle": 0
+            },
+            "layerId": "tarama"
+          },
+          "nonFinite": {
+            "pattern.angle": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Desenin açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı derece olarak sonlu bir sayıyla verin.",
+              "path": "pattern.angle"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İkinci renk renk değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "küre",
+              "secondColor": "mavimsi"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_color",
+              "message": "“mavimsi” bir renk değil: #RRGGBB ya da bir renk adı (Beyaz, Siyah, Kırmızı …) verin.",
+              "path": "pattern.secondColor"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nokta sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "nonFinite": {
+            "region.at.y": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Tıklanan noktanın kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "region.at.y"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu tara: nesne yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "objects",
+              "uids": []
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Taranacak nesne yok. En az bir kapalı nesnenin kalıcı kimliğini verin.",
+              "path": "region.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu tara: kimlik geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "objects",
+              "uids": [
+                "Yapı-01"
+              ]
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“Yapı-01” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "region.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu tara: nesne çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "objects",
+              "uids": [
+                "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              ]
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "region.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınır katmanı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487002,
+                "y": 4420002
+              },
+              "way": "lines",
+              "boundaryLayer": "yok"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "region.boundaryLayer"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapalı nesne yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487200,
+                "y": 4420200
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_enclosed",
+              "message": "Noktayı çevreleyen kapalı bir alan, daire ya da kapalı eğri yok. Çizgilerle çevrili yerler için way: lines verin.",
+              "path": "region.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizgilerle kapalı bölge yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487200,
+                "y": 4420200
+              },
+              "way": "lines"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_enclosed",
+              "message": "Nokta çizgilerle kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli.",
+              "path": "region.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu tara: hiçbiri kapalı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "objects",
+              "uids": [
+                "$uidOf:26"
+              ]
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_closed",
+              "message": "Nesnelerin hiçbiri kapalı değil: alan, daire, tam elips ya da kapalı eğri taranır.",
+              "path": "region.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen bölge için çok sık: 20 000'den çok çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Çizgili",
+              "scale": 0.0001
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "pattern_too_dense",
+              "message": "Desen bu bölge için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin.",
+              "path": "pattern"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmana yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "kilitli"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup katman değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "grup"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katman yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalınlık aralıkta değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama",
+            "lineWeight": 200
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487046,
+                "y": 4420006
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:27"
+              ],
+              "ids": [
+                27
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              }
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama",
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

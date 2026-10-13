@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     ScenarioOperation,
     ScenarioOperationName,
@@ -57,6 +58,8 @@ class _ScenariosEdit(LocalCommand[ScenariosEdit, ScenariosEdited, ScenariosEditP
         name: str | None | Unset = UNSET,
         note: str | None | Unset = UNSET,
         scenario: str | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> ScenariosEdited:
         """Senaryo: Bir senaryo oluşturur (create) ya da birini mevcut duruma uygular (apply);
         tek geri alma adımı, adı işlemin. Senaryo ağacın en üstünde, senaryo olarak işaretli
@@ -80,6 +83,10 @@ class _ScenariosEdit(LocalCommand[ScenariosEdit, ScenariosEdited, ScenariosEditP
             name: `create`: the scenario's name (trimmed).
             note: `create`: the scenario's note.
             scenario: `apply`: the scenario group's id.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             ScenariosEdited
@@ -96,7 +103,7 @@ class _ScenariosEdit(LocalCommand[ScenariosEdit, ScenariosEdited, ScenariosEditP
             name=name,
             note=note,
             scenario=scenario,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -149,6 +156,37 @@ class _ScenariosEdit(LocalCommand[ScenariosEdit, ScenariosEdited, ScenariosEditP
             note=note,
             scenario=scenario,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        operation: ScenarioOperation | ScenarioOperationName,
+        copy_objects: bool | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        layers: Sequence[str] | None | Unset = UNSET,
+        name: str | None | Unset = UNSET,
+        note: str | None | Unset = UNSET,
+        scenario: str | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, ScenariosEdit(
+            operation=operation,
+            copy_objects=copy_objects,
+            expected_revision=expected_revision,
+            layers=_opt(layers, lambda x: list(x)),
+            name=name,
+            note=note,
+            scenario=scenario,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 edit = _ScenariosEdit()

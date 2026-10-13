@@ -106,6 +106,8 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
             .expect("a layer")
             .to_owned(),
     );
+    // The journal is the session's (docs/adr/0253 §3): taken before every reopening.
+    let mut rows: Vec<Value> = Vec::new();
     let dir = std::env::temp_dir().join(format!("kentos-mcp-kabul-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("a folder");
@@ -146,6 +148,12 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
             assert_eq!(undone["step"], label, "{name}");
         } else if step["reopen"] == true {
             // Saved to a file and opened as a model would: a new handle on the same drawing.
+            let journal = call(
+                &mut server,
+                "drawing.journal",
+                json!({ "drawing": drawing }),
+            );
+            rows.extend(journal["calls"].as_array().cloned().unwrap_or_default());
             let path = dir.join(format!("oda-{n}.kcad"));
             call(
                 &mut server,
@@ -232,5 +240,73 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
         }
         assert!(problems.is_empty(), "{name}: {problems:#?}");
     }
+    // The record says what ran, in order, and replays (docs/adr/0253 §3, §10): on a new drawing
+    // of the same project every command row done is the same, the undone ones are not run, the
+    // files are planned again (not written) and are the same files.
+    let mut journal = call(
+        &mut server,
+        "drawing.journal",
+        json!({ "drawing": drawing }),
+    );
+    rows.extend(journal["calls"].as_array().cloned().unwrap_or_default());
+    let ran: Vec<&str> = scenario["steps"]
+        .as_array()
+        .expect("steps")
+        .iter()
+        .filter_map(|s| s["command"].as_str())
+        .collect();
+    let recorded: Vec<&str> = rows
+        .iter()
+        .filter(|r| r["kind"] == "command" && r.get("effects").is_none())
+        .filter_map(|r| r["command"].as_str())
+        .collect();
+    assert_eq!(
+        recorded, ran,
+        "the record's commands are the scenario's, in order"
+    );
+    assert!(
+        rows.iter().all(|r| r["kind"] == "command"),
+        "every write went through a command"
+    );
+    let done = rows
+        .iter()
+        .filter(|r| r["kind"] == "command" && r["status"] == "done" && r.get("effects").is_none())
+        .count();
+    let written = rows.iter().filter(|r| r.get("effects").is_some()).count();
+    assert_eq!(written, 2, "the DXF and the PDF");
+    journal["calls"] = Value::Array(rows);
+    let fresh = call(&mut server, "drawing.new", scenario["project"].clone());
+    let fresh = fresh["drawing"].as_str().expect("a handle").to_owned();
+    let before: Vec<_> = std::fs::read_dir(&dir)
+        .expect("lists")
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .collect();
+    let report = call(
+        &mut server,
+        "drawing.replay",
+        json!({ "drawing": fresh, "journal": journal }),
+    );
+    let wrong: Vec<&Value> = report["steps"]
+        .as_array()
+        .expect("steps")
+        .iter()
+        .filter(|s| s["outcome"] == "differs" || s["outcome"] == "failed")
+        .collect();
+    assert!(wrong.is_empty(), "{wrong:#?}");
+    assert_eq!(report["same"], json!(done + written), "{report}");
+    let after: Vec<_> = std::fs::read_dir(&dir)
+        .expect("lists")
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .collect();
+    assert_eq!(before, after, "a replay writes no file");
+    let mine = call(
+        &mut server,
+        "drawing.summary",
+        json!({ "drawing": drawing }),
+    );
+    let theirs = call(&mut server, "drawing.summary", json!({ "drawing": fresh }));
+    assert_eq!(theirs["objects"], mine["objects"]);
     let _ = std::fs::remove_dir_all(dir);
 }

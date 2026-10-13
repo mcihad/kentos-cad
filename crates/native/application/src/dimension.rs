@@ -30,7 +30,7 @@ pub(crate) fn check(g: &EntityGeometry, at: &dyn Fn(&str) -> Option<String>) -> 
         return Ok(());
     };
     let refuse = |message: String, field: &str| {
-        Err(Stop::Failed(error(
+        Err(Stop::failed(error(
             codes::INVALID_DIMENSION,
             message,
             at(field),

@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `44`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-45.kcad`) |
+| `version` | tam sayı | `2`'den `45`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-46.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -283,7 +283,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 44**, şema 43'ün kendisi ve projenin pafta kitabıdır (ADR 0251): belgenin `sheets`'i (§6.12), pafta çekirdeğinin kitabı (paftalar, ana sayfalar, değişkenler, resimlerin bilgileri) ve resimlerin baytları. Yazıcı `44`'ü **yalnız projenin pafta kitabı varken** yazar. Başka her çizim şema 2–43'tür ve eskisiyle bayt bayt aynıdır. Şema 2–43 yükünde `sheets` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/sheets-in-schema-43.kcad`): eski okuyucu paftaları bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 44 şema 43'ü kapsar. Örnek dosya `sheets.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 45**, şema 44'ün kendisi ve istek defteridir (ADR 0253 §6): belgenin `requests`'i (§6.13), çizimin yürüttüğü isteklerin son 256'sı: kimliği, çağrının parmak izi, komut ve sürümü, sonraki sürüm, durumu ve o zamanki cevabı. Aynı istek yeniden gelince iki kez uygulanmaz; “uygulandı, kaydedildi, cevap gitmeden süreç çöktü” durumunda açılan dosya isteği bilir. Yazıcı `45`'i **yalnız çizim bir istek yürüttüyse** yazar. Başka her çizim şema 2–44'tür ve eskisiyle bayt bayt aynıdır. Şema 2–44 yükünde `requests` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/requests-in-schema-44.kcad`): eski okuyucu defteri bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 45 şema 44'ü kapsar. Örnek dosya `requests.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: istek yürütmüş çizim 45, pafta kitabı olan proje 44, başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -299,6 +301,7 @@ Tablolar anahtarları **dosyadaki sırasıyla** verir (§5.2). “Zorunlu” sü
 | `styles` | harita (§6.7) | evet | projenin kendi stil kitaplığı |
 | `entities` | dizi: nesne (§6.6) | evet | nesneler, **belge sırasıyla** (çizim sırası) |
 | `homeView` | sınırlar | | başlangıç görünümü; yoksa bütün nesneler |
+| `requests` | dizi: istek (§6.13) | | yalnız şema 45: çizimin yürüttüğü istekler, sırasıyla; boş dizi yazılmaz (`bad_value`) |
 | `settings` | harita (§6.4) | evet | proje ayarları |
 | `projectId` | kimlik | | projenin kalıcı kimliği (§6.8) |
 | `activeLayer` | metin | evet | etkin katmanın kimliği |
@@ -998,6 +1001,23 @@ Resim harita:
 - Kitap dosya biçimine opaktır: dosya biçimi onu yorumlamaz, olduğu gibi taşır; tam sayı ile float ayrıdır (§6.7). Kitabın kendi kuralları (kimliklerin benzersizliği, öğelerin türleri, resimlerin bilgileri) pafta çekirdeğinindir (§6.11). Kitabın andığı ama `pictures`'ta olmayan resim paftanın ön denetiminde söylenir; `pictures`'ta olup kitabın anmadığı resim yazıcının işi değildir, yazan uygulama onu yazmaz.
 - Sözleşmenin JSON'unda (`DocumentSnapshotV2.sheets`, `ProjectSheets`) `bytes` base64 metindir (RFC 4648, dolgulu), `sha256` 64 küçük onaltılık hanedir.
 - Pafta kitabının geri alma geçmişi dosyaya girmez (§6.10). Pafta şablonları (cihazın ve bulutun kitaplığı) projenin değildir, dosyaya girmez; paftaya kullanılmış şablonun sayfası ve resimleri kitapta zaten vardır.
+
+### 6.13 İstek defteri
+
+Şema 45 (ADR 0253 §6). `requests` dizi: istek, en eskisi önce, en çok 256 (fazlası `bad_value`); boş dizi yazılmaz (`bad_value`, `broken/requests-empty.kcad`). İstek harita:
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `answer` | metin | | o zamanki cevabın JSON'u (`CallAnswer`), en çok 65 536 bayt; daha büyüğü yazılmaz (`bad_value`) |
+| `status` | metin | evet | `done` ya da `undone`: yazdığı çizimde mi, geri mi alındı; başkası `bad_value` (`broken/requests-status.kcad`) |
+| `command` | metin | evet | komutun kimliği (`cad.entities.offset`); boş olamaz |
+| `version` | tam sayı | evet | komutun sürümü, 1'den (`broken/requests-version-zero.kcad`) |
+| `revision` | metin | evet | yazdıktan sonra çizimin sürümü, ondalık rakamlar (`broken/requests-revision.kcad`); oturumundur, açılan çizimin sürümüyle karşılaştırılmaz |
+| `requestId` | metin | evet | isteğin kimliği: 1–128 karakter, yalnız ASCII harf, rakam ve `. _ : -` (`broken/requests-id.kcad`); aynı kimlik iki kez yazılamaz (`broken/requests-twice.kcad`) |
+| `fingerprint` | bayt dizgisi | evet | çağrının parmak izi (komut, sürüm, biçim, girdi ve beklentilerin kanonik JSON'unun SHA-256'sının ilk 16 baytı); 16 bayt değilse `bad_value` (`broken/requests-fingerprint-length.kcad`) |
+
+- Sözleşmenin JSON'unda (`DocumentSnapshotV2.requests`, `RequestRecord`) `fingerprint` 32 küçük onaltılık hanedir.
+- Defter dosyanın bir parçasıdır, geri alma geçmişi değildir: oturumun kaydı (`kentos.calls/1`) ve geri alma adımları dosyaya girmez (§6.10). Veritabanı projesi defter tutmaz; sunucunun kendi idempotency'si vardır (ADR 0026).
 
 ## 7. v1'den göç
 

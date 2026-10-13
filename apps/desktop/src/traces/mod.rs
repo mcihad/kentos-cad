@@ -44,6 +44,7 @@ mod answers;
 mod command_line;
 mod compare;
 mod format;
+mod journal;
 mod keyboard;
 mod player;
 

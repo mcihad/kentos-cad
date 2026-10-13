@@ -1,0 +1,2035 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.join",
+  "commandVersion": 1,
+  "title": "Nesneleri birleştir",
+  "note": "Written by scripts/fixtures/reshape_command_cases.py from the operations' definitions (docs/adr/0047, 0057, 0160, 0161, 0254); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Biçim komutları",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "nokta",
+        "name": "Nokta",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "grup",
+        "name": "Grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "alt",
+            "name": "Alt",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 10,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Duvar"
+        },
+        "color": "#E5484D",
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Bordür"
+        },
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420020
+          },
+          {
+            "x": 487010,
+            "y": 4420020
+          },
+          {
+            "x": 487010,
+            "y": 4420030
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {
+          "Ada": "101"
+        },
+        "pts": [
+          {
+            "x": 487020,
+            "y": 4420000
+          },
+          {
+            "x": 487030,
+            "y": 4420000
+          },
+          {
+            "x": 487030,
+            "y": 4420010
+          },
+          {
+            "x": 487020,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 13,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487030,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420010
+          },
+          {
+            "x": 487030,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 14,
+        "layerId": "kilitli",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "line",
+        "id": 15,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487050,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487060,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "point",
+        "id": 16,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487050,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 17,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Yol"
+        },
+        "a": {
+          "x": 487000,
+          "y": 4420060
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420060
+        }
+      },
+      {
+        "kind": "line",
+        "id": 18,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420060
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420060
+        }
+      },
+      {
+        "kind": "line",
+        "id": 19,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420060
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420070
+        }
+      },
+      {
+        "kind": "circle",
+        "id": 20,
+        "layerId": "yapi",
+        "attrs": {},
+        "c": {
+          "x": 487060,
+          "y": 4420060
+        },
+        "r": 5
+      },
+      {
+        "kind": "polygon",
+        "id": 21,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487020,
+            "y": 4420010
+          },
+          {
+            "x": 487030,
+            "y": 4420010
+          },
+          {
+            "x": 487030,
+            "y": 4420020
+          },
+          {
+            "x": 487020,
+            "y": 4420020
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 22,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487030,
+          "y": 4420010
+        },
+        "b": {
+          "x": 487032,
+          "y": 4420010
+        }
+      },
+      {
+        "kind": "line",
+        "id": 23,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "line",
+        "id": 24,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420040
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 25,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487070,
+            "y": 4420000
+          },
+          {
+            "x": 487080,
+            "y": 4420000
+          },
+          {
+            "x": 487080,
+            "y": 4420010
+          },
+          {
+            "x": 487070,
+            "y": 4420010
+          }
+        ],
+        "holes": [
+          {
+            "pts": [
+              {
+                "x": 487072,
+                "y": 4420002
+              },
+              {
+                "x": 487074,
+                "y": 4420002
+              },
+              {
+                "x": 487074,
+                "y": 4420004
+              },
+              {
+                "x": 487072,
+                "y": 4420004
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 26,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420090
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420090
+        }
+      },
+      {
+        "kind": "line",
+        "id": 27,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010.5,
+          "y": 4420090
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420090
+        }
+      },
+      {
+        "kind": "line",
+        "id": 28,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420100
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420100
+        }
+      },
+      {
+        "kind": "line",
+        "id": 29,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420100
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420110
+        }
+      },
+      {
+        "kind": "line",
+        "id": 30,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420110
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420100
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Uç uca üç çizgi tek çoklu çizgi olur: ilkinin yerinde, kimliği ve verisiyle; öbürleri gider; adım “Birleştir”",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 18,
+          "as": "u18"
+        },
+        {
+          "op": "captureUid",
+          "id": 19,
+          "as": "u19"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18",
+              "$uidOf:19"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:17"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:u18",
+                "$uid:u19"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "17": {
+                "kind": "polyline",
+                "id": 17,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Yol"
+                },
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420060
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420060
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420060
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420070
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Birleştir",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "17": {
+                "kind": "line",
+                "id": 17,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Yol"
+                },
+                "a": {
+                  "x": 487000,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420060
+                }
+              },
+              "18": {
+                "kind": "line",
+                "id": 18,
+                "layerId": "yapi",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420060
+                }
+              }
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapanan zincir kapalı alan olur",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 29,
+          "as": "u29"
+        },
+        {
+          "op": "captureUid",
+          "id": 30,
+          "as": "u30"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:28",
+              "$uidOf:29",
+              "$uidOf:30"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:28"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:u29",
+                "$uid:u30"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "entities": {
+              "28": {
+                "kind": "polygon",
+                "id": 28,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420100
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420100
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420110
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Toleransla: 0,5 m aralıklı uçlar 1 m toleransla buluşur; birleşme noktası zincirin kendi ucu",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 27,
+          "as": "u27"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:26",
+              "$uidOf:27"
+            ],
+            "tolerance": 1
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:26"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:u27"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "26": {
+                "kind": "polyline",
+                "id": 26,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420090
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420090
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420090
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki nesne locked_skipped uyarısıyla dışarıda kalır, öbürleri birleşir",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 18,
+          "as": "u18"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18",
+              "$uidOf:14"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:17"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:u18"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "locked_skipped",
+                "message": "Nesne kilitli katmanda olduğu için birleştirilmedi.",
+                "path": "uids[2]"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "17": {
+                "kind": "polyline",
+                "id": 17,
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Yol"
+                },
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420060
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420060
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420060
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir: tohum ortadaki çizgi; bağlı çizgiler onunla birleşir, tohum yerini ve kimliğini verir",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 17,
+          "as": "u17"
+        },
+        {
+          "op": "captureUid",
+          "id": 19,
+          "as": "u19"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:18"
+            ],
+            "chain": {
+              "kind": "all"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:18"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:u17",
+                "$uid:u19"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              18,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "18": {
+                "kind": "polyline",
+                "id": 18,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420060
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420060
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420060
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420070
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir kilitli nesnede durur: chain_stopped uyarısı",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 24,
+          "as": "u24"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "chain": {
+              "kind": "all"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:23"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:u24"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "chain_stopped",
+                "message": "Zincir kilitli katmandaki bir nesnede durdu."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "entities": {
+              "23": {
+                "kind": "polyline",
+                "id": 23,
+                "layerId": "yapi",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487010,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487030,
+                    "y": 4420040
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: birleşen nesne yazılacağı gibi; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18",
+              "$uidOf:19"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                {
+                  "kind": "polyline",
+                  "id": 17,
+                  "layerId": "yapi",
+                  "attrs": {
+                    "Tür": "Yol"
+                  },
+                  "pts": [
+                    {
+                      "x": 487000,
+                      "y": 4420060
+                    },
+                    {
+                      "x": 487010,
+                      "y": 4420060
+                    },
+                    {
+                      "x": 487020,
+                      "y": 4420060
+                    },
+                    {
+                      "x": 487020,
+                      "y": 4420070
+                    }
+                  ]
+                }
+              ],
+              "created": [],
+              "removed": [
+                "$uidOf:18",
+                "$uidOf:19"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Birleştirilecek nesne yok. En az bir nesnenin kalıcı kimliğini verin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir tek tohumla başlar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18"
+            ],
+            "chain": {
+              "kind": "all"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Zincir tek bir nesneden (tohum) başlar; bir kimlik verin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "Yapı-01"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“Yapı-01” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincirin nesne listesi boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:18"
+            ],
+            "chain": {
+              "kind": "objects",
+              "uids": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Zincirin nesneleri yok. Nesneleri verin ya da bütün görünen nesneler için “all”u kullanın.",
+              "path": "chain.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tolerans sıfır olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18"
+            ],
+            "tolerance": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Tolerans sıfırdan büyük sonlu bir uzunluk (metre) olmalı.",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tolerans sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18"
+            ],
+            "tolerance": 1
+          },
+          "nonFinite": {
+            "tolerance": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Tolerans sıfırdan büyük sonlu bir uzunluk (metre) olmalı.",
+              "path": "tolerance"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincirin dikdörtgeni sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:18"
+            ],
+            "chain": {
+              "kind": "area",
+              "min": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "max": {
+                "x": 487030,
+                "y": 4420080
+              }
+            }
+          },
+          "nonFinite": {
+            "chain.min.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Dikdörtgenin köşesinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "chain.min.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18"
+            ],
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesne çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincirin nesnesi çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:18"
+            ],
+            "chain": {
+              "kind": "objects",
+              "uids": [
+                "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "chain.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir noktadan başlamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:16"
+            ],
+            "chain": {
+              "kind": "all"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_joinable",
+              "message": "Zincir bir çizgiden, yaydan ya da açık çoklu çizgiden başlar.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli tohum",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:14"
+            ],
+            "chain": {
+              "kind": "all"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki nesne değiştirilemez. Kilidi Katmanlar panelinden açın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uçları buluşmayan nesneler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:19"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_join",
+              "message": "Uçları birleşen çizgi, yay ya da açık çoklu çizgi bulunamadı. Toleransı artırmayı deneyin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Toleransı küçük kalan aralık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:26",
+              "$uidOf:27"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_join",
+              "message": "Uçları birleşen çizgi, yay ya da açık çoklu çizgi bulunamadı. Toleransı artırmayı deneyin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincirin tek nesnesi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "chain": {
+              "kind": "all"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_join",
+              "message": "Bu nesneye ucu ucuna bağlanan nesne yok; zincir kurulamadı.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 29,
+          "as": "u29"
+        },
+        {
+          "op": "captureUid",
+          "id": 30,
+          "as": "u30"
+        },
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:28",
+              "$uidOf:29",
+              "$uidOf:30"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:28"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:u29",
+                "$uid:u30"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18"
+            ],
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

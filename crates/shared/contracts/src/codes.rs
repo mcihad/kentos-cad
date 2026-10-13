@@ -1,0 +1,614 @@
+//! The stable codes of the product commands' answers (`CommandError.code`,
+//! `CommandWarning.code`; docs/adr/0022 … 0253) and what each means, in one
+//! place (docs/adr/0253 §7). Programs branch on these, never on the Turkish
+//! message; the catalog lists the codes each command answers with
+//! (`CommandCapabilities`) and [`CODES`] says what each means, whether it is
+//! a refusal, a conflict or a warning, and whether calling again may help.
+//!
+//! The desktop's handlers (`kentos_native_application::codes`) use these
+//! constants; the sheet core's own refusals (`kentos.sheet/1`) are listed
+//! too, as `cad.sheets.edit` answers with them.
+
+use serde::Serialize;
+
+/// How a code comes back.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CodeKind {
+    /// A refusal: `failed`, nothing written.
+    Failed,
+    /// The state changed: `conflict`, nothing written.
+    Conflict,
+    /// Something only the user can give: `needs_input`.
+    NeedsInput,
+    /// A warning of a completed command.
+    Warning,
+    /// A warning when some of the work could not be done, a refusal when none could.
+    FailedOrWarning,
+    /// The host's own failure, not a command's answer: a Python library's,
+    /// a console's or a tool server's (`HostError`, MCP's error).
+    Host,
+}
+
+/// What a code means.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodeInfo {
+    pub code: &'static str,
+    pub kind: CodeKind,
+    /// Whether calling again may succeed (prepared again from the state now,
+    /// or sent again): a conflict's; never an input wrong in itself.
+    pub retryable: bool,
+    /// Turkish, for people and for an agent choosing what to do.
+    pub meaning: &'static str,
+}
+
+/// What `code` means; none for a code this table does not know.
+pub fn info(code: &str) -> Option<&'static CodeInfo> {
+    CODES.iter().find(|c| c.code == code)
+}
+
+/// Whether calling again with `code` may succeed ([`CodeInfo::retryable`]).
+pub fn retryable(code: &str) -> bool {
+    info(code).is_some_and(|c| c.retryable)
+}
+
+macro_rules! codes {
+    ($( $(#[$doc:meta])* $name:ident = $code:literal, $kind:ident, $retry:literal, $meaning:literal; )*) => {
+        $( $(#[$doc])* pub const $name: &str = $code; )*
+        /// Every code with what it means, in this file's order.
+        pub const CODES: &[CodeInfo] = &[
+            $( CodeInfo { code: $code, kind: CodeKind::$kind, retryable: $retry, meaning: $meaning }, )*
+        ];
+    };
+}
+
+codes! {
+    // ── Shapes and numbers ──────────────────────────────────────────────
+    /// A closed area with fewer than 3 corners (`cad.polygon.create`).
+    TOO_FEW_CORNERS = "too_few_corners", Failed, false, "Kapalı alanın en az üç köşesi olmalı.";
+    /// A polyline with fewer than 2 points (`cad.polyline.create`).
+    TOO_FEW_POINTS = "too_few_points", Failed, false, "Çoklu çizginin en az iki noktası olmalı.";
+    /// A polyline's part with holes: only an area's parts have them (docs/adr/0174).
+    PART_HOLES = "part_holes", Failed, false, "Delik yalnız alanın parçasında olur; çoklu çizginin parçasında olmaz.";
+    /// A coordinate, a bulge, a radius, an angle or an elevation that is NaN or ±∞.
+    NOT_FINITE = "not_finite", Failed, false, "Bir koordinat, büküm, yarıçap, açı ya da kot sayı değil ya da sonsuz.";
+    /// A circle's or an arc's radius that is not above zero (`cad.circle.create`, `cad.arc.create`).
+    INVALID_RADIUS = "invalid_radius", Failed, false, "Dairenin ya da yayın yarıçapı sıfırdan büyük olmalı.";
+    /// Bulges given, but not one per edge.
+    BULGE_COUNT = "bulge_count", Failed, false, "Bükümler verildiyse her kenara bir tane olmalı.";
+
+    // ── The document's state ────────────────────────────────────────────
+    /// An expected revision that is not decimal text.
+    INVALID_REVISION = "invalid_revision", Failed, false, "Beklenen sürüm ondalık bir sayı metni değil.";
+    /// The document is no longer at the expected revision.
+    REVISION_CONFLICT = "revision_conflict", Conflict, true, "Çizim girdi hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Girdiyi çizimin şimdiki hâline göre yeniden hazırlayın.";
+    /// An object, a definition or a part of the project no longer has the
+    /// stamp the call expected, or is gone (docs/adr/0253 §2).
+    STALE_STATE = "stale_state", Conflict, true, "Beklenen nesne, tanım ya da proje parçası değişmiş ya da yok; hiçbir şey yazılmadı. Durum damgalarını yeniden okuyup girdiyi yeniden hazırlayın.";
+    /// The write would not equal the plan it names (docs/adr/0253 §5).
+    PLAN_CHANGED = "plan_changed", Conflict, true, "Yazılacak olan onaylanan plana eşit değil (kaynakları değişti); hiçbir şey yazılmadı. Yeniden planlayın.";
+    /// A request id sent again with another call (docs/adr/0253 §6).
+    REQUEST_REUSED = "request_reused", Failed, false, "Bu istek kimliği başka bir çağrıyla kullanıldı; bir kimlik tek bir işi adlar. Yeni bir kimlik verin.";
+    /// A call the protocol cannot read: a request id out of its rule, a
+    /// request id or a plan with `validate` or `plan`, stamps that are not stamps.
+    INVALID_CALL = "invalid_call", Failed, false, "Çağrı okunamıyor: istek kimliği kuralına uymuyor, istek kimliği ya da plan yalnız execute ile verilir, ya da damga geçersiz.";
+    /// The write would leave the document inconsistent: an object on a layer
+    /// the drawing does not have, an insert of a block it does not define, a
+    /// live reference to an object it no longer has (docs/adr/0253 §8).
+    INTEGRITY_FAILED = "integrity_failed", Failed, false, "Yazma çizimi tutarsız bırakırdı (olmayan katman ya da blok, artık olmayan bir nesneye bağ); hiçbir şey yazılmadı.";
+    /// A job's document changed while it computed and its result no longer
+    /// fits (docs/adr/0253 §9).
+    DOCUMENT_CHANGED = "document_changed", Conflict, true, "İş hesaplanırken çizim değişti ve sonuç artık uymuyor; hiçbir şey yazılmadı. İşi yeniden başlatın.";
+
+    // ── Layers ──────────────────────────────────────────────────────────
+    LAYER_NOT_FOUND = "layer_not_found", Failed, false, "Adı verilen katman çizimde yok.";
+    NOT_A_LAYER = "not_a_layer", Failed, false, "Verilen düğüm bir grup; nesne yalnız katmana konur.";
+    LAYER_LOCKED = "layer_locked", Failed, false, "Katman ya da üstündeki bir grup kilitli; kilitli katmandaki nesne değişmez, kopyalanmaz.";
+    /// The layer named is drawn from a map service and holds no objects (docs/adr/0208 §2).
+    SERVICE_LAYER = "service_layer", Failed, false, "Katman bir harita servisinden çizilir; nesne tutmaz.";
+    /// A warning: the layer is hidden, by itself or a group above it.
+    LAYER_HIDDEN = "layer_hidden", Warning, false, "Katman ya da üstündeki bir grup gizli; yazılan görünmez.";
+    /// A renderer the style core's rules refuse (`cad.layers.renderer`, docs/adr/0213 §5).
+    INVALID_RENDERER = "invalid_renderer", Failed, false, "İşleyici stil çekirdeğinin kurallarına uymuyor.";
+
+    // ── Objects ─────────────────────────────────────────────────────────
+    /// The desktop only: every slot (`u32`) of the document has been given out.
+    SLOTS_EXHAUSTED = "slots_exhausted", Failed, false, "Çizimin nesne kimlikleri tükendi; yeni nesne eklenemez.";
+    /// No object named (`cad.entities.delete`).
+    NO_ENTITIES = "no_entities", Failed, false, "Hiç nesne verilmedi.";
+    /// A persistent id that is not lowercase UUID text with hyphens.
+    INVALID_UID = "invalid_uid", Failed, false, "Kalıcı kimlik küçük harfli, tireli UUID metni değil.";
+    /// A persistent id no object of the document has.
+    ENTITY_NOT_FOUND = "entity_not_found", Failed, false, "Kalıcı kimliği verilen nesne çizimde yok.";
+    /// No object given (`cad.entities.create`).
+    NO_OBJECTS = "no_objects", Failed, false, "Hiç nesne verilmedi.";
+    /// One object changed by two changes of the same edit (`cad.entities.edit`).
+    REPEATED_ENTITY = "repeated_entity", Failed, false, "Bir nesne aynı düzenlemenin iki değişikliğinde geçiyor.";
+    /// No change given (`cad.entities.edit`).
+    NO_CHANGES = "no_changes", Failed, false, "Hiç değişiklik verilmedi.";
+
+    // ── Transforms and arrays ───────────────────────────────────────────
+    /// A scale factor that is not above zero (`cad.entities.transform`).
+    INVALID_FACTOR = "invalid_factor", Failed, false, "Ölçek çarpanı sıfırdan büyük olmalı.";
+    /// A mirror axis whose two points give it no direction (`cad.entities.transform`).
+    INVALID_AXIS = "invalid_axis", Failed, false, "Aynalama ekseninin iki noktası bir doğrultu vermiyor.";
+    /// An alignment's second pair given by half, or its points within a
+    /// nanometre of the first pair's (`cad.entities.transform`).
+    INVALID_ALIGN = "invalid_align", Failed, false, "Hizalamanın ikinci çifti yarım verildi ya da ilk çiftle aynı yerde.";
+    /// An affine or projective transform whose linear part squashes the plane (docs/adr/0156).
+    INVALID_TRANSFORM = "invalid_transform", Failed, false, "Dönüşümün doğrusal kısmı düzlemi eziyor.";
+    /// A point of an object beyond a projective transform's horizon (docs/adr/0156).
+    BEYOND_HORIZON = "beyond_horizon", Failed, false, "Bir nesnenin noktası izdüşümsel dönüşümün ufkunun ötesinde.";
+    /// Objects whose curves became straight vertices under a transform that
+    /// is not a similarity (a warning).
+    WARP_CURVES = "warp_curves", Warning, false, "Benzerlik olmayan dönüşümde eğriler düz kenarlı köşelere çevrildi.";
+    /// Texts, notes, blocks, dimensions and hatch patterns that kept their
+    /// shape under a transform that is not a similarity (a warning).
+    WARP_SHAPES = "warp_shapes", Warning, false, "Benzerlik olmayan dönüşümde yazılar, notlar, bloklar, ölçüler ve tarama desenleri biçimlerini korudu.";
+    /// A rubber sheet's links that give no sheet (docs/adr/0158).
+    INVALID_LINKS = "invalid_links", Failed, false, "Kauçuk levhanın bağları bir levha vermiyor: 3'ten az ya da 1000'den çok, aynı noktadan iki, kaynakları bir doğru üstünde ya da tek çözümü yok.";
+    /// A spread of Hizala ve dağıt with fewer than three objects off locked layers (docs/adr/0194).
+    TOO_FEW_OBJECTS = "too_few_objects", Failed, false, "Dağıtmak için kilitsiz katmanlarda en az üç nesne gerekir.";
+    /// Shapes on a rubber sheet whose kept edges or curves lie over 0.1 mm
+    /// from their true image (a warning, docs/adr/0158).
+    RUBBER_BENDS = "rubber_bends", Warning, false, "Kauçuk levhada bazı kenarlar ya da eğriler gerçek görüntülerinden 0,1 mm'den uzak kaldı.";
+    /// Rows and columns, or a polar array's count, out of their range (`cad.entities.array`).
+    INVALID_COUNT = "invalid_count", Failed, false, "Dizinin satır, sütun ya da öğe sayısı aralığının dışında.";
+    /// A grid direction with more than one place and no spacing (`cad.entities.array`).
+    INVALID_SPACING = "invalid_spacing", Failed, false, "Birden çok yeri olan dizi doğrultusunun aralığı yok.";
+    /// A polar array's fill of zero or past a full turn (`cad.entities.array`).
+    INVALID_FILL = "invalid_fill", Failed, false, "Kutupsal dizinin doldurma açısı sıfır ya da tam turdan büyük.";
+    /// A path array's path that is not a line, an arc, a circle or a
+    /// polyline, or has no length (docs/adr/0140); a text's curve out of its
+    /// rules (docs/adr/0196 §1).
+    INVALID_PATH = "invalid_path", Failed, false, "Yol çizgi, yay, daire ya da çoklu çizgi değil ya da uzunluğu yok; ya da yazının eğrisi kurallarına uymuyor.";
+
+    // ── Elevations and measures ─────────────────────────────────────────
+    /// A warning: an edit could not carry the elevations of an object's
+    /// vertices to what it wrote (docs/adr/0142).
+    ELEVATION_LOST = "elevation_lost", Warning, false, "Düzenleme bazı köşelerin kotunu yazdığına taşıyamadı.";
+    /// Elevations written with a geometry that are not one for each vertex (docs/adr/0142).
+    INVALID_ELEVATIONS = "invalid_elevations", Failed, false, "Geometriyle yazılan kotlar her köşeye bir tane değil.";
+    /// A warning: an edit could not carry the measures (M) of a route's
+    /// vertices to what it wrote (docs/adr/0224 §2).
+    MEASURE_LOST = "measure_lost", Warning, false, "Düzenleme rotanın bazı köşelerinin ölçüsünü (M) taşıyamadı.";
+    /// Measures written with a geometry that are not one for each vertex, or
+    /// measures given to an area (docs/adr/0224 §2).
+    INVALID_MEASURES = "invalid_measures", Failed, false, "Ölçüler her köşeye bir tane değil ya da alana ölçü verildi.";
+
+    // ── Properties, texts, links ────────────────────────────────────────
+    /// A text whose text is empty or only white space.
+    EMPTY_TEXT = "empty_text", Failed, false, "Yazının metni boş ya da yalnız boşluk.";
+    /// No property given (`cad.entities.set`).
+    NOTHING_TO_SET = "nothing_to_set", Failed, false, "Değiştirilecek bir özellik verilmedi.";
+    /// An attribute name empty, or a value that does not keep its layer's
+    /// field's rules (docs/adr/0199 §2).
+    INVALID_ATTRIBUTE = "invalid_attribute", Failed, false, "Öznitelik adı boş ya da değer katmanın alanının kuralına uymuyor.";
+    /// A required field of the layer written empty or taken away (docs/adr/0199 §2).
+    ATTRIBUTE_REQUIRED = "attribute_required", Failed, false, "Katmanın zorunlu alanı boş yazıldı ya da kaldırıldı.";
+    /// A line weight that is not a number from 0 to 100 mm (docs/adr/0139).
+    INVALID_LINE_WEIGHT = "invalid_line_weight", Failed, false, "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı.";
+    /// A new object's link to the object whose label it writes that cannot
+    /// be one (docs/adr/0175 §4).
+    INVALID_LINK = "invalid_link", Failed, false, "Etiket bağı olamaz: yazı değil, labelOf ile labelScale birlikte değil, kimlik geçersiz ya da ölçek uygun değil.";
+    /// The object a linked text names is not in the drawing.
+    LINK_NOT_FOUND = "link_not_found", Failed, false, "Bağlı yazının adını verdiği nesne çizimde yok.";
+    /// A hatch's pattern or tie that cannot be one (docs/adr/0186 §1, §6).
+    INVALID_HATCH = "invalid_hatch", Failed, false, "Taramanın deseni ya da bağı kurallarına uymuyor.";
+    /// A dimension's references that cannot be (docs/adr/0249 §3).
+    INVALID_REFS = "invalid_refs", Failed, false, "Ölçünün başvuruları geçersiz: boş, kimliği boş, sırası çok büyük ya da kopma nedeni bilinmiyor.";
+    /// An attribute definition's text height that is not a finite number above zero.
+    INVALID_HEIGHT = "invalid_height", Failed, false, "Yazı yüksekliği sıfırdan büyük sonlu bir sayı olmalı.";
+    /// A leader's arrowhead size out of 0.1–10 times its note's height (docs/adr/0205 §7).
+    INVALID_ARROW_SIZE = "invalid_arrow_size", Failed, false, "Kılavuzun ok boyu notun yüksekliğinin 0,1 ile 10 katı arasında olmalı.";
+    /// A text's width factor not over 0 or over 100 (docs/adr/0145).
+    INVALID_WIDTH_FACTOR = "invalid_width_factor", Failed, false, "Yazının genişlik çarpanı 0'dan büyük, 100'den küçük olmalı.";
+    /// A multi-line text's box width, line spacing or letter formats out of their rules (docs/adr/0182 §6).
+    INVALID_PARAGRAPH = "invalid_paragraph", Failed, false, "Çok satırlı yazının kutu genişliği, satır aralığı ya da harf biçimleri kurallarına uymuyor.";
+    /// A text's face or a dimension's look out of its rules (docs/adr/0183 §9).
+    INVALID_STYLE = "invalid_style", Failed, false, "Yazının yüzü ya da ölçünün görünüşü kurallarına uymuyor.";
+    /// A text or dimension style id the project does not have (docs/adr/0183 §9).
+    UNKNOWN_STYLE = "unknown_style", Failed, false, "Projede bu kimlikte yazı ya da ölçü stili yok.";
+    /// A dimension the core cannot draw, or a field its kind does not take (docs/adr/0147 §6).
+    INVALID_DIMENSION = "invalid_dimension", Failed, false, "Ölçü çekirdeğin çizebileceği biçimde değil ya da türünün almadığı bir alan var.";
+
+    // ── Tables, pictures, rasters, point clouds ─────────────────────────
+    /// A table's rows, columns, cells, merged ranges, alignments or source
+    /// out of their rules (docs/adr/0184 §6).
+    INVALID_TABLE = "invalid_table", Failed, false, "Tablonun satırları, sütunları, hücreleri, birleşik alanları ya da kaynağı kurallarına uymuyor.";
+    /// A table among the objects a block is defined from (docs/adr/0184 §1).
+    TABLE_IN_BLOCK = "table_in_block", Failed, false, "Blok tanımının nesneleri arasında tablo olamaz.";
+    /// Tablo's edit changing an object that is not a table, or into one that is not (docs/adr/0184 §6).
+    NOT_A_TABLE = "not_a_table", Failed, false, "Tablo düzenlemesi tablo olmayan bir nesneye ya da tabloyu başka türe çeviriyor.";
+    /// A picture's size, source, clip or opacity out of its rules (docs/adr/0192 §6).
+    INVALID_IMAGE = "invalid_image", Failed, false, "Resmin boyu, kaynağı, kırpması ya da saydamlığı kurallarına uymuyor.";
+    /// A picture's asset the project's library does not have as a PNG or JPEG image (docs/adr/0192 §6).
+    UNKNOWN_ASSET = "unknown_asset", Failed, false, "Projenin kitaplığında bu kimlikte PNG ya da JPEG resim yok.";
+    /// A picture among the objects a block is defined from (docs/adr/0192 §1).
+    IMAGE_IN_BLOCK = "image_in_block", Failed, false, "Blok tanımının nesneleri arasında resim olamaz.";
+    /// A raster's affine, size, bands, samples, source, look or opacity out
+    /// of their rules (docs/adr/0204 §9).
+    INVALID_RASTER = "invalid_raster", Failed, false, "Rasterin dönüşümü, boyu, bantları, kaynağı ya da görünüşü kurallarına uymuyor.";
+    /// A raster among the objects a block is defined from (docs/adr/0204 §2).
+    RASTER_IN_BLOCK = "raster_in_block", Failed, false, "Blok tanımının nesneleri arasında raster olamaz.";
+    /// A raster under a projective transform or a rubber sheet (docs/adr/0204 §7).
+    RASTER_NOT_WARPED = "raster_not_warped", Failed, false, "Raster izdüşümsel dönüşüme ya da kauçuk levhaya uyamaz; yalnız pikselleri yeniden örneklenerek izlenebilir.";
+    /// A point cloud's files, bounds, points, look or opacity out of their rules (docs/adr/0207 §10).
+    INVALID_POINTCLOUD = "invalid_pointcloud", Failed, false, "Nokta bulutunun dosyaları, kutusu, noktaları ya da görünüşü kurallarına uymuyor.";
+    /// A point cloud among the objects a block is defined from (docs/adr/0207 §3).
+    POINTCLOUD_IN_BLOCK = "pointcloud_in_block", Failed, false, "Blok tanımının nesneleri arasında nokta bulutu olamaz.";
+    /// A point cloud moved, turned, scaled, mirrored or copied (docs/adr/0207 §3).
+    POINTCLOUD_FIXED = "pointcloud_fixed", Failed, false, "Nokta bulutunun yeri dosyalarınındır; taşınmaz, döndürülmez, ölçeklenmez, kopyalanmaz.";
+
+    // ── Blocks ──────────────────────────────────────────────────────────
+    /// An insert's scale that is not above zero (docs/adr/0144).
+    INVALID_SCALE = "invalid_scale", Failed, false, "Yerleştirmenin ölçeği sıfırdan büyük olmalı.";
+    /// A block the drawing does not define.
+    UNKNOWN_BLOCK = "unknown_block", Failed, false, "Adı geçen blok çizimde tanımlı değil.";
+    /// A block name empty or only white space.
+    EMPTY_NAME = "empty_name", Failed, false, "Ad boş ya da yalnız boşluk.";
+    /// A block name the drawing already has, Turkish case folded.
+    DUPLICATE_BLOCK = "duplicate_block", Failed, false, "Çizimde bu adda bir blok zaten var.";
+    /// A definition that would hold itself, directly or through others.
+    BLOCK_CYCLE = "block_cycle", Failed, false, "Tanım kendini doğrudan ya da başka tanımlar üzerinden içerirdi.";
+    /// Blocks that would be nested deeper than 16 levels.
+    BLOCK_TOO_DEEP = "block_too_deep", Failed, false, "Bloklar 16 düzeyden derin iç içe girerdi.";
+    /// `replace` without the layer the insert goes on.
+    NO_LAYER = "no_layer", Failed, false, "Yerleştirmenin gideceği katman verilmedi.";
+    /// No block given where the operation needs one (`cad.blocks.edit`).
+    NO_BLOCK = "no_block", Failed, false, "İşlemin istediği blok verilmedi.";
+    /// No base point given to `rebase` (`cad.blocks.edit`).
+    NO_BASE = "no_base", Failed, false, "Taban noktası verilmedi.";
+    /// A definition an insert uses, in the drawing or in another definition.
+    BLOCK_IN_USE = "block_in_use", Failed, false, "Tanım çizimde ya da başka bir tanımda bir yerleştirmece kullanılıyor.";
+    /// `attributes` without its list (docs/adr/0144 §7).
+    NO_ATTRIBUTES = "no_attributes", Failed, false, "Öznitelik listesi verilmedi.";
+    /// An attribute definition's tag empty or only white space.
+    EMPTY_TAG = "empty_tag", Failed, false, "Öznitelik tanımının etiketi boş.";
+    /// An attribute definition's tag an earlier one of the list has.
+    DUPLICATE_TAG = "duplicate_tag", Failed, false, "Öznitelik tanımının etiketi listede daha önce var.";
+    /// A block rule the checks before it did not see, as the document said it
+    /// (never expected: the commands check the document's own rules first).
+    BLOCK_REFUSED = "block_refused", Failed, false, "Belge blok kuralını reddetti (önceki denetimlerin görmediği bir durum).";
+
+    // ── Map services (docs/adr/0208 §15) ────────────────────────────────
+    /// `add` without a service.
+    NO_SERVICE = "no_service", Failed, false, "Eklemek için servis verilmedi.";
+    /// `addFeed` without a source.
+    NO_FEED = "no_feed", Failed, false, "Eklemek için kaynak verilmedi.";
+    /// A service and a source given together.
+    SERVICE_AND_FEED = "service_and_feed", Failed, false, "Servis ve kaynak birlikte verilemez.";
+    /// A service against its rules (`ServiceLayer::problem`).
+    INVALID_SERVICE = "invalid_service", Failed, false, "Servis kurallarına uymuyor.";
+    /// A source against its rules (`FeatureFeed::problem`).
+    INVALID_FEED = "invalid_feed", Failed, false, "Kaynak kurallarına uymuyor.";
+    /// A layer's fields against their rules (`fields_problem`).
+    INVALID_FIELDS = "invalid_fields", Failed, false, "Katmanın alanları kurallarına uymuyor.";
+    /// The project's connections against their rules (`connections_problem`).
+    INVALID_CONNECTION = "invalid_connection", Failed, false, "Projenin bağlantıları kurallarına uymuyor.";
+    /// An update or a removal of a layer that is not of the kind it changes.
+    NOT_A_SERVICE_LAYER = "not_a_service_layer", Failed, false, "Katman değiştirilen türden değil.";
+    /// A service given to a layer that holds objects.
+    LAYER_HAS_OBJECTS = "layer_has_objects", Failed, false, "Nesne tutan katmana servis verilemez.";
+    /// A service or a source naming a connection the project does not have.
+    UNKNOWN_CONNECTION = "unknown_connection", Failed, false, "Servisin ya da kaynağın adını verdiği bağlantı projede yok.";
+    /// The document refused the change (a layer that may not be removed).
+    LAYER_REFUSED = "layer_refused", Failed, false, "Belge değişikliği reddetti (silinemeyecek bir katman).";
+
+    // ── Networks and addresses (docs/adr/0209 §11, 0229 §14) ────────────
+    /// `set` without a network.
+    NO_NETWORK = "no_network", Failed, false, "Kaydetmek için ağ verilmedi.";
+    /// `remove` without an id.
+    NO_ID = "no_id", Failed, false, "Silmek için kimlik verilmedi.";
+    /// The network, or the project's networks with it, against their rules.
+    INVALID_NETWORK = "invalid_network", Failed, false, "Ağ ya da onunla projenin ağları kurallarına uymuyor.";
+    /// `remove` of a network the project does not have.
+    UNKNOWN_NETWORK = "unknown_network", Failed, false, "Projede bu kimlikte ağ yok.";
+    /// A warning: a network or a locator names a layer the drawing does not have.
+    UNKNOWN_LAYER = "unknown_layer", Warning, false, "Tanım çizimde olmayan bir katmanı adlıyor.";
+    /// `set` without a locator.
+    NO_LOCATOR = "no_locator", Failed, false, "Kaydetmek için adres verisi verilmedi.";
+    /// The locator, or the project's locators with it, against their rules.
+    INVALID_LOCATOR = "invalid_locator", Failed, false, "Adres verisi ya da onunla projeninkiler kurallarına uymuyor.";
+    /// `remove` of a locator the project does not have.
+    UNKNOWN_LOCATOR = "unknown_locator", Failed, false, "Projede bu kimlikte adres verisi yok.";
+
+    // ── Offset, trim, extend, fillet, chamfer (docs/adr/0246, 0250) ─────
+    /// An offset distance not above zero.
+    INVALID_DISTANCE = "invalid_distance", Failed, false, "Uzaklık sıfırdan büyük olmalı.";
+    /// An object of a kind that is not offset (a point, a text, a hatch …).
+    NOT_OFFSETTABLE = "not_offsettable", Failed, false, "Bu türden nesne ötelenmez (nokta, yazı, tarama …).";
+    /// A copy the core could not make (a warning), or none at all (a refusal).
+    OFFSET_FAILED = "offset_failed", FailedOrWarning, false, "Çekirdek kopyayı yapamadı: bazı nesnelerde uyarı, hiçbirinde ret.";
+    /// An object Buda cannot cut: an area with holes.
+    NOT_TRIMMABLE = "not_trimmable", Failed, false, "Delikli alan budanamaz.";
+    /// A pick Buda could not cut (a warning), or none at all (a refusal).
+    TRIM_FAILED = "trim_failed", FailedOrWarning, false, "Seçilen yer budanamadı: bazılarında uyarı, hiçbirinde ret.";
+    /// A pick Uzat could not grow (a warning), or none at all (a refusal).
+    EXTEND_FAILED = "extend_failed", FailedOrWarning, false, "Seçilen uç uzatılamadı: bazılarında uyarı, hiçbirinde ret.";
+    /// What names no corner: a vertex out of its path or beside an arc, two lines that are one or parallel.
+    NOT_A_CORNER = "not_a_corner", Failed, false, "Verilen yer bir köşe değil: yolun dışında ya da yay yanında bir köşe, ya da tek ya da paralel iki çizgi.";
+    /// A radius that does not fit the corner (with `all`: no corner).
+    FILLET_FAILED = "fillet_failed", Failed, false, "Yarıçap köşeye sığmıyor (bütün köşelerde: hiçbir köşeye).";
+    /// Distances that do not fit the corner (with `all`: no corner).
+    CHAMFER_FAILED = "chamfer_failed", Failed, false, "Uzaklıklar köşeye sığmıyor (bütün köşelerde: hiçbir köşeye).";
+
+    // ── Esnet, Kır, Birleştir, Böl, Alan oluştur, Tarama (docs/adr/0254) ─
+    /// Objects on a locked layer left out of a selection or a window (Esnet, Birleştir).
+    LOCKED_SKIPPED = "locked_skipped", Warning, false, "Kilitli katmandaki nesneler dışarıda kaldı; kilitli katmandaki nesne değişmez.";
+    /// A listed object without a vertex in the window (Esnet).
+    OUTSIDE_WINDOW = "outside_window", Warning, false, "Nesnenin pencerede köşesi yok; esnemez.";
+    /// No object left to stretch (Esnet).
+    NOTHING_TO_STRETCH = "nothing_to_stretch", Failed, false, "Pencerede köşesi olan düzenlenebilir nesne yok.";
+    /// A neighbour on a locked layer that could not follow (Topolojik düzenleme).
+    NEIGHBOUR_LOCKED = "neighbour_locked", Warning, false, "Kilitli katmandaki komşu nesne değişmedi; ortak sınır ayrıldı.";
+    /// A neighbour that following would leave invalid (Topolojik düzenleme).
+    NEIGHBOUR_INVALID = "neighbour_invalid", Warning, false, "Komşu nesne geçersiz kalacağı için değişmedi.";
+    /// An object of a kind Kır does not break.
+    NOT_BREAKABLE = "not_breakable", Failed, false, "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ya da ışın olmalı.";
+    /// The core could not break the object there.
+    BREAK_FAILED = "break_failed", Failed, false, "Nesne bu noktalarda kırılamadı.";
+    /// A chain's seed that is not a line, an arc or an open polyline (Zincir).
+    NOT_JOINABLE = "not_joinable", Failed, false, "Zincir bir çizgiden, yaydan ya da açık çoklu çizgiden başlar.";
+    /// No chain of two objects meeting end to end (Birleştir).
+    NOTHING_TO_JOIN = "nothing_to_join", Failed, false, "Uçları buluşan çizgi, yay ya da açık çoklu çizgi yok.";
+    /// The core refused the join.
+    JOIN_FAILED = "join_failed", Failed, false, "Nesneler birleştirilemedi.";
+    /// A chain that stopped at an object on a locked layer (Zincir).
+    CHAIN_STOPPED = "chain_stopped", Warning, false, "Zincir kilitli katmandaki bir nesnede durdu.";
+    /// An object of a kind Böl does not divide.
+    NOT_DIVISIBLE = "not_divisible", Failed, false, "Bu türdeki nesne bölünmez: çizgi, çoklu çizgi, alan, yay, daire, elips ya da eğri olmalı.";
+    /// A step longer than the object: no point (Böl).
+    NO_POINTS = "no_points", Failed, false, "Aralık nesnenin boyundan uzun; nokta konmaz.";
+    /// More points than a division places (Böl).
+    TOO_MANY_POINTS = "too_many_points", Failed, false, "10 000'den çok nokta olurdu; daha büyük bir aralık verin.";
+    /// No closed region around the point (Alan oluştur, Tarama).
+    NOT_ENCLOSED = "not_enclosed", Failed, false, "Nokta kapalı bir bölgenin içinde değil.";
+    /// An object of Çoklu tara that is not closed: left out, or the refusal when none is.
+    NOT_CLOSED = "not_closed", FailedOrWarning, false, "Nesne kapalı değil: alan, daire, tam elips ya da kapalı eğri taranır; bazılarında uyarı, hiçbirinde ret.";
+    /// A pattern too dense for the region (Tarama).
+    PATTERN_TOO_DENSE = "pattern_too_dense", Failed, false, "Desen bu bölge için çok sık; ölçeği büyütün ya da başka bir desen seçin.";
+    /// A pattern's name the library does not have (Tarama).
+    UNKNOWN_PATTERN = "unknown_pattern", Failed, false, "Bu adda desen yok; desen kitaplığındaki bir adı verin.";
+
+    // ── Associative dimensions (docs/adr/0249 §3) ───────────────────────
+    /// An object that is not a dimension where one is asked for.
+    NOT_A_DIMENSION = "not_a_dimension", Failed, false, "Ölçü istenen yerde ölçü olmayan bir nesne verildi.";
+    /// A place its object does not have.
+    NO_SUCH_PLACE = "no_such_place", Failed, false, "Nesnenin böyle bir yeri yok (halkasının ötesinde bir köşe, çizginin merkezi).";
+
+    // ── Dimensions from what they measure (docs/adr/0255) ───────────────
+    /// An object without an edge of the kind a dimension measures.
+    NOT_MEASURABLE = "not_measurable", Failed, false, "Nesnede ölçünün aradığı türde kenar yok (düz kenar, uçları olan yay ya da daire).";
+    /// Eğim's point with no elevation given or kept.
+    MISSING_ELEVATION = "missing_elevation", Failed, false, "Eğim için noktanın kotu verilmedi ve yerinde kot yok.";
+    /// A distance given to a dimension that takes none (Yarıçap, Çap, Koordinat).
+    INVALID_OFFSET = "invalid_offset", Failed, false, "Bu ölçü türü uzaklık almaz; yerini at verir.";
+    /// No dimension forms where it is placed.
+    NO_DIMENSION = "no_dimension", Failed, false, "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor, kenarlar paralel ya da yay boş.";
+
+    // ── Time and scenarios (docs/adr/0210 §11) ──────────────────────────
+    /// A time setting against its rules.
+    INVALID_TIME = "invalid_time", Failed, false, "Zaman ayarı kurallarına uymuyor.";
+    /// A name longer than 80 characters.
+    INVALID_NAME = "invalid_name", Failed, false, "Ad 80 karakterden uzun.";
+    /// A scenario's note against its rules.
+    INVALID_NOTE = "invalid_note", Failed, false, "Senaryonun notu kurallarına uymuyor.";
+    /// A layer listed twice.
+    DUPLICATE_LAYER = "duplicate_layer", Failed, false, "Bir katman iki kez listelendi.";
+    /// `apply` without a scenario.
+    NO_SCENARIO = "no_scenario", Failed, false, "Uygulamak için senaryo verilmedi.";
+    /// A layer to copy that is not a base layer.
+    NOT_A_BASE_LAYER = "not_a_base_layer", Failed, false, "Kopyalanacak katman ana katman değil: grup, senaryo katmanı ya da servisten çizilen katman.";
+    /// `apply` of a node that is not a scenario group.
+    SCENARIO_NOT_FOUND = "scenario_not_found", Failed, false, "Verilen düğüm bir senaryo grubu değil.";
+
+    // ── Filters, cards, composition, labels ─────────────────────────────
+    /// A filter against its rules (docs/adr/0211 §5).
+    INVALID_FILTER = "invalid_filter", Failed, false, "Süzgeç kurallarına uymuyor.";
+    /// A filter's condition that does not compile, or reads `$sıra` or `$ölçek`.
+    INVALID_EXPRESSION = "invalid_expression", Failed, false, "Süzgecin koşulu derlenmiyor ya da $sıra veya $ölçek okuyor.";
+    /// A layer's actions against their rules (docs/adr/0225).
+    INVALID_ACTIONS = "invalid_actions", Failed, false, "Katmanın eylemleri kurallarına uymuyor.";
+    /// A layer's information card against its rules.
+    INVALID_CARD = "invalid_card", Failed, false, "Katmanın bilgi kartı kurallarına uymuyor.";
+    /// A template whose braces do not close, are empty, or whose expression
+    /// does not compile, reads `$sıra` or `$ölçek`, or looks at other layers.
+    INVALID_TEMPLATE = "invalid_template", Failed, false, "Şablonun parantezleri kapanmıyor ya da boş; ya da ifadesi derlenmiyor, $sıra veya $ölçek okuyor ya da başka katmanlara bakıyor.";
+    /// An object's attachments against their rules.
+    INVALID_ATTACHMENTS = "invalid_attachments", Failed, false, "Nesnenin ekleri kurallarına uymuyor.";
+    /// An opacity outside 0–1, or a mask against its rule (docs/adr/0226).
+    INVALID_COMPOSE = "invalid_compose", Failed, false, "Saydamlık 0–1 aralığında değil ya da maske kuralına uymuyor.";
+    /// A mask cutting into its own layer.
+    MASK_TARGET_SELF = "mask_target_self", Failed, false, "Maske kendi katmanını kesiyor.";
+    /// A mask's target the drawing does not have.
+    MASK_TARGET_NOT_FOUND = "mask_target_not_found", Failed, false, "Maskenin hedefi çizimde yok.";
+    /// A mask's target that is a group.
+    MASK_TARGET_NOT_A_LAYER = "mask_target_not_a_layer", Failed, false, "Maskenin hedefi bir grup.";
+    /// A label style or a layer's labelling against its rules (docs/adr/0212 §5).
+    INVALID_LABELS = "invalid_labels", Failed, false, "Etiket stili ya da katmanın etiketlemesi kurallarına uymuyor.";
+    /// A pin against its rules, its class not its change's, a label changed twice.
+    INVALID_PIN = "invalid_pin", Failed, false, "İğne kurallarına uymuyor, sınıfı değişikliğinin değil ya da bir etiket iki kez değişiyor.";
+    /// A class the object's layer does not label with.
+    UNKNOWN_CLASS = "unknown_class", Failed, false, "Nesnenin katmanı bu sınıfla etiketlemiyor.";
+
+    // ── The layer tree, styles, settings (docs/adr/0248) ────────────────
+    /// No layer named where one is needed.
+    NO_LAYERS = "no_layers", Failed, false, "Katman gereken yerde katman verilmedi.";
+    /// A layer's colour that is not `#rrggbb` nor a theme token.
+    INVALID_COLOR = "invalid_color", Failed, false, "Katmanın rengi #rrggbb ya da tema jetonu değil.";
+    /// A node moved into a layer rather than a group.
+    NOT_A_GROUP = "not_a_group", Failed, false, "Düğüm grup yerine bir katmanın içine taşınıyor.";
+    /// A node moved into itself or a group under it.
+    MOVE_INTO_ITSELF = "move_into_itself", Failed, false, "Düğüm kendine ya da altındaki bir gruba taşınıyor.";
+    /// Visible or locked without its value.
+    NO_VALUE = "no_value", Failed, false, "Görünürlük ya da kilit değersiz verildi.";
+    /// A layer state's operation without its state.
+    NO_STATE = "no_state", Failed, false, "Katman durumu işleminin durumu verilmedi.";
+    /// A layer state the project does not have.
+    STATE_NOT_FOUND = "state_not_found", Failed, false, "Projede bu katman durumu yok.";
+    /// A layer state's name another state has.
+    DUPLICATE_NAME = "duplicate_name", Failed, false, "Bu ad başka bir durumun.";
+    /// A style created or updated without its definition.
+    NO_DEFINITION = "no_definition", Failed, false, "Stilin tanımı verilmedi.";
+    /// A style renamed or removed without its id.
+    NO_STYLE = "no_style", Failed, false, "Stilin kimliği verilmedi.";
+    /// A style the project's table does not have.
+    STYLE_NOT_FOUND = "style_not_found", Failed, false, "Projenin tablosunda bu stil yok.";
+    /// A style created with an id the table has.
+    DUPLICATE_STYLE = "duplicate_style", Failed, false, "Tabloda bu kimlikte stil zaten var.";
+    /// A project type that cannot be chosen.
+    INVALID_PROJECT_TYPE = "invalid_project_type", Failed, false, "Bu proje türü seçilemez.";
+    /// Shown decimals out of 0–4.
+    INVALID_DECIMALS = "invalid_decimals", Failed, false, "Gösterilen basamak 0–4 aralığında olmalı.";
+    /// A coordinate system the registry does not have.
+    UNKNOWN_SRID = "unknown_srid", Failed, false, "Bu koordinat sistemi kayıtta yok.";
+    /// A second system for a project without one.
+    SECOND_NEEDS_SYSTEM = "second_needs_system", Failed, false, "Koordinat sistemi olmayan projeye ikinci sistem verilemez.";
+    /// The second system the project's own.
+    SECOND_IS_OWN = "second_is_own", Failed, false, "İkinci sistem projenin kendi sistemi.";
+    /// A drawing unit other than metres for a project with a system.
+    UNIT_NEEDS_LOCAL = "unit_needs_local", Failed, false, "Metreden başka çizim birimi yalnız yerel projede olur.";
+
+    // ── The sheet book (docs/adr/0252 §2) and the sheet core's refusals ─
+    /// No operation given.
+    NO_OPERATIONS = "no_operations", Failed, false, "Hiç işlem verilmedi.";
+    /// An operation the sheet core does not read.
+    INVALID_OPERATION = "invalid_operation", Failed, false, "Pafta çekirdeği bu işlemi okumuyor.";
+    /// The project's sheet book is one the sheet core cannot read.
+    BOOK_UNREADABLE = "book_unreadable", Failed, false, "Projenin pafta kitabı çekirdeğin okuyamadığı bir kitap; olduğu gibi kalır.";
+    /// A sheet the book does not have.
+    UNKNOWN_SHEET = "unknown_sheet", Failed, false, "Kitapta bu kimlikte pafta yok.";
+    /// An item the book does not have.
+    UNKNOWN_ITEM = "unknown_item", Failed, false, "Kitapta bu kimlikte öğe yok.";
+    /// A master page the book does not have.
+    UNKNOWN_MASTER = "unknown_master", Failed, false, "Kitapta bu kimlikte ana sayfa yok.";
+    /// An id the book or the operation already has.
+    DUPLICATE_ID = "duplicate_id", Failed, false, "Bu kimlik kitapta ya da işlemde zaten var.";
+    /// An operation on items given none.
+    NO_ITEMS = "no_items", Failed, false, "İşlem için en az bir öğe gerekir.";
+    /// An operation's items on different sheets.
+    MIXED_OWNERS = "mixed_owners", Failed, false, "Bir işlemin öğeleri aynı paftada (ya da aynı ana sayfada) olmalı.";
+    /// A locked item or guide.
+    ITEM_LOCKED = "item_locked", Failed, false, "Öğe ya da kılavuz kilitli; önce kilidini açın.";
+    /// Ids not one for each item.
+    IDS_MISSING = "ids_missing", Failed, false, "Kimlikler her öğeye bir tane değil.";
+    /// A master page a sheet uses.
+    MASTER_IN_USE = "master_in_use", Failed, false, "Ana sayfa bir paftada kullanılıyor.";
+    /// A sheet without a master page.
+    NO_MASTER = "no_master", Failed, false, "Bu paftanın ana sayfası yok.";
+    /// A new order that does not count every item once.
+    BAD_ORDER = "bad_order", Failed, false, "Yeni sıra paftanın öğelerinin hepsini birer kez saymalı.";
+    /// A guide the sheet does not have.
+    UNKNOWN_GUIDE = "unknown_guide", Failed, false, "Bu kimlikte kılavuz yok.";
+    /// A picture an item uses.
+    ASSET_IN_USE = "asset_in_use", Failed, false, "Resim bir öğede kullanılıyor.";
+    /// A layout variant the book does not have.
+    UNKNOWN_VARIANT = "unknown_variant", Failed, false, "Bu kimlikte yerleşim düzeni yok.";
+    /// A table that flows into the frame to be removed.
+    ITEM_IN_USE = "item_in_use", Failed, false, "Öğe başka bir öğenin taşma çerçevesi; önce onu değiştirin.";
+    /// A property patch that does not fit the item.
+    BAD_PATCH = "bad_patch", Failed, false, "Özellik yaması öğeye uymuyor.";
+    /// An item's kind changed by a patch.
+    KIND_CHANGE = "kind_change", Failed, false, "Öğenin türü yamayla değişmez; yeni türde bir öğe ekleyin.";
+    /// A grouping against its rules.
+    BAD_GROUP = "bad_group", Failed, false, "Gruplama kurallarına uymuyor.";
+
+    // ── The change set (docs/adr/0253 §8) ───────────────────────────────
+    /// No step given.
+    NO_STEPS = "no_steps", Failed, false, "Hiç adım verilmedi.";
+    /// A step that is a change set itself.
+    NESTED_CHANGESET = "nested_changeset", Failed, false, "Değişiklik kümesi iç içe verilemez.";
+    /// A step that writes a file: its effect could not be taken back.
+    SIDE_EFFECT_IN_CHANGESET = "side_effect_in_changeset", Failed, false, "Dosyaya yazan komut değişiklik kümesine giremez: yan etkisi geri alınamaz.";
+    /// A command this host does not run.
+    UNKNOWN_COMMAND = "unknown_command", Failed, false, "Bu komut burada çalışmıyor ya da katalogda yok.";
+    /// A command only the server runs, called on an open drawing.
+    SERVER_COMMAND = "server_command", Failed, false, "Komut sunucuda çalışır, açık çizimde değil; bir sunucu bağlantısıyla çağırın.";
+    /// A command's version this host does not run.
+    UNKNOWN_VERSION = "unknown_version", Failed, false, "Komutun bu sürümü burada çalışmıyor.";
+    /// Input that does not read as the command's type.
+    INVALID_INPUT = "invalid_input", Failed, false, "Girdi komutun türü olarak okunamıyor; kataloğun girdi şemasına bakın.";
+    /// A `$name` reference to no earlier step, or to an output it does not have.
+    UNKNOWN_REFERENCE = "unknown_reference", Failed, false, "Başvuru önceki bir adımı ya da onun bir çıktısını adlamıyor.";
+
+    // ── Files (docs/adr/0253 §10) ───────────────────────────────────────
+    /// A path that is empty, relative, a directory or under no directory.
+    INVALID_FILE_PATH = "invalid_file_path", Failed, false, "Dosya yolu boş, göreli ya da bir klasör; ya da klasörü yok.";
+    /// A file that exists, and `overwrite` is false.
+    FILE_EXISTS = "file_exists", Failed, false, "Dosya var ve üzerine yazılması istenmedi.";
+    /// The file could not be written or read back.
+    FILE_UNWRITABLE = "file_unwritable", Failed, false, "Dosya yazılamadı ya da geri okunduğunda aynı çıkmadı; eski dosya olduğu gibi kaldı.";
+    /// A drawing with nothing to write.
+    NOTHING_TO_EXPORT = "nothing_to_export", Failed, false, "Çizimde yazılacak nesne yok.";
+    /// A project with no sheet to print.
+    NO_SHEETS = "no_sheets", Failed, false, "Projenin pafta kitabında pafta yok.";
+    /// The PDF could not be made.
+    PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
+
+    // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
+    /// A job cancelled after it was written: the write stands.
+    ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";
+    /// A job id this host does not know.
+    UNKNOWN_JOB = "unknown_job", Failed, false, "Bu kimlikte iş yok.";
+
+    // ── The host itself: the library, the console, the tool server ──────
+    /// A method the host does not have (the agent link, `rpc`).
+    UNKNOWN_METHOD = "unknown_method", Host, false, "Bu bağlantıda böyle bir yöntem yok.";
+    /// No object, layer or block with that id in this drawing (a query).
+    UNKNOWN_OBJECT = "unknown_object", Host, false, "Bu çizimde o kimlikte nesne, katman ya da blok yok.";
+    /// A coordinate system the registry does not know.
+    UNKNOWN_SYSTEM = "unknown_system", Host, false, "Koordinat sistemi kayıtta yok; EPSG kodunu ya da tanımı denetleyin.";
+    /// A file that cannot be read, or is not a KentOS drawing.
+    FILE_UNREADABLE = "file_unreadable", Host, false, "Dosya okunamadı ya da bir KentOS çizimi (.kcad) değil.";
+    /// An old v1 file a save would write over.
+    LEGACY_FILE = "legacy_file", Host, false, "Eski (v1) çizimin üzerine yazılmaz; kaydı yeni bir yola yapın.";
+    /// A save with nowhere to go.
+    NO_PATH = "no_path", Host, false, "Kaydın gideceği yol yok; bir dosya yolu verin.";
+    /// The drawing refuses it as it is: a group is open.
+    BUSY = "busy", Host, false, "Çizim şu an bunu almıyor: açık bir grup var; önce grubu kapatın.";
+    /// An answer that could not be written as JSON.
+    UNWRITABLE_RESULT = "unwritable_result", Host, false, "Cevap JSON olarak yazılamadı.";
+    /// In the desktop's console: what the desktop does itself (undo, redo, save).
+    NOT_IN_CONSOLE = "not_in_console", Host, false, "Bunu konsol değil masaüstü yapar: Geri al, Yinele ve Kaydet masaüstündedir.";
+    /// The desktop has no drawing open.
+    NO_DOCUMENT = "no_document", Host, false, "Masaüstünde açık çizim yok.";
+    /// The desktop's drawing asked for where there is no desktop: a script
+    /// outside its console, or an agent link that is not open.
+    NO_DESKTOP = "no_desktop", Host, false, "Masaüstüne ulaşılamıyor: betik masaüstünün konsolunda çalışmıyor ya da ajan bağlantısı açık değil (Python sekmesinde “Ajanlara aç”).";
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn every_code_is_once_and_plain() {
+        let mut seen = HashSet::new();
+        for c in CODES {
+            assert!(seen.insert(c.code), "{} twice", c.code);
+            assert!(
+                c.code.bytes().all(|b| b.is_ascii_lowercase() || b == b'_'),
+                "{}",
+                c.code
+            );
+            assert!(!c.meaning.is_empty(), "{}", c.code);
+            assert_eq!(
+                c.retryable,
+                c.kind == CodeKind::Conflict,
+                "{}: only a conflict is retryable",
+                c.code
+            );
+        }
+    }
+
+    #[test]
+    fn a_code_is_found_by_name() {
+        assert_eq!(info(STALE_STATE).map(|c| c.kind), Some(CodeKind::Conflict));
+        assert!(retryable(REVISION_CONFLICT));
+        assert!(!retryable(LAYER_LOCKED));
+        assert!(info("nope").is_none());
+    }
+}

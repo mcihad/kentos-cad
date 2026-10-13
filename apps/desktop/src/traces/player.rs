@@ -636,7 +636,10 @@ impl<'a> Player<'a> {
                     .filter(|line| line.id > said)
                     .map(|line| line.text.clone())
                     .collect();
-                let bad = compare(expect, &seen, self.trace);
+                let mut bad = compare(expect, &seen, self.trace);
+                if let Some(want) = &expect.journal {
+                    bad.extend(super::journal::problems(self.app, self.trace, want));
+                }
                 if !bad.is_empty() {
                     problems.push(format!("{label}: {}", bad.join("; ")));
                 }

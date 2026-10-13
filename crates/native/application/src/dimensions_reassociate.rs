@@ -32,7 +32,7 @@ pub use crate::codes;
 pub const LABEL: &str = "Ölçüyü yeniden bağla";
 
 fn fail(code: &str, message: String, path: String) -> Stop {
-    Stop::Failed(error(code, message, Some(path)))
+    Stop::failed(error(code, message, Some(path)))
 }
 
 /// What the checks give: the dimension's slot, it as it would be, and how many points change.
@@ -260,6 +260,21 @@ pub fn plan(
 
 /// Writes the dimension as one undo step when any point changes.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: DimensionsReassociate,
+) -> CommandResult<DimensionsReassociated> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_DIMENSIONS_REASSOCIATE,
+        kentos_contracts::CAD_DIMENSIONS_REASSOCIATE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: DimensionsReassociate,
 ) -> CommandResult<DimensionsReassociated> {

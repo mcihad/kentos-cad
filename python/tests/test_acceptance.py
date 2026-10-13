@@ -59,9 +59,15 @@ def bind(value: Any, names: dict[str, str]) -> Any:
 class Acceptance(unittest.TestCase):
     def test_the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says(self) -> None:
         p = SCENARIO["project"]
-        doc = cad.Document.new(p["name"], workspace=p["workspace"], coords=p["coords"],
-                               drawing_unit=p["drawingUnit"], plot_scale=p["plotScale"])
+
+        def new() -> cad.Document:
+            return cad.Document.new(p["name"], workspace=p["workspace"], coords=p["coords"],
+                                    drawing_unit=p["drawingUnit"], plot_scale=p["plotScale"])
+
+        doc = new()
         names: dict[str, str] = {"layer": doc.active_layer}
+        # The journal is the session's (docs/adr/0253 §3): taken before every reopening.
+        rows: list[dict[str, Any]] = []
         tolerance = SCENARIO["tolerance"]
         for step in SCENARIO["steps"]:
             name = step["name"]
@@ -77,6 +83,7 @@ class Acceptance(unittest.TestCase):
             elif "undo" in step:
                 self.assertEqual(doc.undo(), step["undo"], name)
             elif step.get("reopen"):
+                rows += doc.journal()["calls"]
                 doc = cad.Document.from_bytes(doc.to_bytes())
             problems: list[str] = []
             expect = step.get("expect", {})
@@ -103,6 +110,37 @@ class Acceptance(unittest.TestCase):
             if "count" in expect:
                 problems += matches(len(doc), expect["count"], 0, "nesne sayısı")
             self.assertEqual(problems, [], name)
+        self.replays_the_journal(doc, rows + doc.journal()["calls"], new())
+
+    def replays_the_journal(self, doc: cad.Document, rows: list[dict[str, Any]], fresh: cad.Document) -> None:
+        """The record says what ran, in order, and replays (docs/adr/0253 §3): on a new drawing of the same
+        project every command row done is the same, the undone ones are not run, the files are planned
+        again, not written; the replayed drawing is the same drawing."""
+        ran = [s["command"] for s in SCENARIO["steps"] if "command" in s]
+        recorded = [r["command"] for r in rows if r["kind"] == "command" and not r.get("effects")]
+        self.assertEqual(recorded, ran, "the record's commands are the scenario's, in order")
+        self.assertEqual([r for r in rows if r["kind"] == "edit"], [], "every write went through a command")
+        undone = sum(1 for s in SCENARIO["steps"] if "undo" in s)
+        self.assertEqual(sum(1 for r in rows if r["status"] == "undone"), undone)
+        report = fresh.replay(dict(doc.journal(), calls=rows))
+        done = sum(1 for r in rows if r["kind"] == "command" and r["status"] == "done" and not r.get("effects"))
+        wrong = [x for x in report.steps if x.outcome in ("differs", "failed")]
+        # The files were written to folders gone since: planned again, they are skipped, never written.
+        self.assertEqual((report.same, report.failed, report.differs), (done, 0, 0), wrong)
+        # The same drawing: every object, by the id the replay made in its place.
+        self.assertEqual(len(fresh), len(doc))
+        for record in doc.entities():
+            mine = record.entity.to_json()
+            theirs = fresh.entity(report.mapped.get(record.uid, record.uid)).entity.to_json()
+            self.assertEqual(json.loads(json.dumps(theirs)),
+                             json.loads(rename(json.dumps(mine), report.mapped)), record.uid)
+
+
+def rename(text: str, names: dict[str, str]) -> str:
+    """``text`` with every id the replay made anew written as the replay's."""
+    for old, new in names.items():
+        text = text.replace(old, new)
+    return text
 
 
 if __name__ == "__main__":

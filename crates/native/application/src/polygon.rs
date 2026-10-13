@@ -70,6 +70,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: PolygonCreate,
 ) -> CommandResult<PolygonCreated> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_POLYGON_CREATE,
+        kentos_contracts::CAD_POLYGON_CREATE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: PolygonCreate,
+) -> CommandResult<PolygonCreated> {
     let warnings = match check(cx.doc, &input) {
         Ok(warnings) => warnings,
         Err(stop) => return stop.into(),
@@ -79,7 +94,7 @@ pub fn execute(
             output: PolygonCreated { uid, id, revision },
             warnings,
         },
-        Err(error) => CommandResult::Failed { error },
+        Err(stop) => stop.into(),
     }
 }
 
@@ -139,7 +154,7 @@ fn check_ring(ring: Ring, pts: &[Vec2], bulges: Option<&[f64]>) -> Result<(), St
                 h + 1
             ),
         };
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::TOO_FEW_CORNERS,
             message,
             Some(ring.path("pts")),
@@ -164,7 +179,7 @@ fn check_ring(ring: Ring, pts: &[Vec2], bulges: Option<&[f64]>) -> Result<(), St
             Ring::Outer => "Yay değerleri".to_owned(),
             Ring::Hole(h) => format!("{}. deliğin yay değerleri", h + 1),
         };
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::BULGE_COUNT,
             format!(
                 "{whose} köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: {n} köşe, {} yay değeri verildi. Eksik ya da fazla değerleri düzeltin.",
@@ -175,7 +190,7 @@ fn check_ring(ring: Ring, pts: &[Vec2], bulges: Option<&[f64]>) -> Result<(), St
     }
     for (i, b) in bulges.iter().enumerate() {
         if !b.is_finite() {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::NOT_FINITE,
                 format!(
                     "{} yay değeri sonlu bir sayı değil (NaN ya da sonsuz). Düz kenar için 0, yay için tan(açı/4) verin.",

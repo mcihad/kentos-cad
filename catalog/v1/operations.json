@@ -950,8 +950,12 @@
       "operation": "perpendicularOut"
     },
     "divide": {
-      "level": "geometry",
-      "operation": "divide"
+      "level": "semantic",
+      "via": [
+        "cad.entities.divide"
+      ],
+      "was": "cad.entities.create",
+      "note": "Nesne, parça sayısı ya da aralık ve başlangıç ucu komuta verilir (ADR 0254 §5)."
     },
     "pointsBetween": {
       "level": "geometry",
@@ -1000,8 +1004,12 @@
       "operation": "adjoin"
     },
     "boundary": {
-      "level": "geometry",
-      "operation": "boundary"
+      "level": "semantic",
+      "via": [
+        "cad.entities.boundary"
+      ],
+      "was": "cad.entities.create",
+      "note": "Tıklanan nokta, görünüm ve Sınır katmanı komuta verilir; bölgeyi komut bulur (ADR 0254 §6)."
     },
     "polygonize": {
       "level": "geometry",
@@ -1011,17 +1019,28 @@
       "level": "geometry"
     },
     "hatch": {
-      "level": "geometry",
-      "operation": "hatch",
-      "note": "Bölge araçta bulunur; komut son taramayı alır."
+      "level": "semantic",
+      "via": [
+        "cad.entities.hatch"
+      ],
+      "was": "cad.entities.create",
+      "note": "Tıklanan nokta, yöntem, adalar ve desen komuta verilir; bölgeyi komut bulur (ADR 0254 §7)."
     },
     "hatchSelected": {
-      "level": "geometry",
-      "operation": "hatch"
+      "level": "semantic",
+      "via": [
+        "cad.entities.hatch"
+      ],
+      "was": "cad.entities.create",
+      "note": "Seçilen kapalı nesneler komuta verilir (Çoklu tara, ADR 0254 §7)."
     },
     "dimension": {
       "level": "semantic",
-      "note": "Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in kenetle bir yere oturan noktası nesneye bağlanır (refs, ADR 0249); öbür türler tanım noktalarını saklar.",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in yere oturan noktası nesneye bağlanır (ADR 0249, 0255).",
       "methods": {
         "Hizalı": "semantic",
         "Doğrusal": "semantic",
@@ -1029,10 +1048,10 @@
         "Koordinat": "semantic",
         "Semt": "semantic",
         "Eğim": "semantic",
-        "Yarıçap": "geometry",
-        "Çap": "geometry",
-        "Yay uzunluğu": "geometry",
-        "Kırıklı yarıçap": "geometry"
+        "Yarıçap": "semantic",
+        "Çap": "semantic",
+        "Yay uzunluğu": "semantic",
+        "Kırıklı yarıçap": "semantic"
       }
     },
     "dimContinue": {
@@ -1214,12 +1233,20 @@
       "note": "Nesneler `all` köşesiyle ve iki mesafe komuta verilir (ADR 0250)."
     },
     "break": {
-      "level": "geometry",
-      "operation": "break"
+      "level": "semantic",
+      "via": [
+        "cad.entities.break"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesne ve iki nokta komuta verilir; parçalar çekirdekten (ADR 0254 §3)."
     },
     "join": {
-      "level": "geometry",
-      "operation": "join"
+      "level": "semantic",
+      "via": [
+        "cad.entities.join"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesneler ya da Zincir'in tohumu ve görünüm komuta verilir (ADR 0254 §4)."
     },
     "explode": {
       "level": "geometry",
@@ -1234,8 +1261,12 @@
       "operation": "vertexAdd"
     },
     "stretch": {
-      "level": "geometry",
-      "operation": "stretch"
+      "level": "semantic",
+      "via": [
+        "cad.entities.stretch"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Pencere, yer değiştirme, seçim ve Topoloji'nin durumu komuta verilir; komşular komutta izler (ADR 0254 §2)."
     },
     "split": {
       "level": "geometry",

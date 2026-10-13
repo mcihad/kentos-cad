@@ -1495,6 +1495,42 @@ def sheets(s):
     return cmap(fields(s, {"book": (opaque, True), "pictures": (lambda ps: array([picture(p) for p in ps]), False)}, "sheets"))
 
 
+def requests(rs):
+    """The request ledger (schema 45, docs/adr/0253 §6): the requests a drawing executed, in their order; each its id,
+    its fingerprint (32 hex digits, 16 bytes in the file), the command, its version, the revision after it (decimal
+    text), its status and the answer then; none twice; no requests, no field."""
+    assert rs, "boş istek listesi yazılmaz"
+    assert len(rs) <= 256, "en çok 256 istek yazılır"
+    seen = set()
+
+    def request(r):
+        rid = r["requestId"]
+        assert 1 <= len(rid) <= 128 and all(c.isascii() and (c.isalnum() or c in "._:-") for c in rid), rid
+        assert rid not in seen, "aynı istek iki kez yazılmış"
+        seen.add(rid)
+        assert len(r["fingerprint"]) == 32 and all(c in "0123456789abcdef" for c in r["fingerprint"])
+        assert r["command"] and r["version"] >= 1 and r["revision"].isdigit()
+        assert r["status"] in ("done", "undone")
+        assert len(r.get("answer", "").encode("utf-8")) <= 64 * 1024
+        return cmap(
+            fields(
+                r,
+                {
+                    "requestId": (text, True),
+                    "fingerprint": (lambda h: blob(bytes.fromhex(h)), True),
+                    "command": (text, True),
+                    "version": (uint, True),
+                    "revision": (text, True),
+                    "status": (text, True),
+                    "answer": (text, False),
+                },
+                "istek",
+            )
+        )
+
+    return array([request(r) for r in rs])
+
+
 def document(d):
     """The payload of a drawing given in the contract's JSON form (`DocumentSnapshotV2`)."""
     assert d["format"] == "kentos.document" and d["version"] == 2
@@ -1513,6 +1549,7 @@ def document(d):
             "styles": (lambda s: cmap(fields(s, {"items": (lambda xs: array([opaque(x) for x in xs]), True), "categories": (lambda xs: array([opaque(x) for x in xs]), True)}, "styles")), True),
             "projectId": (lambda u: blob(uid_bytes(u)), False),
             "sheets": (sheets, False),
+            "requests": (requests, False),
             "migratedFrom": (
                 lambda m: cmap(fields(m, {"format": (text, True), "version": (uint, True), "sourceSha256": (lambda h: blob(bytes.fromhex(h)), True)}, "migratedFrom")),
                 False,
@@ -1521,10 +1558,10 @@ def document(d):
         "belge",
     )
     assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d)))
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d)))
 
 
-def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False):
+def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False):
     """The oldest schema that holds the drawing: 44 with the project's sheet book (docs/adr/0251), 43 with a dimension's references (docs/adr/0249 §4), 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
     attachments or a layer's actions or card (docs/adr/0225), 39 with vertex measures (docs/adr/0224), 38 with a raster's
     dataset or its look's edges (docs/adr/0243 §6), 37 with the settings' variables (docs/adr/0214 §2.3), 36 with the
@@ -1614,6 +1651,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False)
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    if has_requests:
+        return 45
     if has_sheets:
         return 44
     if any(e["kind"] == "dimension" and "refs" in e for e in entities):
@@ -1896,7 +1935,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-45.kcad"] = container(root(cmap(parts), version=uint(45)))
+    files["schema-version-46.kcad"] = container(root(cmap(parts), version=uint(46)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2610,6 +2649,34 @@ def broken(minimal_content, minimal_file):
     files["sheets-picture-twice.kcad"] = sheeted(cmap({"book": book_, "pictures": array([picture_(), picture_()])}))
     files["sheets-picture-sha256-length.kcad"] = sheeted(cmap({"book": book_, "pictures": array([picture_(sha=logo_sha[:31])])}))
     files["sheets-picture-unknown-field.kcad"] = sheeted(cmap({"book": book_, "pictures": array([picture_(name=text("logo.png"))])}))
+
+    # The request ledger is schema 45's (docs/adr/0253 §6): in schema 44 an unknown field; not empty; each request's
+    # fields its own, all of them but the answer required; the id by its rule and once; the fingerprint 16 bytes; the
+    # status done or undone; the revision decimal digits; the version from 1.
+    def request_(**over):
+        base = {
+            "status": text("done"),
+            "command": text("cad.entities.delete"),
+            "version": uint(1),
+            "revision": text("3"),
+            "requestId": text("istek-1"),
+            "fingerprint": blob(bytes(range(16))),
+        }
+        return cmap({k: v for k, v in {**base, **over}.items() if v is not None})
+
+    def requested(entries, schema=45):
+        return container(root(cmap({**parts, "requests": array(entries)}), version=uint(schema)))
+
+    files["requests-in-schema-44.kcad"] = requested([request_()], schema=44)
+    files["requests-empty.kcad"] = requested([])
+    files["requests-unknown-field.kcad"] = requested([request_(note=text("?"))])
+    files["requests-missing-field.kcad"] = requested([request_(fingerprint=None)])
+    files["requests-fingerprint-length.kcad"] = requested([request_(fingerprint=blob(bytes(15)))])
+    files["requests-status.kcad"] = requested([request_(status=text("lost"))])
+    files["requests-twice.kcad"] = requested([request_(), request_(revision=text("4"))])
+    files["requests-id.kcad"] = requested([request_(requestId=text("boşluk var"))])
+    files["requests-revision.kcad"] = requested([request_(revision=text("x1"))])
+    files["requests-version-zero.kcad"] = requested([request_(version=uint(0))])
     files["addresses-in-schema-41.kcad"] = addressed([locator()], schema=41)
     files["addresses-empty.kcad"] = addressed([])
     files["address-duplicate-id.kcad"] = addressed([locator(), locator(name=text("Numarataj 2"))])
@@ -3009,6 +3076,7 @@ def build():
     out["addresses.kcad"] = container(document(load("addresses.json")))
     out["dimension-refs.kcad"] = container(document(load("dimension-refs.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
+    out["requests.kcad"] = container(document(load("requests.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

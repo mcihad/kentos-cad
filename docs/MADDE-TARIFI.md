@@ -155,9 +155,12 @@ Projede ya da nesnede kalıcı yeni bir alan varsa yeni bir şema numarası gere
   `pnpm wasm`. `pkg/` elle düzenlenmez. Ağır ve seyrek kullanılan modül tembel yüklenir (`io/<konu>/module.ts` gibi).
 - **TS sarmalayıcıları** (Web; dururken atlanır): `apps/web/src/model/ops/<konu>.ts` (`op<…>('ad')`). Hesap yeniden yazılmaz.
 
-## 6. Ürün komutu, gerekiyorsa
+## 6. Ürün komutu
 
-Belgeyi değiştiren her yeni iş bir ürün komutundan geçer. Python ve AI ayrı bir mutasyon yolu açmaz.
+Belgeyi değiştiren her yeni iş kendi anlamsal ürün komutundan geçer; araç da Python ve AI de aynı komutu kullanır, ayrı bir
+mutasyon yolu açılmaz. Kural ve eksiksiz liste CLAUDE.md §9.2'dedir (“Araç = komut”, sahibin kararı, 13 Ekim 2026): komutun girdisi
+kullanıcının verdiğidir, sonucu komut hesaplar; araç önizlemeyi komutun planından, yazmayı `execute`'tan yapar; yeni araç
+manifestte `semantic` düzeyindedir.
 
 - **Sözleşme:** `crates/shared/contracts/src/cad_<konu>.rs`. Girdi, çıktı, plan, ret kodları ve sıraları doc yorumunda yazılır.
 - **İşleyiciler:**
@@ -170,8 +173,11 @@ Belgeyi değiştiren her yeni iş bir ürün komutundan geçer. Python ve AI ayr
   - masaüstü `crates/native/application/tests/all/fixtures.rs`,
   - Python `python/tests/test_command_cases.py`.
 - **Başsız sunucu:** `crates/native/headless/src/dispatch.rs`.
-- **Python SDK:** `python3 scripts/python/sdk.py` (katalog değişince; `--check` farkı arar).
+- **Python SDK:** `python3 scripts/python/sdk.py` (katalog değişince; `--check` farkı arar), sonra `pnpm py:test`.
 - **MCP:** `crates/native/mcp/src/tools.rs` (silen ya da yıkıcı işaretiyle) ve testi `crates/native/mcp/tests/mcp.rs`.
+- **Yetenekler:** katalogdaki `capabilities` girdisi ve `crates/native/application/tests/all/capabilities.rs` (her ret ve uyarı
+  kodu bir durumda ya da gerekçesiyle; nesne türü alan komutun tür denemesi).
+- **Araç:** aracın önizlemesi komutun planından, yazması komutun `execute`'undan; ortak iz ve kullanım resmi.
 
 ## 7. Masaüstü ve web arayüzü
 
@@ -183,7 +189,8 @@ sütunu yapılır.
   kurallarını masaüstünün testi denetler. İlk tüketicisi `GIS-40`'tır.
 - **İşlem düzeyi:** her yeni komut, araç ya da yöntem `catalog/v1/operations.json`'da düzeyini (semantic, geometry, processing, none,
   query, session, host) aynı commit'te alır; bir iş düzey değiştirirse (örneğin bir araç anlamsal ürün komutuna geçerse) eşlemesi
-  de değişir. `scripts/cad/manifest.py` manifesti yeniden yazar, `--check` eşlenmemiş öğede düşer (ADR 0244).
+  de değişir. Çizimi değiştiren yeni araç `semantic` düzeyinde gelir (CLAUDE.md §9.2). `scripts/cad/manifest.py` manifesti yeniden
+  yazar, `--check` eşlenmemiş öğede düşer (ADR 0244).
 
 | İş | Web | Masaüstü |
 |---|---|---|

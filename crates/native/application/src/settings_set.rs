@@ -23,7 +23,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.to_owned())))
+    Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
 /// Whether the registry has the system (0: a local project, no system). The
@@ -65,7 +65,7 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
         || input.plot_scale.is_some()
         || input.drawing_font.is_some();
     if !given {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NOTHING_TO_SET,
             "Değişecek bir ayar yok: en az bir anahtar verin.".into(),
             None,
@@ -228,6 +228,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SettingsSet) -> CommandResult<Set
 
 /// Writes the settings, then the annotations that follow the plot scale.
 pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SettingsSet,
+) -> CommandResult<SettingsChanged> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_SETTINGS_SET,
+        kentos_contracts::CAD_SETTINGS_SET_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: SettingsSet,
 ) -> CommandResult<SettingsChanged> {

@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     LabelPinChange,
     LabelsPin,
@@ -48,6 +49,8 @@ class _LabelsPin(LocalCommand[LabelsPin, LabelsPinned, LabelsPinPlan]):
         *,
         pins: Sequence[LabelPinChange],
         expected_revision: str | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> LabelsPinned:
         """Etiketi sabitle: Nesnelerin etiketlerini elle sabitler, döndürür, gizler ya da
         serbest bırakır: her değişiklik bir nesnenin bir etiketidir (class: kurallı katmanın
@@ -64,6 +67,10 @@ class _LabelsPin(LocalCommand[LabelsPin, LabelsPinned, LabelsPinPlan]):
             doc: The drawing it works on.
             pins: The changes, at least one.
             expected_revision: The document revision the input was prepared against, as decimal text.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             LabelsPinned
@@ -75,7 +82,7 @@ class _LabelsPin(LocalCommand[LabelsPin, LabelsPinned, LabelsPinPlan]):
         return self.execute_input(doc, LabelsPin(
             pins=list(pins),
             expected_revision=expected_revision,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -108,6 +115,27 @@ class _LabelsPin(LocalCommand[LabelsPin, LabelsPinned, LabelsPinPlan]):
             pins=list(pins),
             expected_revision=expected_revision,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        pins: Sequence[LabelPinChange],
+        expected_revision: str | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, LabelsPin(
+            pins=list(pins),
+            expected_revision=expected_revision,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 pin = _LabelsPin()

@@ -49,11 +49,17 @@ class CommandError(KentosError):
         message: str,
         path: str | None = None,
         revision: str | None = None,
+        uids: tuple[str, ...] = (),
+        retryable: bool = False,
     ) -> None:
         super().__init__(code, message)
         self.command = command
         self.path = path
         self.revision = revision
+        self.uids = uids
+        """The objects it is about, by persistent id (docs/adr/0253 §7)."""
+        self.retryable = retryable
+        """Whether calling again may succeed: a conflict's (prepare the input again, or send it again)."""
 
     def __str__(self) -> str:
         where = f", {self.path}" if self.path else ""
@@ -73,8 +79,12 @@ class NeedsInput(CommandError):
 
 
 class RevisionConflict(CommandError):
-    """The drawing is no longer at the input's ``expected_revision``;
-    ``revision`` is where it is now. Plan again from the drawing as it is."""
+    """The drawing is no longer as the input was prepared for: its
+    ``expected_revision`` (``revision_conflict``), an expected stamp
+    (``stale_state``, ``uids`` names the objects), the plan the write had to
+    equal (``plan_changed``), or a job's document (``document_changed``).
+    ``revision`` is where it is now; ``retryable`` is true. Plan again from
+    the drawing as it is."""
 
     status = "conflict"
 

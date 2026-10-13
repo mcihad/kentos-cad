@@ -8,7 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import TYPE_CHECKING, Any  # noqa: F401
 
-from ._runtime import CommandNote, LocalCommand, UNSET, Unset, _opt  # noqa: F401
+from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
+from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     AnnotationStyleKind,
     AnnotationStyleKindName,
@@ -59,6 +60,8 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         name: str | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
+        request_id: str | None = None,
+        expected: Expected | None = None,
     ) -> StylesEdited:
         """Yazı ve ölçü stilleri: Projenin adlı yazı (kind text) ya da ölçü (kind dimension)
         stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler
@@ -81,6 +84,10 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             name: Rename's new name, trimmed.
             style: Rename's and remove's style, by its id.
             text: Create's and update's text style.
+            request_id: Names this write: sent again with the same call it is answered as
+                before and applied once (docs/adr/0253 §6).
+            expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
+                id); otherwise nothing is written and RevisionConflict is raised.
 
         Returns:
             StylesEdited
@@ -97,7 +104,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             name=name,
             style=style,
             text=text,
-        ))
+        ), request_id=request_id, expected=expected)
 
     def plan(
         self,
@@ -150,6 +157,37 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             style=style,
             text=text,
         ))
+
+    def answer(
+        self,
+        doc: Document,
+        /,
+        *,
+        kind: AnnotationStyleKind | AnnotationStyleKindName,
+        operation: StyleEditOperation | StyleEditOperationName,
+        dimension: DimensionStyleDef | None | Unset = UNSET,
+        expected_revision: str | None | Unset = UNSET,
+        name: str | None | Unset = UNSET,
+        style: str | None | Unset = UNSET,
+        text: TextStyleDef | None | Unset = UNSET,
+        op: str = "execute",
+        request_id: str | None = None,
+        expected: Expected | None = None,
+    ) -> Outcome[Any]:
+        """``op`` (``execute``, ``plan`` or ``validate``) by the protocol (docs/adr/0253):
+        the whole answer, a refusal in it rather than raised, with what it touched
+        (``summary``), the plan's id (``plan_id``), whether the request was answered
+        before (``replayed``) and its journal row (``call``).
+        """
+        return self.answer_input(doc, StylesEdit(
+            kind=kind,
+            operation=operation,
+            dimension=dimension,
+            expected_revision=expected_revision,
+            name=name,
+            style=style,
+            text=text,
+        ), op=op, request_id=request_id, expected=expected)
 
 
 edit = _StylesEdit()

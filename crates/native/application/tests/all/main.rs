@@ -2,6 +2,7 @@
 //! file of its own, the ones run alone (by `--test`) beside this folder.
 //! One binary links once where each file was linked on its own.
 
+mod capabilities;
 mod catalog;
 mod create;
 mod delete;
@@ -9,5 +10,7 @@ mod edit;
 mod fixtures;
 mod info_templates;
 mod polygon;
+mod protocol;
+mod protocol_cases;
 mod reassociate;
 mod transform;

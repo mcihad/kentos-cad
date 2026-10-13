@@ -83,6 +83,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesEdit,
 ) -> CommandResult<EntitiesEdited> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_ENTITIES_EDIT,
+        kentos_contracts::CAD_ENTITIES_EDIT_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesEdit,
+) -> CommandResult<EntitiesEdited> {
     let checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -111,6 +126,7 @@ pub fn execute(
                     message: full.to_string(),
                     path: None,
                     revision: None,
+                    ..Default::default()
                 },
             };
         }
@@ -249,7 +265,7 @@ fn geometry_of(change: &EntityEdit) -> Option<&EntityGeometry> {
 /// The checks in the contract's order.
 fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     if input.changes.is_empty() {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NO_CHANGES,
             "Yapılacak değişiklik verilmedi. En az bir değişiklik verin.".into(),
             Some("changes".into()),
@@ -258,7 +274,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     for (i, change) in input.changes.iter().enumerate() {
         let (uid, field) = named(change);
         if !checks::is_uid_text(uid) {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::INVALID_UID,
                 format!(
                     "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın."
@@ -285,7 +301,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             .and_then(|u| doc.slot_of(u))
             .and_then(|slot| Some((slot, doc.get(slot)?)));
         let Some(at) = at else {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::ENTITY_NOT_FOUND,
                 format!(
                     "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
@@ -303,7 +319,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         }
         if !targets.insert(found[i].0) {
             let (uid, _) = named(change);
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::REPEATED_ENTITY,
                 format!(
                     "“{uid}” kimlikli nesne birden çok değişiklikte değişiyor. Bir nesneye tek değişiklik verin."
@@ -321,7 +337,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 .get(layer)
                 .map_or(layer.as_str(), |n| n.name.as_str());
             let (_, field) = named(change);
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::LAYER_LOCKED,
                 format!(
                     "“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
@@ -344,7 +360,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 }
             ) && matches!(found[i].1, Entity::Table(_));
             if !table {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::NOT_A_TABLE,
                     "Tablonun düzenlemesi yalnız tabloları değiştirir: her değişiklik bir tablonun yeni hâli olmalı (update, tablo geometrisi).".into(),
                     Some(format!("changes[{i}]")),
@@ -587,7 +603,7 @@ pub(crate) fn check_geometry(
     let at = |field: &str| Some(format!("{list}[{i}].geometry{field}"));
     match g {
         EntityGeometry::Polyline { pts, .. } if pts.len() < 2 => {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::TOO_FEW_POINTS,
                 format!(
                     "Çoklu çizginin en az 2 noktası olmalı; {} nokta verildi. Eksik noktaları ekleyin.",
@@ -602,7 +618,7 @@ pub(crate) fn check_geometry(
         } => {
             for (k, part) in parts.iter().enumerate() {
                 if part.pts.len() < 2 {
-                    return Err(Stop::Failed(error(
+                    return Err(Stop::failed(error(
                         codes::TOO_FEW_POINTS,
                         format!(
                             "{}. parçanın en az 2 noktası olmalı; {} nokta verildi. Eksik noktaları ekleyin ya da parçayı çıkarın.",
@@ -613,7 +629,7 @@ pub(crate) fn check_geometry(
                     )));
                 }
                 if part.holes.is_some() {
-                    return Err(Stop::Failed(error(
+                    return Err(Stop::failed(error(
                         codes::PART_HOLES,
                         format!(
                             "Çoklu çizginin {}. parçasının deliği olamaz; delik yalnız kapalı alanda olur. Deliği çıkarın.",
@@ -632,7 +648,7 @@ pub(crate) fn check_geometry(
             ..
         } => {
             if !ring_closes(pts.len(), bulges.as_deref()) {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::TOO_FEW_CORNERS,
                     format!(
                         "Kapalı alanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin.",
@@ -643,7 +659,7 @@ pub(crate) fn check_geometry(
             }
             for (h, ring) in holes.iter().flatten().enumerate() {
                 if !ring_closes(ring.pts.len(), ring.bulges.as_deref()) {
-                    return Err(Stop::Failed(error(
+                    return Err(Stop::failed(error(
                         codes::TOO_FEW_CORNERS,
                         format!(
                             "{}. deliğin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.",
@@ -657,7 +673,7 @@ pub(crate) fn check_geometry(
             // A multi-part area's other parts close as its own ring does (docs/adr/0143).
             for (k, part) in parts.iter().flatten().enumerate() {
                 if !ring_closes(part.pts.len(), part.bulges.as_deref()) {
-                    return Err(Stop::Failed(error(
+                    return Err(Stop::failed(error(
                         codes::TOO_FEW_CORNERS,
                         format!(
                             "{}. parçanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da parçayı çıkarın.",
@@ -669,7 +685,7 @@ pub(crate) fn check_geometry(
                 }
                 for (h, ring) in part.holes.iter().flatten().enumerate() {
                     if !ring_closes(ring.pts.len(), ring.bulges.as_deref()) {
-                        return Err(Stop::Failed(error(
+                        return Err(Stop::failed(error(
                             codes::TOO_FEW_CORNERS,
                             format!(
                                 "{}. parçanın {}. deliğinin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.",
@@ -696,14 +712,14 @@ pub(crate) fn check_geometry(
                     .problem()
                     .or_else(|| assoc.as_ref().and_then(HatchAssoc::problem))
             {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::INVALID_HATCH,
                     words,
                     at(&format!(".{field}")),
                 )));
             }
             if ring.len() < 3 {
-                return Err(Stop::Failed(error(
+                return Err(Stop::failed(error(
                     codes::TOO_FEW_CORNERS,
                     format!(
                         "Taramanın en az 3 köşesi olmalı; {} köşe verildi. Eksik köşeleri ekleyin.",
@@ -714,7 +730,7 @@ pub(crate) fn check_geometry(
             }
             for (h, hole) in holes.iter().flatten().enumerate() {
                 if hole.len() < 3 {
-                    return Err(Stop::Failed(error(
+                    return Err(Stop::failed(error(
                         codes::TOO_FEW_CORNERS,
                         format!(
                             "{}. deliğin en az 3 köşesi olmalı; {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.",
@@ -728,7 +744,7 @@ pub(crate) fn check_geometry(
         }
         // A dimension's text is not checked: an empty one shows the measured value.
         EntityGeometry::Text { text, .. } if is_blank(text) => {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::EMPTY_TEXT,
                 "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.".into(),
                 at(".text"),
@@ -736,7 +752,7 @@ pub(crate) fn check_geometry(
         }
         // A leader (docs/adr/0146 §1): its tip and one vertex more; no note is the field's absence.
         EntityGeometry::Leader { pts, .. } if pts.len() < 2 => {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::TOO_FEW_POINTS,
                 format!(
                     "Kılavuzun en az 2 köşesi olmalı; {} köşe verildi. Okun ucunu ve en az bir köşe daha verin.",
@@ -748,7 +764,7 @@ pub(crate) fn check_geometry(
         EntityGeometry::Leader {
             text: Some(text), ..
         } if is_blank(text) => {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::EMPTY_TEXT,
                 "Kılavuzun notu boş olamaz; yalnız boşluktan oluşan not da boştur. Notu yazın ya da notsuz kılavuz için alanı kaldırın.".into(),
                 at(".text"),
@@ -759,7 +775,7 @@ pub(crate) fn check_geometry(
     // Elevations as written (docs/adr/0142): one for each vertex.
     for (zs, n, path) in written_elevations(g) {
         if zs.len() != n {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::INVALID_ELEVATIONS,
                 format!(
                     "Kotların sayısı köşelerin sayısıyla aynı olmalı; {n} köşeye {} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null.",
@@ -773,7 +789,7 @@ pub(crate) fn check_geometry(
     if let EntityGeometry::Polygon { parts, .. } = g
         && let Some(k) = parts.iter().flatten().position(|q| q.ms.is_some())
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_MEASURES,
             "Kapalı alanın ölçüsü (M) olamaz; ölçü yalnız çizginin ve çoklu çizginin köşelerinde olur. Parçanın ölçülerini kaldırın.".into(),
             at(&format!(".parts[{k}].ms")),
@@ -781,7 +797,7 @@ pub(crate) fn check_geometry(
     }
     for (ms, n, path) in written_measures(g) {
         if ms.len() != n {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::INVALID_MEASURES,
                 format!(
                     "Ölçülerin sayısı köşelerin sayısıyla aynı olmalı; {n} köşeye {} ölçü verildi. Her köşeye bir ölçü verin; ölçüsüz köşeye null.",
@@ -792,7 +808,7 @@ pub(crate) fn check_geometry(
         }
     }
     if !finite(g) {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::NOT_FINITE,
             format!(
                 "{}. {whose} geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.",
@@ -806,7 +822,7 @@ pub(crate) fn check_geometry(
     if let EntityGeometry::Circle { r, .. } | EntityGeometry::Arc { r, .. } = g
         && *r <= 0.0
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_RADIUS,
             "Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.".into(),
             at(".r"),
@@ -816,7 +832,7 @@ pub(crate) fn check_geometry(
     if let EntityGeometry::Insert { scale, .. } = g
         && *scale <= 0.0
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_SCALE,
             "Blok ölçeği sıfırdan büyük olmalı. Pozitif bir ölçek verin.".into(),
             at(".scale"),
@@ -826,7 +842,7 @@ pub(crate) fn check_geometry(
     if let EntityGeometry::Leader { height, .. } = g
         && *height <= 0.0
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_HEIGHT,
             format!(
                 "Kılavuzun yüksekliği sıfırdan büyük olmalı; {height} verildi. Notun yüksekliğini metre olarak, pozitif verin."
@@ -841,7 +857,7 @@ pub(crate) fn check_geometry(
     } = g
         && !kentos_contracts::leader_arrow_holds(*size)
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_ARROW_SIZE,
             format!(
                 "Kılavuzun ok boyu notun yüksekliğinin {} ile {} katı olmalı; {size} verildi. Bu aralıkta verin ya da alanı kaldırın (notun yüksekliği kadar).",
@@ -858,7 +874,7 @@ pub(crate) fn check_geometry(
     } = g
         && !kentos_contracts::width_factor_ok(*w)
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_WIDTH_FACTOR,
             format!(
                 "Yazının genişlik çarpanı 0'dan büyük, en çok {} olmalı; {w} verildi. Çarpanı bu aralıkta verin ya da alanı kaldırın (1).",
@@ -882,7 +898,7 @@ pub(crate) fn check_geometry(
             runs: runs.clone(),
         };
         if let Some((field, words)) = paragraph.problem(text) {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::INVALID_PARAGRAPH,
                 words,
                 at(&format!(".{field}")),
@@ -894,7 +910,7 @@ pub(crate) fn check_geometry(
         } = g
             && let Some(words) = kentos_contracts::text_path_problem(path, text, &paragraph, false)
         {
-            return Err(Stop::Failed(error(codes::INVALID_PATH, words, at(".path"))));
+            return Err(Stop::failed(error(codes::INVALID_PATH, words, at(".path"))));
         }
     }
     // A table's rows, columns, cells, merged ranges and source (docs/adr/0184 §6).
@@ -921,7 +937,7 @@ pub(crate) fn check_geometry(
             source: source.as_ref(),
         };
         if let Some((field, words)) = shape.problem() {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::INVALID_TABLE,
                 words,
                 at(&format!(".{field}")),
@@ -934,21 +950,21 @@ pub(crate) fn check_geometry(
         && image_finite(image)
         && let Some(words) = image.problem()
     {
-        return Err(Stop::Failed(error(codes::INVALID_IMAGE, words, at(""))));
+        return Err(Stop::failed(error(codes::INVALID_IMAGE, words, at(""))));
     }
     // A raster's affine, size, bands, samples, source, look and opacity (docs/adr/0204 §9).
     if let EntityGeometry::Raster(raster) = g
         && raster_finite(raster)
         && let Some(words) = raster.problem()
     {
-        return Err(Stop::Failed(error(codes::INVALID_RASTER, words, at(""))));
+        return Err(Stop::failed(error(codes::INVALID_RASTER, words, at(""))));
     }
     // A point cloud's files, bounds, points, look and opacity (docs/adr/0207 §10).
     if let EntityGeometry::PointCloud(cloud) = g
         && cloud_finite(cloud)
         && let Some(words) = cloud.problem()
     {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_POINTCLOUD,
             words,
             at(""),
@@ -960,7 +976,7 @@ pub(crate) fn check_geometry(
     } = g
         && let Some(words) = refs.problem()
     {
-        return Err(Stop::Failed(error(codes::INVALID_REFS, words, at(".refs"))));
+        return Err(Stop::failed(error(codes::INVALID_REFS, words, at(".refs"))));
     }
     // A text's face and a dimension's look (docs/adr/0183 §9).
     let style = match g {
@@ -969,7 +985,7 @@ pub(crate) fn check_geometry(
         _ => None,
     };
     if let Some((field, words)) = style {
-        return Err(Stop::Failed(error(
+        return Err(Stop::failed(error(
             codes::INVALID_STYLE,
             words,
             at(&format!(".{field}")),
@@ -1012,7 +1028,7 @@ pub(crate) fn check_styles<'a>(
             _ => continue,
         };
         if !known {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::UNKNOWN_STYLE,
                 format!(
                     "“{id}” kimlikli {what} projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir {what}nin kimliğini verin ya da alanı kaldırın (Standart)."
@@ -1118,7 +1134,7 @@ pub(crate) fn check_blocks<'a>(
                     .map(|a| (k, a))
             })
         {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::UNKNOWN_ASSET,
                 format!(
                     "“{asset}” kimlikli nokta bulutu projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir LAS, LAZ, COPC ya da XYZ bulutunun kimliğini verin."
@@ -1130,7 +1146,7 @@ pub(crate) fn check_blocks<'a>(
             && let Some(asset) = &raster.asset
             && !has_raster(doc, asset)
         {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::UNKNOWN_ASSET,
                 format!(
                     "“{asset}” kimlikli raster projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir GeoTIFF, PNG, JPEG ya da NetCDF'in kimliğini verin."
@@ -1142,7 +1158,7 @@ pub(crate) fn check_blocks<'a>(
             && let Some(asset) = &image.asset
             && !has_picture(doc, asset)
         {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::UNKNOWN_ASSET,
                 format!(
                     "“{asset}” kimlikli görüntü projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin."
@@ -1153,7 +1169,7 @@ pub(crate) fn check_blocks<'a>(
         if let EntityGeometry::Insert { block, .. } = g
             && doc.block(*block).is_none()
         {
-            return Err(Stop::Failed(error(
+            return Err(Stop::failed(error(
                 codes::UNKNOWN_BLOCK,
                 format!(
                     "“{block}” kimlikli blok çizimde tanımlı değil: silinmiş ya da başka bir çizimin olabilir. Çizimde tanımlı bir bloğun kimliğini verin."

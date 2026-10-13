@@ -136,7 +136,12 @@ fn an_edit_without_references_keeps_them_and_a_moved_point_goes_free() {
     use kentos_native_application::edit;
     use kentos_native_application::geometry::{edit_geometry, shape};
     let (mut doc, wall, dim) = drawing();
-    bind(&mut doc, wall, dim, &[(DimensionPoint::A, 0), (DimensionPoint::B, 1)]);
+    bind(
+        &mut doc,
+        wall,
+        dim,
+        &[(DimensionPoint::A, 0), (DimensionPoint::B, 1)],
+    );
     let mut masked = dimension(&doc, dim);
     masked.mask = true;
     let write = |doc: &mut Document, e: Entity| {

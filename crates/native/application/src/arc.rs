@@ -55,6 +55,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ArcCreate) -> CommandResult<ArcPl
 /// Checks `input` again and writes the arc as one undo step (“Ekle”, the
 /// document's own `add`): into the open transaction or group, if one is.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ArcCreate) -> CommandResult<ArcCreated> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_ARC_CREATE,
+        kentos_contracts::CAD_ARC_CREATE_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(cx: &mut ExecutionContext<'_>, input: ArcCreate) -> CommandResult<ArcCreated> {
     let warnings = match check(cx.doc, &input) {
         Ok(warnings) => warnings,
         Err(stop) => return stop.into(),
@@ -64,7 +76,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ArcCreate) -> CommandResult
             output: ArcCreated { uid, id, revision },
             warnings,
         },
-        Err(error) => CommandResult::Failed { error },
+        Err(stop) => stop.into(),
     }
 }
 

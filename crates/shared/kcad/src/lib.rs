@@ -371,8 +371,13 @@ pub const SCHEMA_WITH_DIMENSION_REFS: u32 = 43;
 /// project has a book; older readers refuse such a file instead of losing it.
 pub const SCHEMA_WITH_SHEETS: u32 = 44;
 
+/// Schema 45 (docs/specs/kcad-v2.md §6.13, docs/adr/0253 §6): the requests
+/// a drawing executed (`requests`), written only when it executed any; older
+/// readers refuse such a file instead of losing them.
+pub const SCHEMA_WITH_REQUESTS: u32 = 45;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 43] = [
+pub const SCHEMAS: [u32; 44] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -416,6 +421,7 @@ pub const SCHEMAS: [u32; 43] = [
     SCHEMA_WITH_ADDRESSES,
     SCHEMA_WITH_DIMENSION_REFS,
     SCHEMA_WITH_SHEETS,
+    SCHEMA_WITH_REQUESTS,
 ];
 
 /// The file a drawing is saved as.

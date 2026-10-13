@@ -100,6 +100,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesOffset,
 ) -> CommandResult<EntitiesOffsetMade> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_ENTITIES_OFFSET,
+        kentos_contracts::CAD_ENTITIES_OFFSET_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesOffset,
+) -> CommandResult<EntitiesOffsetMade> {
     let checked = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
@@ -139,7 +154,7 @@ struct Checked {
 }
 
 fn refuse(code: &str, message: String, path: &str) -> Stop {
-    Stop::Failed(error(code, message, Some(path.into())))
+    Stop::failed(error(code, message, Some(path.into())))
 }
 
 /// Whether the core offsets an object of this kind.

@@ -73,7 +73,7 @@ pub enum CommandResult<T> {
 
 /// Why a command did not complete (TODOS.md ARCH-07): a stable code for
 /// programs, a message for people, the input field it is about.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -91,6 +91,18 @@ pub struct CommandError {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
+    /// The persistent ids of the objects it is about (docs/adr/0253 §7): the
+    /// protocol's answer names them, from `path` when that leads to an id of
+    /// the input, or from the check that failed (`stale_state`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+    /// Whether calling again may succeed as it is (a conflict: prepare the
+    /// input again or send it again), as opposed to an input that is wrong
+    /// in itself. The protocol's answer sets it by the code (`kentos_contracts::codes`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub retryable: bool,
 }
 
 /// Something a completed command wants the caller to know.
@@ -123,6 +135,7 @@ mod tests {
             message: "…".into(),
             path: Some("expectedRevision".into()),
             revision: Some("7".into()),
+            ..CommandError::default()
         };
         let cases: [(CommandResult<()>, serde_json::Value); 6] = [
             (

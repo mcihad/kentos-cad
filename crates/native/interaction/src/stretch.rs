@@ -9,35 +9,32 @@
 //! - a base point, then the target: clicked (object snaps; ortho and polar
 //!   tracking from the base) or typed (`@dY,dX` from the base).
 //!
-//! The shared core stretches each object (`stretch_entity`: the vertices in
-//! the window move, the rest stay; an arc keeps its bow). Written through
-//! the product command `cad.entities.edit` (updates, “stretch”), one undo
-//! step, “Esnet”; says “2 nesne esnetildi: ΔY 5.000  ΔX 0.000” and leaves.
-//! The preview is the web's: the window being drawn as a crossing box, then
-//! the window dashed in the snap colour, the objects as they would be
-//! (dashed, the geometry store's `stretch_outlines`), the line from the base
-//! with its length.
+//! The product command `cad.entities.stretch` does the work (docs/adr/0254
+//! §2): the window's objects ([`stretch::objects_in`]), the objects as they
+//! would be (its plan, the preview), the write (one undo step, “Esnet”); the
+//! tool says “2 nesne esnetildi: ΔY 5.000  ΔX 0.000” and leaves. The
+//! preview is the web's: the window being drawn as a crossing box, then the
+//! window dashed in the snap colour, the objects as they would be (dashed),
+//! the line from the base with its length.
 //!
 //! With Topolojik düzenleme on, the objects sharing a moved vertex go with
 //! the stretched ones in the same step, selected or not, and are previewed
-//! with them (docs/adr/0160 §3, `neighbours`).
+//! with them (docs/adr/0160 §3; the command's `topology`).
 
-use kentos_contracts::{EditOperation, EntityEdit};
+use kentos_contracts::{CommandResult, EntitiesStretch, StretchTopology, StretchWindow, codes};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{Bounds, dist};
 use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min};
-use kentos_geometry_core::ops::stretch::stretch_entity;
-use kentos_geometry_core::ops::topology_edit::{self, Change};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, stretch};
 
 use crate::Vec2;
-use crate::edge::{self, Outline};
+use crate::edge::Outline;
 use crate::format::Format;
 use crate::log::Level;
-use crate::modify::{GHOST_DASH, MAX_GHOSTS, ghosts};
-use crate::neighbours::{self, Found};
-use crate::points;
+use crate::modify::{GHOST_DASH, MAX_GHOSTS};
+use crate::points::{self, wire};
 use crate::prompt::Prompt;
 use crate::select::SelectBox;
 use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tag, Tone, Tool};
@@ -68,8 +65,8 @@ pub struct Stretch {
     /// The window's first corner: in the world (before snapping) and on the area.
     first: Option<(Vec2, [f64; 2])>,
     window: Option<Bounds>,
-    /// The objects the window stretches.
-    targets: Vec<Slot>,
+    /// How many objects the window stretches.
+    targets: usize,
     base: Option<Vec2>,
     /// The effective cursor: snapped and constrained once the window is drawn.
     hover: Option<Vec2>,
@@ -78,9 +75,6 @@ pub struct Stretch {
     /// The objects as they would be: outlines and point marks.
     ghosts: Vec<Stroke>,
     marks: Vec<Vec2>,
-    /// The vertices the window moves and the objects sharing them
-    /// (Topolojik düzenleme), found once per window for the preview.
-    follow: Option<(Vec<Vec2>, Found)>,
     done: bool,
 }
 
@@ -105,6 +99,42 @@ impl Stretch {
         point
     }
 
+    /// The command's input for the window and a displacement: the selection
+    /// restricts it, Topolojik düzenleme's state goes with it.
+    fn request(window: &Bounds, dx: f64, dy: f64, cx: &Context<'_>) -> EntitiesStretch {
+        let doc = &*cx.doc;
+        let uids = (!cx.selection.is_empty()).then(|| {
+            cx.selection
+                .ids()
+                .iter()
+                .filter_map(|s| doc.uid(*s).map(|u| u.to_string()))
+                .collect()
+        });
+        EntitiesStretch {
+            window: StretchWindow {
+                min: wire(Vec2::new(window.min_x, window.min_y)),
+                max: wire(Vec2::new(window.max_x, window.max_y)),
+            },
+            dx,
+            dy,
+            uids,
+            topology: cx.draft.topology.then_some(StretchTopology {
+                points: cx.draft.topology_points,
+            }),
+            expected_revision: None,
+        }
+    }
+
+    /// Says the command's warnings, but not a selected object's lying outside
+    /// the window: the selection may be wider than the window.
+    fn say_warnings(warnings: Vec<kentos_contracts::CommandWarning>, cx: &mut Context<'_>) {
+        for w in warnings {
+            if w.code != codes::OUTSIDE_WINDOW {
+                cx.say(Level::Warn, w.message);
+            }
+        }
+    }
+
     /// The window from the first corner to `w` takes its objects (the web's `closeWindow`).
     fn close_window(&mut self, w: Vec2, cx: &mut Context<'_>) {
         let Some((a, _)) = self.first else {
@@ -116,79 +146,37 @@ impl Stretch {
             max_x: js_max(a.x, w.x),
             max_y: js_max(a.y, w.y),
         };
-        let restrict = !cx.selection.is_empty();
-        let doc = &*cx.doc;
-        let all: Vec<Slot> = cx
-            .spatial
-            .in_rect(a, w, true)
-            .into_iter()
-            .filter(|slot| !restrict || cx.selection.contains(*slot))
-            .filter(|slot| {
-                doc.get(*slot)
-                    .is_some_and(|e| stretch_entity(&edge::core(e), &r, 0.0, 0.0).is_some())
-            })
-            .collect();
-        let targets: Vec<Slot> = all
-            .iter()
-            .copied()
-            .filter(|slot| doc.get(*slot).is_some_and(|e| edge::unlocked(e, doc)))
-            .collect();
-        if targets.len() < all.len() {
-            let line = format!(
-                "{} nesne kilitli katmanda olduğu için atlandı.",
-                all.len() - targets.len()
-            );
-            cx.say(Level::Warn, line);
-        }
-        if targets.is_empty() {
-            cx.say(
-                Level::Warn,
-                "Pencerede köşesi olan düzenlenebilir nesne yok; yeniden deneyin.",
-            );
-            self.stage = Stage::FirstCorner;
-            self.first = None;
-            return;
-        }
-        self.targets = targets;
-        self.window = Some(r);
-        self.follow = None;
-        self.stage = Stage::Base;
-    }
-
-    /// The vertices the window moves and the neighbours that follow them
-    /// (docs/adr/0160 §3): the vertices as the core's moves of a stretch one
-    /// metre east, the objects sharing them that are not stretched
-    /// themselves. Found when first asked, since the mode can be turned on
-    /// while the tool waits (the web's `followers`).
-    fn followers(&mut self, cx: &Context<'_>) -> Option<&(Vec<Vec2>, Found)> {
-        let window = self.window?;
-        if !cx.draft.topology {
-            return None;
-        }
-        if self.follow.is_none() {
-            let points = cx.draft.topology_points;
-            let mut at = Vec::new();
-            for slot in &self.targets {
-                let Some(e) = cx.doc.get(*slot) else {
-                    continue;
-                };
-                let before = shape(e);
-                if matches!(before, kentos_geometry_core::entity::Shape::Point { .. }) && !points {
-                    continue;
-                }
-                let Some(g) = stretch_entity(&edge::core(e), &window, 1.0, 0.0) else {
-                    continue;
-                };
-                for c in topology_edit::changes(&before, &g.shape) {
-                    if let Change::Move { at: v, .. } = c {
-                        at.push(v);
+        let input = Self::request(&r, 0.0, 0.0, cx);
+        match stretch::objects_in(cx.doc, Some(cx.spatial.store()), &input) {
+            CommandResult::Completed { output, warnings } => {
+                Self::say_warnings(warnings, cx);
+                self.targets = output.len();
+                self.window = Some(r);
+                self.stage = Stage::Base;
+            }
+            other => {
+                if let CommandResult::Failed { error } = other {
+                    if error.code == codes::NOTHING_TO_STRETCH {
+                        // The objects its refusal names were left out for their locked layer.
+                        if !error.uids.is_empty() {
+                            let line = format!(
+                                "{} nesne kilitli katmanda olduğu için atlandı.",
+                                error.uids.len()
+                            );
+                            cx.say(Level::Warn, line);
+                        }
+                        cx.say(
+                            Level::Warn,
+                            "Pencerede köşesi olan düzenlenebilir nesne yok; yeniden deneyin.",
+                        );
+                    } else {
+                        cx.say(Level::Warn, error.message);
                     }
                 }
+                self.stage = Stage::FirstCorner;
+                self.first = None;
             }
-            let found = neighbours::around(cx, &at, &self.targets);
-            self.follow = Some((at, found));
         }
-        self.follow.as_ref()
     }
 
     /// A point clicked or typed: the base, then the target, which writes.
@@ -202,64 +190,45 @@ impl Stretch {
             return;
         };
         let (dx, dy) = (p.x - base.x, p.y - base.y);
-        // Each object's new geometry from the core, written as one edit: slot,
-        // persistent id and every other field kept.
-        let mut changes = Vec::new();
-        let mut edits = Vec::new();
-        for slot in &self.targets {
-            let Some(e) = cx.doc.get(*slot) else {
-                continue;
-            };
-            let Some(g) = stretch_entity(&edge::core(e), &window, dx, dy) else {
-                continue;
-            };
-            let Some(geometry) = edge::geometry(&g.shape) else {
-                continue;
-            };
-            changes.push(EntityEdit::Update {
-                uid: edge::uid(cx.doc, *slot),
-                geometry,
-            });
-            edits.push((*slot, shape(e), g.shape));
-        }
-        // The neighbours sharing a moved vertex go in the same step, found
-        // again on the drawing as it is now (docs/adr/0160 §3).
-        let follow = neighbours::neighbours_of(cx, &edits);
-        // The stretched objects are counted; the neighbours are said after them.
-        let stretched: Vec<String> = changes
-            .iter()
-            .filter_map(|c| match c {
-                EntityEdit::Update { uid, .. } => Some(uid.clone()),
-                _ => None,
-            })
-            .collect();
-        let written = if changes.is_empty() {
-            Some(0)
-        } else {
-            changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
-            edge::write(EditOperation::Stretch, changes, cx).map(|out| {
-                out.changed
-                    .iter()
-                    .filter(|uid| stretched.contains(uid))
-                    .count()
-            })
+        let input = Self::request(&window, dx, dy, cx);
+        let result = {
+            let mut ecx = ExecutionContext::with_store(cx.doc, cx.spatial.store());
+            stretch::execute(&mut ecx, input)
         };
-        if let Some(n) = written {
+        let (result, warnings) = match result {
+            CommandResult::Completed { output, warnings } => (
+                CommandResult::Completed {
+                    output,
+                    warnings: Vec::new(),
+                },
+                warnings,
+            ),
+            other => (other, Vec::new()),
+        };
+        if let Some(out) = points::written(result, cx) {
             let f = cx.format();
             let line = format!(
-                "{n} nesne esnetildi: ΔY {}  ΔX {}",
+                "{} nesne esnetildi: ΔY {}  ΔX {}",
+                out.stretched.len(),
                 f.length_bare(dx),
                 f.length_bare(dy)
             );
             cx.say(Level::Success, line);
-            if n > 0 {
-                neighbours::say(follow.as_ref(), cx);
+            if !out.followed.is_empty() {
+                cx.say(
+                    Level::Info,
+                    format!(
+                        "Topolojik düzenleme: {} komşu nesne de değişti.",
+                        out.followed.len()
+                    ),
+                );
             }
+            Self::say_warnings(warnings, cx);
         }
         self.done = true;
     }
 
-    /// The objects as the cursor would stretch them, from the geometry store.
+    /// The objects as the cursor would stretch them: the command's plan.
     fn refresh(&mut self, cx: &Context<'_>) {
         self.ghosts.clear();
         self.marks.clear();
@@ -270,35 +239,43 @@ impl Stretch {
             (Some(base), Some(hover)) => (hover.x - base.x, hover.y - base.y),
             _ => (0.0, 0.0),
         };
-        let ids: Vec<f64> = self
-            .targets
-            .iter()
-            .take(MAX_GHOSTS)
-            .map(|slot| f64::from(slot.0))
-            .collect();
-        let paths = cx.spatial.store().stretch_outlines(&ids, &window, dx, dy);
-        (self.ghosts, self.marks) = ghosts(&paths);
-        // The neighbours that follow (docs/adr/0160 §5), as the stretched objects.
         if dx == 0.0 && dy == 0.0 {
+            // Where they are: the window's objects as they stand.
+            let input = Self::request(&window, 0.0, 0.0, cx);
+            if let CommandResult::Completed { output, .. } =
+                stretch::objects_in(cx.doc, Some(cx.spatial.store()), &input)
+            {
+                let doc = &*cx.doc;
+                for uid in output.iter().take(MAX_GHOSTS) {
+                    let Some(e) = kentos_domain::Uuid::parse_str(uid)
+                        .ok()
+                        .and_then(|u| doc.slot_of(u))
+                        .and_then(|s: Slot| doc.get(s))
+                    else {
+                        continue;
+                    };
+                    let outline = Outline::of(&shape(e), Some(GHOST_DASH), 1.0, Tone::Accent);
+                    self.ghosts.extend(outline.strokes);
+                    self.marks.extend(outline.marks);
+                }
+            }
             return;
         }
-        let Some((at, found)) = self.followers(cx) else {
+        let input = Self::request(&window, dx, dy, cx);
+        let CommandResult::Completed { output, .. } =
+            stretch::plan_in(cx.doc, Some(cx.spatial.store()), &input)
+        else {
             return;
         };
-        if found.is_empty() {
-            return;
-        }
-        let moves: Vec<Change> = at
+        for e in output
+            .stretched
             .iter()
-            .map(|&v| Change::Move {
-                at: v,
-                to: Vec2::new(v.x + dx, v.y + dy),
-            })
-            .collect();
-        let shapes = neighbours::put_right(cx, found, &moves).shapes;
-        for shape in &shapes {
-            let outline = Outline::of(shape, Some(GHOST_DASH), 1.0, Tone::Accent);
+            .chain(&output.followed)
+            .take(MAX_GHOSTS)
+        {
+            let outline = Outline::of(&shape(e), Some(GHOST_DASH), 1.0, Tone::Accent);
             self.ghosts.extend(outline.strokes);
+            self.marks.extend(outline.marks);
         }
     }
 }
@@ -334,7 +311,7 @@ impl Tool for Stretch {
             Stage::SecondCorner => Prompt::new(LABEL, "pencerenin karşı köşesini belirtin"),
             Stage::Base => Prompt::new(
                 LABEL,
-                format!("{} nesne için temel noktayı belirtin", self.targets.len()),
+                format!("{} nesne için temel noktayı belirtin", self.targets),
             ),
             Stage::Target => Prompt::new(LABEL, "hedef noktayı belirtin ya da @dY,dX yazın"),
         }

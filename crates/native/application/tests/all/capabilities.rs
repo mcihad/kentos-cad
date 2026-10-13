@@ -1,0 +1,367 @@
+//! The catalog's capabilities are true (docs/adr/0253 §7): every code a
+//! shared case answers with is listed for its command, every listed code a
+//! case reaches or is named here with the reason no case does; and for the
+//! commands that pick objects by kind, an object of each kind is tried: a
+//! listed kind is taken, another is refused with the listed code.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
+
+use kentos_contracts::capabilities::{KINDS, capabilities_of};
+use kentos_contracts::{CallOp, DocumentSnapshotV2, FILE_COMMANDS};
+use kentos_domain::{Document, Uuid};
+use kentos_native_application::{DESKTOP_COMMANDS, ExecutionContext, registry};
+use serde_json::{Value, json};
+
+fn root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..")
+}
+
+/// Every code the shared cases answer with, by command.
+fn reached() -> BTreeMap<String, BTreeSet<String>> {
+    fn walk(v: &Value, out: &mut BTreeSet<String>) {
+        match v {
+            Value::Object(map) => {
+                if map.contains_key("status")
+                    && let Some(code) = map
+                        .get("error")
+                        .and_then(|e| e.get("code"))
+                        .and_then(Value::as_str)
+                {
+                    out.insert(code.to_owned());
+                }
+                if let Some(Value::Array(ws)) = map.get("warnings") {
+                    for w in ws {
+                        if let Some(code) = w.get("code").and_then(Value::as_str) {
+                            out.insert(code.to_owned());
+                        }
+                    }
+                }
+                map.values().for_each(|x| walk(x, out));
+            }
+            Value::Array(items) => items.iter().for_each(|x| walk(x, out)),
+            _ => {}
+        }
+    }
+    let mut out: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for dir in ["fixtures/commands/v1", "fixtures/commands/v1/desktop"] {
+        let mut files: Vec<PathBuf> = std::fs::read_dir(root().join(dir))
+            .expect("the folder")
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .filter(|p| p.extension().is_some_and(|x| x == "json"))
+            .collect();
+        files.sort();
+        for file in files {
+            let v: Value = serde_json::from_str(&std::fs::read_to_string(&file).expect("reads"))
+                .expect("json");
+            let command = v["command"].as_str().expect("command").to_owned();
+            walk(&v["cases"], out.entry(command).or_default());
+        }
+    }
+    out
+}
+
+/// The listed codes no shared case reaches, and why.
+const UNREACHED: &[(&str, &str, &str)] = &[
+    (
+        "*",
+        "slots_exhausted",
+        "4 milyarı aşkın yuvanın tükenmesi ortak durumla kurulamaz; masaüstünün kendi testinde (fixtures/commands/README.md)",
+    ),
+    (
+        "*",
+        "block_refused",
+        "beklenmez: komutlar belgenin blok kurallarını önce kendileri denetler",
+    ),
+    (
+        "*",
+        "layer_refused",
+        "beklenmez: komutun denetimleri belgenin reddedeceği katmanı önce yakalar",
+    ),
+    (
+        "cad.entities.edit",
+        "invalid_hatch",
+        "kural cad.entities.create'in durumlarında; düzenleme aynı denetimden geçer",
+    ),
+    (
+        "cad.entities.edit",
+        "invalid_paragraph",
+        "kural cad.entities.create'in durumlarında; düzenleme aynı denetimden geçer",
+    ),
+    (
+        "cad.entities.edit",
+        "invalid_refs",
+        "kural cad.entities.create'in ve cad.dimensions.reassociate'in durumlarında",
+    ),
+    (
+        "cad.entities.edit",
+        "invalid_style",
+        "kural cad.entities.create'in ve cad.styles.edit'in durumlarında",
+    ),
+    (
+        "cad.entities.edit",
+        "unknown_style",
+        "kural cad.entities.create'in durumlarında; düzenleme aynı denetimden geçer",
+    ),
+    (
+        "cad.layers.service",
+        "layer_has_objects",
+        "ortak durumu yok; masaüstünün Harita servisi penceresi nesneli katmanı önermez",
+    ),
+    (
+        "cad.entities.stretch",
+        "neighbour_invalid",
+        "beklenmez: Esnet köşeleri yalnız taşır, komşunun köşe sayısı değişmez; uyarı çekirdeğin kuralı değişirse diye yazılır (ADR 0254 §2)",
+    ),
+    (
+        "cad.entities.join",
+        "join_failed",
+        "beklenmez: çekirdek yalnız boş zinciri reddeder, komut onu nothing_to_join ile önce yakalar (ADR 0254 §4)",
+    ),
+    (
+        "cad.sheets.edit",
+        "*",
+        "pafta çekirdeğinin kendi retleri; çekirdeğin testleri (crates/shared/sheet) ve cad.sheets.edit'in ilk ikisi",
+    ),
+];
+
+fn why_unreached(command: &str, code: &str) -> Option<&'static str> {
+    UNREACHED
+        .iter()
+        .find(|(c, k, _)| (*c == "*" || *c == command) && (*k == "*" || *k == code))
+        .map(|(_, _, why)| *why)
+}
+
+#[test]
+fn every_code_a_case_reaches_is_listed_and_every_listed_one_is_reached_or_explained() {
+    let reached = reached();
+    let mut problems = Vec::new();
+    // The change set answers with its steps' codes too.
+    let every: BTreeSet<String> = DESKTOP_COMMANDS
+        .iter()
+        .filter_map(|(id, _)| capabilities_of(id))
+        .flat_map(|c| c.refusals.into_iter().chain(c.warnings))
+        .collect();
+    for (id, _) in DESKTOP_COMMANDS {
+        let Some(c) = capabilities_of(id) else {
+            problems.push(format!("{id}: yetenekleri yok"));
+            continue;
+        };
+        let listed: BTreeSet<String> = c.refusals.iter().chain(&c.warnings).cloned().collect();
+        let got = reached.get(*id).cloned().unwrap_or_default();
+        for code in &got {
+            let ok =
+                listed.contains(code) || (*id == "cad.changeset.apply" && every.contains(code));
+            if !ok {
+                problems.push(format!("{id}: durumlar {code} veriyor, katalog anmıyor"));
+            }
+        }
+        for code in &listed {
+            if !got.contains(code) && why_unreached(id, code).is_none() {
+                problems.push(format!(
+                    "{id}: {code} anılıyor ama hiçbir durum onu vermiyor ve gerekçesi yok"
+                ));
+            }
+        }
+    }
+    // Every command of the catalog the desktop or the headless host runs has its capabilities.
+    for (id, _) in FILE_COMMANDS {
+        assert!(capabilities_of(id).is_some(), "{id}");
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// An object of every kind, each in a drawing of the shared samples that has it.
+fn one_of_each_kind() -> BTreeMap<&'static str, (Document, Uuid)> {
+    let mut out = BTreeMap::new();
+    let dir = root().join("fixtures/kcad/v2");
+    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .expect("the folder")
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| {
+            p.extension().is_some_and(|x| x == "json")
+                && p.file_name().is_none_or(|n| n != "expected.json")
+        })
+        .collect();
+    files.sort();
+    for file in files {
+        let Ok(snapshot) = serde_json::from_str::<DocumentSnapshotV2>(
+            &std::fs::read_to_string(&file).expect("reads"),
+        ) else {
+            continue;
+        };
+        let Ok(doc) = Document::from_snapshot_v2(snapshot) else {
+            continue;
+        };
+        let wanted: Vec<(&'static str, Uuid)> = KINDS
+            .iter()
+            .filter(|k| !out.contains_key(*k))
+            .filter_map(|k| {
+                doc.entities()
+                    .find(|e| e.kind() == *k)
+                    .and_then(|e| doc.uid(kentos_domain::Slot(e.base().id)))
+                    .map(|u| (*k, u))
+            })
+            .collect();
+        for (kind, uid) in wanted {
+            out.insert(kind, (doc.clone(), uid));
+        }
+    }
+    out
+}
+
+/// The code `command` answers `validate` of `input` with: none when it is taken.
+fn refusal(doc: &mut Document, command: &str, input: Value) -> Option<String> {
+    let mut cx = ExecutionContext::new(doc);
+    let answer = registry::run(&mut cx, command, CallOp::Validate, input).expect("runs");
+    match answer["status"].as_str() {
+        Some("failed") | Some("conflict") => answer["error"]["code"].as_str().map(str::to_owned),
+        _ => None,
+    }
+}
+
+/// The form a target's note names, given to a sample that is not in it
+/// before it is tried: Çoklu tara takes a closed curve (an open one is
+/// refused with `not_closed`, as its note says).
+type Form = fn(&mut kentos_contracts::Entity);
+const FORMS: &[(&str, &str, Form)] = &[("cad.entities.hatch", "spline", |e| {
+    if let kentos_contracts::Entity::Spline(s) = e {
+        s.closed = true;
+    }
+})];
+
+#[test]
+fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
+    let kinds = one_of_each_kind();
+    assert_eq!(
+        kinds.len(),
+        KINDS.len(),
+        "the samples lack a kind: {:?}",
+        KINDS
+            .iter()
+            .filter(|k| !kinds.contains_key(*k))
+            .collect::<Vec<_>>()
+    );
+    // The command, the operation its targets name (none: the whole), the input for an object.
+    type Make = fn(&str) -> Value;
+    let tries: &[(&str, Option<&str>, Make)] = &[
+        (
+            "cad.entities.offset",
+            None,
+            |u| json!({ "uids": [u], "by": { "kind": "distance", "distance": 0.5, "side": { "x": 1.0e9, "y": 1.0e9 } } }),
+        ),
+        (
+            "cad.dimensions.reassociate",
+            None,
+            |u| json!({ "uid": u, "points": [{ "point": "a" }] }),
+        ),
+        (
+            "cad.entities.fillet",
+            Some("vertex"),
+            |u| json!({ "corner": { "kind": "vertex", "uid": u, "index": 1 }, "radius": 0.001 }),
+        ),
+        (
+            "cad.entities.chamfer",
+            Some("vertex"),
+            |u| json!({ "corner": { "kind": "vertex", "uid": u, "index": 1 }, "distance": 0.001 }),
+        ),
+        (
+            "cad.entities.transform",
+            None,
+            |u| json!({ "uids": [u], "transform": { "kind": "move", "dx": 1.0, "dy": 0.0 } }),
+        ),
+        (
+            "cad.entities.array",
+            None,
+            |u| json!({ "uids": [u], "layout": { "kind": "grid", "rows": 1, "cols": 2, "dx": 1.0, "dy": 0.0 } }),
+        ),
+        // A window around everything: a kind that stretches has a corner in it.
+        ("cad.entities.stretch", None, |u| {
+            json!({
+                "window": { "min": { "x": -1.0e12, "y": -1.0e12 }, "max": { "x": 1.0e12, "y": 1.0e12 } },
+                "dx": 1.0, "dy": 0.0, "uids": [u]
+            })
+        }),
+        // A point off the object: a kind that breaks is refused for the point (break_failed), not for its kind.
+        (
+            "cad.entities.break",
+            None,
+            |u| json!({ "uid": u, "first": { "x": 0.0, "y": 0.0 } }),
+        ),
+        // A seed alone: a kind that chains has nothing to join, another is not joinable. (Two
+        // objects meeting end to end, the whole's target, cannot be made of one sample object.)
+        (
+            "cad.entities.join",
+            Some("chain"),
+            |u| json!({ "uids": [u], "chain": { "kind": "objects", "uids": [u] } }),
+        ),
+        // A layer that is not there: a kind that divides is refused for the layer, after its points.
+        (
+            "cad.entities.divide",
+            None,
+            |u| json!({ "uid": u, "division": { "kind": "parts", "count": 2 }, "layerId": "yok" }),
+        ),
+        (
+            "cad.entities.hatch",
+            Some("objects"),
+            |u| json!({ "region": { "kind": "objects", "uids": [u] }, "pattern": { "name": "Dolu" }, "layerId": "yok" }),
+        ),
+        // A circle's or an arc's edge: a kind that has one is refused for the layer, or for a dimension
+        // that does not form there, not for its kind.
+        ("cad.dimensions.create", Some("radius"), |u| {
+            json!({ "measure": { "kind": "radius", "of": { "uid": u, "near": { "x": 0.0, "y": 0.0 } } },
+                    "at": { "x": 1.0e9, "y": 1.0e9 }, "layerId": "yok" })
+        }),
+        ("cad.dimensions.create", Some("arcLength"), |u| {
+            json!({ "measure": { "kind": "arcLength", "of": { "uid": u, "near": { "x": 0.0, "y": 0.0 } } },
+                    "at": { "x": 1.0e9, "y": 1.0e9 }, "layerId": "yok" })
+        }),
+    ];
+    let mut problems = Vec::new();
+    for (command, operation, make) in tries {
+        let c = capabilities_of(command).expect("listed");
+        let target = c
+            .targets
+            .iter()
+            .find(|t| t.operation.as_deref() == *operation)
+            .unwrap_or_else(|| panic!("{command}: no target {operation:?}"));
+        let code = target.refused_with.clone().expect("a refusing code");
+        for kind in KINDS {
+            let taken = if target.kinds.iter().any(|k| k == "*") {
+                !target.except.iter().any(|k| k == kind)
+            } else {
+                target.kinds.iter().any(|k| k == kind)
+            };
+            let (doc, uid) = &kinds[kind];
+            let mut doc = doc.clone();
+            // An object on a locked layer is refused for its layer first: unlock it.
+            let layer = doc
+                .get(doc.slot_of(*uid).expect("there"))
+                .map(|e| e.base().layer_id.clone())
+                .unwrap_or_default();
+            doc.set_layer_locked(&layer, false);
+            if let Some((_, _, form)) = FORMS.iter().find(|(c, k, _)| c == command && *k == kind) {
+                let slot = doc.slot_of(*uid).expect("there");
+                let mut e = doc.get(slot).expect("there").clone();
+                form(&mut e);
+                assert!(
+                    doc.update(slot, e),
+                    "{command}: {kind} could not be given its form"
+                );
+            }
+            let got = refusal(&mut doc, command, make(&uid.to_string()));
+            let refused_for_kind = got.as_deref() == Some(code.as_str());
+            if taken && refused_for_kind {
+                problems.push(format!(
+                    "{command}: {kind} listede ama {code} ile reddedildi"
+                ));
+            }
+            if !taken && !refused_for_kind {
+                problems.push(format!(
+                    "{command}: {kind} listede değil ama {code} ile reddedilmedi ({got:?})"
+                ));
+            }
+        }
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}

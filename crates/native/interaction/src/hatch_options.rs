@@ -48,6 +48,18 @@ pub fn colour_text(m: &Memory) -> String {
     format!("#{:06X}", m.hatch_color2 & 0xFF_FF_FF)
 }
 
+/// The pattern as Tarama's command takes it (docs/adr/0254 §7): the
+/// session's choice by its name, and its options.
+pub fn spec(m: &Memory) -> kentos_contracts::HatchPatternSpec {
+    kentos_contracts::HatchPatternSpec {
+        name: choice(m).name,
+        scale: Some(m.hatch_scale),
+        angle: Some(m.hatch_angle),
+        second_color: Some(colour_text(m)),
+        inverted: Some(m.hatch_inverted),
+    }
+}
+
 /// The pattern a hatch is written with at the drawing's plot scale (1:N).
 pub fn pattern(m: &Memory, plot_scale: f64) -> Option<HatchPattern> {
     contract_pattern(pattern_of(&Options {

@@ -103,9 +103,17 @@ impl App {
                 "revision": doc.model.revision().to_string(),
                 "objects": doc.model.len(),
             })),
-            "run" | "summary" | "layers" | "entities" | "entity" | "measure" => {
-                let mut answer = kentos_headless::rpc::call(&mut doc.model, method, &params)
-                    .map_err(|e| (e.code.to_owned(), e.message))?;
+            "run" | "summary" | "layers" | "entities" | "entity" | "measure" | "call"
+            | "journal" | "replay" | "start" | "job" | "wait" | "cancel" => {
+                // The desktop does not wait for a job on its interface thread: `wait` says how it is.
+                let method = if method == "wait" { "job" } else { method };
+                let mut answer = kentos_headless::rpc::call_with(
+                    &mut doc.model,
+                    Some(&mut self.python.jobs),
+                    method,
+                    &params,
+                )
+                .map_err(|e| (e.code.to_owned(), e.message))?;
                 if method == "summary"
                     && let Some(fields) = answer.as_object_mut()
                 {
@@ -114,19 +122,35 @@ impl App {
                     }
                     fields.insert("legacy".into(), json!(doc.legacy));
                 }
-                let wrote = method == "run"
-                    && params.get("op").and_then(Value::as_str) == Some("execute")
-                    && answer.get("status").and_then(Value::as_str) == Some("completed");
+                let execute = params
+                    .get("op")
+                    .and_then(Value::as_str)
+                    .is_none_or(|o| o == "execute");
+                let wrote = match method {
+                    "run" => {
+                        params.get("op").and_then(Value::as_str) == Some("execute")
+                            && answer.get("status").and_then(Value::as_str) == Some("completed")
+                    }
+                    "call" => {
+                        execute
+                            && answer.get("status").and_then(Value::as_str) == Some("completed")
+                            && answer.get("replayed").and_then(Value::as_bool) != Some(true)
+                    }
+                    "start" => true,
+                    _ => false,
+                };
                 if wrote {
                     let command = params.get("command").and_then(Value::as_str).unwrap_or("?");
                     self.output(format!("Ajan: {command}"));
+                } else if method == "replay" {
+                    self.output("Ajan: kayıt yeniden oynatıldı".to_owned());
                 }
                 Ok(answer)
             }
             other => Err(refused(
                 "unknown_method",
                 &format!(
-                    "“{other}” masaüstünde yanıtlanmaz: hello, run, summary, layers, entities, entity ya da measure."
+                    "“{other}” masaüstünde yanıtlanmaz: hello, run, call, summary, layers, entities, entity, measure, journal, replay, start, job, wait ya da cancel."
                 ),
             )),
         }

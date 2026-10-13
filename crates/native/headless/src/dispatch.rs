@@ -1,34 +1,31 @@
-//! A catalog command by name: its JSON input read as the command's own
-//! type, run by the desktop's handler, its `CommandResult` written back as
-//! JSON (the catalog's wire form, `status`-tagged).
+//! A catalog command by name: the document's commands through the
+//! application's registry (`kentos_native_application::registry`, the
+//! handlers the tools run), the commands that write files through
+//! [`crate::file_commands`]; the answer is the `CommandResult` as the
+//! catalog writes it (`status`-tagged), or by the protocol a `CallAnswer`
+//! (docs/adr/0253).
 
-use kentos_contracts::{
-    AddressesDefine, ArcCreate, BlocksDefine, BlocksEdit, CircleCreate, DimensionsReassociate,
-    EntitiesArray, EntitiesChamfer, EntitiesCreate, EntitiesDelete, EntitiesEdit, EntitiesFillet,
-    EntitiesOffset, EntitiesSetProperties, EntitiesTransform, EntitiesTrim, LabelsPin,
-    LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer,
-    LayersService, LayersSet, LayersStates, LayersTime, LineCreate, NetworkDefine, PointCreate,
-    PolygonCreate, PolylineCreate, ScenariosEdit, SettingsSet, SheetsEdit, StylesEdit,
-};
+use kentos_contracts::{CallAnswer, CallEnvelope, CallOp, FILE_COMMANDS};
 use kentos_domain::Document;
-use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, create, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_trim, labels_pin, layers_compose, layers_edit, layers_filter,
-    layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
-    layers_time, line, network_define, offset, point, polygon, polyline, scenarios_edit, set,
-    settings_set, sheets_edit, styles_edit, transform,
-};
+use kentos_geometry_core::store::Store;
+use kentos_native_application::{DESKTOP_COMMANDS, ExecutionContext, call, registry};
 use serde_json::Value;
 
 use crate::HeadlessError;
+use crate::file_commands;
 
-/// The commands this host runs, by name and version: the desktop's
-/// (`kentos_native_application::DESKTOP_COMMANDS`).
-pub const DESKTOP: &[(&str, u32)] = DESKTOP_COMMANDS;
+/// The commands this host runs, by name and version: the desktop's document
+/// commands (`DESKTOP_COMMANDS`) and the ones that write files (`FILE_COMMANDS`).
+pub fn commands() -> Vec<(&'static str, u32)> {
+    DESKTOP_COMMANDS
+        .iter()
+        .chain(FILE_COMMANDS)
+        .copied()
+        .collect()
+}
 
 /// What a call does (TODOS.md CMD-04): `validate` and `plan` write nothing;
-/// `execute` writes one undo step.
+/// `execute` writes one change.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Op {
     Validate,
@@ -48,6 +45,15 @@ impl Op {
             )),
         }
     }
+
+    /// The protocol's form of it.
+    pub fn call_op(self) -> CallOp {
+        match self {
+            Op::Validate => CallOp::Validate,
+            Op::Plan => CallOp::Plan,
+            Op::Execute => CallOp::Execute,
+        }
+    }
 }
 
 /// Runs `op` of `command` (version `version`, or the host's when absent)
@@ -59,7 +65,7 @@ pub fn run(
     op: Op,
     input: Value,
 ) -> Result<Value, HeadlessError> {
-    let Some(&(_, own)) = DESKTOP.iter().find(|(name, _)| *name == command) else {
+    let Some((_, own)) = commands().into_iter().find(|(name, _)| *name == command) else {
         return Err(refusal(command));
     };
     if let Some(v) = version
@@ -70,73 +76,39 @@ pub fn run(
             format!("{command} için {v}. sürüm yok; bu sürüm {own}. sürümü çalıştırır."),
         ));
     }
-    macro_rules! run {
-        ($module:ident, $input:ty) => {{
-            let input: $input = serde_json::from_value(input).map_err(|e| {
-                HeadlessError::new(
-                    "invalid_input",
-                    format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın."),
-                )
-            })?;
-            match op {
-                Op::Validate => {
-                    serde_json::to_value($module::validate(&ExecutionContext::new(doc), &input))
-                }
-                Op::Plan => serde_json::to_value($module::plan(&ExecutionContext::new(doc), &input)),
-                Op::Execute => {
-                    serde_json::to_value($module::execute(&mut ExecutionContext::new(doc), input))
-                }
-            }
-        }};
+    if file_commands::is_file_command(command) {
+        return file_commands::run(doc, command, op.call_op(), input)
+            .map_err(|message| HeadlessError::new("invalid_input", message));
     }
-    let answer = match command {
-        kentos_contracts::CAD_POLYGON_CREATE => run!(polygon, PolygonCreate),
-        kentos_contracts::CAD_LINE_CREATE => run!(line, LineCreate),
-        kentos_contracts::CAD_POLYLINE_CREATE => run!(polyline, PolylineCreate),
-        kentos_contracts::CAD_ENTITIES_DELETE => run!(delete, EntitiesDelete),
-        kentos_contracts::CAD_POINT_CREATE => run!(point, PointCreate),
-        kentos_contracts::CAD_CIRCLE_CREATE => run!(circle, CircleCreate),
-        kentos_contracts::CAD_ARC_CREATE => run!(arc, ArcCreate),
-        kentos_contracts::CAD_ENTITIES_TRANSFORM => run!(transform, EntitiesTransform),
-        kentos_contracts::CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
-        kentos_contracts::CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
-        kentos_contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
-        kentos_contracts::CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
-        kentos_contracts::CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
-        kentos_contracts::CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
-        kentos_contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
-        kentos_contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
-        kentos_contracts::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
-        kentos_contracts::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
-        kentos_contracts::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),
-        kentos_contracts::CAD_ENTITIES_FILLET => run!(entities_fillet, EntitiesFillet),
-        kentos_contracts::CAD_ENTITIES_CHAMFER => run!(entities_chamfer, EntitiesChamfer),
-        kentos_contracts::CAD_DIMENSIONS_REASSOCIATE => {
-            run!(dimensions_reassociate, DimensionsReassociate)
-        }
-        kentos_contracts::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
-        kentos_contracts::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
-        kentos_contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
-        kentos_contracts::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
-        kentos_contracts::CAD_LAYERS_COMPOSE => run!(layers_compose, LayersCompose),
-        kentos_contracts::CAD_LAYERS_INFO => run!(layers_info, LayersInfo),
-        kentos_contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
-        kentos_contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
-        kentos_contracts::CAD_LAYERS_RENDERER => run!(layers_renderer, LayersRenderer),
-        kentos_contracts::CAD_LAYERS_EDIT => run!(layers_edit, LayersEdit),
-        kentos_contracts::CAD_LAYERS_SET => run!(layers_set, LayersSet),
-        kentos_contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
-        kentos_contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
-        kentos_contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
-        kentos_contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
-        other => return Err(refusal(other)),
-    };
-    answer.map_err(|e| {
-        HeadlessError::new(
-            "unwritable_result",
-            format!("{command} sonucu JSON'a yazılamadı: {e}"),
-        )
+    let mut cx = ExecutionContext::new(doc);
+    registry::run(&mut cx, command, op.call_op(), input).map_err(|unrun| match unrun.code {
+        "unknown_command" => refusal(command),
+        _ => HeadlessError::new("invalid_input", unrun.message),
     })
+}
+
+/// A call by the protocol (docs/adr/0253 §4): never a host's error, every
+/// refusal an answer; a server's command is refused with its reason.
+pub fn call_envelope(
+    doc: &mut Document,
+    store: Option<&Store>,
+    envelope: CallEnvelope,
+) -> CallAnswer {
+    if file_commands::is_file_command(&envelope.command) {
+        return file_commands::call(doc, envelope);
+    }
+    if registry::version_of(&envelope.command).is_none() {
+        let e = refusal(&envelope.command);
+        return CallAnswer::of(kentos_contracts::CommandResult::Failed {
+            error: kentos_contracts::CommandError {
+                code: e.code.to_owned(),
+                message: e.message,
+                path: Some("command".into()),
+                ..kentos_contracts::CommandError::default()
+            },
+        });
+    }
+    call::call(doc, store, envelope)
 }
 
 /// Why a command is not run here: the server's, or unknown.

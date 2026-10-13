@@ -28,11 +28,15 @@
 //!   stays, and when none reads upside down that is said and nothing is
 //!   written.
 //!
-//! Each writes one undo step through `cad.entities.edit`. The chains, the
-//! pieces and the turn are the shared core's (`join_entities`,
-//! `explode_entity`, `TextPlace::readable`).
+//! Birleştir writes through its product command `cad.entities.join`
+//! (docs/adr/0254 §4), the chains found there by the shared core
+//! (`join_entities`, `chain`); Patlat and Okunur yap write one undo step
+//! through `cad.entities.edit`, the pieces and the turn the core's
+//! (`explode_entity`, `TextPlace::readable`).
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit, TextEntity};
+use kentos_contracts::{
+    CommandResult, EditOperation, EntitiesJoin, Entity, EntityEdit, TextEntity, TrimBoundaries,
+};
 use kentos_domain::Slot;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, TextPlace, dimension_geom};
@@ -40,16 +44,17 @@ use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::explode::explode_entity;
-use kentos_geometry_core::ops::join::{ChainObject, chain, join_entities};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::blocks::core_entity;
 use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
+use kentos_native_application::{ExecutionContext, entities_join};
 
 use crate::Vec2;
 use crate::edge;
 use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
+use crate::points::{self, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow, Memory};
 
@@ -223,141 +228,88 @@ impl ObjectAction {
     }
 
     /// Zincir (docs/adr/0161 §2, the web's `JoinTool.joinChain`): the
-    /// visible lines, arcs and polylines walked from `hit` by the core
-    /// (`chain`), then joined as a selection is. Whether a chain was joined.
+    /// visible lines, arcs and polylines walked from `hit` and joined, by the
+    /// command `cad.entities.join` with its chain over the view. Whether a
+    /// chain was joined.
     fn join_chain(hit: Slot, cx: &mut Context<'_>) -> bool {
-        let doc = &*cx.doc;
-        let Some(seed) = doc.get(hit) else {
+        let Some(uid) = cx.doc.uid(hit) else {
             return false;
         };
-        if !matches!(seed, Entity::Line(_) | Entity::Arc(_) | Entity::Polyline(_)) {
-            cx.say(
-                Level::Warn,
-                "Zincir bir çizgiden, yaydan ya da açık çoklu çizgiden başlar.",
-            );
-            return false;
-        }
-        if doc.layers().is_locked(&seed.base().layer_id) {
-            cx.say(Level::Warn, "Kilitli katmandaki nesne birleştirilemez.");
-            return false;
-        }
-        let mut slots = Vec::new();
-        let mut objects = Vec::new();
-        for item in cx.spatial.store().overlapping(&cx.view.visible(), None) {
-            let Some(slot) = crate::spatial::slot(item.id) else {
-                continue;
-            };
-            let Some(e) = doc.get(slot) else {
-                continue;
-            };
-            if matches!(e, Entity::Line(_) | Entity::Arc(_) | Entity::Polyline(_)) {
-                slots.push(slot);
-                objects.push(ChainObject {
-                    shape: item.shape.clone(),
-                    locked: doc.layers().is_locked(&e.base().layer_id),
-                });
-            }
-        }
-        let seed_at = match slots.iter().position(|s| *s == hit) {
-            Some(i) => i,
-            None => {
-                slots.push(hit);
-                objects.push(ChainObject {
-                    shape: shape(seed),
-                    locked: false,
-                });
-                slots.len() - 1
-            }
+        let view = cx.view.visible();
+        let input = EntitiesJoin {
+            uids: vec![uid.to_string()],
+            tolerance: Some(cx.memory.join_tolerance.max(1e-9)),
+            chain: Some(TrimBoundaries::Area {
+                min: wire(Vec2::new(view.min_x, view.min_y)),
+                max: wire(Vec2::new(view.max_x, view.max_y)),
+            }),
+            expected_revision: None,
         };
-        let found = chain(&objects, seed_at, cx.memory.join_tolerance.max(1e-9));
-        if found.members.len() < 2 {
-            cx.say(
-                Level::Warn,
-                "Bu nesneye ucu ucuna bağlanan nesne yok; zincir kurulamadı.",
-            );
-            return false;
-        }
-        // The clicked object keeps its place, its persistent id and its data (docs/adr/0161 §2).
-        let members: Vec<Slot> = found
-            .members
-            .iter()
-            .filter_map(|&i| slots.get(i).copied())
-            .collect();
-        Self::run_join(&members, Some(hit), cx);
-        if found.locked {
-            cx.say(Level::Warn, "Zincir kilitli katmandaki bir nesnede durdu.");
-        }
-        true
+        Self::write_join(input, cx)
     }
 
-    /// Birleştir (the web's `JoinTool.run`); `keep`, when one of a chain, is
-    /// the object that chain becomes (Zincir's clicked one).
-    fn run_join(targets: &[Slot], keep: Option<Slot>, cx: &mut Context<'_>) {
-        let tolerance = cx.memory.join_tolerance.max(1e-9);
-        // The core names each object by its `id`: the slot.
-        let list: Vec<CoreEntity> = targets
+    /// Birleştir (the web's `JoinTool.run`): the command `cad.entities.join`
+    /// with the selection's objects.
+    fn run_join(targets: &[Slot], cx: &mut Context<'_>) {
+        let doc = &*cx.doc;
+        let uids: Vec<String> = targets
             .iter()
-            .filter_map(|slot| {
-                let e = cx.doc.get(*slot)?;
-                Some(CoreEntity {
-                    shape: shape(e),
-                    rest: vec![("id".to_owned(), Json::Num(f64::from(slot.0)))],
-                })
+            .filter_map(|s| doc.uid(*s).map(|u| u.to_string()))
+            .collect();
+        let input = EntitiesJoin {
+            uids,
+            tolerance: Some(cx.memory.join_tolerance.max(1e-9)),
+            chain: None,
+            expected_revision: None,
+        };
+        Self::write_join(input, cx);
+    }
+
+    /// Writes a join, selects what the chains became and says it, the
+    /// command's warnings after (a chain that stopped at a locked object).
+    fn write_join(input: EntitiesJoin, cx: &mut Context<'_>) -> bool {
+        let result = entities_join::execute(
+            &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+            input,
+        );
+        let (result, warnings) = match result {
+            CommandResult::Completed { output, warnings } => (
+                CommandResult::Completed {
+                    output,
+                    warnings: Vec::new(),
+                },
+                warnings,
+            ),
+            other => (other, Vec::new()),
+        };
+        let Some(out) = points::written(result, cx) else {
+            return false;
+        };
+        let doc = &*cx.doc;
+        let firsts: Vec<Slot> = out
+            .changed
+            .iter()
+            .filter_map(|u| {
+                kentos_domain::Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
             })
             .collect();
-        let groups = match join_entities(&list, tolerance) {
-            Ok(joined) => joined.groups,
-            Err(error) => return cx.say(Level::Warn, error),
-        };
-        if groups.is_empty() {
-            cx.say(
-                Level::Warn,
-                "Uçları birleşen çizgi, yay ya da açık çoklu çizgi bulunamadı. Toleransı artırmayı deneyin.",
-            );
-            return;
-        }
-        let slot_of = |id: &Json| match id {
-            Json::Num(n) if *n >= 0.0 && n.fract() == 0.0 => Some(Slot(*n as u32)),
-            _ => None,
-        };
-        // Each chain is its first object, joined (AutoCAD JOIN): its slot, persistent id,
-        // layer, colour, attributes and label; the others go.
-        let mut changes = Vec::new();
-        let mut firsts = Vec::new();
-        let mut joined = 0;
-        for g in &groups {
-            let slots: Vec<Slot> = g.sources.iter().filter_map(slot_of).collect();
-            let first = keep
-                .filter(|k| slots.contains(k))
-                .or_else(|| slots.first().copied());
-            let (Some(first), Some(geometry)) = (first, edge::geometry(&g.geometry.shape)) else {
-                continue;
-            };
-            joined += slots.len();
-            firsts.push(first);
-            changes.push(EntityEdit::Replace {
-                uid: edge::uid(cx.doc, first),
-                geometry,
-                keep_data: Some(true),
-            });
-            for slot in slots.iter().filter(|&&s| s != first) {
-                changes.push(EntityEdit::Remove {
-                    uid: edge::uid(cx.doc, *slot),
-                });
-            }
-        }
-        if edge::write(EditOperation::Join, changes, cx).is_none() {
-            return;
-        }
-        cx.selection.set(firsts);
-        let kinds: Vec<&str> = groups
+        let kinds: Vec<&str> = firsts
             .iter()
-            .map(|g| Self::kind_name(&g.geometry.shape))
+            .filter_map(|s| doc.get(*s))
+            .map(|e| Self::kind_name(&shape(e)))
             .collect();
+        let joined = out.changed.len() + out.removed.len();
+        cx.selection.set(firsts);
         cx.say(
             Level::Success,
             format!("{joined} nesne birleştirildi: {}.", kinds.join(", ")),
         );
+        for w in warnings {
+            cx.say(Level::Warn, w.message);
+        }
+        true
     }
 
     /// A dimension's measured value as the drawing shows it, in project
@@ -512,7 +464,7 @@ impl Stages for ObjectAction {
         let targets = Self::targets(cx);
         if !targets.is_empty() {
             match self.kind {
-                Kind::Join => Self::run_join(&targets, None, cx),
+                Kind::Join => Self::run_join(&targets, cx),
                 Kind::Explode => Self::run_explode(&targets, cx),
                 Kind::Readable => Self::run_readable(&targets, cx),
             }

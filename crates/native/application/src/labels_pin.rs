@@ -27,7 +27,7 @@ pub use crate::codes;
 pub const LABEL: &str = "Etiket";
 
 fn fail(code: &str, message: String, path: String) -> Stop {
-    Stop::Failed(error(code, message, Some(path)))
+    Stop::failed(error(code, message, Some(path)))
 }
 
 /// The objects whose pins change, each with its pins as they would be, in the input's order.
@@ -205,6 +205,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LabelsPin) -> CommandResult<Label
 
 /// Writes the pins as one undo step “Etiket” when any changes.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LabelsPin) -> CommandResult<LabelsPinned> {
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_LABELS_PIN,
+        kentos_contracts::CAD_LABELS_PIN_VERSION,
+        input,
+        write_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step of the
+/// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
+fn write_execute(cx: &mut ExecutionContext<'_>, input: LabelsPin) -> CommandResult<LabelsPinned> {
     let changes = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),

@@ -114,3 +114,74 @@ pub fn write_bytes(bytes: &[u8], path: &Path) -> Result<usize, HeadlessError> {
     }
     result.map(|()| bytes.len())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A folder of its own under the system's temporary one.
+    fn folder(name: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!("kentos-yaz-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&d);
+        fs::create_dir_all(&d).expect("a folder");
+        d
+    }
+
+    fn names(d: &Path) -> Vec<String> {
+        let mut n: Vec<String> = fs::read_dir(d)
+            .expect("lists")
+            .map(|e| {
+                e.expect("an entry")
+                    .file_name()
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect();
+        n.sort();
+        n
+    }
+
+    /// A write that fails after its bytes are down (the name cannot be
+    /// taken) leaves what was there whole and no temporary file.
+    #[test]
+    fn a_write_that_fails_leaves_no_half_file() {
+        let d = folder("yarim");
+        let target = d.join("hedef.dxf");
+        fs::create_dir(&target).expect("a folder in the way");
+        fs::write(target.join("icinde"), b"eski").expect("writes");
+        let e = write_bytes(b"yeni", &target).expect_err("a folder's name is not taken");
+        assert_eq!(e.code, "file_unwritable");
+        assert_eq!(fs::read(target.join("icinde")).expect("reads"), b"eski");
+        assert_eq!(names(&d), ["hedef.dxf"], "no temporary file left");
+        let _ = fs::remove_dir_all(&d);
+    }
+
+    /// A file there is replaced whole; the bytes read back are the ones meant.
+    #[test]
+    fn a_file_there_is_replaced_whole() {
+        let d = folder("yerine");
+        let target = d.join("dosya.dxf");
+        fs::write(&target, b"eski icerik, daha uzun").expect("writes");
+        assert_eq!(write_bytes(b"yeni", &target).expect("written"), 4);
+        assert_eq!(fs::read(&target).expect("reads"), b"yeni");
+        assert_eq!(names(&d), ["dosya.dxf"]);
+        let _ = fs::remove_dir_all(&d);
+    }
+
+    /// A folder it may not write to: nothing made, nothing left.
+    #[cfg(unix)]
+    #[test]
+    fn a_folder_it_may_not_write_to_gets_nothing() {
+        use std::os::unix::fs::PermissionsExt;
+        let d = folder("salt-okunur");
+        fs::set_permissions(&d, fs::Permissions::from_mode(0o555)).expect("read only");
+        let e = write_bytes(b"yeni", &d.join("dosya.dxf"));
+        fs::set_permissions(&d, fs::Permissions::from_mode(0o755)).expect("writable again");
+        // Root writes anyway; then the file is whole, which is the rule too.
+        if let Err(e) = e {
+            assert_eq!(e.code, "file_unwritable");
+            assert!(names(&d).is_empty(), "nothing made");
+        }
+        let _ = fs::remove_dir_all(&d);
+    }
+}

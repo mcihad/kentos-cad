@@ -72,7 +72,10 @@ fn a_locked_or_lonely_object_is_said_and_another_may_be_clicked() {
     assert!(b.session.is_running(), "the tool waits for another click");
     assert_eq!(
         b.said(before),
-        [(Level::Warn, "Kilitli katmandaki nesne birleştirilemez.")]
+        [(
+            Level::Warn,
+            "“Eski yol” katmanı kilitli; üzerindeki nesne değiştirilemez. Kilidi Katmanlar panelinden açın."
+        )]
     );
     // Off: a click selects as usual.
     assert!(b.type_text("Z"));
