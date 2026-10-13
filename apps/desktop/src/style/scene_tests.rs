@@ -176,6 +176,7 @@ fn look(doc: &Document) -> Look {
         origin: scene::scene_origin(doc),
         view_build: Default::default(),
         view_colors: Default::default(),
+        reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
     }
 }
 
@@ -347,6 +348,7 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
         layer_name: &names,
         view: Default::default(),
         frame: None,
+        reading_unit: look.reading_unit,
     };
     let entities: Vec<&Entity> = doc.model.by_layer("parsel").collect();
     let node = doc.model.layers().get("parsel").expect("parsel").clone();

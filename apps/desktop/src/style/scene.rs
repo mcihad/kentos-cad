@@ -599,6 +599,8 @@ impl StyledCache {
                 },
                 view: look.view_build,
                 frame: framed.map(|f| f.1.clone()),
+                // A renderer's classes were made from the values in the project's unit (docs/adr/0165 §2).
+                reading_unit: look.reading_unit,
             };
             build_layer(store, &node.style, entities, &opts)
                 .and_then(|(call, batches)| {

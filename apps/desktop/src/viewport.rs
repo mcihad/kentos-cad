@@ -607,7 +607,12 @@ impl Viewport {
     }
 
     /// The drawing's styled layers (docs/adr/0090), from the cache where nothing they depend on changed.
-    fn styled_scene(&self, doc: &Document, palette: &Palette, s: Styling<'_>) -> StyledScene {
+    pub(crate) fn styled_scene(
+        &self,
+        doc: &Document,
+        palette: &Palette,
+        s: Styling<'_>,
+    ) -> StyledScene {
         let hex = |c: Rgba8| format!("#{:02X}{:02X}{:02X}", c.0[0], c.0[1], c.0[2]);
         let look = crate::style::scene::Look {
             palette: kentos_native_style::StylePalette {
@@ -622,6 +627,8 @@ impl Viewport {
             origin: scene::scene_origin(doc),
             view_build: s.view_build,
             view_colors: s.view_colors,
+            // What a renderer compares is read in the project's drawing unit, as Katman stili listed it.
+            reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
         };
         let scene = self.styled.borrow_mut().scene(
             self.generation,

@@ -525,6 +525,8 @@ cargo test --release -p kentos-interaction --test perf -- --ignored --nocapture 
 cargo test --release -p kentos-expression --test perf -- --ignored --nocapture   # ifade motoru 10⁵ ve 10⁶ nesnede (ADR 0100; web yolu apps/web/scripts/perf/expression.test.ts)
 python3 scripts/fixtures/expression_geometry.py --check   # ifadelerin geometri değerlerini (alan, ağırlık merkezi, kutu; metrede ve yerel projenin cm ve mm biriminde, ADR 0165 §2) bağımsız hesapla denetle (ADR 0100)
 KENTOS_SHOTS_ONLY=cad-mm-etiket cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mm projesinde `$alan` etiketi ve Öznitelikler aynı birimde, .run/shots/arac-cad-mm-etiket-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs units); ADR 0165'in “ifadeler çizim biriminde” eki)
+KENTOS_SHOTS_ONLY=cad-mm-stil-kategorili,cad-mm-stil-aralikli,cad-mm-stil-kurallar,cad-mm-stil-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mm projesinde Katman stili: $alan'ın değerleri mm², sınıflar ve çizilen odalar aynı birimde, .run/shots/arac-cad-mm-stil-* (ADR 0165'in 13 Ekim eki)
+python3 scripts/fixtures/style_units_cases.py --check   # Katman stilinin değerlerini (Değerlerden sınıfla, Sınıfla, Nesne sütunu, kural sayıları) m, cm ve mm'de kesirlerle bağımsız başvurudan denetle; durumlar fixtures/style/v1/units.json, masaüstünün okuyucusu crates/native/style/tests/all/units.rs (ADR 0165'in 13 Ekim eki)
 KENTOS_WRITE_BUILDER=1 cargo test -p kentos-expression --test builder   # İfade oluşturucunun yanıtlarını (fixtures/expression/v2/builder.json) yeniden yaz; farkı okuyun (ADR 0100 §5)
 python3 scripts/fixtures/expression_language.py --check   # dil eklerinin değerlerini (durum, içinde, arasında, gibi, benzer, boş, ^, yeni işlevler) bağımsız başvuruyla denetle (ADR 0100 §4)
 (cd apps/web && node scripts/e2e/builder.mjs)   # İfade oluşturucu web'de klavye ve fareyle (açma, tamamlama, ağaç, değerler, önizleme, Vazgeç, Tamam)
@@ -1838,7 +1840,10 @@ numaraları ve çakışan dosyaları): [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.
   İstatistik/Grafik'in Alan ve Uzunluk'u çizim biriminde ve karesinde (Öznitelikler gibi); İşlemler, ağ maliyetleri ve semboller
   metrede. Birim derlemenin şemasında (`Schema::unit`, web bağlamının `unit`'i), çözümleyici geometri değerlerini ve başka katmana
   bakan işlevlerin ölçülerini çevirir (`resolve`); okuma birimi `expression_unit::reading_unit`, web `readingUnit`; birimli
-  durumlar `geometry.json`'un `units`'inde. Sahibin kararı geldi (12 Ekim): **web katmanına ara**
+  durumlar `geometry.json`'un `units`'inde; 13 Ekim'de sahibin bildirimiyle katmanın işleyicisinin ifadeleri de (Kategorili, Aralıklı,
+  Kurallı, tematik işleyiciler: Katman stili penceresi, çizim alanı, pafta haritası ve PDF) okuma sayılır ve projenin biriminde
+  okunur (ADR 0165'in 13 Ekim eki: `Program::read_in`, `BuildOptions::reading_unit`, `Look::reading_unit`, `ExprScope::unit`);
+  sembolün kendi ifadeleri, İşlemler, ağ maliyetleri ve pafta tabloları metrede kalır. Sahibin kararı geldi (12 Ekim): **web katmanına ara**
   ([ADR 0228](docs/adr/0228-web-pause-desktop-and-cloud-first.md)). Web'in son hâli `1aad00d0`'dır; bundan sonra masaüstü ve
   gerektiğinde bulut. `GIS-40` adres arama ([ADR 0229](docs/adr/0229-address-search.md); kapsamı
   sahibin kurallarıyla ben belirledim) tek parçada, yalnız masaüstünde bitti (12 Ekim): yeni komutların arayüz kaydı

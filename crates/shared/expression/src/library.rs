@@ -396,7 +396,7 @@ pub static VARIABLES: &[VarDef] = &[
         var: Var::Area,
         name: "alan",
         aliases: &[],
-        description: "Alan (m², yerel projede mm² ya da cm²): kapalı alan (delikler düşülür), daire, tam elips, tarama. İşlemler'de her zaman m²",
+        description: "Alan (m², yerel projede mm² ya da cm²): kapalı alan (delikler düşülür), daire, tam elips, tarama. İşlemler, semboller ve ağ maliyetlerinde her zaman m²",
         group: Group::Geometry,
         examples: &[
             ("$alan", "600"),
@@ -408,7 +408,7 @@ pub static VARIABLES: &[VarDef] = &[
         var: Var::Length,
         name: "uzunluk",
         aliases: &["çevre", "length", "perimeter"],
-        description: "Uzunluk ya da çevre (m, yerel projede mm ya da cm): İşlemler'de her zaman m",
+        description: "Uzunluk ya da çevre (m, yerel projede mm ya da cm): İşlemler, semboller ve ağ maliyetlerinde her zaman m",
         group: Group::Geometry,
         examples: &[
             ("$uzunluk", "100"),

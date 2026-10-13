@@ -16,7 +16,7 @@ use kentos_native_style::View;
 use kentos_native_style::batches::{DecodeOptions, decode};
 use kentos_native_style::color::{ColorMode, ViewColors};
 use kentos_native_style::library::{Source, StyleLibrary};
-use kentos_native_style::program::{BuildOptions, build_layer, symbol_scale_of};
+use kentos_native_style::program::{BuildOptions, ReadingUnit, build_layer, symbol_scale_of};
 use serde_json::{Value, json};
 
 fn fixture() -> Value {
@@ -192,6 +192,7 @@ fn builds_the_web_s_batches() {
                 area_edges: view["areaEdges"] != false,
             },
             frame: None,
+            reading_unit: ReadingUnit::METRE,
         };
         let (call, batches) = build_layer(&store, &style, &list, &opts).expect("build");
         let decisions: Vec<Value> = list
@@ -328,6 +329,7 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
             layer_name: &names,
             view: Default::default(),
             frame: None,
+            reading_unit: ReadingUnit::METRE,
         };
         let build = |list: &[&Entity]| -> StyledLayer {
             let (call, batches) = build_layer(&store, &style, list, &opts).expect("build");

@@ -132,6 +132,7 @@ pub fn vector_content(
         origin,
         view_build: Default::default(),
         view_colors: Default::default(),
+        reading_unit: kentos_native_style::reading_unit(doc.settings()),
     };
     let clip = Bounds {
         min_x: reach[0],

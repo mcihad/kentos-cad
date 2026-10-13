@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use kentos_contracts::Entity;
 use kentos_geometry_core::store::Store;
 use kentos_native_application::geometry::shape;
+use kentos_native_style::ReadingUnit;
 use kentos_native_style::classify::{
     CLASS_COUNT_DEFAULT, CLASS_COUNT_MAX, CLASS_COUNT_MIN, DEFAULT_RAMP, ExprScope, Method,
     NumericClass, OTHER_COLOR, Present, QUALITATIVE, RAMPS, categories_of, category_counts,
@@ -84,6 +85,7 @@ fn makes_the_web_s_classes() {
     let scope = ExprScope {
         layer_name: &name,
         measures: &measures,
+        unit: ReadingUnit::METRE,
     };
     let fp = present(&f["present"]);
     let mut problems = Vec::new();

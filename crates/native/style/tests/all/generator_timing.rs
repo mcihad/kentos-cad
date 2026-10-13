@@ -19,7 +19,7 @@ use kentos_geometry_core::store::Store;
 use kentos_native_application::geometry::shape;
 use kentos_native_style::batches::{DecodeOptions, StyledLayer, decode};
 use kentos_native_style::library::StyleLibrary;
-use kentos_native_style::program::{BuildOptions, build_layer};
+use kentos_native_style::program::{BuildOptions, ReadingUnit, build_layer};
 use kentos_native_style::{StylePalette, View};
 use serde_json::{Value, json};
 
@@ -84,6 +84,7 @@ fn build(entities: &[Entity], store: &Store, style: &LayerStyle) -> StyledLayer 
         layer_name: &names,
         view: View::default(),
         frame: None,
+        reading_unit: ReadingUnit::METRE,
     };
     let list: Vec<&Entity> = entities.iter().collect();
     let (_, batches) = build_layer(store, style, &list, &opts).expect("the core builds");

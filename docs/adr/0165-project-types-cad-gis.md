@@ -156,6 +156,64 @@ her yerde metreydi. Kural:
   metreye dönünce etiket “3 / 7” olur ve süzgeç ikisini de dışarıda bırakır (masaüstü `drawing_unit.rs`, web `picking.test.ts`);
   geometri sütunları üç birimde (`charts.rs`, `charts.test.ts`).
 
+### 13 Ekim eki: katman stilinin değerleri çizim biriminde
+
+Sahibin bildirimi (13 Ekim): “Katman stiline girdim kategori seçeneğini seçtim değer bölümüne $alan girdim değerlerden sınıfa
+dediğimde buradaki değerler metrekare geliyor benim proje birimim mm olsa bile, bu da çok yanlış; daha önce ölçü birimi düzeltmesi
+yaptık ama burada düzelmemiş”, ardından “orada başka varsa onları da düzeltsin”. 12 Ekim eki okumaları birime çevirirken katmanın
+işleyicisini (kategorinin değeri, sınıfın sayısı, kuralın koşulu, tematik işleyicilerin değerleri) hiçbir listeye almamıştı; yalnız
+“semboller (boyları metrede)” metrik sayılmıştı. İşleyicinin ifadeleri sembolün değil katmanın ifadesidir ve kullanıcı onları
+Öznitelikler'in gösterdiğiyle karşılaştırır. Katman stili penceresi (`classify`, `tally`) ve çizim (`Program::read`) metrede
+okuyordu: mm projesinde 3 m²'lik alan için pencere “3” yazıyor, çizim sınıfları 3'e göre çiziyordu; Öznitelikler ve etiket 3000000
+mm² diyordu. Kural:
+
+- **İşleyicinin okumaları projenin biriminde:** Kategorili'nin değeri, Aralıklı'nın ve Sürekli renk'in sayısı, Kurallı'nın koşulu
+  (alt kurallar dahil), Orantılı sembol'ün ve İki değişkenli renk'in değerleri, Nokta yoğunluğu'nun ve Grafik'in değer listesi, Isı
+  haritası'nın ağırlığı ve Kümeleme ile Yayma'nın içindeki tek noktaların işleyicisi. “Değerlerden sınıfla”, “Sınıfla”, “Verilerden
+  al” ve Sınıfla'ların hepsi aynı ifadeyi aynı birimde okur, Nesne sütunu (`tally`) onunla sayar; çizim alanı, pafta haritası ve
+  PDF aynı ifadeyi aynı birimde derler. Sınıfların sınırları, kategorilerin değerleri ve kuralların sayıları işleyicide birimle
+  saklanır: mm projesinde 3 m²'lik alan 3000000'dır, sınıf 1750000 – 3000000 mm²'dir.
+- **Metrik kalanlar, nedenleriyle:**
+  - *Sembolün kendi ifadeleri* (veriye bağlı boy, kalınlık, açı, uzaklık, renk, metin ve açık/kapalı; Geometri üretici'nin
+    adımları): sembol taşınır (Kitaplığım, `.kstil`), girdiği her projede aynı semboldür; ürettiği sayılar sembolün kendi
+    biriminde boy ve uzaklıktır (kâğıt mm, piksel, metre) ve `$alan` yanında yazdığı `' m²'` gibi metin onunla birlikte taşınır.
+    Birimle okusaydı aynı sembol metre projesinde bir boyda, mm projesinde başka boyda çizerdi. Sembol resimleri de (Stil
+    yöneticisi, Sembol tasarımcısı, Lejant) örnek nesne üstünde, metrede.
+  - *İşlemler* (araçların sayıları ve ifadeleri; İfadeyle seç ve Öznitelik hesapla dahil): 12 Ekim eki kuralı değişmedi, işlemin
+    bütün sayıları (uzaklıklar, eşikler, çıktılar) metrededir ve bir ifade çoğu araçta o sayılardan birini verir. Açık: İfadeyle
+    seç'in koşulu ile Öznitelik hesapla'nın değeri ve koşulu uzaklık vermeyen saf okumalardır; sahip isterse
+    `ParamKind::Expression`'a “okuma” bayrağı konur, oluşturucunun açıklaması zaten söyler.
+  - *Ağ maliyetleri* (süzgeçleri ve maliyetleri): uzunluk ÷ hız gibi fiziksel formüllerdir, metre ve saniyedir.
+  - *Pafta tabloları ve koordinat listesi:* kâğıt çıktısıdır, sütun başlığı kendi birimini yazar (“Yüzölçümü (m²)”) ve çekirdek web'le
+    ortaktır; sahnenin metresi.
+  - *Isı haritasının yarıçapı, Kümeleme'nin ve Yayma'nın uzaklığı, nokta ve grafik boyları:* ifade değil sayıdır, kendi birimini
+    seçer (m, px, kâğıt mm); Hover kartındaki tapu alanı (“Tapu alanı (m²)” özniteliği) hukuki değerdir.
+- **Motor:** `kentos_style_core`'da programın ifadeleri iki yoldan derlenir: `Exprs::intern` (sembol, metre) ve
+  `Exprs::intern_reading` (işleyici, programın okuma birimi); `Program::read_in(metin, birim)`, `Program::read` onun metredeki
+  hâlidir. Aynı metin iki yerde geçse bile (işleyicinin `$uzunluk`'u ve sembolün genişliği) ayrı derlenir; metrede ikisi tek
+  derlemedir. Masaüstünde `BuildOptions::reading_unit`, `Look::reading_unit` (çizim alanı `viewport.rs`, pafta haritası,
+  `kentos-plot`'un PDF'i ve başsız sunucu), pencerede `ExprScope::unit` (`Source::scope` projenin ayarından alır); sınıf ve kural
+  sayımı (`tally`) onunla derler. Birim `Look`'un parçasıdır: değişince sahne baştan kurulur (`StyledCache`), pafta ve PDF zaten
+  belge sürümüyle yeniden kurulur.
+- **Metre projesi:** hiçbir şey değişmez; birim 1 iken derleme ağacı yazıldığı gibi bırakır (12 Ekim eki), sonuçlar bit bit aynıdır.
+- **Bilinen sınır:** projenin birimi değişince işleyicide saklanan sayılar ve kural metinleri çevrilmez (etiket ve süzgeç
+  metinleri de çevrilmez): kullanıcı yeni birimle “Sınıfla”yı yeniden çalıştırır. Web'e ara verildiği için (ADR 0228) web'in
+  Katman stili'nde, çiziminde ve paftasında bu kural yok; web'de açılan mm projesinin işleyicisi eski gibi metrede okunur.
+  TODOS.md §0.2.
+- **Doğrulama:** bağımsız başvuru `scripts/fixtures/style_units_cases.py` (kesirlerle; geometri eksene paralel olduğu için
+  uzunluk ve alan tam) `fixtures/style/v1/units.json`'u yazar: üç birimde Değerlerden sınıfla'nın değerleri, farklı değerleri ve
+  sayıları, iki ve dört sınıf, kategori, sınıf ve kural sayıları; masaüstü bunu `crates/native/style/tests/all/units.rs`'te
+  geçer (web'in kaydettiği `classify.json`'a dokunulmadı: onu web'in kaydedicisi yeniden yazar). Aynı dosyada çizilen katman: her
+  işleyici metrede ve birimde yazıldığında aynı toplulukları verir, birimin sayılarıyla başka birimde okununca vermez (Kategorili,
+  Aralıklı, Kurallı, Sürekli renk, Orantılı sembol, İki değişkenli renk, Nokta yoğunluğu, Grafik, Isı haritası, Kümeleme ve
+  Yayma'nın tek noktaları); sembolün `$uzunluk` genişliği ve Geometri üretici'nin `$uzunluk / 20` tampon uzaklığı her birimde aynı
+  kalır; metre projesi `read` ile aynı. Uçtan uca pencere ve çizim alanı
+  (`apps/desktop/src/style/layer_style/unit_tests.rs`: Değerlerden sınıfla, Sınıfla, Uygula, çizilen dolgular, birim
+  değişince yeniden çizim, Kurallı, Sürekli renk'in Verilerden al'ı) ve pafta haritası (`crates/native/plot/tests/all/units.rs`).
+  Her yerin bağlantısı tek tek bozularak sınandı (birimi yok sayan program, metrik ağırlık, birimli sembol, metrik sayım, metrik
+  pencere, metrik çizim alanı ve harita): her seferinde ilgili testler düştü. Resimler: `tools_screens`'in `cad-mm-stil-kategorili`,
+  `-aralikli`, `-kurallar`, `-cizim` sahneleri (`.run/shots/arac-cad-mm-stil-*`).
+
 ## Bu ADR'de olmayanlar
 
 - CBS sahnesinde altlık harita karoları (dış XYZ ya da yayın kararı; CLAUDE.md §17).

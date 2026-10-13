@@ -209,6 +209,7 @@ fn look(doc: &Document, screen_scale: f64) -> Look {
         origin: scene::scene_origin(doc),
         view_build: Default::default(),
         view_colors: Default::default(),
+        reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
     }
 }
 
