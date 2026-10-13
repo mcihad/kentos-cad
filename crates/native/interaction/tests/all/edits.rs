@@ -356,8 +356,9 @@ fn a_chamfer_cuts_where_two_lines_meet() {
     );
     assert!(b.type_text("2"));
     assert_eq!(b.last_text(), Some("Pah kırıldı: 2.000 m."));
-    // Each line keeps the side away from the corner, cut back 2 m; the cut is new.
-    assert!(near(&line(&b, 5), &[[26.0, 4.0], [16.0, 4.0]]));
+    // Each line keeps the side away from the corner, cut back 2 m, and its direction (docs/adr/0252 §6);
+    // the cut is new.
+    assert!(near(&line(&b, 5), &[[16.0, 4.0], [26.0, 4.0]]));
     assert!(near(&line(&b, 6), &[[14.0, 16.0], [14.0, 6.0]]));
     assert!(near(&line(&b, 14), &[[16.0, 4.0], [14.0, 6.0]]));
     assert_eq!(b.memory.chamfer, Some((2.0, 2.0)));

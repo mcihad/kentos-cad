@@ -55,21 +55,25 @@ const GROUPS = [
   // style core and the core's batches with their colours and images. Pure like the tool session:
   // no Iced, window system or GPU (the renderer draws what it gives). Listed before `native`.
   { name: 'style', path: 'crates/native/style/', targets: [HOST], uses: ['shared', 'domain', 'application'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // A drawing on paper (docs/adr/0252): the sheet book's maps as vectors through the style
+  // engine, the sheets' tables and legends, the PDF's faces; what the desktop's sheet PDF and the
+  // headless host's share. Pure like the style engine it draws with. Listed before `native`.
+  { name: 'plot', path: 'crates/native/plot/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // A drawing's project model (the coordinate system registry, a new project's content): pure
   // like the document, which it builds on. Listed before `native`.
   { name: 'project', path: 'crates/native/project/', targets: [HOST], uses: ['shared', 'domain'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The headless command host (docs/adr/0130): a drawing without a window, its product commands
   // by name, the catalog, queries and files; what the Python SDK and the MCP server stand on.
   // Pure like the commands it runs. Listed before `native`.
-  { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'headless', path: 'crates/native/headless/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The Python SDK's extension module (docs/adr/0131): the headless host under CPython. The one
   // native crate that uses pyo3. Listed before `native`.
   // `processing` for kentos.network (docs/adr/0209 §11): a network built from the drawing as the İşlemler tools build it.
-  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'headless', 'processing'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'processing'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
   // The MCP server (docs/adr/0133, 0134): the headless host's tools over stdio, JSON-RPC by hand;
   // the server's commands through the desktop's cloud client (`native`). No UI, database or
   // server framework. Listed before `native`.
-  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'headless', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
@@ -85,7 +89,7 @@ const GROUPS = [
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
   { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render', 'style'], forbid: ['axum*', ...BROWSER] },
 ];
 

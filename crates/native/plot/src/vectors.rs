@@ -29,7 +29,7 @@ use kentos_sheet::style::{LineCap, LineJoin};
 
 /// The map's scale and the numbers' origin.
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct VectorScale {
+pub struct VectorScale {
     /// The scale's denominator (1/N): metres of ground per metre of paper.
     pub scale: f64,
     /// The document's origin: the batches' numbers are relative to it.
@@ -49,7 +49,7 @@ fn color(c: [f64; 4], opacity: f64) -> String {
 }
 
 /// Paper mm of a length in a batch's unit: metres of ground at the map's scale, or CSS px.
-pub(crate) fn paper_mm(v: f64, unit: Unit, scale: f64) -> f64 {
+pub fn paper_mm(v: f64, unit: Unit, scale: f64) -> f64 {
     match unit {
         Unit::World => v * 1000.0 / scale,
         Unit::Px => v * 25.4 / 96.0,
@@ -584,7 +584,7 @@ fn marker_paths(
             ]
         };
         for (points, closed) in
-            kentos_render_wgpu::styled::raster::shape_outline(shape, w / 2.0, h / 2.0, *params)
+            kentos_native_style::shapes::shape_outline(shape, w / 2.0, h / 2.0, *params)
         {
             let part = Part {
                 points: points.iter().map(|p| place(p[0], p[1])).collect(),
@@ -599,7 +599,7 @@ fn marker_paths(
         if shape == "ring" && stroke_color.is_some() {
             let r = stroke_width.max(w.min(h) * 0.08);
             for (points, closed) in
-                kentos_render_wgpu::styled::raster::shape_outline("circle", r, r, [0.0; 4])
+                kentos_native_style::shapes::shape_outline("circle", r, r, [0.0; 4])
             {
                 dots.push(Part {
                     points: points.iter().map(|p| place(p[0], p[1])).collect(),
@@ -698,7 +698,7 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
 
 /// What of a built layer has no vector form where it reaches the ground box (each said once, in
 /// the order met): what keeps a map that shows it from going to a PDF as vectors.
-pub(crate) fn unsupported_in(
+pub fn unsupported_in(
     layer: &StyledLayer,
     o: &VectorScale,
     within: Option<[f64; 4]>,
@@ -746,7 +746,7 @@ fn reaches(points: &[[f64; 2]], w: [f64; 4]) -> bool {
 
 /// A built layer's drawing as the core's paths in its draw order, and what has no vector form
 /// (each said once). With `within`, what does not reach that ground box is left out.
-pub(crate) fn layer_paths(
+pub fn layer_paths(
     layer: &StyledLayer,
     o: &VectorScale,
     within: Option<[f64; 4]>,

@@ -17,6 +17,9 @@ kentos-domain = { path = "../domain" }
 kentos-native-application = { path = "../application" }
 kentos-project = { path = "../project" }
 kentos-kcad = { path = "../../shared/kcad" }
+# The DXF writer and, for the PDF, the sheet core (docs/adr/0252).
+kentos-formats = { path = "../../shared/formats" }
+kentos-plot = { path = "../plot" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 serde = { workspace = true }
 serde_json = { workspace = true }

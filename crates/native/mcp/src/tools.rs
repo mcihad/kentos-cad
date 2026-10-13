@@ -116,6 +116,35 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             annotations(false, true),
         ),
         tool(
+            "drawing.exportDxf",
+            "DXF olarak dışa aktar",
+            "Bütün çizimi AutoCAD 2007 DXF olarak yazar: nesneler katmanlarıyla, masaüstünün DXF dışa \
+             aktar'ı gibi (aynı yazıcı). DXF'in tutamadıkları KentOS verisiyle gider; yolda değişenler \
+             cevabın report'undadır. Dışa aktarma kayıt değildir: çizim kaydedilmemişse öyle kalır.",
+            object(
+                json!({ "drawing": drawing_arg(), "path": { "type": "string", "description": "Yazılacak .dxf dosyası." } }),
+                &["drawing", "path"],
+            ),
+            annotations(false, true),
+        ),
+        tool(
+            "drawing.exportPdf",
+            "Paftaları PDF olarak yaz",
+            "Projenin pafta kitabını PDF olarak yazar: verilen paftalar (yoksa hepsi, kitabın sırasıyla), her biri \
+             bir sayfa; öğeleriyle, haritalar ölçeklerinde katmanların çizgileri, alanları ve taramalarıyla; \
+             sistemi TM olan projede GeoPDF. Başsız çıktının yazamadıkları (haritaların yazıları) cevabın \
+             notes'unda, çekirdeğin bulguları findings'tedir. Pafta cad.sheets.edit ile eklenir.",
+            object(
+                json!({
+                    "drawing": drawing_arg(),
+                    "path": { "type": "string", "description": "Yazılacak .pdf dosyası." },
+                    "sheets": { "type": "array", "items": { "type": "string" }, "description": "Paftaların kimlikleri; yoksa hepsi." }
+                }),
+                &["drawing", "path"],
+            ),
+            annotations(false, true),
+        ),
+        tool(
             "drawing.close",
             "Çizimi kapat",
             "Tutamacı bırakır. Kaydedilmemiş değişiklik varsa reddeder; discard: true onları atar.",
@@ -377,6 +406,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.states"
             | "cad.styles.edit"
             | "cad.settings.set"
+            // It removes sheets and their items as the designer does (docs/adr/0252 §2).
+            | "cad.sheets.edit"
     );
     let description = format!(
         "{}\n\nSonuç CommandResult'tır: status completed (output, warnings) ya da failed, needs_input, \
@@ -483,10 +514,11 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
             server.desktops.remove(handle);
             return Ok(answer(json!({ "closed": handle, "detached": true }), false));
         }
-        "drawing.save" | "drawing.undo" | "drawing.redo" => {
+        "drawing.save" | "drawing.undo" | "drawing.redo" | "drawing.exportDxf"
+        | "drawing.exportPdf" => {
             return Err(refused(
                 "desktop_user",
-                "Masaüstündeki çizimi kullanıcı kaydeder ve geri alır: ondan isteyin.",
+                "Masaüstündeki çizimi kullanıcı kaydeder, geri alır ve dışa aktarır: ondan isteyin.",
             ));
         }
         command if command.starts_with("cad.") => {
@@ -595,6 +627,33 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
             let (s, _) = session(server, args)?;
             let saved = s.save(text(args, "path").map(Path::new)).map_err(host)?;
             Ok(answer(saved, false))
+        }
+        "drawing.exportDxf" => {
+            let (s, _) = session(server, args)?;
+            let Some(path) = text(args, "path") else {
+                return Err(refused(
+                    "invalid_input",
+                    "path gerekli: DXF'in yazılacağı dosyayı verin.",
+                ));
+            };
+            let written = s.export_dxf(Path::new(path)).map_err(host)?;
+            Ok(answer(written, false))
+        }
+        "drawing.exportPdf" => {
+            let (s, _) = session(server, args)?;
+            let Some(path) = text(args, "path") else {
+                return Err(refused(
+                    "invalid_input",
+                    "path gerekli: PDF'in yazılacağı dosyayı verin.",
+                ));
+            };
+            let sheets: Vec<String> = args
+                .get("sheets")
+                .and_then(Value::as_array)
+                .map(|a| a.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+                .unwrap_or_default();
+            let written = s.export_pdf(Path::new(path), &sheets).map_err(host)?;
+            Ok(answer(written, false))
         }
         "drawing.summary" => {
             let (s, _) = session(server, args)?;

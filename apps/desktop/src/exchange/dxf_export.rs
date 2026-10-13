@@ -14,9 +14,7 @@ use std::fmt;
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::blocks::placed_blocks;
-use kentos_contracts::{
-    AngleUnit, DxfWriteInput, DxfWriteLayer, Entity, ExportReport, LayerNodeType,
-};
+use kentos_contracts::{Entity, ExportReport};
 use kentos_interaction::{Format, Level};
 use kentos_ui::label;
 use kentos_ui::widget::segmented::Segmented;
@@ -137,30 +135,7 @@ impl App {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
-        let mut out: Vec<(String, Vec<&Entity>)> = doc
-            .model
-            .layers()
-            .leaves()
-            .iter()
-            .map(|l| (l.id.clone(), Vec::new()))
-            .collect();
-        let mut at: BTreeMap<String, usize> = out
-            .iter()
-            .enumerate()
-            .map(|(i, (id, _))| (id.clone(), i))
-            .collect();
-        for e in self.scope_entities(scope) {
-            let id = &e.base().layer_id;
-            match at.get(id) {
-                Some(&i) => out[i].1.push(e),
-                None => {
-                    at.insert(id.clone(), out.len());
-                    out.push((id.clone(), vec![e]));
-                }
-            }
-        }
-        out.retain(|(_, list)| !list.is_empty());
-        out
+        kentos_headless::export::by_layer(&doc.model, self.scope_entities(scope))
     }
 
     /// The objects that will be written: the scope's, less the layers left out.
@@ -215,32 +190,6 @@ impl App {
         Task::none()
     }
 
-    /// A layer as the writer receives it (the groups above it, outermost first).
-    fn write_layer(&self, id: &str) -> Option<DxfWriteLayer> {
-        let doc = self.document.as_ref()?;
-        let layers = doc.model.layers();
-        let l = layers.get(id)?;
-        if l.kind != LayerNodeType::Layer {
-            return None;
-        }
-        let mut path = Vec::new();
-        let mut up = layers.parent(id);
-        while let Some(group) = up {
-            path.insert(0, group.name.clone());
-            up = layers.parent(&group.id);
-        }
-        Some(DxfWriteLayer {
-            id: id.to_owned(),
-            name: l.name.clone(),
-            path,
-            color: l.style.color.clone(),
-            visible: layers.is_visible(id),
-            locked: layers.is_locked(id),
-            line_type: l.style.line_type,
-            line_weight: l.style.line_weight,
-        })
-    }
-
     fn dxf_export_run(&mut self) -> Task<Message> {
         let (Some(Window::DxfExport(s)), Some(doc)) = (&self.exchange, &self.document) else {
             return Task::none();
@@ -249,49 +198,12 @@ impl App {
             return Task::none();
         }
         let chosen = self.chosen(s);
-        let entities: Vec<Entity> = chosen
-            .iter()
-            .flat_map(|(_, list)| list.iter().map(|e| (*e).clone()))
-            .collect();
-        if entities.is_empty() {
+        if chosen.is_empty() {
             return Task::none();
         }
-        let settings = doc.settings();
-        let format = Format::of(settings);
-        // What a dimension without its own text shows (project units): its
-        // block draws it, the dimension keeps no text.
-        let mut dimension_values = BTreeMap::new();
-        for e in &entities {
-            if let Entity::Dimension(d) = e
-                && d.text.as_deref().is_none_or(str::is_empty)
-                && let Some(l) = kentos_formats::dxf::dimension_layout(d)
-            {
-                dimension_values.insert(
-                    d.base.id,
-                    dimension_text(&format, l.prefix, l.unit, l.value, &d.look),
-                );
-            }
-        }
-        let layers: Vec<DxfWriteLayer> = chosen
-            .iter()
-            .filter_map(|(id, _)| self.write_layer(id))
-            .collect();
-        let count = layers.len();
-        let input = DxfWriteInput {
-            entities,
-            layers,
-            scale: settings.plot_scale,
-            length_decimals: settings.length_decimals,
-            grads: settings.angle_unit == AngleUnit::Grad,
-            dimension_values,
-            // The writer takes those the objects place (docs/adr/0144 §5).
-            blocks: doc.model.blocks().iter().map(|b| (**b).clone()).collect(),
-            // A local project's drawing goes out in its unit (docs/adr/0165 §2).
-            unit: (!settings.has_system()).then(|| settings.unit()),
-            // The project's styles as STYLE and DIMSTYLE records (docs/adr/0183 §7).
-            text_styles: settings.text_styles.clone(),
-            dimension_styles: settings.dimension_styles.clone(),
-        };
+        // The headless host's builder: a script and the window write the same file (docs/adr/0252).
+        let input = kentos_headless::export::dxf_input(&doc.model, &chosen);
+        let count = input.layers.len();
         if let Some(Window::DxfExport(s)) = &mut self.exchange {
             s.writing = true;
             s.status = Some((false, "Yazılıyor…".to_owned()));

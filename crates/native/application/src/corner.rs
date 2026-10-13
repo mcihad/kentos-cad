@@ -240,8 +240,20 @@ pub fn done(c: &Corner, size: Size, doc: &Document) -> Result<Done, String> {
                     }
                 }
             };
+            // A side keeps its direction: the core gives the kept end first,
+            // which is the line's end when the corner was at its start.
+            let along = |was: Seg, s: Seg| {
+                if s.a == was.b && s.a != was.a {
+                    Seg { a: s.b, b: s.a }
+                } else {
+                    s
+                }
+            };
             Ok(Done {
-                updates: vec![(first, line(joined.0)), (second, line(joined.1))],
+                updates: vec![
+                    (first, line(along(l1, joined.0))),
+                    (second, line(along(l2, joined.1))),
+                ],
                 add: piece.map(|s| (first, s)),
             })
         }

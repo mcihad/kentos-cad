@@ -2,239 +2,29 @@
 //! drawing's vectors — every shown layer through the style engine at the
 //! map's scale on the paper's palette (the web's map frames: line weights,
 //! line types, point symbols and hatches as styled), turned into paths
-//! (map_vectors.rs), and the drawing's text as its map frames write it
+//! (kentos_plot, docs/adr/0252), and the drawing's text as its map frames write it
 //! (labels.rs, anchored as the web anchors it) — the drawing's faces, the
 //! system for GeoPDF, every sheet's tables and legends; written to the file
 //! chosen, or, to print, to a file of its own opened in the system's viewer.
 
-use std::collections::HashMap;
 use std::path::Path;
 
 use iced::Task;
-use kentos_geometry_core::store::Store;
-use kentos_native_style::StylePalette;
-use kentos_native_style::library::StyleLibrary;
-use kentos_render_wgpu::{Bounds, scene};
-use kentos_sheet::display::paper;
-use kentos_sheet::kinds::MapLayers;
-use kentos_sheet::pdf::{MapContent, MapLayerContent, MapPath, MapText, VectorMap};
 use kentos_sheet_ui::export::PdfHost;
 
 use crate::app::{App, Message};
-use crate::document::Document;
-use crate::labels::MapLabel;
-use crate::map_vectors::{VectorScale, layer_paths};
 
-/// A CSS pixel on the paper, millimetres: the unit the maps' labels are laid out in (the web's
-/// `PX_MM`, app/sheet/mapLabels.ts), so a label is the same size on the screen's sheet and in
-/// the PDF.
-pub(crate) const PX_MM: f64 = 25.4 / 96.0;
+// A map's content, its labels' unit and the paper's palette are the plotter's (docs/adr/0252).
+pub(crate) use kentos_plot::maps::{PX_MM, paper_style};
 
-fn hex_of(c: iced::Color) -> String {
+/// A colour of the screen as the PDF writes it: `#rrggbb`, with its opacity `#rrggbbaa`.
+pub(crate) fn hex_of(c: iced::Color) -> String {
     let [r, g, b, a] = c.into_rgba8();
     if a == 255 {
         format!("#{r:02x}{g:02x}{b:02x}")
     } else {
         format!("#{r:02x}{g:02x}{b:02x}{a:02x}")
     }
-}
-
-/// A label as the PDF writes it (the web's pdfExport.ts `coreText`).
-fn text_of(l: &MapLabel, font: &str) -> MapText {
-    MapText {
-        at: [l.at.x, l.at.y],
-        text: l.text.clone(),
-        size: l.size,
-        rotation: l.rotation,
-        color: hex_of(l.color),
-        // A text's own typeface (docs/adr/0183 §2), else the project's.
-        font: l.font.map_or(font, |f| f.id()).to_owned(),
-        weight: l.weight,
-        italic: l.italic,
-        anchor: l.anchor,
-        halo: Some(hex_of(l.halo)),
-    }
-}
-
-/// A masked text's paper-coloured box.
-fn mask_of(points: &[[f64; 2]]) -> MapPath {
-    MapPath {
-        points: points.to_vec(),
-        closed: true,
-        holes: Vec::new(),
-        stroke: None,
-        fill: Some(paper::PAPER.to_owned()),
-    }
-}
-
-/// The paper's palette for the style engine (the web's `paperPalette`): its ink `#111111`.
-pub(crate) fn paper_style() -> StylePalette {
-    StylePalette {
-        fg: paper::FG.to_owned(),
-        fg_dim: paper::FG_DIM.to_owned(),
-        ink: paper::INK.to_owned(),
-        paper: paper::PAPER.to_owned(),
-    }
-}
-
-/// What a map's vectors are built from: the drawing, its geometry store and the style library.
-pub(crate) struct MapSource<'a> {
-    pub drawing: &'a Document,
-    pub store: &'a Store,
-    pub library: &'a StyleLibrary,
-}
-
-/// The map's content as vectors (the web's app/sheet/mapContent.ts `vectorMap` and pdfExport.ts
-/// `coreLayers`): the shown layers bottom first (only those a layer list names), each through
-/// the style engine at the map's scale on the paper's palette, what reaches the map's box with
-/// a margin of 20 paper mm; then every layer's text masks and texts over all of them. A layer
-/// that draws something with no vector form is named with what (the map then goes as a picture).
-pub(crate) fn vector_content(
-    src: &MapSource<'_>,
-    layers: &MapLayers,
-    scale: u32,
-    extent: [f64; 4],
-    labels: &[MapLabel],
-) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
-    let doc = src.drawing;
-    let scale = f64::from(scale.max(1));
-    let pad = 20.0 * scale / 1000.0;
-    let reach = [
-        extent[0] - pad,
-        extent[1] - pad,
-        extent[2] + pad,
-        extent[3] + pad,
-    ];
-    let origin = scene::scene_origin(doc);
-    let look = crate::style::scene::Look {
-        palette: paper_style(),
-        symbol_scale: scale,
-        screen: false,
-        hairlines: false,
-        origin,
-        view_build: Default::default(),
-        view_colors: Default::default(),
-    };
-    let clip = Bounds {
-        min_x: reach[0],
-        min_y: reach[1],
-        max_x: reach[2],
-        max_y: reach[3],
-    };
-    let mut names = HashMap::new();
-    crate::style::scene::names(doc.model.layers().nodes(), &mut names);
-    let only = match layers {
-        MapLayers::List(l) => Some(&l.layers),
-        _ => None,
-    };
-    let font = crate::drawing_fonts::sheet_font(
-        doc.settings()
-            .drawing_font
-            .unwrap_or(kentos_contracts::DrawingFont::Barlow),
-    );
-    let o = VectorScale {
-        scale,
-        origin: [origin.x, origin.y],
-    };
-    let mut shapes: Vec<MapLayerContent> = Vec::new();
-    let mut unsupported = Vec::new();
-    for node in crate::style::scene::shown_layers(doc.model.layers().nodes()) {
-        if only.is_some_and(|l| !l.contains(&node.id)) {
-            continue;
-        }
-        let objects: Vec<&kentos_contracts::Entity> = doc.model.by_layer(&node.id).collect();
-        if objects.is_empty() {
-            continue;
-        }
-        let styled = crate::style::scene::build_whole(
-            src.store,
-            src.library,
-            node,
-            &objects,
-            &look,
-            clip,
-            &names,
-        );
-        let (paths, missing) = layer_paths(&styled, &o, Some(reach));
-        if !missing.is_empty() {
-            unsupported.push((node.name.clone(), missing));
-        }
-        shapes.push(MapLayerContent {
-            id: node.id.clone(),
-            name: node.name.clone(),
-            paths,
-            texts: Vec::new(),
-        });
-    }
-    if !unsupported.is_empty() {
-        return Err(unsupported);
-    }
-    // The texts and their masks, by layer, over every layer's drawing.
-    let writing: Vec<MapLayerContent> = shapes
-        .iter()
-        .filter_map(|l| {
-            let mine: Vec<&MapLabel> = labels.iter().filter(|t| t.layer == l.id).collect();
-            if mine.is_empty() {
-                return None;
-            }
-            Some(MapLayerContent {
-                id: l.id.clone(),
-                name: l.name.clone(),
-                // Placed labels' shadows and backgrounds, then the texts' masks, the underlines and
-                // the callouts and outlines (docs/adr/0212 §4), all under the texts.
-                paths: mine
-                    .iter()
-                    .filter_map(|t| {
-                        t.fill.as_deref().map(|ring| MapPath {
-                            points: ring.to_vec(),
-                            closed: true,
-                            holes: Vec::new(),
-                            stroke: None,
-                            fill: Some(hex_of(t.color)),
-                        })
-                    })
-                    .chain(mine.iter().filter_map(|t| t.mask.as_deref().map(mask_of)))
-                    .chain(mine.iter().filter_map(|t| {
-                        t.stroke.as_ref().map(|(line, closed)| MapPath {
-                            points: line.clone(),
-                            closed: *closed,
-                            holes: Vec::new(),
-                            stroke: Some(kentos_sheet::pdf::MapStroke {
-                                color: hex_of(t.color),
-                                width: crate::sheet_pdf::PX_MM,
-                                dash: Vec::new(),
-                                cap: kentos_sheet::LineCap::Butt,
-                                join: kentos_sheet::LineJoin::Miter,
-                            }),
-                            fill: None,
-                        })
-                    }))
-                    .chain(mine.iter().filter_map(|t| {
-                        t.underline.as_deref().map(|bar| MapPath {
-                            points: bar.to_vec(),
-                            closed: true,
-                            holes: Vec::new(),
-                            stroke: None,
-                            fill: Some(hex_of(t.color)),
-                        })
-                    }))
-                    .collect(),
-                // A multi-line text's mask has no words (docs/adr/0182 §3).
-                texts: mine
-                    .iter()
-                    .filter(|t| !t.text.is_empty())
-                    .map(|t| text_of(t, font))
-                    .collect(),
-            })
-        })
-        .collect();
-    let shown: Vec<MapLayerContent> = shapes
-        .into_iter()
-        .filter(|l| !l.paths.is_empty() || writing.iter().any(|w| w.id == l.id))
-        .collect();
-    Ok(MapContent::Vector(VectorMap {
-        layers: shown.into_iter().chain(writing).collect(),
-    }))
 }
 
 impl App {
@@ -254,7 +44,7 @@ impl App {
                     continue;
                 };
                 let list = kentos_sheet::display::display_list(book, &id, &render).ok();
-                let data = crate::sheet_inputs::sheet_data(
+                let data = kentos_plot::inputs::sheet_data(
                     &doc.model,
                     &self.spatial,
                     &self.styles.library,
@@ -273,13 +63,15 @@ impl App {
             crs: self
                 .document
                 .as_ref()
-                .and_then(|d| crate::sheet_inputs::pdf_crs(d.settings().srid)),
+                .and_then(|d| kentos_plot::inputs::pdf_crs(d.settings().srid)),
             render,
         }
     }
 
     /// Yazdır: the PDF to a file of its own, opened in the system's viewer to print from there.
     pub(crate) fn sheet_print(&mut self) -> Task<Message> {
+        // The project as it is now (see `sheet_export_to`).
+        self.sheets.set_context(self.sheet_context());
         let host = self.sheet_pdf_host();
         let painter = crate::sheets::painter_of(
             &self.sheet_maps,

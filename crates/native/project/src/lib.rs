@@ -19,6 +19,7 @@
 pub mod choice_form;
 pub mod crs;
 pub mod definition_form;
+pub mod format;
 pub mod new_project;
 pub mod new_request;
 pub mod provinces;

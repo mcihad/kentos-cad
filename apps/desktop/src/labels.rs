@@ -478,35 +478,8 @@ pub fn paint_in_map(
     .paint(frame);
 }
 
-/// A label of a sheet's map as the PDF writes it (sheet_pdf.rs; the web's mapLabels.ts
-/// `VecText`): its text anchored on the ground as the drawing area anchors it (the middle of a
-/// centred label, a text's baseline start, a dimension value's baseline middle), its turn
-/// (degrees, counter-clockwise on the paper), its size in paper mm (the screen's pixels at 100 %
-/// are the paper's CSS pixels), its face, its colour and its halo's; the paper-coloured box
-/// under a masked text (docs/adr/0145), on the ground.
-#[derive(Clone, Debug, PartialEq)]
-pub struct MapLabel {
-    /// The layer of the object it is written for.
-    pub layer: String,
-    pub text: String,
-    pub at: kentos_render_wgpu::Vec2,
-    pub anchor: kentos_sheet::pdf::TextAnchor,
-    pub rotation: f64,
-    pub size: f64,
-    pub weight: u16,
-    pub italic: bool,
-    /// Its own typeface (docs/adr/0183 §2); none: the project's.
-    pub font: Option<DrawingFont>,
-    pub color: Color,
-    pub halo: Color,
-    pub mask: Option<Vec<[f64; 2]>>,
-    /// A multi-line text's underlined run's bar, on the ground, in its colour (docs/adr/0182 §3).
-    pub underline: Option<Vec<[f64; 2]>>,
-    /// A placed label's background or its shadow (docs/adr/0212 §3.8): a ring on the ground filled in `color`.
-    pub fill: Option<Vec<[f64; 2]>>,
-    /// A placed label's callout or its background's outline: a line on the ground in `color`, closed or not.
-    pub stroke: Option<(Vec<[f64; 2]>, bool)>,
-}
+// A label of a sheet's map as the PDF writes it is the plotter's (docs/adr/0252): laid out here.
+pub use kentos_plot::maps::MapLabel;
 
 /// The drawing's text in a sheet's map as [`paint_in_map`] lays it out (the same pieces, the
 /// same room between them, the same fence), as a list rather than a picture.
@@ -668,6 +641,7 @@ impl Collect<'_> {
             })
             .collect();
         let at = kentos_render_wgpu::Vec2::new(ground.first()?[0], ground.first()?[1]);
+        let ink = crate::sheet_pdf::hex_of(color);
         Some((
             ground,
             MapLabel {
@@ -680,8 +654,8 @@ impl Collect<'_> {
                 weight: 400,
                 italic: false,
                 font: None,
-                color,
-                halo: color,
+                color: ink.clone(),
+                halo: ink,
                 mask: None,
                 underline: None,
                 fill: None,
@@ -757,8 +731,8 @@ impl Ink for Collect<'_> {
                     .find(|f| drawing_fonts::family(*f) == name),
                 _ => None,
             },
-            color: piece.color,
-            halo,
+            color: crate::sheet_pdf::hex_of(piece.color),
+            halo: crate::sheet_pdf::hex_of(halo),
             mask,
             fill: None,
             stroke: None,
@@ -824,8 +798,8 @@ impl Ink for Collect<'_> {
             weight: 400,
             italic: false,
             font: None,
-            color,
-            halo: color,
+            color: crate::sheet_pdf::hex_of(color),
+            halo: crate::sheet_pdf::hex_of(color),
             mask: Some(ground),
             underline: None,
             fill: None,

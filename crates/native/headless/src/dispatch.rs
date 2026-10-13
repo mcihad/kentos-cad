@@ -8,7 +8,7 @@ use kentos_contracts::{
     EntitiesOffset, EntitiesSetProperties, EntitiesTransform, EntitiesTrim, LabelsPin,
     LayersCompose, LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer,
     LayersService, LayersSet, LayersStates, LayersTime, LineCreate, NetworkDefine, PointCreate,
-    PolygonCreate, PolylineCreate, ScenariosEdit, SettingsSet, StylesEdit,
+    PolygonCreate, PolylineCreate, ScenariosEdit, SettingsSet, SheetsEdit, StylesEdit,
 };
 use kentos_domain::Document;
 use kentos_native_application::{
@@ -17,7 +17,7 @@ use kentos_native_application::{
     entities_fillet, entities_trim, labels_pin, layers_compose, layers_edit, layers_filter,
     layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
     layers_time, line, network_define, offset, point, polygon, polyline, scenarios_edit, set,
-    settings_set, styles_edit, transform,
+    settings_set, sheets_edit, styles_edit, transform,
 };
 use serde_json::Value;
 
@@ -128,6 +128,7 @@ pub fn run(
         kentos_contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
         kentos_contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
+        kentos_contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         other => return Err(refusal(other)),
     };
     answer.map_err(|e| {

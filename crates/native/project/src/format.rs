@@ -6,7 +6,7 @@
 use kentos_contracts::{AngleUnit, AreaUnit, DrawingUnit, ProjectSettings, Workspace};
 use kentos_geometry_core::tools::point_input::{AngleFrom, Angles};
 
-use crate::Vec2;
+use kentos_geometry_core::Vec2;
 
 /// Grads per degree.
 const GRAD_PER_DEG: f64 = 400.0 / 360.0;
@@ -419,7 +419,7 @@ pub fn fixed(v: f64, d: usize) -> String {
 /// show after `+x.toFixed(d)`: the shortest digits, no trailing zeros, no
 /// sign on zero. Numbers this small in magnitude are never written with an
 /// exponent by either.
-pub(crate) fn js_number(v: f64) -> String {
+pub fn js_number(v: f64) -> String {
     if v == 0.0 {
         return "0".to_owned();
     }
@@ -428,14 +428,14 @@ pub(crate) fn js_number(v: f64) -> String {
 
 /// An angle in radians as the rectangle tool writes its rotation (the web's
 /// `fmtDeg`: `+((rad / DEG) % 360).toFixed(4)` and a degree sign): `30°`, `12.3457°`.
-pub(crate) fn short_degrees(rad: f64) -> String {
+pub fn short_degrees(rad: f64) -> String {
     let deg = (rad / (kentos_geometry_core::jsmath::PI / 180.0)) % 360.0;
     let rounded = fixed(deg, 4).parse::<f64>().unwrap_or(f64::NAN);
     format!("{}°", js_number(rounded))
 }
 
 /// Radians in degrees as the arc tool writes them (the web's `deg`: `rad * 180 / π`).
-pub(crate) fn degrees(rad: f64) -> f64 {
+pub fn degrees(rad: f64) -> f64 {
     (rad * 180.0) / kentos_geometry_core::jsmath::PI
 }
 

@@ -46,9 +46,80 @@
       "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz."
     },
     {
+      "match": "sheet.zoom*",
+      "level": "session",
+      "note": "Paftanın görünümü."
+    },
+    {
+      "match": "sheet.tool.*",
+      "level": "session",
+      "note": "Pafta tasarımcısının aracı."
+    },
+    {
+      "match": "sheet.alignTo.*",
+      "level": "session",
+      "note": "Hizalamanın başvurusu; işlem cad.sheets.edit'in align'ı."
+    },
+    {
+      "match": "sheet.escape",
+      "level": "session"
+    },
+    {
+      "match": "sheet.selectAll",
+      "level": "session"
+    },
+    {
+      "match": "sheet.model",
+      "level": "session"
+    },
+    {
+      "match": "sheet.open",
+      "level": "session"
+    },
+    {
+      "match": "sheet.undo",
+      "level": "session",
+      "note": "Kâğıdın kendi geçmişi (ADR 0251 §3); betikte cad.sheets.edit'in inverse'ü."
+    },
+    {
+      "match": "sheet.redo",
+      "level": "session",
+      "note": "Kâğıdın kendi geçmişi (ADR 0251 §3)."
+    },
+    {
+      "match": "sheet.preflight",
+      "level": "query"
+    },
+    {
+      "match": "sheet.export.pdf",
+      "level": "host",
+      "note": "Python Document.export_pdf, MCP drawing.exportPdf (ADR 0252 §3)."
+    },
+    {
+      "match": "sheet.print",
+      "level": "host"
+    },
+    {
+      "match": "sheet.export.*",
+      "level": "host",
+      "note": "Dosyaya yazar; PDF'inki başsız sunucuda da var."
+    },
+    {
+      "match": "sheet.importKpafta",
+      "level": "host"
+    },
+    {
+      "match": "sheet.saveTemplate",
+      "level": "host",
+      "note": "Cihazın ya da hesabın şablon kitaplığı."
+    },
+    {
       "match": "sheet.*",
-      "level": "none",
-      "note": "Pafta komutları katalogda yok (plan §17)."
+      "level": "semantic",
+      "via": [
+        "cad.sheets.edit"
+      ],
+      "note": "Pafta çekirdeğinin işlemi cad.sheets.edit'le (ADR 0252 §2)."
     },
     {
       "match": "chart.*",

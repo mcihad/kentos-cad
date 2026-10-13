@@ -64,9 +64,19 @@ pub fn from_bytes(bytes: &[u8]) -> Result<(Document, bool), HeadlessError> {
 
 /// Writes `doc` as `.kcad` v2 to `path`; the bytes written.
 pub fn write(doc: &Document, path: &Path) -> Result<usize, HeadlessError> {
+    let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).map_err(|e| {
+        HeadlessError::new(
+            "file_unwritable",
+            format!("çizim KCAD v2'ye yazılamadı: {e}"),
+        )
+    })?;
+    write_bytes(&bytes, path)
+}
+
+/// Writes `bytes` to `path` through a temporary file beside it, read back
+/// before it takes the name: a file is whole or not there. The bytes written.
+pub fn write_bytes(bytes: &[u8], path: &Path) -> Result<usize, HeadlessError> {
     let fail = |what: String| HeadlessError::new("file_unwritable", what);
-    let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2())
-        .map_err(|e| fail(format!("çizim KCAD v2'ye yazılamadı: {e}")))?;
     let dir = match path.parent() {
         Some(d) if !d.as_os_str().is_empty() => d.to_path_buf(),
         _ => PathBuf::from("."),
@@ -74,12 +84,12 @@ pub fn write(doc: &Document, path: &Path) -> Result<usize, HeadlessError> {
     let name = path
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_else(|| "cizim.kcad".to_owned());
+        .unwrap_or_else(|| "cizim".to_owned());
     let temp = dir.join(format!(".{name}.{}.yaziliyor", std::process::id()));
     let result = (|| {
         let mut file = fs::File::create(&temp)
             .map_err(|e| fail(format!("{} yazılamadı: {e}", temp.display())))?;
-        file.write_all(&bytes)
+        file.write_all(bytes)
             .and_then(|()| file.sync_all())
             .map_err(|e| fail(format!("{} yazılamadı: {e}", temp.display())))?;
         drop(file);

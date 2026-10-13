@@ -1,0 +1,3458 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sheets.edit",
+ "commandVersion": 1,
+ "title": "Pafta kitabı",
+ "note": "Written by scripts/fixtures/sheets_edit_command_cases.py from the contract's rules, the sheet core's model and docs/adr/0251 §3, 0252 §2; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Paftalar",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 0,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "drawingFont": "barlow",
+   "drawingUnit": "mm"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 5,
+     "y": 0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Kitapsız projeye pafta: kitap olur, çizim kirlenir, geri alma adımı değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": true,
+      "revision": "changed",
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki pafta tek değişiklik; ters işlemler sondan başa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       },
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "vaziyet",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "vaziyet-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 100,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Vaziyet",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "vaziyet",
+         "op": "removeSheet"
+        },
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "2 işlem",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        },
+        {
+         "height": 297.0,
+         "id": "vaziyet",
+         "items": 1,
+         "maps": [
+          {
+           "item": "vaziyet-harita",
+           "name": "Harita",
+           "scale": 100
+          }
+         ],
+         "name": "Vaziyet",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       },
+       {
+        "height": 297.0,
+        "id": "vaziyet",
+        "items": 1,
+        "maps": [
+         {
+          "item": "vaziyet-harita",
+          "name": "Harita",
+          "scale": 100
+         }
+        ],
+        "name": "Vaziyet",
+        "width": 420.0
+       }
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ekle ve adlandır: tersi önce eski adı verir, sonra paftayı siler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       },
+       {
+        "op": "renameSheet",
+        "id": "kat-plani",
+        "name": "Plan"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "name": "Kat planı",
+         "op": "renameSheet"
+        },
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "2 işlem",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Plan",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Plan",
+        "width": 420.0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Son pafta silinince kitap kalmaz; tersi paftayı olduğu gibi geri ekler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "removeSheet",
+        "id": "kat-plani"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "index": 0,
+         "op": "addSheet",
+         "sheet": {
+          "export": {
+           "dpi": 300,
+           "fileName": "[% @pafta_adi %]",
+           "format": "svg"
+          },
+          "guides": [],
+          "id": "kat-plani",
+          "items": [
+           {
+            "bindings": [],
+            "constraints": {
+             "h": "left",
+             "relativeTo": "margins",
+             "v": "top"
+            },
+            "frame": {
+             "height": 230000,
+             "left": 20000,
+             "top": 10000,
+             "width": 390000
+            },
+            "hidden": false,
+            "id": "kat-plani-harita",
+            "kind": {
+             "clipToAtlasFeature": false,
+             "grids": [],
+             "labelBand": 0,
+             "layers": {
+              "type": "all"
+             },
+             "overviewFrame": {
+              "cap": "butt",
+              "color": "#d0021b",
+              "dash": [],
+              "join": "miter",
+              "width": 500
+             },
+             "type": "map",
+             "view": {
+              "center": {
+               "x": 2.5,
+               "y": 0.0
+              },
+              "rotation": 0,
+              "scale": 50,
+              "type": "fixed"
+             }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+           }
+          ],
+          "name": "Kat planı",
+          "page": {
+           "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+           },
+           "orientation": "landscape",
+           "paper": "a3",
+           "size": {
+            "height": 297000,
+            "width": 420000
+           }
+          },
+          "snapGrid": {
+           "enabled": false,
+           "spacing": 5000,
+           "visible": false
+          },
+          "variables": [],
+          "variants": []
+         }
+        }
+       ],
+       "label": "Paftayı sil: Kat planı",
+       "revision": "$current",
+       "sheets": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "dirty": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "index": 0,
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: kitabı yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrula: yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "İşlem yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_operations",
+       "message": "Uygulanacak işlem yok: ops'a en az bir pafta işlemi verin.",
+       "path": "ops"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan işlem: alanı eksik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       },
+       {
+        "op": "removeSheet"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_operation",
+       "message": "2. işlem pafta çekirdeğinin bir işlemi olarak okunamadı: missing field `id`. İşlemin op adını ve alanlarını kataloğun örneğine göre denetleyin.",
+       "path": "ops[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çekirdeğin reddi: kitapta olmayan pafta, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       },
+       {
+        "op": "removeSheet",
+        "id": "yok"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_sheet",
+       "message": "“yok” paftası kitapta yok.",
+       "path": "ops[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ],
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "sürüm çakışması: hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "once"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "vaziyet",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "vaziyet-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 100,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Vaziyet",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "vaziyet",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Vaziyet",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "vaziyet",
+         "items": 1,
+         "maps": [
+          {
+           "item": "vaziyet-harita",
+           "name": "Harita",
+           "scale": 100
+          }
+         ],
+         "name": "Vaziyet",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ],
+      "expectedRevision": "$once"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "vaziyet",
+        "items": 1,
+        "maps": [
+         {
+          "item": "vaziyet-harita",
+          "name": "Harita",
+          "scale": 100
+         }
+        ],
+        "name": "Vaziyet",
+        "width": 420.0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Paftaya ad ver: tersi eski adı verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "renameSheet",
+        "id": "kat-plani",
+        "name": "Zemin kat"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "name": "Kat planı",
+         "op": "renameSheet"
+        }
+       ],
+       "label": "Paftaya ad ver: Zemin kat",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Zemin kat",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Zemin kat",
+        "width": 420.0
+       }
+      ],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Paftayı taşı: kitabın sırası değişir, tersi eski yerine koyar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       },
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "vaziyet",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "vaziyet-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 100,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Vaziyet",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "vaziyet",
+         "op": "removeSheet"
+        },
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "2 işlem",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        },
+        {
+         "height": 297.0,
+         "id": "vaziyet",
+         "items": 1,
+         "maps": [
+          {
+           "item": "vaziyet-harita",
+           "name": "Harita",
+           "scale": 100
+          }
+         ],
+         "name": "Vaziyet",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "moveSheet",
+        "id": "vaziyet",
+        "to": 0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "vaziyet",
+         "op": "moveSheet",
+         "to": 1
+        }
+       ],
+       "label": "Paftayı taşı: Vaziyet",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "vaziyet",
+         "items": 1,
+         "maps": [
+          {
+           "item": "vaziyet-harita",
+           "name": "Harita",
+           "scale": 100
+          }
+         ],
+         "name": "Vaziyet",
+         "width": 420.0
+        },
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "vaziyet",
+        "items": 1,
+        "maps": [
+         {
+          "item": "vaziyet-harita",
+          "name": "Harita",
+          "scale": 100
+         }
+        ],
+        "name": "Vaziyet",
+        "width": 420.0
+       },
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Paftaya ikinci harita: sayılır, ölçeğiyle listelenir; tersi onu siler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addItems",
+        "to": {
+         "kind": "sheet",
+         "id": "kat-plani"
+        },
+        "items": [
+         {
+          "bindings": [],
+          "constraints": {
+           "h": "left",
+           "relativeTo": "margins",
+           "v": "top"
+          },
+          "frame": {
+           "height": 230000,
+           "left": 20000,
+           "top": 10000,
+           "width": 390000
+          },
+          "hidden": false,
+          "id": "kat-plani-detay",
+          "kind": {
+           "clipToAtlasFeature": false,
+           "grids": [],
+           "labelBand": 0,
+           "layers": {
+            "type": "all"
+           },
+           "overviewFrame": {
+            "cap": "butt",
+            "color": "#d0021b",
+            "dash": [],
+            "join": "miter",
+            "width": 500
+           },
+           "type": "map",
+           "view": {
+            "center": {
+             "x": 2.5,
+             "y": 0.0
+            },
+            "rotation": 0,
+            "scale": 20,
+            "type": "fixed"
+           }
+          },
+          "locked": false,
+          "name": "Detay",
+          "opacity": 100,
+          "padding": 0,
+          "printable": true,
+          "rotation": 0
+         }
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "ids": [
+          "kat-plani-detay"
+         ],
+         "op": "removeItems"
+        }
+       ],
+       "label": "Ekle: Detay",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 2,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          },
+          {
+           "item": "kat-plani-detay",
+           "name": "Detay",
+           "scale": 20
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 2,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         },
+         {
+          "item": "kat-plani-detay",
+          "name": "Detay",
+          "scale": 20
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Haritayı gizle: tersi yeniden gösterir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "hide",
+        "ids": [
+         "kat-plani-harita"
+        ],
+        "value": true
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "ids": [
+          "kat-plani-harita"
+         ],
+         "op": "hide",
+         "value": false
+        }
+       ],
+       "label": "Gizle: Harita",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kitaplı projede ikinci işlem reddedilince ilki de yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "renameSheet",
+        "id": "kat-plani",
+        "name": "Zemin kat"
+       },
+       {
+        "op": "removeSheet",
+        "id": "yok"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_sheet",
+       "message": "“yok” paftası kitapta yok.",
+       "path": "ops[1]"
+      }
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       }
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kitaplı projede plan: kitabı yazmaz, sürüm aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "ops": [
+       {
+        "op": "removeSheet",
+        "id": "kat-plani"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "index": 0,
+         "op": "addSheet",
+         "sheet": {
+          "export": {
+           "dpi": 300,
+           "fileName": "[% @pafta_adi %]",
+           "format": "svg"
+          },
+          "guides": [],
+          "id": "kat-plani",
+          "items": [
+           {
+            "bindings": [],
+            "constraints": {
+             "h": "left",
+             "relativeTo": "margins",
+             "v": "top"
+            },
+            "frame": {
+             "height": 230000,
+             "left": 20000,
+             "top": 10000,
+             "width": 390000
+            },
+            "hidden": false,
+            "id": "kat-plani-harita",
+            "kind": {
+             "clipToAtlasFeature": false,
+             "grids": [],
+             "labelBand": 0,
+             "layers": {
+              "type": "all"
+             },
+             "overviewFrame": {
+              "cap": "butt",
+              "color": "#d0021b",
+              "dash": [],
+              "join": "miter",
+              "width": 500
+             },
+             "type": "map",
+             "view": {
+              "center": {
+               "x": 2.5,
+               "y": 0.0
+              },
+              "rotation": 0,
+              "scale": 50,
+              "type": "fixed"
+             }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+           }
+          ],
+          "name": "Kat planı",
+          "page": {
+           "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+           },
+           "orientation": "landscape",
+           "paper": "a3",
+           "size": {
+            "height": 297000,
+            "width": 420000
+           }
+          },
+          "snapGrid": {
+           "enabled": false,
+           "spacing": 5000,
+           "visible": false
+          },
+          "variables": [],
+          "variants": []
+         }
+        }
+       ],
+       "label": "Paftayı sil: Kat planı",
+       "revision": "$current",
+       "sheets": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       }
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan işlem: alanın türü yanlış",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "renameSheet",
+        "id": "kat-plani",
+        "name": 5
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_operation",
+       "message": "1. işlem pafta çekirdeğinin bir işlemi olarak okunamadı: invalid type: integer `5`, expected a string. İşlemin op adını ve alanlarını kataloğun örneğine göre denetleyin.",
+       "path": "ops[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan işlem: işlemin adı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "id": "kat-plani"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_operation",
+       "message": "1. işlem pafta çekirdeğinin bir işlemi olarak okunamadı: missing field `op`. İşlemin op adını ve alanlarını kataloğun örneğine göre denetleyin.",
+       "path": "ops[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Gizlenen öğe kitapta yok: çekirdeğin reddi yoluyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addSheet",
+        "sheet": {
+         "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+         },
+         "guides": [],
+         "id": "kat-plani",
+         "items": [
+          {
+           "bindings": [],
+           "constraints": {
+            "h": "left",
+            "relativeTo": "margins",
+            "v": "top"
+           },
+           "frame": {
+            "height": 230000,
+            "left": 20000,
+            "top": 10000,
+            "width": 390000
+           },
+           "hidden": false,
+           "id": "kat-plani-harita",
+           "kind": {
+            "clipToAtlasFeature": false,
+            "grids": [],
+            "labelBand": 0,
+            "layers": {
+             "type": "all"
+            },
+            "overviewFrame": {
+             "cap": "butt",
+             "color": "#d0021b",
+             "dash": [],
+             "join": "miter",
+             "width": 500
+            },
+            "type": "map",
+            "view": {
+             "center": {
+              "x": 2.5,
+              "y": 0.0
+             },
+             "rotation": 0,
+             "scale": 50,
+             "type": "fixed"
+            }
+           },
+           "locked": false,
+           "name": "Harita",
+           "opacity": 100,
+           "padding": 0,
+           "printable": true,
+           "rotation": 0
+          }
+         ],
+         "name": "Kat planı",
+         "page": {
+          "margins": {
+           "bottom": 10000,
+           "left": 20000,
+           "right": 10000,
+           "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+           "height": 297000,
+           "width": 420000
+          }
+         },
+         "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+         },
+         "variables": [],
+         "variants": []
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "id": "kat-plani",
+         "op": "removeSheet"
+        }
+       ],
+       "label": "Pafta ekle: Kat planı",
+       "revision": "$current",
+       "sheets": [
+        {
+         "height": 297.0,
+         "id": "kat-plani",
+         "items": 1,
+         "maps": [
+          {
+           "item": "kat-plani-harita",
+           "name": "Harita",
+           "scale": 50
+          }
+         ],
+         "name": "Kat planı",
+         "width": 420.0
+        }
+       ]
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "hide",
+        "ids": [
+         "yok"
+        ],
+        "value": true
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_item",
+       "message": "“yok” öğesi kitapta yok.",
+       "path": "ops[0]"
+      }
+     },
+     "expect": {
+      "sheets": [
+       {
+        "height": 297.0,
+        "id": "kat-plani",
+        "items": 1,
+        "maps": [
+         {
+          "item": "kat-plani-harita",
+          "name": "Harita",
+          "scale": 50
+         }
+        ],
+        "name": "Kat planı",
+        "width": 420.0
+       }
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

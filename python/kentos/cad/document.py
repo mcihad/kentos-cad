@@ -33,6 +33,7 @@ from .types import (
     LayerNode,
     LayerNodeType,
     ProjectSettings,
+    SheetInfo,
     Workspace,
     WorkspaceName,
 )
@@ -55,6 +56,12 @@ class SessionBase:
         raise NotImplementedError
 
     def to_bytes(self) -> bytes:
+        raise NotImplementedError
+
+    def export_dxf(self, path: str) -> str:
+        raise NotImplementedError
+
+    def export_pdf(self, path: str, sheets: list[str] | None = None) -> str:
         raise NotImplementedError
 
     def summary(self) -> str:
@@ -201,6 +208,31 @@ class Saved:
 
 
 @dataclass(frozen=True, slots=True)
+class Exported:
+    """Where an export went, how many bytes, how many objects and layers, and
+    what changed on the way (the writer's report: ``counts``, ``notes``,
+    ``skipped``)."""
+
+    path: Path
+    bytes: int
+    objects: int
+    layers: int
+    report: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class Printed:
+    """Where a sheet PDF went, how many bytes, the sheets it holds (by id, a page each), the
+    sheet core's findings, and what a headless host leaves out (``notes``)."""
+
+    path: Path
+    bytes: int
+    sheets: list[str]
+    findings: list[dict[str, Any]]
+    notes: list[str]
+
+
+@dataclass(frozen=True, slots=True)
 class DocumentInfo:
     """The drawing as a whole."""
 
@@ -323,6 +355,21 @@ class Document:
         """The ``.kcad`` v2 bytes of the drawing as it is now, verified."""
         return _host(self._session.to_bytes)
 
+    def export_dxf(self, path: str | os.PathLike[str]) -> Exported:
+        """The whole drawing as an AutoCAD 2007 DXF file, as the desktop's DXF
+        dışa aktar writes it (the same writer): every object with its layers,
+        what DXF cannot hold carried as KentOS data. An export is not a save."""
+        raw = json.loads(_host(self._session.export_dxf, os.fspath(path)))
+        return Exported(Path(raw["path"]), int(raw["bytes"]), int(raw["objects"]), int(raw["layers"]), raw["report"])
+
+    def export_pdf(self, path: str | os.PathLike[str], sheets: Sequence[str] | None = None) -> Printed:
+        """The project's sheet book as a PDF: the sheets named (by id) or all, a page each, as the
+        desktop's Dışa aktar › PDF writes them (each map at its scale, GeoPDF where the system is a
+        transverse Mercator one). Sheets are made with ``kentos.cad.sheets.edit``. A headless
+        host writes the maps' lines, areas and hatches but not their texts yet (``notes``)."""
+        raw = json.loads(_host(self._session.export_pdf, os.fspath(path), None if sheets is None else list(sheets)))
+        return Printed(Path(raw["path"]), int(raw["bytes"]), list(raw["sheets"]), list(raw["findings"]), list(raw["notes"]))
+
     # ------------------------------------------------------------ the whole
 
     def info(self) -> DocumentInfo:
@@ -340,6 +387,14 @@ class Document:
             can_redo=s["canRedo"],
             units=_units(s.get("units")),
         )
+
+    def sheets(self) -> list[SheetInfo]:
+        """The project's sheet book's sheets, in its order: page size in millimetres, map frames
+        with their scales (``kentos.cad.sheets.edit`` changes the book). Empty without a book."""
+        raw = json.loads(self._session.summary()).get("sheets")
+        if raw is None:
+            raise host_error("book_unreadable", "Bu projenin pafta kitabı okunamadı; daha yeni bir KentOS'la açın.")
+        return [decode(SheetInfo, x, "Document.sheets") for x in raw]
 
     @property
     def name(self) -> str:
@@ -540,4 +595,4 @@ def _walk(nodes: Iterable[LayerNode]) -> Iterator[LayerNode]:
         yield from _walk(n.children)
 
 
-__all__ = ["BoundsLike", "Document", "DocumentInfo", "Measure", "Page", "Record", "Saved", "Units", "current"]
+__all__ = ["BoundsLike", "Document", "DocumentInfo", "Exported", "Measure", "Page", "Printed", "Record", "Saved", "Units", "current"]

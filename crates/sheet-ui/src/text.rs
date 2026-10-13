@@ -1,21 +1,8 @@
 //! Search text: Turkish lower case (İ → i, I → ı), then the Turkish letters
 //! folded to their Latin ones, so “isik” finds “Işık” and “IŞIK” alike.
 
-pub fn fold(s: &str) -> String {
-    s.chars()
-        .flat_map(|c| match c {
-            'İ' | 'I' | 'ı' => vec!['i'],
-            'Ğ' | 'ğ' => vec!['g'],
-            'Ü' | 'ü' => vec!['u'],
-            'Ş' | 'ş' => vec!['s'],
-            'Ö' | 'ö' => vec!['o'],
-            'Ç' | 'ç' => vec!['c'],
-            other => other.to_lowercase().collect(),
-        })
-        .collect::<String>()
-        .trim()
-        .to_owned()
-}
+// The fold is the sheet core's: the headless host's sheets find layers by name with it too.
+pub use kentos_sheet::text::fold;
 
 /// Turkish lower case (İ → i, I → ı), as the web's `toLocaleLowerCase('tr')`.
 pub fn lower(s: &str) -> String {

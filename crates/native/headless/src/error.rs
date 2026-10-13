@@ -10,7 +10,8 @@ pub struct HeadlessError {
     /// Stable, lowercase with underscores: `unknown_command`, `server_command`,
     /// `unknown_version`, `invalid_input`, `unknown_object`, `unknown_system`,
     /// `file_unreadable`, `file_unwritable`, `legacy_file`, `no_path`, `busy`,
-    /// `unwritable_result`.
+    /// `unwritable_result`, `nothing_to_export`, `no_sheets`, `unknown_sheet`,
+    /// `pdf_unwritable`.
     pub code: &'static str,
     /// For people: the cause and how to fix it (CLAUDE.md §8).
     pub message: String,

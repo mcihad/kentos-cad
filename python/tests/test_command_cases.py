@@ -225,6 +225,9 @@ class Case:
                 settings = json.loads(self.doc._session.summary())["settings"]
                 for k, v in want.items():
                     same(settings.get(k), v, f"{at}: settings.{k}")
+            elif key == "sheets":
+                # The sheet book's sheets as the command lists them (docs/adr/0252 §2).
+                same(json.loads(self.doc._session.summary())["sheets"], want, f"{at}: sheets")
             elif key == "addressLocators":
                 # The project's address data (docs/adr/0229 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]

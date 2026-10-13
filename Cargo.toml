@@ -65,6 +65,7 @@ members = [
     "crates/native/cloud",
     # The desktop's style engine page (docs/adr/0090): the style library and a layer's way to the GPU.
     "crates/native/style",
+    "crates/native/plot",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
     "crates/server/postgres",
     "crates/server/application",

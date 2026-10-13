@@ -591,8 +591,8 @@ Pafta çekirdeği, düzenleyici, PDF/SVG ve değişken/şablon altyapısı zaten
 - [x] **CAD-SHEET-03:** `.kcad`, cloud file snapshot, database project, duplicate, import/export ve restore bütün pafta verisini taşısın.
 - [x] **CAD-SHEET-04:** `.kpafta` bağımsız template/exchange yolu olarak korunmalı; ana proje kaydı için kullanıcıya ek dosya taşıma zorunluluğu kalmasın. — ✅ **Bitti (13 Ekim; CADP-09, ADR 0251):** kitap `.kcad` şema 44'te, cihazdaki kitaplar projeye alınır ve kaydedilince kenara ayrılır, veritabanı projesinde `project.sheets`; `.kpafta` şablon ve alışveriş dosyası olarak kalır.
 - [ ] **CAD-SHEET-05:** Model ve paper-space veri sahipliğini, farklı undo geçmişlerini ve birleştirilmiş script transaction davranışını ADR ile netleştir. — ◐ **Kısmen (ADR 0251 §3):** kitap projenin, kâğıdın geri alması modelinkinden ayrı; birlikte yazan betik işlemi açık.
-- [ ] **CAD-SHEET-06:** Ortak pafta `ops`, variables, templates, assets ve export işlemlerini ürün kataloğu/headless host'a aç.
-- [ ] **CAD-SHEET-07:** Sheet create/rename/delete/duplicate/order, item create/update/group/align, page setup ve source binding UI/Python/AI'da aynı iş olsun.
+- [ ] **CAD-SHEET-06:** Ortak pafta `ops`, variables, templates, assets ve export işlemlerini ürün kataloğu/headless host'a aç. — ◐ **Kısmen (ADR 0252):** `cad.sheets.edit` çekirdeğin işlemleriyle, başsız PDF (haritaların yazıları olmadan) ve DXF; kalan: başsız haritaların yazıları ve resim olarak haritalar, asset baytları.
+- [ ] **CAD-SHEET-07:** Sheet create/rename/delete/duplicate/order, item create/update/group/align, page setup ve source binding UI/Python/AI'da aynı iş olsun. — ◐ **Kısmen (ADR 0252):** işlemler `cad.sheets.edit` ile aynı çekirdekten; kalan: kullanışlı sarmalayıcılar (şablondan pafta, haritayı nesneye sığdır).
 - [ ] **CAD-SHEET-08:** Paper-space çizim/annotation için mevcut pafta item modelinin yeterliliğini değerlendir; CAD entity gerekiyorsa kaynak bağlantısı açık yeni model ekle.
 
 ### 17.2 CAD viewport ve çok ölçekli üretim
@@ -816,6 +816,8 @@ Mevcut performance kayıtları korunmalı. Aşağıdaki rakamlar **yeni başlang
 
 Her senaryo ilgili UI, yazılı command, Python ve AI yolundan çalıştırılmalıdır. ID/çıktı zamanı gibi kontrollü farklar dışında kaynak belge ve iş sonucu eşdeğer olmalıdır.
 
+✅ **İlk kabul çizimi (13 Ekim; CADP-12, ADR 0252):** K01–K04, K11 ve K12 tek senaryoda (`fixtures/acceptance/v1/room.json`): arayüz (iz `acceptance-room`), yazılı komut ve masaüstünün ajan bağlantısı, Python ve MCP aynı sonucu verir; DXF ve PDF bağımsız okunur. AI panelinin yolu CADP-10'la eklenir; K11'in başsız PDF'inde haritaların yazıları yok (ADR 0252 §3).
+
 | ID | Senaryo | Beklenen kanıt |
 |---|---|---|
 | K01 | Yerel CAD/mm oluştur; 4000 × 3000 mm kapalı oda çiz | 12 m² alan, 14 m çevre; kaydet/aç sonrası aynı kaynak değerleri |
@@ -894,7 +896,7 @@ Bağımlılık omurgası:
 9. Pafta kitabını `.kcad` kaynak kapsamına alma ve cihaz kitaplarından göç yolunu uygula. — ✅ **Bitti (13 Ekim; CADP-09, ADR 0251).**
 10. Gerçek AI Surface host ve çizim context/query/plan/execute zincirini bağla.
 11. DWG karar matrisi ve gerçek ofis dosyalarından codec POC yap; seçim kararını ayrı ADR'ye yaz.
-12. İlk uçtan uca kabul çizimini üret: oda → düzeltme → ölçü/tarama → 1:50 pafta → PDF/DXF → başka host'ta yeniden açma.
+12. İlk uçtan uca kabul çizimini üret: oda → düzeltme → ölçü/tarama → 1:50 pafta → PDF/DXF → başka host'ta yeniden açma. — ✅ **Bitti (13 Ekim; CADP-12, ADR 0252; UI, yazılı komut, Python ve MCP; AI panelinin yolu CADP-10'la).**
 
 ## 25. Uygulama öncesi çözülmesi gereken tasarım kararları
 
