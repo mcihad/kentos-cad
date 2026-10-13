@@ -115,6 +115,12 @@ pub const TOOLS: &[&str] = &[
     ellipse::ID,
     spline::ID,
     crate::nurbs_tool::ID,
+    // The user coordinate system (docs/adr/0261).
+    crate::ucs_tool::OBJECT_ID,
+    crate::ucs_tool::TWO_POINTS_ID,
+    crate::ucs_tool::ORIGIN_ID,
+    crate::ucs_tool::ROTATE_ID,
+    crate::ucs_tool::NAMED_ID,
     construction::XLINE_ID,
     construction::RAY_ID,
     // Çizim ekleri (docs/adr/0197).
@@ -355,6 +361,11 @@ impl Session {
             ellipse::ID => Box::new(crate::ellipse::Ellipse::new()),
             spline::ID => Box::new(crate::spline::Spline::new()),
             crate::nurbs_tool::ID => Box::new(crate::nurbs_tool::NurbsTool::new()),
+            crate::ucs_tool::OBJECT_ID => Box::new(crate::ucs_tool::UcsTool::object()),
+            crate::ucs_tool::TWO_POINTS_ID => Box::new(crate::ucs_tool::UcsTool::two_points()),
+            crate::ucs_tool::ORIGIN_ID => Box::new(crate::ucs_tool::UcsTool::origin()),
+            crate::ucs_tool::ROTATE_ID => Box::new(crate::ucs_tool::UcsTool::rotate()),
+            crate::ucs_tool::NAMED_ID => Box::new(crate::ucs_tool::UcsTool::named()),
             construction::XLINE_ID => Box::new(crate::construction::Xline::new()),
             construction::RAY_ID => Box::new(crate::construction::Ray::new()),
             crate::drawing_extras::TANGENT_ID => {
@@ -882,6 +893,7 @@ impl Session {
                 .iter()
                 .all(|&g| g > 0.0)
                 .then_some(draft.snap_grid),
+            grid_frame: draft.ucs,
         };
         spatial.snap_ex(at, tol, draft.snap_kinds, from, &extras)
     }

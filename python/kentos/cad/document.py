@@ -12,6 +12,7 @@ drawing is closed.
 from __future__ import annotations
 
 import json
+import math
 import os
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -302,6 +303,47 @@ class Conventions:
     """Which way they turn: ``ccw`` or ``cw``."""
     angle_unit: str
     """The angle unit the windows show and take: ``deg`` or ``grad``. On the wire each angle field is in its own unit (the catalog's ``x-unit``)."""
+    ucs: UcsFrame | None = None
+    """The drawing's user coordinate system (docs/adr/0261 §5): how its windows take and show points; ``None``, the
+    world's. The wire stays the world: turn points with :meth:`Document.to_world` before giving them to a command."""
+
+
+@dataclass(frozen=True, slots=True)
+class UcsFrame:
+    """A user coordinate system (docs/adr/0261): its origin in the world and the angle of its x axis from east,
+    counter-clockwise, in radians; ``name`` when a named UCS is this frame. The world's is origin (0, 0), angle 0.
+
+    Points are turned in Python's own floating point: within a float's rounding of the desktop's."""
+
+    origin: tuple[float, float]
+    angle: float
+    name: str | None = None
+
+    @property
+    def is_world(self) -> bool:
+        return self.origin == (0.0, 0.0) and self.angle == 0.0
+
+    def to_world(self, points: Iterable[Sequence[float]]) -> list[tuple[float, float]]:
+        """Points of this frame in the world: origin + R(angle)·p."""
+        c, s = math.cos(self.angle), math.sin(self.angle)
+        ox, oy = self.origin
+        return [(ox + p[0] * c - p[1] * s, oy + p[0] * s + p[1] * c) for p in points]
+
+    def to_frame(self, points: Iterable[Sequence[float]]) -> list[tuple[float, float]]:
+        """World points in this frame: R(−angle)·(w − origin)."""
+        c, s = math.cos(self.angle), math.sin(self.angle)
+        ox, oy = self.origin
+        return [((p[0] - ox) * c + (p[1] - oy) * s, -(p[0] - ox) * s + (p[1] - oy) * c) for p in points]
+
+
+WORLD_UCS = UcsFrame((0.0, 0.0), 0.0)
+
+
+def _frame(raw: Mapping[str, Any] | None, name: str | None = None) -> UcsFrame:
+    if not raw:
+        return WORLD_UCS
+    o = raw["origin"]
+    return UcsFrame((float(o["x"]), float(o["y"])), float(raw["angle"]), raw.get("name", name))
 
 
 def _conventions(raw: Mapping[str, Any] | None) -> Conventions:
@@ -316,6 +358,7 @@ def _conventions(raw: Mapping[str, Any] | None) -> Conventions:
         polar_zero=str(polar["zero"]),
         polar_turn=str(polar["turn"]),
         angle_unit=str(raw.get("angleUnit", "grad")),
+        ucs=_frame(raw["ucs"]) if raw.get("ucs") else None,
     )
 
 
@@ -604,6 +647,37 @@ class Document:
         return self.info().conventions or _conventions(None)
 
     @property
+    def ucs(self) -> UcsFrame:
+        """The drawing's user coordinate system (docs/adr/0261): the world's when it has none. Set it with
+        ``kentos.cad.ucs.set``."""
+        return self.conventions.ucs or WORLD_UCS
+
+    @property
+    def named_ucs(self) -> list[UcsFrame]:
+        """The project's named UCSs, in the order they were kept."""
+        raw = json.loads(self._session.summary())["settings"].get("namedUcs") or []
+        return [_frame(n, n["name"]) for n in raw]
+
+    def _ucs_of(self, ucs: UcsFrame | str | None) -> UcsFrame:
+        if ucs is None:
+            return self.ucs
+        if isinstance(ucs, str):
+            found = next((n for n in self.named_ucs if n.name == ucs), None)
+            if found is None:
+                raise UnknownObject("unknown_ucs", f"“{ucs}” adlı bir UCS yok.")
+            return found
+        return ucs
+
+    def to_world(self, points: Iterable[Sequence[float]], ucs: UcsFrame | str | None = None) -> list[tuple[float, float]]:
+        """Points given in a UCS turned into the world, where commands take them (docs/adr/0261 §5): the
+        drawing's current UCS, or ``ucs`` (a :class:`UcsFrame` or a named UCS's name)."""
+        return self._ucs_of(ucs).to_world(points)
+
+    def to_ucs(self, points: Iterable[Sequence[float]], ucs: UcsFrame | str | None = None) -> list[tuple[float, float]]:
+        """World points in a UCS, as the windows show them: the drawing's current UCS, or ``ucs``."""
+        return self._ucs_of(ucs).to_frame(points)
+
+    @property
     def active_layer(self) -> str:
         return self.info().active_layer
 
@@ -886,4 +960,4 @@ def _walk(nodes: Iterable[LayerNode]) -> Iterator[LayerNode]:
         yield from _walk(n.children)
 
 
-__all__ = ["Basis", "BoundsLike", "Conventions", "Document", "DocumentInfo", "Exported", "Measure", "MeasureItem", "Measures", "Page", "Printed", "Record", "Saved", "Units", "current"]
+__all__ = ["Basis", "BoundsLike", "Conventions", "Document", "UcsFrame", "WORLD_UCS", "DocumentInfo", "Exported", "Measure", "MeasureItem", "Measures", "Page", "Printed", "Record", "Saved", "Units", "current"]

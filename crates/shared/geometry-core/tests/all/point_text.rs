@@ -5,9 +5,8 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::tools::point_input::{AngleFrom, Angles};
-use kentos_geometry_core::tools::point_text::{
-    looks_like_coordinate, parse_number, point_from_text_in, point_name,
-};
+use kentos_geometry_core::tools::point_text::{looks_like_coordinate, parse_number, point_name};
+use kentos_geometry_core::tools::ucs::{Frame, point_from_text_framed};
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/point-input/v1/cases.json");
@@ -51,13 +50,22 @@ fn every_shared_case_reads_as_the_web_reads_it() {
                         Some(other) => panic!("{name}: bilinmeyen açı birimi {other}"),
                     },
                 };
-                let got = point_from_text_in(
+                // A user coordinate system (docs/adr/0261 §4); the world without one.
+                let frame = match case.get("ucs") {
+                    Some(u) => Frame::new(
+                        point(&u["origin"]).expect("a UCS origin"),
+                        u["angle"].as_f64().expect("a UCS angle"),
+                    ),
+                    None => Frame::WORLD,
+                };
+                let got = point_from_text_framed(
                     text,
                     point(&case["last"]),
                     point(&case["cursor"]),
                     |_| None,
                     |v| v / per_metre,
                     angles,
+                    &frame,
                 );
                 let want = point(&case["expect"]);
                 let same = match (got, want) {

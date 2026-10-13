@@ -162,6 +162,11 @@ Liste:
   `io/kcad.ts`'in KCAD şema 47'si ve tipli sütunların türü 19, `io/columns.ts`; `FORMATS_VERSION` 60); paketli biçimin türü 23
   (`wasm/pack.ts`); çekirdeğin JSON API'si `tangents`'ı taşımaz; `cad.nurbs.create`'in web işleyicisi ve NURBS eğrisi aracı
   (Yöntem, Derece, Kapat; önizleme planla); Öznitelikler'in satırları; seçim süzgecinde Eğri'nin NURBS'ü de tutması.
+- [ ] `CAD-DATA-09`…`CAD-DATA-11` (ADR 0261, 13 Ekim): web'de gerekenler: ayarların `ucs` ve `namedUcs`'i (TS türleri,
+  `io/kcad.ts`'in KCAD şema 49'u); `cad.ucs.set`'in web işleyicisi; yazılan noktanın UCS'te okunması (çekirdeğin
+  `point_from_text_framed`'i WASM'a), orto ve kutupsal izlemenin UCS'in eksenleriyle (`constrain_cursor_in`), ızgaranın ve karelajın
+  UCS'e göre çizilmesi, koordinat ekseni simgesinin dönmesi, durum çubuğunda UCS koordinatları; şeritte UCS ▾ (Dünya, Önceki, Nesne,
+  İki nokta, Orijin, Döndür, Adlı UCS) ve araçları; Doğrusal ölçünün ve taramanın UCS'e göre yönü.
 - [ ] `CAD-DATA-21` (ADR 0260, 13 Ekim): web'de gerekenler: belgenin ve TS türlerinin `look` alanları (`lineType`, `lineTypeScale`,
   `transparency`, `order`, `byLayer`) ve katmanın `plot`'u (`io/kcad.ts`'in KCAD şema 48'i, tipli sütunların bayrağı 64,
   `io/columns.ts`; `FORMATS_VERSION` 61); stil motoruna nesnenin çizgisinin (`Stroke`: desen ölçeği, saydamlık) ve çizim sırası

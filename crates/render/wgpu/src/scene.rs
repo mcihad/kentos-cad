@@ -323,6 +323,81 @@ pub fn build_grid(
     b.into_part(0.0, BTreeMap::new())
 }
 
+/// Grid lines across `area` along a user coordinate system's axes (docs/adr/0261
+/// §4): the frame's origin `at` and its x axis's angle from east, radians;
+/// lines on whole multiples of the spacing from its origin, each drawn
+/// across the part of the frame that covers `area`.
+pub fn build_grid_framed(
+    area: &Bounds,
+    spacing: (f64, f64),
+    origin: Vec2,
+    colors: [Rgba8; 2],
+    at: Vec2,
+    angle: f64,
+) -> ScenePart {
+    if angle == 0.0 && at.x == 0.0 && at.y == 0.0 {
+        return build_grid(area, spacing, origin, colors);
+    }
+    let (minor, major) = spacing;
+    let mut b = Builder::new(origin);
+    if !(minor > 0.0 && minor.is_finite()) {
+        return b.into_part(0.0, BTreeMap::new());
+    }
+    let (c, s) = (angle.cos(), angle.sin());
+    let to_frame = |x: f64, y: f64| {
+        let (dx, dy) = (x - at.x, y - at.y);
+        (dx * c + dy * s, -dx * s + dy * c)
+    };
+    let to_world = |u: f64, v: f64| Vec2::new(at.x + u * c - v * s, at.y + u * s + v * c);
+    let corners = [
+        to_frame(area.min_x, area.min_y),
+        to_frame(area.max_x, area.min_y),
+        to_frame(area.max_x, area.max_y),
+        to_frame(area.min_x, area.max_y),
+    ];
+    let (mut u0, mut u1, mut v0, mut v1) = (
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+    );
+    for (u, v) in corners {
+        u0 = u0.min(u);
+        u1 = u1.max(u);
+        v0 = v0.min(v);
+        v1 = v1.max(v);
+    }
+    let is_major = |v: f64| (v / major - (v / major).round()).abs() < 1e-6;
+    let (first_u, first_v) = ((u0 / minor).floor() * minor, (v0 / minor).floor() * minor);
+    for (major_layer, color) in [(false, colors[0]), (true, colors[1])] {
+        let start = b.start();
+        let mut i = 0u32;
+        loop {
+            let u = first_u + f64::from(i) * minor;
+            if u > u1 {
+                break;
+            }
+            if is_major(u) == major_layer {
+                b.segment(to_world(u, v0), to_world(u, v1), color);
+            }
+            i += 1;
+        }
+        let mut i = 0u32;
+        loop {
+            let v = first_v + f64::from(i) * minor;
+            if v > v1 {
+                break;
+            }
+            if is_major(v) == major_layer {
+                b.segment(to_world(u0, v), to_world(u1, v), color);
+            }
+            i += 1;
+        }
+        b.finish(start);
+    }
+    b.into_part(0.0, BTreeMap::new())
+}
+
 /// Infinite lines and rays, clipped to `clip` (the web clips them to the
 /// view; a host keeps a box around the view and builds this part again when
 /// the view leaves it). Layers as the other parts list them.

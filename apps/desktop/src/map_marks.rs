@@ -40,7 +40,17 @@ const UCS_ARM: f32 = 38.0;
 /// Draws a CBS project's grid north and scale bar over the drawing, or a CAD
 /// project's coordinate axes (docs/adr/0165 §5); the scale bar `lift` pixels
 /// higher, over the map services' credits (docs/adr/0208 §3).
-pub fn paint(frame: &mut Frame, camera: &Camera, colors: &Colors, axes: Axes, lift: f32) {
+/// A user coordinate system (docs/adr/0261 §4) turns the icon with its axes:
+/// the CAD project's always, a CBS project's shows it beside its marks when
+/// it is not the world's (`ucs`: its angle; none, the world's).
+pub fn paint(
+    frame: &mut Frame,
+    camera: &Camera,
+    colors: &Colors,
+    axes: Axes,
+    ucs: Option<f64>,
+    lift: f32,
+) {
     let size = frame.size();
     match axes {
         Axes::Gis => {
@@ -51,8 +61,18 @@ pub fn paint(frame: &mut Frame, camera: &Camera, colors: &Colors, axes: Axes, li
                 Size::new(size.width, size.height - lift),
                 colors,
             );
+            if let Some(a) = ucs {
+                ucs_icon(frame, ucs_at(size), colors, a, ["Y", "X"], false);
+            }
         }
-        Axes::Cad => ucs_icon(frame, ucs_at(size), colors),
+        Axes::Cad => ucs_icon(
+            frame,
+            ucs_at(size),
+            colors,
+            ucs.unwrap_or(0.0),
+            ["X", "Y"],
+            ucs.is_none(),
+        ),
     }
 }
 
@@ -63,11 +83,23 @@ pub fn ucs_at(size: Size) -> Point {
 }
 
 /// X to the right and Y up from a small square, each arm with its arrow and
-/// name, in the drawing's ink.
-fn ucs_icon(frame: &mut Frame, o: Point, colors: &Colors) {
+/// name, in the drawing's ink; turned by `angle` (the UCS's, counter-clockwise
+/// on the ground, so the screen's way round), the square only for the world's
+/// axes (AutoCAD's: a UCS's icon has none).
+fn ucs_icon(
+    frame: &mut Frame,
+    o: Point,
+    colors: &Colors,
+    angle: f64,
+    names: [&str; 2],
+    world: bool,
+) {
     let ink = Stroke::default().with_color(colors.fg).with_width(1.5);
-    let x_tip = Point::new(o.x + UCS_ARM, o.y);
-    let y_tip = Point::new(o.x, o.y - UCS_ARM);
+    // Screen y grows downward: a turn counter-clockwise on the ground is clockwise here.
+    let (c, s) = (angle.cos() as f32, angle.sin() as f32);
+    let turn = |dx: f32, dy: f32| Point::new(o.x + dx * c + dy * s, o.y - dx * s + dy * c);
+    let x_tip = turn(UCS_ARM, 0.0);
+    let y_tip = turn(0.0, -UCS_ARM);
     frame.stroke(&Path::line(o, x_tip), ink);
     frame.stroke(&Path::line(o, y_tip), ink);
     let head = |a: Point, b: Point, c: Point| {
@@ -80,35 +112,34 @@ fn ucs_icon(frame: &mut Frame, o: Point, colors: &Colors) {
     };
     frame.fill(
         &head(
-            Point::new(x_tip.x + 2.0, x_tip.y),
-            Point::new(x_tip.x - 6.0, x_tip.y - 3.5),
-            Point::new(x_tip.x - 6.0, x_tip.y + 3.5),
+            turn(UCS_ARM + 2.0, 0.0),
+            turn(UCS_ARM - 6.0, -3.5),
+            turn(UCS_ARM - 6.0, 3.5),
         ),
         colors.fg,
     );
     frame.fill(
         &head(
-            Point::new(y_tip.x, y_tip.y - 2.0),
-            Point::new(y_tip.x - 3.5, y_tip.y + 6.0),
-            Point::new(y_tip.x + 3.5, y_tip.y + 6.0),
+            turn(0.0, -UCS_ARM - 2.0),
+            turn(-3.5, -UCS_ARM + 6.0),
+            turn(3.5, -UCS_ARM + 6.0),
         ),
         colors.fg,
     );
-    frame.stroke(
-        &Path::rectangle(Point::new(o.x - 3.0, o.y - 3.0), Size::new(6.0, 6.0)),
-        Stroke::default().with_color(colors.fg).with_width(1.0),
-    );
+    if world {
+        frame.stroke(
+            &Path::rectangle(Point::new(o.x - 3.0, o.y - 3.0), Size::new(6.0, 6.0)),
+            Stroke::default().with_color(colors.fg).with_width(1.0),
+        );
+    }
+    let (x_at, x_align) = if world {
+        (turn(UCS_ARM + 6.0, 6.0), text::Alignment::Left)
+    } else {
+        (turn(UCS_ARM + 9.0, 4.0), text::Alignment::Center)
+    };
     for (name, at, align) in [
-        (
-            "X",
-            Point::new(x_tip.x + 6.0, x_tip.y + 6.0),
-            text::Alignment::Left,
-        ),
-        (
-            "Y",
-            Point::new(y_tip.x, y_tip.y - 5.0),
-            text::Alignment::Center,
-        ),
+        (names[0], x_at, x_align),
+        (names[1], turn(0.0, -UCS_ARM - 5.0), text::Alignment::Center),
     ] {
         haloed(
             frame,

@@ -393,11 +393,16 @@ pub const SCHEMA_WITH_NURBS: u32 = 47;
 /// layer (`byLayer`), and a layer's `plot`, written only when the drawing has
 /// one; older readers refuse such a file instead of drawing it otherwise.
 pub const SCHEMA_WITH_LOOK: u32 = 48;
+/// Schema 49 (docs/adr/0261): the settings' `ucs` (the drawing's user
+/// coordinate system) and `namedUcs`, written only when the current UCS is
+/// not the world's or a named one is kept; older readers refuse such a file
+/// instead of opening it in the world's axes.
+pub const SCHEMA_WITH_UCS: u32 = 49;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 47] = [
+pub const SCHEMAS: [u32; 48] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -445,6 +450,7 @@ pub const SCHEMAS: [u32; 47] = [
     SCHEMA_WITH_POLYLINE_EXTRAS,
     SCHEMA_WITH_NURBS,
     SCHEMA_WITH_LOOK,
+    SCHEMA_WITH_UCS,
 ];
 
 /// The file a drawing is saved as.

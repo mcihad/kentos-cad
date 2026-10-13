@@ -1332,12 +1332,15 @@ impl App {
                 // first, named as its type names them (docs/adr/0165 §4), rounded as
                 // the web's toFixed rounds.
                 let f = Format::of(doc.settings());
+                // In the drawing's UCS when it is not the world's (docs/adr/0261 §4), said so.
+                let q = f.in_ucs(p);
                 format!(
-                    "{} {}   {} {}",
+                    "{}{} {}   {} {}",
+                    if f.ucs.is_some() { "UCS  " } else { "" },
                     f.east_label(),
-                    f.coord(p.x),
+                    f.coord(q.x),
                     f.north_label(),
-                    f.coord(p.y)
+                    f.coord(q.y)
                 )
             }
             (Some(doc), None) => {
@@ -1350,11 +1353,19 @@ impl App {
         let mut bar = StatusBar::new().push(
             Readout::new(label::mono(coordinates))
                 .icon(Icon::Crosshair)
-                .tip(format!(
-                    "İmleç koordinatı: {} sağa (doğu), {} yukarı (kuzey)",
-                    f.east_label(),
-                    f.north_label()
-                )),
+                .tip(if f.ucs.is_some() {
+                    format!(
+                        "İmleç koordinatı kullanıcı koordinat sisteminde (UCS): {} UCS'in x ekseni boyunca, {} y ekseni boyunca; Koordinat oku dünyayı da verir",
+                        f.east_label(),
+                        f.north_label()
+                    )
+                } else {
+                    format!(
+                        "İmleç koordinatı: {} sağa (doğu), {} yukarı (kuzey)",
+                        f.east_label(),
+                        f.north_label()
+                    )
+                }),
         );
         // The second coordinate system's values, before the message (docs/adr/0167 §2).
         if second && let Some(cell) = self.second_cell(cursor) {

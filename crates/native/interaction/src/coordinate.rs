@@ -115,6 +115,19 @@ impl Tool for CrsQuery {
             text.push_str(&format!(", Z={}", f.length_bare(z)));
         }
         cx.say(Level::Info, text);
+        // In the drawing's UCS too, when it is not the world's (docs/adr/0261 §4).
+        let frame = cx.frame();
+        if !frame.is_world() {
+            let u = frame.to_frame(p.world);
+            let line = format!(
+                "UCS: {}={}, {}={}",
+                f.east_label(),
+                f.coord(u.x),
+                f.north_label(),
+                f.coord(u.y)
+            );
+            cx.say(Level::Info, line);
+        }
         // The second coordinate system's values, and how sure they are (docs/adr/0167 §2, §5).
         if let Some(second) = Second::of(cx.doc.settings()) {
             match second.point(p.world) {

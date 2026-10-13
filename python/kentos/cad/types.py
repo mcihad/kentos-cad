@@ -2197,6 +2197,34 @@ class TrimBoundaries(_Union):
         return _variant(_TRIM_BOUNDARIES, "TrimBoundaries", "kind", data).from_json(data)
 
 
+class UcsTo(_Union):
+    """What the UCS becomes (docs/adr/0261 §2).
+
+    One of:
+
+    - :class:`WorldUcsTo` (``kind: world``)
+    - :class:`FrameUcsTo` (``kind: frame``)
+    - :class:`OriginUcsTo` (``kind: origin``)
+    - :class:`RotateUcsTo` (``kind: rotate``)
+    - :class:`TwoPointsUcsTo` (``kind: twoPoints``)
+    - :class:`ObjectUcsTo` (``kind: object``)
+    - :class:`NamedUcsTo` (``kind: named``)
+    - :class:`SaveUcsTo` (``kind: save``)
+    - :class:`DeleteUcsTo` (``kind: delete``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UcsTo:
+        return _variant(_UCS_TO, "UcsTo", "kind", data).from_json(data)
+
+
 _ConstructionEntityT = TypeVar("_ConstructionEntityT", bound="ConstructionEntity")
 
 
@@ -10713,6 +10741,34 @@ class LocalDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NamedUcs(_Model):
+    """A named UCS of the project.
+    Attributes:
+        name: Trimmed, 1–64 characters, no control characters; unique.
+        origin: Unit: length.
+        angle: Unit: rad.
+    """
+    name: str
+    origin: Vec2
+    angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["origin"] = _vec2_out(self.origin)
+        out["angle"] = float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NamedUcs:
+        return cls(
+            name=data["name"],
+            origin=Vec2.from_json(data["origin"]),
+            angle=float(data["angle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NetworkCost(_Model):
     """A cost besides the length (docs/adr/0209 §2).
     Attributes:
@@ -13073,6 +13129,7 @@ class ProjectSettings(_Model):
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
+        named_ucs: The project's named UCSs, in the order they were kept.
         networks: The project's networks (docs/adr/0209 §2).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
@@ -13082,6 +13139,8 @@ class ProjectSettings(_Model):
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
         topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
+        ucs: The drawing's user coordinate system (docs/adr/0261 §1); none: the
+            world. How points are typed and shown, never where they are.
         variables: The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
@@ -13102,12 +13161,14 @@ class ProjectSettings(_Model):
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
+    named_ucs: list[NamedUcs] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
+    ucs: Ucs | None | Unset = UNSET
     variables: list[ProjectVariable] | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
@@ -13137,6 +13198,8 @@ class ProjectSettings(_Model):
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
+        if self.named_ucs is not UNSET:
+            out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.networks is not UNSET:
             out["networks"] = [e0.to_json() for e0 in self.networks]
         if self.second_custom_crs is not UNSET:
@@ -13149,6 +13212,8 @@ class ProjectSettings(_Model):
             out["textStyles"] = [e0.to_json() for e0 in self.text_styles]
         if self.topology is not UNSET:
             out["topology"] = None if self.topology is None else self.topology.to_json()
+        if self.ucs is not UNSET:
+            out["ucs"] = None if self.ucs is None else self.ucs.to_json()
         if self.variables is not UNSET:
             out["variables"] = [e0.to_json() for e0 in self.variables]
         if self.workspace is not UNSET:
@@ -13173,12 +13238,14 @@ class ProjectSettings(_Model):
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
+            named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
+            ucs=UNSET if "ucs" not in data else None if data["ucs"] is None else Ucs.from_json(data["ucs"]),
             variables=[ProjectVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else UNSET,
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
@@ -15678,6 +15745,124 @@ class TrimPick(_Model):
         return cls(
             uid=data["uid"],
             at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Ucs(_Model):
+    """A user coordinate system: its origin in the world and the angle of its x
+    axis from the world's x (east), counter-clockwise, in radians, in
+    [0, 2π). Its y axis is square to x, counter-clockwise; it neither scales
+    nor mirrors. The world's is origin (0, 0), angle 0, kept as no setting.
+    Attributes:
+        origin: Its origin in the world. Unit: length.
+        angle: Its x axis from east, counter-clockwise. Unit: rad.
+    """
+    origin: Vec2
+    angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["origin"] = _vec2_out(self.origin)
+        out["angle"] = float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Ucs:
+        return cls(
+            origin=Vec2.from_json(data["origin"]),
+            angle=float(data["angle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UcsChanged(_Model):
+    """Output of `cad.ucs.set` v1, and what plan says it would do.
+    Attributes:
+        ucs: The current UCS afterwards.
+        named: The named UCSs' names, in order.
+        changed: Whether the settings changed.
+        revision: The document's revision afterwards (plan: the one it was made against).
+    """
+    ucs: UcsNow
+    named: list[str]
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ucs"] = self.ucs.to_json()
+        out["named"] = list(self.named)
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UcsChanged:
+        return cls(
+            ucs=UcsNow.from_json(data["ucs"]),
+            named=list(data["named"]),
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UcsNow(_Model):
+    """The current UCS as the command says it: its frame and, when a named one
+    is the same frame, that name.
+    Attributes:
+        origin: Unit: length.
+        angle: Unit: rad.
+    """
+    origin: Vec2
+    angle: float
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["origin"] = _vec2_out(self.origin)
+        out["angle"] = float(self.angle)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UcsNow:
+        return cls(
+            origin=Vec2.from_json(data["origin"]),
+            angle=float(data["angle"]),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UcsSet(_Model):
+    """Input of `cad.ucs.set` v1.
+
+    Refusals (`CommandError.code`), checked in this order: `non_finite`,
+    `far_point`, `invalid_ucs_name`, `same_points`, `invalid_uid`;
+    `invalid_revision`, `revision_conflict` (status `conflict`);
+    `entity_not_found`, `object_without_axis`, `unknown_ucs`,
+    `too_many_ucs`. Warning: `ucs_replaced`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    to: UcsTo
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["to"] = self.to.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UcsSet:
+        return cls(
+            to=UcsTo.from_json(data["to"]),
+            expected_revision=data.get("expectedRevision", UNSET),
         )
 
 
@@ -18566,6 +18751,190 @@ class ObjectsTrimBoundaries(TrimBoundaries):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class WorldUcsTo(UcsTo):
+    """Dünya: the world's axes."""
+    TAG_VALUE: ClassVar[str] = "world"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "world"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorldUcsTo:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class FrameUcsTo(UcsTo):
+    """A frame given as it is (Önceki, Python).
+    Attributes:
+        origin: Unit: length.
+        angle: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "frame"
+    origin: Vec2
+    angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "frame"}
+        out["origin"] = _vec2_out(self.origin)
+        out["angle"] = float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FrameUcsTo:
+        return cls(
+            origin=Vec2.from_json(data["origin"]),
+            angle=float(data["angle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OriginUcsTo(UcsTo):
+    """Orijin: the origin moves, the axes keep their angle.
+    Attributes:
+        point: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "origin"
+    point: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "origin"}
+        out["point"] = _vec2_out(self.point)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OriginUcsTo:
+        return cls(
+            point=Vec2.from_json(data["point"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RotateUcsTo(UcsTo):
+    """Döndür: the axes turn by `angle` about the origin.
+    Attributes:
+        angle: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "rotate"
+    angle: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rotate"}
+        out["angle"] = float(self.angle)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RotateUcsTo:
+        return cls(
+            angle=float(data["angle"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TwoPointsUcsTo(UcsTo):
+    """İki nokta: the origin, and the x axis toward the second point.
+    Attributes:
+        origin: Unit: length.
+        x_point: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "twoPoints"
+    origin: Vec2
+    x_point: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "twoPoints"}
+        out["origin"] = _vec2_out(self.origin)
+        out["xPoint"] = _vec2_out(self.x_point)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TwoPointsUcsTo:
+        return cls(
+            origin=Vec2.from_json(data["origin"]),
+            x_point=Vec2.from_json(data["xPoint"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ObjectUcsTo(UcsTo):
+    """Nesne: aligned to an object, at the place clicked (§3).
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "object"
+    uid: str
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "object"}
+        out["uid"] = self.uid
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectUcsTo:
+        return cls(
+            uid=data["uid"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NamedUcsTo(UcsTo):
+    """Adlı UCS: a named one."""
+    TAG_VALUE: ClassVar[str] = "named"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "named"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NamedUcsTo:
+        return cls(
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SaveUcsTo(UcsTo):
+    """Kaydet: the current UCS kept under a name; one of that name is replaced."""
+    TAG_VALUE: ClassVar[str] = "save"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "save"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SaveUcsTo:
+        return cls(
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeleteUcsTo(UcsTo):
+    """Sil: a named one removed; the current UCS stays."""
+    TAG_VALUE: ClassVar[str] = "delete"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "delete"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeleteUcsTo:
+        return cls(
+            name=data["name"],
+        )
+
+
 _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
 
 
@@ -18624,6 +18993,9 @@ _TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": Rotat
 
 
 _TRIM_BOUNDARIES: dict[str, type[TrimBoundaries]] = {"all": AllTrimBoundaries, "area": AreaTrimBoundaries, "objects": ObjectsTrimBoundaries}
+
+
+_UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "origin": OriginUcsTo, "rotate": RotateUcsTo, "twoPoints": TwoPointsUcsTo, "object": ObjectUcsTo, "named": NamedUcsTo, "save": SaveUcsTo, "delete": DeleteUcsTo}
 
 
 __all__ = [
@@ -18739,6 +19111,7 @@ __all__ = [
     "DatumTransform",
     "DeleteBlockChange",
     "DeleteFeatureChange",
+    "DeleteUcsTo",
     "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
     "DimensionArrow",
@@ -18832,6 +19205,7 @@ __all__ = [
     "FileUnit",
     "FileUnitName",
     "FitNurbsBy",
+    "FrameUcsTo",
     "GeographicCrsSystem",
     "GeographicDefinition",
     "GradientShape",
@@ -18971,6 +19345,8 @@ __all__ = [
     "MidSubPlace",
     "MirrorTransform",
     "MoveTransform",
+    "NamedUcs",
+    "NamedUcsTo",
     "NetworkConnect",
     "NetworkConnectName",
     "NetworkCost",
@@ -18993,6 +19369,7 @@ __all__ = [
     "NurbsEntity",
     "NurbsEntityGeometry",
     "NurbsPlan",
+    "ObjectUcsTo",
     "ObjectsHatchRegion",
     "ObjectsTrimBoundaries",
     "ObstacleKind",
@@ -19001,6 +19378,7 @@ __all__ = [
     "OrderTo",
     "OrderToName",
     "OrdinateDimensionMeasure",
+    "OriginUcsTo",
     "PartsDivision",
     "PathArrayLayout",
     "PathEntity",
@@ -19105,8 +19483,10 @@ __all__ = [
     "ReplaceEntityEdit",
     "RingGeometry",
     "RotateTransform",
+    "RotateUcsTo",
     "RubberLink",
     "RubbersheetTransform",
+    "SaveUcsTo",
     "ScaleTransform",
     "ScenarioInfo",
     "ScenarioOperation",
@@ -19178,6 +19558,12 @@ __all__ = [
     "Transform",
     "TrimBoundaries",
     "TrimPick",
+    "TwoPointsUcsTo",
+    "Ucs",
+    "UcsChanged",
+    "UcsNow",
+    "UcsSet",
+    "UcsTo",
     "UnitDecision",
     "UnitGeometry",
     "UnitGeometryName",
@@ -19197,6 +19583,7 @@ __all__ = [
     "VertexSubPlace",
     "Workspace",
     "WorkspaceName",
+    "WorldUcsTo",
     "XlineEntity",
     "XlineEntityGeometry",
 ]

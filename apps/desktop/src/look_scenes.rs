@@ -32,8 +32,16 @@ fn ground() -> Objects {
     o.fields(b, json!({ "lineType": "dotted" }));
     let c = o.line("yol", [0.0, 6.0], [14.0, 6.0]);
     o.fields(c, json!({ "lineType": "dashdot", "lineTypeScale": 0.5 }));
-    o.path("parsel", &[[18.0, 0.0], [28.0, 0.0], [28.0, 8.0], [18.0, 8.0]], true);
-    let over = o.path("yol", &[[22.0, 4.0], [32.0, 4.0], [32.0, 12.0], [22.0, 12.0]], true);
+    o.path(
+        "parsel",
+        &[[18.0, 0.0], [28.0, 0.0], [28.0, 8.0], [18.0, 8.0]],
+        true,
+    );
+    let over = o.path(
+        "yol",
+        &[[22.0, 4.0], [32.0, 4.0], [32.0, 12.0], [22.0, 12.0]],
+        true,
+    );
     o.fields(over, json!({ "transparency": 0.5, "color": "#E5484D" }));
     let line = o.line("parsel", [16.0, 14.0], [32.0, 14.0]);
     let h = o.hatch(
@@ -90,4 +98,3 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("gorunus-one-getir", front),
     ]
 }
-

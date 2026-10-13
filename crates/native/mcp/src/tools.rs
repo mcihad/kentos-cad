@@ -230,6 +230,23 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             annotations(true, false),
         ),
         tool(
+            "drawing.toWorld",
+            "UCS'ten dünyaya",
+            "Kullanıcı koordinat sistemindeki (UCS) noktaları dünyaya çevirir: dünya = başlangıç + R(açı)·nokta (docs/adr/0261 §5). \
+             Komutların ve nesnelerin noktaları her zaman dünyadadır; UCS'te düşünülen noktaları komuta vermeden önce bununla çevirin. \
+             ucs verilmezse çizimin geçerli UCS'i (özetin conventions.ucs'i; yoksa dünya), name verilirse o adlı UCS kullanılır.",
+            object(ucs_points_args(), &["drawing", "points"]),
+            annotations(true, false),
+        ),
+        tool(
+            "drawing.toUcs",
+            "Dünyadan UCS'e",
+            "Dünyadaki noktaları kullanıcı koordinat sistemine (UCS) çevirir: R(−açı)·(nokta − başlangıç); arayüzün gösterdiği UCS koordinatları. \
+             ucs verilmezse çizimin geçerli UCS'i, name verilirse o adlı UCS kullanılır.",
+            object(ucs_points_args(), &["drawing", "points"]),
+            annotations(true, false),
+        ),
+        tool(
             "drawing.undo",
             "Geri al",
             "Son adımı geri alır; adının adını verir.",
@@ -521,6 +538,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.states"
             | "cad.styles.edit"
             | "cad.settings.set"
+            // Its delete takes a named UCS away (docs/adr/0261 §2).
+            | "cad.ucs.set"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
             // A change set runs any of these (docs/adr/0253 §8).
@@ -598,6 +617,102 @@ fn session<'a>(server: &'a mut Server, args: &Value) -> Result<(&'a mut Session,
     Ok((s, handle.to_owned()))
 }
 
+/// The arguments of drawing.toWorld and drawing.toUcs.
+fn ucs_points_args() -> Value {
+    json!({
+        "drawing": drawing_arg(),
+        "points": { "type": "array", "maxItems": UCS_POINTS_MAX,
+                    "items": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } }, "required": ["x", "y"] },
+                    "description": "Noktalar {x, y}; en çok 10 000." },
+        "ucs": { "type": "object", "description": "Açık bir UCS: { origin: {x, y}, angle } (angle radyan, doğudan saat yönünün tersine)." },
+        "name": { "type": "string", "description": "Adlı bir UCS (ucs yerine)." }
+    })
+}
+
+/// The most points drawing.toWorld and drawing.toUcs take at once.
+const UCS_POINTS_MAX: usize = 10_000;
+
+/// Points turned between the world and a UCS (docs/adr/0261 §5): the one
+/// given, the named one, else the drawing's current one (the world's when it
+/// has none), from the drawing's summary.
+fn ucs_points(summary: &Value, args: &Value, to_world: bool) -> Result<Value, Value> {
+    let frame_of = |u: &Value| -> Option<(f64, f64, f64)> {
+        Some((
+            u["origin"]["x"].as_f64()?,
+            u["origin"]["y"].as_f64()?,
+            u["angle"].as_f64()?,
+        ))
+    };
+    let (ox, oy, a, name) = if let Some(u) = args.get("ucs") {
+        let f = frame_of(u).ok_or_else(|| {
+            refused(
+                "invalid_input",
+                "ucs { origin: {x, y}, angle } olmalı; sayılar sonlu.",
+            )
+        })?;
+        (f.0, f.1, f.2, None)
+    } else if let Some(n) = text(args, "name") {
+        let found = summary["settings"]["namedUcs"]
+            .as_array()
+            .and_then(|list| list.iter().find(|u| u["name"] == n))
+            .and_then(frame_of)
+            .ok_or_else(|| refused("unknown_ucs", format!("“{n}” adlı bir UCS yok.")))?;
+        (found.0, found.1, found.2, Some(n.to_owned()))
+    } else {
+        match frame_of(&summary["conventions"]["ucs"]) {
+            Some(f) => (
+                f.0,
+                f.1,
+                f.2,
+                summary["conventions"]["ucs"]["name"]
+                    .as_str()
+                    .map(str::to_owned),
+            ),
+            None => (0.0, 0.0, 0.0, None),
+        }
+    };
+    if ![ox, oy, a].iter().all(|v| v.is_finite()) {
+        return Err(refused("not_finite", "UCS'in sayıları sonlu olmalı."));
+    }
+    let points = args["points"].as_array().ok_or_else(|| {
+        refused(
+            "invalid_input",
+            "points {x, y} noktalarının listesi olmalı.",
+        )
+    })?;
+    if points.len() > UCS_POINTS_MAX {
+        return Err(refused(
+            "too_many",
+            format!("En çok {UCS_POINTS_MAX} nokta çevrilir."),
+        ));
+    }
+    let (c, s) = (a.cos(), a.sin());
+    let mut out = Vec::with_capacity(points.len());
+    for (i, p) in points.iter().enumerate() {
+        let (Some(x), Some(y)) = (p["x"].as_f64(), p["y"].as_f64()) else {
+            return Err(refused(
+                "invalid_input",
+                format!("points[{i}] {{x, y}} olmalı."),
+            ));
+        };
+        let (u, v) = if to_world {
+            (ox + x * c - y * s, oy + x * s + y * c)
+        } else {
+            let (dx, dy) = (x - ox, y - oy);
+            (dx * c + dy * s, -dx * s + dy * c)
+        };
+        out.push(json!({ "x": u, "y": v }));
+    }
+    Ok(answer(
+        json!({
+            "points": out,
+            "ucs": { "origin": { "x": ox, "y": oy }, "angle": a, "name": name },
+            "to": if to_world { "world" } else { "ucs" }
+        }),
+        false,
+    ))
+}
+
 fn opened(server: &mut Server, session: Session) -> Result<Value, Value> {
     if server.drawings.len() >= MOST_DRAWINGS {
         return Err(refused(
@@ -632,6 +747,18 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
             }),
         ),
         "drawing.entity" => ("entity", json!({ "uid": args.get("uid") })),
+        "drawing.toWorld" | "drawing.toUcs" => {
+            let Some(link) = server.desktops.get_mut(handle) else {
+                return Err(refused(
+                    "unknown_drawing",
+                    "Masaüstü tutamacı artık açık değil.",
+                ));
+            };
+            let summary = link
+                .ask("summary", json!({}))
+                .map_err(|(code, message)| refused(&code, message))?;
+            return ucs_points(&summary, args, name == "drawing.toWorld");
+        }
         "drawing.measure" => match args.get("uids") {
             Some(uids) => (
                 "measureMany",
@@ -796,6 +923,10 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         "drawing.summary" => {
             let (s, _) = session(server, args)?;
             Ok(answer(s.summary(), false))
+        }
+        "drawing.toWorld" | "drawing.toUcs" => {
+            let (s, _) = session(server, args)?;
+            ucs_points(&s.summary(), args, name == "drawing.toWorld")
         }
         "drawing.layers" => {
             let (s, _) = session(server, args)?;

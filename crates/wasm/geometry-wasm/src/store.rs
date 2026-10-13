@@ -682,6 +682,7 @@ impl GeometryStore {
     ) -> Vec<f64> {
         let from = has_from.then(|| Vec2::new(fx, fy));
         let extras = SnapExtras {
+            grid_frame: None,
             extensions: read_extensions(extensions),
             parallels: parallels
                 .chunks_exact(2)

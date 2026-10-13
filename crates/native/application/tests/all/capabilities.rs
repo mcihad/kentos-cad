@@ -317,6 +317,12 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
             json!({ "measure": { "kind": "radius", "of": { "uid": u, "near": { "x": 0.0, "y": 0.0 } } },
                     "at": { "x": 1.0e9, "y": 1.0e9 }, "layerId": "yok" })
         }),
+        // Nesne: a kind that gives axes sets the UCS, another is refused for its kind.
+        (
+            "cad.ucs.set",
+            Some("object"),
+            |u| json!({ "to": { "kind": "object", "uid": u, "at": { "x": 0.0, "y": 0.0 } } }),
+        ),
         ("cad.dimensions.create", Some("arcLength"), |u| {
             json!({ "measure": { "kind": "arcLength", "of": { "uid": u, "near": { "x": 0.0, "y": 0.0 } } },
                     "at": { "x": 1.0e9, "y": 1.0e9 }, "layerId": "yok" })

@@ -47,6 +47,7 @@ mod data_compare;
 #[cfg(test)]
 mod dimension_scenes;
 mod document;
+mod draw_order;
 mod drawing_exchange;
 mod drawing_fonts;
 mod drawing_menus;
@@ -56,7 +57,6 @@ mod edge_shift_scenes;
 mod elevation_scenes;
 #[cfg(test)]
 mod elevation_tests;
-mod draw_order;
 mod exchange;
 mod expression;
 mod features;
@@ -103,6 +103,8 @@ mod locks;
 mod log_plan;
 #[cfg(test)]
 mod log_plan_tests;
+#[cfg(test)]
+mod look_scenes;
 mod map_marks;
 mod marks;
 mod message_log;
@@ -113,8 +115,6 @@ mod navigation;
 mod navigation_cards;
 #[cfg(test)]
 mod netcad_names_tests;
-#[cfg(test)]
-mod look_scenes;
 #[cfg(test)]
 mod nurbs_scenes;
 mod object_info;
@@ -177,6 +177,9 @@ mod settings_look;
 mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
+mod ucs;
+#[cfg(test)]
+mod ucs_scenes;
 // Map services (docs/adr/0208): their tiles, connections' secrets and the device's cache.
 #[cfg(test)]
 mod distance_scenes;

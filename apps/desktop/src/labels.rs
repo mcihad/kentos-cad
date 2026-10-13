@@ -530,6 +530,7 @@ trait Ink {
         camera: &Camera,
         colors: &Colors,
         axes: kentos_interaction::Axes,
+        ucs: Option<f64>,
         lift: f32,
     );
     /// A ring of the screen filled, and a line drawn: a grown leader's arrowhead (docs/adr/0205 §5),
@@ -564,9 +565,10 @@ impl Ink for Frame {
         camera: &Camera,
         colors: &Colors,
         axes: kentos_interaction::Axes,
+        ucs: Option<f64>,
         lift: f32,
     ) {
-        crate::map_marks::paint(self, camera, colors, axes, lift);
+        crate::map_marks::paint(self, camera, colors, axes, ucs, lift);
     }
 
     fn fill_ring(&mut self, ring: &[Point], color: Color, _of: Option<Slot>) {
@@ -812,6 +814,7 @@ impl Ink for Collect<'_> {
         _camera: &Camera,
         _colors: &Colors,
         _axes: kentos_interaction::Axes,
+        _ucs: Option<f64>,
         _lift: f32,
     ) {
     }
@@ -1570,7 +1573,8 @@ impl Labels<'_> {
         if self.fence.is_none()
             && let Some(lift) = self.map_marks
         {
-            frame.marks(&self.view, &self.colors, self.format.axes, lift);
+            let ucs = self.format.ucs.map(|u| u[2]);
+            frame.marks(&self.view, &self.colors, self.format.axes, ucs, lift);
         }
     }
 

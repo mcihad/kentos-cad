@@ -989,22 +989,34 @@ mod tests {
     #[test]
     fn an_objects_look_is_a_column_of_its_own() {
         // docs/adr/0260: the line type, its scale, transparency and order go in `look`, not the definition.
-        let line = entity(serde_json::json!({ "kind": "line", "id": 1, "layerId": "a", "attrs": {},
+        let line = entity(
+            serde_json::json!({ "kind": "line", "id": 1, "layerId": "a", "attrs": {},
             "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 },
-            "lineType": "dashed", "lineTypeScale": 2.5, "transparency": 0.5, "order": -3 }));
+            "lineType": "dashed", "lineTypeScale": 2.5, "transparency": 0.5, "order": -3 }),
+        );
         let s = to_stored(&line, 5256, &none()).unwrap();
         assert_eq!(
             s.look,
-            Some(serde_json::json!({ "lineType": "dashed", "lineTypeScale": 2.5, "transparency": 0.5, "order": -3 }))
+            Some(
+                serde_json::json!({ "lineType": "dashed", "lineTypeScale": 2.5, "transparency": 0.5, "order": -3 })
+            )
         );
         assert_eq!(from_stored(&s).unwrap().base().look, line.base().look);
-        let arc = entity(serde_json::json!({ "kind": "arc", "id": 1, "layerId": "a", "attrs": {},
-            "c": { "x": 0, "y": 0 }, "r": 2, "a0": 0, "a1": 1, "transparency": 0.25 }));
+        let arc = entity(
+            serde_json::json!({ "kind": "arc", "id": 1, "layerId": "a", "attrs": {},
+            "c": { "x": 0, "y": 0 }, "r": 2, "a0": 0, "a1": 1, "transparency": 0.25 }),
+        );
         let s = to_stored(&arc, 5256, &none()).unwrap();
-        assert!(s.cad_definition.as_ref().is_some_and(|d| d.get("transparency").is_none()));
+        assert!(
+            s.cad_definition
+                .as_ref()
+                .is_some_and(|d| d.get("transparency").is_none())
+        );
         assert_eq!(from_stored(&s).unwrap().base().look, arc.base().look);
-        let wrong = entity(serde_json::json!({ "kind": "line", "id": 1, "layerId": "a", "attrs": {},
-            "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 }, "transparency": 0.95 }));
+        let wrong = entity(
+            serde_json::json!({ "kind": "line", "id": 1, "layerId": "a", "attrs": {},
+            "a": { "x": 0, "y": 0 }, "b": { "x": 1, "y": 0 }, "transparency": 0.95 }),
+        );
         assert!(to_stored(&wrong, 5256, &none()).is_err());
     }
 

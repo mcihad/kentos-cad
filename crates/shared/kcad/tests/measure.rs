@@ -70,6 +70,8 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         version: 2,
         name: "Ölçüm".into(),
         settings: ProjectSettings {
+            named_ucs: Vec::new(),
+            ucs: None,
             srid: 5256,
             length_decimals: 3,
             area_decimals: 2,

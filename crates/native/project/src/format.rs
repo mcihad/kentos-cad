@@ -23,6 +23,10 @@ pub struct Format {
     pub unit: DrawingUnit,
     /// The project's axes and the way its angles run (docs/adr/0165 §4).
     pub axes: Axes,
+    /// The drawing's user coordinate system, its origin's x and y and its
+    /// angle (docs/adr/0261): where the status bar reads the pointer and how
+    /// the axes' icon turns. Points are given in the world all the same.
+    pub ucs: Option<[f64; 3]>,
 }
 
 /// A project's axes and the way its angles run (docs/adr/0165 §4): a CBS
@@ -46,6 +50,7 @@ impl Default for Format {
             angle_unit: AngleUnit::Grad,
             unit: DrawingUnit::M,
             axes: Axes::Gis,
+            ucs: None,
         }
     }
 }
@@ -63,6 +68,22 @@ impl Format {
             } else {
                 Axes::Gis
             },
+            ucs: settings.ucs.map(|u| [u.origin.x, u.origin.y, u.angle]),
+        }
+    }
+
+    /// A world point in the drawing's UCS (docs/adr/0261 §4); itself in the world's.
+    pub fn in_ucs(&self, p: Vec2) -> Vec2 {
+        match self.ucs {
+            Some([ox, oy, a]) => {
+                let (c, s) = (
+                    kentos_geometry_core::jsmath::cos(a),
+                    kentos_geometry_core::jsmath::sin(a),
+                );
+                let (dx, dy) = (p.x - ox, p.y - oy);
+                Vec2::new(dx * c + dy * s, -dx * s + dy * c)
+            }
+            None => p,
         }
     }
 
@@ -482,6 +503,8 @@ mod tests {
     #[test]
     fn a_projects_type_names_its_axes() {
         let mut settings = ProjectSettings {
+            named_ucs: Vec::new(),
+            ucs: None,
             srid: 5256,
             length_decimals: 3,
             area_decimals: 2,
@@ -559,6 +582,8 @@ mod tests {
     #[test]
     fn a_local_project_reads_in_its_unit() {
         let mut settings = ProjectSettings {
+            named_ucs: Vec::new(),
+            ucs: None,
             srid: 0,
             length_decimals: 3,
             area_decimals: 2,

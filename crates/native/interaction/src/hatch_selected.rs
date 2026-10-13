@@ -56,7 +56,9 @@ impl HatchSelected {
     /// The command's input: the selection's closed objects, the options,
     /// the active layer and colour.
     fn request(&self, cx: &Context<'_>) -> EntitiesHatch {
-        let m = *cx.memory;
+        let mut m = *cx.memory;
+        // The pattern's angle is from the UCS's x axis (docs/adr/0261 §4).
+        m.hatch_angle += cx.ucs_degrees();
         let doc = &*cx.doc;
         EntitiesHatch {
             region: HatchRegion::Objects {

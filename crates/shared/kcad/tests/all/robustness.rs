@@ -468,6 +468,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
         version: 2,
         name: rng.text(),
         settings: ProjectSettings {
+            named_ucs: Vec::new(),
+            ucs: None,
             srid: rng.next() as u32,
             length_decimals: rng.below(10) as u32,
             area_decimals: rng.below(10) as u32,

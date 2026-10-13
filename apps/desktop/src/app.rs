@@ -779,6 +779,8 @@ pub struct App {
     /// The digitizing locks (docs/adr/0166): what holds the next point; the
     /// session's, the tools see them in their context.
     pub locks: kentos_interaction::LockState,
+    /// The UCSs Önceki gives back (ucs.rs, docs/adr/0261 §1).
+    pub(crate) ucs_history: crate::ucs::UcsHistory,
     /// The object template being drawn with (templates.rs, docs/adr/0176 §3):
     /// its stamp is in the tools' context while its tool runs.
     pub(crate) template: Option<crate::templates::TemplateRun>,
@@ -1077,6 +1079,7 @@ impl App {
             overlap_layers: Vec::new(),
             select_kinds: kentos_interaction::selectable::ALL,
             locks: kentos_interaction::LockState::default(),
+            ucs_history: crate::ucs::UcsHistory::default(),
             template: None,
             last_template: None,
             template_names: std::collections::HashMap::new(),
@@ -1310,6 +1313,8 @@ impl App {
             self.repoint();
         }
         self.follow_document();
+        // Önceki's history follows the drawing's UCS (ucs.rs, docs/adr/0261 §1).
+        self.follow_ucs();
         // The sheets follow the project and the drawing (sheets.rs).
         self.follow_sheets();
         self.follow_selection_layers();
@@ -1782,6 +1787,7 @@ impl App {
             color: self.draft.color,
             line_weight: self.draft.line_weight,
             line_type: self.draft.line_type,
+            ucs: self.draft.ucs,
             geographic: kentos_interaction::second::Notation::parse(&s.text("display.geographic")),
             // Seçim süzgeci's kinds are the session's (docs/adr/0187 §5).
             select_kinds: s.bool("drafting.selectFilter").then_some(self.select_kinds),
@@ -2250,6 +2256,9 @@ impl App {
             "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
             "address.data" => return self.open_address_data(),
             "address.providers" => return self.open_address_providers(),
+            // The user coordinate system (ucs.rs, docs/adr/0261).
+            "ucs.world" => self.ucs_world(),
+            "ucs.previous" => self.ucs_previous(),
             // Sırala (draw_order.rs, docs/adr/0260 §5).
             "edit.bringToFront" => self.order_selection(kentos_contracts::OrderTo::Front),
             "edit.sendToBack" => self.order_selection(kentos_contracts::OrderTo::Back),

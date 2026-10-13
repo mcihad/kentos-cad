@@ -17,7 +17,7 @@ use kentos_domain::contracts::{
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet,
     LayersStates, LayersTime, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet,
-    SheetsEdit, StylesEdit,
+    SheetsEdit, StylesEdit, UcsSet, UcsTo,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -38,7 +38,7 @@ use kentos_native_application::{
     entities_fillet, entities_order, entities_trim, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
     layers_states, layers_time, line, network_define, nurbs, offset, point, polygon, polyline,
-    scenarios_edit, set, settings_set, sheets_edit, styles_edit, transform, units_change,
+    scenarios_edit, set, settings_set, sheets_edit, styles_edit, transform, ucs_set, units_change,
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
@@ -754,6 +754,33 @@ impl Input for SettingsSet {
     }
 }
 
+impl Input for UcsSet {
+    /// `to.angle`; a point's `x` or `y` (`to.origin.x`, `to.point.y`, `to.xPoint.x`, `to.at.y`);
+    /// the command's errors name the point (docs/adr/0261 §2).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "to.angle" {
+            return match &mut self.to {
+                UcsTo::Frame { angle, .. } | UcsTo::Rotate { angle } => Some(angle),
+                _ => None,
+            };
+        }
+        let (point, axis) = path.rsplit_once('.')?;
+        let p = match (&mut self.to, point) {
+            (UcsTo::Frame { origin: p, .. }, "to.origin")
+            | (UcsTo::Origin { point: p }, "to.point")
+            | (UcsTo::TwoPoints { origin: p, .. }, "to.origin")
+            | (UcsTo::TwoPoints { x_point: p, .. }, "to.xPoint")
+            | (UcsTo::Object { at: p, .. }, "to.at") => p,
+            _ => return None,
+        };
+        match axis {
+            "x" => Some(&mut p.x),
+            "y" => Some(&mut p.y),
+            _ => None,
+        }
+    }
+}
+
 impl Input for UnitsChange {
     /// No numbers: two units and a choice (docs/adr/0256 §1).
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -1385,6 +1412,7 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
+        kentos_domain::contracts::CAD_UCS_SET => run!(ucs_set, UcsSet),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),

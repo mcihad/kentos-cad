@@ -28,6 +28,7 @@ import hashlib
 import json
 import math
 import re
+import unicodedata
 import struct
 import sys
 from pathlib import Path
@@ -312,6 +313,9 @@ def settings(s):
                 "variables": (variables, False),
                 # Schema 42 (docs/adr/0229 §2): the project's address data.
                 "addressLocators": (address_locators, False),
+                # Schema 49 (docs/adr/0261 §1): the current UCS (none: the world) and the named ones.
+                "ucs": (ucs, False),
+                "namedUcs": (named_ucs, False),
             },
             "settings",
         )
@@ -954,6 +958,36 @@ def address_locators(list_):
     ids = [l_["id"] for l_ in list_]
     assert len(set(ids)) == len(ids), "adres verisinin kimliği bir kez"
     return nonempty(address_locator)(list_)
+
+
+# Schema 49 (docs/adr/0261 §1): a UCS is an origin within 10 000 km and an angle in [0, 2π); the current one is never
+# the world's (that is no setting); names trimmed, 1 to 64 characters without control characters, unique, at most 100.
+UCS_REACH = 1.0e7
+TAU = 2.0 * math.pi
+
+
+def ucs_frame(u):
+    o = u["origin"]
+    assert all(math.isfinite(v) and abs(v) <= UCS_REACH for v in (o["x"], o["y"])), u
+    assert math.isfinite(u["angle"]) and 0.0 <= u["angle"] < TAU, u
+    return {"origin": (point, True), "angle": (f64, True)}
+
+
+def ucs(u):
+    assert not (u["origin"]["x"] == 0 and u["origin"]["y"] == 0 and u["angle"] == 0), "dünya UCS'i yazılmaz"
+    return cmap(fields(u, ucs_frame(u), "ucs"))
+
+
+def named_ucs(list_):
+    names = [n["name"] for n in list_]
+    assert len(names) <= 100 and len(set(names)) == len(names), names
+    for n in names:
+        assert n == n.strip() and 0 < len(n) <= 64 and not any(unicodedata.category(c) == "Cc" for c in n), n
+
+    def one(n):
+        return cmap(fields(n, {"name": (text, True), **ucs_frame(n)}, "namedUcs"))
+
+    return nonempty(one)(list_)
 
 
 # Schema 37 (docs/adr/0214 §2.3): the project's `@` variables; a label only when not empty, a value only when given.
@@ -1737,6 +1771,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 49 (docs/adr/0261): the current UCS or a named one.
+    if settings and ("ucs" in settings or "namedUcs" in settings):
+        return 49
     # Schema 48 (docs/adr/0260): an object's look, a block definition's too, or a layer not printed.
     looked = lambda es: any(k in e for e in es for k in ("lineType", "lineTypeScale", "transparency", "order", "byLayer"))  # noqa: E731
 
@@ -2041,7 +2078,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-49.kcad"] = container(root(cmap(parts), version=uint(49)))
+    files["schema-version-50.kcad"] = container(root(cmap(parts), version=uint(50)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2361,6 +2398,22 @@ def broken(minimal_content, minimal_file):
     files["look-order-float.kcad"] = in_schema(48, line(order=f64(1.5)))
     files["look-by-layer-in-drawing.kcad"] = in_schema(48, line(byLayer=array([text("color")])))
     files["plot-true.kcad"] = container(root(cmap({**parts, "layers": array([cmap({**layer_entries(m["layers"][0]), "plot": boolean(True)})])}), version=uint(48)))
+    # The UCS settings are schema 49's (docs/adr/0261 §1): in schema 48 unknown fields; the world's never written as the
+    # current one, an angle in [0, 2π), an origin within 10 000 km, names that hold and are unique, an empty list refused.
+    def with_ucs(extra, schema=49):
+        return container(root(cmap({**parts, "settings": cmap({**settings_parts(m["settings"]), **extra})}), version=uint(schema)))
+
+    def frame_of(x=10.0, y=20.0, a=1.0, **more):
+        return cmap({**more, "origin": point({"x": x, "y": y}), "angle": f64(a)})
+
+    files["ucs-in-schema-48.kcad"] = with_ucs({"ucs": frame_of()}, schema=48)
+    files["ucs-world.kcad"] = with_ucs({"ucs": frame_of(0.0, 0.0, 0.0)})
+    files["ucs-angle-tau.kcad"] = with_ucs({"ucs": frame_of(a=TAU)})
+    files["ucs-far.kcad"] = with_ucs({"ucs": frame_of(x=2.0e7)})
+    files["named-ucs-empty.kcad"] = with_ucs({"namedUcs": array([])})
+    files["named-ucs-twice.kcad"] = with_ucs({"namedUcs": array([frame_of(name=text("A")), frame_of(name=text("A"))])})
+    files["named-ucs-blank.kcad"] = with_ucs({"namedUcs": array([frame_of(name=text(" "))])})
+    files["named-ucs-unknown-field.kcad"] = with_ucs({"namedUcs": array([frame_of(name=text("A"), note=text("x"))])})
     files["nurbs-in-schema-46.kcad"] = in_schema(46, nurbs_of())
     files["nurbs-closed-false.kcad"] = in_schema(47, nurbs_of(closed=boolean(False)))
     files["nurbs-degree-12.kcad"] = in_schema(47, nurbs_of(degree=uint(12)))
@@ -3230,6 +3283,7 @@ def build():
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))
     out["nurbs.kcad"] = container(document(load("nurbs.json")))
     out["look.kcad"] = container(document(load("look.json")))
+    out["ucs.kcad"] = container(document(load("ucs.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

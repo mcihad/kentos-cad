@@ -9,12 +9,14 @@ import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
+import type { NamedUcs } from "./NamedUcs";
 import type { NetworkDef } from "./NetworkDef";
 import type { ProjectVariable } from "./ProjectVariable";
 import type { ServiceConnection } from "./ServiceConnection";
 import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { TopologySettings } from "./TopologySettings";
+import type { Ucs } from "./Ucs";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -100,4 +102,13 @@ variables?: Array<ProjectVariable>,
 /**
  * The project's address data (docs/adr/0229 §2), in the order they were made.
  */
-addressLocators?: Array<AddressLocator>, };
+addressLocators?: Array<AddressLocator>, 
+/**
+ * The drawing's user coordinate system (docs/adr/0261 §1); none: the
+ * world. How points are typed and shown, never where they are.
+ */
+ucs?: Ucs, 
+/**
+ * The project's named UCSs, in the order they were kept.
+ */
+namedUcs?: Array<NamedUcs>, };
