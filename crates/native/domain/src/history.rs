@@ -27,6 +27,7 @@ use crate::changes::Journal;
 use crate::document::Document;
 use crate::identity::{Slot, Uuid};
 use crate::store::Stored;
+use crate::units::UnitState;
 
 /// Undo steps kept; an older step is dropped when a new one comes (web; TODOS.md TX-06).
 pub const UNDO_LIMIT: usize = 200;
@@ -162,6 +163,13 @@ pub(crate) enum Op {
         before: Arc<BlockDefinition>,
         after: Arc<BlockDefinition>,
     },
+    /// The drawing unit, the home view and the anchor a unit change wrote
+    /// (docs/adr/0256 §1), before and after: in the step with the objects
+    /// it scaled, so undo gives both back.
+    Units {
+        before: UnitState,
+        after: UnitState,
+    },
 }
 
 /// A tree node as a step keeps it (children, flags, style), and where it
@@ -277,6 +285,10 @@ impl Op {
             Op::BlockUpdate { before, after } => Op::BlockUpdate {
                 before: after.clone(),
                 after: before.clone(),
+            },
+            Op::Units { before, after } => Op::Units {
+                before: *after,
+                after: *before,
             },
         }
     }
@@ -658,7 +670,8 @@ impl Document {
                 | Op::LayerActive { .. }
                 | Op::BlockAdd { .. }
                 | Op::BlockRemove { .. }
-                | Op::BlockUpdate { .. } => false,
+                | Op::BlockUpdate { .. }
+                | Op::Units { .. } => false,
             })
         };
         self.history.undo.retain(|step| !touches(step));
@@ -815,6 +828,12 @@ impl Document {
             // Not objects: a reader compares the definitions themselves (blocks.rs).
             Op::BlockAdd { .. } | Op::BlockRemove { .. } | Op::BlockUpdate { .. } => {
                 self.apply_block_op(op);
+                return;
+            }
+            Op::Units { after, .. } => {
+                self.settings.drawing_unit = after.drawing_unit;
+                self.home_view = after.home_view;
+                self.origin = after.origin;
                 return;
             }
         };

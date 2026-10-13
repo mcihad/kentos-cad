@@ -2925,6 +2925,45 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A local project's unit, keeping the sizes or the numbers (docs/adr/0256 §1), held together
+        // by fixtures/commands/v1/cad.units.change.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_UNITS_CHANGE.into(),
+            version: crate::CAD_UNITS_CHANGE_VERSION,
+            title: "Birimi değiştir".into(),
+            summary: "Yerel projenin çizim birimini from'dan to'ya değiştirir (mm, cm, m); from çizimin şimdiki birimi olmalıdır. geometry ne olacağını söyler: \
+                      keep boyları korur, yalnız okuma ve yazma birimi değişir (4000 mm'lik duvar 4 m okunur, hiçbir nesne değişmez); \
+                      scale sayıları korur, çizim iki birimin oranıyla 0,0'a göre ölçeklenir (4000 mm 4000 m okunur: ×1000; cm'den mm'ye ÷10). \
+                      scale'de nesnelerin koordinatları, uzunlukları, yarıçapları, kotları, yazı, ölçü, kılavuz ve tablo yükseklikleri ve boyları, paragraf kutusu, eğri boyunca yazının eğrisi, tarama aralığı ve desen ölçeği, resim ve raster çerçeveleri, blok tanımları, ana görünüm ölçeklenir; \
+                      açılar, oranlar, yerleştirmenin kendi ölçeği, kâğıt üstü boylar ve ölçüler (M) kalır. Nokta bulutlarının noktaları, pafta kitabı ve projenin toleransları değişmez; uyarı söyler. \
+                      Telde geometri her durumda metredir. Birim ve ölçeklenen çizim tek geri alma adımıdır (“Birimi değiştir”). Koordinat sistemli projenin birimi sistemindir (unit_needs_local); scale'de kilitli katmanda nesne varsa hiçbir şey yazılmaz (layer_locked). \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::UnitsChange>(),
+            output: schema::<crate::UnitsChanged>(),
+            plan: Some(schema::<crate::UnitsChanged>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Milimetreden metreye, boylar korunarak".into(),
+                    input: json!({ "from": "mm", "to": "m", "geometry": "keep" }),
+                    output: Some(json!({ "from": "mm", "to": "m", "geometry": "keep", "factor": 1.0, "objects": 0, "blocks": 0, "revision": "8" })),
+                },
+                CommandExample {
+                    title: "Metre sanılan milimetrelik çizim: sayılar korunur, çizim binde birine iner".into(),
+                    input: json!({ "from": "m", "to": "mm", "geometry": "scale" }),
+                    output: Some(json!({ "from": "m", "to": "mm", "geometry": "scale", "factor": 0.001, "objects": 412, "blocks": 6, "revision": "9" })),
+                },
+            ],
+        },
         // The sheet book by the sheet core's own operations (docs/adr/0252 §2), held together by
         // fixtures/commands/v1/cad.sheets.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {

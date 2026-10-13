@@ -388,6 +388,18 @@ codes! {
     /// No dimension forms where it is placed.
     NO_DIMENSION = "no_dimension", Failed, false, "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor, kenarlar paralel ya da yay boş.";
 
+    // ── A drawing's unit (docs/adr/0256 §1) ─────────────────────────────
+    /// A unit change to the unit it already is.
+    SAME_UNIT = "same_unit", Failed, false, "Çizimin birimi zaten bu; değişecek bir şey yok.";
+    /// A unit change from a unit the drawing is not in.
+    UNIT_MISMATCH = "unit_mismatch", Failed, false, "Çizim söylenen birimde değil; from çizimin şimdiki birimi olmalı.";
+    /// A cloud's points are in its files: a unit change does not scale them.
+    POINT_CLOUDS_KEPT = "point_clouds_kept", Warning, false, "Nokta bulutlarının noktaları dosyalarındadır; ölçeklenmedi.";
+    /// The sheet book is the paper's: a unit change does not scale its maps.
+    SHEETS_KEPT = "sheets_kept", Warning, false, "Pafta kitabı ölçeklenmedi; paftaların haritalarını yeni boylara göre ayarlayın.";
+    /// The project's tolerances are its precision: a unit change keeps them.
+    TOLERANCES_KEPT = "tolerances_kept", Warning, false, "Projenin toleransları (topoloji, ağlar) değişmedi.";
+
     // ── Time and scenarios (docs/adr/0210 §11) ──────────────────────────
     /// A time setting against its rules.
     INVALID_TIME = "invalid_time", Failed, false, "Zaman ayarı kurallarına uymuyor.";
