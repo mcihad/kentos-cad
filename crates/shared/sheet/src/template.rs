@@ -171,79 +171,9 @@ pub struct Instance {
     pub asset_bytes: Vec<AssetWithBytes>,
 }
 
-// ── base64 (RFC 4648) ────────────────────────────────────────────────────
+// ── base64 (RFC 4648) and SHA-256: the contracts' one copy (`.kcad` carries the book's pictures too) ──
 
-const B64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-pub fn base64_encode(bytes: &[u8]) -> String {
-    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let b = [
-            chunk.first().copied().unwrap_or(0),
-            chunk.get(1).copied().unwrap_or(0),
-            chunk.get(2).copied().unwrap_or(0),
-        ];
-        let n = (u32::from(b[0]) << 16) | (u32::from(b[1]) << 8) | u32::from(b[2]);
-        for (i, shift) in [18u32, 12, 6, 0].iter().enumerate() {
-            if i <= chunk.len() {
-                out.push(char::from(B64[((n >> shift) & 63) as usize]));
-            } else {
-                out.push('=');
-            }
-        }
-    }
-    out
-}
-
-pub fn base64_decode(text: &str) -> Option<Vec<u8>> {
-    let t: Vec<u8> = text.bytes().filter(|b| !b.is_ascii_whitespace()).collect();
-    if !t.len().is_multiple_of(4) {
-        return None;
-    }
-    let val = |c: u8| -> Option<u32> {
-        Some(match c {
-            b'A'..=b'Z' => c - b'A',
-            b'a'..=b'z' => c - b'a' + 26,
-            b'0'..=b'9' => c - b'0' + 52,
-            b'+' => 62,
-            b'/' => 63,
-            _ => return None,
-        } as u32)
-    };
-    let mut out = Vec::with_capacity(t.len() / 4 * 3);
-    let quads = t.len() / 4;
-    for (q, chunk) in t.chunks(4).enumerate() {
-        let pad = chunk.iter().rev().take_while(|&&c| c == b'=').count();
-        if pad > 2 || (pad > 0 && q + 1 != quads) {
-            return None;
-        }
-        let mut n = 0u32;
-        for (i, &c) in chunk.iter().enumerate() {
-            let v = if i >= 4 - pad { 0 } else { val(c)? };
-            n = (n << 6) | v;
-        }
-        out.push((n >> 16) as u8);
-        if pad < 2 {
-            out.push((n >> 8) as u8);
-        }
-        if pad < 1 {
-            out.push(n as u8);
-        }
-    }
-    Some(out)
-}
-
-/// SHA-256 of `bytes` as 64 lowercase hex digits: an asset's name.
-pub fn sha256_hex(bytes: &[u8]) -> String {
-    use sha2::{Digest, Sha256};
-    let d = Sha256::digest(bytes);
-    let mut s = String::with_capacity(64);
-    for b in d {
-        s.push(char::from(b"0123456789abcdef"[usize::from(b >> 4)]));
-        s.push(char::from(b"0123456789abcdef"[usize::from(b & 15)]));
-    }
-    s
-}
+pub use kentos_contracts::encoding::{base64_decode, base64_encode, sha256_hex};
 
 // ── Reading, migrating, validating ───────────────────────────────────────
 

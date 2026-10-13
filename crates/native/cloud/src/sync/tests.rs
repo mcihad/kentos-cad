@@ -24,6 +24,7 @@ pub(super) fn opened(permissions: Vec<ProjectPermission>, state: ProjectState) -
         project: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000001").unwrap(),
         info: ProjectInfo {
             blocks: Vec::new(),
+            sheets: None,
             id: "0199aaaa-0000-7000-8000-000000000001".into(),
             tenant_id: "0199aaaa-0000-7000-8000-000000000002".into(),
             tenant_name: "Harita Bürosu".into(),
@@ -291,6 +292,61 @@ fn the_metadata_goes_with_its_version_only_for_who_may_change_it() {
     e.document.add(point(486600.0)).unwrap();
     let env = sync.next(&e.document).unwrap();
     assert!(input(&env).project.is_none());
+}
+
+/// The project's sheet book (docs/adr/0251) is metadata: it goes whole with
+/// the project's version, null when the project has none any more, and one
+/// changed elsewhere comes in with the project's info.
+#[test]
+fn the_sheet_book_goes_and_comes_as_the_projects_metadata() {
+    let sample: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/sheets.json")).unwrap();
+    let book: kentos_contracts::ProjectSheets =
+        serde_json::from_value(sample["sheets"].clone()).unwrap();
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    o.document.set_sheets(Some(book.clone())).unwrap();
+    let env = sync.next(&o.document).unwrap();
+    assert_eq!(
+        env.expected_versions,
+        BTreeMap::from([(PROJECT_KEY.to_string(), "4".into())])
+    );
+    let patch = input(&env).project.unwrap();
+    assert_eq!(patch.sheets, Some(Some(book.clone())));
+    assert!(patch.layers.is_none() && patch.name.is_none() && patch.styles.is_none());
+    // On the wire: base64 bytes, the book as it is.
+    let wire = serde_json::to_value(input(&env)).unwrap();
+    assert_eq!(wire["project"]["sheets"], sample["sheets"]);
+    sync.answered(&o.document, &committed(&env, 2));
+    assert!(sync.all_sent());
+    assert_eq!(sync.next(&o.document), None, "sent once");
+
+    // Taken away here: null goes.
+    o.document.set_sheets(None).unwrap();
+    let env = sync.next(&o.document).unwrap();
+    assert_eq!(input(&env).project.unwrap().sheets, Some(None));
+    let wire = serde_json::to_value(input(&env)).unwrap();
+    assert!(wire["project"]["sheets"].is_null());
+    sync.answered(&o.document, &committed(&env, 3));
+
+    // Another editor's book comes in with the project's info.
+    sync.observe(&o.document);
+    let mut info = o.info.clone();
+    info.sheets = Some(book.clone());
+    info.meta_version = "9".into();
+    let incoming = sync.incoming(&page(vec![event(10, None, &[], true)]));
+    sync.take_remote(
+        &mut o.document,
+        incoming,
+        Remote {
+            records: vec![],
+            info: Some(info),
+            blocks: None,
+        },
+    )
+    .unwrap();
+    assert_eq!(o.document.sheets(), Some(&book));
+    assert_eq!(sync.next(&o.document), None, "theirs is not sent back");
 }
 
 #[test]

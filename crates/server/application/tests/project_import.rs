@@ -254,6 +254,7 @@ async fn an_import_needs_the_right_project_rights_and_upload() {
         layers: s.layers,
         active_layer: s.active_layer,
         styles: s.styles,
+        sheets: None,
         description: None,
         project_type: None,
         tags: None,

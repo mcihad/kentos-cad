@@ -468,6 +468,51 @@ fn the_project_styles_change_as_an_edit_without_an_undo_step() {
 }
 
 #[test]
+fn the_sheet_book_changes_as_an_edit_without_an_undo_step_and_is_saved() {
+    use kentos_domain::contracts::{ProjectSheets, SheetPicture, encoding::sha256_hex};
+    let mut doc = empty();
+    doc.add(point("0", 1.0)).expect("slot");
+    let undo_steps = doc.can_undo();
+    let generation = doc.generation();
+    let logo = b"\x89PNG logo".to_vec();
+    let sheets = ProjectSheets {
+        book: serde_json::json!({ "schema": "kentos.sheet/1", "sheets": [{ "id": "pafta-1", "name": "Pafta 1" }] }),
+        pictures: vec![SheetPicture {
+            sha256: sha256_hex(&logo),
+            bytes: logo,
+        }],
+    };
+    doc.set_sheets(Some(sheets.clone())).expect("kept");
+    assert_eq!(doc.sheets(), Some(&sheets));
+    assert!(doc.is_dirty());
+    assert!(doc.generation() > generation);
+    assert_eq!(doc.can_undo(), undo_steps);
+    doc.undo();
+    assert_eq!(
+        doc.sheets(),
+        Some(&sheets),
+        "the drawing's undo does not take a sheet back"
+    );
+    // The same book again is no edit; one the file could not keep is refused and changes nothing.
+    let generation = doc.generation();
+    doc.set_sheets(Some(sheets.clone())).expect("kept");
+    assert_eq!(doc.generation(), generation);
+    let mut wrong = sheets.clone();
+    wrong.pictures[0].bytes = b"baska".to_vec();
+    let refused = doc.set_sheets(Some(wrong)).expect_err("refused");
+    assert!(refused.contains("1. resim"), "{refused}");
+    assert_eq!(doc.sheets(), Some(&sheets));
+    // A snapshot carries it; a reading copy shares it.
+    let snapshot = doc.to_snapshot_v2();
+    assert_eq!(snapshot.sheets.as_ref(), Some(&sheets));
+    let back = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+    assert_eq!(back.sheets(), Some(&sheets));
+    assert_eq!(doc.reading_copy().sheets(), Some(&sheets));
+    doc.set_sheets(None).expect("kept");
+    assert_eq!(doc.to_snapshot_v2().sheets, None);
+}
+
+#[test]
 fn a_layers_objects_are_read_by_their_places_which_edits_and_undo_keep() {
     let mut doc = empty();
     let a1 = doc.add(point("a", 1.0)).expect("slot");

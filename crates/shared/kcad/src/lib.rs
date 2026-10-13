@@ -366,8 +366,13 @@ pub const SCHEMA_WITH_ADDRESSES: u32 = 42;
 /// of losing them. A block definition's dimensions have none.
 pub const SCHEMA_WITH_DIMENSION_REFS: u32 = 43;
 
+/// Schema 44 (docs/specs/kcad-v2.md §6.12, docs/adr/0251): the project's
+/// sheet book and its pictures' bytes (`sheets`), written only when the
+/// project has a book; older readers refuse such a file instead of losing it.
+pub const SCHEMA_WITH_SHEETS: u32 = 44;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 42] = [
+pub const SCHEMAS: [u32; 43] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -410,6 +415,7 @@ pub const SCHEMAS: [u32; 42] = [
     SCHEMA_WITH_COMPOSE,
     SCHEMA_WITH_ADDRESSES,
     SCHEMA_WITH_DIMENSION_REFS,
+    SCHEMA_WITH_SHEETS,
 ];
 
 /// The file a drawing is saved as.

@@ -39,6 +39,9 @@ pub struct BaseMeta {
     pub settings: ProjectSettings,
     pub layers: Vec<LayerNode>,
     pub styles: ProjectStyles,
+    /// The sheet book (docs/adr/0251); a copy written before it has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sheets: Option<kentos_contracts::ProjectSheets>,
 }
 
 /// A block definition as the server has it, with its version (docs/adr/0144 §5).
@@ -150,6 +153,7 @@ impl ProjectSync {
                 settings: self.meta_base.settings.clone(),
                 layers: self.meta_base.layers.clone(),
                 styles: self.meta_base.styles.clone(),
+                sheets: self.meta_base.sheets.as_deref().cloned(),
             }),
             blocks: g.blocks.then(|| {
                 self.known_block_list()
@@ -199,6 +203,7 @@ impl ProjectSync {
                 blocks: known_blocks.iter().map(|(_, _, b)| (**b).clone()).collect(),
                 project_id: Some(ProjectId(self.project.into_bytes())),
                 migrated_from: None,
+                sheets: self.meta_base.sheets.as_deref().cloned(),
             },
             versions,
             block_versions: known_blocks.into_iter().map(|(id, v, _)| (id, v)).collect(),

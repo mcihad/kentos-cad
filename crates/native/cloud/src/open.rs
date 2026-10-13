@@ -108,6 +108,7 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
         blocks: info.blocks.iter().map(|r| r.block.clone()).collect(),
         project_id: Some(ProjectId(project.into_bytes())),
         migrated_from: None,
+        sheets: info.sheets.clone(),
     }
 }
 
@@ -296,6 +297,7 @@ mod tests {
         let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
         ProjectInfo {
             blocks: Vec::new(),
+            sheets: None,
             id: "0199aaaa-0000-7000-8000-000000000001".into(),
             tenant_id: "0199aaaa-0000-7000-8000-000000000002".into(),
             tenant_name: "Harita Bürosu".into(),

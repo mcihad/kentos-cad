@@ -5541,6 +5541,17 @@
                   }
                 ]
               },
+              "sheets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ProjectSheets"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The sheet book and its pictures, whole (docs/adr/0251); null: the\nproject has none any more. Held to the file format's rules\n(`sheets_problem`)."
+              },
               "styles": {
                 "anyOf": [
                   {
@@ -5744,6 +5755,25 @@
               "areaUnit",
               "angleUnit",
               "plotScale"
+            ],
+            "type": "object"
+          },
+          "ProjectSheets": {
+            "description": "The sheet book of a project and its pictures' bytes.",
+            "properties": {
+              "book": {
+                "description": "The sheet core's book (`kentos.sheet/1`): an object, opaque here."
+              },
+              "pictures": {
+                "description": "The bytes of the book's pictures; none when it has none.",
+                "items": {
+                  "$ref": "#/$defs/SheetPicture"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "book"
             ],
             "type": "object"
           },
@@ -6484,6 +6514,24 @@
             "required": [
               "name",
               "value"
+            ],
+            "type": "object"
+          },
+          "SheetPicture": {
+            "description": "A picture's bytes under the SHA-256 the book names it by.",
+            "properties": {
+              "bytes": {
+                "description": "The file's bytes; base64 (RFC 4648, with padding) in JSON.",
+                "type": "string"
+              },
+              "sha256": {
+                "description": "SHA-256 of `bytes`, 64 lowercase hexadecimal digits.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "sha256",
+              "bytes"
             ],
             "type": "object"
           },
@@ -11234,6 +11282,25 @@
             ],
             "type": "object"
           },
+          "ProjectSheets": {
+            "description": "The sheet book of a project and its pictures' bytes.",
+            "properties": {
+              "book": {
+                "description": "The sheet core's book (`kentos.sheet/1`): an object, opaque here."
+              },
+              "pictures": {
+                "description": "The bytes of the book's pictures; none when it has none.",
+                "items": {
+                  "$ref": "#/$defs/SheetPicture"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "book"
+            ],
+            "type": "object"
+          },
           "ProjectStorage": {
             "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
             "oneOf": [
@@ -11619,6 +11686,24 @@
             "required": [
               "name",
               "value"
+            ],
+            "type": "object"
+          },
+          "SheetPicture": {
+            "description": "A picture's bytes under the SHA-256 the book names it by.",
+            "properties": {
+              "bytes": {
+                "description": "The file's bytes; base64 (RFC 4648, with padding) in JSON.",
+                "type": "string"
+              },
+              "sha256": {
+                "description": "SHA-256 of `bytes`, 64 lowercase hexadecimal digits.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "sha256",
+              "bytes"
             ],
             "type": "object"
           },
@@ -12257,6 +12342,17 @@
           },
           "settings": {
             "$ref": "#/$defs/ProjectSettings"
+          },
+          "sheets": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectSheets"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The project's sheet book and its pictures (docs/adr/0251); absent: none."
           },
           "storage": {
             "anyOf": [
@@ -18014,6 +18110,25 @@
             ],
             "type": "object"
           },
+          "ProjectSheets": {
+            "description": "The sheet book of a project and its pictures' bytes.",
+            "properties": {
+              "book": {
+                "description": "The sheet core's book (`kentos.sheet/1`): an object, opaque here."
+              },
+              "pictures": {
+                "description": "The bytes of the book's pictures; none when it has none.",
+                "items": {
+                  "$ref": "#/$defs/SheetPicture"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "book"
+            ],
+            "type": "object"
+          },
           "ProjectState": {
             "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
             "oneOf": [
@@ -18787,6 +18902,24 @@
             "required": [
               "name",
               "value"
+            ],
+            "type": "object"
+          },
+          "SheetPicture": {
+            "description": "A picture's bytes under the SHA-256 the book names it by.",
+            "properties": {
+              "bytes": {
+                "description": "The file's bytes; base64 (RFC 4648, with padding) in JSON.",
+                "type": "string"
+              },
+              "sha256": {
+                "description": "SHA-256 of `bytes`, 64 lowercase hexadecimal digits.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "sha256",
+              "bytes"
             ],
             "type": "object"
           },
@@ -20301,6 +20434,17 @@
           },
           "settings": {
             "$ref": "#/$defs/ProjectSettings"
+          },
+          "sheets": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectSheets"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A database project's sheet book and its pictures (docs/adr/0251); an\nolder server's answer without it has none."
           },
           "state": {
             "$ref": "#/$defs/ProjectState",

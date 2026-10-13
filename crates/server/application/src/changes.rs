@@ -57,7 +57,7 @@ use crate::error::{AppError, AppResult};
 use crate::idempotency;
 use crate::projects::{
     FEATURE_COLUMNS, FeatureRow, check_address_locators, check_name, check_networks,
-    check_services, check_srid, check_tree, find_layer, gone, record,
+    check_services, check_sheets, check_srid, check_tree, find_layer, gone, record,
 };
 
 /// Most object changes one command may carry; larger sets go in several commands.
@@ -443,6 +443,10 @@ pub async fn commit(
             "project.settings.addressLocators",
         )?;
     }
+    // The sheet book keeps the file format's rules (docs/adr/0251).
+    if let Some(Some(sheets)) = &patch.sheets {
+        check_sheets(Some(sheets), "project.sheets")?;
+    }
     if new_srid != srid as u32 {
         check_srid(&mut tx, new_srid).await?;
     }
@@ -815,6 +819,7 @@ pub async fn commit(
             meta_version = meta_version + $3::int,
             name = coalesce($4, name), settings = coalesce($5, settings), srid = $6,
             layers = coalesce($7, layers), active_layer = coalesce($8, active_layer), styles = coalesce($9, styles),
+            sheets = case when $11 then $12 else sheets end,
             catalog_version = catalog_version + $10::int, updated_at = now()
           where tenant_id = $1 and id = $2
           returning data_revision, meta_version",
@@ -829,6 +834,14 @@ pub async fn commit(
     .bind(&patch.active_layer)
     .bind(patch.styles.as_ref().map(|s| serde_json::to_value(s).expect("styles serialize")))
     .bind(i32::from(new_name.is_some()))
+    .bind(patch.sheets.is_some())
+    .bind(
+        patch
+            .sheets
+            .as_ref()
+            .and_then(Option::as_ref)
+            .map(|s| serde_json::to_value(s).expect("sheets serialize")),
+    )
     .fetch_one(&mut *tx)
     .await?;
     // The project row has been locked since the revision was read: created objects carry this commit's.

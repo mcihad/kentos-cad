@@ -109,7 +109,7 @@ fn store(name: &str) -> (PathBuf, Store) {
 
 fn designer(store: &Store, library: Library) -> Designer {
     let mut d = Designer::new(context());
-    d.attach(store.clone(), "dosya/ada.kcad");
+    d.attach(store.clone());
     assert!(d.library_event(LibraryEvent::State(library)).is_empty());
     d.update(Message::Gallery(GalleryMessage::Open));
     d

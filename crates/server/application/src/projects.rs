@@ -223,6 +223,22 @@ pub fn check_address_locators(
     }
 }
 
+/// A project's sheet book by the file format's rules (`sheets_problem`,
+/// docs/adr/0251), refused at its place under `path`. The book's own rules
+/// are the sheet core's: the clients read it, the server keeps it.
+pub fn check_sheets(sheets: Option<&kentos_contracts::ProjectSheets>, path: &str) -> AppResult<()> {
+    match sheets.and_then(kentos_contracts::sheets_problem) {
+        Some((fault, why)) => {
+            let place = match fault {
+                kentos_contracts::SheetsFault::Book => format!("{path}.book"),
+                kentos_contracts::SheetsFault::Picture(i) => format!("{path}.pictures[{i}].sha256"),
+            };
+            Err(AppError::invalid_at(place, format!("{fault}: {why}.")))
+        }
+        None => Ok(()),
+    }
+}
+
 /// The stored name of a storage mode (`project.storage`, migration 0006).
 pub fn storage_name(storage: ProjectStorage) -> &'static str {
     match storage {
@@ -329,6 +345,7 @@ pub async fn create(
     check_services(&input.layers, &input.settings.connections)?;
     check_networks(&input.settings.networks, "settings.networks")?;
     check_address_locators(&input.settings.address_locators, "settings.addressLocators")?;
+    check_sheets(input.sheets.as_ref(), "sheets")?;
     let description =
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
@@ -354,8 +371,8 @@ pub async fn create(
     check_srid(&mut tx, input.settings.srid).await?;
     sqlx::query(
         "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
-                                     description, project_type, tags, storage)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16)",
+                                     description, project_type, tags, storage, sheets)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17)",
     )
     .bind(access.tenant)
     .bind(id)
@@ -373,6 +390,7 @@ pub async fn create(
     .bind(project_type.name())
     .bind(&tags)
     .bind(storage_name(input.storage.unwrap_or(ProjectStorage::Database)))
+    .bind(input.sheets.as_ref().map(json).transpose()?)
     .execute(&mut *tx)
     .await?;
     sqlx::query("insert into kentos.audit_event (tenant_id, project_id, actor, action, detail) values ($1, $2, $3, 'project.create', $4)")
@@ -451,6 +469,7 @@ type ProjectRow = (
     i64,
     bool,
     String,
+    Option<Value>,
 );
 
 /// A project's metadata, object count and the event cursor of this moment:
@@ -465,7 +484,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
                 (select count(*) from kentos.feature f where f.tenant_id = p.tenant_id and f.project_id = p.id),
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
-                p.deleted_at is not null, p.storage
+                p.deleted_at is not null, p.storage, p.sheets
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -490,6 +509,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         cursor,
         deleted,
         storage,
+        sheets,
     ) = row.ok_or_else(not_found)?;
     if deleted {
         return Err(gone(&name));
@@ -510,6 +530,10 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         layers: serde_json::from_value(layers).map_err(bad)?,
         active_layer,
         styles: serde_json::from_value(styles).map_err(bad)?,
+        sheets: sheets
+            .map(serde_json::from_value)
+            .transpose()
+            .map_err(bad)?,
         meta_version: meta.to_string(),
         data_revision: rev.to_string(),
         feature_count: count.to_string(),

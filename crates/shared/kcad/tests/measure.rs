@@ -134,6 +134,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         blocks: Vec::new(),
         project_id: None,
         migrated_from: None,
+        sheets: None,
     }
 }
 

@@ -765,6 +765,11 @@ pub struct DocumentSnapshotV2 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub migrated_from: Option<MigrationSource>,
+    /// The project's sheet book and its pictures (docs/adr/0251); none in a
+    /// project without one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sheets: Option<crate::sheets::ProjectSheets>,
 }
 
 /// The two fields a reader checks before the rest; every other field is skipped unread.

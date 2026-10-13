@@ -26,6 +26,7 @@ mod pointclouds;
 mod rasters;
 mod robustness;
 mod services;
+mod sheets;
 mod survey_sigmas;
 mod texts;
 mod topology;

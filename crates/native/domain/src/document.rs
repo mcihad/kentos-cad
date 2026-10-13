@@ -14,7 +14,8 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use kentos_contracts::{
-    BlockDefinition, Bounds, Entity, MigrationSource, ProjectSettings, ProjectStyles, Vec2,
+    BlockDefinition, Bounds, Entity, MigrationSource, ProjectSettings, ProjectSheets,
+    ProjectStyles, Vec2,
 };
 
 use crate::history::History;
@@ -41,6 +42,9 @@ pub struct Document {
     pub(crate) project_id: Option<Uuid>,
     /// The v1 file this drawing was migrated from; every v2 save keeps it.
     pub(crate) migrated_from: Option<MigrationSource>,
+    /// The project's sheet book and its pictures (docs/adr/0251), shared: a
+    /// reading copy does not copy the pictures.
+    pub(crate) sheets: Option<Arc<ProjectSheets>>,
     pub(crate) layers: LayerTree,
     pub(crate) store: Store,
     /// The next slot to give out; u64 so the last `u32` can be given without overflow.
@@ -83,6 +87,17 @@ impl Document {
     /// The v1 file this drawing was migrated from, when it was (docs/specs/kcad-v2.md §6.8).
     pub fn migrated_from(&self) -> Option<&MigrationSource> {
         self.migrated_from.as_ref()
+    }
+
+    /// The project's sheet book and its pictures, when it has one (docs/adr/0251).
+    pub fn sheets(&self) -> Option<&ProjectSheets> {
+        self.sheets.as_deref()
+    }
+
+    /// The same, shared: a host that shows the book compares it by pointer to
+    /// know whether something else (a sync, a script) changed it.
+    pub fn sheets_shared(&self) -> Option<&Arc<ProjectSheets>> {
+        self.sheets.as_ref()
     }
 
     pub fn layers(&self) -> &LayerTree {
@@ -177,6 +192,7 @@ impl Document {
             blocks: self.blocks.clone(),
             project_id: self.project_id,
             migrated_from: self.migrated_from.clone(),
+            sheets: self.sheets.clone(),
             layers: self.layers.clone(),
             store: self.store.clone(),
             next_slot: self.next_slot,

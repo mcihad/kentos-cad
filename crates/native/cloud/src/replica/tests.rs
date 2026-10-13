@@ -31,6 +31,7 @@ fn opened(storage: ProjectStorage) -> Opened {
         project: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000001").unwrap(),
         info: ProjectInfo {
             blocks: Vec::new(),
+            sheets: None,
             id: "0199aaaa-0000-7000-8000-000000000001".into(),
             tenant_id: "0199aaaa-0000-7000-8000-000000000002".into(),
             tenant_name: "Harita Bürosu".into(),
@@ -177,6 +178,7 @@ fn what_came_to_be_known_is_kept_step_by_step() {
                 settings: o.info.settings.clone(),
                 layers,
                 styles: o.info.styles.clone(),
+                sheets: None,
             }),
             ..BaseStep::default()
         })

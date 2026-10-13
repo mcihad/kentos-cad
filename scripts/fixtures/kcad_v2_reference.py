@@ -23,6 +23,7 @@ the project id and the migration source, its former Hibrit mode left out (a
 project type not asked yet, docs/adr/0165 §1); so it is what opening that v1
 file and saving it as v2 must give on every platform.
 """
+import base64
 import hashlib
 import json
 import math
@@ -1476,6 +1477,24 @@ def definition(b):
     return cmap(fields(b, table, f"blok {b.get('name')}"))
 
 
+def sheets(s):
+    """The project's sheet book (schema 44, docs/adr/0251): the book an opaque map, as the sheet core keeps it; its
+    pictures' bytes (base64 in the JSON) under the SHA-256 the book names them by, none given twice; no pictures, no
+    field."""
+    assert type(s["book"]) is dict, "pafta kitabı bir harita olmalı"
+    assert s.get("pictures", [None]), "boş resim listesi yazılmaz"
+    seen = set()
+
+    def picture(p):
+        raw = base64.b64decode(p["bytes"], validate=True)
+        assert hashlib.sha256(raw).hexdigest() == p["sha256"], "resmin baytları SHA-256'sına uymuyor"
+        assert p["sha256"] not in seen, "aynı resim iki kez verilmiş"
+        seen.add(p["sha256"])
+        return cmap({"bytes": blob(raw), "sha256": blob(bytes.fromhex(p["sha256"]))})
+
+    return cmap(fields(s, {"book": (opaque, True), "pictures": (lambda ps: array([picture(p) for p in ps]), False)}, "sheets"))
+
+
 def document(d):
     """The payload of a drawing given in the contract's JSON form (`DocumentSnapshotV2`)."""
     assert d["format"] == "kentos.document" and d["version"] == 2
@@ -1493,6 +1512,7 @@ def document(d):
             "blocks": (lambda bs: array([definition(b) for b in bs]), False),
             "styles": (lambda s: cmap(fields(s, {"items": (lambda xs: array([opaque(x) for x in xs]), True), "categories": (lambda xs: array([opaque(x) for x in xs]), True)}, "styles")), True),
             "projectId": (lambda u: blob(uid_bytes(u)), False),
+            "sheets": (sheets, False),
             "migratedFrom": (
                 lambda m: cmap(fields(m, {"format": (text, True), "version": (uint, True), "sourceSha256": (lambda h: blob(bytes.fromhex(h)), True)}, "migratedFrom")),
                 False,
@@ -1501,11 +1521,11 @@ def document(d):
         "belge",
     )
     assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"])))
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d)))
 
 
-def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 43 with a dimension's references (docs/adr/0249 §4), 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
+def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False):
+    """The oldest schema that holds the drawing: 44 with the project's sheet book (docs/adr/0251), 43 with a dimension's references (docs/adr/0249 §4), 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
     attachments or a layer's actions or card (docs/adr/0225), 39 with vertex measures (docs/adr/0224), 38 with a raster's
     dataset or its look's edges (docs/adr/0243 §6), 37 with the settings' variables (docs/adr/0214 §2.3), 36 with the
     label engine's fields, a layer's labelling or an object's
@@ -1594,6 +1614,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    if has_sheets:
+        return 44
     if any(e["kind"] == "dimension" and "refs" in e for e in entities):
         return 43
     if settings and "addressLocators" in settings:
@@ -1874,7 +1896,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-44.kcad"] = container(root(cmap(parts), version=uint(44)))
+    files["schema-version-45.kcad"] = container(root(cmap(parts), version=uint(45)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2566,6 +2588,28 @@ def broken(minimal_content, minimal_file):
     def area_(level="neighbourhood", **extra):
         return cmap({"layer": text("mahalle"), "level": text(level), "name": text("AD"), **extra})
 
+    # The project's sheet book is schema 44's (docs/adr/0251): in schema 43 an unknown field; the book a map and
+    # required; a picture's bytes held to its 32-byte SHA-256, none given twice; an empty picture list refused; a field
+    # neither the book's map nor a picture has, unknown.
+    logo = b"\x89PNG\r\n\x1a\n KentOS"
+    logo_sha = hashlib.sha256(logo).digest()
+
+    def picture_(raw=logo, sha=None, **extra):
+        return cmap({"bytes": blob(raw), "sha256": blob(hashlib.sha256(raw).digest() if sha is None else sha), **extra})
+
+    def sheeted(sheets_map, schema=44):
+        return container(root(cmap({**parts, "sheets": sheets_map}), version=uint(schema)))
+
+    book_ = opaque({"schema": "kentos.sheet/1", "sheets": []})
+    files["sheets-in-schema-43.kcad"] = sheeted(cmap({"book": book_}), schema=43)
+    files["sheets-book-not-a-map.kcad"] = sheeted(cmap({"book": opaque(["kentos.sheet/1"])}))
+    files["sheets-book-missing.kcad"] = sheeted(cmap({"pictures": array([picture_()])}))
+    files["sheets-unknown-field.kcad"] = sheeted(cmap({"book": book_, "assets": array([])}))
+    files["sheets-pictures-empty.kcad"] = sheeted(cmap({"book": book_, "pictures": array([])}))
+    files["sheets-picture-digest.kcad"] = sheeted(cmap({"book": book_, "pictures": array([picture_(sha=hashlib.sha256(b"baska").digest())])}))
+    files["sheets-picture-twice.kcad"] = sheeted(cmap({"book": book_, "pictures": array([picture_(), picture_()])}))
+    files["sheets-picture-sha256-length.kcad"] = sheeted(cmap({"book": book_, "pictures": array([picture_(sha=logo_sha[:31])])}))
+    files["sheets-picture-unknown-field.kcad"] = sheeted(cmap({"book": book_, "pictures": array([picture_(name=text("logo.png"))])}))
     files["addresses-in-schema-41.kcad"] = addressed([locator()], schema=41)
     files["addresses-empty.kcad"] = addressed([])
     files["address-duplicate-id.kcad"] = addressed([locator(), locator(name=text("Numarataj 2"))])
@@ -2964,6 +3008,7 @@ def build():
     out["compose.kcad"] = container(document(load("compose.json")))
     out["addresses.kcad"] = container(document(load("addresses.json")))
     out["dimension-refs.kcad"] = container(document(load("dimension-refs.json")))
+    out["sheets.kcad"] = container(document(load("sheets.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

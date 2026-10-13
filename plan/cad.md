@@ -586,11 +586,11 @@ Araştırma: DXF SPLINE derece/knot/kontrol noktası/ağırlık verileri taşır
 
 Pafta çekirdeği, düzenleyici, PDF/SVG ve değişken/şablon altyapısı zaten var. Ancak web kitapları IndexedDB'de, masaüstü kitapları cihazın veri klasöründe tutuluyor; `DocumentSnapshotV2` incelenen halinde pafta kitabını taşımıyor. Taşınabilir mimari proje için bu kopukluk öncelikle kapanmalıdır. [E05, E16–E17]
 
-- [ ] **CAD-SHEET-01:** Pafta kitabı, page/view/item kimlikleri, bağlı kaynaklar ve asset'leri ana proje snapshot kapsamına al.
-- [ ] **CAD-SHEET-02:** Cihazdaki mevcut pafta kitapları için project-key/digest ile güvenli migration tasarla; bulunamayan kitabı boş kitapla ezme.
-- [ ] **CAD-SHEET-03:** `.kcad`, cloud file snapshot, database project, duplicate, import/export ve restore bütün pafta verisini taşısın.
-- [ ] **CAD-SHEET-04:** `.kpafta` bağımsız template/exchange yolu olarak korunmalı; ana proje kaydı için kullanıcıya ek dosya taşıma zorunluluğu kalmasın.
-- [ ] **CAD-SHEET-05:** Model ve paper-space veri sahipliğini, farklı undo geçmişlerini ve birleştirilmiş script transaction davranışını ADR ile netleştir.
+- [x] **CAD-SHEET-01:** Pafta kitabı, page/view/item kimlikleri, bağlı kaynaklar ve asset'leri ana proje snapshot kapsamına al.
+- [x] **CAD-SHEET-02:** Cihazdaki mevcut pafta kitapları için project-key/digest ile güvenli migration tasarla; bulunamayan kitabı boş kitapla ezme.
+- [x] **CAD-SHEET-03:** `.kcad`, cloud file snapshot, database project, duplicate, import/export ve restore bütün pafta verisini taşısın.
+- [x] **CAD-SHEET-04:** `.kpafta` bağımsız template/exchange yolu olarak korunmalı; ana proje kaydı için kullanıcıya ek dosya taşıma zorunluluğu kalmasın. — ✅ **Bitti (13 Ekim; CADP-09, ADR 0251):** kitap `.kcad` şema 44'te, cihazdaki kitaplar projeye alınır ve kaydedilince kenara ayrılır, veritabanı projesinde `project.sheets`; `.kpafta` şablon ve alışveriş dosyası olarak kalır.
+- [ ] **CAD-SHEET-05:** Model ve paper-space veri sahipliğini, farklı undo geçmişlerini ve birleştirilmiş script transaction davranışını ADR ile netleştir. — ◐ **Kısmen (ADR 0251 §3):** kitap projenin, kâğıdın geri alması modelinkinden ayrı; birlikte yazan betik işlemi açık.
 - [ ] **CAD-SHEET-06:** Ortak pafta `ops`, variables, templates, assets ve export işlemlerini ürün kataloğu/headless host'a aç.
 - [ ] **CAD-SHEET-07:** Sheet create/rename/delete/duplicate/order, item create/update/group/align, page setup ve source binding UI/Python/AI'da aynı iş olsun.
 - [ ] **CAD-SHEET-08:** Paper-space çizim/annotation için mevcut pafta item modelinin yeterliliğini değerlendir; CAD entity gerekiyorsa kaynak bağlantısı açık yeni model ekle.
@@ -891,7 +891,7 @@ Bağımlılık omurgası:
 6. Subentity ID ve reference migration/invalidasyon tasarımını yaz; bağımsız testlerle uygula. — ✅ **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
 7. Dimension associativity, annotation monitor ve reassociate ilk dilimini çıkar. — ✅ **Bitti (12 Ekim; CADP-06/07, ADR 0249).**
 8. Katman/stil/settings CRUD işlemlerini kataloga al; SDK/MCP kapsamını eşitle. — ✅ **Bitti (12 Ekim; CADP-08, ADR 0248).**
-9. Pafta kitabını `.kcad` kaynak kapsamına alma ve cihaz kitaplarından göç yolunu uygula.
+9. Pafta kitabını `.kcad` kaynak kapsamına alma ve cihaz kitaplarından göç yolunu uygula. — ✅ **Bitti (13 Ekim; CADP-09, ADR 0251).**
 10. Gerçek AI Surface host ve çizim context/query/plan/execute zincirini bağla.
 11. DWG karar matrisi ve gerçek ofis dosyalarından codec POC yap; seçim kararını ayrı ADR'ye yaz.
 12. İlk uçtan uca kabul çizimini üret: oda → düzeltme → ölçü/tarama → 1:50 pafta → PDF/DXF → başka host'ta yeniden açma.

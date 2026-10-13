@@ -242,12 +242,12 @@ cargo test -p kentos-desktop sheet_comparison_screens -- --ignored # gerçek uyg
 
 Dalda bilerek yapılmayanlar. `main`'in merkezi biçimlerine dokundukları için ayrı adımlardır:
 
-1. **`.kcad` 2.x `sheets` alanı.** Pafta kitabı proje dosyasına girer.
-   - `minReaderMinor` yükselir; eski okuyucu açık hata verir.
-   - `fixtures/kcad/v2`'ye geçerli ve bozuk örnekler eklenir.
-   - Web ve masaüstü belgesi kitabı taşır.
-   - 1. aşamanın yerel deposundan (IndexedDB, uygulama veri klasörü) tek seferlik taşıma yapılır.
-2. **Veritabanı projeleri:** sunucuda proje başına pafta kitabı (revizyonlu, `expectedRevision`).
+1. **`.kcad` 2.x `sheets` alanı.** Pafta kitabı proje dosyasına girer. — **Masaüstünde yapıldı (13 Ekim,
+   [ADR 0251](../adr/0251-sheet-book-in-the-project-file.md)):** belge şeması 44 (`minReaderMinor` yerine şema sürümü: eski okuyucu
+   `schema_version` verir), örnek `sheets.kcad` ve dokuz bozuk dosya, belgenin kitabı, uygulama veri klasöründen projeye alma ve
+   kaydedince kenara ayırma. Web'inki TODOS.md §0.2'de.
+2. **Veritabanı projeleri:** sunucuda proje başına pafta kitabı. — **Yapıldı (ADR 0251 §6):** `project.sheets` (göç 0017),
+   projenin meta sürümüyle (`@project`) korunan `ProjectPatch.sheets`.
 3. **Ürün komutu kataloğu:** pafta işlemleri `sheet.*` komutları olarak Python ve MCP'ye açılır
    (ADR 0013).
 4. **PDF ve GeoPDF, yazı tipi gömme, manyetik model, kurum şablonları, e-postayla şablon daveti:**
