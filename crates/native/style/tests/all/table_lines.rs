@@ -8,7 +8,7 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::store::Store;
 use kentos_native_application::geometry::shape;
 use kentos_native_style::library::StyleLibrary;
-use kentos_native_style::program::{BuildOptions, build_layer};
+use kentos_native_style::program::{BuildOptions, ReadingUnit, build_layer};
 use serde_json::json;
 
 fn table(grid: Option<&str>, frame: Option<f64>) -> Entity {
@@ -47,6 +47,7 @@ fn batches(e: &Entity) -> (usize, usize) {
         layer_name: &names,
         view: Default::default(),
         frame: None,
+        reading_unit: ReadingUnit::METRE,
     };
     let (_, batches) = build_layer(&store, &style, &[e], &opts).expect("a build");
     // The batches' JSON names each batch's kind.

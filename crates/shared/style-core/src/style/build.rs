@@ -37,7 +37,7 @@ use super::prim::{
 use super::resolve::{Patch, Resolved, Scale, resolve_renderer};
 use super::{charts, dots, groups, heat, inverted, thematic};
 use crate::expr::rows::{Layout, RowsInput, Table};
-use crate::expr::{Expr, Measured, Needs, Scope, Value};
+use crate::expr::{Expr, Measured, Needs, Scope, Unit as ReadingUnit, Value};
 
 /// Symbol levels across classes: every fill before any line, every line before any marker.
 const LEVEL_FILL: f64 = 0.0;
@@ -284,10 +284,21 @@ fn aspects_of(v: &Json) -> HashMap<String, f64> {
 }
 
 impl Program {
-    /// `{ symbols: {id: Symbol}, renderer?, sets: [SymbolSet], refs: [id], colors: [Color], assets: {asset: [width, height]} }`.
+    /// `{ symbols: {id: Symbol}, renderer?, sets: [SymbolSet], refs: [id], colors: [Color], assets: {asset: [width, height]} }`,
+    /// its renderer's readings in metres (`read_in`).
     pub fn read(text: &str) -> Result<Program, String> {
+        Program::read_in(text, ReadingUnit::METRE)
+    }
+
+    /// [`Program::read`] with the renderer's expressions reading geometry
+    /// (`$alan`, `$uzunluk`, `$y` …) in `unit`, the project's drawing unit
+    /// (docs/adr/0165 §2, the 13 Ekim addendum): a category, a class, a
+    /// rule's condition and a thematic renderer's value compare with what
+    /// Öznitelikler shows. A symbol's own expressions stay in metres. In
+    /// metres the program is the same as `read`'s, bit for bit.
+    pub fn read_in(text: &str, unit: ReadingUnit) -> Result<Program, String> {
         let v = Json::parse(text)?;
-        let mut exprs = Exprs::default();
+        let mut exprs = Exprs::reading_in(unit);
         let mut symbols = Symbols::default();
         let mut r = Reader {
             exprs: &mut exprs,

@@ -21,6 +21,8 @@ mod rules;
 #[cfg(test)]
 mod tests;
 mod thematic;
+#[cfg(test)]
+mod unit_tests;
 mod widgets;
 
 use std::cell::RefCell;
@@ -35,6 +37,7 @@ use kentos_native_style::classify::{
     categories_of, class_count, classes_present, graduated_of, js_number, new_category,
     numbers_per_object, plain_symbols, texts, unique_values, values_of,
 };
+use kentos_native_style::reading_unit;
 use kentos_native_style::renderer::{
     Categorized, GeometryClass, Graduated, Renderer, Rule, Rules, Single, SymbolSet,
 };
@@ -295,7 +298,10 @@ pub struct Source<'a> {
 }
 
 impl Source<'_> {
-    /// Layer names from the tree, geometry values from the drawing's geometry store.
+    /// Layer names from the tree, geometry values from the drawing's geometry
+    /// store, in the project's drawing unit: what the window lists and counts
+    /// is read as the layer's renderer reads it when it draws (docs/adr/0165
+    /// §2, the 13 Ekim addendum).
     fn scope<T>(&self, f: impl FnOnce(&ExprScope) -> T) -> T {
         let layers = self.doc.layers();
         let name = |id: &str| {
@@ -311,6 +317,7 @@ impl Source<'_> {
         f(&ExprScope {
             layer_name: &name,
             measures: &measures,
+            unit: reading_unit(self.doc.settings()),
         })
     }
 }

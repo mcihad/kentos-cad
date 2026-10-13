@@ -137,7 +137,7 @@ Semboller varsayılan olarak çizim ölçeğinde (kâğıt mm) durur, bu yüzden
 ### 3.5 Renkler ve ifadeler
 
 - Renk: `#RRGGBB`, `#RRGGBBAA` ya da tema jetonu (`ink` = CAD renk 7, `fg`, `fg-dim`).
-- **Veriye bağlı özellik:** sayı, renk ve metin özellikleri sabit ya da `{ expr: '…', fallback }` olabilir. İfadeler `model/expression` dilidir ($alan, alanlar, işlevler); sembol başına bir kez derlenir, nesne başına değerlendirilir.
+- **Veriye bağlı özellik:** sayı, renk ve metin özellikleri sabit ya da `{ expr: '…', fallback }` olabilir. İfadeler `model/expression` dilidir ($alan, alanlar, işlevler); sembol başına bir kez derlenir, nesne başına değerlendirilir. Geometri değerleri (`$alan`, `$uzunluk`, `$y` …) sembolün kendi ifadelerinde her zaman metredir: sembol taşınır ve ürettiği sayılar kendi birimindeki boy ve uzaklıktır. Katmanın işleyicisinin ifadeleri (kategorinin değeri, sınıfın sayısı, kuralın koşulu, tematik işleyicilerin değerleri) ise okumadır ve yerel projede çizim biriminde (mm, mm²) okunur; Katman stili penceresi de aynı birimde sınıflar (`Program::read_in`, `ExprScope::unit`; ADR 0165'in 13 Ekim eki).
 
 ## 4. Katman stili (işleyiciler)
 
@@ -241,7 +241,7 @@ Pencereler ilk açılışta yüklenir (`ui/style/`); komutlar Araçlar menüsün
 - **Katman stili** (`style.layerStyle`, `LayerStyleDialog.ts`, `rulesEditor.ts`, `symbolSlot.ts`):
   - Üstte işleyici: Basit, Tek sembol, Kategorili, Aralıklı, Kurallar; her türün taslağı ayrı tutulur, türler arasında gidip gelmek iş kaybettirmez. Katmandaki alan, çizgi ve nokta sayıları yazar; semboller yalnızca katmanda bulunan geometri türleri için sorulur.
   - **Sembol yuvası:** küçük resim ve adı ("Basit görünüş", "Bu stilde" ya da kitaplıktaki adı); tıklayınca kitaplıktan seç, burada düzenle (kitaplık sembolünün kopyası), Kitaplığıma kaydet, basit görünüşe dön. Sembolü olmayan yuvanın resmi, o sınıfın düştüğü düz görünüştür.
-  - **İfade alanı:** Alanlar (her birinin kaç nesnede olduğuyla), Değişkenler ve İşlevler menüleri; alan tek parça değilse `[…]` yazılır (`"…"` metindir). Hata yeriyle söylenir ("8. karakterde: …").
+  - **İfade alanı:** Alanlar (her birinin kaç nesnede olduğuyla), Değişkenler ve İşlevler menüleri; alan tek parça değilse `[…]` yazılır (`"…"` metindir). Hata yeriyle söylenir ("8. karakterde: …"). Geometri değerleri yerel projede çizim biriminde okunur: mm projesinde `$alan` mm², `$uzunluk` mm'dir; "Değerlerden sınıfla", "Sınıfla", "Verilerden al" ve Nesne sütunu ile çizim aynı birimi kullanır, sınıf sınırları o birimle saklanır.
   - **Kategorili:** değer ifadesi, "Değerlerden sınıfla" farklı değerleri getirir (var olan kategoriler korunur), düzenlenebilir değer ve etiket, "Diğer değerler". Aynı değerin sonraki kategorisi işaretlenir: yalnız ilki çizer. Kapalı kategorinin nesneleri çizilmez, "Diğer değerler"e de düşmez (QGIS gibi; ADR 0091).
   - **Aralıklı:** sayı veren ifade, eşit aralık ya da eşit sayı, sınıf sayısı, renk rampası; alt sınır dahil, son sınıf üst sınırı da içerir. Hiçbir sınıfın almadıkları ayrı satırda sayılır: çizilmez.
   - **Kurallar:** koşul (boş: hepsi), "değilse", ölçek aralığı (1:en yakın – 1:en uzak), alt kurallar; ifade hatası canlıdır.

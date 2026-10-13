@@ -142,6 +142,7 @@ impl SheetMaps {
             origin,
             view_build: Default::default(),
             view_colors: Default::default(),
+            reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
         };
         let clip = scene::extents(doc).map_or(
             kentos_render_wgpu::Bounds {

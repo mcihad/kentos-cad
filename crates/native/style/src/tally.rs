@@ -10,8 +10,8 @@
 use std::collections::HashMap;
 
 use kentos_contracts::Entity;
+use kentos_style_core::expr::Value;
 use kentos_style_core::expr::rows::As;
-use kentos_style_core::expr::{Value, compile};
 
 use crate::classify::{ExprScope, evaluate, geometry_class};
 use crate::renderer::{Category, GraduatedClass, Rule};
@@ -106,7 +106,7 @@ pub fn rule_counts(
         };
         masks
             .entry(f.to_owned())
-            .or_insert_with(|| match compile(f) {
+            .or_insert_with(|| match scope.compile(f) {
                 Err(e) => Err(e.text()),
                 Ok(c) => Ok(evaluate(&c, list, scope, As::Bool)
                     .iter()

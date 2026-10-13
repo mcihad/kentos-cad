@@ -21,7 +21,7 @@ use serde_json::{Value, json};
 use crate::StylePalette;
 use crate::batches::{DecodeOptions, StyledLayer, decode};
 use crate::library::StyleLibrary;
-use crate::program::{BuildOptions, build_layer};
+use crate::program::{BuildOptions, ReadingUnit, build_layer};
 use crate::renderer::GeometryClass;
 
 /// Sample values for the attributes MPYY's parametric symbols read (`SAMPLE_ATTRS`).
@@ -220,6 +220,8 @@ pub fn preview(
         layer_name: &|_| "Önizleme".to_owned(),
         view: Default::default(),
         frame: None,
+        // A symbol on a sample object, in paper millimetres: a symbol's expressions are metric, whatever the project.
+        reading_unit: ReadingUnit::METRE,
     };
     let (_, batches) = build_layer(&store, &style, &[&sample], &opts)?;
     let layer = decode(

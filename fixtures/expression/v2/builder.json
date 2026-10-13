@@ -5345,7 +5345,7 @@
       "result": {
         "aliases": [],
         "args": [],
-        "description": "Alan (m², yerel projede mm² ya da cm²): kapalı alan (delikler düşülür), daire, tam elips, tarama. İşlemler'de her zaman m²",
+        "description": "Alan (m², yerel projede mm² ya da cm²): kapalı alan (delikler düşülür), daire, tam elips, tarama. İşlemler, semboller ve ağ maliyetlerinde her zaman m²",
         "examples": [
           {
             "expression": "$alan",
@@ -5380,7 +5380,7 @@
           "$perimeter"
         ],
         "args": [],
-        "description": "Uzunluk ya da çevre (m, yerel projede mm ya da cm): İşlemler'de her zaman m",
+        "description": "Uzunluk ya da çevre (m, yerel projede mm ya da cm): İşlemler, semboller ve ağ maliyetlerinde her zaman m",
         "examples": [
           {
             "expression": "$uzunluk",
@@ -6695,7 +6695,7 @@
       "result": {
         "aliases": [],
         "args": [],
-        "description": "Alan (m², yerel projede mm² ya da cm²): kapalı alan (delikler düşülür), daire, tam elips, tarama. İşlemler'de her zaman m²",
+        "description": "Alan (m², yerel projede mm² ya da cm²): kapalı alan (delikler düşülür), daire, tam elips, tarama. İşlemler, semboller ve ağ maliyetlerinde her zaman m²",
         "examples": [
           {
             "expression": "$alan",

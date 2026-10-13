@@ -32,6 +32,11 @@ pub struct Look {
     /// Görünüm kipleri (docs/adr/0195): what the build leaves out, and the colours.
     pub view_build: kentos_native_style::View,
     pub view_colors: kentos_native_style::color::ViewColors,
+    /// The unit the layers' renderers read geometry in (`$alan`, `$uzunluk` …):
+    /// the project's drawing unit (docs/adr/0165 §2, the 13 Ekim addendum;
+    /// `kentos_native_style::reading_unit`), the same in the drawing area, a
+    /// sheet's map and the PDF, so a layer is classed alike on all three.
+    pub reading_unit: kentos_native_style::ReadingUnit,
 }
 
 /// The shown layers, bottom first (the top of the tree draws last), as the plain scene orders them.
@@ -84,6 +89,7 @@ pub fn build_whole(
         layer_name: &|id: &str| names.get(id).cloned().unwrap_or_else(|| id.to_owned()),
         view: look.view_build,
         frame: sheet_frame(node, look.symbol_scale),
+        reading_unit: look.reading_unit,
     };
     build_layer(store, &node.style, entities, &opts)
         .and_then(|(_, batches)| {

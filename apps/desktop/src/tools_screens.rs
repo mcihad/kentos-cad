@@ -194,6 +194,11 @@ fn ribbon_scenes() -> Vec<Scene> {
         }),
         // docs/adr/0165's “ifadeler çizim biriminde” addendum: a label's `$alan` in mm² beside Öznitelikler.
         ("cad-mm-etiket", mm_labels),
+        // The 13 Ekim addendum: Katman stili reads `$alan` in mm² too, and what it made draws the rooms.
+        ("cad-mm-stil-kategorili", mm_style_categories),
+        ("cad-mm-stil-aralikli", mm_style_classes),
+        ("cad-mm-stil-kurallar", mm_style_rules),
+        ("cad-mm-stil-cizim", mm_style_drawn),
         ("serit-harita", |app| app.tab = "map"),
         // docs/adr/0141: two zooms in and a step back, so that Önceki and Sonraki görünüm are both on.
         ("serit-gorunum", |app| {
@@ -268,6 +273,149 @@ fn mm_labels(app: &mut App) {
         },
         24.0,
     );
+}
+
+/// A local CAD project in millimetres whose layer Odalar holds four rooms, a salon of 3 m²
+/// (2 × 1.5 m), a kitchen of 1.5 m², a room of 1 m² and a closet of 0.5 m², each labelled with
+/// its name and `$alan` in mm²: the layer's id (docs/adr/0165 §2, the 13 Ekim addendum). Katman
+/// stili reads the same `$alan` in mm², so the classes it makes meet the values drawn.
+fn mm_rooms(app: &mut App) -> String {
+    use kentos_contracts::{DrawingUnit, Entity, EntityBase, PathEntity, ProjectSettings, Vec2};
+    crate::files_testing::make_cad(app);
+    let doc = app.document.as_mut().expect("a drawing");
+    let settings = ProjectSettings {
+        srid: 0,
+        drawing_unit: Some(DrawingUnit::Mm),
+        // An architect's scale: the lines' paper widths stay thin around rooms of a metre.
+        plot_scale: 50.0,
+        ..doc.model.settings().clone()
+    };
+    doc.model.set_settings(settings);
+    let others: Vec<String> = doc
+        .model
+        .layers()
+        .leaves()
+        .into_iter()
+        .map(|l| l.id.clone())
+        .collect();
+    let mut style = kentos_domain::default_style();
+    style.label = Some(
+        serde_json::from_str(
+            r#"{"placement":"center","size":12,"text":"Ad || ' ' || $alan || ' mm²'"}"#,
+        )
+        .expect("a label style"),
+    );
+    let layer = doc
+        .model
+        .add_layer(kentos_domain::NewLayer::layer("Odalar"), None, true)
+        .expect("a layer");
+    doc.model.set_layer_style(&layer, style, "Etiketler");
+    for id in others {
+        doc.model.set_layer_visible(&id, false);
+    }
+    let p = |x: f64, y: f64| Vec2 { x, y };
+    for (name, x, w, h) in [
+        ("Salon", 0.0, 2.0, 1.5),
+        ("Mutfak", 2.5, 1.5, 1.0),
+        ("Oda", 4.5, 1.0, 1.0),
+        ("Dolap", 6.0, 1.0, 0.5),
+    ] {
+        let base = EntityBase {
+            id: 0,
+            layer_id: layer.clone(),
+            color: None,
+            attrs: [("Ad".to_owned(), name.to_owned())].into(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        };
+        doc.model
+            .add(Entity::Polygon(PathEntity {
+                base,
+                pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],
+                ms: None,
+                bulges: None,
+                holes: None,
+                zs: None,
+                parts: None,
+            }))
+            .expect("a room");
+    }
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: -0.4,
+            min_y: -0.5,
+            max_x: 7.4,
+            max_y: 2.0,
+        },
+        24.0,
+    );
+    layer
+}
+
+/// Katman stili as the owner met it: Kategorili, `$alan`, Değerlerden sınıfla.
+fn mm_style_categories(app: &mut App) {
+    use crate::style::layer_style::{Event, Field, Kind};
+    let layer = mm_rooms(app);
+    app.open_layer_style(Some(layer));
+    for e in [
+        Event::Kind(Kind::Categorized),
+        Event::Expr(Field::Categories, "$alan".into()),
+        Event::Classify,
+    ] {
+        let _ = app.update(Message::LayerStyle(e));
+    }
+}
+
+/// Aralıklı, `$alan`, three classes along the blues, Sınıfla.
+fn mm_style_classes(app: &mut App) {
+    use crate::style::layer_style::{Event, Field, Kind};
+    let layer = mm_rooms(app);
+    app.open_layer_style(Some(layer));
+    for e in [
+        Event::Kind(Kind::Graduated),
+        Event::Expr(Field::Classes, "$alan".into()),
+        Event::Count("3".into()),
+        Event::Ramp("maviler"),
+        Event::Graduate,
+    ] {
+        let _ = app.update(Message::LayerStyle(e));
+    }
+}
+
+/// Kurallar: larger than 1 200 000 mm² (the salon and the kitchen), and what the rule left.
+fn mm_style_rules(app: &mut App) {
+    use crate::style::layer_style::{Event, Field, Kind, RuleEdit};
+    let layer = mm_rooms(app);
+    app.open_layer_style(Some(layer));
+    for e in [
+        Event::Kind(Kind::Rules),
+        Event::Rule(vec![0], RuleEdit::Label("Büyük odalar".into())),
+        Event::Expr(Field::Rule(vec![0]), "$alan > 1200000".into()),
+        Event::AddElse,
+    ] {
+        let _ = app.update(Message::LayerStyle(e));
+    }
+}
+
+/// The rooms drawn by the classes Katman stili made, the window closed: the salon in the darkest
+/// of three blues, the kitchen in the middle one, the room and the closet in the lightest.
+fn mm_style_drawn(app: &mut App) {
+    use crate::style::layer_style::{Event, Field, Kind};
+    let layer = mm_rooms(app);
+    app.open_layer_style(Some(layer));
+    for e in [
+        Event::Kind(Kind::Graduated),
+        Event::Expr(Field::Classes, "$alan".into()),
+        Event::Count("3".into()),
+        Event::Ramp("maviler"),
+        Event::Graduate,
+        Event::Done,
+    ] {
+        let _ = app.update(Message::LayerStyle(e));
+    }
 }
 
 /// Every scene of the new tools: the ribbon's, then each tool's (the tool

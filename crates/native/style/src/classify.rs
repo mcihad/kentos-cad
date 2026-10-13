@@ -12,7 +12,9 @@ use std::collections::HashMap;
 
 use kentos_contracts::Entity;
 use kentos_style_core::expr::rows::{As, MEASURE_STRIDE};
-use kentos_style_core::expr::{Expr, Measured, Scope, Value, compile};
+use kentos_style_core::expr::{
+    CompileError, Expr, Measured, Schema, Scope, Unit, Value, compile_with,
+};
 use kentos_style_core::js::collate::compare_tr;
 use kentos_style_core::js::number;
 use serde_json::json;
@@ -85,6 +87,24 @@ impl Scope for Row<'_> {
 pub struct ExprScope<'a> {
     pub layer_name: &'a dyn Fn(&str) -> String,
     pub measures: &'a dyn Fn(&[&Entity]) -> Vec<f64>,
+    /// The unit the expression reads lengths, coordinates and areas in: the
+    /// project's drawing unit (docs/adr/0165 §2, the 13 Ekim addendum), as
+    /// the layer's renderer will read them when it draws (`Program::read_in`),
+    /// so the classes made from the values listed here meet the values the
+    /// drawing compares them with. Metres in a project without a unit.
+    pub unit: Unit,
+}
+
+impl ExprScope<'_> {
+    /// `source` compiled as the drawing compiles a renderer's expression: its
+    /// geometry values in this scope's unit.
+    pub fn compile(&self, source: &str) -> Result<Expr, CompileError> {
+        let schema = Schema {
+            unit: self.unit,
+            ..Schema::default()
+        };
+        compile_with(source, &schema)
+    }
 }
 
 /// The expression's value for every object, as `want` asks.
@@ -147,7 +167,7 @@ impl<T> Evaluated<T> {
 
 /// The expression's text per object (None when it gives nothing) (`valuesOf`).
 pub fn values_of(list: &[&Entity], expr: &str, scope: &ExprScope) -> Evaluated<Option<String>> {
-    match compile(expr) {
+    match scope.compile(expr) {
         Err(e) => Evaluated::failed(e.message, e.at),
         Ok(c) => Evaluated {
             values: evaluate(&c, list, scope, As::Text)
@@ -165,7 +185,7 @@ pub fn values_of(list: &[&Entity], expr: &str, scope: &ExprScope) -> Evaluated<O
 
 /// The numbers the expression's values read as, text that reads as a number counting (`numbersOf`).
 pub fn numbers_of(list: &[&Entity], expr: &str, scope: &ExprScope) -> Evaluated<f64> {
-    match compile(expr) {
+    match scope.compile(expr) {
         Err(e) => Evaluated::failed(e.message, e.at),
         Ok(c) => Evaluated {
             values: evaluate(&c, list, scope, As::TextNumber)
@@ -188,7 +208,7 @@ pub fn numbers_per_object(
     expr: &str,
     scope: &ExprScope,
 ) -> Evaluated<Option<f64>> {
-    match compile(expr) {
+    match scope.compile(expr) {
         Err(e) => Evaluated::failed(e.message, e.at),
         Ok(c) => Evaluated {
             values: evaluate(&c, list, scope, As::TextNumber)
