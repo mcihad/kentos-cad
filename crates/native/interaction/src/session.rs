@@ -813,6 +813,7 @@ impl Session {
     fn prime(&self, cx: &mut Context<'_>) {
         cx.locks.travel = self.travel();
         cx.locks.reference = self.reference;
+        cx.locks.frame = cx.frame();
     }
 
     /// Nesneye paralel or dik waiting for its edge, if one is.
@@ -1002,6 +1003,19 @@ impl Session {
             return false;
         };
         cx.locks.lock_length(metres, at);
+        self.say_locks(cx);
+        true
+    }
+
+    /// Locks the next point's east or north coordinate (metres in the drawing's UCS, docs/adr/0267 §1) at the
+    /// lock reference; false (and why) without one.
+    pub fn lock_coordinate(&self, north: bool, metres: f64, cx: &mut Context<'_>) -> bool {
+        let Some(at) = self.lock_reference() else {
+            cx.say(Level::Warn, NO_LOCK_REFERENCE.to_owned());
+            return false;
+        };
+        self.prime(cx);
+        cx.locks.lock_coordinate(north, metres, at);
         self.say_locks(cx);
         true
     }

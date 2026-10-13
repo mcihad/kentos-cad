@@ -2101,6 +2101,8 @@ impl App {
             "draft.lock.length" => self.ask_lock(kentos_interaction::LockAsk::Length),
             "draft.lock.angle" => self.ask_lock(kentos_interaction::LockAsk::Angle),
             "draft.lock.deflection" => self.ask_lock(kentos_interaction::LockAsk::Deflection),
+            "draft.lock.east" => self.ask_lock(kentos_interaction::LockAsk::East),
+            "draft.lock.north" => self.ask_lock(kentos_interaction::LockAsk::North),
             "draft.lock.parallel" => {
                 self.with_tool(|s, cx| {
                     s.pick_lock_edge(kentos_interaction::LockPick::Parallel, cx)
@@ -2475,6 +2477,8 @@ impl App {
             // The locks work while a point is expected after another (docs/adr/0166 §6).
             "draft.lock.length"
             | "draft.lock.angle"
+            | "draft.lock.east"
+            | "draft.lock.north"
             | "draft.lock.parallel"
             | "draft.lock.perpendicular"
             | "draft.lock.keep" => self.session.lock_reference().is_some(),

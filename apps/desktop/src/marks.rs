@@ -113,6 +113,8 @@ pub struct LockMarks {
     pub named: Option<Vec2>,
     /// Whether locks hold (else only the reference is marked).
     pub locks: bool,
+    /// The locked coordinates' lines, a point on each and its direction (docs/adr/0267 §1).
+    pub lines: [Option<(Vec2, Vec2)>; 2],
 }
 
 /// How long the crosshair's arms are (`appearance.crosshair`, the web's `CROSSHAIR_ARM`).
@@ -662,6 +664,15 @@ fn locks(frame: &mut canvas::Frame, l: &LockMarks, camera: &Camera, colors: &Mar
                 o - Vector::new(dx * back, dy * back),
                 o + Vector::new(dx, dy),
             ),
+            dashed,
+        );
+    }
+    for &(through, u) in l.lines.iter().flatten() {
+        let [x, y] = camera.world_to_screen(through);
+        let p = Point::new(x as f32, y as f32);
+        let (dx, dy) = (u.x as f32 * 1e4, -u.y as f32 * 1e4);
+        frame.stroke(
+            &Path::line(p - Vector::new(dx, dy), p + Vector::new(dx, dy)),
             dashed,
         );
     }

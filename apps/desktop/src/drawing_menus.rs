@@ -433,6 +433,20 @@ impl App {
             menu = menu.item(angle, on_press).icon(command.icon);
         }
         let menu = self.command_item(menu, "draft.lock.deflection");
+        // The coordinates under the project's axis names (docs/adr/0267 §1).
+        let format = self.format();
+        let mut menu = menu;
+        for (id, label) in [
+            ("draft.lock.east", format.east_label()),
+            ("draft.lock.north", format.north_label()),
+        ] {
+            let on_press = self.available(id).then_some(Message::Run(id));
+            if let Some(command) = catalog().get(id) {
+                menu = menu
+                    .item(format!("{label} kilidi…"), on_press)
+                    .icon(command.icon);
+            }
+        }
         let menu = self.command_item(menu, "draft.lock.parallel");
         let menu = self.command_item(menu, "draft.lock.perpendicular");
         let menu = self.command_item(menu, "draft.lock.reference");
