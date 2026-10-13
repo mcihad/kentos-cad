@@ -143,12 +143,17 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
         panic!("{:?}", e[7])
     };
     assert_eq!((s.pts.len(), s.closed), (4, false));
-    let Entity::Polyline(p) = &e[8] else {
+    // A control-point SPLINE is kept as the NURBS curve it is (docs/adr/0259 §4).
+    let Entity::Nurbs(n) = &e[8] else {
         panic!("{:?}", e[8])
     };
     assert_eq!(
-        (p.pts.first(), p.pts.last()),
-        (Some(&v(0.0, 0.0)), Some(&v(2.0, 0.0)))
+        (n.ctrl.first(), n.ctrl.last(), n.knots.len()),
+        (
+            Some(&v(0.0, 0.0)),
+            Some(&v(2.0, 0.0)),
+            n.ctrl.len() + n.degree as usize + 1
+        )
     );
     let Entity::Point(pt) = &e[9] else {
         panic!("{:?}", e[9])
@@ -218,8 +223,9 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
             .iter()
             .any(|n| n.what == "Genişlikli çoklu çizgi")
     );
+    // A curve taken exactly is not said to be changed (docs/adr/0259 §4).
     assert!(
-        r.report
+        !r.report
             .notes
             .iter()
             .any(|n| n.what == "Denetim noktalı eğri (SPLINE)")
@@ -228,9 +234,10 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
         (
             count(&r, "text"),
             count(&r, "polygon"),
-            count(&r, "polyline")
+            count(&r, "polyline"),
+            count(&r, "nurbs")
         ),
-        (2, 2, 3)
+        (2, 2, 2, 1)
     );
     let b = r.bounds.expect("extent");
     assert!(b.max_x >= 452020.0 && b.min_x <= 0.0);

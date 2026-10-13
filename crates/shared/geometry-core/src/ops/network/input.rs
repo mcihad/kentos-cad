@@ -74,6 +74,7 @@ pub fn kind_of(shape: &Shape) -> &'static str {
         Shape::Arc { .. } => "arc",
         Shape::Ellipse { .. } => "ellipse",
         Shape::Spline { .. } => "spline",
+        Shape::Nurbs { .. } => "nurbs",
         Shape::Text { .. } => "text",
         _ => "other",
     }

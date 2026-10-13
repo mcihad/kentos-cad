@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, sheets, styles, units  # noqa: E402  isort: skip
+from . import addresses, arc, blocks, changeset, circle, dimensions, entities, file, labels, layers, line, network, nurbs, point, polygon, polyline, project, scenarios, settings, sheets, styles, units  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -138,6 +138,7 @@ __all__ = [
     "CommitResult",
     "Connection",
     "ConstructionEntity",
+    "ControlNurbsBy",
     "Convention",
     "ConventionName",
     "Conventions",
@@ -251,6 +252,7 @@ __all__ = [
     "FileTableSource",
     "FileUnit",
     "FileUnitName",
+    "FitNurbsBy",
     "Forbidden",
     "GeographicCrsSystem",
     "GeographicDefinition",
@@ -420,6 +422,12 @@ __all__ = [
     "NotFound",
     "NotRunHere",
     "NotSignedIn",
+    "NurbsBy",
+    "NurbsCreate",
+    "NurbsCreated",
+    "NurbsEntity",
+    "NurbsEntityGeometry",
+    "NurbsPlan",
     "ObjectsHatchRegion",
     "ObjectsTrimBoundaries",
     "ObstacleKind",
@@ -661,6 +669,7 @@ __all__ = [
     "layers",
     "line",
     "network",
+    "nurbs",
     "point",
     "polygon",
     "polyline",

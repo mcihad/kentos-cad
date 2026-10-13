@@ -140,7 +140,9 @@ use crate::layer::LineType;
 ///    `closed` and `widths` (the typed columns' path bits 13 and 14); the DXF reader's
 ///    `closedPolylines` (a closed LWPOLYLINE or POLYLINE as an area or as a closed line). The
 ///    web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 59;
+/// 60 (docs/adr/0259): the NURBS curve (`nurbs`), the typed columns' kind 19; the DXF reader keeps a
+///    SPLINE with control points as one exactly, its fit points with it. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 60;
 
 // ── Every import ────────────────────────────────────────────────────────
 

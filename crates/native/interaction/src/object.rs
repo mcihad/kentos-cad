@@ -186,6 +186,7 @@ impl ObjectAction {
             Shape::Arc { .. } => "yay",
             Shape::Ellipse { .. } => "elips",
             Shape::Spline { .. } => "eğri",
+            Shape::Nurbs { .. } => "NURBS eğrisi",
             Shape::Xline { .. } => "yardımcı çizgi",
             Shape::Ray { .. } => "ışın",
             Shape::Text { .. } => "yazı",

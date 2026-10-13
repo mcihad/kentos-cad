@@ -94,7 +94,7 @@ zs?: Array<number | null>,
  * area: absent, it has one part, so an edit of a multi-part area
  * writes every part.
  */
-parts?: Array<AreaPart>, } | { "kind": "circle", c: Vec2, r: number, } | { "kind": "arc", c: Vec2, r: number, a0: number, a1: number, } | { "kind": "ellipse", c: Vec2, major: Vec2, ratio: number, t0: number, t1: number, } | { "kind": "spline", pts: Array<Vec2>, closed: boolean, } | { "kind": "xline", p: Vec2, dir: Vec2, } | { "kind": "ray", p: Vec2, dir: Vec2, } | { "kind": "text", p: Vec2, text: string, height: number, rotation: number, 
+parts?: Array<AreaPart>, } | { "kind": "circle", c: Vec2, r: number, } | { "kind": "arc", c: Vec2, r: number, a0: number, a1: number, } | { "kind": "ellipse", c: Vec2, major: Vec2, ratio: number, t0: number, t1: number, } | { "kind": "spline", pts: Array<Vec2>, closed: boolean, } | { "kind": "nurbs", degree: number, ctrl: Array<Vec2>, knots: Array<number>, weights?: Array<number>, closed?: boolean, periodic?: boolean, fit?: Array<Vec2>, tangents?: [Vec2 | null, Vec2 | null], fitTolerance?: number, } | { "kind": "xline", p: Vec2, dir: Vec2, } | { "kind": "ray", p: Vec2, dir: Vec2, } | { "kind": "text", p: Vec2, text: string, height: number, rotation: number, 
 /**
  * Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
  */

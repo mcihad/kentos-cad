@@ -164,6 +164,12 @@ SCHEMA_WITH_REQUESTS = 45
 # Schema 46: schema 45 and a polyline's `closed` (a closed line, not an area) and `widths` (each vertex's edge's start
 # and end width in the drawing's length), in the drawing and in a block definition (docs/adr/0258).
 SCHEMA_WITH_POLYLINE_EXTRAS = 46
+# Schema 47: schema 46 and the `nurbs` kind, a general NURBS curve as given, in the drawing and in a block definition
+# (docs/adr/0259).
+SCHEMA_WITH_NURBS = 47
+# A NURBS curve's bounds (kentos_contracts::nurbs).
+NURBS_MAX_DEGREE = 11
+NURBS_MAX_POINTS = 100_000
 # The request ledger's bounds (kentos_contracts::command_call).
 REQUEST_LEDGER = 256
 REQUEST_ANSWER_LIMIT = 64 * 1024
@@ -324,7 +330,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1814,6 +1820,7 @@ class _Schema:
         self.sheets = version >= SCHEMA_WITH_SHEETS
         self.requests = version >= SCHEMA_WITH_REQUESTS
         self.polyline_extras = version >= SCHEMA_WITH_POLYLINE_EXTRAS
+        self.nurbs = version >= SCHEMA_WITH_NURBS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3036,7 +3043,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -3064,6 +3071,8 @@ class _Schema:
                 self.same_length(fields)
             if kind == "polyline":
                 self.polyline_extras_rules(fields)
+            if kind == "nurbs":
+                self.nurbs_rules(fields)
             if kind == "dimension":
                 self.dimension_rules(fields)
             if kind == "text" and ("labelOf" in fields) != ("labelScale" in fields):
@@ -3914,6 +3923,49 @@ class _Schema:
             self.fail("bad_value", f"genişlik 2 sayı olmalı (başlangıç, bitiş), {len(v)} var")
         return [self.at(0, self.float, v[0]), self.at(1, self.float, v[1])]
 
+    def degree(self, v):
+        """A NURBS curve's degree (schema 47): a whole number from 1 to 11."""
+        if type(v) is not int:
+            self.fail("wrong_type", "tam sayı olmalı")
+        if not 1 <= v <= NURBS_MAX_DEGREE:
+            self.fail("bad_value", f"derece {v}; 1 ile {NURBS_MAX_DEGREE} arasında olmalı")
+        return v
+
+    def tangents(self, v):
+        """A NURBS curve's fit points' end tangents (schema 47): two entries, each a point or `null`."""
+        if type(v) is not list:
+            self.fail("wrong_type", "teğetler [başlangıç, bitiş] dizisi olmalı")
+        if len(v) != 2:
+            self.fail("bad_value", f"teğetler 2 öğe olmalı, {len(v)} var")
+        return [None if t is None else self.at(i, self.point, t) for i, t in enumerate(v)]
+
+    def nurbs_rules(self, obj):
+        """A NURBS curve's numbers make a curve (schema 47, docs/adr/0259 §1): at least degree + 1 control points, as
+        many knots as control points + degree + 1, never decreasing, a span that is not empty, an inner knot at most
+        degree times, one positive weight per control point, a fit tolerance not below 0."""
+        p, n, knots = obj["degree"], len(obj["ctrl"]), obj["knots"]
+        if not p + 1 <= n <= NURBS_MAX_POINTS:
+            self.fail("bad_value", f"{p}. dereceden eğrinin {n} denetim noktası var; en az {p + 1}, en çok {NURBS_MAX_POINTS}")
+        if len(knots) != n + p + 1:
+            self.fail("bad_value", f"{len(knots)} düğüm var; denetim noktası + derece + 1 = {n + p + 1} olmalı")
+        if any(b < a for a, b in zip(knots, knots[1:])):
+            self.fail("bad_value", "düğümler azalmamalı")
+        if not knots[n] > knots[p]:
+            self.fail("bad_value", "eğrinin aralığı boş")
+        run, inner = 1, knots[1:-1]
+        for a, b in zip(inner, inner[1:]):
+            run = run + 1 if a == b else 1
+            if run > p:
+                self.fail("bad_value", f"iç düğüm {run} kez yinelenmiş; en çok derece ({p}) kez")
+        if "weights" in obj:
+            w = obj["weights"]
+            if len(w) != n:
+                self.fail("bad_value", f"{len(w)} ağırlık var ama {n} denetim noktası var")
+            if any(not x > 0 for x in w):
+                self.fail("bad_value", "ağırlıklar sıfırdan büyük olmalı")
+        if obj.get("fitTolerance", 0.0) < 0:
+            self.fail("bad_value", "geçiş toleransı sıfır ya da büyük olmalı")
+
     def polyline_extras_rules(self, obj):
         """A closed and a wide polyline (schema 46, docs/adr/0258): of one part; a closed one of two vertices or more;
         widths one pair for each vertex, not below 0, the last pair 0 on an open line and not all 0."""
@@ -4018,6 +4070,18 @@ ENTITY_KINDS = {
     "arc": lambda s: {"c": (s.point, True), "r": (s.float, True), "a0": (s.float, True), "a1": (s.float, True)},
     "ellipse": lambda s: {"c": (s.point, True), "major": (s.point, True), "ratio": (s.float, True), "t0": (s.float, True), "t1": (s.float, True)},
     "spline": lambda s: {"pts": (s.array(s.point), True), "closed": (s.bool, True)},
+    # Schema 47 (docs/adr/0259): a NURBS curve; `closed` and `periodic` only when true.
+    "nurbs": lambda s: {
+        "degree": (s.degree, True),
+        "ctrl": (s.array(s.point), True),
+        "knots": (s.array(s.float), True),
+        "weights": (s.array(s.float), False),
+        "closed": (s.only_true, False),
+        "periodic": (s.only_true, False),
+        "fit": (s.array(s.point), False),
+        "tangents": (s.tangents, False),
+        "fitTolerance": (s.float, False),
+    },
     "xline": lambda s: {"p": (s.point, True), "dir": (s.point, True)},
     "ray": lambda s: {"p": (s.point, True), "dir": (s.point, True)},
     "text": lambda s: {

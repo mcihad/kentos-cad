@@ -616,6 +616,7 @@ impl AreaAction {
                             | Entity::Arc(_)
                             | Entity::Polyline(_)
                             | Entity::Spline(_)
+                            | Entity::Nurbs(_)
                             | Entity::Ellipse(_)
                     )
             })

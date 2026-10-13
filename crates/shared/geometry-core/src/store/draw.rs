@@ -399,7 +399,7 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             }
         }
         // Drawn open even when closed: the curve itself comes back to its start.
-        Shape::Spline { .. } => {
+        Shape::Spline { .. } | Shape::Nurbs { .. } => {
             out.extend([LINE, 1.0]);
             path(out, false, &entity_outline(s, OUTLINE_SEGMENTS));
         }

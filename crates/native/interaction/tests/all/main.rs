@@ -19,6 +19,7 @@ mod dimension_values;
 mod drawing;
 mod drawing_unit;
 mod edits;
+mod nurbs;
 mod elevating;
 mod elevation_grips;
 mod feature_export;

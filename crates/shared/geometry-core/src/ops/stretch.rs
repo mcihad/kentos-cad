@@ -117,6 +117,36 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             pts: pts.iter().map(|&p| mv(p)).collect(),
             closed: *closed,
         })?,
+        // Its control points in the window move, as AutoCAD stretches a curve (docs/adr/0259 §2).
+        Shape::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            periodic,
+            fit,
+            fit_tolerance,
+            tangents,
+        } => any(ctrl).then(|| {
+            // All of it in the window: a move, so its fit points move with it; else they are dropped.
+            let all = ctrl.iter().all(|&p| inside(p, r));
+            Shape::Nurbs {
+                degree: *degree,
+                ctrl: ctrl.iter().map(|&p| mv(p)).collect(),
+                knots: knots.clone(),
+                weights: weights.clone(),
+                closed: *closed,
+                periodic: *periodic,
+                fit: if all {
+                    fit.as_ref().map(|f| f.iter().map(|&p| mv(p)).collect())
+                } else {
+                    None
+                },
+                fit_tolerance: if all { *fit_tolerance } else { None },
+                tangents: if all { *tangents } else { None },
+            }
+        })?,
         // Its vertices in the window move; the landing and the note follow the last (docs/adr/0146 §4).
         Shape::Leader {
             pts,

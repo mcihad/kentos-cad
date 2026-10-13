@@ -851,6 +851,13 @@
     "processing.run.address.reverse": {
       "level": "processing",
       "python": "kentos.address"
+    },
+    "tool.nurbs": {
+      "level": "semantic",
+      "via": [
+        "cad.nurbs.create"
+      ],
+      "note": "Geçiş ya da denetim noktaları, derece ve kapalılık komuta verilir; eğriyi komut kurar, önizleme komutun planıdır (ADR 0259)."
     }
   },
   "tools": {

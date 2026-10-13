@@ -551,6 +551,20 @@ fn rings_of(e: &Entity) -> Option<Vec<(Vec<Ring>, bool)>> {
                 closed,
             )]
         }
+        // A NURBS curve's chords within 0,1 mm (docs/adr/0259 §5).
+        Entity::Nurbs(_) => {
+            let s = shape(e);
+            let closed = matches!(
+                s,
+                kentos_geometry_core::entity::Shape::Nurbs { closed: true, .. }
+            );
+            // A closed curve's ring leaves out the end that returns to its start.
+            let mut pts = kentos_geometry_core::geom::nurbs::outline(&s);
+            if closed && pts.len() > 3 {
+                pts.pop();
+            }
+            vec![(vec![Ring { pts, bulges: None }], closed)]
+        }
         Entity::Spline(sp) => {
             let pts: Vec<P> = sp.pts.iter().copied().map(pt).collect();
             vec![(

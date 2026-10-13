@@ -88,6 +88,7 @@ pub mod layers_states;
 pub mod layers_time;
 pub mod line;
 pub mod network_define;
+pub mod nurbs;
 pub mod offset;
 pub mod point;
 pub mod polygon;
@@ -150,6 +151,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION),
     (CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION),
     (CAD_ENTITIES_ARRAY, CAD_ENTITIES_ARRAY_VERSION),
+    // A NURBS curve by control points or through points ([`nurbs`], docs/adr/0259).
+    (
+        kentos_contracts::CAD_NURBS_CREATE,
+        kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
     // Ötele's semantic command ([`offset`], docs/adr/0246).
     (
         kentos_contracts::CAD_ENTITIES_OFFSET,

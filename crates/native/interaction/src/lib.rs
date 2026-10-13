@@ -217,6 +217,7 @@ mod session;
 pub mod set_elevation;
 pub mod sources;
 pub mod spatial;
+pub mod nurbs_tool;
 pub mod spline;
 pub mod split;
 mod standard_layer;

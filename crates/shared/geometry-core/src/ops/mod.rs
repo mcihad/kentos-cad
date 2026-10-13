@@ -37,6 +37,7 @@ pub mod label_text;
 pub mod lengthen;
 pub mod lrs;
 pub mod network;
+pub mod nurbs_cuts;
 pub mod offset;
 pub mod order;
 pub mod parts;

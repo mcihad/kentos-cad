@@ -1485,6 +1485,75 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Denetim noktalı and Geçiş noktalı eğri's command (docs/adr/0259 §3), held together by
+        // fixtures/commands/v1/cad.nurbs.create.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_NURBS_CREATE.into(),
+            version: crate::CAD_NURBS_CREATE_VERSION,
+            title: "NURBS eğrisi oluştur".into(),
+            summary: "Açık çizimde verilen katmana bir NURBS eğrisi ekler; tek geri alma adımıdır. \
+                      by.kind control (Denetim noktalı): derece, denetim noktaları, isteğe bağlı ağırlıklar ve düğümler; düğüm verilmezse uçlara sıkıştırılmış eşit aralıklı düğümler kurulur, eğri ilk ve son denetim noktasından geçer. \
+                      by.kind fit (Geçiş noktalı): eğrinin sırayla geçeceği noktalar ve derece (verilmezse 3; nokta sayısından küçük olur); komut kiriş uzunluğuyla parametreler, ortalanmış düğümler ve çözülen denklem sistemiyle eğriyi kurar (Piegl ve Tiller'ın global interpolasyonu), noktalar eğrinin geçiş noktaları olarak saklanır. \
+                      closed: true eğriyi kendi üstüne düzgünce kapatır (periyodik): denetim noktalarında ilk derece kadar nokta sona sarılır, geçiş noktalarında son nokta ilkine bağlanır; kapalı eğriye düğüm verilmez. \
+                      Eğriyi ortak geometri çekirdeği kurar: araç, Python ve ajan aynı noktalarla aynı eğriyi bulur. \
+                      Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Plan yazmadan eğriyi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::NurbsCreate>(),
+            output: schema::<crate::NurbsCreated>(),
+            plan: Some(schema::<crate::NurbsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Dört noktadan geçen kübik eğri (dere kıyısı)".into(),
+                    input: json!({
+                        "layerId": "dere",
+                        "by": { "kind": "fit", "pts": [
+                            { "x": 423500.0, "y": 4512300.0 },
+                            { "x": 423520.0, "y": 4512312.0 },
+                            { "x": 423545.0, "y": 4512305.0 },
+                            { "x": 423570.0, "y": 4512318.0 }
+                        ] }
+                    }),
+                    output: Some(json!({
+                        "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                        "id": 12,
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Ağırlıklı ikinci dereceden eğri: tam bir çeyrek daire".into(),
+                    input: json!({
+                        "layerId": "yol",
+                        "by": { "kind": "control", "degree": 2,
+                            "ctrl": [ { "x": 10.0, "y": 0.0 }, { "x": 10.0, "y": 10.0 }, { "x": 0.0, "y": 10.0 } ],
+                            "weights": [1.0, std::f64::consts::FRAC_1_SQRT_2, 1.0] }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Altı denetim noktalı kapalı kübik eğri; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "layerId": "peyzaj",
+                        "by": { "kind": "control", "degree": 3, "ctrl": [
+                            { "x": 0.0, "y": 0.0 }, { "x": 8.0, "y": -2.0 }, { "x": 14.0, "y": 3.0 },
+                            { "x": 12.0, "y": 10.0 }, { "x": 4.0, "y": 11.0 }, { "x": -2.0, "y": 6.0 }
+                        ] },
+                        "closed": true,
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Yeniden bağla (docs/adr/0249 §3), held together by
         // fixtures/commands/v1/cad.dimensions.reassociate.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -3521,6 +3590,9 @@ mod tests {
                     crate::CAD_ENTITIES_ARRAY => {
                         serde_json::from_value::<crate::EntitiesArray>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_NURBS_CREATE => {
+                        serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_OFFSET => {
                         serde_json::from_value::<crate::EntitiesOffset>(e.input.clone()).map(|_| ())
                     }
@@ -3681,6 +3753,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_ARRAY => {
                             serde_json::from_value::<crate::EntitiesArrayed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_NURBS_CREATE => {
+                            serde_json::from_value::<crate::NurbsCreated>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_OFFSET => {

@@ -10,9 +10,9 @@ use kentos_contracts::{
     DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, EntityId,
     GradientShape, HatchAssoc, HatchEntity, HatchGradient, HatchPattern as ContractPattern,
     HatchPatternType, ImageEntity, ImageFields, InsertEntity, LeaderArrow, LeaderEntity,
-    LineEntity, PathEntity, PatternLine, PointEntity, RasterEntity, RasterFields, RasterSample,
-    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextEntity,
-    Vec2 as Point,
+    LineEntity, NurbsEntity, PathEntity, PatternLine, PointEntity, RasterEntity, RasterFields,
+    RasterSample, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
+    TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
@@ -674,6 +674,19 @@ pub fn shape(entity: &Entity) -> Shape {
             pts: points(&s.pts),
             closed: s.closed,
         },
+        Entity::Nurbs(n) => Shape::Nurbs {
+            degree: n.degree as usize,
+            ctrl: points(&n.ctrl),
+            knots: n.knots.clone(),
+            weights: n.weights.clone(),
+            closed: n.closed,
+            periodic: n.periodic,
+            fit: n.fit.as_deref().map(points),
+            fit_tolerance: n.fit_tolerance,
+            tangents: n
+                .tangents
+                .map(|[a, b]| [a.as_ref().map(v), b.as_ref().map(v)]),
+        },
         Entity::Xline(c) => Shape::Xline {
             p: v(&c.p),
             dir: v(&c.dir),
@@ -978,6 +991,30 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.pts = back(pts);
             e.closed = closed;
         }
+        (
+            Entity::Nurbs(e),
+            Shape::Nurbs {
+                degree,
+                ctrl,
+                knots,
+                weights,
+                closed,
+                periodic,
+                fit,
+                fit_tolerance,
+                tangents,
+            },
+        ) => {
+            e.degree = degree as u32;
+            e.ctrl = back(ctrl);
+            e.knots = knots;
+            e.weights = weights;
+            e.closed = closed;
+            e.periodic = periodic;
+            e.fit = fit.map(back);
+            e.fit_tolerance = fit_tolerance;
+            e.tangents = tangents.map(|[a, b]| [a.map(p), b.map(p)]);
+        }
         (Entity::Xline(e), Shape::Xline { p: at, dir })
         | (Entity::Ray(e), Shape::Ray { p: at, dir }) => {
             e.p = p(at);
@@ -1255,6 +1292,28 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
         EntityGeometry::Spline { pts, closed } => {
             Entity::Spline(SplineEntity { base, pts, closed })
         }
+        EntityGeometry::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            periodic,
+            fit,
+            tangents,
+            fit_tolerance,
+        } => Entity::Nurbs(NurbsEntity {
+            base,
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            periodic,
+            fit,
+            tangents,
+            fit_tolerance,
+        }),
         EntityGeometry::Xline { p, dir } => Entity::Xline(ConstructionEntity { base, p, dir }),
         EntityGeometry::Ray { p, dir } => Entity::Ray(ConstructionEntity { base, p, dir }),
         // A width factor of 1 is no width factor (docs/adr/0145): one spelling.
@@ -1475,6 +1534,27 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         Shape::Spline { pts, closed } => EntityGeometry::Spline {
             pts: back(pts),
             closed,
+        },
+        Shape::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            periodic,
+            fit,
+            fit_tolerance,
+            tangents,
+        } => EntityGeometry::Nurbs {
+            degree: degree as u32,
+            ctrl: back(ctrl),
+            knots,
+            weights,
+            closed,
+            periodic,
+            fit: fit.map(back),
+            tangents: tangents.map(|[a, b]| [a.map(p), b.map(p)]),
+            fit_tolerance,
         },
         Shape::Xline { p: at, dir } => EntityGeometry::Xline {
             p: p(at),

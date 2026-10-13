@@ -16,6 +16,9 @@ pub fn break_entity(e: &Entity, p1: Vec2, p2: Vec2) -> Cut {
     if matches!(s, Shape::Spline { .. }) {
         return Cut::Error("Eğri kırılamaz; önce Patlat (X) ile çoklu çizgiye dönüştürün.".into());
     }
+    if matches!(s, Shape::Nurbs { .. }) {
+        return crate::ops::nurbs_cuts::break_at(e, p1, p2);
+    }
     if matches!(s, Shape::Leader { .. }) {
         return Cut::Error(leader_refused("kırılamaz"));
     }

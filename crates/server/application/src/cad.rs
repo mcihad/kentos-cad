@@ -228,6 +228,12 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             positive("Büyük eksen", x.major.x.hypot(x.major.y))?;
         }
         Spline(x) => check_len("Eğri", x.pts.len(), 2)?,
+        // A NURBS curve's numbers make a curve (docs/adr/0259 §1).
+        Nurbs(x) => {
+            if let Some(why) = x.problem() {
+                return Err(why);
+            }
+        }
         Xline(x) | Ray(x) => positive("Doğrultu", x.dir.x.hypot(x.dir.y))?,
         Text(x) => {
             positive("Yazı yüksekliği", x.height)?;
@@ -486,6 +492,27 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         Entity::Spline(x) => {
             let points = catmull_rom(&pts(&x.pts), x.closed, tol);
             if x.closed && x.pts.len() >= 3 {
+                Geometry::Polygon(vec![points])
+            } else {
+                Geometry::LineString(points)
+            }
+        }
+        // A NURBS curve's chords within the tolerance (docs/adr/0259 §5); a closed one an area's ring, as a closed spline.
+        Entity::Nurbs(x) => {
+            let ctrl = pts(&x.ctrl);
+            let c = kentos_geometry_core::geom::nurbs::Nurbs {
+                degree: x.degree as usize,
+                ctrl: &ctrl,
+                knots: &x.knots,
+                weights: x.weights.as_deref(),
+            };
+            if !c.valid() {
+                return None;
+            }
+            let mut points = c.tessellate(tol);
+            if x.closed && points.len() >= 4 {
+                // A ring leaves out the end that returns to its start.
+                points.pop();
                 Geometry::Polygon(vec![points])
             } else {
                 Geometry::LineString(points)

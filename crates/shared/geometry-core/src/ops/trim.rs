@@ -28,6 +28,8 @@ pub fn trim_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Cut {
                 "Eğri budanamaz; önce Patlat (X) ile çoklu çizgiye dönüştürün.".into(),
             );
         }
+        // Cut on the curve itself, each piece the same curve (docs/adr/0259 §2).
+        Shape::Nurbs { .. } => return crate::ops::nurbs_cuts::trim(target, pick, boundaries),
         Shape::Dimension { .. } | Shape::Hatch { .. } => {
             return Cut::Error("Ölçü ve tarama budanamaz.".into());
         }

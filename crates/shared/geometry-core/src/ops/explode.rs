@@ -154,6 +154,22 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 }
             })])
         }
+        // Its chords within 0.1 mm (docs/adr/0259 §2): a polyline, closed when the curve is.
+        Shape::Nurbs { closed, .. } => {
+            let mut out = crate::geom::nurbs::outline(e);
+            let ring = *closed && out.len() > 3;
+            if ring {
+                out.pop();
+            }
+            Cut::Pieces(vec![Entity::new(Shape::Polyline {
+                pts: out,
+                bulges: None,
+                holes: None,
+                parts: None,
+                closed: ring,
+                widths: None,
+            })])
+        }
         Shape::Dimension {
             text, height, look, ..
         } => {

@@ -1113,6 +1113,27 @@ def polyline_extras(e):
         assert any(a != 0 or b != 0 for a, b in widths), "bütün genişlikler sıfır yazılmaz"
 
 
+def nurbs_rule(e):
+    """A NURBS curve's numbers make a curve (schema 47, docs/adr/0259 §1), as a writer keeps them."""
+    p, ctrl, knots = e["degree"], e["ctrl"], e["knots"]
+    n = len(ctrl)
+    assert type(p) is int and 1 <= p <= 11, "derece 1 ile 11 arasında"
+    assert p + 1 <= n <= 100_000, "en az derece + 1 denetim noktası"
+    assert len(knots) == n + p + 1, "düğüm sayısı denetim noktası + derece + 1"
+    assert all(math.isfinite(k) for k in knots) and all(a <= b for a, b in zip(knots, knots[1:])), "düğümler sonlu, azalmaz"
+    assert knots[n] > knots[p], "eğrinin aralığı boş değil"
+    inner = knots[1:-1]
+    run = 1
+    for a, b in zip(inner, inner[1:]):
+        run = run + 1 if a == b else 1
+        assert run <= p, "iç düğüm en çok derece kez"
+    if "weights" in e:
+        assert len(e["weights"]) == n and all(math.isfinite(w) and w > 0 for w in e["weights"]), "ağırlıklar pozitif"
+    assert "tangents" not in e or len(e["tangents"]) == 2, "iki teğet"
+    assert e.get("fitTolerance", 0.0) >= 0.0, "geçiş toleransı sıfır ya da büyük"
+    assert e.get("closed", True) is True and e.get("periodic", True) is True, "closed ve periodic yalnız true yazılır"
+
+
 # A table's columns' alignments and lines (schema 22, docs/adr/0184): all lines is the field's absence, no value.
 TABLE_ALIGNS = ("left", "center", "right")
 TABLE_GRIDS = ("outer", "rows", "none")
@@ -1225,6 +1246,19 @@ KINDS = {
     "arc": {"c": (point, True), "r": (f64, True), "a0": (f64, True), "a1": (f64, True)},
     "ellipse": {"c": (point, True), "major": (point, True), "ratio": (f64, True), "t0": (f64, True), "t1": (f64, True)},
     "spline": {"pts": (points, True), "closed": (boolean, True)},
+    # Schema 47 (docs/adr/0259): a NURBS curve, its numbers as given; `closed` and `periodic` only when true; the fit
+    # points' end tangents a pair, `null` where none was given.
+    "nurbs": {
+        "degree": (uint, True),
+        "ctrl": (points, True),
+        "knots": (floats, True),
+        "weights": (floats, False),
+        "closed": (lambda b: boolean(b) if b is True else None, False),
+        "periodic": (lambda b: boolean(b) if b is True else None, False),
+        "fit": (points, False),
+        "tangents": (lambda t: array([b"\xf6" if x is None else point(x) for x in t]), False),
+        "fitTolerance": (f64, False),
+    },
     "xline": {"p": (point, True), "dir": (point, True)},
     "ray": {"p": (point, True), "dir": (point, True)},
     # Schema 7 (docs/adr/0145): an alignment by name, a width factor, `mask` only when true.
@@ -1463,6 +1497,8 @@ def entity(e, uid, index):
         cloud_shape(e)
     if kind == "polyline":
         polyline_extras(e)
+    if kind == "nurbs":
+        nurbs_rule(e)
     # A block definition's objects have no persistent ids to name (docs/adr/0186 §6).
     assert "assoc" not in e or uid is not None, "blok tanımının taraması nesnelere bağlı olamaz"
     assert "refs" not in e or uid is not None, "blok tanımının ölçüsü nesnelere bağlı olamaz"
@@ -1671,6 +1707,12 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 47 (docs/adr/0259): a NURBS curve, a block definition's too.
+    def curved(es):
+        return any(e["kind"] == "nurbs" for e in es)
+
+    if curved(entities) or any(curved(b["entities"]) for b in blocks or []):
+        return 47
     # Schema 46 (docs/adr/0258): a closed or a wide polyline, a block definition's too.
     def extras(es):
         return any(e["kind"] == "polyline" and ("closed" in e or "widths" in e) for e in es)
@@ -1961,7 +2003,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-47.kcad"] = container(root(cmap(parts), version=uint(47)))
+    files["schema-version-48.kcad"] = container(root(cmap(parts), version=uint(48)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2263,6 +2305,24 @@ def broken(minimal_content, minimal_file):
     files["polyline-closed-parts.kcad"] = in_schema(46, path("polyline", 3, closed=boolean(True), parts=array([cmap({"pts": square_line(5.0)})])))
     files["polygon-closed.kcad"] = in_schema(46, path("polygon", 3, closed=boolean(True)))
     files["polygon-widths.kcad"] = in_schema(46, path("polygon", 3, widths=array([pair(1.0, 1.0)] * 3)))
+    # A NURBS curve is schema 47's (docs/adr/0259): in schema 46 an unknown kind; its numbers a curve's (the degree 1 to
+    # 11, as many knots as control points + degree + 1, never decreasing, an inner knot at most degree times, positive
+    # weights one per control point, two tangents); `closed` and `periodic` only true.
+    def nurbs_of(**extra):
+        ctrl = array([point({"x": one["p"]["x"] + i, "y": one["p"]["y"] + (i % 2)}) for i in range(4)])
+        body = {**common, "degree": uint(2), "ctrl": ctrl, "knots": floats([0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0])}
+        return cmap({"nurbs": cmap({**body, **extra})})
+
+    files["nurbs-in-schema-46.kcad"] = in_schema(46, nurbs_of())
+    files["nurbs-closed-false.kcad"] = in_schema(47, nurbs_of(closed=boolean(False)))
+    files["nurbs-degree-12.kcad"] = in_schema(47, nurbs_of(degree=uint(12)))
+    files["nurbs-knot-count.kcad"] = in_schema(47, nurbs_of(knots=floats([0.0, 0.0, 0.0, 1.0, 2.0, 2.0])))
+    files["nurbs-knots-decreasing.kcad"] = in_schema(47, nurbs_of(knots=floats([0.0, 0.0, 0.0, 2.0, 1.0, 2.0, 2.0])))
+    files["nurbs-inner-knot.kcad"] = in_schema(47, nurbs_of(degree=uint(1), knots=floats([0.0, 0.0, 1.0, 1.0, 2.0, 2.0])))
+    files["nurbs-weight-zero.kcad"] = in_schema(47, nurbs_of(weights=floats([1.0, 0.0, 1.0, 1.0])))
+    files["nurbs-weight-count.kcad"] = in_schema(47, nurbs_of(weights=floats([1.0, 1.0, 1.0])))
+    files["nurbs-knot-nan.kcad"] = in_schema(47, nurbs_of(knots=array([f64(0.0)] * 3 + [nan] + [f64(2.0)] * 3)))
+    files["nurbs-tangents-three.kcad"] = in_schema(47, nurbs_of(tangents=array([b"\xf6"] * 3)))
     # A picture is schema 24's (docs/adr/0192): in schema 23 an unknown kind; only in the drawing; a positive size, one
     # source, a clip of three corners or more inside the picture, an opacity from 0.1 to 1, `mirror` only when true.
     def image_of(**extra):
@@ -3120,6 +3180,7 @@ def build():
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))
+    out["nurbs.kcad"] = container(document(load("nurbs.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

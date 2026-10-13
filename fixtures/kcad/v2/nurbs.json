@@ -1,0 +1,301 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Denetim noktalı eğriler",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "egri",
+      "name": "Eğri",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#2F80ED",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "egri",
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000001",
+    "0192f5a1-2590-7000-8000-000000000002",
+    "0192f5a1-2590-7000-8000-000000000003",
+    "0192f5a1-2590-7000-8000-000000000004",
+    "0192f5a1-2590-7000-8000-000000000005"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-2590-7d4a-9b1e-4c2f8a6d0001",
+      "name": "Kavis",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "nurbs",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "degree": 2,
+          "ctrl": [
+            {
+              "x": 1.0,
+              "y": 0.0
+            },
+            {
+              "x": 1.0,
+              "y": 1.0
+            },
+            {
+              "x": 0.0,
+              "y": 1.0
+            }
+          ],
+          "knots": [
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "weights": [
+            1.0,
+            0.7071067811865476,
+            1.0
+          ]
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "kind": "nurbs",
+      "id": 1,
+      "layerId": "egri",
+      "attrs": {},
+      "degree": 2,
+      "ctrl": [
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 10.0
+        },
+        {
+          "x": 0.0,
+          "y": 10.0
+        }
+      ],
+      "knots": [
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "weights": [
+        1.0,
+        0.7071067811865476,
+        1.0
+      ],
+      "fit": [
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 0.0,
+          "y": 10.0
+        }
+      ],
+      "tangents": [
+        {
+          "x": 0.0,
+          "y": 1.0
+        },
+        null
+      ],
+      "fitTolerance": 1e-10
+    },
+    {
+      "kind": "nurbs",
+      "id": 2,
+      "layerId": "egri",
+      "attrs": {
+        "Ad": "Kıyı"
+      },
+      "degree": 3,
+      "ctrl": [
+        {
+          "x": 20.0,
+          "y": 0.0
+        },
+        {
+          "x": 22.0,
+          "y": 4.0
+        },
+        {
+          "x": 26.0,
+          "y": -2.0
+        },
+        {
+          "x": 30.0,
+          "y": 3.0
+        },
+        {
+          "x": 33.0,
+          "y": 0.0
+        },
+        {
+          "x": 36.0,
+          "y": 1.0
+        }
+      ],
+      "knots": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    {
+      "kind": "nurbs",
+      "id": 3,
+      "layerId": "egri",
+      "attrs": {},
+      "degree": 3,
+      "ctrl": [
+        {
+          "x": 40.0,
+          "y": 0.0
+        },
+        {
+          "x": 46.0,
+          "y": 0.0
+        },
+        {
+          "x": 46.0,
+          "y": 6.0
+        },
+        {
+          "x": 40.0,
+          "y": 6.0
+        },
+        {
+          "x": 40.0,
+          "y": 0.0
+        },
+        {
+          "x": 46.0,
+          "y": 0.0
+        },
+        {
+          "x": 46.0,
+          "y": 6.0
+        }
+      ],
+      "knots": [
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+        10.0
+      ],
+      "closed": true,
+      "periodic": true,
+      "lineWeight": 0.5
+    },
+    {
+      "kind": "nurbs",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "degree": 1,
+      "ctrl": [
+        {
+          "x": 0.0,
+          "y": 20.0
+        },
+        {
+          "x": 5.0,
+          "y": 25.0
+        },
+        {
+          "x": 10.0,
+          "y": 20.0
+        }
+      ],
+      "knots": [
+        0.0,
+        0.0,
+        0.5,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "egri",
+      "attrs": {},
+      "block": "0192f5a0-2590-7d4a-9b1e-4c2f8a6d0001",
+      "p": {
+        "x": 15.0,
+        "y": 15.0
+      },
+      "scale": 2.0,
+      "rotation": 0.0
+    }
+  ]
+}

@@ -16,7 +16,8 @@ use kentos_domain::contracts::{
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     EntitiesOffset, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose, LayersEdit,
     LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates,
-    LayersTime, NetworkDefine, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StylesEdit,
+    LayersTime, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit,
+    StylesEdit,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -36,8 +37,8 @@ use kentos_native_application::{
     circle, delete, dimensions_reassociate, edit, entities_chamfer, entities_extend,
     entities_fillet, entities_trim, labels_pin, layers_compose, layers_edit, layers_filter,
     layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
-    layers_time, line, network_define, offset, point, polygon, polyline, scenarios_edit, set,
-    settings_set, sheets_edit, styles_edit, transform, units_change,
+    layers_time, line, network_define, nurbs, offset, point, polygon, polyline, scenarios_edit,
+    set, settings_set, sheets_edit, styles_edit, transform, units_change,
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
@@ -346,6 +347,47 @@ impl Input for PolylineCreate {
             point_number(&mut self.pts, path)
         } else {
             bulge_number(&mut self.bulges, path)
+        }
+    }
+}
+
+/// `list[i]` of a list of numbers.
+fn list_number<'a>(list: &'a mut [f64], name: &str, rest: &str) -> Option<&'a mut f64> {
+    let i = rest
+        .strip_prefix(name)?
+        .strip_prefix('[')?
+        .strip_suffix(']')?;
+    list.get_mut(i.parse::<usize>().ok()?)
+}
+
+/// `name[i].x` of a list of points, as `pts[i].x`.
+fn named_point<'a>(
+    pts: &'a mut [kentos_domain::contracts::Vec2],
+    name: &str,
+    rest: &str,
+) -> Option<&'a mut f64> {
+    let after = rest.strip_prefix(name)?;
+    point_number(pts, &format!("pts{after}"))
+}
+
+impl Input for kentos_domain::contracts::NurbsCreate {
+    /// `by.ctrl[1].y`, `by.pts[0].x`, `by.weights[2]`, `by.knots[3]`, `lineWeight` (docs/adr/0259).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::NurbsBy;
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let rest = path.strip_prefix("by.")?;
+        match &mut self.by {
+            NurbsBy::Control {
+                ctrl,
+                weights,
+                knots,
+                ..
+            } => named_point(ctrl, "ctrl", rest)
+                .or_else(|| list_number(weights.as_deref_mut()?, "weights", rest))
+                .or_else(|| list_number(knots.as_deref_mut()?, "knots", rest)),
+            NurbsBy::Fit { pts, .. } => named_point(pts, "pts", rest),
         }
     }
 }
@@ -1063,6 +1105,14 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             _ => coordinate(c, "c", rest).or_else(|| coordinate(major, "major", rest)),
         },
         EntityGeometry::Spline { pts, .. } => point_number(pts, rest),
+        EntityGeometry::Nurbs {
+            ctrl,
+            knots,
+            weights,
+            ..
+        } => named_point(ctrl, "ctrl", rest)
+            .or_else(|| list_number(knots, "knots", rest))
+            .or_else(|| list_number(weights.as_deref_mut()?, "weights", rest)),
         EntityGeometry::Xline { p, dir } | EntityGeometry::Ray { p, dir } => {
             coordinate(p, "p", rest).or_else(|| coordinate(dir, "dir", rest))
         }
@@ -1305,6 +1355,7 @@ fn run_op(
             run!(dimensions_create, DimensionsCreate)
         }
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
+        kentos_domain::contracts::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),

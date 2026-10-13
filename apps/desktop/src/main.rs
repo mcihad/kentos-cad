@@ -131,6 +131,8 @@ mod point_calc_scenes;
 mod pointclouds;
 mod points;
 #[cfg(test)]
+mod nurbs_scenes;
+#[cfg(test)]
 mod polyline_scenes;
 mod preview;
 mod processing;

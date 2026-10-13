@@ -50,7 +50,7 @@ use crate::{
     SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
-    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
+    SCHEMA_WITH_NURBS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
     SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_REQUESTS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS, SCHEMA_WITH_STYLES,
     SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
@@ -1107,6 +1107,11 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 47 (docs/adr/0259): a NURBS curve, a block definition's too.
+    let curves = |list: &[Entity]| list.iter().any(|e| matches!(e, Entity::Nurbs(_)));
+    if curves(&doc.entities) || doc.blocks.iter().any(|b| curves(&b.entities)) {
+        return SCHEMA_WITH_NURBS;
     }
     // Schema 46 (docs/adr/0258): a closed or a wide polyline, a block definition's too.
     let extras = |list: &[Entity]| {

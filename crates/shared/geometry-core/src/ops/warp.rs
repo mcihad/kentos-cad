@@ -577,6 +577,30 @@ fn common<M: Map + ?Sized>(
                 .collect::<Result<Vec<_>, _>>()?,
             closed: *closed,
         }),
+        // Its control points mapped: exact under an affine map, the curve's shape near it under the
+        // others; its fit points no longer describe it (docs/adr/0259 §2).
+        Shape::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+            closed,
+            periodic,
+            ..
+        } => plain(Shape::Nurbs {
+            degree: *degree,
+            ctrl: ctrl
+                .iter()
+                .map(|&p| m.at(p))
+                .collect::<Result<Vec<_>, _>>()?,
+            knots: knots.clone(),
+            weights: weights.clone(),
+            closed: *closed,
+            periodic: *periodic,
+            fit: None,
+            fit_tolerance: None,
+            tangents: None,
+        }),
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => {
             let d = lin(&m.jac(*p)?, *dir);
             let l = js_hypot(d.x, d.y);

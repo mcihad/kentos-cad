@@ -70,7 +70,7 @@ fn paths(list: impl IntoIterator<Item = Vec<Edge>>) -> Class {
 pub fn class_of(s: &Shape) -> Class {
     match s {
         Shape::Polygon { .. } | Shape::Circle { .. } => Class::Areas(areas_of_entity(s)),
-        Shape::Ellipse { .. } | Shape::Spline { .. } => {
+        Shape::Ellipse { .. } | Shape::Spline { .. } | Shape::Nurbs { .. } => {
             let areas = areas_of_entity(s);
             if areas.is_empty() {
                 paths([entity_edges(s)])
@@ -112,7 +112,10 @@ pub fn written_vertices(s: &Shape) -> usize {
 
 /// Whether the object enters as chords within 0.1 mm of its curve (an ellipse, a curve; docs/adr/0149 §5.3).
 pub fn is_chorded(s: &Shape) -> bool {
-    matches!(s, Shape::Ellipse { .. } | Shape::Spline { .. })
+    matches!(
+        s,
+        Shape::Ellipse { .. } | Shape::Spline { .. } | Shape::Nurbs { .. }
+    )
 }
 
 /// Everything any of the areas covers: one source, so the overlay's nonzero

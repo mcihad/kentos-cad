@@ -21,6 +21,7 @@ mod line_parts;
 mod linked_texts;
 mod measures;
 mod networks;
+mod nurbs;
 mod parts;
 mod pointclouds;
 mod polyline_extras;

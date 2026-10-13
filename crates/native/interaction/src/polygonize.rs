@@ -109,6 +109,7 @@ fn line_work(e: &Entity) -> bool {
             | Entity::Circle(_)
             | Entity::Ellipse(_)
             | Entity::Spline(_)
+            | Entity::Nurbs(_)
             | Entity::Polygon(_)
     )
 }

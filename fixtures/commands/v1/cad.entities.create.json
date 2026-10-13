@@ -318,6 +318,14 @@
       ]
     },
     {
+      "name": "NURBS eğrisi yazıldığı gibi; eğri tanımlamayan sayılar reddedilir (invalid_nurbs)",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "nurbs", "degree": 2, "ctrl": [{"x": 487000, "y": 4420130}, {"x": 487010, "y": 4420140}, {"x": 487020, "y": 4420130}], "knots": [0, 0, 0, 1, 1, 1], "weights": [1, 0.5, 1]}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3], "entities": {"3": {"kind": "nurbs", "degree": 2, "ctrl": [{"x": 487000, "y": 4420130}, {"x": 487010, "y": 4420140}, {"x": 487020, "y": 4420130}], "knots": [0, 0, 0, 1, 1, 1], "weights": [1, 0.5, 1], "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "nurbs", "degree": 2, "ctrl": [{"x": 487000, "y": 4420130}, {"x": 487010, "y": 4420140}, {"x": 487020, "y": 4420130}], "knots": [0, 0, 1, 0, 1, 1], "weights": [1, 0.5, 1]}}]}, "result": {"status": "failed", "error": {"code": "invalid_nurbs", "message": "Düğümler azalmamalı: her düğüm bir öncekinden küçük olmaz.", "path": "objects[0].geometry"}}, "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "nurbs", "degree": 3, "ctrl": [{"x": 487000, "y": 4420130}, {"x": 487010, "y": 4420140}, {"x": 487020, "y": 4420130}], "knots": [0, 0, 0, 1, 1, 1], "weights": [1, 0.5, 1]}}]}, "result": {"status": "failed", "error": {"code": "invalid_nurbs", "message": "3. dereceden eğrinin en az 4 denetim noktası olur; 3 verildi.", "path": "objects[0].geometry"}}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
       "name": "girdinin hatası çizimin durumundan önce gelir: geometri, sürümden ve katmandan önce denetlenir",
       "steps": [
         {"op": "execute", "input": {"layerId": "kilitli", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420010}]}}], "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "too_few_points", "message": "Çoklu çizginin en az 2 noktası olmalı; 1 nokta verildi. Eksik noktaları ekleyin.", "path": "objects[0].geometry.pts"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}

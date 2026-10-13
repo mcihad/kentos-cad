@@ -904,6 +904,22 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         } => pt(c) && pt(major) && ratio.is_finite() && t0.is_finite() && t1.is_finite(),
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => pt(p) && pt(dir),
         Shape::Spline { pts: p, .. } => pts(p),
+        Shape::Nurbs {
+            ctrl,
+            knots,
+            weights,
+            fit,
+            tangents,
+            fit_tolerance,
+            ..
+        } => {
+            pts(ctrl)
+                && knots.iter().all(|k| k.is_finite())
+                && weights.iter().flatten().all(|w| w.is_finite())
+                && fit.as_deref().is_none_or(pts)
+                && tangents.iter().flatten().flatten().all(pt)
+                && fit_tolerance.is_none_or(f64::is_finite)
+        }
         Shape::Table {
             p,
             rotation,

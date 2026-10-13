@@ -38,6 +38,8 @@ pub const ALL: u32 = (1 << KINDS.len()) - 1;
 
 /// A kind's bit in the filter's mask; none for a kind it does not know.
 pub fn bit(kind: &str) -> u32 {
+    // A NURBS curve is a curve: the filter's Eğri holds it too (docs/adr/0259 §6).
+    let kind = if kind == "nurbs" { "spline" } else { kind };
     KINDS.iter().position(|k| *k == kind).map_or(0, |i| 1 << i)
 }
 

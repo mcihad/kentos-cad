@@ -119,7 +119,7 @@ pub fn input_notes(
         .iter()
         .chain(others)
         .filter(|e| seen.insert(e.base().id))
-        .filter(|e| matches!(e, Entity::Ellipse(_) | Entity::Spline(_)))
+        .filter(|e| matches!(e, Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_)))
         .count();
     if chorded > 0 {
         feedback.warn(format!(

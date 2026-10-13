@@ -40,6 +40,7 @@ pub fn vertex_count(e: &Entity) -> Option<f64> {
         }
         Entity::Line(_) => 2,
         Entity::Spline(s) => s.pts.len(),
+        Entity::Nurbs(n) => n.ctrl.len(),
         Entity::Point(_) => 1,
         _ => return None,
     };

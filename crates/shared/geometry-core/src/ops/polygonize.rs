@@ -75,6 +75,7 @@ fn bounds(shape: &Shape) -> bool {
             | Shape::Circle { .. }
             | Shape::Ellipse { .. }
             | Shape::Spline { .. }
+            | Shape::Nurbs { .. }
             | Shape::Polygon { .. }
     )
 }
@@ -283,7 +284,9 @@ fn open_path(shape: &Shape) -> Option<([Vec2; 2], Vec<Vec2>)> {
             pts, closed: false, ..
         } => ends(&edges()).map(|e| (e, pts.clone())),
         Shape::Line { .. } | Shape::Arc { .. } => ends(&edges()).map(|e| (e, e.to_vec())),
-        Shape::Spline { closed: false, .. } => ends(&edges()).map(|e| (e, e.to_vec())),
+        Shape::Spline { closed: false, .. } | Shape::Nurbs { closed: false, .. } => {
+            ends(&edges()).map(|e| (e, e.to_vec()))
+        }
         Shape::Ellipse { .. } => {
             let edges = edges();
             let e = ends(&edges)?;

@@ -124,6 +124,24 @@ impl Objects {
         self.push(layer, fields)
     }
 
+    /// A NURBS curve (docs/adr/0259): its degree, control points and knots; `more` its other fields.
+    pub(crate) fn nurbs(
+        &mut self,
+        layer: &str,
+        degree: u32,
+        ctrl: &[[f64; 2]],
+        knots: &[f64],
+        more: Value,
+    ) -> u32 {
+        let pts: Vec<Value> = ctrl.iter().map(|p| xy(*p)).collect();
+        let id = self.push(
+            layer,
+            json!({ "kind": "nurbs", "degree": degree, "ctrl": pts, "knots": knots }),
+        );
+        self.fields(id, more);
+        id
+    }
+
     pub(crate) fn circle(&mut self, layer: &str, c: [f64; 2], r: f64) -> u32 {
         self.push(layer, json!({ "kind": "circle", "c": xy(c), "r": r }))
     }

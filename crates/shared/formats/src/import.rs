@@ -64,6 +64,8 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
             .iter()
             .for_each(&mut add),
         Entity::Spline(e) => e.pts.iter().for_each(&mut add),
+        // The curve lies in its control points' hull.
+        Entity::Nurbs(e) => e.ctrl.iter().for_each(&mut add),
         Entity::Xline(e) | Entity::Ray(e) => add(&e.p),
         Entity::Text(e) => add(&e.p),
         Entity::Dimension(e) => {

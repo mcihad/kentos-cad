@@ -50,6 +50,7 @@ pub fn path_of(e: &Shape) -> Option<Path> {
         // A closed polyline runs round as an area's ring (docs/adr/0258 §1).
         Shape::Polygon { .. } | Shape::Circle { .. } | Shape::Polyline { closed: true, .. } => true,
         Shape::Spline { closed, .. } => closed,
+        Shape::Nurbs { closed, .. } => closed,
         Shape::Ellipse {
             c,
             major,

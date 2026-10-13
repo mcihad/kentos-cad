@@ -63,7 +63,7 @@ pub struct CommandTarget {
 }
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 19] = [
+pub const KINDS: [&str; 20] = [
     "point",
     "line",
     "polyline",
@@ -72,6 +72,7 @@ pub const KINDS: [&str; 19] = [
     "arc",
     "ellipse",
     "spline",
+    "nurbs",
     "xline",
     "ray",
     "text",
@@ -161,7 +162,7 @@ pub const BREAK_KINDS: &[&str] = &[
 pub const JOIN_KINDS: &[&str] = &["line", "arc", "polyline"];
 /// The objects Böl divides (docs/adr/0254 §5).
 pub const DIVIDE_KINDS: &[&str] = &[
-    "line", "polyline", "polygon", "arc", "circle", "ellipse", "spline",
+    "line", "polyline", "polygon", "arc", "circle", "ellipse", "spline", "nurbs",
 ];
 /// The closed objects Çoklu tara hatches (docs/adr/0254 §7).
 pub const CLOSED_KINDS: &[&str] = &["polygon", "circle", "ellipse", "spline"];
@@ -301,6 +302,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_elevations",
                 "invalid_measures",
                 "invalid_polyline",
+                "invalid_nurbs",
                 "empty_text",
                 "invalid_height",
                 "invalid_width_factor",
@@ -372,6 +374,7 @@ const ENTRIES: &[Entry] = &[
                 "too_few_corners",
                 "too_few_points",
                 "invalid_polyline",
+                "invalid_nurbs",
                 "invalid_radius",
                 "invalid_path",
                 "empty_text",
@@ -517,6 +520,21 @@ const ENTRIES: &[Entry] = &[
             REVISION,
         ],
         warnings: &["unknown_layer"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.nurbs.create",
+        refusals: &[
+            &[
+                "not_finite",
+                "coincident_points",
+                "invalid_nurbs",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
         targets: none,
     },
     Entry {

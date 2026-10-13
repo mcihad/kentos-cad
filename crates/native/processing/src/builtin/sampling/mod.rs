@@ -30,7 +30,7 @@ pub const LINE_KINDS: [&str; 3] = ["line", "polyline", "arc"];
 pub fn curved_note(feedback: &mut dyn Feedback, inputs: &[&Entity]) {
     let c = inputs
         .iter()
-        .filter(|e| matches!(e, Entity::Ellipse(_) | Entity::Spline(_)))
+        .filter(|e| matches!(e, Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_)))
         .count();
     if c > 0 {
         feedback.warn(format!(

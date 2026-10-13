@@ -37,6 +37,7 @@
 //! | arc | | c, r, a0, a1 | |
 //! | ellipse | | c, major, ratio, t0, t1 | |
 //! | spline | n, closed (0 or 1) | pts (2n) | |
+//! | nurbs | degree, n, m, curve flags (1 weights, 2 closed, 4 periodic, 8 fit, 16 fit tolerance, 32 start tangent, 64 end tangent), k if fit | ctrl (2n), knots (m), weights (n) if any, fit (2k) if any, fit tolerance if any, start and end tangents (2 each) if any | |
 //! | xline, ray | | p, dir | |
 //! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any |
 //! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs, then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
@@ -170,7 +171,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 19] = [
+pub const KINDS: [&str; 20] = [
     "point",
     "line",
     "polyline",
@@ -190,6 +191,7 @@ pub const KINDS: [&str; 19] = [
     "image",
     "raster",
     "pointcloud",
+    "nurbs",
 ];
 
 const COLOR: u32 = 1;
@@ -378,6 +380,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Image(_) => 16,
         Entity::Raster(_) => 17,
         Entity::PointCloud(_) => 18,
+        Entity::Nurbs(_) => 19,
     }
 }
 
@@ -707,6 +710,49 @@ impl Packer {
             }) => {
                 self.points(pts);
                 self.int(u32::from(*closed));
+            }
+            // Every field named, as the base's (docs/adr/0259).
+            Entity::Nurbs(kentos_contracts::NurbsEntity {
+                base: _,
+                degree,
+                ctrl,
+                knots,
+                weights,
+                closed,
+                periodic,
+                fit,
+                tangents,
+                fit_tolerance,
+            }) => {
+                let [start, end] = tangents.unwrap_or([None, None]);
+                let flags = [
+                    (1, weights.is_some()),
+                    (2, *closed),
+                    (4, *periodic),
+                    (8, fit.is_some()),
+                    (16, fit_tolerance.is_some()),
+                    (32, start.is_some()),
+                    (64, end.is_some()),
+                ]
+                .iter()
+                .filter(|(_, on)| *on)
+                .fold(0, |m, (b, _)| m | b);
+                self.int(*degree);
+                self.points(ctrl);
+                self.numbers(knots);
+                self.int(flags);
+                if let Some(w) = weights {
+                    self.numbers(w);
+                }
+                if let Some(f) = fit {
+                    self.points(f);
+                }
+                if let Some(t) = fit_tolerance {
+                    self.float(*t);
+                }
+                for t in [start, end].into_iter().flatten() {
+                    self.point(&t);
+                }
             }
             Entity::Xline(line) | Entity::Ray(line) => {
                 let ConstructionEntity { base: _, p, dir } = line;
@@ -2700,6 +2746,35 @@ fn geometry(
                     dataset,
                 },
             })
+        }
+        // A NURBS curve (docs/adr/0259): its numbers as written, checked as the file's reader checks them.
+        19 => {
+            let degree = c.int()?;
+            let ctrl = c.points()?;
+            let knots = c.numbers()?;
+            let flags = c.int()?;
+            let on = |b: u32| flags & b != 0;
+            let weights = if on(1) { Some(c.numbers()?) } else { None };
+            let fit = if on(8) { Some(c.points()?) } else { None };
+            let fit_tolerance = if on(16) { Some(c.float()?) } else { None };
+            let start = if on(32) { Some(c.point()?) } else { None };
+            let end = if on(64) { Some(c.point()?) } else { None };
+            let e = kentos_contracts::NurbsEntity {
+                base,
+                degree,
+                ctrl,
+                knots,
+                weights,
+                closed: on(2),
+                periodic: on(4),
+                fit,
+                tangents: (start.is_some() || end.is_some()).then_some([start, end]),
+                fit_tolerance,
+            };
+            if let Some(problem) = e.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Nurbs(e)
         }
         18 => {
             let srid = c.int()?;

@@ -186,6 +186,8 @@ struct Nearby {
     id: f64,
     ed: Edge,
     ell: Option<EllipseGeom>,
+    /// One of a NURBS curve's chords: crossings on it are moved onto the curve (docs/adr/0259 §2).
+    nurbs: Option<std::rc::Rc<crate::geom::nurbs::OwnedNurbs>>,
     /// Its layer's snap kinds (`LayerFlags::snap`).
     mask: u32,
 }
@@ -194,9 +196,26 @@ impl Nearby {
     /// A plain segment's ends: not an arc, not an ellipse's chord.
     fn segment(&self) -> Option<(Vec2, Vec2)> {
         match (self.ell, self.ed) {
-            (None, Edge::Seg { a, b }) => Some((a, b)),
+            (None, Edge::Seg { a, b }) if self.nurbs.is_none() => Some((a, b)),
             _ => None,
         }
+    }
+
+    /// One of a curve's chords (an ellipse's or a NURBS curve's).
+    fn curved(&self) -> bool {
+        self.ell.is_some() || self.nurbs.is_some()
+    }
+
+    /// `q` moved onto what the edge stands for: the curve itself, or the edge.
+    fn project(&self, q: Vec2) -> Vec2 {
+        if let Some(g) = self.ell {
+            return ellipse_point(&g, closest_param(&g, q));
+        }
+        if let Some(n) = &self.nurbs {
+            let c = n.view();
+            return c.point(c.closest(q));
+        }
+        closest_on_edge(&self.ed, q).p
     }
 }
 
@@ -542,7 +561,7 @@ fn crossings(ch: &mut Choice, nearby: &[Nearby], p: Vec2) {
     // The partners a far segment still has to meet, in order.
     let mut curved = Vec::new();
     for (k, e) in nearby.iter().enumerate() {
-        if e.ell.is_some() || (arcs_count && e.segment().is_none()) {
+        if e.curved() || (arcs_count && e.segment().is_none()) {
             curved.push(k);
         }
     }
@@ -582,7 +601,7 @@ fn crossings(ch: &mut Choice, nearby: &[Nearby], p: Vec2) {
             }
             // An arc and a far segment after it: the crossing lies on the segment, as above.
             if !arcs_count
-                && a.ell.is_none()
+                && !a.curved()
                 && a.segment().is_none()
                 && b.segment()
                     .is_some_and(|(bs, be)| ch.out_of_reach(crossing_gap(bs, be, p)))
@@ -622,8 +641,21 @@ fn crossing_gap(a: Vec2, b: Vec2, p: Vec2) -> f64 {
 /// A crossing found on an ellipse's chords, moved onto the true curves:
 /// exactly for a straight partner, by alternating projection otherwise.
 fn refine_crossing(p: Vec2, a: &Nearby, b: &Nearby) -> Vec2 {
-    if a.ell.is_none() && b.ell.is_none() {
+    if !a.curved() && !b.curved() {
         return p;
+    }
+    // A NURBS curve's chord: projected onto both in turn until they agree (docs/adr/0259 §2).
+    if a.nurbs.is_some() || b.nurbs.is_some() {
+        let mut q = p;
+        for _ in 0..40 {
+            let next = b.project(a.project(q));
+            let moved = js_hypot(next.x - q.x, next.y - q.y);
+            q = next;
+            if moved <= 1e-13 {
+                break;
+            }
+        }
+        return q;
     }
     let (e, other) = if a.ell.is_some() { (a, b) } else { (b, a) };
     let Some(ell) = e.ell else { return p };
@@ -724,6 +756,7 @@ fn shape_snaps(
                         id,
                         ed,
                         ell: Some(g),
+                        nurbs: None,
                         mask: ch.mask,
                     });
                 }
@@ -760,6 +793,53 @@ fn shape_snaps(
             ch.consider(SnapKind::Endpoint, arc_start(&g), id);
             ch.consider(SnapKind::Endpoint, arc_end(&g), id);
             ch.consider(SnapKind::Midpoint, arc_mid(&g), id);
+        }
+        // Its ends, its middle by length, the nearest and perpendicular points on the curve itself
+        // (docs/adr/0259 §2); its chords only find crossings, which are then moved onto it.
+        Shape::Nurbs { closed, .. } => {
+            let Some(c) = crate::geom::nurbs::of(e) else {
+                return;
+            };
+            let (lo, hi) = c.domain();
+            if !closed {
+                ch.consider(SnapKind::Endpoint, c.point(lo), id);
+                ch.consider(SnapKind::Endpoint, c.point(hi), id);
+            }
+            let chords = c.tessellate(1e-3);
+            let near = chords
+                .windows(2)
+                .any(|w| closest_on_edge(&Edge::Seg { a: w[0], b: w[1] }, p).d <= tol);
+            if !near {
+                return;
+            }
+            ch.consider(
+                SnapKind::Midpoint,
+                c.point(c.param_at_length(c.length() / 2.0)),
+                id,
+            );
+            ch.consider(SnapKind::Nearest, c.point(c.closest(p)), id);
+            if let Some(f) = from {
+                ch.consider(SnapKind::Perpendicular, c.point(c.closest(f)), id);
+            }
+            let owned = std::rc::Rc::new(crate::geom::nurbs::OwnedNurbs {
+                degree: c.degree,
+                ctrl: c.ctrl.to_vec(),
+                knots: c.knots.to_vec(),
+                weights: c.weights.map(<[f64]>::to_vec),
+            });
+            for w in chords.windows(2) {
+                let ed = Edge::Seg { a: w[0], b: w[1] };
+                if closest_on_edge(&ed, p).d <= tol {
+                    nearby.push(Nearby {
+                        id,
+                        ed,
+                        ell: None,
+                        nurbs: Some(std::rc::Rc::clone(&owned)),
+                        mask: ch.mask,
+                    });
+                }
+            }
+            return;
         }
         Shape::Spline { pts, closed } => {
             for (i, q) in pts.iter().enumerate() {
@@ -907,6 +987,7 @@ fn shape_snaps(
             id,
             ed,
             ell: None,
+            nurbs: None,
             mask: ch.mask,
         });
         ch.consider(SnapKind::Nearest, c.p, id);

@@ -439,6 +439,10 @@ fn curves(
                         color,
                     );
                 }
+                Entity::Nurbs(n) => {
+                    let (pts, closed) = nurbs_points(n, tol);
+                    b.path(&pts, closed, color);
+                }
                 _ => {}
             }
             if b.segments.len() + b.fills.len() / 3 > budget {
@@ -628,6 +632,10 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
                 s.closed,
                 color,
             );
+        }
+        Entity::Nurbs(n) => {
+            let (pts, closed) = nurbs_points(n, tol);
+            b.path(&pts, closed, color);
         }
         Entity::Dimension(_) => {
             dimension_lines(b, entity, color, style.fill);
@@ -1164,6 +1172,26 @@ fn text_runs(
     })
 }
 
+/// A NURBS curve's chords within `tol` (docs/adr/0259 §5); a closed one as a ring, its returning end left out.
+fn nurbs_points(n: &kentos_contracts::NurbsEntity, tol: f64) -> (Vec<Vec2>, bool) {
+    let ctrl = points(&n.ctrl);
+    let c = kentos_geometry_core::geom::nurbs::Nurbs {
+        degree: n.degree as usize,
+        ctrl: &ctrl,
+        knots: &n.knots,
+        weights: n.weights.as_deref(),
+    };
+    if !c.valid() {
+        return (Vec::new(), false);
+    }
+    let mut pts = c.tessellate(tol);
+    if n.closed && pts.len() >= 4 {
+        pts.pop();
+        return (pts, true);
+    }
+    (pts, false)
+}
+
 /// An object's geometry as the geometry core takes it (its own `Shape`).
 fn shape(entity: &Entity) -> Shape {
     match entity {
@@ -1313,6 +1341,19 @@ fn shape(entity: &Entity) -> Shape {
         Entity::Spline(s) => Shape::Spline {
             pts: points(&s.pts),
             closed: s.closed,
+        },
+        Entity::Nurbs(n) => Shape::Nurbs {
+            degree: n.degree as usize,
+            ctrl: points(&n.ctrl),
+            knots: n.knots.clone(),
+            weights: n.weights.clone(),
+            closed: n.closed,
+            periodic: n.periodic,
+            fit: n.fit.as_deref().map(points),
+            fit_tolerance: n.fit_tolerance,
+            tangents: n
+                .tangents
+                .map(|[a, b]| [a.as_ref().map(v), b.as_ref().map(v)]),
         },
         Entity::Xline(c) => Shape::Xline {
             p: v(&c.p),

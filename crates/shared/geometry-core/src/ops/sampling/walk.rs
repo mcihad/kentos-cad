@@ -103,7 +103,10 @@ impl Walk {
 
 /// Whether the object's paths are chords of its curve (an ellipse, a curve).
 pub fn chorded(s: &Shape) -> bool {
-    matches!(s, Shape::Ellipse { .. } | Shape::Spline { .. })
+    matches!(
+        s,
+        Shape::Ellipse { .. } | Shape::Spline { .. } | Shape::Nurbs { .. }
+    )
 }
 
 /// An object's paths in order, with their elevations (`zs` in the
@@ -129,7 +132,10 @@ pub fn walks_of(s: &Shape, zs: Option<&Zs>) -> Vec<Walk> {
                 })
                 .collect()
         }
-        Shape::Circle { .. } | Shape::Ellipse { .. } | Shape::Spline { .. } => path_of(s)
+        Shape::Circle { .. }
+        | Shape::Ellipse { .. }
+        | Shape::Spline { .. }
+        | Shape::Nurbs { .. } => path_of(s)
             .map(|p| vec![Walk::new(p.edges, p.closed, Vec::new())])
             .unwrap_or_default(),
         _ => Vec::new(),

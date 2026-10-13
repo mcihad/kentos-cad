@@ -15,9 +15,9 @@ use kentos_contracts::{
     ConstructionEntity, DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle,
     DimensionTextPlace, DrawingFont, DrawingUnit, DxfWriteInput, DxfWriteLayer, EllipseEntity,
     Entity, EntityBase, HatchAssoc, HatchEntity, HatchPattern, InsertEntity, LeaderArrow,
-    LeaderEntity, LineEntity, Paragraph, PathEntity, PointEntity, PointPart, RingGeometry,
-    SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace,
-    TextRun, Vec2,
+    LeaderEntity, LineEntity, NurbsEntity, Paragraph, PathEntity, PointEntity, PointPart,
+    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign,
+    TextEntity, TextFace, TextRun, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -151,6 +151,15 @@ struct Fields {
     grid: Option<TableGrid>,
     frame: Option<f64>,
     source: Option<TableSource>,
+    /// A NURBS curve's own fields (docs/adr/0259).
+    degree: Option<u32>,
+    ctrl: Option<Vec<Vec2>>,
+    knots: Option<Vec<f64>>,
+    weights: Option<Vec<f64>>,
+    periodic: Option<bool>,
+    fit: Option<Vec<Vec2>>,
+    tangents: Option<[Option<Vec2>; 2]>,
+    fit_tolerance: Option<f64>,
 }
 
 fn need<T, E: de::Error>(v: Option<T>, name: &'static str) -> Result<T, E> {
@@ -313,6 +322,18 @@ impl Fields {
                 pts: need(self.pts, "pts")?,
                 closed: need(self.closed, "closed")?,
             }),
+            "nurbs" => Entity::Nurbs(NurbsEntity {
+                base,
+                degree: need(self.degree, "degree")?,
+                ctrl: need(self.ctrl, "ctrl")?,
+                knots: need(self.knots, "knots")?,
+                weights: self.weights,
+                closed: self.closed.unwrap_or(false),
+                periodic: self.periodic.unwrap_or(false),
+                fit: self.fit,
+                tangents: self.tangents,
+                fit_tolerance: self.fit_tolerance,
+            }),
             "xline" => Entity::Xline(construction(base, self.p, self.dir)?),
             "ray" => Entity::Ray(construction(base, self.p, self.dir)?),
             "text" => Entity::Text(TextEntity {
@@ -450,6 +471,7 @@ impl Fields {
                         "arc",
                         "ellipse",
                         "spline",
+                        "nurbs",
                         "xline",
                         "ray",
                         "text",
@@ -557,6 +579,14 @@ impl<'de> Deserialize<'de> for Wire {
                         "grid" => f.grid = map.next_value()?,
                         "frame" => f.frame = map.next_value()?,
                         "source" => f.source = map.next_value()?,
+                        "degree" => f.degree = Some(map.next_value()?),
+                        "ctrl" => f.ctrl = Some(map.next_value()?),
+                        "knots" => f.knots = Some(map.next_value()?),
+                        "weights" => f.weights = map.next_value()?,
+                        "periodic" => f.periodic = map.next_value()?,
+                        "fit" => f.fit = map.next_value()?,
+                        "tangents" => f.tangents = map.next_value()?,
+                        "fitTolerance" => f.fit_tolerance = map.next_value()?,
                         _ => {
                             map.next_value::<IgnoredAny>()?;
                         }
@@ -705,7 +735,11 @@ mod tests {
       {"kind":"leader","id":23,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":-4,"y":2},{"x":-8,"y":2}],"height":1,"rotation":0},
       {"kind":"dimension","id":24,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":0.5,"style":"slope",
        "za":105.25,"zb":104.5,"mask":true},
-      {"kind":"dimension","id":25,"layerId":"a","attrs":{},"a":{"x":5,"y":0},"b":{"x":0,"y":5},"offset":1,"height":0.5,"style":"arcLength","c":{"x":0,"y":0}}
+      {"kind":"dimension","id":25,"layerId":"a","attrs":{},"a":{"x":5,"y":0},"b":{"x":0,"y":5},"offset":1,"height":0.5,"style":"arcLength","c":{"x":0,"y":0}},
+      {"kind":"nurbs","id":26,"layerId":"a","attrs":{},"degree":2,"ctrl":[{"x":0,"y":0},{"x":1,"y":1},{"x":2,"y":0}],
+       "knots":[0,0,0,1,1,1],"weights":[1,0.7071067811865476,1],"fit":[{"x":0,"y":0},{"x":2,"y":0}],
+       "tangents":[{"x":1,"y":0},null],"fitTolerance":1e-10},
+      {"kind":"nurbs","id":27,"layerId":"a","attrs":{},"degree":1,"ctrl":[{"x":0,"y":0},{"x":1,"y":1}],"knots":[0,0,1,1],"closed":true,"periodic":true}
     ]"##;
 
     /// A definition holding a line and a nested insert, and the one it nests.
@@ -731,7 +765,7 @@ mod tests {
         let ours = input_from_json(&text).expect("input");
         let derived: DxfWriteInput = serde_json::from_str(&text).expect("contract");
         assert_eq!(ours, derived);
-        assert_eq!(ours.entities.len(), 25);
+        assert_eq!(ours.entities.len(), 27);
         // A leader with every field, and one with none of the optional ones (docs/adr/0146 §8).
         let Entity::Leader(l) = &ours.entities[21] else {
             panic!("{:?}", ours.entities[21])
