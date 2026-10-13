@@ -243,8 +243,8 @@ Her mutating istekte uygun `expectedRevision`, idempotency ve actor/scope bilgis
 - [ ] **CAD-DATA-21:** Nesne görünüşünde ByLayer/ByBlock/explicit ayrımını, linetype, linetype scale, transparency, plot ve draw order alanlarını tasarla.
 - [ ] **CAD-DATA-22:** Nesne/alt nesne/ilişki modelinin `.kcad`, tipli sütunlar, WASM, cloud kaynak tanımı ve Python tiplerine birlikte taşınmasını sağla.
 - [ ] **CAD-DATA-23:** Yeni format şeması; eski okuyucunun açık reddi, yeni okuyucunun eski dosyayı açması, bağımsız doğrulama ve geri dönüş yolu içersin.
-- [ ] **CAD-DATA-24:** Sayısal politika; float64 kaynak, kontrollü gösterim yuvarlaması, toleranslı geometri kararı ve kesin ondalık kullanıcı verisi arasındaki sınırı belgele.
-- [ ] **CAD-DATA-25:** Küçük mimari detay ve büyük gerçek koordinat birlikte sınansın; GPU origin/rebase çözümü kaynak koordinatları değiştirmesin.
+- [x] **CAD-DATA-24:** Sayısal politika; float64 kaynak, kontrollü gösterim yuvarlaması, toleranslı geometri kararı ve kesin ondalık kullanıcı verisi arasındaki sınırı belgele. — **Bitti (13 Ekim; [docs/specs/numeric-policy.md](../docs/specs/numeric-policy.md): dört tür sayı, birim çevirisi, gösterim, toleranslar tablosu, kesin veri ve politikası, doğrulama).**
+- [x] **CAD-DATA-25:** Küçük mimari detay ve büyük gerçek koordinat birlikte sınansın; GPU origin/rebase çözümü kaynak koordinatları değiştirmesin. — **Bitti (13 Ekim): TM33'te 1 mm'lik ayrıntının ölçüsü, Buda'sı, `.kcad` ve DXF gidiş dönüşü bit bit (başsız sunucunun testi); çizimde paketleme kaynağı yalnız okur, sapma konumun float32 adımı kadar (`styled_precision`); çapadan uzakta milimetre altı çizim `REN-16`'da.**
 
 **Kabul:** mm ile başlayan 4000 × 3000 mm oda, kaynak hesabında 12 m² verir; UI/Python/AI aynı birimi gösterir. Birim veya UCS değişikliği eski geometriyi beklenmedik biçimde ölçeklemez. NURBS ve genişlikli polyline kaydedilip yeniden açıldığında kaynak parametrelerini korur.
 

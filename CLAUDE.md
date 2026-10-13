@@ -2179,7 +2179,8 @@ Nihai decimal, yuvarlama yönü ve topolojik karar platformlar arasında aynı
 olmalıdır; farkta server sonucunu sessiz seçmeyin. Algoritma/build, kaynak
 revision, numeric policy ve dönüşüm provenance'ı sonucu yeniden üretilebilir kılsın.
 Mevcut toleransı büyütmek veya beklenen fixture'ı hataya göre yenilemek yasaktır.
-Ayrıntı: ADR 0004/0008 ve TODOS.md §3/§20.
+Ayrıntı: ADR 0004/0008, TODOS.md §3/§20 ve [docs/specs/numeric-policy.md](docs/specs/numeric-policy.md) (dört tür sayı, toleranslar,
+büyük koordinatta küçük ayrıntının testleri).
 
 ## 24. Ürün kapsamının izlenmesi
 

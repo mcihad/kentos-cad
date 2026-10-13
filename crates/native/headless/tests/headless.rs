@@ -668,3 +668,124 @@ fn a_file_is_planned_without_writing_and_written_whole() {
     assert_eq!(set["error"]["code"], "side_effect_in_changeset");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// A millimetre's detail on real coordinates (plan/cad.md `CAD-DATA-25`,
+/// docs/specs/numeric-policy.md §7): a 1 mm square and two 1 mm lines in
+/// TUREF / TM33, 4 412 km north. The square measures what its own corners
+/// give, worked out here from their differences (exact in float64: the
+/// corners are within a factor of two of each other); the trim meets the
+/// crossing within a nanometre; a 0.25 mm offset is 0.25 mm; the `.kcad`
+/// and the DXF give every coordinate back bit for bit.
+#[test]
+fn a_millimetre_detail_on_tm_coordinates_survives_measure_edits_and_files() {
+    let mut s = new_drawing();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let (x, y): (f64, f64) = (487_512.345_678, 4_412_345.678_901);
+    let mm: f64 = 0.001;
+    let corners = [(x, y), (x + mm, y), (x + mm, y + mm), (x, y + mm)];
+    let pts: Vec<Value> = corners
+        .iter()
+        .map(|(px, py)| json!({ "x": px, "y": py }))
+        .collect();
+    let square = created(
+        &s.run(
+            "cad.polygon.create",
+            None,
+            Op::Execute,
+            json!({ "layerId": layer, "pts": pts }),
+        )
+        .expect("runs"),
+    );
+    // The sides as float64 holds them: x + 0.001 is the double nearest to it.
+    let dx = (x + mm) - x;
+    let dy = (y + mm) - y;
+    assert!(
+        (dx - mm).abs() < 1e-10 && (dy - mm).abs() < 1e-9,
+        "{dx} {dy}"
+    );
+    let m = s.measure(&square).expect("measures");
+    let area = m.area.expect("an area");
+    assert!(
+        (area - dx * dy).abs() <= 1e-18,
+        "{area} against {}",
+        dx * dy
+    );
+    let length = m.length.expect("a length");
+    assert!((length - 2.0 * (dx + dy)).abs() <= 1e-15, "{length}");
+
+    // Two 1 mm lines crossing 0.5 mm from the corner: the vertical one trimmed at the other.
+    let across = created(
+        &s.run(
+            "cad.line.create",
+            None,
+            Op::Execute,
+            json!({ "layerId": layer, "a": {"x": x, "y": y + 0.0005}, "b": {"x": x + mm, "y": y + 0.0005} }),
+        )
+        .expect("runs"),
+    );
+    let up = created(
+        &s.run(
+            "cad.line.create",
+            None,
+            Op::Execute,
+            json!({ "layerId": layer, "a": {"x": x + 0.0005, "y": y}, "b": {"x": x + 0.0005, "y": y + mm} }),
+        )
+        .expect("runs"),
+    );
+    let trimmed = s
+        .run(
+            "cad.entities.trim",
+            None,
+            Op::Execute,
+            json!({ "boundaries": { "kind": "objects", "uids": [across] },
+                    "picks": [{ "uid": up, "at": {"x": x + 0.0005, "y": y + 0.0009} }] }),
+        )
+        .expect("runs");
+    assert_eq!(trimmed["status"], "completed", "{trimmed}");
+    let line = s.entity(&up).expect("the line");
+    let (bx, by) = (
+        line["entity"]["b"]["x"].as_f64().expect("x"),
+        line["entity"]["b"]["y"].as_f64().expect("y"),
+    );
+    assert!(
+        (bx - (x + 0.0005)).abs() <= 1e-9 && (by - (y + 0.0005)).abs() <= 1e-9,
+        "{bx} {by}"
+    );
+
+    // Saved and opened again: every number is the same float64.
+    let bytes = s.to_bytes().expect("saves");
+    let again = Session::from_bytes(&bytes).expect("opens");
+    for uid in [&square, &across, &up] {
+        assert_eq!(
+            again.entity(uid).expect("there"),
+            s.entity(uid).expect("there"),
+            "{uid}"
+        );
+    }
+
+    // As a DXF and read back: the shortest decimal that gives the double back.
+    let dir = scratch("large-coordinates");
+    let path = dir.join("milimetre.dxf");
+    s.export_dxf(&path).expect("writes");
+    let read = kentos_formats::dxf::read(
+        &std::fs::read(&path).expect("the file"),
+        &kentos_contracts::DxfReadOptions::default(),
+    )
+    .expect("reads");
+    let back = read
+        .entities
+        .iter()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Polygon(p) => Some(p.pts.clone()),
+            _ => None,
+        })
+        .expect("the square");
+    let want: Vec<kentos_contracts::Vec2> = corners
+        .iter()
+        .map(|(px, py)| kentos_contracts::Vec2 { x: *px, y: *py })
+        .collect();
+    assert_eq!(back, want);
+}
