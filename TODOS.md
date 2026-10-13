@@ -1066,7 +1066,8 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   0017 (`project.sheets`), bilgi, oluşturma, `ProjectPatch.sheets`, görüntü, içe aktarma, kopya ve geri yükleme; masaüstünün bulut
   eşitlemesi kitabı meta olarak gönderir ve alır. Açık: pafta işlemleri katalogda ve başsız sunucuda (`CAD-SHEET-06`, `07`), modeli ve
   kâğıdı birlikte yazan betik işlemi (`CAD-SHEET-05`'in kalanı).
-- [ ] `CADP-10` Uygulamanın gerçek AI yüzeyi ve çizimin bağlam, sorgu, plan ve yürütme zinciri (plan §19).
+- [ ] `CADP-10` Uygulamanın gerçek AI yüzeyi ve çizimin bağlam, sorgu, plan ve yürütme zinciri (plan §19). Sahibin kararı (13 Ekim): §16.5'in en son işi; `CADP-11` ve `CADP-12`'den sonra. `CADP-12`'nin kabul
+  çizimi o zamana dek arayüz, yazılı komut, Python ve MCP yollarıyla yürür; uygulama içi panelin yolu `CADP-10`'la eklenir.
 - [ ] `CADP-11` DWG karar matrisi ve gerçek ofis dosyalarıyla kodek denemesi; seçim ayrı ADR'de (plan §16.1, `DEC-01`).
 - [ ] `CADP-12` İlk uçtan uca kabul çizimi: oda, düzeltme, ölçü ve tarama, 1:50 pafta, PDF ve DXF, başka ortamda yeniden açma
   (plan §23.1).
