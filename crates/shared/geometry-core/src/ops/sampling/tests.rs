@@ -44,6 +44,8 @@ fn polyline(pts: &[(f64, f64)]) -> Shape {
         bulges: None,
         holes: None,
         parts: None,
+        closed: false,
+        widths: None,
     }
 }
 

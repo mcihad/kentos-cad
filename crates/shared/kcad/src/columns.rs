@@ -32,7 +32,7 @@
 //! | every object | layer, flags, attributes | line weight? | colour?, label?, symbol?, key and value per attribute |
 //! | point | | p, z? | |
 //! | line | | a, b, za?, zb?, ma?, mb? | |
-//! | polyline, polygon | n; m if bulges; e if elevations; v if measures; h if holes, then per hole: hole flags, k, j if bulges, d if elevations; q if parts, then per part: part flags, n, m if bulges, e if elevations, v if measures, h if holes and its holes as above | pts (2n), bulges (m), zs (e), ms (v), per hole: pts (2k), bulges (j), zs (d); per part: pts, bulges, zs, ms, its holes' | |
+//! | polyline, polygon | n; m if bulges; e if elevations; v if measures; h if holes, then per hole: hole flags, k, j if bulges, d if elevations; q if parts, then per part: part flags, n, m if bulges, e if elevations, v if measures, h if holes and its holes as above; 2w if widths | pts (2n), bulges (m), zs (e), ms (v), per hole: pts (2k), bulges (j), zs (d); per part: pts, bulges, zs, ms, its holes'; widths (2w: each edge's start, end) | |
 //! | circle | | c, r | |
 //! | arc | | c, r, a0, a1 | |
 //! | ellipse | | c, major, ratio, t0, t1 | |
@@ -52,7 +52,9 @@
 //! line weight (docs/adr/0139); a
 //! kind's optional fields from bit 8 up, in the order the table names them
 //! (point: z; line: za, zb, ma, mb (docs/adr/0224); polyline and polygon:
-//! bulges, holes, zs, parts, ms (docs/adr/0224); text: align, width factor, mask (no value; docs/adr/0145), link
+//! bulges, holes, zs, parts, ms (docs/adr/0224), closed (no value), widths
+//! (docs/adr/0258; a polygon has neither, the columns carry them anyway so
+//! that the encoder refuses them with their place); text: align, width factor, mask (no value; docs/adr/0145), link
 //! (docs/adr/0175), box width, line spacing, runs (docs/adr/0182; a run's
 //! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 32 colour),
 //! text style, font, bold (no value), italic (no value), oblique
@@ -602,6 +604,8 @@ impl Packer {
                     zs,
                     ms,
                     parts,
+                    closed,
+                    widths,
                 } = path;
                 self.points(pts);
                 if let Some(b) = bulges {
@@ -659,6 +663,15 @@ impl Packer {
                             self.holes(holes);
                         }
                     }
+                }
+                // A closed and a wide polyline (docs/adr/0258): after its parts.
+                if *closed {
+                    flags |= OPT[5];
+                }
+                if let Some(widths) = widths {
+                    flags |= OPT[6];
+                    let flat: Vec<f64> = widths.iter().flatten().copied().collect();
+                    self.numbers(&flat);
                 }
             }
             Entity::Circle(CircleEntity { base: _, c, r }) => {
@@ -1765,9 +1778,10 @@ fn allowed(kind: u8) -> u32 {
         // A line's measures are schema 39's (docs/adr/0224).
         1 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         // A polyline's parts are schema 17's (docs/adr/0174), its measures schema 39's (docs/adr/0224;
-        // a polygon's are carried for the encoder to refuse).
-        2 => OPT[..5].iter().fold(0, |m, b| m | b),
-        3 => OPT[..5].iter().fold(0, |m, b| m | b),
+        // a polygon's are carried for the encoder to refuse), its closed and widths schema 46's
+        // (docs/adr/0258; a polygon's alike).
+        2 => OPT[..7].iter().fold(0, |m, b| m | b),
+        3 => OPT[..7].iter().fold(0, |m, b| m | b),
         // A text's alignment, width factor and mask, schema 18's link (docs/adr/0175 §4), schema 20's box,
         // spacing and runs, schema 21's face (docs/adr/0183), schema 25's curve and its bulges
         // (docs/adr/0196); a leader's three and schema 30's arrowhead size (docs/adr/0205 §7).
@@ -1883,6 +1897,16 @@ fn geometry(
             } else {
                 None
             };
+            let closed = has(5);
+            let widths = if has(6) {
+                let flat = c.numbers()?;
+                if flat.len() % 2 != 0 {
+                    return Err(broken("genişlik listesinin sayısı tek"));
+                }
+                Some(flat.chunks_exact(2).map(|w| [w[0], w[1]]).collect())
+            } else {
+                None
+            };
             let path = PathEntity {
                 base,
                 pts,
@@ -1891,6 +1915,8 @@ fn geometry(
                 zs,
                 ms,
                 parts,
+                closed,
+                widths,
             };
             if kind == 3 {
                 Entity::Polygon(path)
@@ -3119,6 +3145,8 @@ mod tests {
             ]),
             zs: Some(vec![Some(10.0), None, Some(12.0)]),
             parts: None,
+            closed: false,
+            widths: None,
         });
         let entities = vec![line, polygon];
         let uids = vec![id(1), id(2)];

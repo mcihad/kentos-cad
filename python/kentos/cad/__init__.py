@@ -122,6 +122,8 @@ __all__ = [
     "CircleEntity",
     "CircleEntityGeometry",
     "CirclePlan",
+    "ClosedPolylines",
+    "ClosedPolylinesName",
     "CloudFormat",
     "CloudFormatName",
     "CloudRender",

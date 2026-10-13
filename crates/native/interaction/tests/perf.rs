@@ -63,6 +63,8 @@ fn drawing(side: usize) -> Document {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }));
         }
         let mut b = base("cizim");

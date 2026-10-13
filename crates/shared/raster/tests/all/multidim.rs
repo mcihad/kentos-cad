@@ -120,6 +120,8 @@ fn kesit_reads_every_point_as_the_reference() {
                 bulges: None,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             })
             .collect();
         let step = c["step"].as_f64().unwrap();

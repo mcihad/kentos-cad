@@ -35,8 +35,8 @@ use iced::widget::{Column, column, container, row};
 use iced::{Bottom, Center, Element, Fill, Length, Right, Task};
 use kentos_contracts::blocks::import_names;
 use kentos_contracts::{
-    CommandResult, CommandWarning, DrawingUnit, FileUnit, ImportDxf, ImportLayer, ImportResult,
-    LayerStyle, NczReadOptions, ReportItem, UnitDecision, UnitSource,
+    ClosedPolylines, CommandResult, CommandWarning, DrawingUnit, FileUnit, ImportDxf, ImportLayer,
+    ImportResult, LayerStyle, NczReadOptions, ReportItem, UnitDecision, UnitSource,
 };
 use kentos_domain::Slot;
 use kentos_formats::import;
@@ -80,6 +80,17 @@ const EXPLODE_HINT: &str = "Kapalıyken bloklar çizime blok tanımı olarak gir
 const RENAMES_SHOWN: usize = 5;
 /// Dosyanın birimi (docs/adr/0257 §4).
 const FILE_UNIT: &str = "Dosyanın birimi";
+/// What the file's closed polylines become (docs/adr/0258 §1).
+const CLOSED: &str = "Kapalı çoklu çizgiler";
+const CLOSED_HINT: &str = "Alan: kapalı çoklu çizgi kapalı alan olur (parsel, yapı). Kapalı çizgi: çizgi olarak kalır, genişliğiyle. KentOS'un kapalı çizgi diye yazdığı her zaman çizgidir. Değiştirince dosya yeniden okunur.";
+
+/// A choice of the closed polylines as the list says it.
+fn closed_label(c: ClosedPolylines) -> &'static str {
+    match c {
+        ClosedPolylines::Area => "Alan",
+        ClosedPolylines::Line => "Kapalı çizgi",
+    }
+}
 
 /// A file unit as the list says it.
 fn unit_label(u: FileUnit) -> &'static str {
@@ -215,6 +226,8 @@ pub struct State {
     explode: bool,
     /// The unit chosen for a DXF's values (docs/adr/0257 §4); none: the rule's.
     file_unit: Option<FileUnit>,
+    /// What a DXF's closed polylines become (docs/adr/0258 §1); none: the project type's.
+    closed: Option<ClosedPolylines>,
     crs: CrsQuestion,
     /// What the footer says, and whether it is an error.
     status: Option<(bool, String)>,
@@ -247,6 +260,8 @@ pub enum Event {
     Explode,
     /// Dosyanın birimi chosen (none: the rule's): the file is read again.
     FileUnit(Option<FileUnit>),
+    /// Kapalı çoklu çizgiler chosen (none: the project type's): the file is read again.
+    Closed(Option<ClosedPolylines>),
     Crs(u32),
     Another,
     Run,
@@ -380,11 +395,11 @@ impl App {
     pub(super) fn drawing_import_picked(&mut self, source: Source, file: Picked) -> Task<Message> {
         let srid = self.project_srid();
         // “Başka dosya…” keeps the chosen coordinate system of a file that says nothing, and Blokları patlat.
-        let (crs, explode) = match &self.exchange {
+        let (crs, explode, closed) = match &self.exchange {
             Some(Window::DrawingImport(s)) if s.source == Source::Dxf && source == Source::Dxf => {
-                (s.crs.clone(), s.explode)
+                (s.crs.clone(), s.explode, s.closed)
             }
-            _ => (CrsQuestion::new(srid), false),
+            _ => (CrsQuestion::new(srid), false, None),
         };
         if let Some(Window::DrawingImport(s)) = &self.exchange {
             s.stop_reading();
@@ -400,6 +415,7 @@ impl App {
             excluded: BTreeSet::new(),
             explode,
             file_unit: None,
+            closed,
             crs,
             status: None,
         }));
@@ -413,7 +429,7 @@ impl App {
         // The command's options (docs/adr/0257 §3): the project's unit, the chosen one, its scale and typeface.
         let options = match (&self.document, &self.exchange) {
             (Some(d), Some(Window::DrawingImport(s))) => {
-                file_import::read_options(&d.model, s.file_unit, s.explode)
+                file_import::read_options(&d.model, s.file_unit, s.explode, s.closed)
             }
             _ => kentos_contracts::DxfReadOptions::default(),
         };
@@ -504,6 +520,12 @@ impl App {
                 }
                 return self.read_drawing();
             }
+            Event::Closed(closed) => {
+                if let Some(Window::DrawingImport(s)) = &mut self.exchange {
+                    s.closed = closed;
+                }
+                return self.read_drawing();
+            }
             Event::Cancel => {
                 self.close_exchange();
                 return Task::none();
@@ -573,6 +595,7 @@ impl App {
             | Event::Run
             | Event::Explode
             | Event::FileUnit(_)
+            | Event::Closed(_)
             | Event::Cancel
             | Event::Frame
             | Event::Stop => {}
@@ -658,6 +681,7 @@ impl App {
                 .map_or_else(|| s.file.name.clone(), |p| p.display().to_string()),
             file_unit: s.file_unit,
             explode_blocks: s.explode,
+            closed_polylines: s.closed,
             skip_layers: result
                 .layers
                 .iter()
@@ -1039,6 +1063,7 @@ impl App {
             body = body.push(
                 row![
                     container(self.unit_field(s)).width(Length::FillPortion(3)),
+                    container(self.closed_field(s)).width(Length::FillPortion(2)),
                     container(words::field(
                         "Bloklar",
                         words::check(s.explode, EXPLODE, Some(event(Event::Explode))),
@@ -1072,6 +1097,32 @@ impl App {
                 .width(900.0)
                 .max_height(820.0),
         )
+    }
+
+    /// Kapalı çoklu çizgiler (docs/adr/0258 §1): the project type's choice, or one chosen.
+    fn closed_field<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
+        let by_type = self.document.as_ref().map_or(ClosedPolylines::Area, |d| {
+            file_import::closed_by_type(&d.model)
+        });
+        let choices = [
+            Choice::new(format!("Projeye göre ({})", closed_label(by_type))),
+            Choice::new(closed_label(ClosedPolylines::Area)),
+            Choice::new(closed_label(ClosedPolylines::Line)),
+        ];
+        let current = match s.closed {
+            None => 0,
+            Some(ClosedPolylines::Area) => 1,
+            Some(ClosedPolylines::Line) => 2,
+        };
+        let select = Select::new(choices, Some(current), |i| {
+            event(Event::Closed(match i {
+                1 => Some(ClosedPolylines::Area),
+                2 => Some(ClosedPolylines::Line),
+                _ => None,
+            }))
+        })
+        .searchable(false);
+        words::field(CLOSED, select, Some(CLOSED_HINT.to_owned()))
     }
 
     /// Dosyanın birimi (docs/adr/0257 §4): the file's own (the rule's) or a

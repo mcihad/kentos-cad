@@ -91,10 +91,14 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 .collect(),
         ),
         Shape::Polyline {
-            pts, bulges, parts, ..
+            pts,
+            bulges,
+            parts,
+            closed,
+            ..
         } => {
-            // Every part's edges (docs/adr/0174).
-            let mut pieces = segment_pieces(pts, bulges.as_deref(), false);
+            // Every part's edges (docs/adr/0174); a closed one's closing edge too (docs/adr/0258 §1).
+            let mut pieces = segment_pieces(pts, bulges.as_deref(), *closed);
             for part in parts.iter().flatten() {
                 pieces.extend(segment_pieces(&part.pts, part.bulges.as_deref(), false));
             }
@@ -130,6 +134,8 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
         Shape::Spline { pts, closed } => {
             // Chords within 0.1 mm of the curve (docs/adr/0149 §5.3); a closed ring does not repeat its first point.
             let out = spline_outline(pts, *closed);
+            // A closed curve's chords are still an area, as the TypeScript's: a closed line would be
+            // the CAD drawing's (docs/adr/0258 §5), with the web's.
             Cut::Pieces(vec![Entity::new(if *closed {
                 Shape::Polygon {
                     pts: out,
@@ -143,6 +149,8 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     bulges: None,
                     holes: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 }
             })])
         }
@@ -278,6 +286,8 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     bulges: None,
                     holes: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 })
             };
             let mut pieces = vec![path(leader::drawn_path(pts, &l))];

@@ -117,12 +117,14 @@ fn ring_of<'a>(shape: &'a Shape, part: usize, ring: usize) -> Option<PathRing<'a
             bulges,
             holes,
             parts,
+            closed,
+            ..
         } => (
             pts,
             bulges.as_deref(),
             holes.as_ref(),
             parts.as_ref(),
-            false,
+            *closed,
         ),
         Shape::Polygon {
             pts,

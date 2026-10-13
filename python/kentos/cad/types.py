@@ -284,6 +284,20 @@ CheckpointKindName = Literal["snapshot", "revision"]
 """The names of :class:`CheckpointKind`, for a plain string."""
 
 
+class ClosedPolylines(_StrEnum):
+    """What a file's closed polyline becomes (docs/adr/0258 §1).
+
+    - ``area``: An area: what a GIS project wants of a parcel's boundary.
+    - ``line``: A closed line: a CAD drawing's polyline stays a line.
+    """
+    AREA = "area"
+    LINE = "line"
+
+
+ClosedPolylinesName = Literal["area", "line"]
+"""The names of :class:`ClosedPolylines`, for a plain string."""
+
+
 class CloudFormat(_StrEnum):
     """What a member's file is."""
     LAS = "las"
@@ -4643,6 +4657,7 @@ class DxfImported(_Model):
             was read, so a replay can tell the same file.
         bytes: Unit: bytes.
         unit: The unit the file's lengths were read in and why (docs/adr/0257 §1).
+        closed_polylines: What the file's closed polylines became (docs/adr/0258 §1).
         objects: The objects taken. Unit: count.
         targets: The file's layer (its name in the file) → the drawing's layer its
             objects went onto; the layers left out are not here.
@@ -4658,6 +4673,7 @@ class DxfImported(_Model):
     bytes: int
     sha256: str
     unit: UnitDecision
+    closed_polylines: ClosedPolylines | ClosedPolylinesName
     objects: int
     targets: dict[str, str]
     layers: list[ImportedLayer]
@@ -4675,6 +4691,7 @@ class DxfImported(_Model):
         out["bytes"] = self.bytes
         out["sha256"] = self.sha256
         out["unit"] = self.unit.to_json()
+        out["closedPolylines"] = _enum_out(self.closed_polylines)
         out["objects"] = self.objects
         out["targets"] = dict(self.targets)
         out["layers"] = [e0.to_json() for e0 in self.layers]
@@ -4696,6 +4713,7 @@ class DxfImported(_Model):
             bytes=data["bytes"],
             sha256=data["sha256"],
             unit=UnitDecision.from_json(data["unit"]),
+            closed_polylines=_enum_in(ClosedPolylines, data["closedPolylines"]),
             objects=data["objects"],
             targets=dict(data["targets"]),
             layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
@@ -7335,6 +7353,9 @@ class ImportDxf(_Model):
     `unit_ignored`, `block_units_differ`, `import_losses`.
     Attributes:
         path: The file to read, an absolute path.
+        closed_polylines: What the file's closed LWPOLYLINEs and POLYLINEs become, those KentOS
+            marked closed lines aside (docs/adr/0258 §1). Absent: closed lines in
+            a CAD project, areas in any other.
         expected_revision: The drawing's revision the input was prepared against.
         explode_blocks: Blokları patlat: every insert opened into its objects, no block
             definitions taken (docs/adr/0144 §5).
@@ -7351,6 +7372,7 @@ class ImportDxf(_Model):
         skip_layers: The file's layers (by their names in the file) whose objects are left out.
     """
     path: str
+    closed_polylines: ClosedPolylines | ClosedPolylinesName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     explode_blocks: bool | Unset = UNSET
     file_unit: FileUnit | FileUnitName | None | Unset = UNSET
@@ -7361,6 +7383,8 @@ class ImportDxf(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.closed_polylines is not UNSET:
+            out["closedPolylines"] = None if self.closed_polylines is None else _enum_out(self.closed_polylines)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.explode_blocks is not UNSET:
@@ -7379,6 +7403,7 @@ class ImportDxf(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ImportDxf:
         return cls(
             path=data["path"],
+            closed_polylines=UNSET if "closedPolylines" not in data else None if data["closedPolylines"] is None else _enum_in(ClosedPolylines, data["closedPolylines"]),
             expected_revision=data.get("expectedRevision", UNSET),
             explode_blocks=data.get("explodeBlocks", UNSET),
             file_unit=UNSET if "fileUnit" not in data else None if data["fileUnit"] is None else _enum_in(FileUnit, data["fileUnit"]),
@@ -10454,6 +10479,9 @@ class PathEntity(_Model):
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         bulges: Unit: 1.
+        closed: A polyline whose last vertex joins its first: a closed line, not an
+            area (docs/adr/0258 §1); its closing edge's bulge is the last of
+            `bulges`. One part only. A polygon is a ring without saying so.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -10468,6 +10496,11 @@ class PathEntity(_Model):
             fields above; absent for one part (docs/adr/0143, 0174). A
             polyline's parts are open, of two vertices or more, without holes.
         symbol: Library symbol overriding the layer's style.
+        widths: A polyline's widths: the start and the end of the edge from each
+            vertex, as many as `pts` (the last is the closing edge's, `[0, 0]`
+            on an open polyline), in the drawing's length, not the paper's line
+            weight (docs/adr/0258 §2). Absent: none, the line is drawn with its
+            line weight. One part only. Unit: length.
         zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
             without one (not 0); absent when no vertex has one (docs/adr/0142). Unit: elevation.
     """
@@ -10477,6 +10510,7 @@ class PathEntity(_Model):
     pts: list[Vec2]
     attachments: list[Attachment] | Unset = UNSET
     bulges: list[float] | None | Unset = UNSET
+    closed: bool | Unset = UNSET
     color: str | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -10485,6 +10519,7 @@ class PathEntity(_Model):
     ms: list[float | None] | None | Unset = UNSET
     parts: list[AreaPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    widths: list[list[float]] | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -10497,6 +10532,8 @@ class PathEntity(_Model):
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
         if self.color is not UNSET:
             out["color"] = self.color
         if self.holes is not UNSET:
@@ -10513,6 +10550,8 @@ class PathEntity(_Model):
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.widths is not UNSET:
+            out["widths"] = None if self.widths is None else [[float(e1) for e1 in e0] for e0 in self.widths]
         if self.zs is not UNSET:
             out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
@@ -10526,6 +10565,7 @@ class PathEntity(_Model):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            closed=data.get("closed", UNSET),
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             label=data.get("label", UNSET),
@@ -10534,6 +10574,7 @@ class PathEntity(_Model):
             ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
+            widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
@@ -11270,7 +11311,10 @@ class PolylineCreate(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `too_few_points`,
     `not_finite` (points, x before y), `bulge_count`, `not_finite` (bulges),
-    `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
+    `invalid_polyline` (widths not one pair per edge; docs/adr/0258),
+    `not_finite` and `invalid_polyline` (each edge's widths, NaN or ±∞, then
+    below 0), `invalid_line_weight` (not from 0 to 100 mm),
+    `invalid_revision`, `revision_conflict` (status `conflict`),
     `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
     `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
     Geometric validity (a path crossing itself, zero-length edges) is not
@@ -11280,11 +11324,14 @@ class PolylineCreate(_Model):
         pts: Its points in order: x east (Y), y north (X), in the project's units
             (m), float64. At least 2. Unit: length.
         attrs: GIS attributes, text in v1. Absent: none.
-        bulges: One bulge per edge (`pts[i]` → `pts[i + 1]`), so one fewer than the
-            points: tan(θ/4) of the edge's included angle, positive
+        bulges: One bulge per edge (`pts[i]` → `pts[i + 1]`, and a closed line's last
+            point back to its first), so one fewer than the points, or as many on
+            a closed line: tan(θ/4) of the edge's included angle, positive
             counter-clockwise, 0 straight. Absent: every edge is straight. The
-            document keeps one value per point, as DXF does: the polyline is
+            document keeps one value per point, as DXF does: an open polyline is
             stored with a 0 after these, for the closing edge it does not have. Unit: 1.
+        closed: A closed line, not an area (docs/adr/0258 §1): its last point joins
+            its first by one edge more. Absent: open.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
@@ -11297,16 +11344,22 @@ class PolylineCreate(_Model):
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
             layer's style.
+        widths: Each edge's start and end width, one pair per edge as `bulges`, in
+            the project's length (m), not the paper's line weight (docs/adr/0258
+            §2): finite, 0 or above. Absent or all 0: none, the line is drawn with
+            its line weight. Unit: length.
     """
     layer_id: str
     pts: list[Vec2]
     attrs: dict[str, str] | None | Unset = UNSET
     bulges: list[float] | None | Unset = UNSET
+    closed: bool | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    widths: list[list[float]] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -11316,6 +11369,8 @@ class PolylineCreate(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
         if self.color is not UNSET:
             out["color"] = self.color
         if self.expected_revision is not UNSET:
@@ -11326,6 +11381,8 @@ class PolylineCreate(_Model):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.widths is not UNSET:
+            out["widths"] = None if self.widths is None else [[float(e1) for e1 in e0] for e0 in self.widths]
         return out
 
     @classmethod
@@ -11335,11 +11392,13 @@ class PolylineCreate(_Model):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            closed=data.get("closed", UNSET),
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+            widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
         )
 
 
@@ -15727,11 +15786,14 @@ class LineEntityGeometry(EntityGeometry):
 
 @dataclass(kw_only=True, slots=True)
 class PolylineEntityGeometry(EntityGeometry):
-    """An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
-    one at vertex i bending the edge to vertex i + 1.
+    """A path: vertices and DXF bulges (tan(θ/4), CCW positive), the one at
+    vertex i bending the edge to vertex i + 1; open unless `closed`.
     Attributes:
         pts: Unit: length.
         bulges: Unit: 1.
+        closed: A closed line, not an area (docs/adr/0258 §1): its last vertex
+            joins its first by the edge the last of `bulges` bends. Absent:
+            open. One part only.
         ms: The vertices' measures (M) as written (docs/adr/0224 §2), as
             `zs`; a part's come with it (`AreaPart.ms`). Absent: each vertex
             takes one from the objects the edit names. Unit: measure.
@@ -15739,6 +15801,11 @@ class PolylineEntityGeometry(EntityGeometry):
             arcs and elevations, without holes (docs/adr/0174). The geometry
             is the whole polyline: absent, it has one part, so an edit of a
             multi-part polyline writes every part.
+        widths: The edges' widths as written (docs/adr/0258 §2): a start and an
+            end for each vertex's edge, in the drawing's length (the last
+            `[0, 0]` on an open line); all 0: none. Absent: each edge takes
+            its widths from the objects the edit names, where it runs along
+            one of their edges, as elevations do. One part only. Unit: length.
         zs: The vertices' elevations as written (docs/adr/0142): as many as
             the vertices, `null` for one without; all `null`: none. Absent:
             each vertex takes one from the objects the edit names. Unit: elevation.
@@ -15746,8 +15813,10 @@ class PolylineEntityGeometry(EntityGeometry):
     TAG_VALUE: ClassVar[str] = "polyline"
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
+    closed: bool | Unset = UNSET
     ms: list[float | None] | None | Unset = UNSET
     parts: list[AreaPart] | None | Unset = UNSET
+    widths: list[list[float]] | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -15755,10 +15824,14 @@ class PolylineEntityGeometry(EntityGeometry):
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
         if self.ms is not UNSET:
             out["ms"] = None if self.ms is None else [None if e0 is None else float(e0) for e0 in self.ms]
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.widths is not UNSET:
+            out["widths"] = None if self.widths is None else [[float(e1) for e1 in e0] for e0 in self.widths]
         if self.zs is not UNSET:
             out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
@@ -15768,8 +15841,10 @@ class PolylineEntityGeometry(EntityGeometry):
         return cls(
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            closed=data.get("closed", UNSET),
             ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
+            widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 
@@ -17527,6 +17602,8 @@ __all__ = [
     "CircleEntity",
     "CircleEntityGeometry",
     "CirclePlan",
+    "ClosedPolylines",
+    "ClosedPolylinesName",
     "CloudFormat",
     "CloudFormatName",
     "CloudRender",

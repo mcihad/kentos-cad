@@ -44,10 +44,11 @@ use crate::{
     SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
-    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
-    SCHEMA_WITH_REQUESTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS,
-    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
-    SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
+    SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_REQUESTS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS, SCHEMA_WITH_STYLES,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
     SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
 };
 
@@ -191,6 +192,8 @@ pub(super) struct Features {
     pub(super) sheets: bool,
     /// Schema 45: the document's `requests` (docs/adr/0253 §6).
     pub(super) requests: bool,
+    /// Schema 46: a polyline's `closed` and `widths` (docs/adr/0258).
+    polyline_extras: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -243,6 +246,7 @@ impl Features {
             dimension_refs: schema >= SCHEMA_WITH_DIMENSION_REFS,
             sheets: schema >= SCHEMA_WITH_SHEETS,
             requests: schema >= SCHEMA_WITH_REQUESTS,
+            polyline_extras: schema >= SCHEMA_WITH_POLYLINE_EXTRAS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -281,6 +285,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.elevations && key == "zs")
                     || (has.line_parts && key == "parts")
                     || (has.measures && key == "ms")
+                    || (has.polyline_extras && matches!(key, "closed" | "widths"))
             }
             Kind::Polygon => {
                 matches!(key, "pts" | "bulges" | "holes")
@@ -478,6 +483,8 @@ struct Fields {
     point_parts: Option<Vec<PointPart>>,
     loops: Option<Vec<Vec<Vec2>>>,
     closed: Option<bool>,
+    /// A polyline's widths (docs/adr/0258 §2).
+    widths: Option<Vec<[f64; 2]>>,
     text: Option<String>,
     style: Option<DimensionStyle>,
     pattern: Option<HatchPattern>,
@@ -869,7 +876,20 @@ pub(super) fn object(
             "parts" if kind == Kind::Point => f.point_parts = Some(list(r, |r, _| point_part(r))?),
             "parts" if kind == Kind::Polyline => f.parts = Some(list(r, |r, _| line_part(r, has))?),
             "parts" => f.parts = Some(list(r, |r, _| part(r, has))?),
+            // A closed polyline (docs/adr/0258 §1): an open one has no field.
+            "closed" if kind == Kind::Polyline => {
+                let at = r.position();
+                if !r.bool()? {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "kapalılık false yazılmaz; açık çoklu çizgide alan yoktur",
+                    ));
+                }
+                f.closed = Some(true);
+            }
             "closed" => f.closed = Some(r.bool()?),
+            "widths" => f.widths = Some(list(r, |r, _| width(r))?),
             "text" if kind == Kind::Leader => {
                 let at = r.position();
                 let note = text(r)?;
@@ -1186,6 +1206,12 @@ pub(super) fn object(
         Ok(())
     })?;
     let entity = build(r, kind, index, &mut f)?;
+    // A closed and a wide polyline's rules (docs/adr/0258).
+    if let Entity::Polyline(p) = &entity
+        && let Some(why) = p.extras_problem(false)
+    {
+        return Err(r.fail(Code::BadValue, &why));
+    }
     let uid = if has.uids {
         Some(required(r, f.uid, "uid")?)
     } else {
@@ -1194,6 +1220,23 @@ pub(super) fn object(
     r.pop();
     r.leave();
     Ok((entity, uid, f.block_at))
+}
+
+/// A polyline edge's start and end width (docs/adr/0258 §2): two numbers.
+fn width(r: &mut Reader<'_>) -> Result<[f64; 2], KcadError> {
+    let at = r.position();
+    let n = r.array()?;
+    if n != 2 {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("genişlik 2 sayı olmalı (başlangıç, bitiş), {n} var"),
+        ));
+    }
+    let start = r.float()?;
+    let end = r.float()?;
+    r.leave();
+    Ok([start, end])
 }
 
 fn build(
@@ -1243,6 +1286,8 @@ fn build(
                 zs,
                 ms,
                 parts: f.parts.take(),
+                closed: f.closed.take().unwrap_or(false),
+                widths: f.widths.take(),
             };
             if kind == Kind::Polygon {
                 Entity::Polygon(path)

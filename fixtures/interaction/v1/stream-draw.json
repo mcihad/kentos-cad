@@ -16,13 +16,13 @@
     {
       "text": "a",
       "note": "Akış bir tuşla açılır; adım boyu 1 m.",
-      "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A): açık / Adım boyu (B): 1.000 m / Geri (G)]" }
+      "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A): açık / Adım boyu (B): 1.000 m / Genişlik (E): 0.000 m / Geri (G)]" }
     },
     { "text": "b", "expect": { "prompt": "Çoklu çizgi: akışın adım boyunu yazın [Geri (G)]" } },
     { "text": "2" },
     {
       "key": "Enter",
-      "expect": { "points": 1, "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A): açık / Adım boyu (B): 2.000 m / Geri (G)]" }
+      "expect": { "points": 1, "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A): açık / Adım boyu (B): 2.000 m / Genişlik (E): 0.000 m / Geri (G)]" }
     },
     { "move": [-19, 0], "note": "1 m: köşe yok.", "expect": { "points": 1 } },
     { "move": [-17.5, 0], "note": "2,5 m: köşe imlecin yerinde.", "expect": { "points": 2 } },
@@ -32,7 +32,7 @@
     { "text": "b" },
     { "text": "1" },
     { "key": "Enter", "note": "Adım boyu 1 m'ye döner." },
-    { "text": "a", "note": "Akış kapanır: imleç köşe bırakmaz.", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Geri (G) / Bitir (Enter)]" } },
+    { "text": "a", "note": "Akış kapanır: imleç köşe bırakmaz.", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Genişlik (E): 0.000 m / Kapat (K) / Geri (G) / Bitir (Enter)]" } },
     { "move": [-8, 2], "expect": { "points": 4 } },
     {
       "key": "Enter",

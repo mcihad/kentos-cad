@@ -71,6 +71,8 @@ pub fn line_geometry(l: &Line) -> EntityGeometry {
         bulges: arcs.then(|| l.bulges.clone()),
         zs: None,
         parts: None,
+        closed: false,
+        widths: None,
     }
 }
 

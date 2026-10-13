@@ -39,7 +39,8 @@ pub fn paths(e: &Entity) -> Vec<Elevated> {
             closed: false,
             zs: vec![l.za, l.zb],
         }],
-        Entity::Polyline(p) => std::iter::once(path(&p.pts, &p.bulges, false, &p.zs))
+        // A closed polyline's closing edge carries too (docs/adr/0258 §1).
+        Entity::Polyline(p) => std::iter::once(path(&p.pts, &p.bulges, p.closed, &p.zs))
             .chain(
                 p.parts
                     .iter()
@@ -83,7 +84,7 @@ pub fn measure_paths(e: &Entity) -> Vec<Elevated> {
             closed: false,
             zs: vec![l.ma, l.mb],
         }],
-        Entity::Polyline(p) => std::iter::once(path(&p.pts, &p.bulges, false, &p.ms))
+        Entity::Polyline(p) => std::iter::once(path(&p.pts, &p.bulges, p.closed, &p.ms))
             .chain(
                 p.parts
                     .iter()
@@ -208,7 +209,7 @@ pub fn carry(entity: &mut Entity, sources: &[Elevated], same: &[Elevated], how: 
             l.za.is_some() || l.zb.is_some()
         }
         Entity::Polyline(p) => {
-            p.zs = run(&p.pts, false, 0);
+            p.zs = run(&p.pts, p.closed, 0);
             let mut any = p.zs.is_some();
             // Every other part, in `paths`' order (docs/adr/0174).
             for (k, part) in p.parts.iter_mut().flatten().enumerate() {

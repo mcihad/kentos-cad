@@ -44,6 +44,12 @@ pub struct ImportDxf {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub explode_blocks: bool,
+    /// What the file's closed LWPOLYLINEs and POLYLINEs become, those KentOS
+    /// marked closed lines aside (docs/adr/0258 §1). Absent: closed lines in
+    /// a CAD project, areas in any other.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub closed_polylines: Option<crate::ClosedPolylines>,
     /// The file's layers (by their names in the file) whose objects are left out.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
@@ -101,6 +107,8 @@ pub struct DxfImported {
     pub sha256: String,
     /// The unit the file's lengths were read in and why (docs/adr/0257 §1).
     pub unit: UnitDecision,
+    /// What the file's closed polylines became (docs/adr/0258 §1).
+    pub closed_polylines: crate::ClosedPolylines,
     /// The objects taken.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,

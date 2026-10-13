@@ -53,6 +53,8 @@ pub(super) enum Val<'d> {
     Parts(&'d [AreaPart]),
     /// A multi-point object's points past its first (§6.6).
     PointParts(&'d [PointPart]),
+    /// A polyline's widths, a start and an end for each vertex's edge (§6.6, docs/adr/0258 §2).
+    Widths(&'d [[f64; 2]]),
     Loops(&'d [Vec<Vec2>]),
     Pattern(&'d HatchPattern),
     /// The objects a hatch's region follows (docs/adr/0186 §6).
@@ -310,6 +312,17 @@ impl<'d> Encoder<'d> {
                         }
                     }
                     f.push(("parts", Val::Parts(parts)));
+                }
+                // A closed and a wide polyline (docs/adr/0258): one part, a line's only.
+                if let Some(why) = e.extras_problem(matches!(entity, Entity::Polygon(_))) {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &why));
+                }
+                if e.closed {
+                    f.push(("closed", Val::Bool(true)));
+                }
+                if let Some(w) = &e.widths {
+                    f.push(("widths", Val::Widths(w)));
                 }
             }
             Entity::Circle(e) => {
@@ -1064,6 +1077,20 @@ impl<'d> Encoder<'d> {
             Val::Block(id) => self.id(&id.0),
             Val::Point(p) => self.point(p),
             Val::Points(list) => self.points(list),
+            Val::Widths(list) => {
+                self.open(list.len(), false)?;
+                for (i, [start, end]) in list.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        e.open(2, false)?;
+                        e.float(*start)?;
+                        e.float(*end)?;
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
             Val::Floats(list) => self.floats(list),
             Val::Elevations(list, vertices) => self.elevations(list, vertices),
             Val::Measures(list, vertices) => self.measures(list, vertices),

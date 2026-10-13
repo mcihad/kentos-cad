@@ -60,12 +60,18 @@ fn rings_of(shape: &Shape) -> Result<Rings, &'static str> {
                 closed: true,
             })
         }
-        Shape::Polyline { pts, bulges, .. } => Ok(Rings {
+        // A closed polyline's ring has no free end, as an area's (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => Ok(Rings {
             rings: vec![Ring {
                 pts: pts.clone(),
                 bulges: bulges.clone(),
             }],
-            closed: false,
+            closed: *closed,
         }),
         _ => Err(NOT_PATH),
     }
@@ -87,7 +93,12 @@ fn with_rings(shape: &Shape, mut rings: Vec<Ring>) -> Shape {
                 parts: parts.clone(),
             }
         }
-        Shape::Polyline { holes, parts, .. } => {
+        Shape::Polyline {
+            holes,
+            parts,
+            closed,
+            ..
+        } => {
             let path = rings.into_iter().next().unwrap_or(Ring {
                 pts: Vec::new(),
                 bulges: None,
@@ -97,6 +108,8 @@ fn with_rings(shape: &Shape, mut rings: Vec<Ring>) -> Shape {
                 bulges: path.bulges,
                 holes: holes.clone(),
                 parts: parts.clone(),
+                closed: *closed,
+                widths: None,
             }
         }
         _ => shape.clone(),
@@ -267,9 +280,10 @@ pub fn shifted(shape: &Shape, ring: usize, edge: usize, d: f64) -> Result<Shape,
 /// (docs/adr/0191 §3): the root of `A₀ + L·d + ½(λ_b − λ_a)·d² = target`
 /// nearer 0; none when no shift reaches it or the shift is refused there.
 pub fn for_area(shape: &Shape, ring: usize, edge: usize, target: f64) -> Result<f64, String> {
-    let Shape::Polygon { .. } = shape else {
+    // A closed polyline encloses its ring's area as an area does (docs/adr/0258 §1).
+    if !crate::entity::is_closed_path(shape) {
         return Err(NOT_AREA.to_owned());
-    };
+    }
     let (rings, m) = motion(shape, ring, edge).map_err(str::to_owned)?;
     if !target.is_finite() {
         return Err(NO_AREA.to_owned());

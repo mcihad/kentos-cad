@@ -45,7 +45,13 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
         Shape::Polyline { .. } if is_multi_part(e) => {
             area_parts(e).iter().flat_map(entity_edges).collect()
         }
-        Shape::Polyline { pts, bulges, .. } => bulge_path_edges(pts, bulges.as_deref(), false),
+        // A closed polyline's closing edge last (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => bulge_path_edges(pts, bulges.as_deref(), *closed),
         // Its line from the arrow's tip on to its landing's end (docs/adr/0146 §4).
         Shape::Leader { .. } => path_edges(&entity_outline(e, 72.0), false),
         // The part shown's sides (docs/adr/0192 §4).
@@ -181,6 +187,8 @@ mod tests {
             bulges: None,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
         assert_eq!(
             nearest_edge(&path, Vec2::new(9.0, 6.0)),

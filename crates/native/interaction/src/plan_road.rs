@@ -258,6 +258,8 @@ impl PlanRoad {
                     bulges: None,
                     zs: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 },
                 Some(attrs(&[(KIND, "Yol ekseni")])),
             ));

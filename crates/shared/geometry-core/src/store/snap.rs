@@ -870,7 +870,7 @@ fn shape_snaps(
                     ch.consider(SnapKind::Endpoint, end, id);
                 }
                 // A polygon's vertices include its holes', as the TypeScript walked them.
-                let n = if matches!(s, Shape::Polygon { .. }) {
+                let n = if crate::entity::is_closed_path(s) {
                     pts.len()
                 } else {
                     pts.len().saturating_sub(1)
@@ -1042,6 +1042,8 @@ mod tests {
                         bulges: None,
                         holes: None,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     },
                 );
             }
@@ -1122,6 +1124,8 @@ mod tests {
                         ),
                         holes: None,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     }
                 }
                 4 => Shape::Xline {

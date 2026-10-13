@@ -9,7 +9,10 @@ import type { Vec2 } from "./Vec2";
  *
  * Refusals (`CommandError.code`), checked in this order: `too_few_points`,
  * `not_finite` (points, x before y), `bulge_count`, `not_finite` (bulges),
- * `invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),
+ * `invalid_polyline` (widths not one pair per edge; docs/adr/0258),
+ * `not_finite` and `invalid_polyline` (each edge's widths, NaN or ±∞, then
+ * below 0), `invalid_line_weight` (not from 0 to 100 mm),
+ * `invalid_revision`, `revision_conflict` (status `conflict`),
  * `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
  * `slots_exhausted`. Warning: `layer_hidden` (it is written all the same).
  * Geometric validity (a path crossing itself, zero-length edges) is not
@@ -26,13 +29,26 @@ layerId: string,
  */
 pts: Array<Vec2>, 
 /**
- * One bulge per edge (`pts[i]` → `pts[i + 1]`), so one fewer than the
- * points: tan(θ/4) of the edge's included angle, positive
+ * One bulge per edge (`pts[i]` → `pts[i + 1]`, and a closed line's last
+ * point back to its first), so one fewer than the points, or as many on
+ * a closed line: tan(θ/4) of the edge's included angle, positive
  * counter-clockwise, 0 straight. Absent: every edge is straight. The
- * document keeps one value per point, as DXF does: the polyline is
+ * document keeps one value per point, as DXF does: an open polyline is
  * stored with a 0 after these, for the closing edge it does not have.
  */
 bulges?: Array<number>, 
+/**
+ * A closed line, not an area (docs/adr/0258 §1): its last point joins
+ * its first by one edge more. Absent: open.
+ */
+closed?: boolean, 
+/**
+ * Each edge's start and end width, one pair per edge as `bulges`, in
+ * the project's length (m), not the paper's line weight (docs/adr/0258
+ * §2): finite, 0 or above. Absent or all 0: none, the line is drawn with
+ * its line weight.
+ */
+widths?: Array<[number, number]>, 
 /**
  * Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
  */

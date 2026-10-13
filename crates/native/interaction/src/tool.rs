@@ -692,6 +692,9 @@ pub struct Memory {
     /// every step it goes (docs/adr/0161 §3).
     pub stream: bool,
     pub stream_step: f64,
+    /// Çoklu çizgi's Genişlik, metres: every edge's start and end width; 0 none
+    /// (docs/adr/0258 §2). Kept for the session, as AutoCAD's PLINE keeps it.
+    pub polyline_width: f64,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
@@ -998,6 +1001,7 @@ impl Default for Memory {
             trace: false,
             stream: false,
             stream_step: 1.0,
+            polyline_width: 0.0,
             block_insert: None,
             block_scale: 1.0,
             block_rotation: 0.0,

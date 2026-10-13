@@ -230,8 +230,8 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
         ms: Option<Vec<Option<f64>>>,
     },
-    /// An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
-    /// one at vertex i bending the edge to vertex i + 1.
+    /// A path: vertices and DXF bulges (tan(θ/4), CCW positive), the one at
+    /// vertex i bending the edge to vertex i + 1; open unless `closed`.
     Polyline {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         pts: Vec<Vec2>,
@@ -260,6 +260,21 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         parts: Option<Vec<AreaPart>>,
+        /// A closed line, not an area (docs/adr/0258 §1): its last vertex
+        /// joins its first by the edge the last of `bulges` bends. Absent:
+        /// open. One part only.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        closed: bool,
+        /// The edges' widths as written (docs/adr/0258 §2): a start and an
+        /// end for each vertex's edge, in the drawing's length (the last
+        /// `[0, 0]` on an open line); all 0: none. Absent: each edge takes
+        /// its widths from the objects the edit names, where it runs along
+        /// one of their edges, as elevations do. One part only.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        widths: Option<Vec<[f64; 2]>>,
     },
     /// A closed area: its ring and, when it has any, its holes.
     Polygon {

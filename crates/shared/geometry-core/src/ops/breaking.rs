@@ -83,7 +83,14 @@ pub fn break_entity(e: &Entity, p1: Vec2, p2: Vec2) -> Cut {
     // Circles run counter-clockwise; a clockwise ring swaps the picks so the removed part stays CCW.
     let ccw = match s {
         Shape::Circle { .. } | Shape::Arc { .. } => true,
-        Shape::Polygon { pts, bulges, .. } => bulge_ring_area(pts, bulges.as_deref()) > 0.0,
+        // A closed polyline as an area's ring (docs/adr/0258 §1): it opens where it is broken.
+        Shape::Polygon { pts, bulges, .. }
+        | Shape::Polyline {
+            pts,
+            bulges,
+            closed: true,
+            ..
+        } => bulge_ring_area(pts, bulges.as_deref()) > 0.0,
         _ => false,
     };
     if !ccw {

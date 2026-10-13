@@ -690,6 +690,26 @@ fn measure_rows(e: &Entity, f: &Format) -> Vec<Row> {
     }
 }
 
+fn yes_no(on: bool) -> &'static str {
+    if on { "Evet" } else { "Hayır" }
+}
+
+/// A polyline's one width for every edge, 0 without widths; none when its edges' differ
+/// (docs/adr/0258 §2).
+fn constant_width(line: &kentos_contracts::PathEntity) -> Option<f64> {
+    let Some(widths) = &line.widths else {
+        return Some(0.0);
+    };
+    let n = line.pts.len();
+    let edges = if line.closed { n } else { n.saturating_sub(1) };
+    let first = widths.first()?[0];
+    widths
+        .get(..edges)?
+        .iter()
+        .all(|[a, b]| *a == first && *b == first)
+        .then_some(first)
+}
+
 /// `3B uzunluk` of a line or a polyline, `3B çevre` of an area, when every
 /// vertex has an elevation (docs/adr/0142): the length in space beside the
 /// plan one, which stays the measure of record.
@@ -828,6 +848,38 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 length_of.unwrap_or(0.0),
             ));
             geo.extend(space_length(e, &f));
+            // A one-part polyline's Kapalı and Genişlik; a closed one encloses an area, shown,
+            // while it has none of its own (docs/adr/0258).
+            if let Entity::Polyline(line) = e
+                && parts.is_empty()
+            {
+                let closings = Editor::Select {
+                    text: yes_no(line.closed).to_owned(),
+                    swatch: None,
+                    icon: None,
+                    items: [true, false]
+                        .into_iter()
+                        .map(|on| Choice::Pick {
+                            label: yes_no(on).to_owned(),
+                            swatch: None,
+                            icon: None,
+                            wide: false,
+                            chosen: line.closed == on,
+                            enabled: true,
+                            message: Message::Properties(Event::PolylineClosed(vec![slot], on)),
+                        })
+                        .collect(),
+                };
+                geo.push(Row::text("Kapalı", yes_no(line.closed)).editor(edit(closings)));
+                let width = number(Field::PolylineWidth(slot));
+                geo.push(match constant_width(line) {
+                    Some(w) => metres("Genişlik", w).editor(width),
+                    None => Row::text("Genişlik", "Değişken").editor(width),
+                });
+                if line.closed {
+                    geo.extend(area(kentos_interaction::enclosed(e).unwrap_or(0.0)));
+                }
+            }
             if polygon {
                 // Net area: the holes (adalar) are taken out already.
                 let holes = p.holes.iter().flatten().count()

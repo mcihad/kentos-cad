@@ -4,7 +4,8 @@
 
 use crate::api::Op;
 use crate::entity::{
-    Entity, Shape, area_parts, inside_polygon, is_multi_part, join_parts, leader_refused,
+    Entity, Shape, area_parts, inside_polygon, is_closed_path, is_multi_part, join_parts,
+    leader_refused,
 };
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::bulge::{bulge_ring_area, has_bulges};
@@ -18,6 +19,22 @@ use crate::ops::curve_cuts::{
 };
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
+
+/// A path of `like`'s kind: an area's ring, or a polyline open or closed as `like` is
+/// (docs/adr/0258 §1).
+pub fn path_like(like: &Shape, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
+    match like {
+        Shape::Polygon { .. } => path_shape(true, pts, bulges),
+        _ => Shape::Polyline {
+            pts,
+            bulges,
+            holes: None,
+            parts: None,
+            closed: matches!(like, Shape::Polyline { closed: true, .. }),
+            widths: None,
+        },
+    }
+}
 
 pub(crate) fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
     if closed {
@@ -33,6 +50,8 @@ pub(crate) fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>)
             bulges,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         }
     }
 }
@@ -144,23 +163,25 @@ pub fn offset_entity(e: &Shape, distance: f64, through: Vec2) -> Geometry {
                 _ => Geometry::Error("Öteleme sonucu geçerli bir şekil oluşmadı.".into()),
             }
         }
+        // A closed polyline's parallel is a closed ring as an area's, and a line still
+        // (docs/adr/0258 §1).
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
-            let closed = matches!(e, Shape::Polygon { .. });
+            let closed = is_closed_path(e);
             if let Some(bs) = bulges.as_deref()
                 && has_bulges(Some(bs))
             {
                 let d = f64::from(bulged_side(e, through)) * distance;
                 return match offset_bulge_path(pts, bs, d, closed) {
                     OffsetResult::Path { pts, bulges } => {
-                        Geometry::Ok(Entity::new(path_shape(closed, pts, Some(bulges))))
+                        Geometry::Ok(Entity::new(path_like(e, pts, Some(bulges))))
                     }
                     OffsetResult::Error { error } => Geometry::Error(error),
                 };
             }
             let side = side_of(pts, closed, through);
             let out = offset_path(pts, f64::from(side) * distance, closed);
-            if out.len() >= 2 {
-                Geometry::Ok(Entity::new(path_shape(closed, out, None)))
+            if out.len() >= if closed { 3 } else { 2 } {
+                Geometry::Ok(Entity::new(path_like(e, out, None)))
             } else {
                 Geometry::Error("Öteleme sonucu geçerli bir şekil oluşmadı.".into())
             }

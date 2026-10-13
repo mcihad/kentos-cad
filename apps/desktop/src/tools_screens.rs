@@ -254,6 +254,8 @@ fn mm_labels(app: &mut App) {
                         holes: None,
                         zs: None,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     },
                 ))
                 .expect("a slot"),
@@ -346,6 +348,8 @@ fn mm_rooms(app: &mut App) -> String {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }))
             .expect("a room");
     }
@@ -445,6 +449,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::centerline_scenes::scenes());
     all.extend(crate::edge_shift_scenes::scenes());
     all.extend(crate::offset_scenes::scenes());
+    all.extend(crate::polyline_scenes::scenes());
     all.extend(crate::image_scenes::scenes());
     all.extend(crate::temporal_scenes::scenes());
     all.extend(crate::attachment_scenes::scenes());

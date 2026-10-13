@@ -427,6 +427,8 @@ impl Emitter {
                         holes: None,
                         zs,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     }),
                 );
             }
@@ -544,6 +546,8 @@ impl Emitter {
                         holes: None,
                         zs: None,
                         parts: None,
+                        closed: false,
+                        widths: None,
                     }),
                 );
                 self.framed += 1;
@@ -599,6 +603,8 @@ impl Emitter {
                 holes: None,
                 zs,
                 parts: None,
+                closed: false,
+                widths: None,
             }),
         );
         Ok(())
@@ -784,6 +790,8 @@ impl Emitter {
                             holes: None,
                             zs: None,
                             parts: None,
+                            closed: false,
+                            widths: None,
                         }),
                         _ => Entity::Polyline(PathEntity {
                             ms: None,
@@ -793,6 +801,8 @@ impl Emitter {
                             holes: None,
                             zs: None,
                             parts: None,
+                            closed: false,
+                            widths: None,
                         }),
                     };
                     self.push_smart(layer, entity);

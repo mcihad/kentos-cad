@@ -244,6 +244,8 @@ impl Fields {
                 holes: rings(holes)?,
                 zs,
                 parts,
+                closed: false,
+                widths: None,
             })
         };
         let construction = |base: EntityBase,

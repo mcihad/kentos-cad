@@ -196,6 +196,8 @@ impl Parallel {
                     bulges: None,
                     zs: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 }
             }
         };

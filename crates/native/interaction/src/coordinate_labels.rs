@@ -186,6 +186,8 @@ fn geometries(labels: &Labels, look: &Look) -> Vec<EntityGeometry> {
                 bulges: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             });
         }
         for t in &l.texts {

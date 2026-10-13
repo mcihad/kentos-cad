@@ -266,6 +266,8 @@ pub fn offset_ellipse(e: &EllipseGeom, d: f64, through: Vec2) -> Geometry {
         pts.push(Vec2::new(p.x + (dp.y / l) * s, p.y - (dp.x / l) * s));
         i += 1.0;
     }
+    // A whole ellipse's parallel is still an area, as the TypeScript's: a closed line would be the
+    // CAD drawing's (docs/adr/0258 §5), with the web's.
     Geometry::Ok(Entity::new(if closed {
         Shape::Polygon {
             pts,
@@ -279,6 +281,8 @@ pub fn offset_ellipse(e: &EllipseGeom, d: f64, through: Vec2) -> Geometry {
             bulges: None,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         }
     }))
 }

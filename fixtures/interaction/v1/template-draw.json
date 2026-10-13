@@ -23,7 +23,7 @@
     {"click": [2, -10]},
     {"click": [12, -2], "expect": {"entities": 2, "newest": {"kind": "polygon", "label": null, "attrs": {"Kat": "2", "Tür": "Bina"}, "symbol": "temel.alan.tarama-45", "color": "#7A5C3E", "lineWeight": null, "layer": "Bina"}}},
     {"shot": "sablon-bina", "note": "Bina şablonu: paletin dışındaki renk şeritte, dikdörtgen sembolüyle"},
-    {"template": "p-yol", "note": "Şablondan şablona: Ulaşım grubu ve Yol katmanı açılır; renk ilk değerine döner", "expect": {"prompt": "Yol kenarı · Çoklu çizgi: ilk noktayı belirtin", "tool": "polyline", "activeLayer": ["Ulaşım", "Yol"], "currentColor": null, "currentWeight": null}},
+    {"template": "p-yol", "note": "Şablondan şablona: Ulaşım grubu ve Yol katmanı açılır; renk ilk değerine döner", "expect": {"prompt": "Yol kenarı · Çoklu çizgi: ilk noktayı belirtin [Genişlik (E): 0.000 m]", "tool": "polyline", "activeLayer": ["Ulaşım", "Yol"], "currentColor": null, "currentWeight": null}},
     {"click": [15, -10]},
     {"click": [25, -10]},
     {"click": [25, 0]},

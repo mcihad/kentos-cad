@@ -51,7 +51,7 @@
       }
     },
     { "click": [-15, 12], "note": "Bellek başladığı gibi bırakılır: İzle kapatılır." },
-    { "text": "i", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Geri (G)]" } },
+    { "text": "i", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Genişlik (E): 0.000 m / Geri (G)]" } },
     { "key": "Esc" },
     { "key": "Esc" }
   ]

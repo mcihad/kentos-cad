@@ -39,7 +39,31 @@ IMPORT_DIR = "formats/v1/dxf-import"
 EMPTY = units.dxf(4, [], "")
 LOSSES = units.dxf(4, [], units.line(0.0, 0.0, 2500.0, 0.0) + units.pairs(
     (0, "3DSOLID"), (8, "DUVAR"), (100, "AcDbEntity"), (100, "AcDbModelerGeometry"), (70, 1), (1, "ACIS")))
-EXTRA = {"empty.dxf": EMPTY, "losses.dxf": LOSSES}
+
+
+def lwpolyline(pts, closed=False, constant=None, widths=None, layer="DUVAR"):
+    """A LWPOLYLINE: its vertices, closed (70), a constant width (43) or each vertex's start and end (40, 41)."""
+    groups = [(0, "LWPOLYLINE"), (8, layer), (100, "AcDbEntity"), (100, "AcDbPolyline"), (90, len(pts)),
+              (70, 1 if closed else 0)]
+    if constant is not None:
+        groups.append((43, constant))
+    for i, (x, y) in enumerate(pts):
+        groups += [(10, x), (20, y)]
+        if widths:
+            start, end = widths[i]
+            groups += [(40, start)] if start else []
+            groups += [(41, end)] if end else []
+    return units.pairs(*groups)
+
+
+# Closed and wide polylines (docs/adr/0258), in mm: a closed room, a 500 mm wide wall line, a closed tapered frame.
+SQUARE_MM = [(0.0, 0.0), (4000.0, 0.0), (4000.0, 3000.0), (0.0, 3000.0)]
+WALL_MM = [(6000.0, 0.0), (10000.0, 0.0), (10000.0, 3000.0)]
+FRAME_MM = [(12000.0, 0.0), (16000.0, 0.0), (16000.0, 3000.0)]
+FRAME_WIDTHS_MM = [(200.0, 400.0), (400.0, 400.0), (400.0, 200.0)]
+CLOSED = units.dxf(4, [], lwpolyline(SQUARE_MM, closed=True) + lwpolyline(WALL_MM, constant=500.0)
+                   + lwpolyline(FRAME_MM, closed=True, widths=FRAME_WIDTHS_MM))
+EXTRA = {"empty.dxf": EMPTY, "losses.dxf": LOSSES, "closed.dxf": CLOSED}
 
 
 def text_of(rel: str) -> str:
@@ -170,8 +194,9 @@ def p(x: float, y: float) -> dict:
     return {"x": x, "y": y}
 
 
-def objects(rel: str, used: int, target: str, explode: bool, block: str) -> dict:
-    """The fields these cases look at of the objects a file gives, from slot 2 (the drawing's point is 1)."""
+def objects(rel: str, used: int, target: str, explode: bool, block: str, lines: bool = False) -> dict:
+    """The fields these cases look at of the objects a file gives, from slot 2 (the drawing's point is 1); `lines`:
+    closed polylines are read as closed lines (docs/adr/0258 §1)."""
     name = rel.rsplit("/", 1)[1]
     k = lambda v: units.metres(v, used)  # noqa: E731
     line = lambda a, b, c, d: {"kind": "line", "layerId": target, "a": p(k(a), k(b)), "b": p(k(c), k(d))}  # noqa: E731
@@ -200,6 +225,19 @@ def objects(rel: str, used: int, target: str, explode: bool, block: str) -> dict
         return {"2": line(0.0, 0.0, 2_500_000.0, 0.0)}
     if name == "losses.dxf":
         return {"2": line(0.0, 0.0, 2500.0, 0.0)}
+    if name == "closed.dxf":
+        pts = lambda ps: [p(k(x), k(y)) for x, y in ps]  # noqa: E731
+        wide = lambda ws: [[k(a), k(b)] for a, b in ws]  # noqa: E731
+        # An area has no widths (said in the report); an open line's last vertex none.
+        room = {"kind": "polyline", "closed": True} if lines else {"kind": "polygon"}
+        frame = ({"kind": "polyline", "closed": True, "widths": wide(FRAME_WIDTHS_MM)} if lines
+                 else {"kind": "polygon"})
+        return {
+            "2": {**room, "layerId": target, "pts": pts(SQUARE_MM)},
+            "3": {"kind": "polyline", "layerId": target, "pts": pts(WALL_MM),
+                  "widths": wide([(500.0, 500.0), (500.0, 500.0), (0.0, 0.0)])},
+            "4": {**frame, "layerId": target, "pts": pts(FRAME_MM)},
+        }
     raise ValueError(name)
 
 
@@ -209,11 +247,12 @@ def counts(rel: str, explode: bool) -> tuple[int, int]:
     if name in ("mm.dxf", "unitless.dxf", "no-header.dxf", "unknown-code.dxf"):
         return 5, 0 if explode else 1
     return {"inches.dxf": (2, 0), "us-feet.dxf": (1, 0), "block-units.dxf": (2, 1), "micrometres.dxf": (1, 0),
-            "losses.dxf": (1, 0), "empty.dxf": (0, 0)}[name]
+            "losses.dxf": (1, 0), "empty.dxf": (0, 0), "closed.dxf": (3, 0)}[name]
 
 
 def completed(rel: str, doc: dict, project: str, *, file_unit: str | None = None, explode: bool = False,
-              layers: dict | None = None, group_name: str | None = None, op: str = "execute") -> tuple[dict, dict]:
+              layers: dict | None = None, group_name: str | None = None, op: str = "execute",
+              closed: str | None = None) -> tuple[dict, dict]:
     """The step importing `rel` into `doc` and what it gives: its result, and what the drawing then holds."""
     name = rel.rsplit("/", 1)[1]
     text = text_of(rel).encode()
@@ -244,8 +283,11 @@ def completed(rel: str, doc: dict, project: str, *, file_unit: str | None = None
     if blocks and doc.get("blocks") and block == "KAPI":
         block = "KAPI (2)"
         renamed = [{"from": "KAPI", "to": block}]
+    # Closed polylines: as asked, else a CAD project's closed lines, any other's areas (docs/adr/0258 §1).
+    choice = closed or ("line" if doc["settings"].get("workspace") == "cad" else "area")
     output = {
         "file": name, "bytes": len(text), "sha256": hashlib.sha256(text).hexdigest(), "unit": unit,
+        "closedPolylines": choice,
         "objects": n, "targets": {"DUVAR": target}, "layers": made, "blocks": blocks,
         "textStyles": 0, "dimensionStyles": 0, "report": "$any", "revision": "$current",
     }
@@ -259,13 +301,16 @@ def completed(rel: str, doc: dict, project: str, *, file_unit: str | None = None
         step["input"]["fileUnit"] = file_unit
     if explode:
         step["input"]["explodeBlocks"] = True
+    if closed:
+        step["input"]["closedPolylines"] = closed
     if layers:
         step["input"]["layers"] = layers
     if group_name is not None:
         step["input"]["group"] = group_name
     expect = {}
     if op == "execute":
-        expect = {"ids": [1, *range(2, 2 + n)], "fields": objects(rel, unit["used"], target, explode, block),
+        expect = {"ids": [1, *range(2, 2 + n)], "fields": objects(rel, unit["used"], target, explode, block,
+                                                                     choice == "line"),
                   "revision": "changed", "canUndo": True}
         if made:
             nodes = {m["id"]: {"name": m["name"], "type": "layer", "parent": group_id} for m in made}
@@ -350,6 +395,17 @@ def cases() -> list:
          [completed(MM, with_kapi, "m")[0]], with_kapi)
     case("Okuyucunun alamadığı nesne (3DSOLID): import_losses",
          [completed(f"{IMPORT_DIR}/losses.dxf", m, "m")[0]])
+    # Closed and wide polylines (docs/adr/0258).
+    closed_dxf = f"{IMPORT_DIR}/closed.dxf"
+    case("Kapalı ve genişlikli çoklu çizgiler CAD projesine: kapalı çizgi kalır, genişlikleri metrede",
+         [completed(closed_dxf, m, "m")[0]])
+    crs = setup(None)
+    case("Kapalı çoklu çizgiler koordinat sistemli (CBS) projeye: alan olur, genişliği alınmaz; açık çizgi genişliğiyle",
+         [completed(closed_dxf, crs, "crs")[0]], crs)
+    case("closedPolylines line: CBS projesinde de kapalı çizgi, genişliğiyle",
+         [completed(closed_dxf, crs, "crs", closed="line")[0]], crs)
+    case("closedPolylines area: CAD projesinde de alan",
+         [completed(closed_dxf, m, "m", closed="area")[0]])
     # Refusals, in the ADR's order.
     case("Göreli yol: invalid_file_path", [failed({"path": "mm.dxf"}, "invalid_file_path",
          "“mm.dxf” mutlak bir dosya yolu değil; okunacak dosyanın tam yolunu verin (/klasör/ad.dxf).", "path")])

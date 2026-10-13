@@ -404,6 +404,8 @@ fn joins_the_vertices_of_areas_only_with_koseler_the_holes_kept() {
             holes: Some(vec![hole.clone()]),
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }),
     );
     b.start("topology");
@@ -452,6 +454,8 @@ fn the_objects_it_takes_are_paths_with_their_elevations_and_come_back_the_same()
             holes: None,
             zs: Some(vec![Some(1.0), None, Some(3.0)]),
             parts: None,
+            closed: false,
+            widths: None,
         }),
     );
     let e = b.doc.get(path).unwrap();
@@ -487,6 +491,8 @@ fn the_objects_it_takes_are_paths_with_their_elevations_and_come_back_the_same()
                 }]),
                 zs: None,
             }]),
+            closed: false,
+            widths: None,
         }),
     );
     let e = b.doc.get(area).unwrap();

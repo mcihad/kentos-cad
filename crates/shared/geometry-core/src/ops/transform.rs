@@ -74,6 +74,8 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             bulges,
             holes,
             parts,
+            closed,
+            widths,
         } => {
             let (pts, bulges) = transform_ring(pts, bulges, m);
             // Only a polygon's holes are transformed (a polyline has none to speak of).
@@ -95,6 +97,12 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                 bulges,
                 holes: holes.clone(),
                 parts,
+                closed: *closed,
+                // Widths are lengths: they scale with the drawing (docs/adr/0258 §2).
+                widths: widths.as_ref().map(|ws| {
+                    let k = length_scale(m);
+                    ws.iter().map(|[a, b]| [a * k, b * k]).collect()
+                }),
             }
         }
         Shape::Polygon {

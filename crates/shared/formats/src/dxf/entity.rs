@@ -49,6 +49,9 @@ pub struct Vertex {
     pub p: P3,
     pub bulge: f64,
     pub flags: i64,
+    /// The start and end width of the edge leaving it (40, 41; the
+    /// polyline's own 40 and 41 when it has none).
+    pub widths: [f64; 2],
 }
 
 #[derive(Clone, Debug)]
@@ -83,13 +86,14 @@ pub enum Kind {
         bulges: Vec<f64>,
         closed: bool,
         elevation: f64,
-        width: bool,
+        /// Each vertex's edge's start and end width (40, 41), or every
+        /// edge's the constant width (43); none when all are 0.
+        widths: Option<Vec<[f64; 2]>>,
     },
     Polyline {
         flags: i64,
         verts: Vec<Vertex>,
         elevation: f64,
-        width: bool,
     },
     Spline {
         flags: i64,
@@ -409,7 +413,8 @@ pub fn parse(
         "LWPOLYLINE" => {
             let mut pts: Vec<[f64; 2]> = Vec::new();
             let mut bulges: Vec<f64> = Vec::new();
-            let mut width = g.num_or(43, 0.0)? != 0.0;
+            let mut widths: Vec<[f64; 2]> = Vec::new();
+            let constant = g.num_or(43, 0.0)?;
             for p in list {
                 let v = || {
                     parse_real(p.text()).ok_or_else(|| {
@@ -423,6 +428,7 @@ pub fn parse(
                     10 => {
                         pts.push([v()?, 0.0]);
                         bulges.push(0.0);
+                        widths.push([0.0, 0.0]);
                     }
                     20 => {
                         if let Some(last) = pts.last_mut() {
@@ -434,38 +440,52 @@ pub fn parse(
                             *last = v()?;
                         }
                     }
-                    40 | 41 => width |= v()? != 0.0,
+                    // A vertex's own widths (docs/adr/0258 §2).
+                    40 | 41 => {
+                        let w = v()?;
+                        if let Some(last) = widths.last_mut() {
+                            last[usize::from(p.code == 41)] = w;
+                        }
+                    }
                     _ => {}
                 }
             }
+            // The vertices' own widths when any is given, else the constant width for every edge.
+            let widths = if widths.iter().any(|[a, b]| *a != 0.0 || *b != 0.0) {
+                Some(widths)
+            } else if constant != 0.0 {
+                Some(vec![[constant, constant]; pts.len()])
+            } else {
+                None
+            };
             Kind::LwPolyline {
                 pts,
                 bulges,
                 closed: g.int(70) & 1 == 1,
                 elevation: g.num_or(38, 0.0)?,
-                width,
+                widths,
             }
         }
         "POLYLINE" => {
             let mut verts = Vec::new();
-            let mut width = g.num_or(40, 0.0)? != 0.0 || g.num_or(41, 0.0)? != 0.0;
+            // The polyline's default widths, a vertex's own when it has them (docs/adr/0258 §2).
+            let (start, end) = (g.num_or(40, 0.0)?, g.num_or(41, 0.0)?);
             for (_, vl) in &after {
                 let vg = Groups {
                     list: own_groups(vl),
                     dec,
                 };
-                width |= vg.num_or(40, 0.0)? != 0.0 || vg.num_or(41, 0.0)? != 0.0;
                 verts.push(Vertex {
                     p: vg.point_or_zero(10)?,
                     bulge: vg.num_or(42, 0.0)?,
                     flags: vg.int(70),
+                    widths: [vg.num_or(40, start)?, vg.num_or(41, end)?],
                 });
             }
             Kind::Polyline {
                 flags: g.int(70),
                 verts,
                 elevation: g.point_or_zero(10)?[2],
-                width,
             }
         }
         "SPLINE" => Kind::Spline {

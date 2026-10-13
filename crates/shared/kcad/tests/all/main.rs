@@ -23,6 +23,7 @@ mod measures;
 mod networks;
 mod parts;
 mod pointclouds;
+mod polyline_extras;
 mod rasters;
 mod requests;
 mod robustness;

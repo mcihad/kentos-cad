@@ -2272,6 +2272,240 @@ cases.append({
     ],
 })
 
+# ── Widths and closed lines (docs/adr/0258) ────────────────────────────
+# The geometry comes without widths; each edge of what the edit writes takes them from the polylines it names, by
+# the ADR's rules, worked here for straight edges: an edge along a source edge (its ends and middle on it) that
+# edge's widths at its ends, linearly; for a moving edit (grip, Esnet, Öznitelikler) and Ötele's copy the edge in
+# its place; an end on a source vertex the width leaving it (arriving, for the end); an end on a source edge the
+# width there; Ötele the closest point's. Widths written with the geometry are written as they are; all 0 is none.
+
+W_ENTITIES = [
+    # 10 m from 0 to 2 m wide, then 10 m 2 m wide.
+    {"kind": "polyline", "id": 1, "layerId": "yapi", "attrs": {}, "pts": [P(487000, 4420080), P(487010, 4420080), P(487010, 4420090)], "widths": [[0, 2], [2, 2], [0, 0]]},
+    # A closed square, 0.5 m wide all round.
+    {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [P(487020, 4420080), P(487024, 4420080), P(487024, 4420084), P(487020, 4420084)], "closed": True, "widths": [[0.5, 0.5]] * 4},
+]
+W_SETUP = {**SETUP, "entities": W_ENTITIES}
+W_IDS = [e["id"] for e in W_ENTITIES]
+W_BY_ID = {e["id"]: e for e in W_ENTITIES}
+ON = 1e-6
+
+
+def WE(i):
+    return json.loads(json.dumps(W_BY_ID[i]))
+
+
+def w_edges(e):
+    pts, n = e["pts"], len(e["pts"])
+    count = n if e.get("closed") else n - 1
+    return [(pts[i], pts[(i + 1) % n], e["widths"][i]) for i in range(count)]
+
+
+def on_seg(p, a, b):
+    """The parameter of p's closest point on segment ab and its distance."""
+    dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+    t = ((p["x"] - a["x"]) * dx + (p["y"] - a["y"]) * dy) / (dx * dx + dy * dy)
+    t = min(1.0, max(0.0, t))
+    q = (a["x"] + dx * t, a["y"] + dy * t)
+    return t, math.hypot(p["x"] - q[0], p["y"] - q[1])
+
+
+def lerp(w, t):
+    return w[0] + (w[1] - w[0]) * t
+
+
+def carried(pts, closed, sources, same=None, offset=False):
+    """The ADR's rules for straight edges; None when every edge has 0."""
+    n = len(pts)
+    edges = [ed for s in sources for ed in w_edges(s)]
+    same = same if same is not None and len(same["pts"]) == n else None
+    out = [[0, 0] for _ in range(n)]
+    for i in range(n if closed else n - 1):
+        a, b = pts[i], pts[(i + 1) % n]
+        mid = {"x": (a["x"] + b["x"]) / 2, "y": (a["y"] + b["y"]) / 2}
+        along = None
+        for s0, s1, w in edges:
+            (ta, da), (tb, db), (_, dm) = on_seg(a, s0, s1), on_seg(b, s0, s1), on_seg(mid, s0, s1)
+            if da <= ON and db <= ON and dm <= ON:
+                along = [lerp(w, ta), lerp(w, tb)]
+                break
+        if along is not None:
+            out[i] = along
+            continue
+        if same is not None:
+            out[i] = list(same["widths"][i])
+            continue
+
+        def end(p, start):
+            for s in sources:
+                m = len(s["pts"])
+                count = m if s.get("closed") else m - 1
+                for k, q in enumerate(s["pts"]):
+                    if math.hypot(p["x"] - q["x"], p["y"] - q["y"]) <= ON:
+                        leaving = s["widths"][k][0] if k < count else None
+                        arriving = s["widths"][k - 1][1] if k > 0 else (s["widths"][m - 1][1] if s.get("closed") else None)
+                        w = (leaving if leaving is not None else arriving) if start else (arriving if arriving is not None else leaving)
+                        if w is not None:
+                            return w
+            for s0, s1, w in edges:
+                t, d = on_seg(p, s0, s1)
+                if d <= ON:
+                    return lerp(w, t)
+            if offset:
+                t, d, w = min(((*on_seg(p, s0, s1), w) for s0, s1, w in edges), key=lambda x: x[1])
+                return lerp(w, t)
+            return 0
+
+        out[i] = [end(a, True), end(b, False)]
+    return out if any(x != 0 or y != 0 for x, y in out) else None
+
+
+def w_updated(i, geometry, widths):
+    out = {k: v for k, v in WE(i).items() if k not in ("kind", "widths", "closed") and k not in GEOMETRY[WE(i)["kind"]]}
+    out.update(json.loads(json.dumps(geometry)))
+    if widths is not None:
+        out["widths"] = widths
+    return out
+
+
+def plain(x):
+    """Whole numbers as the drawing writes them back (JSON's 1.0 is 1)."""
+    if isinstance(x, float) and x == int(x):
+        return int(x)
+    if isinstance(x, list):
+        return [plain(v) for v in x]
+    return x
+
+
+W_PATH = W_ENTITIES[0]["pts"]
+cut = {"kind": "polyline", "pts": [P(487000, 4420080), P(487005, 4420080), P(487010, 4420080), P(487010, 4420090)]}
+cases.append({
+    "name": "Genişlik, Köşe ekle: yeni köşe kenarı ikiye böler; iki yarı kenarın genişliğini yerinde alır (0–2 m kenarın ortası 1 m)",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "vertexAdd", "changes": [{"kind": "update", "uid": uid(1), "geometry": cut}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": w_updated(1, cut, plain(carried(cut["pts"], False, [WE(1)])))}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Köşe ekle", "expect": {"entities": {"1": WE(1)}, "canUndo": False}},
+    ],
+})
+
+joined = {"kind": "polyline", "pts": [P(487000, 4420080), P(487010, 4420090)]}
+cases.append({
+    "name": "Genişlik, Köşe sil: birleşen kenar ilk kenarın başlangıcını, ikincinin bitişini alır",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "vertexRemove", "changes": [{"kind": "update", "uid": uid(1), "geometry": joined}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": w_updated(1, joined, plain(carried(joined["pts"], False, [WE(1)])))}, "revision": "changed"}},
+    ],
+})
+
+turned = {"kind": "polyline", "pts": list(reversed(W_PATH))}
+cases.append({
+    "name": "Genişlik, Yönü çevir: kenarlar döner, başlangıç ve bitiş yer değiştirir",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "reverse", "changes": [{"kind": "update", "uid": uid(1), "geometry": turned}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": w_updated(1, turned, plain(carried(turned["pts"], False, [WE(1)])))}, "revision": "changed"}},
+    ],
+})
+
+moved = {"kind": "polyline", "pts": [P(487000, 4420080), P(487012, 4420078), P(487010, 4420090)]}
+cases.append({
+    "name": "Genişlik, tutamaç: taşınan köşenin kenarları sıradaki genişliklerini korur",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(1), "geometry": moved}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": w_updated(1, moved, plain(carried(moved["pts"], False, [WE(1)], same=WE(1))))}, "revision": "changed"}},
+    ],
+})
+
+piece_a = {"kind": "polyline", "pts": [P(487000, 4420080), P(487004, 4420080)]}
+piece_b = {"kind": "polyline", "pts": [P(487006, 4420080), P(487010, 4420080), P(487010, 4420090)]}
+cases.append({
+    "name": "Genişlik, Kır: iki parça kenarların genişliğini kesildiği yerde alır (0–2 m kenarın 4. metresi 0,8; 6. metresi 1,2)",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "break", "changes": [{"kind": "update", "uid": uid(1), "geometry": piece_a}, {"kind": "add", "from": uid(1), "geometry": piece_b}]},
+         "result": done(changed=[uid(1)], created=[uid(3)]),
+         "expect": {"ids": W_IDS + [3], "entities": {
+             "1": w_updated(1, piece_a, plain(carried(piece_a["pts"], False, [WE(1)]))),
+             "3": {**piece_b, "id": 3, "layerId": "yapi", "attrs": {}, "widths": plain(carried(piece_b["pts"], False, [WE(1)]))},
+         }, "revision": "changed"}},
+    ],
+})
+
+copy_ = {"kind": "polyline", "pts": [P(487000, 4420081), P(487009, 4420081), P(487009, 4420090)]}
+cases.append({
+    "name": "Genişlik, Ötele: kopyanın her kenarı kaynaktaki karşılığının genişliğini alır",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "offset", "changes": [{"kind": "add", "from": uid(1), "geometry": copy_}]}, "result": done(created=[uid(3)]),
+         "expect": {"ids": W_IDS + [3], "entities": {"3": {**copy_, "id": 3, "layerId": "yapi", "attrs": {}, "widths": plain(carried(copy_["pts"], False, [WE(1)], same=WE(1), offset=True))}}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "Genişlik, Patlat: çizgilerin genişliği olmaz; korunamadığı söylenir (widths_lost)",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "genis"},
+        {"op": "execute", "input": {"operation": "explode", "changes": [{"kind": "remove", "uid": uid(1)}, {"kind": "add", "from": uid(1), "geometry": line(487000, 4420080, 487010, 4420080)}, {"kind": "add", "from": uid(1), "geometry": line(487010, 4420080, 487010, 4420090)}]},
+         "result": {**done(created=[uid(3), uid(4)], removed=["$uid:genis"]), "warnings": [{"code": "widths_lost", "message": "1 çoklu çizginin genişliği bu işlemde korunmadı.", "path": "changes"}]},
+         "expect": {"ids": [2, 3, 4], "entities": {"3": {**line(487000, 4420080, 487010, 4420080), "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+    ],
+})
+
+opened = {"kind": "polyline", "pts": [P(487022, 4420080), P(487024, 4420080), P(487024, 4420084), P(487020, 4420084), P(487020, 4420080), P(487021, 4420080)]}
+cases.append({
+    "name": "Kapalı, Buda: budanan kapalı çizgi açılır (geometri açık yazar); kenarları genişliklerini yerinde alır",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "trim", "changes": [{"kind": "update", "uid": uid(2), "geometry": opened}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": w_updated(2, opened, plain(carried(opened["pts"], False, [WE(2)])))}, "revision": "changed"}},
+    ],
+})
+
+square_moved = {"kind": "polyline", "pts": [P(487020, 4420080), P(487025, 4420080), P(487024, 4420084), P(487020, 4420084)], "closed": True}
+cases.append({
+    "name": "Kapalı, tutamaç: kapalı çizgi kapalı yazılır; kapanan kenar da genişliğini korur",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [{"kind": "update", "uid": uid(2), "geometry": square_moved}]}, "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": w_updated(2, square_moved, plain(carried(square_moved["pts"], True, [WE(2)], same=WE(2))))}, "revision": "changed"}},
+    ],
+})
+
+W_PATH1 = {"kind": "polyline", "pts": W_PATH}
+cases.append({
+    "name": "Genişlik, Öznitelikler: yazılan genişlik olduğu gibi; hepsi sıfır genişlik yok demektir",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**W_PATH1, "widths": [[0.3, 0.3], [0.3, 0.3], [0, 0]]}}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": w_updated(1, W_PATH1, [[0.3, 0.3], [0.3, 0.3], [0, 0]])}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**W_PATH1, "widths": [[0, 0], [0, 0], [0, 0]]}}]}, "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": w_updated(1, W_PATH1, None)}, "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "Kapalı ve genişlik, reddedilen: kapalı ya da genişlikli çizgi tek parçalı; genişlik köşe başına bir çift (invalid_polyline)",
+    "setup": W_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(2), "geometry": {"kind": "polyline", "pts": W_ENTITIES[1]["pts"], "closed": True, "parts": [{"pts": [P(487030, 4420080), P(487031, 4420080)]}]}}]},
+         "result": failed("invalid_polyline", "Kapalı ya da genişlikli çoklu çizgi tek parçalıdır. Önce Parçalara ayır ile parçalarına ayırın.", "changes[0].geometry.closed"),
+         "expect": {"ids": W_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**W_PATH1, "widths": [[1, 1], [0, 0]]}}]},
+         "result": failed("invalid_polyline", "Genişlik sayısı (2) köşe sayısından (3) farklı. Her köşeden çıkan kenara bir başlangıç ve bir bitiş genişliği verin.", "changes[0].geometry.widths"),
+         "expect": {"ids": W_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**W_PATH1, "widths": [[1, 1], [1, 1], [1, 1]]}}]},
+         "result": failed("invalid_polyline", "Açık çoklu çizginin son köşesinden kenar çıkmaz: son genişlik [0, 0] olmalı.", "changes[0].geometry.widths"),
+         "expect": {"ids": W_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**W_PATH1, "widths": [[1, -1], [0, 0], [0, 0]]}}]},
+         "result": failed("invalid_polyline", "1. kenarın genişliği geçersiz: genişlik sonlu ve sıfır ya da daha büyük olmalı.", "changes[0].geometry.widths"),
+         "expect": {"ids": W_IDS, "canUndo": False, "dirty": False, "revision": "same"}},
+    ],
+})
+
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",

@@ -184,6 +184,14 @@ pub enum Shape {
         /// fields above, open and without holes (docs/adr/0174); `path_parts`
         /// takes it part by part.
         parts: Option<Vec<Part>>,
+        /// A closed line, not an area: its last vertex joins its first by the
+        /// edge `bulges`' last gives (docs/adr/0258 §1). One part only.
+        closed: bool,
+        /// Each edge's start and end width, in the drawing's length, one per
+        /// vertex (the last is the closing edge's); drawn as a band, not as a
+        /// line weight (docs/adr/0258 §2). The edits compute without them:
+        /// the application carries them to what an edit writes. One part only.
+        widths: Option<Vec<[f64; 2]>>,
     },
     Polygon {
         pts: Vec<Vec2>,
@@ -378,7 +386,9 @@ pub enum Shape {
 crate::json_tagged!(Shape, "kind",
     Point => "point" { p, z, parts },
     Line => "line" { a, b },
-    Polyline => "polyline" { pts, bulges, holes, parts },
+    // A closed polyline and its widths (docs/adr/0258) are the typed hosts': the JSON API reads it
+    // open and without them.
+    Polyline => "polyline" { pts, bulges, holes, parts; closed, widths },
     Polygon => "polygon" { pts, bulges, holes, parts },
     Circle => "circle" { c, r },
     Arc => "arc" { c, r, a0, a1 },
@@ -638,8 +648,18 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
             vec![start, Vec2::new(p.x + dir.x * r, p.y + dir.y * r)]
         }
         Shape::Spline { pts, closed } => catmull_rom(pts, *closed, 16.0),
-        Shape::Polyline { pts, bulges, .. } => {
-            bulge_path_outline(pts, bulges.as_deref(), false, TAU / segments)
+        // A closed polyline's runs back to its first point (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => {
+            let mut out = bulge_path_outline(pts, bulges.as_deref(), *closed, TAU / segments);
+            if *closed && let Some(&first) = out.first() {
+                out.push(first);
+            }
+            out
         }
         Shape::Polygon { pts, bulges, .. } => {
             bulge_path_outline(pts, bulges.as_deref(), true, TAU / segments)
@@ -738,12 +758,16 @@ pub fn area_parts(e: &Shape) -> Cow<'_, [Shape]> {
                 bulges: bulges.clone(),
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             });
             out.extend(parts.iter().map(|q| Shape::Polyline {
                 pts: q.pts.clone(),
                 bulges: q.bulges.clone(),
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }));
             Cow::Owned(out)
         }
@@ -775,11 +799,39 @@ pub fn area_parts(e: &Shape) -> Cow<'_, [Shape]> {
 pub const MULTI_PART_REFUSED: &str =
     "Bu işlem çok parçalı nesnede çalışmaz; önce Parçalara ayır ile parçalarına ayırın.";
 
+/// What an edit that grows or joins at an end (Uzat, Uzat-kısalt, Birleştir, Sürdür) says of
+/// a closed polyline (docs/adr/0258 §1).
+pub const CLOSED_HAS_NO_END: &str = "Kapalı çoklu çizginin ucu yok; önce Öznitelikler'de Kapalı'yı kapatın ya da bir yerinden Kır ile açın.";
+
 /// What an edge edit (Buda, Uzat, Kır, Ötele) says of a leader: its
 /// arrowhead, line, landing and note are one object (docs/adr/0146 §4).
 /// `verb`: “budanamaz”, “uzatılamaz” …
 pub fn leader_refused(verb: &str) -> String {
     format!("Kılavuz {verb}; önce Patlat (X) ile çizgisine, ok başına ve notuna ayırın.")
+}
+
+/// Whether a path runs back to its first vertex: an area's ring, or a closed polyline
+/// (docs/adr/0258 §1). A closed polyline is still a line: it has no inside of its own.
+pub fn is_closed_path(e: &Shape) -> bool {
+    matches!(
+        e,
+        Shape::Polygon { .. } | Shape::Polyline { closed: true, .. }
+    )
+}
+
+/// The area a closed path encloses: an area's (its holes out), a closed polyline's ring;
+/// none for anything else. What is shown for a closed polyline (docs/adr/0258 §1); its
+/// `entity_area` stays none, as a line's (`$alan`, the processing tools).
+pub fn enclosed_area(e: &Shape) -> Option<f64> {
+    match e {
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed: true,
+            ..
+        } => Some(bulge_ring_area(pts, bulges.as_deref()).abs()),
+        _ => entity_area(e),
+    }
 }
 
 /// Whether an area, a polyline or a point has parts past its first.
@@ -829,10 +881,22 @@ pub fn join_parts(shapes: &[Shape]) -> Option<Shape> {
                 parts: (!rest.is_empty()).then_some(rest),
             })
         }
-        Shape::Polyline { pts, bulges, .. } => {
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => {
             let mut parts = Vec::with_capacity(rest.len());
             for s in rest {
-                let Shape::Polyline { pts, bulges, .. } = s else {
+                // A closed line is one part only (docs/adr/0258 §1).
+                let Shape::Polyline {
+                    pts,
+                    bulges,
+                    closed: false,
+                    ..
+                } = s
+                else {
                     return None;
                 };
                 parts.push(Part {
@@ -841,11 +905,16 @@ pub fn join_parts(shapes: &[Shape]) -> Option<Shape> {
                     holes: None,
                 });
             }
+            if *closed && !parts.is_empty() {
+                return None;
+            }
             Some(Shape::Polyline {
                 pts: pts.clone(),
                 bulges: bulges.clone(),
                 holes: None,
                 parts: (!parts.is_empty()).then_some(parts),
+                closed: *closed,
+                widths: None,
             })
         }
         Shape::Point { p, z, .. } => {
@@ -1318,6 +1387,22 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
             extend_bounds(&mut b, *c, *r);
             return b;
         }
+        // A wide polyline's band reaches past its line (docs/adr/0258 §2).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            widths: Some(widths),
+            ..
+        } => {
+            let band = crate::geom::band::band(pts, bulges.as_deref(), *closed, widths);
+            for q in band.thin.iter().chain(&band.rings).flatten() {
+                extend_bounds(&mut b, *q, 0.0);
+            }
+            if !band.thin.is_empty() || !band.rings.is_empty() {
+                return b;
+            }
+        }
         Shape::Text { .. } => {
             for q in TextPlace::of(e)
                 .map(|t| t.outline(font))
@@ -1473,8 +1558,9 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
         | Shape::Polygon {
             pts, bulges, holes, ..
         } => {
-            // A polygon's perimeter includes its holes (as in GIS).
-            let closed = matches!(e, Shape::Polygon { .. });
+            // A polygon's perimeter includes its holes (as in GIS); a closed polyline's
+            // length its closing edge (docs/adr/0258 §1).
+            let closed = is_closed_path(e);
             let holes = holes.iter().flatten().fold(0.0, |s, h| {
                 s + bulge_path_length(&h.pts, h.bulges.as_deref(), true)
             });

@@ -310,6 +310,14 @@
       ]
     },
     {
+      "name": "kapalı ve genişlikli çoklu çizgi yazıldığı gibi; kuralı dışı genişlik ve parçalı kapalı çizgi reddedilir (invalid_polyline)",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420110}, {"x": 487010, "y": 4420110}, {"x": 487010, "y": 4420120}], "closed": true, "widths": [[0.5, 0.5], [0.5, 1], [1, 0.5]]}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3], "entities": {"3": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420110}, {"x": 487010, "y": 4420110}, {"x": 487010, "y": 4420120}], "id": 3, "layerId": "yapi", "attrs": {}, "closed": true, "widths": [[0.5, 0.5], [0.5, 1], [1, 0.5]]}}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420110}, {"x": 487010, "y": 4420110}, {"x": 487010, "y": 4420120}], "widths": [[1, 1], [1, 1]]}}]}, "result": {"status": "failed", "error": {"code": "invalid_polyline", "message": "Genişlik sayısı (2) köşe sayısından (3) farklı. Her köşeden çıkan kenara bir başlangıç ve bir bitiş genişliği verin.", "path": "objects[0].geometry.widths"}}, "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420110}, {"x": 487010, "y": 4420110}, {"x": 487010, "y": 4420120}], "closed": true, "parts": [{"pts": [{"x": 487020, "y": 4420110}, {"x": 487030, "y": 4420110}]}]}}]}, "result": {"status": "failed", "error": {"code": "invalid_polyline", "message": "Kapalı ya da genişlikli çoklu çizgi tek parçalıdır. Önce Parçalara ayır ile parçalarına ayırın.", "path": "objects[0].geometry.closed"}}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
       "name": "girdinin hatası çizimin durumundan önce gelir: geometri, sürümden ve katmandan önce denetlenir",
       "steps": [
         {"op": "execute", "input": {"layerId": "kilitli", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420010}]}}], "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "too_few_points", "message": "Çoklu çizginin en az 2 noktası olmalı; 1 nokta verildi. Eksik noktaları ekleyin.", "path": "objects[0].geometry.pts"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}

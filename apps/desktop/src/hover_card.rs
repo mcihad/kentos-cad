@@ -144,6 +144,12 @@ pub(crate) fn card(
         rows.push(("Tapu alanı", text, plain));
     }
     let (area, length) = measures(e);
+    // A closed polyline's enclosed area is shown, while it has none of its own (docs/adr/0258 §1).
+    let area = area.or_else(|| {
+        matches!(e, Entity::Polyline(p) if p.closed)
+            .then(|| kentos_interaction::enclosed(e))
+            .flatten()
+    });
     if let Some(area) = area {
         let name = if has_deed { "Hesaplanan alan" } else { "Alan" };
         rows.push((name, format.area(area), true));
@@ -455,6 +461,8 @@ mod tests {
                 holes: None,
                 zs: None,
             }]),
+            closed: false,
+            widths: None,
         });
         assert_eq!(
             rows_of(&road),
@@ -546,6 +554,8 @@ mod tests {
                 }]),
                 zs: Some(vec![Some(7.0); 4]),
                 parts: None,
+                closed: false,
+                widths: None,
             })
         };
         let flat = rows_of(&area(Some(vec![Some(7.0); 4])));

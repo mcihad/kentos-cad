@@ -635,6 +635,7 @@ fn read_once(
     em.project_font = opts
         .drawing_font
         .unwrap_or(kentos_contracts::DrawingFont::Barlow);
+    em.closed_lines = !opts.closed_polylines.is_area();
     for (kind, reason, line) in block_skips {
         em.out.report.skip(&kind, &reason, line);
     }

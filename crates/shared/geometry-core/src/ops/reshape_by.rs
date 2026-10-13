@@ -72,6 +72,37 @@ pub fn reshape(e: &Shape, sketch: &[Vec2]) -> Result<Shape, ReshapeRefusal> {
         Shape::Polygon { .. } => reshape_area(e, sketch),
         Shape::Line { a, b } => reshape_path(&[*a, *b], &[0.0, 0.0], sketch),
         Shape::Polyline { .. } if crate::entity::is_multi_part(e) => Err(ReshapeRefusal::MultiPart),
+        // A closed polyline is reshaped as an area's ring and stays a closed line (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            holes: None,
+            closed: true,
+            ..
+        } => {
+            let ring = Shape::Polygon {
+                pts: pts.clone(),
+                bulges: bulges.clone(),
+                holes: None,
+                parts: None,
+            };
+            match reshape_area(&ring, sketch)? {
+                Shape::Polygon {
+                    pts,
+                    bulges,
+                    holes: None,
+                    parts: None,
+                } => Ok(Shape::Polyline {
+                    pts,
+                    bulges,
+                    holes: None,
+                    parts: None,
+                    closed: true,
+                    widths: None,
+                }),
+                _ => Err(ReshapeRefusal::NotShape),
+            }
+        }
         Shape::Polyline {
             pts,
             bulges,
@@ -401,6 +432,8 @@ fn reshape_path(pts: &[Vec2], b: &[f64], sketch: &[Vec2]) -> Result<Shape, Resha
         bulges: clean.bulges,
         holes: None,
         parts: None,
+        closed: false,
+        widths: None,
     })
 }
 

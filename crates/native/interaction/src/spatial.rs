@@ -1296,6 +1296,12 @@ pub fn measures(entity: &Entity) -> (Option<f64>, Option<f64>) {
     (entity_area(&s), entity_length(&s))
 }
 
+/// The area a closed polyline encloses, an area's own (`enclosed_area`): what
+/// Öznitelikler and the card show, while the line has no area of its own (docs/adr/0258 §1).
+pub fn enclosed(entity: &Entity) -> Option<f64> {
+    kentos_geometry_core::entity::enclosed_area(&shape(entity))
+}
+
 /// An arc's sweep from `a0` to `a1`, counter-clockwise, radians (the core's
 /// `sweep`, the properties panel's Yay açısı).
 pub fn arc_sweep(a0: f64, a1: f64) -> f64 {

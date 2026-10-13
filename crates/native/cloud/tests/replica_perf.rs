@@ -65,6 +65,8 @@ fn parcel(i: usize, shift: f64) -> Entity {
         holes: None,
         zs: None,
         parts: None,
+        closed: false,
+        widths: None,
     })
 }
 

@@ -1,0 +1,307 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kapalı ve genişlikli çoklu çizgiler",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#C0392B",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "uids": [
+    "0192f5a1-2580-7000-8000-000000000001",
+    "0192f5a1-2580-7000-8000-000000000002",
+    "0192f5a1-2580-7000-8000-000000000003",
+    "0192f5a1-2580-7000-8000-000000000004",
+    "0192f5a1-2580-7000-8000-000000000005",
+    "0192f5a1-2580-7000-8000-000000000006"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-2580-7d4a-9b1e-4c2f8a6d0001",
+      "name": "Kolon",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "polyline",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "pts": [
+            {
+              "x": -0.2,
+              "y": -0.2
+            },
+            {
+              "x": 0.2,
+              "y": -0.2
+            },
+            {
+              "x": 0.2,
+              "y": 0.2
+            },
+            {
+              "x": -0.2,
+              "y": 0.2
+            }
+          ],
+          "closed": true,
+          "widths": [
+            [
+              0.05,
+              0.05
+            ],
+            [
+              0.05,
+              0.05
+            ],
+            [
+              0.05,
+              0.05
+            ],
+            [
+              0.05,
+              0.05
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "kind": "polyline",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 8.0
+        },
+        {
+          "x": 0.0,
+          "y": 8.0
+        }
+      ],
+      "closed": true
+    },
+    {
+      "kind": "polyline",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 20.0,
+          "y": 0.0
+        },
+        {
+          "x": 26.0,
+          "y": 0.0
+        },
+        {
+          "x": 26.0,
+          "y": 6.0
+        }
+      ],
+      "bulges": [
+        0.0,
+        0.0,
+        0.41421356237309503
+      ],
+      "closed": true
+    },
+    {
+      "kind": "polyline",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {
+        "Ad": "Ok"
+      },
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 12.0
+        },
+        {
+          "x": 5.0,
+          "y": 12.0
+        },
+        {
+          "x": 5.0,
+          "y": 16.0
+        }
+      ],
+      "widths": [
+        [
+          0.0,
+          0.4
+        ],
+        [
+          0.4,
+          0.4
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 4,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 30.0,
+          "y": 0.0
+        },
+        {
+          "x": 36.0,
+          "y": 0.0
+        },
+        {
+          "x": 36.0,
+          "y": 5.0
+        },
+        {
+          "x": 30.0,
+          "y": 5.0
+        }
+      ],
+      "zs": [
+        100.0,
+        100.0,
+        100.5,
+        null
+      ],
+      "closed": true,
+      "widths": [
+        [
+          0.25,
+          0.25
+        ],
+        [
+          0.25,
+          0.25
+        ],
+        [
+          0.25,
+          0.25
+        ],
+        [
+          0.25,
+          0.25
+        ]
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 5,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 40.0,
+          "y": 0.0
+        },
+        {
+          "x": 50.0,
+          "y": 0.0
+        },
+        {
+          "x": 55.0,
+          "y": 5.0
+        }
+      ],
+      "bulges": [
+        0.5,
+        0.0,
+        0.0
+      ],
+      "widths": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "lineWeight": 0.5
+    },
+    {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "duvar",
+      "attrs": {},
+      "block": "0192f5a0-2580-7d4a-9b1e-4c2f8a6d0001",
+      "p": {
+        "x": 15.0,
+        "y": 15.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    }
+  ]
+}

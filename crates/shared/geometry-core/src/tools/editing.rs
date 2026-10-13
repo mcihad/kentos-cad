@@ -540,7 +540,13 @@ pub fn path_corner_at(e: &Shape, index: usize) -> Option<CornerGeom> {
     let parts = area_parts(e);
     let (k, i) = locate_part(&parts, index, outer_count)?;
     let (pts, bulges, closed) = match &parts[k] {
-        Shape::Polyline { pts, bulges, .. } => (pts, bulges.as_deref(), false),
+        // A closed polyline's first and last vertices are corners (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => (pts, bulges.as_deref(), *closed),
         Shape::Polygon { pts, bulges, .. } => (pts, bulges.as_deref(), true),
         _ => return None,
     };
@@ -840,6 +846,8 @@ mod tests {
             bulges: None,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
         // Five places over 20 m: 0, 5, 10 (the bend: the next edge's direction), 15, 20.
         let maps = path_array_transforms(&path, 5.0, None, true).expect("maps");

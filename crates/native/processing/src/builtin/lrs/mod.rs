@@ -202,6 +202,8 @@ pub fn polyline_of(parts: &[RoutePart], layer_id: &str, attrs: BTreeMap<String, 
                 })
                 .collect()
         }),
+        closed: false,
+        widths: None,
     })
 }
 

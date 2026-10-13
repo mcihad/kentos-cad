@@ -106,6 +106,7 @@ pub mod topology_follow;
 pub mod transform;
 pub mod trim;
 pub mod units_change;
+pub mod widths;
 
 pub use context::ExecutionContext;
 pub use kentos_contracts::{CommandError, CommandResult, CommandWarning};

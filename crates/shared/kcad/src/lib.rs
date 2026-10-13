@@ -376,8 +376,15 @@ pub const SCHEMA_WITH_SHEETS: u32 = 44;
 /// readers refuse such a file instead of losing them.
 pub const SCHEMA_WITH_REQUESTS: u32 = 45;
 
+/// Schema 46 (docs/specs/kcad-v2.md §6.6, docs/adr/0258): a polyline's
+/// `closed` (a closed line, not an area) and `widths` (each edge's start and
+/// end width in the drawing's length), written only when a polyline of the
+/// drawing or of a block definition has one; older readers refuse such a file
+/// instead of opening the line open or narrow.
+pub const SCHEMA_WITH_POLYLINE_EXTRAS: u32 = 46;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 44] = [
+pub const SCHEMAS: [u32; 45] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -422,6 +429,7 @@ pub const SCHEMAS: [u32; 44] = [
     SCHEMA_WITH_DIMENSION_REFS,
     SCHEMA_WITH_SHEETS,
     SCHEMA_WITH_REQUESTS,
+    SCHEMA_WITH_POLYLINE_EXTRAS,
 ];
 
 /// The file a drawing is saved as.

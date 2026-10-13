@@ -13,6 +13,7 @@ use crate::jsmath::js_min;
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::edges::entity_edges;
+use crate::ops::offset::path_like;
 use crate::vec2::Vec2;
 
 /// Index of the edge of an entity nearest to p (0 when it has none). Edges
@@ -103,24 +104,6 @@ pub(crate) fn part_kept(e: &Shape) -> &'static str {
     }
 }
 
-fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
-    if closed {
-        Shape::Polygon {
-            pts,
-            bulges,
-            holes: None,
-            parts: None,
-        }
-    } else {
-        Shape::Polyline {
-            pts,
-            bulges,
-            holes: None,
-            parts: None,
-        }
-    }
-}
-
 /// `Array.prototype.splice(start, 1, ...items)` on a bulge list.
 fn splice(v: &mut Vec<f64>, start: usize, items: &[f64]) {
     let start = start.min(v.len());
@@ -154,9 +137,17 @@ pub fn insert_vertex(e: &Shape, seg: usize, p: Vec2) -> Result<Geometry, String>
                 bulges: None,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             })));
         }
-        Shape::Polyline { pts, bulges, .. } => (pts, bulges.as_deref(), false),
+        // A closed polyline's closing edge takes a vertex as an area's (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => (pts, bulges.as_deref(), *closed),
         Shape::Polygon { pts, bulges, .. } => (pts, bulges.as_deref(), true),
         _ => {
             return Ok(Geometry::Error(
@@ -198,8 +189,8 @@ pub fn insert_vertex(e: &Shape, seg: usize, p: Vec2) -> Result<Geometry, String>
     };
     splice(&mut out_b, seg, &halves);
     let clean = clean_bulge_path(&out_p, Some(&out_b), closed, 1e-9);
-    Ok(Geometry::Ok(Entity::new(path_shape(
-        closed,
+    Ok(Geometry::Ok(Entity::new(path_like(
+        e,
         clean.pts,
         clean.bulges,
     ))))
@@ -215,7 +206,12 @@ pub fn remove_vertex(e: &Shape, index: usize) -> Geometry {
         .unwrap_or_else(Geometry::Error);
     }
     let (pts, bulges, closed) = match e {
-        Shape::Polyline { pts, bulges, .. } => (pts, bulges.as_deref(), false),
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => (pts, bulges.as_deref(), *closed),
         Shape::Polygon { pts, bulges, .. } => (pts, bulges.as_deref(), true),
         _ => {
             return Geometry::Error(
@@ -225,7 +221,9 @@ pub fn remove_vertex(e: &Shape, index: usize) -> Geometry {
     };
     let n = pts.len();
     if n < if closed { 4 } else { 3 } {
-        return Geometry::Error(if closed {
+        return Geometry::Error(if matches!(e, Shape::Polyline { .. }) && closed {
+            "Kapalı çoklu çizgide en az üç köşe kalmalı.".into()
+        } else if closed {
             "Kapalı alanda en az üç köşe kalmalı.".into()
         } else {
             "Çoklu çizgide en az iki köşe kalmalı.".into()
@@ -252,7 +250,7 @@ pub fn remove_vertex(e: &Shape, index: usize) -> Geometry {
         }
     }
     let clean = clean_bulge_path(&out_p, Some(&out_b), closed, 1e-9);
-    Geometry::Ok(Entity::new(path_shape(closed, clean.pts, clean.bulges)))
+    Geometry::Ok(Entity::new(path_like(e, clean.pts, clean.bulges)))
 }
 
 pub(crate) static OPS: &[Op] = &[

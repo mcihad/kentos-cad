@@ -128,6 +128,8 @@ pub fn line_geometry(
         bulges: arcs.then(|| l.bulges.clone()),
         zs: None,
         parts: None,
+        closed: false,
+        widths: None,
     }
 }
 

@@ -25,6 +25,7 @@ use kentos_geometry_core::entity::{Shape, area_parts, replace_part};
 use kentos_geometry_core::geom::bulge::{bulge_at, bulge_ring_area, is_arc_bulge, segment_mid};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::grips::{grip_part, hole_grip, mid_grip_segment};
+use kentos_geometry_core::ops::offset::path_like;
 use kentos_geometry_core::ops::vertex::{insert_vertex, remove_vertex};
 use kentos_geometry_core::vec2::Vec2;
 use kentos_native_application::geometry::{edit_geometry, shape};
@@ -115,10 +116,16 @@ struct Path<'a> {
 
 fn path(s: &Shape) -> Option<Path<'_>> {
     match s {
-        Shape::Polyline { pts, bulges, .. } => Some(Path {
+        // A closed polyline's closing edge is an edge too (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => Some(Path {
             pts,
             bulges: bulges.as_deref(),
-            closed: false,
+            closed: *closed,
         }),
         Shape::Polygon { pts, bulges, .. } => Some(Path {
             pts,
@@ -189,7 +196,7 @@ pub fn apply(menu: GripMenu, action: GripAction, cx: &mut Context<'_>) {
         }
         (GripAction::StraightEdge, Target::Edge { segment, .. }) => (
             EditOperation::StraightEdge,
-            Ok(with_bulge(pts, bulges, closed, segment, 0.0)),
+            Ok(with_bulge(&s, pts, bulges, segment, 0.0)),
         ),
         (GripAction::ArcEdge, Target::Edge { segment, .. }) => {
             // Outside of a counter-clockwise ring is right of travel, where a positive bulge bows.
@@ -200,7 +207,7 @@ pub fn apply(menu: GripMenu, action: GripAction, cx: &mut Context<'_>) {
             };
             (
                 EditOperation::ArcEdge,
-                Ok(with_bulge(pts, bulges, closed, segment, outward)),
+                Ok(with_bulge(&s, pts, bulges, segment, outward)),
             )
         }
         _ => return,
@@ -256,11 +263,12 @@ fn shape_of(g: Geometry) -> Result<Shape, String> {
 }
 
 /// The path with edge `segment` bent to `bulge`; its bulges kept only while
-/// one is an arc (the web's `withBulge`).
+/// one is an arc (the web's `withBulge`); of `like`'s kind, a closed polyline
+/// closed (docs/adr/0258 §1).
 fn with_bulge(
+    like: &Shape,
     pts: &[Vec2],
     bulges: Option<&[f64]>,
-    closed: bool,
     segment: usize,
     bulge: f64,
 ) -> Shape {
@@ -274,21 +282,7 @@ fn with_bulge(
         })
         .collect();
     let bulges = all.iter().any(|&b| is_arc_bulge(b)).then_some(all);
-    if closed {
-        Shape::Polygon {
-            pts: pts.to_vec(),
-            bulges,
-            holes: None,
-            parts: None,
-        }
-    } else {
-        Shape::Polyline {
-            pts: pts.to_vec(),
-            bulges,
-            holes: None,
-            parts: None,
-        }
-    }
+    path_like(like, pts.to_vec(), bulges)
 }
 
 /// An area's holes kept on its edited ring (the web's `{...geometryOf(e), ...edit}`).

@@ -5172,6 +5172,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -5259,6 +5263,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -17884,6 +17905,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -17971,6 +17996,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -28953,6 +28995,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -29040,6 +29086,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -33308,6 +33371,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -33395,6 +33462,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -35196,7 +35280,7 @@
       "id": "cad.polyline.create",
       "version": 1,
       "title": "Çoklu çizgi oluştur",
-      "summary": "Açık çizimde verilen katmana noktaları ve isteğe bağlı yay değerleriyle (kenar başına bir tane) açık bir çoklu çizgi ekler; tek geri alma adımıdır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Açık çizimde verilen katmana noktaları ve isteğe bağlı yay değerleriyle (kenar başına bir tane) bir çoklu çizgi ekler; tek geri alma adımıdır. closed: true son noktayı ilkine bağlar (kapalı çizgi; alan değildir). widths kenar başına başlangıç ve bitiş genişliğidir, çizimin uzunluğunda; kâğıdın çizgi kalınlığı (lineWeight) ayrıdır (ADR 0258). Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -35232,7 +35316,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.polyline.create` v1: one open polyline on a named layer,\nwritten as one undo step. Everything the command depends on is here\n(TODOS.md CMD-07): the polyline tool fills `layerId` from the active\nlayer and `color` from the current colour; the command reads neither.\n\nRefusals (`CommandError.code`), checked in this order: `too_few_points`,\n`not_finite` (points, x before y), `bulge_count`, `not_finite` (bulges),\n`invalid_line_weight` (not from 0 to 100 mm), `invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also\n`slots_exhausted`. Warning: `layer_hidden` (it is written all the same).\nGeometric validity (a path crossing itself, zero-length edges) is not\nchecked, as for `cad.polygon.create`.",
+        "description": "Input of `cad.polyline.create` v1: one open polyline on a named layer,\nwritten as one undo step. Everything the command depends on is here\n(TODOS.md CMD-07): the polyline tool fills `layerId` from the active\nlayer and `color` from the current colour; the command reads neither.\n\nRefusals (`CommandError.code`), checked in this order: `too_few_points`,\n`not_finite` (points, x before y), `bulge_count`, `not_finite` (bulges),\n`invalid_polyline` (widths not one pair per edge; docs/adr/0258),\n`not_finite` and `invalid_polyline` (each edge's widths, NaN or ±∞, then\nbelow 0), `invalid_line_weight` (not from 0 to 100 mm),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also\n`slots_exhausted`. Warning: `layer_hidden` (it is written all the same).\nGeometric validity (a path crossing itself, zero-length edges) is not\nchecked, as for `cad.polygon.create`.",
         "properties": {
           "attrs": {
             "additionalProperties": {
@@ -35245,7 +35329,7 @@
             ]
           },
           "bulges": {
-            "description": "One bulge per edge (`pts[i]` → `pts[i + 1]`), so one fewer than the\npoints: tan(θ/4) of the edge's included angle, positive\ncounter-clockwise, 0 straight. Absent: every edge is straight. The\ndocument keeps one value per point, as DXF does: the polyline is\nstored with a 0 after these, for the closing edge it does not have.",
+            "description": "One bulge per edge (`pts[i]` → `pts[i + 1]`, and a closed line's last\npoint back to its first), so one fewer than the points, or as many on\na closed line: tan(θ/4) of the edge's included angle, positive\ncounter-clockwise, 0 straight. Absent: every edge is straight. The\ndocument keeps one value per point, as DXF does: an open polyline is\nstored with a 0 after these, for the closing edge it does not have.",
             "items": {
               "format": "double",
               "type": "number"
@@ -35255,6 +35339,10 @@
               "null"
             ],
             "x-unit": "1"
+          },
+          "closed": {
+            "description": "A closed line, not an area (docs/adr/0258 §1): its last point joins\nits first by one edge more. Absent: open.",
+            "type": "boolean"
           },
           "color": {
             "description": "Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).",
@@ -35307,6 +35395,23 @@
               "string",
               "null"
             ]
+          },
+          "widths": {
+            "description": "Each edge's start and end width, one pair per edge as `bulges`, in\nthe project's length (m), not the paper's line weight (docs/adr/0258\n§2): finite, 0 or above. Absent or all 0: none, the line is drawn with\nits line weight.",
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
           }
         },
         "required": [
@@ -37622,6 +37727,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -37709,6 +37818,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -39456,6 +39582,7 @@
           "too_few_points",
           "bulge_count",
           "not_finite",
+          "invalid_polyline",
           "invalid_line_weight",
           "layer_not_found",
           "not_a_layer",
@@ -39516,6 +39643,49 @@
                 "x": 423530.0,
                 "y": 4512310.0
               }
+            ]
+          }
+        },
+        {
+          "title": "25 cm genişliğinde kapalı duvar ekseni: kapanan kenar da genişlikli",
+          "input": {
+            "closed": true,
+            "layerId": "duvar",
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 4.5
+              },
+              {
+                "x": 0.0,
+                "y": 4.5
+              }
+            ],
+            "widths": [
+              [
+                0.25,
+                0.25
+              ],
+              [
+                0.25,
+                0.25
+              ],
+              [
+                0.25,
+                0.25
+              ],
+              [
+                0.25,
+                0.25
+              ]
             ]
           }
         }
@@ -42092,6 +42262,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -42179,6 +42353,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -46390,6 +46581,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -46477,6 +46672,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -50702,6 +50914,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -50789,6 +51005,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -55307,6 +55540,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -55394,6 +55631,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -58212,7 +58466,7 @@
                 "type": "object"
               },
               {
-                "description": "An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the\none at vertex i bending the edge to vertex i + 1.",
+                "description": "A path: vertices and DXF bulges (tan(θ/4), CCW positive), the one at\nvertex i bending the edge to vertex i + 1; open unless `closed`.",
                 "properties": {
                   "bulges": {
                     "items": {
@@ -58224,6 +58478,10 @@
                       "null"
                     ],
                     "x-unit": "1"
+                  },
+                  "closed": {
+                    "description": "A closed line, not an area (docs/adr/0258 §1): its last vertex\njoins its first by the edge the last of `bulges` bends. Absent:\nopen. One part only.",
+                    "type": "boolean"
                   },
                   "kind": {
                     "const": "polyline",
@@ -58259,6 +58517,23 @@
                       "$ref": "#/$defs/Vec2"
                     },
                     "type": "array",
+                    "x-unit": "length"
+                  },
+                  "widths": {
+                    "description": "The edges' widths as written (docs/adr/0258 §2): a start and an\nend for each vertex's edge, in the drawing's length (the last\n`[0, 0]` on an open line); all 0: none. Absent: each edge takes\nits widths from the objects the edit names, where it runs along\none of their edges, as elevations do. One part only.",
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ],
                     "x-unit": "length"
                   },
                   "zs": {
@@ -62898,6 +63173,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -62985,6 +63264,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -64760,6 +65056,7 @@
           "invalid_path",
           "invalid_elevations",
           "invalid_measures",
+          "invalid_polyline",
           "empty_text",
           "invalid_height",
           "invalid_width_factor",
@@ -64788,7 +65085,8 @@
         ],
         "warnings": [
           "elevation_lost",
-          "measure_lost"
+          "measure_lost",
+          "widths_lost"
         ]
       },
       "examples": [
@@ -67365,6 +67663,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -67452,6 +67754,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -71755,6 +72074,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -71842,6 +72165,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -76258,6 +76598,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -76345,6 +76689,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -81123,6 +81484,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -81210,6 +81575,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -85536,6 +85918,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -85623,6 +86009,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -89935,6 +90338,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -90022,6 +90429,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -94321,6 +94745,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -94408,6 +94836,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -98756,6 +99201,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -98843,6 +99292,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -103107,6 +103573,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -103194,6 +103664,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -107419,6 +107906,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -107506,6 +107997,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -111795,6 +112303,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -111882,6 +112394,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -116169,6 +116698,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -116256,6 +116789,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -120579,6 +121129,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -120666,6 +121220,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -125122,6 +125693,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -125209,6 +125784,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -127695,7 +128287,7 @@
                 "type": "object"
               },
               {
-                "description": "An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the\none at vertex i bending the edge to vertex i + 1.",
+                "description": "A path: vertices and DXF bulges (tan(θ/4), CCW positive), the one at\nvertex i bending the edge to vertex i + 1; open unless `closed`.",
                 "properties": {
                   "bulges": {
                     "items": {
@@ -127707,6 +128299,10 @@
                       "null"
                     ],
                     "x-unit": "1"
+                  },
+                  "closed": {
+                    "description": "A closed line, not an area (docs/adr/0258 §1): its last vertex\njoins its first by the edge the last of `bulges` bends. Absent:\nopen. One part only.",
+                    "type": "boolean"
                   },
                   "kind": {
                     "const": "polyline",
@@ -127742,6 +128338,23 @@
                       "$ref": "#/$defs/Vec2"
                     },
                     "type": "array",
+                    "x-unit": "length"
+                  },
+                  "widths": {
+                    "description": "The edges' widths as written (docs/adr/0258 §2): a start and an\nend for each vertex's edge, in the drawing's length (the last\n`[0, 0]` on an open line); all 0: none. Absent: each edge takes\nits widths from the objects the edit names, where it runs along\none of their edges, as elevations do. One part only.",
+                    "items": {
+                      "items": {
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ],
                     "x-unit": "length"
                   },
                   "zs": {
@@ -132459,6 +133072,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -132546,6 +133163,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -134297,6 +134931,7 @@
           "not_finite",
           "too_few_corners",
           "too_few_points",
+          "invalid_polyline",
           "invalid_radius",
           "invalid_path",
           "empty_text",
@@ -136981,6 +137616,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -137068,6 +137707,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -141426,6 +142082,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -141513,6 +142173,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -146051,6 +146728,10 @@
                 ],
                 "x-unit": "1"
               },
+              "closed": {
+                "description": "A polyline whose last vertex joins its first: a closed line, not an\narea (docs/adr/0258 §1); its closing edge's bulge is the last of\n`bulges`. One part only. A polygon is a ring without saying so.",
+                "type": "boolean"
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -146138,6 +146819,23 @@
                   "string",
                   "null"
                 ]
+              },
+              "widths": {
+                "description": "A polyline's widths: the start and the end of the edge from each\nvertex, as many as `pts` (the last is the closing edge's, `[0, 0]`\non an open polyline), in the drawing's length, not the paper's line\nweight (docs/adr/0258 §2). Absent: none, the line is drawn with its\nline weight. One part only.",
+                "items": {
+                  "items": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "zs": {
                 "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -168438,6 +169136,21 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "ClosedPolylines": {
+            "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "An area: what a GIS project wants of a parcel's boundary.",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A closed line: a CAD drawing's polyline stays a line.",
+                "type": "string"
+              }
+            ]
+          },
           "FileUnit": {
             "description": "A unit a file's lengths may be read in, whatever the file says\n(docs/adr/0257 §1): DXF's `$INSUNITS` most used.",
             "oneOf": [
@@ -168474,6 +169187,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.import.dxf` v1. Refusals (`CommandError.code`), in order:\n`invalid_file_path` (empty, relative, a directory), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable` (not a DXF, or\nbroken), `layer_not_found` and `not_a_layer` (a target of `layers`, at\n`layers.<name>`), `layer_locked` (a target the objects cannot go onto),\n`nothing_to_import` (no object left to take). Warnings: `unit_assumed`,\n`unit_ignored`, `block_units_differ`, `import_losses`.",
         "properties": {
+          "closedPolylines": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ClosedPolylines"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the file's closed LWPOLYLINEs and POLYLINEs become, those KentOS\nmarked closed lines aside (docs/adr/0258 §1). Absent: closed lines in\na CAD project, areas in any other."
+          },
           "expectedRevision": {
             "description": "The drawing's revision the input was prepared against.",
             "type": [
@@ -168549,6 +169273,21 @@
             ],
             "type": "object"
           },
+          "ClosedPolylines": {
+            "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "An area: what a GIS project wants of a parcel's boundary.",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A closed line: a CAD drawing's polyline stays a line.",
+                "type": "string"
+              }
+            ]
+          },
           "ImportedLayer": {
             "description": "A layer an import made.",
             "properties": {
@@ -168675,6 +169414,10 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "closedPolylines": {
+            "$ref": "#/$defs/ClosedPolylines",
+            "description": "What the file's closed polylines became (docs/adr/0258 §1)."
+          },
           "dimensionStyles": {
             "format": "uint32",
             "minimum": 0,
@@ -168745,6 +169488,7 @@
           "bytes",
           "sha256",
           "unit",
+          "closedPolylines",
           "objects",
           "targets",
           "layers",
@@ -168778,6 +169522,21 @@
             ],
             "type": "object"
           },
+          "ClosedPolylines": {
+            "description": "What a file's closed polyline becomes (docs/adr/0258 §1).",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "An area: what a GIS project wants of a parcel's boundary.",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "A closed line: a CAD drawing's polyline stays a line.",
+                "type": "string"
+              }
+            ]
+          },
           "ImportedLayer": {
             "description": "A layer an import made.",
             "properties": {
@@ -168904,6 +169663,10 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "closedPolylines": {
+            "$ref": "#/$defs/ClosedPolylines",
+            "description": "What the file's closed polylines became (docs/adr/0258 §1)."
+          },
           "dimensionStyles": {
             "format": "uint32",
             "minimum": 0,
@@ -168974,6 +169737,7 @@
           "bytes",
           "sha256",
           "unit",
+          "closedPolylines",
           "objects",
           "targets",
           "layers",
@@ -169014,6 +169778,7 @@
           "output": {
             "blocks": 2,
             "bytes": 48213,
+            "closedPolylines": "line",
             "dimensionStyles": 0,
             "file": "kat-plani.dxf",
             "group": "import-kat-plani-dxf",
@@ -170360,6 +171125,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Ölçüler her köşeye bir tane değil ya da alana ölçü verildi."
+    },
+    {
+      "code": "widths_lost",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Düzenleme çoklu çizginin bazı kenarlarının genişliğini yazdığına taşıyamadı."
+    },
+    {
+      "code": "invalid_polyline",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kapalılık ya da genişlikler kurallara uymuyor: her köşeye bir başlangıç ve bir bitiş genişliği, sonlu ve sıfır ya da büyük; kapalı ya da genişlikli çizgi tek parçalı; alanın kapalılığı ve genişliği olmaz."
     },
     {
       "code": "empty_text",

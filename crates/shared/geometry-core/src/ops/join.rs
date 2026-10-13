@@ -41,6 +41,8 @@ fn chain_of(e: &Shape) -> Option<Chain> {
                 bulges: vec![bulge_from_arc(&g), 0.0],
             })
         }
+        // A closed polyline has no end to go on from (docs/adr/0258 §1).
+        Shape::Polyline { closed: true, .. } => None,
         Shape::Polyline { pts, bulges, .. } => Some(Chain {
             pts: pts.clone(),
             bulges: (0..pts.len())
@@ -108,6 +110,8 @@ fn to_geometry(c: &Chain, tol: f64) -> Result<Entity, String> {
             bulges: clean.bulges,
             holes: None,
             parts: None,
+            closed: false,
+            widths: None,
         }
     }))
 }

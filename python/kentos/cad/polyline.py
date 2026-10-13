@@ -24,11 +24,14 @@ if TYPE_CHECKING:
 
 class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan]):
     """``cad.polyline.create`` v1. Çoklu çizgi oluştur: Açık çizimde verilen katmana
-    noktaları ve isteğe bağlı yay değerleriyle (kenar başına bir tane) açık bir çoklu
-    çizgi ekler; tek geri alma adımıdır. Katman girdide açıkça verilir: kilitli katmana
-    yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
-    bulut projesine değişiklik project.changes ile gider.
+    noktaları ve isteğe bağlı yay değerleriyle (kenar başına bir tane) bir çoklu çizgi
+    ekler; tek geri alma adımıdır. closed: true son noktayı ilkine bağlar (kapalı çizgi;
+    alan değildir). widths kenar başına başlangıç ve bitiş genişliğidir, çizimin
+    uzunluğunda; kâğıdın çizgi kalınlığı (lineWeight) ayrıdır (ADR 0258). Katman girdide
+    açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
+    ile gider.
     """
     __slots__ = ()
     id = "cad.polyline.create"
@@ -48,20 +51,24 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         pts: Sequence[Vec2Like],
         attrs: Mapping[str, str] | None | Unset = UNSET,
         bulges: Sequence[float] | None | Unset = UNSET,
+        closed: bool | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        widths: Sequence[Sequence[float]] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> PolylineCreated:
         """Çoklu çizgi oluştur: Açık çizimde verilen katmana noktaları ve isteğe bağlı yay
-        değerleriyle (kenar başına bir tane) açık bir çoklu çizgi ekler; tek geri alma
-        adımıdır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana
-        uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
-        project.changes ile gider.
+        değerleriyle (kenar başına bir tane) bir çoklu çizgi ekler; tek geri alma adımıdır.
+        closed: true son noktayı ilkine bağlar (kapalı çizgi; alan değildir). widths kenar
+        başına başlangıç ve bitiş genişliğidir, çizimin uzunluğunda; kâğıdın çizgi kalınlığı
+        (lineWeight) ayrıdır (ADR 0258). Katman girdide açıkça verilir: kilitli katmana
+        yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
+        bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -69,11 +76,14 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             pts: Its points in order: x east (Y), y north (X), in the project's units
                 (m), float64. At least 2. Unit: length.
             attrs: GIS attributes, text in v1. Absent: none.
-            bulges: One bulge per edge (`pts[i]` → `pts[i + 1]`), so one fewer than the
-                points: tan(θ/4) of the edge's included angle, positive
+            bulges: One bulge per edge (`pts[i]` → `pts[i + 1]`, and a closed line's last
+                point back to its first), so one fewer than the points, or as many on
+                a closed line: tan(θ/4) of the edge's included angle, positive
                 counter-clockwise, 0 straight. Absent: every edge is straight. The
-                document keeps one value per point, as DXF does: the polyline is
+                document keeps one value per point, as DXF does: an open polyline is
                 stored with a 0 after these, for the closing edge it does not have. Unit: 1.
+            closed: A closed line, not an area (docs/adr/0258 §1): its last point joins
+                its first by one edge more. Absent: open.
             color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
             expected_revision: The document revision the input was prepared against, as decimal text
                 (from a plan, or the document). When given and the document is no
@@ -86,6 +96,10 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the
                 layer's style.
+            widths: Each edge's start and end width, one pair per edge as `bulges`, in
+                the project's length (m), not the paper's line weight (docs/adr/0258
+                §2): finite, 0 or above. Absent or all 0: none, the line is drawn with
+                its line weight. Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -103,11 +117,13 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             pts=[Vec2.of(p) for p in pts],
             attrs=_opt(attrs, lambda x: dict(x)),
             bulges=_opt(bulges, lambda x: list(x)),
+            closed=closed,
             color=color,
             expected_revision=expected_revision,
             label=label,
             line_weight=line_weight,
             symbol=symbol,
+            widths=_opt(widths, lambda x: [list(p) for p in x]),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -119,11 +135,13 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         pts: Sequence[Vec2Like],
         attrs: Mapping[str, str] | None | Unset = UNSET,
         bulges: Sequence[float] | None | Unset = UNSET,
+        closed: bool | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        widths: Sequence[Sequence[float]] | None | Unset = UNSET,
     ) -> PolylinePlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -133,11 +151,13 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             pts=[Vec2.of(p) for p in pts],
             attrs=_opt(attrs, lambda x: dict(x)),
             bulges=_opt(bulges, lambda x: list(x)),
+            closed=closed,
             color=color,
             expected_revision=expected_revision,
             label=label,
             line_weight=line_weight,
             symbol=symbol,
+            widths=_opt(widths, lambda x: [list(p) for p in x]),
         ))
 
     def validate(
@@ -149,11 +169,13 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         pts: Sequence[Vec2Like],
         attrs: Mapping[str, str] | None | Unset = UNSET,
         bulges: Sequence[float] | None | Unset = UNSET,
+        closed: bool | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        widths: Sequence[Sequence[float]] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -163,11 +185,13 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             pts=[Vec2.of(p) for p in pts],
             attrs=_opt(attrs, lambda x: dict(x)),
             bulges=_opt(bulges, lambda x: list(x)),
+            closed=closed,
             color=color,
             expected_revision=expected_revision,
             label=label,
             line_weight=line_weight,
             symbol=symbol,
+            widths=_opt(widths, lambda x: [list(p) for p in x]),
         ))
 
     def answer(
@@ -179,11 +203,13 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         pts: Sequence[Vec2Like],
         attrs: Mapping[str, str] | None | Unset = UNSET,
         bulges: Sequence[float] | None | Unset = UNSET,
+        closed: bool | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        widths: Sequence[Sequence[float]] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -198,11 +224,13 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             pts=[Vec2.of(p) for p in pts],
             attrs=_opt(attrs, lambda x: dict(x)),
             bulges=_opt(bulges, lambda x: list(x)),
+            closed=closed,
             color=color,
             expected_revision=expected_revision,
             label=label,
             line_weight=line_weight,
             symbol=symbol,
+            widths=_opt(widths, lambda x: [list(p) for p in x]),
         ), op=op, request_id=request_id, expected=expected)
 
 

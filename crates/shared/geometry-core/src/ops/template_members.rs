@@ -11,7 +11,7 @@ use crate::entity::{Entity, Shape, entity_anchor, is_multi_part};
 use crate::geom::bulge::{bulge_ring_area, has_bulges};
 use crate::geom::offset::{OffsetResult, offset_bulge_path, offset_path};
 use crate::op;
-use crate::ops::offset::path_shape;
+use crate::ops::offset::path_like;
 
 /// An offset member's side (`MEMBER_SIDES`): left or right of the drawing's
 /// direction on an open shape, inside or outside on a closed one, or both.
@@ -92,13 +92,14 @@ fn offset_signed(shape: &Shape, d: f64) -> Result<Shape, String> {
                 _ => Err(none()),
             }
         }
+        // A closed polyline's member is closed as it is (docs/adr/0258 §1).
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
-            let closed = matches!(shape, Shape::Polygon { .. });
+            let closed = crate::entity::is_closed_path(shape);
             if let Some(bs) = bulges.as_deref()
                 && has_bulges(Some(bs))
             {
                 return match offset_bulge_path(pts, bs, d, closed) {
-                    OffsetResult::Path { pts, bulges } => Ok(path_shape(closed, pts, Some(bulges))),
+                    OffsetResult::Path { pts, bulges } => Ok(path_like(shape, pts, Some(bulges))),
                     OffsetResult::Error { error } => Err(error),
                 };
             }
@@ -106,7 +107,7 @@ fn offset_signed(shape: &Shape, d: f64) -> Result<Shape, String> {
             if out.len() < if closed { 3 } else { 2 } {
                 return Err(none());
             }
-            Ok(path_shape(closed, out, None))
+            Ok(path_like(shape, out, None))
         }
         _ => Err(none()),
     }

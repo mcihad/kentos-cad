@@ -231,6 +231,8 @@ pub struct Path {
     ask_length: bool,
     /// Akış: waiting for a typed step.
     ask_step: bool,
+    /// Çoklu çizgi's Genişlik: waiting for a typed width (docs/adr/0258 §2).
+    ask_width: bool,
     /// Bulge of the closing segment: an arc when the area was closed on its first corner in arc mode.
     closing: f64,
     /// Where the button went down, while that click is being taken (closing on the first corner).
@@ -297,6 +299,7 @@ impl Path {
             arc_via: None,
             ask_length: false,
             ask_step: false,
+            ask_width: false,
             closing: 0.0,
             pressed_at: None,
             memory: Memory::default(),
@@ -429,6 +432,8 @@ impl Path {
 
     fn accept(&mut self, p: Vec2, cx: &mut Context<'_>) {
         points::echo(p, cx);
+        // A point given while the width is asked leaves the width as it was.
+        self.ask_width = false;
         self.on_point(p, cx);
         self.refill(false, cx);
     }
@@ -848,6 +853,23 @@ impl Path {
             self.square_close(cx);
             return true;
         }
+        // Çoklu çizgi (docs/adr/0258): Kapat closes it with a straight edge, a closed line and no
+        // area; Genişlik asks for every edge's width, kept for the session.
+        if self.shape == Shape::Open && !self.arc_mode && !self.ask_width {
+            if key == "K" && self.pts.len() >= 2 {
+                self.close_line(cx);
+                return true;
+            }
+            if key == "E" {
+                self.ask_width = true;
+                return true;
+            }
+        }
+        if key == "G" && self.ask_width {
+            // Geri leaves the width as it was; the points stay.
+            self.ask_width = false;
+            return true;
+        }
         let arc = match key {
             "A" => Some(Spec::Angle { sweep: None }),
             "M" => Some(Spec::Centre { c: None }),
@@ -1003,7 +1025,7 @@ impl Path {
             }
             Shape::Open => {
                 let length = bulge_path_length(&pts, bulges.as_deref(), false);
-                if self.create_polyline(&pts, cx) {
+                if self.create_polyline(&pts, false, cx) {
                     let text = format!("Çoklu çizgi eklendi: {}", cx.format().length(length));
                     cx.say(Level::Success, text);
                 }
@@ -1096,21 +1118,71 @@ impl Path {
         Some(area)
     }
 
+    /// Kapat: the polyline closed on its first point by a straight edge, a closed line
+    /// (docs/adr/0258 §1); written, the tool starts over.
+    fn close_line(&mut self, cx: &mut Context<'_>) {
+        let pts = self.pts.clone();
+        let mut bulges = self.bulges.clone();
+        bulges.push(0.0);
+        let length = bulge_path_length(&pts, Some(&bulges), true);
+        if self.create_polyline(&pts, true, cx) {
+            let text = format!("Kapalı çoklu çizgi eklendi: {}", cx.format().length(length));
+            cx.say(Level::Success, text);
+        }
+        self.reset();
+    }
+
+    /// Every edge's widths at the session's Genişlik (docs/adr/0258 §2); none at 0.
+    fn widths(&self, edges: usize) -> Option<Vec<[f64; 2]>> {
+        let w = self.memory.polyline_width;
+        (w > 0.0).then(|| vec![[w, w]; edges])
+    }
+
+    /// The band a wide polyline will draw, lightly filled under its line (docs/adr/0258 §2).
+    fn band_preview(&self, pts: &[Vec2], bulges: &[f64]) -> Vec<Area> {
+        if self.shape != Shape::Open || pts.len() < 2 {
+            return Vec::new();
+        }
+        let Some(widths) = self.widths(pts.len()) else {
+            return Vec::new();
+        };
+        kentos_geometry_core::geom::band::band(pts, Some(bulges), false, &widths)
+            .rings
+            .into_iter()
+            .map(|ring| Area {
+                rings: vec![ring],
+                fill: 0.3,
+                width: 0.0,
+                dash: None,
+                fill_tone: Tone::Accent,
+            })
+            .collect()
+    }
+
     /// Writes the polyline through the product command `cad.polyline.create`
-    /// (docs/adr/0027), as one undo step, with one bulge per drawn segment;
-    /// the command stores the document's per-point form. As for the area:
-    /// the active layer and the current colour; false when refused.
-    fn create_polyline(&self, pts: &[Vec2], cx: &mut Context<'_>) -> bool {
+    /// (docs/adr/0027), as one undo step, with one bulge per drawn segment
+    /// (and the closing one, straight, when `closed`, docs/adr/0258 §1) and
+    /// the session's width on every edge; the command stores the document's
+    /// per-point form. As for the area: the active layer and the current
+    /// colour; false when refused.
+    fn create_polyline(&self, pts: &[Vec2], closed: bool, cx: &mut Context<'_>) -> bool {
+        let mut bulges = self.bulges.clone();
+        if closed {
+            bulges.push(0.0);
+        }
+        let edges = if closed { pts.len() } else { pts.len() - 1 };
         let input = PolylineCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             pts: pts.iter().copied().map(wire).collect(),
-            bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
+            bulges: has_bulges(Some(&bulges)).then_some(bulges),
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
             attrs: cx.template_attrs(None),
             expected_revision: None,
             label: cx.template_label(),
             symbol: cx.template_symbol(),
+            closed,
+            widths: self.widths(edges),
         };
         let result = polyline::execute(&mut ExecutionContext::new(cx.doc), input);
         points::written(result, cx).is_some()
@@ -1218,6 +1290,7 @@ impl Path {
         self.spec = Spec::Tangent;
         self.ask_length = false;
         self.ask_step = false;
+        self.ask_width = false;
         self.closing = 0.0;
         self.way = None;
         self.region.clear();
@@ -1341,6 +1414,12 @@ impl Path {
                     prompt
                 }
             }
+            // Çoklu çizgi's width can be set before its first point (docs/adr/0258 §2).
+            Shape::Open => prompt.option_with(
+                "Genişlik",
+                "E",
+                self.format.length(self.memory.polyline_width),
+            ),
             _ => prompt,
         }
     }
@@ -1461,6 +1540,8 @@ impl Tool for Path {
                 bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }
         })
     }
@@ -1569,6 +1650,10 @@ impl Tool for Path {
         if self.ask_step {
             return Prompt::new(label, "akışın adım boyunu yazın").option("Geri", "G");
         }
+        if self.ask_width {
+            return Prompt::new(label, "kenarların genişliğini yazın (0: genişliksiz)")
+                .option("Geri", "G");
+        }
         if !self.arc_mode {
             // Biçim değiştir's line: straight edges, not along the line work.
             let straight = self.shape == Shape::Reshape;
@@ -1591,6 +1676,17 @@ impl Tool for Path {
             // Dik kapat once a ring has three corners (docs/adr/0166 §4).
             if self.shape.closed() && n >= 3 {
                 prompt = prompt.option("Dik kapat", "D");
+            }
+            // Çoklu çizgi's width and Kapat (docs/adr/0258).
+            if self.shape == Shape::Open {
+                prompt = prompt.option_with(
+                    "Genişlik",
+                    "E",
+                    self.format.length(self.memory.polyline_width),
+                );
+                if n >= 2 {
+                    prompt = prompt.option("Kapat", "K");
+                }
             }
             let prompt = prompt.option("Geri", "G");
             return if done {
@@ -1718,6 +1814,19 @@ impl Tool for Path {
         let plain = number.filter(|_| !text.contains([',', ';', '@', '<']));
         // Lengths are typed in the project's unit (docs/adr/0165 §2); an angle is not.
         let unit = cx.format();
+        if let Some(n) = plain.filter(|_| self.ask_width) {
+            if n >= 0.0 {
+                cx.memory.polyline_width = unit.to_metres(n);
+                self.memory.polyline_width = cx.memory.polyline_width;
+                self.ask_width = false;
+            } else {
+                cx.say(
+                    Level::Warn,
+                    "Genişlik eksi olamaz; genişliksiz çizgi için 0 yazın.",
+                );
+            }
+            return true;
+        }
         if let Some(n) = plain.filter(|_| self.ask_step) {
             if n > 0.0 {
                 cx.memory.stream_step = unit.to_metres(n);
@@ -1887,6 +1996,7 @@ impl Tool for Path {
                     .map(|region| region_area(region, 0.1, Some([5.0, 4.0]))),
             )
             .chain(self.region.iter().map(|r| region_area(r, 0.16, None)))
+            .chain(self.band_preview(&pts, &bulges))
             .collect();
         Preview {
             path,

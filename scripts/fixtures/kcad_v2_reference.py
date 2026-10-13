@@ -1093,7 +1093,24 @@ def path_fields(holes):
         table["parts"] = (lambda ps: array([line_part(pt) for pt in ps]), False)
         # Schema 39 (docs/adr/0224): a polyline's measures, a route's; an area has none.
         table["ms"] = (elevations, False)
+        # Schema 46 (docs/adr/0258): a closed line, written only when closed; each vertex's edge's widths.
+        table["closed"] = (lambda b: boolean(b) if b is True else None, False)
+        table["widths"] = (lambda ws: array([floats(w) for w in ws]), False)
     return table
+
+
+def polyline_extras(e):
+    """A closed and a wide polyline's rules (schema 46, docs/adr/0258), as a writer keeps them."""
+    closed, widths = e.get("closed", False), e.get("widths")
+    assert closed is not False or "closed" not in e, "kapalılık false yazılmaz"
+    if closed or widths is not None:
+        assert "parts" not in e, "kapalı ya da genişlikli çoklu çizgi tek parçalıdır"
+    assert not closed or len(e["pts"]) >= 2, "kapalı çoklu çizginin en az iki köşesi olmalı"
+    if widths is not None:
+        assert len(widths) == len(e["pts"]), "her köşeye bir genişlik çifti"
+        assert all(len(w) == 2 and w[0] >= 0 and w[1] >= 0 for w in widths), "genişlik sıfır ya da büyük"
+        assert closed or widths[-1] == [0.0, 0.0], "açık çizginin son genişliği [0, 0]"
+        assert any(a != 0 or b != 0 for a, b in widths), "bütün genişlikler sıfır yazılmaz"
 
 
 # A table's columns' alignments and lines (schema 22, docs/adr/0184): all lines is the field's absence, no value.
@@ -1444,6 +1461,8 @@ def entity(e, uid, index):
     if kind == "pointcloud":
         assert uid is not None, "blok tanımında nokta bulutu olamaz"
         cloud_shape(e)
+    if kind == "polyline":
+        polyline_extras(e)
     # A block definition's objects have no persistent ids to name (docs/adr/0186 §6).
     assert "assoc" not in e or uid is not None, "blok tanımının taraması nesnelere bağlı olamaz"
     assert "refs" not in e or uid is not None, "blok tanımının ölçüsü nesnelere bağlı olamaz"
@@ -1451,6 +1470,7 @@ def entity(e, uid, index):
     assert body.get("header", True) is not None, f"nesne {index}: header yalnız true yazılır"
     assert body.get("mirror", True) is not None, f"nesne {index}: mirror yalnız true yazılır"
     assert body.get("mask", True) is not None, f"nesne {index}: mask yalnız true yazılır"
+    assert body.get("closed", True) is not None, f"nesne {index}: closed yalnız true yazılır"
     if uid is not None:
         body["uid"] = blob(uid_bytes(uid))
     return cmap({kind: cmap(body)})
@@ -1651,6 +1671,12 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 46 (docs/adr/0258): a closed or a wide polyline, a block definition's too.
+    def extras(es):
+        return any(e["kind"] == "polyline" and ("closed" in e or "widths" in e) for e in es)
+
+    if extras(entities) or any(extras(b["entities"]) for b in blocks or []):
+        return 46
     if has_requests:
         return 45
     if has_sheets:
@@ -1935,7 +1961,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-46.kcad"] = container(root(cmap(parts), version=uint(46)))
+    files["schema-version-47.kcad"] = container(root(cmap(parts), version=uint(47)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2221,6 +2247,22 @@ def broken(minimal_content, minimal_file):
     files["dimension-refs-unknown-broken.kcad"] = in_schema(43, dimension_of(cmap({"b": corner(1, broken=text("lost"))})))
     files["dimension-refs-unknown-field.kcad"] = in_schema(43, dimension_of(cmap({"a": corner(0), "d": corner(1)})))
     files["dimension-refs-in-block.kcad"] = with_blocks([block(1, "Ölçü", [cmap({"dimension": cmap({"attrs": cmap({}), "layerId": text("0"), **dim_body, "refs": cmap({"a": corner(0)})})})])], version=43)
+    # A closed and a wide polyline are schema 46's (docs/adr/0258): in schema 45 unknown fields; an area has neither;
+    # `closed` only true; widths one pair of two numbers for each vertex, not below 0, the last pair 0 on an open
+    # line, not all 0; a closed or wide polyline of one part.
+    pair = lambda a, b: floats([a, b])  # noqa: E731
+    files["polyline-closed-in-schema-45.kcad"] = in_schema(45, path("polyline", 3, closed=boolean(True)))
+    files["polyline-widths-in-schema-45.kcad"] = in_schema(45, path("polyline", 2, widths=array([pair(1.0, 1.0), pair(0.0, 0.0)])))
+    files["polyline-closed-false.kcad"] = in_schema(46, path("polyline", 3, closed=boolean(False)))
+    files["polyline-widths-count.kcad"] = in_schema(46, path("polyline", 3, widths=array([pair(1.0, 1.0), pair(0.0, 0.0)])))
+    files["polyline-widths-negative.kcad"] = in_schema(46, path("polyline", 2, widths=array([pair(-1.0, 1.0), pair(0.0, 0.0)])))
+    files["polyline-widths-all-zero.kcad"] = in_schema(46, path("polyline", 2, widths=array([pair(0.0, 0.0), pair(0.0, 0.0)])))
+    files["polyline-widths-open-last.kcad"] = in_schema(46, path("polyline", 2, widths=array([pair(1.0, 1.0), pair(1.0, 1.0)])))
+    files["polyline-widths-three.kcad"] = in_schema(46, path("polyline", 2, widths=array([floats([1.0, 1.0, 1.0]), pair(0.0, 0.0)])))
+    files["polyline-widths-nan.kcad"] = in_schema(46, path("polyline", 2, widths=array([array([nan, f64(1.0)]), pair(0.0, 0.0)])))
+    files["polyline-closed-parts.kcad"] = in_schema(46, path("polyline", 3, closed=boolean(True), parts=array([cmap({"pts": square_line(5.0)})])))
+    files["polygon-closed.kcad"] = in_schema(46, path("polygon", 3, closed=boolean(True)))
+    files["polygon-widths.kcad"] = in_schema(46, path("polygon", 3, widths=array([pair(1.0, 1.0)] * 3)))
     # A picture is schema 24's (docs/adr/0192): in schema 23 an unknown kind; only in the drawing; a positive size, one
     # source, a clip of three corners or more inside the picture, an opacity from 0.1 to 1, `mirror` only when true.
     def image_of(**extra):
@@ -3077,6 +3119,7 @@ def build():
     out["dimension-refs.kcad"] = container(document(load("dimension-refs.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
+    out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

@@ -782,6 +782,8 @@ fn path_z(app: &mut App, zs: Option<Vec<Option<f64>>>) -> u32 {
             holes: None,
             zs,
             parts: None,
+            closed: false,
+            widths: None,
         }),
     )
 }
@@ -812,6 +814,8 @@ fn area_z(app: &mut App, zs: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f
             }]),
             zs,
             parts: None,
+            closed: false,
+            widths: None,
         }),
     )
 }
@@ -1389,6 +1393,8 @@ fn multi_part_lines_and_points_count_every_part() {
             holes: None,
             zs: None,
         }]),
+        closed: false,
+        widths: None,
     });
     assert!(doc.model.update(Slot(1), road));
     let Some(Entity::Point(mut marks)) = doc.model.get(Slot(5)).cloned() else {

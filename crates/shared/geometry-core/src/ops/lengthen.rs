@@ -14,10 +14,11 @@ use crate::ops::curve_cuts::Geometry;
 use crate::ops::path::{nearest_s, path_of, sub_path};
 use crate::vec2::Vec2;
 
+/// A closed polyline has no end to move (docs/adr/0258 §1).
 fn can_lengthen(e: &Shape) -> bool {
     matches!(
         e,
-        Shape::Line { .. } | Shape::Arc { .. } | Shape::Polyline { .. }
+        Shape::Line { .. } | Shape::Arc { .. } | Shape::Polyline { closed: false, .. }
     )
 }
 
@@ -66,6 +67,8 @@ pub fn lengthen_entity(e: &Entity, at_end: bool, new_length: f64) -> Geometry {
                 bulges: None,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }));
         }
         return Geometry::Ok(g);
@@ -165,6 +168,8 @@ pub fn lengthen_entity(e: &Entity, at_end: bool, new_length: f64) -> Geometry {
                 bulges,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }))
         }
         _ => Geometry::Error("Uzat-kısalt çizgi, yay ve açık çoklu çizgide çalışır.".into()),

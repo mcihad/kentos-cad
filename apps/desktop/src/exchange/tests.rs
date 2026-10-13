@@ -675,7 +675,8 @@ fn leader_screens() {
 /// A local project's DXF (docs/adr/0165 §2): a file in inches read into a
 /// project in millimetres, the window saying the file's unit and that its
 /// values come in the project's. The web's are `shots.mjs drawingunit`
-/// (unit-dxf-import).
+/// (unit-dxf-import). Then the file's unit (docs/adr/0257 §4) and Kapalı
+/// çoklu çizgiler (docs/adr/0258 §1, 28–29).
 ///
 /// ```text
 /// cargo test -p kentos-desktop exchange::tests::unit_screens -- --ignored --nocapture
@@ -767,7 +768,109 @@ fn unit_screens() {
                 &format!("aktar-{mode}-27-dxf-blok-birimi"),
                 size,
             );
+            // Kapalı çoklu çizgiler (docs/adr/0258 §1): the project type's choice, then a closed line chosen.
+            app.picker = Picker::File(fixture("dxf-import/closed.dxf"));
+            run(&mut app, "file.import.dxf");
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-28-dxf-kapali-cizgiler"),
+                size,
+            );
+            send(
+                &mut app,
+                Event::DrawingImport(drawing_import::Event::Closed(Some(
+                    kentos_contracts::ClosedPolylines::Line,
+                ))),
+            );
+            shot(
+                &mut app,
+                &out,
+                &format!("aktar-{mode}-29-dxf-kapali-cizgi-secilen"),
+                size,
+            );
         }
+    }
+}
+
+/// A DXF's closed polylines (docs/adr/0258 §1): into a project that is not
+/// CAD they go in as areas, the window saying a wide one's widths are lost; Kapalı çizgi
+/// chosen, the file is read again and they go in closed lines with their
+/// widths; a CAD project takes them as lines without being asked, and Alan
+/// chosen there makes them areas again.
+#[test]
+fn closed_polylines_go_in_as_the_window_says() {
+    // (area, closed, wide) of the file's layer's objects, in the drawing's order.
+    let walls = |app: &App| -> Vec<(bool, bool, bool)> {
+        let model = &app.document.as_ref().expect("open").model;
+        let layer = model
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == "DUVAR")
+            .expect("the file's layer")
+            .id
+            .clone();
+        model
+            .by_layer(&layer)
+            .map(|e| match e {
+                Entity::Polygon(p) => (true, p.closed, p.widths.is_some()),
+                Entity::Polyline(p) => (false, p.closed, p.widths.is_some()),
+                other => panic!("{other:?}"),
+            })
+            .collect()
+    };
+    let import = |cad: bool, chosen: Option<kentos_contracts::ClosedPolylines>| {
+        let mut app = app_with_drawing();
+        {
+            let model = &mut app.document.as_mut().expect("open").model;
+            let settings = kentos_contracts::ProjectSettings {
+                srid: 0,
+                drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+                ..model.settings().clone()
+            };
+            model.set_settings(settings);
+        }
+        if cad {
+            crate::files_testing::make_cad(&mut app);
+        }
+        app.picker = Picker::File(fixture("dxf-import/closed.dxf"));
+        run(&mut app, "file.import.dxf");
+        if chosen.is_some() {
+            send(
+                &mut app,
+                Event::DrawingImport(drawing_import::Event::Closed(chosen)),
+            );
+        }
+        let Some(Window::DrawingImport(state)) = &app.exchange else {
+            panic!("the DXF window");
+        };
+        let noted = format!("{state:?}").contains("Genişlikli kapalı çoklu çizgi");
+        send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+        assert_eq!(app.dialog, None, "the window closes after the import");
+        (app, noted)
+    };
+    use kentos_contracts::ClosedPolylines::{Area, Line};
+    // The room, the open wide wall, the closed wide wall.
+    let areas = [
+        (true, false, false),
+        (false, false, true),
+        (true, false, false),
+    ];
+    let lines = [
+        (false, true, false),
+        (false, false, true),
+        (false, true, true),
+    ];
+    for (cad, chosen, objects, noted) in [
+        (false, None, areas, true),
+        (false, Some(Line), lines, false),
+        (true, None, lines, false),
+        (true, Some(Area), areas, true),
+    ] {
+        let (app, said) = import(cad, chosen);
+        assert_eq!(walls(&app), objects, "{cad} {chosen:?}");
+        assert_eq!(said, noted, "{cad} {chosen:?}");
     }
 }
 

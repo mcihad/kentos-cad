@@ -82,6 +82,8 @@ pub enum Event {
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
     TextMask(Vec<Slot>, bool),
+    /// Kapalı ▾ of a polyline: a closed line, no area (docs/adr/0258 §1).
+    PolylineClosed(Vec<Slot>, bool),
     /// Ok ▾ of leaders (none: the filled arrow) and their Zemin ▾ (docs/adr/0146 §7).
     LeaderArrow(Vec<Slot>, Option<kentos_contracts::LeaderArrow>),
     LeaderMask(Vec<Slot>, bool),
@@ -131,6 +133,9 @@ pub enum Field {
     /// A line's start or end elevation, or every vertex's of a polyline or an
     /// area: a number sets it, an empty text clears it (docs/adr/0142).
     Elevation(Slot, Spot),
+    /// A polyline's width, every edge's, in the project's length; 0 or an
+    /// empty text: none (docs/adr/0258 §2).
+    PolylineWidth(Slot),
     /// Every vertex's elevation of these lines, polylines, areas and points.
     Elevations(Vec<Slot>),
     /// Texts' width factor: out of its range the command says why (docs/adr/0145).
@@ -575,6 +580,7 @@ impl App {
             },
             Event::TextAlign(slots, to) => properties::realign_texts(model, &slots, to),
             Event::TextMask(slots, on) => properties::set_text_mask(model, &slots, on),
+            Event::PolylineClosed(slots, on) => properties::set_polyline_closed(model, &slots, on),
             Event::TextStyle(slots, id) => {
                 properties::apply_text_style(model, &slots, id.as_deref())
             }
@@ -712,6 +718,16 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
     let f = kentos_interaction::Format::of(model.settings());
     match field {
         Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
+        // Typed in the project's unit; emptied or 0, none (docs/adr/0258 §2).
+        Field::PolylineWidth(slot) => {
+            let t = kentos_interaction::js_trim(text);
+            let n = if t.is_empty() { 0.0 } else { web_number(t) };
+            return if n.is_finite() {
+                properties::set_polyline_width(model, &[*slot], f.to_metres(n))
+            } else {
+                Vec::new()
+            };
+        }
         Field::Elevations(slots) => return commit_elevation(model, slots, Spot::All, text),
         // Any finite number: the command refuses one out of range and says why.
         Field::TextWidth(slots) => {
@@ -850,6 +866,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::Attribute(s, _) => *s,
         // Taken above.
         Field::Elevation(..)
+        | Field::PolylineWidth(_)
         | Field::Elevations(_)
         | Field::TextWidth(_)
         | Field::TextBox(_)

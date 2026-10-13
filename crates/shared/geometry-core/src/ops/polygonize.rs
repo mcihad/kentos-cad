@@ -278,7 +278,10 @@ fn open_path(shape: &Shape) -> Option<([Vec2; 2], Vec<Vec2>)> {
         Some([point_at(edges.first()?, 0.0), point_at(edges.last()?, 1.0)])
     };
     match shape {
-        Shape::Polyline { pts, .. } => ends(&edges()).map(|e| (e, pts.clone())),
+        // A closed polyline has no ends (docs/adr/0258 §1).
+        Shape::Polyline {
+            pts, closed: false, ..
+        } => ends(&edges()).map(|e| (e, pts.clone())),
         Shape::Line { .. } | Shape::Arc { .. } => ends(&edges()).map(|e| (e, e.to_vec())),
         Shape::Spline { closed: false, .. } => ends(&edges()).map(|e| (e, e.to_vec())),
         Shape::Ellipse { .. } => {

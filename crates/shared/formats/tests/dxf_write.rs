@@ -155,6 +155,8 @@ fn objects() -> Vec<Entity> {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }),
         Entity::Polyline(PathEntity {
             ms: None,
@@ -164,6 +166,8 @@ fn objects() -> Vec<Entity> {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }),
         Entity::Polygon(PathEntity {
             ms: None,
@@ -190,6 +194,8 @@ fn objects() -> Vec<Entity> {
             ]),
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }),
         Entity::Polygon(PathEntity {
             ms: None,
@@ -199,6 +205,8 @@ fn objects() -> Vec<Entity> {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }),
         Entity::Circle(CircleEntity {
             base: base("parsel"),
@@ -1159,6 +1167,8 @@ fn elevated() -> Vec<Entity> {
             holes: None,
             zs: Some(vec![Some(10.0), None, Some(12.5 + third), Some(-3.0)]),
             parts: None,
+            closed: false,
+            widths: None,
         }),
         Entity::Polyline(PathEntity {
             ms: None,
@@ -1168,6 +1178,8 @@ fn elevated() -> Vec<Entity> {
             holes: None,
             zs: Some(vec![Some(0.0), Some(0.0), Some(0.0)]),
             parts: None,
+            closed: false,
+            widths: None,
         }),
         // 5: an area whose outline has a vertex without a height, with a hole that has them and one that has none.
         Entity::Polygon(PathEntity {
@@ -1189,6 +1201,8 @@ fn elevated() -> Vec<Entity> {
             ]),
             zs: Some(vec![Some(100.0), Some(101.0), None, Some(103.0)]),
             parts: None,
+            closed: false,
+            widths: None,
         }),
         // 6-7: arcs at one height (a LWPOLYLINE holds one), at 0 on purpose.
         Entity::Polyline(PathEntity {
@@ -1199,6 +1213,8 @@ fn elevated() -> Vec<Entity> {
             holes: None,
             zs: Some(vec![Some(250.5); 3]),
             parts: None,
+            closed: false,
+            widths: None,
         }),
         Entity::Polygon(PathEntity {
             ms: None,
@@ -1208,6 +1224,8 @@ fn elevated() -> Vec<Entity> {
             holes: None,
             zs: Some(vec![Some(0.0); 3]),
             parts: None,
+            closed: false,
+            widths: None,
         }),
         // 8: arcs at several heights: DXF has no 3D polyline with arcs.
         Entity::Polyline(PathEntity {
@@ -1218,6 +1236,8 @@ fn elevated() -> Vec<Entity> {
             holes: None,
             zs: Some(vec![Some(1.0), Some(2.0), Some(3.0)]),
             parts: None,
+            closed: false,
+            widths: None,
         }),
     ]
 }
@@ -1378,6 +1398,8 @@ fn what_cannot_be_written_is_left_out_and_said() {
         holes: None,
         zs: Some(vec![Some(1.0), Some(f64::INFINITY)]),
         parts: None,
+        closed: false,
+        widths: None,
     });
     let (text, report) = write(&input(vec![bad(f64::NAN), path, bad(5.0)]));
     let r = read(&text);
@@ -1400,6 +1422,8 @@ fn what_cannot_be_written_is_left_out_and_said() {
         holes: None,
         zs: Some(vec![Some(1.0)]),
         parts: None,
+        closed: false,
+        widths: None,
     });
     let (text, _) = write(&input(vec![short]));
     assert!(entities_of(&pairs(&text), "POLYLINE").is_empty());
@@ -1440,6 +1464,8 @@ fn a_multi_part_area_is_one_closed_polyline_a_part() {
             holes: Some(vec![hole.clone()]),
             zs: None,
         }]),
+        closed: false,
+        widths: None,
     });
     let (text, report) = write(&input(vec![area]));
     assert_eq!(entities_of(&pairs(&text), "LWPOLYLINE").len(), 3);
@@ -1557,6 +1583,8 @@ fn lights() -> DxfWriteInput {
         }]),
         zs: None,
         parts: None,
+        closed: false,
+        widths: None,
     });
     let mut first = insert("yapi", 1, tm(10.0, 20.0), 2.5, 0.1, true);
     first.base_mut().color = Some("#E5484D".into());

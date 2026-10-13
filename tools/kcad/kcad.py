@@ -161,6 +161,9 @@ SCHEMA_WITH_DIMENSION_REFS = 43
 SCHEMA_WITH_SHEETS = 44
 # Schema 45: schema 44 and the document's `requests`, the requests the drawing executed (docs/adr/0253 §6).
 SCHEMA_WITH_REQUESTS = 45
+# Schema 46: schema 45 and a polyline's `closed` (a closed line, not an area) and `widths` (each vertex's edge's start
+# and end width in the drawing's length), in the drawing and in a block definition (docs/adr/0258).
+SCHEMA_WITH_POLYLINE_EXTRAS = 46
 # The request ledger's bounds (kentos_contracts::command_call).
 REQUEST_LEDGER = 256
 REQUEST_ANSWER_LIMIT = 64 * 1024
@@ -321,7 +324,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1810,6 +1813,7 @@ class _Schema:
         self.dim_refs = version >= SCHEMA_WITH_DIMENSION_REFS
         self.sheets = version >= SCHEMA_WITH_SHEETS
         self.requests = version >= SCHEMA_WITH_REQUESTS
+        self.polyline_extras = version >= SCHEMA_WITH_POLYLINE_EXTRAS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3058,6 +3062,8 @@ class _Schema:
             fields = self.fields(table)(body)
             if kind in ("polyline", "polygon"):
                 self.same_length(fields)
+            if kind == "polyline":
+                self.polyline_extras_rules(fields)
             if kind == "dimension":
                 self.dimension_rules(fields)
             if kind == "text" and ("labelOf" in fields) != ("labelScale" in fields):
@@ -3900,6 +3906,42 @@ class _Schema:
             self.path.append("ms")
             self.fail("bad_value", f"{len(obj['ms'])} ölçü var ama {len(obj['pts'])} köşe var; her köşenin bir ölçüsü olmalı (ölçüsüz köşe için null)")
 
+    def width_pair(self, v):
+        """A polyline edge's start and end width (schema 46, docs/adr/0258 §2): two numbers."""
+        if type(v) is not list:
+            self.fail("wrong_type", "genişlik [başlangıç, bitiş] dizisi olmalı")
+        if len(v) != 2:
+            self.fail("bad_value", f"genişlik 2 sayı olmalı (başlangıç, bitiş), {len(v)} var")
+        return [self.at(0, self.float, v[0]), self.at(1, self.float, v[1])]
+
+    def polyline_extras_rules(self, obj):
+        """A closed and a wide polyline (schema 46, docs/adr/0258): of one part; a closed one of two vertices or more;
+        widths one pair for each vertex, not below 0, the last pair 0 on an open line and not all 0."""
+        closed = obj.get("closed", False)
+        widths = obj.get("widths")
+        if (closed or widths is not None) and "parts" in obj:
+            self.path.append("parts")
+            self.fail("bad_value", "kapalı ya da genişlikli çoklu çizgi tek parçalıdır")
+        n = len(obj["pts"])
+        if closed and n < 2:
+            self.path.append("closed")
+            self.fail("bad_value", f"kapalı çoklu çizginin {n} köşesi var; en az iki olmalı")
+        if widths is None:
+            return
+        self.path.append("widths")
+        if len(widths) != n:
+            self.fail("bad_value", f"{len(widths)} genişlik var ama {n} köşe var; her köşeden çıkan kenara bir genişlik çifti")
+        for i, (a, b) in enumerate(widths):
+            if not (a >= 0 and b >= 0):
+                self.path.append(str(i))
+                self.fail("bad_value", "genişlik sıfır ya da büyük olmalı")
+        if not closed and widths[-1] != [0.0, 0.0]:
+            self.path.append(str(n - 1))
+            self.fail("bad_value", "açık çoklu çizginin son köşesinden kenar çıkmaz; son genişlik [0, 0] olmalı")
+        if all(a == 0 and b == 0 for a, b in widths):
+            self.fail("bad_value", "bütün genişlikler sıfır; genişliksiz çizginin alanı yazılmaz")
+        self.path.pop()
+
     def ring(self, v):
         table = {"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False)}
         if self.elevations:
@@ -3953,6 +3995,10 @@ def _path(s, holes):
     # A polyline's measures from schema 39 on (docs/adr/0224): a route's; an area has none.
     if s.measures and not holes:
         table["ms"] = (s.array(s.elevation), False)
+    # A polyline's `closed` and `widths` from schema 46 on (docs/adr/0258): a line's; an area has neither.
+    if s.polyline_extras and not holes:
+        table["closed"] = (s.only_true, False)
+        table["widths"] = (s.array(s.width_pair), False)
     return table
 
 

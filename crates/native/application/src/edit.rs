@@ -34,6 +34,7 @@ use kentos_contracts::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::ops::elevation::{Carry, Elevated};
+use kentos_geometry_core::ops::widths::Widened;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_blank};
@@ -41,6 +42,7 @@ use crate::checks::{self, Stop, error, is_blank};
 pub use crate::codes;
 use crate::elevation;
 use crate::geometry::entity_of;
+use crate::widths;
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesEdit) -> CommandResult<()> {
@@ -416,6 +418,11 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         .flat_map(|(_, e)| elevation::measure_paths(e))
         .filter(|p| elevation::elevated(std::slice::from_ref(p)))
         .collect();
+    // The polylines' widths alike, by the core's own rules (docs/adr/0258 §2).
+    let wide: Vec<Widened> = found
+        .iter()
+        .filter_map(|(_, e)| widths::source(e))
+        .collect();
     let how = if input.operation == EditOperation::Offset {
         Carry::Offset
     } else {
@@ -434,6 +441,8 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             | EditOperation::EdgeShift
     );
     let (mut lost, mut lost_m) = (0, 0);
+    // The polylines whose widths an edit could not carry, each once (Patlat's pieces are one's).
+    let mut lost_w = std::collections::BTreeSet::new();
     // Deliği doldur's area takes its hole's elevations, if it has any: its
     // area keeps its own (docs/adr/0173 §5).
     let keeps = input.operation == EditOperation::HoleFill;
@@ -458,6 +467,14 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 && elevation::elevated(&before)
             {
                 lost_m += 1;
+            }
+        }
+        // Widths written with the geometry are written as they are (Öznitelikler, a script).
+        if !written_w(geometry) && !wide.is_empty() {
+            let before = widths::source(from);
+            let same = if by_place { before.as_ref() } else { None };
+            if !widths::carry(&mut entity, &wide, same, how) && before.is_some() {
+                lost_w.insert(from.base().id);
             }
         }
         entity
@@ -547,6 +564,16 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         checked.warnings.push(CommandWarning {
             code: codes::MEASURE_LOST.into(),
             message: format!("{lost_m} nesnenin ölçüleri (M) bu işlemde korunmadı."),
+            path: Some("changes".into()),
+        });
+    }
+    if !lost_w.is_empty() {
+        checked.warnings.push(CommandWarning {
+            code: codes::WIDTHS_LOST.into(),
+            message: format!(
+                "{} çoklu çizginin genişliği bu işlemde korunmadı.",
+                lost_w.len()
+            ),
             path: Some("changes".into()),
         });
     }
@@ -816,6 +843,32 @@ pub(crate) fn check_geometry(
             ),
             at(""),
         )));
+    }
+    // A closed and a wide polyline's rules (docs/adr/0258); widths all 0 are none.
+    if let EntityGeometry::Polyline {
+        pts,
+        closed,
+        widths,
+        parts,
+        ..
+    } = g
+    {
+        let given = widths
+            .as_deref()
+            .filter(|w| w.iter().any(|[a, b]| *a != 0.0 || *b != 0.0));
+        if let Some(why) =
+            kentos_contracts::path_extras_problem(pts.len(), *closed, given, parts.is_some(), false)
+        {
+            return Err(Stop::failed(error(
+                codes::INVALID_POLYLINE,
+                why,
+                at(if given.is_some() {
+                    ".widths"
+                } else {
+                    ".closed"
+                }),
+            )));
+        }
     }
     // A dimension its kind's rules and the core can draw (docs/adr/0147 §6).
     crate::dimension::check(g, &at)?;
@@ -1197,6 +1250,17 @@ fn written(g: &EntityGeometry) -> bool {
     }
 }
 
+/// Whether a polyline's widths are written with the geometry (docs/adr/0258 §2).
+fn written_w(g: &EntityGeometry) -> bool {
+    matches!(
+        g,
+        EntityGeometry::Polyline {
+            widths: Some(_),
+            ..
+        }
+    )
+}
+
 /// Whether measures are written with the geometry (docs/adr/0224 §2): a
 /// line's or a polyline's own or a part's list.
 fn written_m(g: &EntityGeometry) -> bool {
@@ -1309,11 +1373,17 @@ fn finite(g: &EntityGeometry) -> bool {
             zs,
             ms,
             parts,
+            widths,
+            ..
         } => {
             pts(p)
                 && values(bulges)
                 && heights(zs)
                 && heights(ms)
+                && widths
+                    .iter()
+                    .flatten()
+                    .all(|[a, b]| a.is_finite() && b.is_finite())
                 && parts
                     .iter()
                     .flatten()

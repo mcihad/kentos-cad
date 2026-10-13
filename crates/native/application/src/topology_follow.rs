@@ -111,11 +111,15 @@ fn straight(shape: Shape) -> Shape {
             bulges,
             holes,
             parts,
+            closed,
+            widths,
         } => Shape::Polyline {
             pts,
             bulges: bulges.filter(|b| has_bulges(Some(b))),
             holes,
             parts,
+            closed,
+            widths,
         },
         Shape::Polygon {
             pts,

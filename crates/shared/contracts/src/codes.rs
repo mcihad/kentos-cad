@@ -177,6 +177,15 @@ codes! {
     /// measures given to an area (docs/adr/0224 §2).
     INVALID_MEASURES = "invalid_measures", Failed, false, "Ölçüler her köşeye bir tane değil ya da alana ölçü verildi.";
 
+    // ── Closed and wide polylines ───────────────────────────────────────
+    /// A warning: an edit could not carry a polyline's widths to every edge
+    /// it wrote (docs/adr/0258 §2).
+    WIDTHS_LOST = "widths_lost", Warning, false, "Düzenleme çoklu çizginin bazı kenarlarının genişliğini yazdığına taşıyamadı.";
+    /// A polyline's `closed` or `widths` out of their rules: widths not one
+    /// pair for each vertex, not finite or below 0; a closed or wide polyline
+    /// of more than one part; an area given either (docs/adr/0258).
+    INVALID_POLYLINE = "invalid_polyline", Failed, false, "Kapalılık ya da genişlikler kurallara uymuyor: her köşeye bir başlangıç ve bir bitiş genişliği, sonlu ve sıfır ya da büyük; kapalı ya da genişlikli çizgi tek parçalı; alanın kapalılığı ve genişliği olmaz.";
+
     // ── Properties, texts, links ────────────────────────────────────────
     /// A text whose text is empty or only white space.
     EMPTY_TEXT = "empty_text", Failed, false, "Yazının metni boş ya da yalnız boşluk.";

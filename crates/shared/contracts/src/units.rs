@@ -266,6 +266,10 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             for a in p.parts.iter_mut().flatten() {
                 s.part(a);
             }
+            // A polyline's widths are lengths in the drawing (docs/adr/0258 §2).
+            for w in p.widths.iter_mut().flatten().flatten() {
+                *w = s.apply(*w);
+            }
         }
         Entity::Circle(c) => {
             s.point(&mut c.c);

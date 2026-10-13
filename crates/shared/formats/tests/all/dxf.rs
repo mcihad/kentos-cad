@@ -109,6 +109,8 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
         panic!("{:?}", e[2])
     };
     assert_eq!(p.bulges, Some(vec![-1.0, 0.0]));
+    // Its constant width (43) is every edge's; an open line's last vertex has none (docs/adr/0258 §2).
+    assert_eq!(p.widths, Some(vec![[0.5, 0.5], [0.5, 0.5], [0.0, 0.0]]));
     let Entity::Polyline(p) = &e[3] else {
         panic!("{:?}", e[3])
     };
@@ -209,8 +211,9 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
 
     assert!(skipped(&r, "IMAGE").is_some_and(|s| s.contains("raster")));
     assert!(skipped(&r, "Kâğıt uzayı nesnesi").is_some());
+    // Widths are read, no longer said lost (docs/adr/0258 §2).
     assert!(
-        r.report
+        !r.report
             .notes
             .iter()
             .any(|n| n.what == "Genişlikli çoklu çizgi")

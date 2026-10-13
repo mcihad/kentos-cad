@@ -223,6 +223,8 @@ pub fn path_shape(path: &[Edge]) -> Option<Shape> {
         bulges: curved.then_some(bulges),
         holes: None,
         parts: None,
+        closed: false,
+        widths: None,
     })
 }
 

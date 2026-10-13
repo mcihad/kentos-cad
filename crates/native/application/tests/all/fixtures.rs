@@ -331,10 +331,17 @@ impl Input for LineCreate {
 }
 
 impl Input for PolylineCreate {
-    /// `pts[1].y`, `bulges[0]`, `lineWeight` (which the step's input must give).
+    /// `pts[1].y`, `bulges[0]`, `widths[1][0]` (docs/adr/0258), `lineWeight` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             self.line_weight.as_mut()
+        } else if let Some(rest) = path.strip_prefix("widths[") {
+            let (i, rest) = rest.split_once("][")?;
+            let k: usize = rest.strip_suffix(']')?.parse().ok()?;
+            self.widths
+                .as_mut()?
+                .get_mut(i.parse::<usize>().ok()?)?
+                .get_mut(k)
         } else if path.starts_with("pts[") {
             point_number(&mut self.pts, path)
         } else {

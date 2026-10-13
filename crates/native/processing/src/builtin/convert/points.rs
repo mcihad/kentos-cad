@@ -414,6 +414,8 @@ fn run_points_to_path(
                 bulges: None,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }
         };
         if let Some(mut e) = new_object(s, layer, attrs) {

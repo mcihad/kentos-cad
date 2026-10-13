@@ -309,14 +309,20 @@ pub fn corner_in_path(e: &Shape, index: usize, op: &CornerOp) -> Result<Geometry
     let Some((k, i)) = locate_part(&parts, index, outer_count) else {
         return Err(format!("{}. köşe yok.", index + 1));
     };
-    let (pts, bulges, holes) = match &parts[k] {
-        Shape::Polyline { pts, bulges, .. } => (pts, bulges, None),
+    // A closed polyline's first and last vertices are corners as an area's (docs/adr/0258 §1).
+    let (pts, bulges, holes, closed) = match &parts[k] {
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed,
+            ..
+        } => (pts, bulges, None, *closed),
         Shape::Polygon {
             pts, bulges, holes, ..
-        } => (pts, bulges, Some(holes.clone())),
+        } => (pts, bulges, Some(holes.clone()), true),
         _ => return Err("Köşe yalnızca çoklu çizgide ve kapalı alanda işlenir.".into()),
     };
-    let path = match corner_of_path(pts, bulges.as_deref(), holes.is_some(), i, op)? {
+    let path = match corner_of_path(pts, bulges.as_deref(), closed, i, op)? {
         CornerResult::Path(path) => path,
         CornerResult::Error(error) => return Ok(Geometry::Error(error)),
     };
@@ -332,6 +338,8 @@ pub fn corner_in_path(e: &Shape, index: usize, op: &CornerOp) -> Result<Geometry
             bulges: path.bulges,
             holes: None,
             parts: None,
+            closed,
+            widths: None,
         },
     };
     let shape = if parts.len() > 1 {

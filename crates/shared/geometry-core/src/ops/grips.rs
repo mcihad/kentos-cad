@@ -42,9 +42,10 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         Shape::PointCloud { .. } => Vec::new(),
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
-            let polygon = matches!(e, Shape::Polygon { .. });
+            // A closed polyline's closing edge has its middle too (docs/adr/0258 §1).
+            let ring = crate::entity::is_closed_path(e);
             let n = pts.len();
-            let count = if polygon { n } else { n.saturating_sub(1) };
+            let count = if ring { n } else { n.saturating_sub(1) };
             let mut out = pts.clone();
             for i in 0..count {
                 out.push(segment_mid(
@@ -149,7 +150,10 @@ fn dimension_grips(e: &Shape) -> Vec<(Vec2, DimensionGrip)> {
 
 fn segment_count(e: &Shape) -> Option<usize> {
     match e {
-        Shape::Polygon { pts, .. } => Some(pts.len()),
+        Shape::Polygon { pts, .. }
+        | Shape::Polyline {
+            pts, closed: true, ..
+        } => Some(pts.len()),
         Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } => {
             Some(pts.len().saturating_sub(1))
         }
@@ -362,6 +366,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                         bulges,
                         holes,
                         parts: None,
+                        closed: matches!(e.shape, Shape::Polyline { closed: true, .. }),
+                        widths: None,
                     },
                 }
             };

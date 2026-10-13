@@ -290,6 +290,8 @@ impl Bench {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
         let entity = if closed {
             Entity::Polygon(path)
@@ -314,6 +316,8 @@ impl Bench {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
         self.doc.add(Entity::Polyline(path)).expect("a slot")
     }

@@ -199,6 +199,8 @@ impl Centerline {
             bulges: axis.bulges.clone().filter(|b| b.iter().any(|&x| x != 0.0)),
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         };
         if points::write_objects(vec![geometry], Some(CreateOperation::Centerline), cx).is_none() {
             return;

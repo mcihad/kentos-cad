@@ -55,6 +55,8 @@ fn area(b: &mut Bench, pts: &[[f64; 2]], zs: Option<Vec<Option<f64>>>) -> Slot {
             holes: None,
             zs,
             parts: None,
+            closed: false,
+            widths: None,
         }),
     )
 }

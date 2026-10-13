@@ -112,7 +112,7 @@
     { "text": "b" },
     { "text": "1" },
     { "key": "Enter" },
-    { "text": "a", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Geri (G)]" } },
+    { "text": "a", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Genişlik (E): 0.000 m / Geri (G)]" } },
     { "key": "Esc" },
     { "key": "Esc" }
   ]

@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    ClosedPolylines,
+    ClosedPolylinesName,
     DxfImported,
     FileUnit,
     FileUnitName,
@@ -55,6 +57,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         /,
         *,
         path: str,
+        closed_polylines: ClosedPolylines | ClosedPolylinesName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         explode_blocks: bool | Unset = UNSET,
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
@@ -85,6 +88,9 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         Args:
             doc: The drawing it works on.
             path: The file to read, an absolute path.
+            closed_polylines: What the file's closed LWPOLYLINEs and POLYLINEs become, those KentOS
+                marked closed lines aside (docs/adr/0258 §1). Absent: closed lines in
+                a CAD project, areas in any other.
             expected_revision: The drawing's revision the input was prepared against.
             explode_blocks: Blokları patlat: every insert opened into its objects, no block
                 definitions taken (docs/adr/0144 §5).
@@ -113,6 +119,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         """
         return self.execute_input(doc, ImportDxf(
             path=path,
+            closed_polylines=closed_polylines,
             expected_revision=expected_revision,
             explode_blocks=explode_blocks,
             file_unit=file_unit,
@@ -127,6 +134,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         /,
         *,
         path: str,
+        closed_polylines: ClosedPolylines | ClosedPolylinesName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         explode_blocks: bool | Unset = UNSET,
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
@@ -139,6 +147,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         """
         return self.plan_input(doc, ImportDxf(
             path=path,
+            closed_polylines=closed_polylines,
             expected_revision=expected_revision,
             explode_blocks=explode_blocks,
             file_unit=file_unit,
@@ -153,6 +162,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         /,
         *,
         path: str,
+        closed_polylines: ClosedPolylines | ClosedPolylinesName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         explode_blocks: bool | Unset = UNSET,
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
@@ -165,6 +175,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         """
         return self.validate_input(doc, ImportDxf(
             path=path,
+            closed_polylines=closed_polylines,
             expected_revision=expected_revision,
             explode_blocks=explode_blocks,
             file_unit=file_unit,
@@ -179,6 +190,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         /,
         *,
         path: str,
+        closed_polylines: ClosedPolylines | ClosedPolylinesName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         explode_blocks: bool | Unset = UNSET,
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
@@ -196,6 +208,7 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         """
         return self.answer_input(doc, ImportDxf(
             path=path,
+            closed_polylines=closed_polylines,
             expected_revision=expected_revision,
             explode_blocks=explode_blocks,
             file_unit=file_unit,

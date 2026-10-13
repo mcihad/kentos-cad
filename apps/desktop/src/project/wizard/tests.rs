@@ -411,6 +411,8 @@ fn axes_screens() {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }))
             .expect("a slot");
         app.selection.set(vec![plate]);

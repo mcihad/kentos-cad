@@ -158,6 +158,17 @@ Liste:
   `io/apply.ts`'in uygulama katmanının kurallarıyla (`kentos_native_application::import_apply`) eşitliği; ortak durumlar
   `fixtures/commands/v1/file.import.dxf.json` (yeni beklentiler `fields`, `nodes`, yer tutucular `$fixture:`, `"$any"`) ve
   `fixtures/formats/v1/dxf-units/cases.json`; `FORMATS_VERSION` 58 (web'in kopyası 53).
+- [ ] `CAD-DATA-18`, `CAD-DATA-19` (ADR 0258, 13 Ekim): web'de gerekenler: belgenin ve TS türlerinin çoklu çizgisinde `closed` ve
+  `widths` (`model/document.ts`, `io/kcad.ts`'in KCAD şema 46'sı ve tipli sütunların yol bitleri 13 ve 14, `io/columns.ts`;
+  `FORMATS_VERSION` 59, web'in kopyası 53); çekirdeğin JSON API'si `Shape::Polyline`'ın `closed`'ını ve `widths`'ini taşımaz (web'in
+  çizgileri açık ve genişliksiz okunur): JSON'a eklenmeli; paketli biçimin kapalı çoklu çizgisi tür 22'dir (`wasm/pack.ts`);
+  stil motorunun genişlikli çizgisi `MIXED` kaydı ve nesnenin renginde dolu şerit (`style/geometry.ts`, web'in `leaderSymbolsOf`'u);
+  Çoklu çizgi aracında Kapat (K) ve Genişlik (E), önizlemede şerit; Öznitelikler'de Kapalı, Genişlik ve kapalı çizginin Alan'ı;
+  kartta Alan; DXF içe aktarma penceresinde “Kapalı çoklu çizgiler” (Projeye göre, Alan, Kapalı çizgi); `cad.entities.edit`'te
+  genişliğin taşınması (`product/` ile `kentos_native_application::widths`'in eşitliği, `widths_lost`); ortak durumlar
+  `fixtures/commands/v1/cad.polyline.create.json` (22 yeni), `cad.entities.edit.json` (11 yeni), `cad.entities.create.json`,
+  `file.import.dxf.json` (yanıtta `closedPolylines`), `fixtures/kcad/v2` (yeni örnek ve 12 bozuk dosya; `schema-version-46.kcad`
+  `schema-version-47.kcad` oldu); bilinen bozulmalar: web'in komut koşucusu yeni durumlarda düşer; Çoklu çizgi'nin istemindeki Genişlik (E) ve Kapat (K) yüzünden yedi ortak iz (`polyline-arc`, `right-angle`, `stream-draw`, `template-draw`, `template-group`, `trace-draw`, `usage-stream-draw`) web'de araç onları sunana dek düşer.
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek

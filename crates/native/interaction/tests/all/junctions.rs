@@ -321,6 +321,8 @@ fn a_neighbours_new_corner_takes_its_elevation_along_the_edge() {
         holes: None,
         zs: Some(vec![Some(100.0), Some(110.0), Some(120.0), Some(130.0)]),
         parts: None,
+        closed: false,
+        widths: None,
     });
     let slot = b.doc.add(lot).expect("a slot");
     draw(

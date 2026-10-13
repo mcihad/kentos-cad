@@ -103,6 +103,8 @@ fn drawing(n: usize) -> Document {
             holes: None,
             zs: None,
             parts: None,
+            closed: false,
+            widths: None,
         }));
         entities.push(Entity::Point(PointEntity {
             base: base("nokta"),
@@ -132,6 +134,8 @@ fn drawing(n: usize) -> Document {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }));
         }
     }
@@ -409,6 +413,8 @@ fn temporal_drawing(n: usize, in_order: bool) -> Document {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             })
         })
         .collect();

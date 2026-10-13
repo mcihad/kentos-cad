@@ -398,6 +398,8 @@ fn multidim_timing() {
                 bulges: None,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }
         })
         .collect();

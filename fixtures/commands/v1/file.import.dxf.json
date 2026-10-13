@@ -136,6 +136,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -243,6 +244,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -459,6 +461,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "area",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -681,6 +684,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "area",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -895,6 +899,7 @@
                 "factor": 0.001,
                 "assumed": true
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -1116,6 +1121,7 @@
                 "factor": 1.0,
                 "assumed": true
               },
+              "closedPolylines": "area",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -1337,6 +1343,7 @@
                 "factor": 0.01,
                 "assumed": false
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -1443,6 +1450,7 @@
                 "factor": 0.01,
                 "assumed": true
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -1665,6 +1673,7 @@
                 "assumed": true,
                 "declared": 99
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -1778,6 +1787,7 @@
                 "assumed": false,
                 "declared": 1
               },
+              "closedPolylines": "line",
               "objects": 2,
               "targets": {
                 "DUVAR": "duvar"
@@ -1849,6 +1859,7 @@
                 "assumed": false,
                 "declared": 21
               },
+              "closedPolylines": "line",
               "objects": 1,
               "targets": {
                 "DUVAR": "duvar"
@@ -1915,6 +1926,7 @@
                   }
                 ]
               },
+              "closedPolylines": "line",
               "objects": 2,
               "targets": {
                 "DUVAR": "duvar"
@@ -1995,6 +2007,7 @@
                 "assumed": false,
                 "declared": 13
               },
+              "closedPolylines": "area",
               "objects": 1,
               "targets": {
                 "DUVAR": "duvar"
@@ -2169,6 +2182,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -2237,6 +2251,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -2355,6 +2370,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "import-duvar"
@@ -2575,6 +2591,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "import-duvar"
@@ -2789,6 +2806,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "import-duvar"
@@ -3018,6 +3036,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "import-duvar"
@@ -3240,6 +3259,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "cizim"
@@ -3348,6 +3368,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -3454,6 +3475,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 5,
               "targets": {
                 "DUVAR": "duvar"
@@ -3701,6 +3723,7 @@
                 "assumed": false,
                 "declared": 4
               },
+              "closedPolylines": "line",
               "objects": 1,
               "targets": {
                 "DUVAR": "duvar"
@@ -3736,6 +3759,760 @@
                   "x": 2.5,
                   "y": 0.0
                 }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapalı ve genişlikli çoklu çizgiler CAD projesine: kapalı çizgi kalır, genişlikleri metrede",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-import/closed.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "closed.dxf",
+              "bytes": 827,
+              "sha256": "767241270aaf5bf6ff41464f24d8d67832af10a95def9c248b32282335cd5e74",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "closedPolylines": "line",
+              "objects": 3,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "fields": {
+              "2": {
+                "kind": "polyline",
+                "closed": true,
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 3.0
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polyline",
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 3.0
+                  }
+                ],
+                "widths": [
+                  [
+                    0.5,
+                    0.5
+                  ],
+                  [
+                    0.5,
+                    0.5
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              },
+              "4": {
+                "kind": "polyline",
+                "closed": true,
+                "widths": [
+                  [
+                    0.2,
+                    0.4
+                  ],
+                  [
+                    0.4,
+                    0.4
+                  ],
+                  [
+                    0.4,
+                    0.2
+                  ]
+                ],
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16.0,
+                    "y": 3.0
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapalı çoklu çizgiler koordinat sistemli (CBS) projeye: alan olur, genişliği alınmaz; açık çizgi genişliğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-import/closed.dxf"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "closed.dxf",
+              "bytes": 827,
+              "sha256": "767241270aaf5bf6ff41464f24d8d67832af10a95def9c248b32282335cd5e74",
+              "unit": {
+                "used": 6,
+                "name": "metre",
+                "source": "metres",
+                "factor": 1.0,
+                "assumed": false,
+                "declared": 4
+              },
+              "closedPolylines": "area",
+              "objects": 3,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unit_ignored",
+                "path": "fileUnit",
+                "message": "Dosya birimini milimetre olarak bildiriyor; koordinat sistemi olan proje dosyayı metre okur, değerler ölçeklenmedi. Ölçeklemek için dosyanın birimini seçin (fileUnit)."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "fields": {
+              "2": {
+                "kind": "polygon",
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4000.0,
+                    "y": 3000.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 3000.0
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polyline",
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 6000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10000.0,
+                    "y": 3000.0
+                  }
+                ],
+                "widths": [
+                  [
+                    500.0,
+                    500.0
+                  ],
+                  [
+                    500.0,
+                    500.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              },
+              "4": {
+                "kind": "polygon",
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 12000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16000.0,
+                    "y": 3000.0
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "closedPolylines line: CBS projesinde de kapalı çizgi, genişliğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-import/closed.dxf",
+            "closedPolylines": "line"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "closed.dxf",
+              "bytes": 827,
+              "sha256": "767241270aaf5bf6ff41464f24d8d67832af10a95def9c248b32282335cd5e74",
+              "unit": {
+                "used": 6,
+                "name": "metre",
+                "source": "metres",
+                "factor": 1.0,
+                "assumed": false,
+                "declared": 4
+              },
+              "closedPolylines": "line",
+              "objects": 3,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "unit_ignored",
+                "path": "fileUnit",
+                "message": "Dosya birimini milimetre olarak bildiriyor; koordinat sistemi olan proje dosyayı metre okur, değerler ölçeklenmedi. Ölçeklemek için dosyanın birimini seçin (fileUnit)."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "fields": {
+              "2": {
+                "kind": "polyline",
+                "closed": true,
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4000.0,
+                    "y": 3000.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 3000.0
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polyline",
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 6000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10000.0,
+                    "y": 3000.0
+                  }
+                ],
+                "widths": [
+                  [
+                    500.0,
+                    500.0
+                  ],
+                  [
+                    500.0,
+                    500.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              },
+              "4": {
+                "kind": "polyline",
+                "closed": true,
+                "widths": [
+                  [
+                    200.0,
+                    400.0
+                  ],
+                  [
+                    400.0,
+                    400.0
+                  ],
+                  [
+                    400.0,
+                    200.0
+                  ]
+                ],
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 12000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16000.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16000.0,
+                    "y": 3000.0
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İçe alma",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ic",
+                "name": "İç",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "closedPolylines area: CAD projesinde de alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:formats/v1/dxf-import/closed.dxf",
+            "closedPolylines": "area"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "file": "closed.dxf",
+              "bytes": 827,
+              "sha256": "767241270aaf5bf6ff41464f24d8d67832af10a95def9c248b32282335cd5e74",
+              "unit": {
+                "used": 4,
+                "name": "milimetre",
+                "source": "declared",
+                "factor": 0.001,
+                "assumed": false,
+                "declared": 4
+              },
+              "closedPolylines": "area",
+              "objects": 3,
+              "targets": {
+                "DUVAR": "duvar"
+              },
+              "layers": [],
+              "blocks": 0,
+              "textStyles": 0,
+              "dimensionStyles": 0,
+              "report": "$any",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "fields": {
+              "2": {
+                "kind": "polygon",
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 3.0
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polyline",
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 3.0
+                  }
+                ],
+                "widths": [
+                  [
+                    0.5,
+                    0.5
+                  ],
+                  [
+                    0.5,
+                    0.5
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              },
+              "4": {
+                "kind": "polygon",
+                "layerId": "duvar",
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 16.0,
+                    "y": 3.0
+                  }
+                ]
               }
             },
             "revision": "changed",

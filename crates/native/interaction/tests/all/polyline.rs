@@ -21,23 +21,25 @@ fn newest(b: &Bench) -> (Vec<[f64; 2]>, Option<Vec<f64>>) {
     )
 }
 
+/// The web's text and options, and the desktop's Genişlik (E) and Kapat (K)
+/// since docs/adr/0258 (the web's are in TODOS.md §0.2).
 #[test]
 fn prompts_are_the_web_s_text_and_options() {
     let mut b = Bench::new("polyline");
     assert_eq!(
         b.session.prompt().text(),
-        "Çoklu çizgi: ilk noktayı belirtin"
+        "Çoklu çizgi: ilk noktayı belirtin [Genişlik (E): 0.000 m]"
     );
     b.click(0.0, 0.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Geri (G)]"
+        "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Genişlik (E): 0.000 m / Geri (G)]"
     );
     b.click(10.0, 0.0);
     assert_eq!(
         b.options(),
-        ["Y", "U", "İ", "A", "G", "Enter"],
-        "two points finish"
+        ["Y", "U", "İ", "A", "E", "K", "G", "Enter"],
+        "two points finish, or close"
     );
     assert!(b.type_text("Y"));
     assert_eq!(

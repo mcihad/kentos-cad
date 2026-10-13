@@ -86,6 +86,8 @@ fn two_areas(b: &mut Bench) -> [kentos_domain::Slot; 2] {
                 holes: None,
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }))
             .expect("a slot")
     };

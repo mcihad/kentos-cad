@@ -15,6 +15,7 @@
 //! 1002 {  1000 weight   1040 <mm>                1002 }   the object's own line weight, exactly (370 holds the nearest DXF one)
 //! 1002 {  1000 hole     1005 <handle>            1002 }   a ring of the polygon with that handle
 //! 1002 {  1000 curve    1070 <0|1>               1002 }   a SPLINE through its fit points is KentOS's curve (1: closed)
+//! 1002 {  1000 line                              1002 }   a closed LWPOLYLINE or POLYLINE is a closed line, not an area (docs/adr/0258 §1)
 //! 1002 {  1000 arc      1040 <a0> 1040 <a1>      1002 }   the arc's angles in radians, exactly
 //! 1002 {  1000 pattern  1040 <angle> 1040 <gap>  1002 }   the hatch's angle and spacing, exactly
 //! 1002 {  1000 hatch    <json>                   1002 }   a hatch's pattern or gradient as KentOS holds it, exactly (docs/adr/0186 §9)
@@ -69,6 +70,9 @@ pub struct Meta {
     pub hole_of: Option<u64>,
     /// The SPLINE is KentOS's curve through its fit points; true: closed.
     pub curve: Option<bool>,
+    /// The closed LWPOLYLINE or POLYLINE is a closed line, not an area
+    /// (docs/adr/0258 §1), whatever the reader's `closedPolylines` says.
+    pub line: bool,
     /// Arc angles in radians.
     pub arc: Option<(f64, f64)>,
     /// Hatch angle (degrees) and spacing.
@@ -249,6 +253,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
         item("curve", &mut out, |o| {
             o.push((1070, if closed { "1" } else { "0" }.into()))
         });
+    }
+    if meta.line {
+        item("line", &mut out, |_| {});
     }
     if let Some((a0, a1)) = meta.arc {
         item("arc", &mut out, |o| {
@@ -507,6 +514,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             }
             "turn" => m.turn = real(a).or(m.turn),
             "z" => m.z = true,
+            "line" => m.line = true,
             "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
             "mask" => m.mask = true,
             "arrow" => m.arrow = text(a).or(m.arrow),
@@ -573,6 +581,7 @@ mod tests {
             line_weight: Some(0.1 + 0.23),
             hole_of: Some(0x2F),
             curve: Some(true),
+            line: true,
             arc: Some((0.1 + 0.2, -1.0 / 3.0)),
             pattern: Some((45.0, 2.5e-3)),
             turn: Some(0.1),

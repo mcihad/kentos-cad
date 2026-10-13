@@ -199,6 +199,8 @@ mod tests {
                     holes: None,
                     zs: None,
                     parts: None,
+                    closed: false,
+                    widths: None,
                 }))
                 .expect("a slot");
         }

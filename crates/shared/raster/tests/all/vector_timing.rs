@@ -343,6 +343,8 @@ fn vector_timing() {
                 bulges: None,
                 holes: None,
                 parts: None,
+                closed: false,
+                widths: None,
             }
         })
         .collect();

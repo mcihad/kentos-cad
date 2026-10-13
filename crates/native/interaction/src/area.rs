@@ -180,6 +180,8 @@ fn contract_parts(x: &Whole) -> Vec<(f64, AreaPart)> {
                 holes: part.holes.clone(),
                 zs: None,
                 parts: None,
+                closed: false,
+                widths: None,
             })))
             .map_or(0.0, |a| net_area(&a));
             (size, part)

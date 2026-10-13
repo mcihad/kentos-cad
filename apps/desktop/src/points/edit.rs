@@ -163,6 +163,9 @@ pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
                 bulges: l.bulges.clone(),
                 zs: Some(ps[0].zs.clone()),
                 parts: (!parts.is_empty()).then_some(parts),
+                // A closed line stays closed, its widths with its vertices (docs/adr/0258).
+                closed: l.closed,
+                widths: l.widths.clone(),
             })
         }
         Entity::Polygon(a) => {
