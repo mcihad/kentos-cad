@@ -129,6 +129,30 @@ impl PySession {
         text(&saved)
     }
 
+    /// The whole drawing as a DXF file at `path` (docs/adr/0252); the answer
+    /// (`path`, `bytes`, `objects`, `layers`, `report`) as JSON text.
+    fn export_dxf(&self, py: Python<'_>, path: PathBuf) -> PyResult<String> {
+        let inner = &self.inner;
+        let written = py.detach(|| inner.export_dxf(&path)).map_err(host)?;
+        text(&written)
+    }
+
+    /// The project's sheet book as a PDF at `path` (docs/adr/0252), the
+    /// sheets named or all; the answer (`path`, `bytes`, `sheets`,
+    /// `findings`, `notes`) as JSON text.
+    #[pyo3(signature = (path, sheets = None))]
+    fn export_pdf(
+        &self,
+        py: Python<'_>,
+        path: PathBuf,
+        sheets: Option<Vec<String>>,
+    ) -> PyResult<String> {
+        let inner = &self.inner;
+        let sheets = sheets.unwrap_or_default();
+        let written = py.detach(|| inner.export_pdf(&path, &sheets)).map_err(host)?;
+        text(&written)
+    }
+
     /// The `.kcad` v2 bytes of the drawing as it is now, verified.
     fn to_bytes<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
         let inner = &self.inner;

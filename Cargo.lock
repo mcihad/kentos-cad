@@ -2581,6 +2581,7 @@ dependencies = [
  "kentos-native-application",
  "kentos-native-style",
  "kentos-ncz",
+ "kentos-plot",
  "kentos-pointcloud",
  "kentos-processing",
  "kentos-project",
@@ -2590,6 +2591,7 @@ dependencies = [
  "kentos-sheet-ui",
  "kentos-svg-core",
  "kentos-ui",
+ "miniz_oxide 0.9.1",
  "png 0.18.1",
  "resvg",
  "rfd",
@@ -2684,9 +2686,11 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-domain",
+ "kentos-formats",
  "kentos-geometry-core",
  "kentos-kcad",
  "kentos-native-application",
+ "kentos-plot",
  "kentos-project",
  "serde",
  "serde_json",
@@ -2723,6 +2727,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-domain",
  "kentos-headless",
+ "miniz_oxide 0.9.1",
  "serde_json",
 ]
 
@@ -2734,6 +2739,7 @@ dependencies = [
  "kentos-domain",
  "kentos-expression",
  "kentos-geometry-core",
+ "kentos-sheet",
  "kentos-style-core",
  "serde_json",
 ]
@@ -2749,6 +2755,7 @@ dependencies = [
  "libm",
  "serde",
  "serde_json",
+ "tiny-skia",
 ]
 
 [[package]]
@@ -2772,6 +2779,22 @@ dependencies = [
  "kentos-ncz",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kentos-plot"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "kentos-geometry-core",
+ "kentos-interaction",
+ "kentos-native-style",
+ "kentos-project",
+ "kentos-sheet",
+ "miniz_oxide 0.9.1",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

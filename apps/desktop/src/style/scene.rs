@@ -22,33 +22,21 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-use kentos_contracts::{BlockDefinition, BlockId, Entity, LayerNode, LayerNodeType, LayerStyle};
+use kentos_contracts::{BlockDefinition, BlockId, Entity, LayerNode, LayerStyle};
 use kentos_domain::{ChangeMark, Changes, Slot, SlotMap};
 use kentos_geometry_core::store::Store;
-use kentos_native_style::StylePalette;
 use kentos_native_style::batches::{DecodeOptions, StyledLayer, decode, merged_order};
 use kentos_native_style::library::StyleLibrary;
 use kentos_native_style::program::{BuildOptions, build_layer};
+use kentos_render_wgpu::Bounds;
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
-use kentos_render_wgpu::{Bounds, Vec2};
+
+// How a layer is built for the drawing and for a sheet's map is the plotter's: the headless host's
+// PDF builds the same (docs/adr/0252).
+pub use kentos_plot::layers::Look;
+pub(crate) use kentos_plot::layers::{build_whole, names, shown_layers};
 
 static NEXT_LAYER: AtomicU64 = AtomicU64::new(1);
-
-/// How the drawing is drawn: what every layer's build depends on beyond its objects.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Look {
-    pub palette: StylePalette,
-    /// The scale symbols are compiled at (`symbol_scale_of`).
-    pub symbol_scale: f64,
-    /// Symbol sizes on the screen (Semboller → Ekranda sabit).
-    pub screen: bool,
-    /// Line weights hidden (Kalınlık off).
-    pub hairlines: bool,
-    pub origin: Vec2,
-    /// Görünüm kipleri (docs/adr/0195): what the build leaves out, and the colours.
-    pub view_build: kentos_native_style::View,
-    pub view_colors: kentos_native_style::color::ViewColors,
-}
 
 /// Places per part of a large layer: a part holds the layer's objects whose
 /// places in the document fall in one run of `PART_PLACES` (docs/adr/0121).
@@ -212,26 +200,6 @@ fn clip_stale(view: &Bounds, clip: &Bounds) -> bool {
     !inside || (clip.max_x - clip.min_x) > 20.0 * (view.max_x - view.min_x)
 }
 
-/// The shown layers, bottom first (the top of the tree draws last), as the plain scene orders them.
-pub(crate) fn shown_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
-    fn walk<'a>(nodes: &'a [LayerNode], visible: bool, out: &mut Vec<&'a LayerNode>) {
-        for node in nodes {
-            match node.kind {
-                LayerNodeType::Layer => {
-                    if visible && node.visible {
-                        out.push(node);
-                    }
-                }
-                LayerNodeType::Group => walk(&node.children, visible && node.visible, out),
-            }
-        }
-    }
-    let mut out = Vec::new();
-    walk(nodes, true, &mut out);
-    out.reverse();
-    out
-}
-
 /// CSS pixels per paper millimetre at 96 dpi: a mask's growth (docs/adr/0226 §3).
 const PX_PER_MM: f32 = 96.0 / 25.4;
 
@@ -309,71 +277,6 @@ pub(crate) fn shown_service_layers(nodes: &[LayerNode]) -> Vec<&kentos_contracts
         .into_iter()
         .filter_map(|n| n.service.as_ref())
         .collect()
-}
-
-/// Every layer's name by id (`$katman`).
-pub(crate) fn names(nodes: &[LayerNode], out: &mut HashMap<String, String>) {
-    for n in nodes {
-        out.insert(n.id.clone(), n.name.clone());
-        names(&n.children, out);
-    }
-}
-
-/// One layer through the style engine whole, as a sheet's map frame draws it (the web's
-/// app/sheet/mapFrames.ts `styleAt` and `buildStyledLayer`): its objects' symbols at `look`'s
-/// scale and palette, its construction lines clipped to `clip`; empty where the engine refuses it.
-pub(crate) fn build_whole(
-    store: &Store,
-    library: &StyleLibrary,
-    node: &LayerNode,
-    entities: &[&Entity],
-    look: &Look,
-    clip: Bounds,
-    names: &HashMap<String, String>,
-) -> StyledLayer {
-    let opts = BuildOptions {
-        origin: look.origin,
-        plot_scale: look.symbol_scale,
-        screen: look.screen,
-        hairlines: look.hairlines,
-        clip: Some(clip),
-        library,
-        layer_name: &|id: &str| names.get(id).cloned().unwrap_or_else(|| id.to_owned()),
-        view: look.view_build,
-        frame: sheet_frame(node, look.symbol_scale),
-    };
-    build_layer(store, &node.style, entities, &opts)
-        .and_then(|(_, batches)| {
-            decode(
-                batches,
-                &DecodeOptions {
-                    palette: &look.palette,
-                    plot_scale: look.symbol_scale,
-                    library,
-                    view: look.view_colors,
-                },
-            )
-        })
-        .unwrap_or_default()
-}
-
-static SHEET_MADE: AtomicU64 = AtomicU64::new(0);
-
-/// A layer's build on a sheet's map (the web's `layerStyleAt`): a view-dependent renderer's
-/// (docs/adr/0213 §3) at the paper's CSS px per ground metre (96 dpi over the scale), a heat map's
-/// picture under a key of its own.
-fn sheet_frame(node: &LayerNode, scale: f64) -> Option<(f64, String)> {
-    let needs = kentos_native_style::renderer::needs_of(node.style.renderer.as_ref());
-    (needs.scale || needs.frame.is_some()).then(|| {
-        (
-            96_000.0 / (25.4 * scale.max(1.0)),
-            format!(
-                "heat:sheet:{}:{}",
-                node.id,
-                SHEET_MADE.fetch_add(1, Ordering::Relaxed) + 1
-            ),
-        )
-    })
 }
 
 impl StyledCache {

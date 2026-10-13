@@ -11893,6 +11893,72 @@ class SettingsSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetInfo(_Model):
+    """A sheet of the book as the answer lists it.
+    Attributes:
+        width: The page's width and height, millimetres.
+        items: Its items, how many.
+        maps: Its map frames, in drawing order.
+    """
+    id: str
+    name: str
+    width: float
+    height: float
+    items: int
+    maps: list[SheetMapInfo]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        out["items"] = self.items
+        out["maps"] = [e0.to_json() for e0 in self.maps]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetInfo:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            width=float(data["width"]),
+            height=float(data["height"]),
+            items=data["items"],
+            maps=[SheetMapInfo.from_json(e0) for e0 in data["maps"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetMapInfo(_Model):
+    """A map frame of a sheet as the answer lists it.
+    Attributes:
+        item: The item's id.
+        name: The item's name, unique in its sheet.
+        scale: The map's scale denominator (1:N); none for a map that follows something else (an atlas).
+    """
+    item: str
+    name: str
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["item"] = self.item
+        out["name"] = self.name
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetMapInfo:
+        return cls(
+            item=data["item"],
+            name=data["name"],
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetPicture(_Model):
     """A picture's bytes under the SHA-256 the book names it by.
     Attributes:
@@ -11913,6 +11979,81 @@ class SheetPicture(_Model):
         return cls(
             sha256=data["sha256"],
             bytes=data["bytes"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetsEdit(_Model):
+    """Input of `cad.sheets.edit` v1: the sheet core's operations applied to the
+    project's book in order, as one change. Lengths on the paper are
+    micrometres, angles thousandths of a degree, as the core writes them. A
+    project without a book starts from an empty one; a book left empty is no
+    book. The book is the paper's (docs/adr/0251 §3): the change makes the
+    drawing dirty and is no undo step of it; `inverse` in the answer takes it
+    back.
+
+    Refusals (`CommandError.code`), checked in this order: `no_operations`
+    (none given), `invalid_operation` (one the core does not read, at
+    `ops[i]`), `invalid_revision`, `revision_conflict` (status `conflict`),
+    `book_unreadable` (the project's book is one the core cannot read: it is
+    kept as it is), then the core's own refusal of an operation with its code
+    (`unknown_sheet`, `duplicate_id`, `unknown_item` …), at `ops[i]` and the
+    core's path.
+    Attributes:
+        ops: The operations, at least one, each an object tagged by `op`
+            (`kentos.sheet/1`).
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+    """
+    ops: list[Any]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ops"] = list(self.ops)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsEdit:
+        return cls(
+            ops=list(data["ops"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetsEdited(_Model):
+    """Output of `cad.sheets.edit` v1.
+    Attributes:
+        label: What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).
+        inverse: The operations that take the change back, in the order to apply them
+            (an input of this command again).
+        sheets: The book's sheets after the change, in its order.
+        revision: The document's revision after the write, as decimal text.
+    """
+    label: str
+    inverse: list[Any]
+    sheets: list[SheetInfo]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["inverse"] = list(self.inverse)
+        out["sheets"] = [e0.to_json() for e0 in self.sheets]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsEdited:
+        return cls(
+            label=data["label"],
+            inverse=list(data["inverse"]),
+            sheets=[SheetInfo.from_json(e0) for e0 in data["sheets"]],
+            revision=data["revision"],
         )
 
 
@@ -15375,7 +15516,11 @@ __all__ = [
     "ServiceParam",
     "SettingsChanged",
     "SettingsSet",
+    "SheetInfo",
+    "SheetMapInfo",
     "SheetPicture",
+    "SheetsEdit",
+    "SheetsEdited",
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SplineEntity",

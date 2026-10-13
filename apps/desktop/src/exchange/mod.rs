@@ -23,7 +23,7 @@ pub(crate) mod coord_import;
 #[cfg(test)]
 mod dimension_tests;
 pub(crate) mod drawing_import;
-mod dxf_export;
+pub(crate) mod dxf_export;
 pub(crate) mod field_send;
 #[cfg(test)]
 mod field_send_tests;

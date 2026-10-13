@@ -25,6 +25,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.layers.states.json` | `cad.layers.states` v1 (ADR 0248: adlı katman durumları; masaüstünün) | 20 |
 | `v1/cad.styles.edit.json` | `cad.styles.edit` v1 (ADR 0248: yazı ve ölçü stilleri; masaüstünün) | 25 |
 | `v1/cad.settings.set.json` | `cad.settings.set` v1 (ADR 0248: proje ayarları anahtarla; masaüstünün) | 28 |
+| `v1/cad.sheets.edit.json` | `cad.sheets.edit` v1 (ADR 0252: pafta çekirdeğinin işlemleri; masaüstünün) | 20 |
 
 **Yalnız masaüstünün durumları** `v1/desktop/`'tadır ([ADR 0207](../../docs/adr/0207-point-clouds-and-large-data.md) §10): nokta bulutunu şimdilik yalnız masaüstü ekler, çizer ve işler (sahibin kararı, 8 Ekim 2026), web'in koşucusu bu klasörü okumaz (`v1/*.json`). Biçim aynıdır; masaüstünün koşucusu (`the_desktops_own_cases_match_its_handlers`) dosya başına 20 durum aramaz. Durumları KentOS kodu olmadan sözleşmenin kurallarından `scripts/fixtures/pointcloud_command_cases.py` yazar (`--check` farkı arar). Web nokta bulutunu alınca durumlar yukarıdaki dosyalara taşınır.
 

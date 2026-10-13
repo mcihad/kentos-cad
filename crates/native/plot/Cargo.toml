@@ -1,0 +1,25 @@
+[package]
+name = "kentos-plot"
+description = "A drawing on paper: the sheet book's maps as vectors through the style engine, the sheets' inputs and the PDF's faces, shared by the desktop and the headless command host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust, native only (scripts/arch/deps.mjs, group `plot`; docs/adr/0252): no UI, GPU,
+# database, async runtime or network. The desktop's sheet PDF and the headless host's
+# (Python, MCP) draw a map from the same paths, the same tables and legends, the same faces.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-domain = { path = "../domain" }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-interaction = { path = "../interaction" }
+kentos-native-style = { path = "../style" }
+kentos-project = { path = "../project" }
+kentos-sheet = { path = "../../shared/sheet", default-features = false }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+# Inflating the PDF's streams in the tests' own reader (tests/support/files.rs).
+miniz_oxide = { workspace = true }

@@ -75,7 +75,7 @@ impl App {
         }
     }
 
-    fn agents_answer(&mut self, request: &Value) -> Result<Value, (String, String)> {
+    pub(crate) fn agents_answer(&mut self, request: &Value) -> Result<Value, (String, String)> {
         if self.python.link.is_none() {
             return Err(refused("closed", "Ajan bağlantısı kapatıldı."));
         }

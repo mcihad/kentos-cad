@@ -519,6 +519,24 @@ pub fn descent(style: &TextStyle) -> i64 {
     })
 }
 
+/// Search text: Turkish lower case (İ → i, I → ı), then the Turkish letters folded to their
+/// Latin ones, so “isik” finds “Işık” and “IŞIK” alike (a layer named in a sheet, a search).
+pub fn fold(s: &str) -> String {
+    s.chars()
+        .flat_map(|c| match c {
+            'İ' | 'I' | 'ı' => vec!['i'],
+            'Ğ' | 'ğ' => vec!['g'],
+            'Ü' | 'ü' => vec!['u'],
+            'Ş' | 'ş' => vec!['s'],
+            'Ö' | 'ö' => vec!['o'],
+            'Ç' | 'ç' => vec!['c'],
+            other => other.to_lowercase().collect(),
+        })
+        .collect::<String>()
+        .trim()
+        .to_owned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -44,6 +44,7 @@ pub mod object_template;
 pub mod preview;
 pub mod program;
 pub mod renderer;
+pub mod shapes;
 pub mod simple;
 pub mod system;
 pub mod table;

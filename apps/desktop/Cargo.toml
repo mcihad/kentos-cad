@@ -39,6 +39,8 @@ kentos-cloud = { path = "../../crates/native/cloud" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }
+# A drawing on paper (docs/adr/0252): the sheet PDF's maps, inputs and faces, shared with the headless host.
+kentos-plot = { path = "../../crates/native/plot" }
 # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and operations.
 kentos-pointcloud = { path = "../../crates/shared/pointcloud" }
 # Map services (docs/adr/0208): requests, capabilities, vector tiles and their styles, labels,
@@ -76,3 +78,7 @@ iced_runtime = { workspace = true }
 rfd = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+# Inflating the PDF's streams in the acceptance test's own reader (the plotter's tests/support/files.rs).
+miniz_oxide = { workspace = true }

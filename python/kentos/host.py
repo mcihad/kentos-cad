@@ -204,6 +204,18 @@ class DesktopSession(_document.SessionBase):
             "Açık çizimin dosyasını masaüstü yazar; Farklı kaydet ile bir .kcad olarak kaydedin.",
         )
 
+    def export_dxf(self, path: str) -> str:
+        raise _native.HostError(
+            "not_in_console",
+            "Açık çizimi masaüstü dışa aktarır (Dosya › Dışa aktar › DXF); başka bir çizim için Document.open.",
+        )
+
+    def export_pdf(self, path: str, sheets: list[str] | None = None) -> str:
+        raise _native.HostError(
+            "not_in_console",
+            "Açık çizimin paftalarını masaüstü yazar (Pafta › Dışa aktar › PDF); başka bir çizim için Document.open.",
+        )
+
 
 def _no_input(prompt: object = "") -> str:
     raise RuntimeError("input() konsolda yok: değerleri betiğe yazın.")

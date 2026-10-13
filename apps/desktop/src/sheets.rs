@@ -401,12 +401,13 @@ impl MapPainter for SheetPainter<'_> {
                 )
             })
             .unwrap_or_default();
-        let src = crate::sheet_pdf::MapSource {
-            drawing,
+        let src = kentos_plot::maps::MapSource {
+            doc: &drawing.model,
             store: self.spatial.store(),
             library: self.library,
+            origin: kentos_render_wgpu::scene::scene_origin(drawing),
         };
-        crate::sheet_pdf::vector_content(&src, r.layers, r.view.scale, extent, &texts).ok()
+        kentos_plot::maps::vector_content(&src, r.layers, r.view.scale, extent, &texts).ok()
     }
 
     fn vectors(&self) -> bool {
@@ -465,7 +466,7 @@ impl SheetPainter<'_> {
             extent[2] + pad,
             extent[3] + pad,
         ];
-        let o = crate::map_vectors::VectorScale {
+        let o = kentos_plot::vectors::VectorScale {
             scale: s,
             origin: [at.origin.x, at.origin.y],
         };
@@ -481,7 +482,7 @@ impl SheetPainter<'_> {
             if only.is_some_and(|l| !l.contains(id)) {
                 continue;
             }
-            let (paths, missing) = crate::map_vectors::layer_paths(layer, &o, Some(reach));
+            let (paths, missing) = kentos_plot::vectors::layer_paths(layer, &o, Some(reach));
             // A layer with no vector form here: the map as a picture, styled all the same.
             if !missing.is_empty() {
                 return self.paint_picture(r, frame, &at, only, s);
@@ -565,7 +566,7 @@ impl SheetPainter<'_> {
             extent[2] + pad,
             extent[3] + pad,
         ];
-        let o = crate::map_vectors::VectorScale {
+        let o = kentos_plot::vectors::VectorScale {
             scale: s,
             origin: [at.origin.x, at.origin.y],
         };
@@ -578,7 +579,7 @@ impl SheetPainter<'_> {
             .iter()
             .filter(|(id, ..)| only.is_none_or(|l| l.contains(id)))
             .filter_map(|(_, name, layer)| {
-                let what = crate::map_vectors::unsupported_in(layer, &o, Some(reach));
+                let what = kentos_plot::vectors::unsupported_in(layer, &o, Some(reach));
                 (!what.is_empty()).then(|| format!("{name} ({})", what.join(", ")))
             })
             .collect();
@@ -922,13 +923,13 @@ impl App {
                 variables: settings.map_or_else(Vec::new, |s| {
                     s.variables
                         .iter()
-                        .map(crate::sheet_inputs::sheet_variable)
+                        .map(kentos_plot::inputs::sheet_variable)
                         .collect()
                 }),
             },
             // With its transverse Mercator parameters: the core works out the meridian convergence.
             crs: crs.map(|name| {
-                crate::sheet_inputs::crs_info(srid)
+                kentos_plot::inputs::crs_info(srid)
                     .filter(|_| srid != crate::crs::LOCAL_SRID)
                     .unwrap_or(CrsInfo { name, tm: None })
             }),
@@ -1058,7 +1059,7 @@ impl App {
                 it.id.hash(&mut h);
             }
         }
-        for (id, e) in crate::sheet_inputs::extents_of(self.sheets.display_list()) {
+        for (id, e) in kentos_plot::inputs::extents_of(self.sheets.display_list()) {
             (id, e.map(f64::to_bits)).hash(&mut h);
         }
         let key = h.finish();
@@ -1066,7 +1067,7 @@ impl App {
             return;
         }
         self.sheet_data_key = Some(key);
-        let data = crate::sheet_inputs::sheet_data(
+        let data = kentos_plot::inputs::sheet_data(
             &doc.model,
             &self.spatial,
             &self.styles.library,
@@ -1127,7 +1128,7 @@ impl App {
                 return Task::none();
             };
             let (slots, _) =
-                crate::sheet_inputs::coordinate_objects(&doc.model, self.selection.ids(), &source);
+                kentos_plot::inputs::coordinate_objects(&doc.model, self.selection.ids(), &source);
             if slots.is_empty() {
                 return Task::none();
             }
@@ -1250,6 +1251,9 @@ impl App {
         let Some(path) = path else {
             return;
         };
+        // The file takes the project as it is now (its name, the date, its system), whether or
+        // not the sheet mode followed the drawing since (an agent may have changed the book).
+        self.sheets.set_context(self.sheet_context());
         let host = (kind == ExportKind::Pdf).then(|| self.sheet_pdf_host());
         let painter = painter_of(
             &self.sheet_maps,

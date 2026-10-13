@@ -1,0 +1,42 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Oda",
+ "settings": {
+  "srid": 0,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 50,
+  "workspace": "cad",
+  "drawingUnit": "mm",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 0,
+  "y": 0
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

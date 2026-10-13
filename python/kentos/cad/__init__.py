@@ -29,7 +29,7 @@ from .document import *  # noqa: F403
 from .errors import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, blocks, circle, dimensions, entities, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, styles  # noqa: E402  isort: skip
+from . import addresses, arc, blocks, circle, dimensions, entities, labels, layers, line, network, point, polygon, polyline, project, scenarios, settings, sheets, styles  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -202,6 +202,7 @@ __all__ = [
     "Entity",
     "EntityEdit",
     "EntityGeometry",
+    "Exported",
     "FeatureChange",
     "FeatureFeed",
     "FeedKind",
@@ -412,6 +413,7 @@ __all__ = [
     "PolylineEntity",
     "PolylineEntityGeometry",
     "PolylinePlan",
+    "Printed",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
     "ProjectAccessView",
@@ -498,7 +500,11 @@ __all__ = [
     "ServiceParam",
     "SettingsChanged",
     "SettingsSet",
+    "SheetInfo",
+    "SheetMapInfo",
     "SheetPicture",
+    "SheetsEdit",
+    "SheetsEdited",
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SplineEntity",
@@ -585,6 +591,7 @@ __all__ = [
     "project",
     "scenarios",
     "settings",
+    "sheets",
     "styles",
     "types",
 ]

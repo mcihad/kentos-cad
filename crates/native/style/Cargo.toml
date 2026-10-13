@@ -19,3 +19,5 @@ kentos-native-application = { path = "../application" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 libm = { workspace = true }
+# The marker shapes' paths (shapes.rs): the renderer's atlas and the PDF's outlines from one rule.
+tiny-skia = { workspace = true }

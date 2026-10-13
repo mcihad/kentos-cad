@@ -1,0 +1,2682 @@
+{
+ "format": "kentos.acceptance",
+ "version": 1,
+ "id": "room",
+ "title": "Oda: çiz, ölç, düzelt ve tara; pafta, PDF ve DXF; başka ortamda aç (K01–K04, K11, K12)",
+ "source": "plan/cad.md §23.1 K01–K04, K11, K12; TODOS.md CADP-12",
+ "project": {
+  "name": "Oda",
+  "workspace": "cad",
+  "coords": "local",
+  "drawingUnit": "mm",
+  "plotScale": 50
+ },
+ "tolerance": 1e-09,
+ "steps": [
+  {
+   "name": "K01 Oda: 4000 × 3000 mm kapalı alan",
+   "command": "cad.polygon.create",
+   "input": {
+    "layerId": "$layer",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 4.0,
+      "y": 0.0
+     },
+     {
+      "x": 4.0,
+      "y": 3.0
+     },
+     {
+      "x": 0.0,
+      "y": 3.0
+     }
+    ]
+   },
+   "as": "room",
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     }
+    },
+    "measures": {
+     "room": {
+      "area": 12.0,
+      "length": 14.0
+     }
+    },
+    "count": 1
+   }
+  },
+  {
+   "name": "K01 Kaydet ve aç: aynı kaynak değerleri",
+   "reopen": true,
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     }
+    },
+    "measures": {
+     "room": {
+      "area": 12.0,
+      "length": 14.0
+     }
+    },
+    "count": 1
+   }
+  },
+  {
+   "name": "K03 İlişkili ölçü alt kenarın köşelerine bağlanır",
+   "command": "cad.entities.create",
+   "input": {
+    "layerId": "$layer",
+    "objects": [
+     {
+      "geometry": {
+       "kind": "dimension",
+       "a": {
+        "x": 0,
+        "y": 0
+       },
+       "b": {
+        "x": 0,
+        "y": 0
+       },
+       "offset": -0.6,
+       "height": 0.125,
+       "refs": {
+        "a": {
+         "uid": "$room",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "b": {
+         "uid": "$room",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 1
+         }
+        }
+       }
+      }
+     }
+    ]
+   },
+   "as": [
+    "dim1"
+   ],
+   "expect": {
+    "objects": {
+     "dim1": {
+      "kind": "dimension",
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       0.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 0
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 1
+        }
+       }
+      }
+     }
+    },
+    "measures": {
+     "dim1": {
+      "length": 4.0
+     }
+    },
+    "count": 2
+   }
+  },
+  {
+   "name": "K03 Köşe 4500 mm'ye çekilir; ölçü izler",
+   "command": "cad.entities.edit",
+   "input": {
+    "operation": "grip",
+    "changes": [
+     {
+      "kind": "update",
+      "uid": "$room",
+      "geometry": {
+       "kind": "polygon",
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.5,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 3.0
+        },
+        {
+         "x": 0.0,
+         "y": 3.0
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.5,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     },
+     "dim1": {
+      "kind": "dimension",
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       4.5,
+       0.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 0
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 1
+        }
+       }
+      }
+     }
+    },
+    "measures": {
+     "dim1": {
+      "length": 4.5
+     },
+     "room": {
+      "area": 12.75,
+      "length": 14.54138126514911
+     }
+    }
+   }
+  },
+  {
+   "name": "K03 Geri al: oda ve ölçü birlikte 4000 mm",
+   "undo": "Tutamaçla düzenle",
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     },
+     "dim1": {
+      "kind": "dimension",
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       0.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 0
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 1
+        }
+       }
+      }
+     }
+    },
+    "measures": {
+     "dim1": {
+      "length": 4.0
+     }
+    }
+   }
+  },
+  {
+   "name": "K04 Üst kenar köşelerinden ölçülür",
+   "command": "cad.entities.create",
+   "input": {
+    "layerId": "$layer",
+    "objects": [
+     {
+      "geometry": {
+       "kind": "dimension",
+       "a": {
+        "x": 0,
+        "y": 0
+       },
+       "b": {
+        "x": 0,
+        "y": 0
+       },
+       "offset": -0.6,
+       "height": 0.125,
+       "refs": {
+        "a": {
+         "uid": "$room",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 2
+         }
+        },
+        "b": {
+         "uid": "$room",
+         "place": {
+          "kind": "vertex",
+          "part": 0,
+          "ring": 0,
+          "index": 3
+         }
+        }
+       }
+      }
+     }
+    ]
+   },
+   "as": [
+    "dim2"
+   ],
+   "expect": {
+    "objects": {
+     "dim2": {
+      "kind": "dimension",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 2
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 3
+        }
+       }
+      }
+     }
+    },
+    "measures": {
+     "dim2": {
+      "length": 4.0
+     }
+    },
+    "count": 3
+   }
+  },
+  {
+   "name": "K04 Ölçülen kenara köşe eklenir (kenar bölünür)",
+   "command": "cad.entities.edit",
+   "input": {
+    "operation": "vertexAdd",
+    "changes": [
+     {
+      "kind": "update",
+      "uid": "$room",
+      "geometry": {
+       "kind": "polygon",
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 3.0
+        },
+        {
+         "x": 2.0,
+         "y": 3.0
+        },
+        {
+         "x": 0.0,
+         "y": 3.0
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        2.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     },
+     "dim2": {
+      "kind": "dimension",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 2
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 4
+        }
+       }
+      }
+     }
+    },
+    "measures": {
+     "room": {
+      "area": 12.0,
+      "length": 14.0
+     },
+     "dim2": {
+      "length": 4.0
+     }
+    }
+   }
+  },
+  {
+   "name": "K04 Yeni köşe 300 mm dışa çekilir; ölçü yerinde kalır",
+   "command": "cad.entities.edit",
+   "input": {
+    "operation": "grip",
+    "changes": [
+     {
+      "kind": "update",
+      "uid": "$room",
+      "geometry": {
+       "kind": "polygon",
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 3.0
+        },
+        {
+         "x": 2.0,
+         "y": 3.3
+        },
+        {
+         "x": 0.0,
+         "y": 3.0
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        2.0,
+        3.3
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     },
+     "dim2": {
+      "kind": "dimension",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 2
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 4
+        }
+       }
+      }
+     }
+    },
+    "measures": {
+     "room": {
+      "area": 12.6,
+      "length": 14.044749683231338
+     },
+     "dim2": {
+      "length": 4.0
+     }
+    }
+   }
+  },
+  {
+   "name": "K04 Geri al: çekilen köşe",
+   "undo": "Tutamaçla düzenle",
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        2.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K04 Geri al: eklenen köşe",
+   "undo": "Köşe ekle",
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     },
+     "dim2": {
+      "kind": "dimension",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 2
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 3
+        }
+       }
+      }
+     }
+    },
+    "measures": {
+     "room": {
+      "area": 12.0,
+      "length": 14.0
+     }
+    }
+   }
+  },
+  {
+   "name": "Oda ilişkili taramayla taranır",
+   "command": "cad.entities.create",
+   "input": {
+    "layerId": "$layer",
+    "operation": "hatch",
+    "objects": [
+     {
+      "geometry": {
+       "kind": "hatch",
+       "ring": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 3.0
+        },
+        {
+         "x": 0.0,
+         "y": 3.0
+        }
+       ],
+       "pattern": {
+        "type": "lines",
+        "angle": 45,
+        "spacing": 0.1
+       },
+       "assoc": {
+        "outer": "$room",
+        "seed": {
+         "x": 2.0,
+         "y": 1.5
+        }
+       }
+      }
+     }
+    ]
+   },
+   "as": [
+    "hatch"
+   ],
+   "expect": {
+    "measures": {
+     "hatch": {
+      "area": 12.0
+     }
+    },
+    "count": 4
+   }
+  },
+  {
+   "name": "Odanın üst kenarı 500 mm kayar; tarama izler",
+   "command": "cad.entities.edit",
+   "input": {
+    "operation": "stretch",
+    "changes": [
+     {
+      "kind": "update",
+      "uid": "$room",
+      "geometry": {
+       "kind": "polygon",
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 3.5
+        },
+        {
+         "x": 0.0,
+         "y": 3.5
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "expect": {
+    "measures": {
+     "room": {
+      "area": 14.0,
+      "length": 15.0
+     },
+     "hatch": {
+      "area": 14.0
+     }
+    }
+   }
+  },
+  {
+   "name": "Geri al: oda ve tarama 12 m²",
+   "undo": "Esnet",
+   "expect": {
+    "measures": {
+     "room": {
+      "area": 12.0,
+      "length": 14.0
+     },
+     "hatch": {
+      "area": 12.0
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Duvar ekseni 1",
+   "command": "cad.line.create",
+   "input": {
+    "layerId": "$layer",
+    "a": {
+     "x": -0.1,
+     "y": -0.1
+    },
+    "b": {
+     "x": 4.1,
+     "y": -0.1
+    }
+   },
+   "as": "wall1",
+   "expect": {
+    "objects": {
+     "wall1": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       -0.1
+      ],
+      "b": [
+       4.1,
+       -0.1
+      ]
+     }
+    },
+    "count": 5
+   }
+  },
+  {
+   "name": "K02 Duvar ekseni 2",
+   "command": "cad.line.create",
+   "input": {
+    "layerId": "$layer",
+    "a": {
+     "x": 4.1,
+     "y": -0.1
+    },
+    "b": {
+     "x": 4.1,
+     "y": 3.1
+    }
+   },
+   "as": "wall2",
+   "expect": {
+    "objects": {
+     "wall2": {
+      "kind": "line",
+      "a": [
+       4.1,
+       -0.1
+      ],
+      "b": [
+       4.1,
+       3.1
+      ]
+     }
+    },
+    "count": 6
+   }
+  },
+  {
+   "name": "K02 Duvar ekseni 3",
+   "command": "cad.line.create",
+   "input": {
+    "layerId": "$layer",
+    "a": {
+     "x": 4.1,
+     "y": 3.1
+    },
+    "b": {
+     "x": -0.1,
+     "y": 3.1
+    }
+   },
+   "as": "wall3",
+   "expect": {
+    "objects": {
+     "wall3": {
+      "kind": "line",
+      "a": [
+       4.1,
+       3.1
+      ],
+      "b": [
+       -0.1,
+       3.1
+      ]
+     }
+    },
+    "count": 7
+   }
+  },
+  {
+   "name": "K02 Duvar ekseni 4",
+   "command": "cad.line.create",
+   "input": {
+    "layerId": "$layer",
+    "a": {
+     "x": -0.1,
+     "y": 3.1
+    },
+    "b": {
+     "x": -0.1,
+     "y": -0.1
+    }
+   },
+   "as": "wall4",
+   "expect": {
+    "objects": {
+     "wall4": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       3.1
+      ],
+      "b": [
+       -0.1,
+       -0.1
+      ]
+     }
+    },
+    "count": 8
+   }
+  },
+  {
+   "name": "K02 Duvar 1 dışa 100 mm ötelenir",
+   "command": "cad.entities.offset",
+   "input": {
+    "uids": [
+     "$wall1"
+    ],
+    "by": {
+     "kind": "distance",
+     "distance": 0.1,
+     "side": {
+      "x": 2.0,
+      "y": -0.5
+     }
+    }
+   },
+   "as": [
+    "out1"
+   ],
+   "expect": {
+    "objects": {
+     "out1": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       -0.2
+      ],
+      "b": [
+       4.1,
+       -0.2
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Duvar 2 dışa 100 mm ötelenir",
+   "command": "cad.entities.offset",
+   "input": {
+    "uids": [
+     "$wall2"
+    ],
+    "by": {
+     "kind": "distance",
+     "distance": 0.1,
+     "side": {
+      "x": 4.5,
+      "y": 1.5
+     }
+    }
+   },
+   "as": [
+    "out2"
+   ],
+   "expect": {
+    "objects": {
+     "out2": {
+      "kind": "line",
+      "a": [
+       4.199999999999999,
+       -0.1
+      ],
+      "b": [
+       4.199999999999999,
+       3.1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Duvar 3 dışa 100 mm ötelenir",
+   "command": "cad.entities.offset",
+   "input": {
+    "uids": [
+     "$wall3"
+    ],
+    "by": {
+     "kind": "distance",
+     "distance": 0.1,
+     "side": {
+      "x": 2.0,
+      "y": 3.5
+     }
+    }
+   },
+   "as": [
+    "out3"
+   ],
+   "expect": {
+    "objects": {
+     "out3": {
+      "kind": "line",
+      "a": [
+       4.1,
+       3.2
+      ],
+      "b": [
+       -0.1,
+       3.2
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Duvar 4 dışa 100 mm ötelenir",
+   "command": "cad.entities.offset",
+   "input": {
+    "uids": [
+     "$wall4"
+    ],
+    "by": {
+     "kind": "distance",
+     "distance": 0.1,
+     "side": {
+      "x": -0.5,
+      "y": 1.5
+     }
+    }
+   },
+   "as": [
+    "out4"
+   ],
+   "expect": {
+    "objects": {
+     "out4": {
+      "kind": "line",
+      "a": [
+       -0.2,
+       3.1
+      ],
+      "b": [
+       -0.2,
+       -0.1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Duvar 1 içe 100 mm ötelenir",
+   "command": "cad.entities.offset",
+   "input": {
+    "uids": [
+     "$wall1"
+    ],
+    "by": {
+     "kind": "distance",
+     "distance": 0.1,
+     "side": {
+      "x": 2.0,
+      "y": 1.0
+     }
+    }
+   },
+   "as": [
+    "in1"
+   ],
+   "expect": {
+    "objects": {
+     "in1": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       0.0
+      ],
+      "b": [
+       4.1,
+       0.0
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Duvar 2 içe 100 mm ötelenir",
+   "command": "cad.entities.offset",
+   "input": {
+    "uids": [
+     "$wall2"
+    ],
+    "by": {
+     "kind": "distance",
+     "distance": 0.1,
+     "side": {
+      "x": 3.0,
+      "y": 1.5
+     }
+    }
+   },
+   "as": [
+    "in2"
+   ],
+   "expect": {
+    "objects": {
+     "in2": {
+      "kind": "line",
+      "a": [
+       3.9999999999999996,
+       -0.1
+      ],
+      "b": [
+       3.9999999999999996,
+       3.1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Duvar 3 içe 100 mm ötelenir",
+   "command": "cad.entities.offset",
+   "input": {
+    "uids": [
+     "$wall3"
+    ],
+    "by": {
+     "kind": "distance",
+     "distance": 0.1,
+     "side": {
+      "x": 2.0,
+      "y": 2.0
+     }
+    }
+   },
+   "as": [
+    "in3"
+   ],
+   "expect": {
+    "objects": {
+     "in3": {
+      "kind": "line",
+      "a": [
+       4.1,
+       3.0
+      ],
+      "b": [
+       -0.1,
+       3.0
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Duvar 4 içe 100 mm ötelenir",
+   "command": "cad.entities.offset",
+   "input": {
+    "uids": [
+     "$wall4"
+    ],
+    "by": {
+     "kind": "distance",
+     "distance": 0.1,
+     "side": {
+      "x": 1.0,
+      "y": 1.5
+     }
+    }
+   },
+   "as": [
+    "in4"
+   ],
+   "expect": {
+    "objects": {
+     "in4": {
+      "kind": "line",
+      "a": [
+       0.0,
+       3.1
+      ],
+      "b": [
+       0.0,
+       -0.1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Dış köşe 1–2 birleşir (yarıçap 0)",
+   "command": "cad.entities.fillet",
+   "input": {
+    "corner": {
+     "kind": "lines",
+     "first": {
+      "uid": "$out1",
+      "at": {
+       "x": 3.9,
+       "y": -0.2
+      }
+     },
+     "second": {
+      "uid": "$out2",
+      "at": {
+       "x": 4.2,
+       "y": 0.1
+      }
+     }
+    },
+    "radius": 0
+   },
+   "expect": {
+    "objects": {
+     "out1": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       -0.2
+      ],
+      "b": [
+       4.2,
+       -0.2
+      ]
+     },
+     "out2": {
+      "kind": "line",
+      "a": [
+       4.2,
+       -0.2
+      ],
+      "b": [
+       4.199999999999999,
+       3.1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Dış köşe 2–3 birleşir (yarıçap 0)",
+   "command": "cad.entities.fillet",
+   "input": {
+    "corner": {
+     "kind": "lines",
+     "first": {
+      "uid": "$out2",
+      "at": {
+       "x": 4.2,
+       "y": 2.9
+      }
+     },
+     "second": {
+      "uid": "$out3",
+      "at": {
+       "x": 3.9,
+       "y": 3.2
+      }
+     }
+    },
+    "radius": 0
+   },
+   "expect": {
+    "objects": {
+     "out2": {
+      "kind": "line",
+      "a": [
+       4.2,
+       -0.2
+      ],
+      "b": [
+       4.2,
+       3.2
+      ]
+     },
+     "out3": {
+      "kind": "line",
+      "a": [
+       4.2,
+       3.2
+      ],
+      "b": [
+       -0.1,
+       3.2
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Dış köşe 3–4 birleşir (yarıçap 0)",
+   "command": "cad.entities.fillet",
+   "input": {
+    "corner": {
+     "kind": "lines",
+     "first": {
+      "uid": "$out3",
+      "at": {
+       "x": 0.1,
+       "y": 3.2
+      }
+     },
+     "second": {
+      "uid": "$out4",
+      "at": {
+       "x": -0.2,
+       "y": 2.9
+      }
+     }
+    },
+    "radius": 0
+   },
+   "expect": {
+    "objects": {
+     "out3": {
+      "kind": "line",
+      "a": [
+       4.2,
+       3.2
+      ],
+      "b": [
+       -0.2,
+       3.2
+      ]
+     },
+     "out4": {
+      "kind": "line",
+      "a": [
+       -0.2,
+       3.2
+      ],
+      "b": [
+       -0.2,
+       -0.1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 Dış köşe 4–1 birleşir (yarıçap 0)",
+   "command": "cad.entities.fillet",
+   "input": {
+    "corner": {
+     "kind": "lines",
+     "first": {
+      "uid": "$out4",
+      "at": {
+       "x": -0.2,
+       "y": 0.1
+      }
+     },
+     "second": {
+      "uid": "$out1",
+      "at": {
+       "x": 0.1,
+       "y": -0.2
+      }
+     }
+    },
+    "radius": 0
+   },
+   "expect": {
+    "objects": {
+     "out4": {
+      "kind": "line",
+      "a": [
+       -0.2,
+       3.2
+      ],
+      "b": [
+       -0.2,
+       -0.2
+      ]
+     },
+     "out1": {
+      "kind": "line",
+      "a": [
+       -0.2,
+       -0.2
+      ],
+      "b": [
+       4.2,
+       -0.2
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "K02 İç yüzlerin taşan uçları budanır; iç yüzler odanın kenarlarıdır",
+   "command": "cad.entities.trim",
+   "input": {
+    "picks": [
+     {
+      "uid": "$in1",
+      "at": {
+       "x": -0.05,
+       "y": 0.0
+      }
+     },
+     {
+      "uid": "$in1",
+      "at": {
+       "x": 4.05,
+       "y": 0.0
+      }
+     },
+     {
+      "uid": "$in2",
+      "at": {
+       "x": 3.9999999999999996,
+       "y": -0.05
+      }
+     },
+     {
+      "uid": "$in2",
+      "at": {
+       "x": 3.9999999999999996,
+       "y": 3.0500000000000003
+      }
+     },
+     {
+      "uid": "$in3",
+      "at": {
+       "x": 4.05,
+       "y": 3.0
+      }
+     },
+     {
+      "uid": "$in3",
+      "at": {
+       "x": -0.05,
+       "y": 3.0
+      }
+     },
+     {
+      "uid": "$in4",
+      "at": {
+       "x": 0.0,
+       "y": 3.0500000000000003
+      }
+     },
+     {
+      "uid": "$in4",
+      "at": {
+       "x": 0.0,
+       "y": -0.05
+      }
+     }
+    ],
+    "boundaries": {
+     "kind": "all"
+    }
+   },
+   "expect": {
+    "objects": {
+     "in1": {
+      "kind": "line",
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       0.0
+      ]
+     },
+     "in2": {
+      "kind": "line",
+      "a": [
+       4.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       3.0
+      ]
+     },
+     "in3": {
+      "kind": "line",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ]
+     },
+     "in4": {
+      "kind": "line",
+      "a": [
+       0.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "count": 16
+   }
+  },
+  {
+   "name": "Kaydet ve aç: bütün çizim",
+   "reopen": true,
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     },
+     "dim1": {
+      "kind": "dimension",
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       0.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 0
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 1
+        }
+       }
+      }
+     },
+     "dim2": {
+      "kind": "dimension",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 2
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 3
+        }
+       }
+      }
+     },
+     "wall1": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       -0.1
+      ],
+      "b": [
+       4.1,
+       -0.1
+      ]
+     },
+     "wall2": {
+      "kind": "line",
+      "a": [
+       4.1,
+       -0.1
+      ],
+      "b": [
+       4.1,
+       3.1
+      ]
+     },
+     "wall3": {
+      "kind": "line",
+      "a": [
+       4.1,
+       3.1
+      ],
+      "b": [
+       -0.1,
+       3.1
+      ]
+     },
+     "wall4": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       3.1
+      ],
+      "b": [
+       -0.1,
+       -0.1
+      ]
+     },
+     "out1": {
+      "kind": "line",
+      "a": [
+       -0.2,
+       -0.2
+      ],
+      "b": [
+       4.2,
+       -0.2
+      ]
+     },
+     "out2": {
+      "kind": "line",
+      "a": [
+       4.2,
+       -0.2
+      ],
+      "b": [
+       4.2,
+       3.2
+      ]
+     },
+     "out3": {
+      "kind": "line",
+      "a": [
+       4.2,
+       3.2
+      ],
+      "b": [
+       -0.2,
+       3.2
+      ]
+     },
+     "out4": {
+      "kind": "line",
+      "a": [
+       -0.2,
+       3.2
+      ],
+      "b": [
+       -0.2,
+       -0.2
+      ]
+     },
+     "in1": {
+      "kind": "line",
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       0.0
+      ]
+     },
+     "in2": {
+      "kind": "line",
+      "a": [
+       4.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       3.0
+      ]
+     },
+     "in3": {
+      "kind": "line",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ]
+     },
+     "in4": {
+      "kind": "line",
+      "a": [
+       0.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     }
+    },
+    "measures": {
+     "room": {
+      "area": 12.0,
+      "length": 14.0
+     },
+     "hatch": {
+      "area": 12.0
+     },
+     "dim1": {
+      "length": 4.0
+     },
+     "dim2": {
+      "length": 4.0
+     }
+    },
+    "count": 16
+   }
+  },
+  {
+   "name": "K11 5000 mm kaynak çizgi",
+   "command": "cad.line.create",
+   "input": {
+    "layerId": "$layer",
+    "a": {
+     "x": -0.5,
+     "y": -1.5
+    },
+    "b": {
+     "x": 4.5,
+     "y": -1.5
+    }
+   },
+   "as": "k11",
+   "expect": {
+    "objects": {
+     "k11": {
+      "kind": "line",
+      "a": [
+       -0.5,
+       -1.5
+      ],
+      "b": [
+       4.5,
+       -1.5
+      ]
+     }
+    },
+    "measures": {
+     "k11": {
+      "length": 5.0
+     }
+    },
+    "count": 17
+   }
+  },
+  {
+   "name": "K11 İki A3 pafta: 1:50 kat planı ve 1:100 vaziyet, antetleriyle",
+   "command": "cad.sheets.edit",
+   "input": {
+    "ops": [
+     {
+      "op": "addSheet",
+      "sheet": {
+       "id": "kat-plani",
+       "name": "Kat planı",
+       "page": {
+        "paper": "a3",
+        "orientation": "landscape",
+        "size": {
+         "width": 420000,
+         "height": 297000
+        },
+        "margins": {
+         "top": 10000,
+         "right": 10000,
+         "bottom": 10000,
+         "left": 20000
+        }
+       },
+       "items": [
+        {
+         "id": "kat-plani-harita",
+         "name": "Harita",
+         "frame": {
+          "left": 20000,
+          "top": 10000,
+          "width": 390000,
+          "height": 230000
+         },
+         "kind": {
+          "type": "map",
+          "view": {
+           "type": "fixed",
+           "center": {
+            "x": 2.0,
+            "y": 1.0
+           },
+           "scale": 50,
+           "rotation": 0
+          }
+         }
+        },
+        {
+         "id": "kat-plani-antet",
+         "name": "Antet",
+         "frame": {
+          "left": 230000,
+          "top": 245000,
+          "width": 180000,
+          "height": 42000
+         },
+         "kind": {
+          "type": "titleBlock",
+          "rows": [
+           {
+            "height": 1,
+            "cells": [
+             {
+              "width": 1,
+              "label": "PROJE",
+              "value": "[% @proje_adi %]",
+              "align": "left",
+              "valign": "middle",
+              "signature": false,
+              "rows": []
+             },
+             {
+              "width": 1,
+              "label": "PAFTA",
+              "value": "[% @pafta_adi %]",
+              "align": "left",
+              "valign": "middle",
+              "signature": false,
+              "rows": []
+             }
+            ]
+           },
+           {
+            "height": 1,
+            "cells": [
+             {
+              "width": 1,
+              "label": "ÖLÇEK",
+              "value": "[% @olcek %]",
+              "align": "left",
+              "valign": "middle",
+              "signature": false,
+              "rows": []
+             },
+             {
+              "width": 1,
+              "label": "TARİH",
+              "value": "[% @tarih %]",
+              "align": "left",
+              "valign": "middle",
+              "signature": false,
+              "rows": []
+             }
+            ]
+           }
+          ],
+          "outer": {
+           "color": "#000000",
+           "width": 350,
+           "dash": [],
+           "cap": "butt",
+           "join": "miter"
+          },
+          "inner": {
+           "color": "#000000",
+           "width": 180,
+           "dash": [],
+           "cap": "butt",
+           "join": "miter"
+          },
+          "labelStyle": {
+           "font": "barlow",
+           "size": 1500,
+           "weight": 500,
+           "italic": false,
+           "color": "#000000"
+          },
+          "valueStyle": {
+           "font": "barlow",
+           "size": 2700,
+           "weight": 500,
+           "italic": false,
+           "color": "#000000"
+          },
+          "cellPadding": 1200
+         }
+        }
+       ]
+      }
+     },
+     {
+      "op": "addSheet",
+      "sheet": {
+       "id": "vaziyet",
+       "name": "Vaziyet",
+       "page": {
+        "paper": "a3",
+        "orientation": "landscape",
+        "size": {
+         "width": 420000,
+         "height": 297000
+        },
+        "margins": {
+         "top": 10000,
+         "right": 10000,
+         "bottom": 10000,
+         "left": 20000
+        }
+       },
+       "items": [
+        {
+         "id": "vaziyet-harita",
+         "name": "Harita",
+         "frame": {
+          "left": 20000,
+          "top": 10000,
+          "width": 390000,
+          "height": 230000
+         },
+         "kind": {
+          "type": "map",
+          "view": {
+           "type": "fixed",
+           "center": {
+            "x": 2.0,
+            "y": 1.0
+           },
+           "scale": 100,
+           "rotation": 0
+          }
+         }
+        },
+        {
+         "id": "vaziyet-antet",
+         "name": "Antet",
+         "frame": {
+          "left": 230000,
+          "top": 245000,
+          "width": 180000,
+          "height": 42000
+         },
+         "kind": {
+          "type": "titleBlock",
+          "rows": [
+           {
+            "height": 1,
+            "cells": [
+             {
+              "width": 1,
+              "label": "PROJE",
+              "value": "[% @proje_adi %]",
+              "align": "left",
+              "valign": "middle",
+              "signature": false,
+              "rows": []
+             },
+             {
+              "width": 1,
+              "label": "PAFTA",
+              "value": "[% @pafta_adi %]",
+              "align": "left",
+              "valign": "middle",
+              "signature": false,
+              "rows": []
+             }
+            ]
+           },
+           {
+            "height": 1,
+            "cells": [
+             {
+              "width": 1,
+              "label": "ÖLÇEK",
+              "value": "[% @olcek %]",
+              "align": "left",
+              "valign": "middle",
+              "signature": false,
+              "rows": []
+             },
+             {
+              "width": 1,
+              "label": "TARİH",
+              "value": "[% @tarih %]",
+              "align": "left",
+              "valign": "middle",
+              "signature": false,
+              "rows": []
+             }
+            ]
+           }
+          ],
+          "outer": {
+           "color": "#000000",
+           "width": 350,
+           "dash": [],
+           "cap": "butt",
+           "join": "miter"
+          },
+          "inner": {
+           "color": "#000000",
+           "width": 180,
+           "dash": [],
+           "cap": "butt",
+           "join": "miter"
+          },
+          "labelStyle": {
+           "font": "barlow",
+           "size": 1500,
+           "weight": 500,
+           "italic": false,
+           "color": "#000000"
+          },
+          "valueStyle": {
+           "font": "barlow",
+           "size": 2700,
+           "weight": 500,
+           "italic": false,
+           "color": "#000000"
+          },
+          "cellPadding": 1200
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "expect": {
+    "sheets": [
+     {
+      "id": "kat-plani",
+      "name": "Kat planı",
+      "width": 420.0,
+      "height": 297.0,
+      "items": 2,
+      "maps": [
+       {
+        "item": "kat-plani-harita",
+        "name": "Harita",
+        "scale": 50
+       }
+      ]
+     },
+     {
+      "id": "vaziyet",
+      "name": "Vaziyet",
+      "width": 420.0,
+      "height": 297.0,
+      "items": 2,
+      "maps": [
+       {
+        "item": "vaziyet-harita",
+        "name": "Harita",
+        "scale": 100
+       }
+      ]
+     }
+    ],
+    "count": 17
+   }
+  },
+  {
+   "name": "DXF: bütün çizim milimetrede",
+   "export": "dxf",
+   "expect": {
+    "dxf": {
+     "insunits": 4,
+     "counts": {
+      "LWPOLYLINE": 1,
+      "DIMENSION": 2,
+      "HATCH": 1,
+      "LINE": 13
+     },
+     "polylines": [
+      {
+       "closed": true,
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         4000.0,
+         0.0
+        ],
+        [
+         4000.0,
+         3000.0
+        ],
+        [
+         0.0,
+         3000.0
+        ]
+       ]
+      }
+     ],
+     "lines": [
+      [
+       [
+        -100.0,
+        -100.0
+       ],
+       [
+        4100.0,
+        -100.0
+       ]
+      ],
+      [
+       [
+        4100.0,
+        -100.0
+       ],
+       [
+        4100.0,
+        3100.0
+       ]
+      ],
+      [
+       [
+        4100.0,
+        3100.0
+       ],
+       [
+        -100.0,
+        3100.0
+       ]
+      ],
+      [
+       [
+        -100.0,
+        3100.0
+       ],
+       [
+        -100.0,
+        -100.0
+       ]
+      ],
+      [
+       [
+        -200.0,
+        -200.0
+       ],
+       [
+        4200.0,
+        -200.0
+       ]
+      ],
+      [
+       [
+        4200.0,
+        -200.0
+       ],
+       [
+        4200.0,
+        3200.0
+       ]
+      ],
+      [
+       [
+        4200.0,
+        3200.0
+       ],
+       [
+        -200.0,
+        3200.0
+       ]
+      ],
+      [
+       [
+        -200.0,
+        3200.0
+       ],
+       [
+        -200.0,
+        -200.0
+       ]
+      ],
+      [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4000.0,
+        0.0
+       ]
+      ],
+      [
+       [
+        4000.0,
+        0.0
+       ],
+       [
+        4000.0,
+        3000.0
+       ]
+      ],
+      [
+       [
+        4000.0,
+        3000.0
+       ],
+       [
+        0.0,
+        3000.0
+       ]
+      ],
+      [
+       [
+        0.0,
+        3000.0
+       ],
+       [
+        0.0,
+        0.0
+       ]
+      ],
+      [
+       [
+        -500.0,
+        -1500.0
+       ],
+       [
+        4500.0,
+        -1500.0
+       ]
+      ]
+     ],
+     "dimensions": [
+      4000.0,
+      4000.0
+     ],
+     "hatches": [
+      {
+       "angle": 45.0,
+       "spacing": 100.0,
+       "boundary": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         4000.0,
+         0.0
+        ],
+        [
+         4000.0,
+         3000.0
+        ],
+        [
+         0.0,
+         3000.0
+        ]
+       ]
+      }
+     ],
+     "tolerance": 1e-06
+    }
+   }
+  },
+  {
+   "name": "K11 PDF: A3 sayfalar, 5000 mm çizgi 1:50'de 100 mm",
+   "export": "pdf",
+   "expect": {
+    "pdf": {
+     "pages": [
+      {
+       "width": 420.0,
+       "height": 297.0,
+       "segment": [
+        [
+         165.0,
+         122.0
+        ],
+        [
+         265.0,
+         122.0
+        ]
+       ],
+       "texts": [
+        "Oda",
+        "Kat planı",
+        "1/50"
+       ]
+      },
+      {
+       "width": 420.0,
+       "height": 297.0,
+       "segment": [
+        [
+         190.0,
+         147.0
+        ],
+        [
+         240.0,
+         147.0
+        ]
+       ],
+       "texts": [
+        "Oda",
+        "Vaziyet",
+        "1/100"
+       ]
+      }
+     ],
+     "tolerance": 0.01
+    }
+   }
+  },
+  {
+   "name": "K12 Kaydet ve başka ortamda aç: çizim ve pafta kitabı eksiksiz",
+   "reopen": true,
+   "expect": {
+    "objects": {
+     "room": {
+      "kind": "polygon",
+      "pts": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.0,
+        0.0
+       ],
+       [
+        4.0,
+        3.0
+       ],
+       [
+        0.0,
+        3.0
+       ]
+      ]
+     },
+     "dim1": {
+      "kind": "dimension",
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       0.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 0
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 1
+        }
+       }
+      }
+     },
+     "dim2": {
+      "kind": "dimension",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ],
+      "refs": {
+       "a": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 2
+        }
+       },
+       "b": {
+        "place": {
+         "kind": "vertex",
+         "part": 0,
+         "ring": 0,
+         "index": 3
+        }
+       }
+      }
+     },
+     "wall1": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       -0.1
+      ],
+      "b": [
+       4.1,
+       -0.1
+      ]
+     },
+     "wall2": {
+      "kind": "line",
+      "a": [
+       4.1,
+       -0.1
+      ],
+      "b": [
+       4.1,
+       3.1
+      ]
+     },
+     "wall3": {
+      "kind": "line",
+      "a": [
+       4.1,
+       3.1
+      ],
+      "b": [
+       -0.1,
+       3.1
+      ]
+     },
+     "wall4": {
+      "kind": "line",
+      "a": [
+       -0.1,
+       3.1
+      ],
+      "b": [
+       -0.1,
+       -0.1
+      ]
+     },
+     "out1": {
+      "kind": "line",
+      "a": [
+       -0.2,
+       -0.2
+      ],
+      "b": [
+       4.2,
+       -0.2
+      ]
+     },
+     "out2": {
+      "kind": "line",
+      "a": [
+       4.2,
+       -0.2
+      ],
+      "b": [
+       4.2,
+       3.2
+      ]
+     },
+     "out3": {
+      "kind": "line",
+      "a": [
+       4.2,
+       3.2
+      ],
+      "b": [
+       -0.2,
+       3.2
+      ]
+     },
+     "out4": {
+      "kind": "line",
+      "a": [
+       -0.2,
+       3.2
+      ],
+      "b": [
+       -0.2,
+       -0.2
+      ]
+     },
+     "in1": {
+      "kind": "line",
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       0.0
+      ]
+     },
+     "in2": {
+      "kind": "line",
+      "a": [
+       4.0,
+       0.0
+      ],
+      "b": [
+       4.0,
+       3.0
+      ]
+     },
+     "in3": {
+      "kind": "line",
+      "a": [
+       4.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       3.0
+      ]
+     },
+     "in4": {
+      "kind": "line",
+      "a": [
+       0.0,
+       3.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "k11": {
+      "kind": "line",
+      "a": [
+       -0.5,
+       -1.5
+      ],
+      "b": [
+       4.5,
+       -1.5
+      ]
+     }
+    },
+    "sheets": [
+     {
+      "id": "kat-plani",
+      "name": "Kat planı",
+      "width": 420.0,
+      "height": 297.0,
+      "items": 2,
+      "maps": [
+       {
+        "item": "kat-plani-harita",
+        "name": "Harita",
+        "scale": 50
+       }
+      ]
+     },
+     {
+      "id": "vaziyet",
+      "name": "Vaziyet",
+      "width": 420.0,
+      "height": 297.0,
+      "items": 2,
+      "maps": [
+       {
+        "item": "vaziyet-harita",
+        "name": "Harita",
+        "scale": 100
+       }
+      ]
+     }
+    ],
+    "count": 17
+   }
+  }
+ ]
+}

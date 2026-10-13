@@ -12,6 +12,9 @@
 //!   ones the server runs are listed too, and refused here with the reason.
 //! - Queries ([`Session::layers`], [`Session::entities`], [`Session::entity`])
 //!   and measures ([`Session::measure`]) read without writing.
+//! - [`Session::export_dxf`]: the drawing as a DXF file, as the desktop's
+//!   DXF dışa aktar writes it ([`export`], docs/adr/0252); [`Session::export_pdf`]:
+//!   the project's sheet book as a PDF (`kentos_plot::book`).
 //! - [`rpc::call`]: the same by name over a document another host owns (the
 //!   desktop's open drawing, asked by its Python console).
 //!
@@ -27,6 +30,7 @@
 
 mod dispatch;
 mod error;
+pub mod export;
 mod files;
 mod query;
 pub mod rpc;

@@ -112,6 +112,68 @@ impl Session {
         }))
     }
 
+    /// The whole drawing as an AutoCAD 2007 DXF file at `path` (docs/adr/0252),
+    /// the desktop's DXF dışa aktar with Tümü: every object with its layers,
+    /// what DXF cannot hold carried as KentOS data. An export is not a save:
+    /// the drawing stays as dirty as it was. The answer counts what was
+    /// written and says what changed on the way (the writer's report).
+    pub fn export_dxf(&self, path: &Path) -> Result<Value, HeadlessError> {
+        let chosen = crate::export::by_layer(&self.doc, self.doc.entities());
+        if chosen.is_empty() {
+            return Err(HeadlessError::new(
+                "nothing_to_export",
+                "Çizimde nesne yok: DXF'e yazılacak bir şey çizin.",
+            ));
+        }
+        let input = crate::export::dxf_input(&self.doc, &chosen);
+        let layers = input.layers.len();
+        let (bytes, report) = kentos_formats::dxf::write(&input);
+        let written = files::write_bytes(&bytes, path)?;
+        Ok(json!({
+            "path": path.display().to_string(),
+            "bytes": written,
+            "objects": report.counts.values().sum::<u32>(),
+            "layers": layers,
+            "report": report,
+        }))
+    }
+
+    /// The project's sheet book as a PDF at `path` (docs/adr/0252 §3): the
+    /// sheets named (none: every sheet, in the book's order), a page each,
+    /// as the desktop's Dışa aktar › PDF writes them: the sheets' items, each
+    /// placed map frame as the shown layers' paths at its scale, GeoPDF where
+    /// the project's system is a transverse Mercator one. What a headless
+    /// host cannot draw (the maps' texts) is said in `notes`, the core's
+    /// findings in `findings`. An export is not a save.
+    pub fn export_pdf(&self, path: &Path, sheets: &[String]) -> Result<Value, HeadlessError> {
+        let user = std::env::var("USER")
+            .or_else(|_| std::env::var("USERNAME"))
+            .unwrap_or_default();
+        let made = kentos_plot::book::book_pdf(
+            &self.doc,
+            sheets,
+            &user,
+            &kentos_plot::book::today(),
+        )
+        .map_err(|e| {
+            let code = match e.code.as_str() {
+                "no_sheets" => "no_sheets",
+                "pdf_unknown_sheet" => "unknown_sheet",
+                "pdf_no_sheets" => "no_sheets",
+                _ => "pdf_unwritable",
+            };
+            HeadlessError::new(code, e.message)
+        })?;
+        let written = files::write_bytes(&made.bytes, path)?;
+        Ok(json!({
+            "path": path.display().to_string(),
+            "bytes": written,
+            "sheets": made.sheets,
+            "findings": made.findings,
+            "notes": made.notes,
+        }))
+    }
+
     /// The `.kcad` v2 bytes of the drawing as it is now, verified.
     pub fn to_bytes(&self) -> Result<Vec<u8>, HeadlessError> {
         kentos_kcad::encode_verified(&self.doc.to_snapshot_v2()).map_err(|e| {

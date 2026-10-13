@@ -459,6 +459,12 @@ def fillet_lines(first, p1, second, p2, r):
     return (far1, t1), (far2, t2), {"c": c, "r": r, "a0": a0, "a1": a1}
 
 
+def along(first, kept):
+    """A side keeps its direction (docs/adr/0250 §3): the kept end first is turned round when it is the line's end."""
+    a, b = [(float(v[0]), float(v[1])) for v in seg(BY_ID[first])]
+    return (kept[1], kept[0]) if kept[0] == b and kept[0] != a else kept
+
+
 def cut_lines(first, p1, second, p2, d1, d2):
     x, u1, far1, u2, far2 = lines_corner(first, p1, second, p2)
     c1 = (x[0] + u1[0] * d1, x[1] + u1[1] * d1)
@@ -528,6 +534,7 @@ def lines_case(name, kind, size, trim=True, plan=False):
     if not trim:
         inp["trim"] = False
     changed, ents = [], {}
+    l1, l2 = along(21, l1), along(22, l2)
     if trim:
         ents = {"21": {**A, "a": P(*l1[0]), "b": P(*l1[1])}, "22": {**B, "a": P(*l2[0]), "b": P(*l2[1])}}
         changed = [UID(21), UID(22)]

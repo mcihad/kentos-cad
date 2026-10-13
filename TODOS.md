@@ -117,6 +117,11 @@ Liste:
   bulut istemcisinin `ProjectPatch.sheets`'i göndermesi ve `ProjectInfo.sheets`'i alması; pafta çekirdeğinin `project` modülü WASM'a
   (`sheet-wasm`); bilinen bozulmalar: örnek `fixtures/kcad/v2/sheets.kcad` ve dokuz bozuk dosya web'in okuyucusunda şema 44 olarak
   reddedilir.
+- [ ] `CADP-12` (ADR 0252, 13 Ekim): web'de gerekenler: `cad.sheets.edit`'in işleyicisi (`product/`; ortak durumlar
+  `fixtures/commands/v1/cad.sheets.edit.json`'u geçmeli) ve pafta kipinin kitabı belgeden izlemesi (ajanın değişikliği); Köşe
+  yuvarla'nın `lines` köşesinde çizgilerin yönünü koruması (web'in `product/` işleyicisi eski kuralla; ortak durumlar ve `corner-tools`
+  izi yenisini bekler); haritaların vektörleri `kentos-plot`'un kuralıyla (web'in `mapVectors.ts`'i aynı yolları vermeli); kabul
+  senaryosunun izi (`acceptance-room.json`) web'in oynatıcısında.
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
@@ -1064,14 +1069,22 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   56; belgede kitap (düzenleme, geri alma adımı değil); pafta çekirdeğinin `project`'i; masaüstünde kitap çizimle gider, cihazdaki
   kitap projeye alınır ve kaydedilince `kitaplar/tasindi/`'ye ayrılır, okunamayan kitap olduğu gibi kalır; veritabanı projesinde göç
   0017 (`project.sheets`), bilgi, oluşturma, `ProjectPatch.sheets`, görüntü, içe aktarma, kopya ve geri yükleme; masaüstünün bulut
-  eşitlemesi kitabı meta olarak gönderir ve alır. Açık: pafta işlemleri katalogda ve başsız sunucuda (`CAD-SHEET-06`, `07`), modeli ve
+  eşitlemesi kitabı meta olarak gönderir ve alır. Açık: pafta işlemleri katalogda ve başsız sunucuda (`CAD-SHEET-06`, `07`; ilk dilimi
+  `CADP-12`'de, ADR 0252), modeli ve
   kâğıdı birlikte yazan betik işlemi (`CAD-SHEET-05`'in kalanı).
 - [ ] `CADP-10` Uygulamanın gerçek AI yüzeyi ve çizimin bağlam, sorgu, plan ve yürütme zinciri (plan §19). Sahibin kararı (13 Ekim): §16.5'in en son işi; `CADP-11` ve `CADP-12`'den sonra. `CADP-12`'nin kabul
   çizimi o zamana dek arayüz, yazılı komut, Python ve MCP yollarıyla yürür; uygulama içi panelin yolu `CADP-10`'la eklenir.
 - [ ] `CADP-11` DWG karar matrisi ve gerçek ofis dosyalarıyla kodek denemesi; seçim ayrı ADR'de (plan §16.1, `DEC-01`). Ertelendi (sahibin kararı, 13 Ekim:
   “Dwg ertelensin”); sahip söyleyince açılır. Sıra `CADP-12`, sonra `CADP-10`.
-- [ ] `CADP-12` İlk uçtan uca kabul çizimi: oda, düzeltme, ölçü ve tarama, 1:50 pafta, PDF ve DXF, başka ortamda yeniden açma
-  (plan §23.1).
+- [x] `CADP-12` İlk uçtan uca kabul çizimi: oda, düzeltme, ölçü ve tarama, 1:50 pafta, PDF ve DXF, başka ortamda yeniden açma
+  (plan §23.1). — **13 Ekim, [ADR 0252](docs/adr/0252-first-acceptance-drawing.md):** ortak senaryo `fixtures/acceptance/v1/room.json`
+  (K01–K04, ilişkili tarama, K11, K12; beklentiler KentOS kodu olmadan `acceptance_room.py`'den) Python'dan, MCP'den, masaüstünün ajan
+  bağlantısından ve fareyle ve klavyeyle (`acceptance-room` izi ve resimleri) aynı sonuçla; DXF ve PDF bağımsız okuyucularla
+  (`acceptance_files.py`, `plot/tests/support/files.rs`, `pdftotext`); `cad.sheets.edit` (pafta çekirdeğinin işlemleri katalogda, 20 ortak
+  durum), `kentos-plot` (haritaların vektörleri, paftanın girdileri, yazı tipleri, başsız kitap PDF'i), başsız DXF; Python
+  `export_dxf`, `export_pdf`, `sheets`, MCP `drawing.exportDxf`, `drawing.exportPdf`; Köşe yuvarla'nın iki çizgisi yönlerini korur. Açık:
+  başsız PDF'te haritaların yazıları ve resim olarak yazılacak haritalar (`CAD-SHEET-06`'nın kalanı), pafta işlemlerinin kullanışlı
+  sarmalayıcıları (`CAD-SHEET-07`), uygulama içi yapay zekâ panelinin yolu (`CADP-10`).
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

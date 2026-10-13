@@ -2584,6 +2584,62 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // The sheet book by the sheet core's own operations (docs/adr/0252 §2), held together by
+        // fixtures/commands/v1/cad.sheets.edit.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_SHEETS_EDIT.into(),
+            version: crate::CAD_SHEETS_EDIT_VERSION,
+            title: "Pafta kitabı".into(),
+            summary: "Projenin pafta kitabını pafta çekirdeğinin kendi işlemleriyle değiştirir (kentos.sheet/1; pafta tasarımcısının yaptıkları): ops sırayla ve tek değişiklik olarak uygulanır. \
+                      Her işlem op ile adlanan bir nesnedir: addSheet (sayfası, öğeleriyle bir pafta), removeSheet, renameSheet, setPage, addItems (harita, antet, ölçek çubuğu, kuzey oku, yazı …), setItemProps, removeItems, applyTemplate, saveVariables ve ötekiler. \
+                      Kâğıt üstündeki uzunluklar mikrometre (A3 yatay 420000 × 297000), açılar derecenin binde biridir; haritanın görünümü projenin koordinatlarında merkez ve ölçek paydasıyla verilir. \
+                      Kitap kâğıdındır: değiştirmek çizimi kirli yapar, çizimin geri alma adımı değildir; sonuçtaki inverse değişikliği geri alan işlemlerdir (bu komuta yeniden verilir). Sonuç kitabın paftalarını boyları ve haritalarının ölçekleriyle sayar. \
+                      Çekirdeğin okumadığı ya da reddettiği işlem hiçbir şey yazdırmaz; ret çekirdeğin kodu ve ops[i] yoluyla döner. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SheetsEdit>(),
+            output: schema::<crate::SheetsEdited>(),
+            plan: Some(schema::<crate::SheetsEdited>()),
+            examples: vec![
+                CommandExample {
+                    title: "A3 yatay pafta, 1:50 haritayla".into(),
+                    input: json!({ "ops": [{
+                        "op": "addSheet",
+                        "sheet": {
+                            "id": "kat-plani", "name": "Kat planı",
+                            "page": { "paper": "a3", "orientation": "landscape",
+                                      "size": { "width": 420000, "height": 297000 },
+                                      "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 20000 } },
+                            "items": [{
+                                "id": "harita", "name": "Harita",
+                                "frame": { "left": 20000, "top": 10000, "width": 390000, "height": 277000 },
+                                "kind": { "type": "map", "view": { "type": "fixed", "center": { "x": 2.0, "y": 1.5 }, "scale": 50, "rotation": 0 } }
+                            }]
+                        }
+                    }] }),
+                    output: Some(json!({
+                        "label": "Pafta ekle: Kat planı",
+                        "inverse": [{ "op": "removeSheet", "id": "kat-plani" }],
+                        "sheets": [{ "id": "kat-plani", "name": "Kat planı", "width": 420.0, "height": 297.0, "items": 1,
+                                     "maps": [{ "item": "harita", "name": "Harita", "scale": 50 }] }],
+                        "revision": "12"
+                    })),
+                },
+                CommandExample {
+                    title: "Paftayı sil".into(),
+                    input: json!({ "ops": [{ "op": "removeSheet", "id": "kat-plani" }] }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -2760,7 +2816,8 @@ mod tests {
                         serde_json::from_value::<crate::EntitiesFillet>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_CHAMFER => {
-                        serde_json::from_value::<crate::EntitiesChamfer>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::EntitiesChamfer>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_ENTITIES_CREATE => {
                         serde_json::from_value::<crate::EntitiesCreate>(e.input.clone()).map(|_| ())
@@ -2823,6 +2880,9 @@ mod tests {
                     }
                     crate::CAD_SETTINGS_SET => {
                         serde_json::from_value::<crate::SettingsSet>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SHEETS_EDIT => {
+                        serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
                     other => panic!("{other}: add its input type to this test"),
                 };
@@ -2958,6 +3018,10 @@ mod tests {
                         }
                         crate::CAD_SETTINGS_SET => {
                             serde_json::from_value::<crate::SettingsChanged>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SHEETS_EDIT => {
+                            serde_json::from_value::<crate::SheetsEdited>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

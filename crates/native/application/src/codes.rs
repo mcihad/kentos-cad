@@ -367,3 +367,9 @@ pub const SECOND_NEEDS_SYSTEM: &str = "second_needs_system";
 pub const SECOND_IS_OWN: &str = "second_is_own";
 /// A drawing unit other than metres for a project with a system (`cad.settings.set`).
 pub const UNIT_NEEDS_LOCAL: &str = "unit_needs_local";
+/// No operation given (`cad.sheets.edit`).
+pub const NO_OPERATIONS: &str = "no_operations";
+/// An operation the sheet core does not read (`cad.sheets.edit`).
+pub const INVALID_OPERATION: &str = "invalid_operation";
+/// The project's sheet book is one the sheet core cannot read (`cad.sheets.edit`).
+pub const BOOK_UNREADABLE: &str = "book_unreadable";

@@ -41,9 +41,12 @@ mod checks;
 pub mod circle;
 pub mod codes;
 mod context;
+pub mod corner;
 pub mod create;
 pub mod delete;
 mod dimension;
+pub mod dimensions_reassociate;
+mod edge_commands;
 pub mod edit;
 pub mod elevation;
 pub mod expression_unit;
@@ -51,12 +54,8 @@ pub mod geometry;
 pub mod info_templates;
 pub mod label_texts;
 pub mod labels_pin;
-pub mod corner;
-pub mod dimensions_reassociate;
-mod edge_commands;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub mod geometry_store;
-pub mod trim;
 pub mod layer_filter;
 pub mod layers_compose;
 pub mod layers_edit;
@@ -77,9 +76,11 @@ pub mod polyline;
 pub mod scenarios_edit;
 pub mod set;
 pub mod settings_set;
+pub mod sheets_edit;
 pub mod style_tables;
 pub mod styles_edit;
 pub mod transform;
+pub mod trim;
 
 pub use context::ExecutionContext;
 pub use kentos_contracts::{CommandError, CommandResult, CommandWarning};
@@ -241,5 +242,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_SETTINGS_SET,
         kentos_contracts::CAD_SETTINGS_SET_VERSION,
+    ),
+    // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
+    (
+        kentos_contracts::CAD_SHEETS_EDIT,
+        kentos_contracts::CAD_SHEETS_EDIT_VERSION,
     ),
 ];

@@ -1,0 +1,236 @@
+//! The first end-to-end acceptance drawing through the MCP server (TODOS.md
+//! CADP-12, plan/cad.md §23.1 K01–K04, K11, K12): the shared scenario
+//! (fixtures/acceptance/v1/room.json, worked out by
+//! scripts/fixtures/acceptance_room.py without KentOS code) replayed as a
+//! model would replay it, tool call after tool call, every step's objects,
+//! measures and sheets held to it, its DXF and PDF read back without KentOS
+//! code (the plotter's tests/support/files.rs). Python and the desktop
+//! replay the same file.
+
+use std::collections::BTreeMap;
+
+use kentos_mcp::{MODERN, Server};
+use serde_json::{Value, json};
+
+#[path = "../../plot/tests/support/files.rs"]
+mod files;
+
+const SCENARIO: &str = include_str!("../../../../fixtures/acceptance/v1/room.json");
+
+fn call(server: &mut Server, name: &str, arguments: Value) -> Value {
+    let request = json!({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {
+            "name": name, "arguments": arguments,
+            "_meta": {
+                "io.modelcontextprotocol/protocolVersion": MODERN,
+                "io.modelcontextprotocol/clientInfo": { "name": "kabul", "version": "1" },
+                "io.modelcontextprotocol/clientCapabilities": {}
+            }
+        }
+    });
+    let answer = server.handle(&request).expect("an answer");
+    let result = answer["result"].clone();
+    assert_eq!(result["isError"], false, "{name}: {answer}");
+    result["structuredContent"].clone()
+}
+
+/// Where `actual` differs from `expected`: only the fields `expected` names;
+/// a point `[x, y]` is `{"x", "y"}` in a drawing; numbers to `tolerance`.
+fn differs(actual: &Value, expected: &Value, tolerance: f64, at: &str, out: &mut Vec<String>) {
+    if let (Some(e), Some(a)) = (expected.as_array(), actual.as_object())
+        && e.len() == 2
+        && e.iter().all(Value::is_number)
+        && a.contains_key("x")
+    {
+        let point = json!([a["x"], a["y"]]);
+        return differs(&point, expected, tolerance, at, out);
+    }
+    match expected {
+        Value::Object(fields) => {
+            for (k, v) in fields {
+                differs(&actual[k.as_str()], v, tolerance, &format!("{at}.{k}"), out);
+            }
+        }
+        Value::Array(items) => match actual.as_array() {
+            Some(a) if a.len() == items.len() => {
+                for (i, (x, e)) in a.iter().zip(items).enumerate() {
+                    differs(x, e, tolerance, &format!("{at}[{i}]"), out);
+                }
+            }
+            _ => out.push(format!("{at}: {actual}, beklenen {expected}")),
+        },
+        Value::Number(n) => {
+            let ok = actual
+                .as_f64()
+                .zip(n.as_f64())
+                .is_some_and(|(a, e)| (a - e).abs() <= tolerance);
+            if !ok {
+                out.push(format!("{at}: {actual}, beklenen {expected}"));
+            }
+        }
+        _ => {
+            if actual != expected {
+                out.push(format!("{at}: {actual}, beklenen {expected}"));
+            }
+        }
+    }
+}
+
+fn bind(value: &Value, names: &BTreeMap<String, String>) -> Value {
+    match value {
+        Value::String(s) if s.starts_with('$') => json!(names[&s[1..]]),
+        Value::Object(fields) => Value::Object(
+            fields
+                .iter()
+                .map(|(k, v)| (k.clone(), bind(v, names)))
+                .collect(),
+        ),
+        Value::Array(items) => Value::Array(items.iter().map(|v| bind(v, names)).collect()),
+        other => other.clone(),
+    }
+}
+
+#[test]
+fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
+    let scenario: Value = serde_json::from_str(SCENARIO).expect("the scenario");
+    let tolerance = scenario["tolerance"].as_f64().expect("a tolerance");
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", scenario["project"].clone());
+    let mut drawing = made["drawing"].as_str().expect("a handle").to_owned();
+    let mut names = BTreeMap::new();
+    names.insert(
+        "layer".to_owned(),
+        made["summary"]["activeLayer"]
+            .as_str()
+            .expect("a layer")
+            .to_owned(),
+    );
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-kabul-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    for (n, step) in scenario["steps"]
+        .as_array()
+        .expect("steps")
+        .iter()
+        .enumerate()
+    {
+        let name = step["name"].as_str().unwrap_or("");
+        if let Some(command) = step["command"].as_str() {
+            let mut arguments = bind(&step["input"], &names);
+            arguments["drawing"] = json!(drawing);
+            let answer = call(&mut server, command, arguments);
+            assert_eq!(answer["status"], "completed", "{name}: {answer}");
+            match &step["as"] {
+                Value::String(key) => {
+                    names.insert(
+                        key.clone(),
+                        answer["output"]["uid"].as_str().expect("uid").to_owned(),
+                    );
+                }
+                Value::Array(keys) => {
+                    for (key, uid) in keys
+                        .iter()
+                        .zip(answer["output"]["created"].as_array().expect("created"))
+                    {
+                        names.insert(
+                            key.as_str().expect("a name").to_owned(),
+                            uid.as_str().expect("uid").to_owned(),
+                        );
+                    }
+                }
+                _ => {}
+            }
+        } else if let Some(label) = step["undo"].as_str() {
+            let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
+            assert_eq!(undone["step"], label, "{name}");
+        } else if step["reopen"] == true {
+            // Saved to a file and opened as a model would: a new handle on the same drawing.
+            let path = dir.join(format!("oda-{n}.kcad"));
+            call(
+                &mut server,
+                "drawing.save",
+                json!({ "drawing": drawing, "path": path }),
+            );
+            let opened = call(&mut server, "drawing.open", json!({ "path": path }));
+            drawing = opened["drawing"].as_str().expect("a handle").to_owned();
+        }
+        let expect = &step["expect"];
+        let mut problems = Vec::new();
+        match step["export"].as_str() {
+            Some("dxf") => {
+                let path = dir.join(format!("oda-{n}.dxf"));
+                call(
+                    &mut server,
+                    "drawing.exportDxf",
+                    json!({ "drawing": drawing, "path": path }),
+                );
+                let bytes = std::fs::read(&path).expect("the DXF");
+                problems.extend(files::dxf_problems(&bytes, &expect["dxf"]));
+            }
+            Some("pdf") => {
+                let path = dir.join(format!("oda-{n}.pdf"));
+                call(
+                    &mut server,
+                    "drawing.exportPdf",
+                    json!({ "drawing": drawing, "path": path }),
+                );
+                let bytes = std::fs::read(&path).expect("the PDF");
+                problems.extend(files::pdf_problems(&bytes, &expect["pdf"]));
+                match files::pdf_text_problems(&path, &expect["pdf"]) {
+                    Some(texts) => problems.extend(texts),
+                    None => {
+                        eprintln!("pdftotext yok: PDF'in yazıları denetlenmedi (poppler kurun).")
+                    }
+                }
+            }
+            _ => {}
+        }
+        if let Some(sheets) = expect.get("sheets") {
+            let summary = call(
+                &mut server,
+                "drawing.summary",
+                json!({ "drawing": drawing }),
+            );
+            differs(
+                &summary["sheets"],
+                sheets,
+                tolerance,
+                "paftalar",
+                &mut problems,
+            );
+        }
+        for (key, want) in expect["objects"].as_object().into_iter().flatten() {
+            let got = call(
+                &mut server,
+                "drawing.entity",
+                json!({ "drawing": drawing, "uid": names[key] }),
+            );
+            differs(&got["entity"], want, tolerance, key, &mut problems);
+        }
+        for (key, want) in expect["measures"].as_object().into_iter().flatten() {
+            let got = call(
+                &mut server,
+                "drawing.measure",
+                json!({ "drawing": drawing, "uid": names[key] }),
+            );
+            differs(&got, want, tolerance, &format!("{key} ölçü"), &mut problems);
+        }
+        if let Some(count) = expect.get("count") {
+            let summary = call(
+                &mut server,
+                "drawing.summary",
+                json!({ "drawing": drawing }),
+            );
+            differs(
+                &summary["objects"],
+                count,
+                0.0,
+                "nesne sayısı",
+                &mut problems,
+            );
+        }
+        assert!(problems.is_empty(), "{name}: {problems:#?}");
+    }
+    let _ = std::fs::remove_dir_all(dir);
+}

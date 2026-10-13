@@ -68,9 +68,11 @@ fn system(srid: u32) -> Option<&'static System> {
     static SYSTEMS: std::sync::OnceLock<Vec<System>> = std::sync::OnceLock::new();
     SYSTEMS
         .get_or_init(|| {
-            serde_json::from_str::<Registry>(include_str!("../../../fixtures/crs/v1/registry.json"))
-                .map(|r| r.systems)
-                .unwrap_or_default()
+            serde_json::from_str::<Registry>(include_str!(
+                "../../../../fixtures/crs/v1/registry.json"
+            ))
+            .map(|r| r.systems)
+            .unwrap_or_default()
         })
         .iter()
         .find(|s| s.srid == srid)
@@ -168,11 +170,11 @@ fn layer_of(doc: &Document, name: &str) -> Option<String> {
     {
         return Some(name.to_owned());
     }
-    let want = kentos_sheet_ui::text::fold(name);
+    let want = kentos_sheet::text::fold(name);
     layers
         .leaves()
         .into_iter()
-        .find(|l| kentos_sheet_ui::text::fold(&l.name) == want)
+        .find(|l| kentos_sheet::text::fold(&l.name) == want)
         .map(|l| l.id.clone())
 }
 
@@ -566,6 +568,15 @@ pub fn sheet_data(
 mod tests {
     use super::*;
 
+    /// The web's sample drawing (fixtures/document/v1/sample.json), as the desktop's tests open it.
+    fn sample() -> Document {
+        let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+            "../../../../fixtures/document/v1/sample.json"
+        ))
+        .expect("reads");
+        Document::from_snapshot(snapshot).expect("opens")
+    }
+
     #[test]
     fn an_attribute_is_a_number_only_when_it_reads_as_one() {
         assert_eq!(attr_value("12.50"), VarValue::Number(12.5));
@@ -621,8 +632,7 @@ mod tests {
     #[test]
     fn a_coordinate_list_reads_its_objects_by_their_ids() {
         use kentos_sheet::kinds::{CoordLayer, CoordObjects, Empty};
-        let app = crate::files_testing::app_with_drawing();
-        let doc = &app.document.as_ref().expect("open").model;
+        let doc = &sample();
         let parcels: Vec<Slot> = doc.entities().map(|e| Slot(e.base().id)).take(2).collect();
         assert_eq!(parcels.len(), 2, "the sample has objects");
         let mut uids: Vec<String> = parcels
@@ -656,8 +666,7 @@ mod tests {
     /// The sample drawing's parcel layer as a table, its parcels in the map or not.
     #[test]
     fn a_layer_table_lists_its_objects_with_their_fields_and_measures() {
-        let app = crate::files_testing::app_with_drawing();
-        let doc = &app.document.as_ref().expect("open").model;
+        let doc = &sample();
         let mut spatial = Spatial::new();
         spatial.reload(doc);
         let layer = doc

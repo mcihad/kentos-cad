@@ -15,7 +15,7 @@ use kentos_domain::contracts::{
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     EntitiesOffset, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose, LayersEdit,
     LayersFilter, LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates,
-    LayersTime, NetworkDefine, OffsetBy, ScenariosEdit, SettingsSet, StylesEdit,
+    LayersTime, NetworkDefine, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StylesEdit,
 };
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -32,7 +32,7 @@ use kentos_native_application::{
     entities_fillet, entities_trim, labels_pin, layers_compose, layers_edit, layers_filter,
     layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_states,
     layers_time, line, network_define, offset, point, polygon, polyline, scenarios_edit, set,
-    settings_set, styles_edit, transform,
+    settings_set, sheets_edit, styles_edit, transform,
 };
 use serde_json::{Value, json};
 
@@ -454,6 +454,12 @@ impl Input for LayersStates {
 /// No style's number is a NaN or ±∞ case: the table's rule refuses them as
 /// any other value out of its bounds (docs/adr/0248 §4).
 impl Input for StylesEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for SheetsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -1063,6 +1069,7 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
         kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
+        kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
@@ -1369,6 +1376,12 @@ fn check(
                 at,
             )?,
             "name" => expect_same(&json!(doc.name()), want, "çizimin adı", at)?,
+            // The sheet book's sheets as the command lists them (docs/adr/0252 §2).
+            "sheets" => {
+                let got = serde_json::to_value(kentos_native_application::sheets_edit::sheets_in(doc))
+                    .map_err(|e| format!("{at}: {e}"))?;
+                expect_same(&got, want, "paftalar", at)?;
+            }
             // The project's settings, only the keys given; an absent one is null (docs/adr/0248).
             "settings" => {
                 let got = serde_json::to_value(doc.settings()).map_err(|e| format!("{at}: {e}"))?;

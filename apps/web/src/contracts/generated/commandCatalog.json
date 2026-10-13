@@ -131448,6 +131448,351 @@
           }
         }
       ]
+    },
+    {
+      "id": "cad.sheets.edit",
+      "version": 1,
+      "title": "Pafta kitabı",
+      "summary": "Projenin pafta kitabını pafta çekirdeğinin kendi işlemleriyle değiştirir (kentos.sheet/1; pafta tasarımcısının yaptıkları): ops sırayla ve tek değişiklik olarak uygulanır. Her işlem op ile adlanan bir nesnedir: addSheet (sayfası, öğeleriyle bir pafta), removeSheet, renameSheet, setPage, addItems (harita, antet, ölçek çubuğu, kuzey oku, yazı …), setItemProps, removeItems, applyTemplate, saveVariables ve ötekiler. Kâğıt üstündeki uzunluklar mikrometre (A3 yatay 420000 × 297000), açılar derecenin binde biridir; haritanın görünümü projenin koordinatlarında merkez ve ölçek paydasıyla verilir. Kitap kâğıdındır: değiştirmek çizimi kirli yapar, çizimin geri alma adımı değildir; sonuçtaki inverse değişikliği geri alan işlemlerdir (bu komuta yeniden verilir). Sonuç kitabın paftalarını boyları ve haritalarının ölçekleriyle sayar. Çekirdeğin okumadığı ya da reddettiği işlem hiçbir şey yazdırmaz; ret çekirdeğin kodu ve ops[i] yoluyla döner. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.sheets.edit` v1: the sheet core's operations applied to the\nproject's book in order, as one change. Lengths on the paper are\nmicrometres, angles thousandths of a degree, as the core writes them. A\nproject without a book starts from an empty one; a book left empty is no\nbook. The book is the paper's (docs/adr/0251 §3): the change makes the\ndrawing dirty and is no undo step of it; `inverse` in the answer takes it\nback.\n\nRefusals (`CommandError.code`), checked in this order: `no_operations`\n(none given), `invalid_operation` (one the core does not read, at\n`ops[i]`), `invalid_revision`, `revision_conflict` (status `conflict`),\n`book_unreadable` (the project's book is one the core cannot read: it is\nkept as it is), then the core's own refusal of an operation with its code\n(`unknown_sheet`, `duplicate_id`, `unknown_item` …), at `ops[i]` and the\ncore's path.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal\ntext. When given and the document is no longer at it, nothing is\nwritten and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ops": {
+            "description": "The operations, at least one, each an object tagged by `op`\n(`kentos.sheet/1`).",
+            "items": true,
+            "type": "array"
+          }
+        },
+        "required": [
+          "ops"
+        ],
+        "title": "SheetsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "SheetInfo": {
+            "description": "A sheet of the book as the answer lists it.",
+            "properties": {
+              "height": {
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "type": "string"
+              },
+              "items": {
+                "description": "Its items, how many.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maps": {
+                "description": "Its map frames, in drawing order.",
+                "items": {
+                  "$ref": "#/$defs/SheetMapInfo"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "width": {
+                "description": "The page's width and height, millimetres.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "width",
+              "height",
+              "items",
+              "maps"
+            ],
+            "type": "object"
+          },
+          "SheetMapInfo": {
+            "description": "A map frame of a sheet as the answer lists it.",
+            "properties": {
+              "item": {
+                "description": "The item's id.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The item's name, unique in its sheet.",
+                "type": "string"
+              },
+              "scale": {
+                "description": "The map's scale denominator (1:N); none for a map that follows something else (an atlas).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "item",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sheets.edit` v1.",
+        "properties": {
+          "inverse": {
+            "description": "The operations that take the change back, in the order to apply them\n(an input of this command again).",
+            "items": true,
+            "type": "array"
+          },
+          "label": {
+            "description": "What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheets": {
+            "description": "The book's sheets after the change, in its order.",
+            "items": {
+              "$ref": "#/$defs/SheetInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "inverse",
+          "sheets",
+          "revision"
+        ],
+        "title": "SheetsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "SheetInfo": {
+            "description": "A sheet of the book as the answer lists it.",
+            "properties": {
+              "height": {
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "type": "string"
+              },
+              "items": {
+                "description": "Its items, how many.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maps": {
+                "description": "Its map frames, in drawing order.",
+                "items": {
+                  "$ref": "#/$defs/SheetMapInfo"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "width": {
+                "description": "The page's width and height, millimetres.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "width",
+              "height",
+              "items",
+              "maps"
+            ],
+            "type": "object"
+          },
+          "SheetMapInfo": {
+            "description": "A map frame of a sheet as the answer lists it.",
+            "properties": {
+              "item": {
+                "description": "The item's id.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The item's name, unique in its sheet.",
+                "type": "string"
+              },
+              "scale": {
+                "description": "The map's scale denominator (1:N); none for a map that follows something else (an atlas).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "item",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sheets.edit` v1.",
+        "properties": {
+          "inverse": {
+            "description": "The operations that take the change back, in the order to apply them\n(an input of this command again).",
+            "items": true,
+            "type": "array"
+          },
+          "label": {
+            "description": "What was done, as the designer's undo names it (“Pafta ekle: Kat planı”, “3 işlem”).",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheets": {
+            "description": "The book's sheets after the change, in its order.",
+            "items": {
+              "$ref": "#/$defs/SheetInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "inverse",
+          "sheets",
+          "revision"
+        ],
+        "title": "SheetsEdited",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "A3 yatay pafta, 1:50 haritayla",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "id": "kat-plani",
+                  "items": [
+                    {
+                      "frame": {
+                        "height": 277000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 390000
+                      },
+                      "id": "harita",
+                      "kind": {
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 2.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "name": "Harita"
+                    }
+                  ],
+                  "name": "Kat planı",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "output": {
+            "inverse": [
+              {
+                "id": "kat-plani",
+                "op": "removeSheet"
+              }
+            ],
+            "label": "Pafta ekle: Kat planı",
+            "revision": "12",
+            "sheets": [
+              {
+                "height": 297.0,
+                "id": "kat-plani",
+                "items": 1,
+                "maps": [
+                  {
+                    "item": "harita",
+                    "name": "Harita",
+                    "scale": 50
+                  }
+                ],
+                "name": "Kat planı",
+                "width": 420.0
+              }
+            ]
+          }
+        },
+        {
+          "title": "Paftayı sil",
+          "input": {
+            "ops": [
+              {
+                "id": "kat-plani",
+                "op": "removeSheet"
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

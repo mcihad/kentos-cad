@@ -107,6 +107,8 @@ pub fn summary(doc: &Document) -> Value {
         "legacy": false,
         "canUndo": doc.can_undo(),
         "canRedo": doc.can_redo(),
+        // The sheet book's sheets (docs/adr/0252 §2); null for a book the core cannot read.
+        "sheets": kentos_native_application::sheets_edit::sheets_in(doc),
     })
 }
 

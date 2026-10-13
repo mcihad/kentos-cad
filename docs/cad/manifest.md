@@ -17,13 +17,13 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 25 | 75 | 5 | 38 | 143 |
+| semantic | 25 | 77 | 38 | 38 | 178 |
 | geometry | 26 | 78 | 0 | 8 | 112 |
 | processing | 0 | 11 | 2 | 140 | 153 |
-| none | 0 | 23 | 57 | 6 | 86 |
-| query | 0 | 21 | 0 | 4 | 25 |
-| session | 0 | 78 | 27 | 5 | 110 |
-| host | 0 | 15 | 7 | 4 | 26 |
+| none | 0 | 21 | 0 | 6 | 27 |
+| query | 0 | 21 | 1 | 4 | 26 |
+| session | 0 | 78 | 43 | 5 | 126 |
+| host | 0 | 15 | 14 | 4 | 33 |
 | **toplam** | 51 | 301 | 98 | 205 | 655 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
@@ -31,7 +31,7 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 450 satırdan 214'i: geometry 104, none 80, processing 13, query 17.
+CBS'ye özgü olmayan 450 satırdan 156'i: geometry 104, none 21, processing 13, query 18.
 
 ### Sonucu çağıran hesaplar (geometry) — 104
 
@@ -142,7 +142,7 @@ CBS'ye özgü olmayan 450 satırdan 214'i: geometry 104, none 80, processing 13,
 | `tool.vertex` | Köşe ekle/sil | cad | cad.entities.edit `vertexAdd` |  |
 | `tool.vertexPoints` | Köşelere nokta | shared | cad.entities.create `vertexPoints` |  |
 
-### Ürün komutu yok (none) — 80
+### Ürün komutu yok (none) — 21
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -166,65 +166,6 @@ CBS'ye özgü olmayan 450 satırdan 214'i: geometry 104, none 80, processing 13,
 | `file.saveSelection` | Seçilenleri dosyaya kaydet… | shared | — |  |
 | `file.takeFrom` | Başka çizimden al… | shared | — |  |
 | `pointcloud.vpcSave` | Sanal bulut olarak kaydet… | shared | — |  |
-| `sheet.align.bottom` | Alta hizala | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.align.center` | Yatayda ortala | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.align.left` | Sola hizala | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.align.middle` | Düşeyde ortala | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.align.right` | Sağa hizala | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.align.top` | Üste hizala | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.alignTo.margins` | Kenar boşluklarına göre | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.alignTo.page` | Sayfaya göre | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.alignTo.selection` | Seçime göre | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.atlas` | Atlas | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.delete` | Paftayı sil… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.deleteItems` | Sil | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.distribute.hCenters` | Yatayda ortaları eşit dağıt | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.distribute.hGaps` | Yatayda aralıkları eşitle | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.distribute.vCenters` | Düşeyde ortaları eşit dağıt | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.distribute.vGaps` | Düşeyde aralıkları eşitle | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.duplicate` | Paftayı çoğalt | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.duplicateItems` | Çoğalt | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.escape` | Seçimi bırak | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.export.kpafta` | .kpafta dosyası olarak… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.export.pdf` | PDF olarak… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.export.png` | PNG olarak… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.export.svg` | SVG olarak… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.fromTemplate` | Şablondan pafta… | shared | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.grid` | Karelaj | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.group` | Grupla | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.hideItems` | Gizle ya da göster | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.importKpafta` | .kpafta dosyasından… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.lockItems` | Kilitle ya da aç | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.matchSize.height` | Aynı yükseklik | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.matchSize.width` | Aynı genişlik | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.model` | Modele dön | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.moveLeft` | Sola taşı | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.moveRight` | Sağa taşı | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.new` | Yeni pafta | shared | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.nudge` | Kaydır | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.open` | Paftayı aç | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.order.back` | Arkaya gönder | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.order.backward` | Bir arkaya | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.order.forward` | Bir öne | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.order.front` | Öne getir | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.pageSetup` | Sayfa ayarları… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.preflight` | Ön denetim | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.print` | Yazdır… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.redo` | Yinele (pafta) | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.rename` | Paftaya ad ver… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.renameItem` | Öğeye ad ver | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.saveTemplate` | Şablon olarak kaydet | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.selectAll` | Tümünü seç | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.tool.hand` | El | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.tool.select` | Seç | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.undo` | Geri al (pafta) | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.ungroup` | Grubu çöz | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.variables` | Değişkenler… | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.zoomIn` | Yakınlaştır | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.zoomOut` | Uzaklaştır | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.zoomPage` | Sayfayı sığdır | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.zoomReal` | Gerçek boyut | none | — | Pafta komutları katalogda yok (plan §17). |
-| `sheet.zoomSelection` | Seçime yakınlaş | none | — | Pafta komutları katalogda yok (plan §17). |
 | `topology.rules` | Topoloji kuralları | shared | — |  |
 
 ### Yalnız İşlemler'den (processing) — 13
@@ -245,7 +186,7 @@ CBS'ye özgü olmayan 450 satırdan 214'i: geometry 104, none 80, processing 13,
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 17
+### Okuma, Python'da yok (query) — 18
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -262,6 +203,7 @@ CBS'ye özgü olmayan 450 satırdan 214'i: geometry 104, none 80, processing 13,
 | `data.search` | Veride ara | shared | — |  |
 | `data.statistics` | Alan istatistikleri | shared | — |  |
 | `pointcloud.query` | Nokta bulutu XYZ sor | shared | — |  |
+| `sheet.preflight` | Ön denetim | none | — |  |
 | `tool.measure` | Mesafe ölç | shared | — | İki nokta arası uzunluk: noktalardan hesap; ölçme API'si nesne ister. |
 | `tool.measureAngle` | Açı ölç | shared | — |  |
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |
