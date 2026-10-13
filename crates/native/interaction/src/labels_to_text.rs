@@ -216,6 +216,7 @@ impl LabelsToText {
         let linked = cx.memory.labels_linked;
         let v = |p: Vec2| kentos_contracts::Vec2 { x: p.x, y: p.y };
         let bare = |geometry: EntityGeometry| NewObject {
+            line_type: None,
             geometry,
             color: None,
             line_weight: None,

@@ -227,6 +227,9 @@ impl App {
                     continue;
                 };
                 let input = EntitiesSetProperties {
+                    line_type: None,
+                    line_type_scale: None,
+                    transparency: None,
                     uids: vec![uid.to_string()],
                     layer_id: None,
                     color: None,

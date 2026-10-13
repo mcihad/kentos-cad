@@ -34,6 +34,8 @@ pub enum LayerTarget {
         locked: bool,
         /// The fields the file gives the layer (docs/adr/0199 §6).
         fields: Vec<kentos_contracts::LayerField>,
+        /// `Some(false)`: the file's layer is not printed (docs/adr/0260 §4).
+        plot: Option<bool>,
     },
 }
 
@@ -432,6 +434,7 @@ fn make_layers(
             visible,
             locked,
             fields,
+            plot,
         } = t
         else {
             continue;
@@ -459,6 +462,7 @@ fn make_layers(
             card: None,
             compose: None,
             filter: None,
+            plot: *plot,
         };
         let id = doc
             .add_layer(new, parent.as_deref(), false)
@@ -838,6 +842,7 @@ mod tests {
 
     fn base(layer: &str) -> EntityBase {
         EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer.into(),
             color: None,
@@ -923,6 +928,7 @@ mod tests {
                 (
                     "PARSEL".into(),
                     LayerTarget::New {
+                        plot: None,
                         name: "PARSEL".into(),
                         style: Box::new(style("#FF0000")),
                         visible: true,
@@ -933,6 +939,7 @@ mod tests {
                 (
                     "YOL".into(),
                     LayerTarget::New {
+                        plot: None,
                         name: "YOL".into(),
                         style: Box::new(style("fg")),
                         visible: false,
@@ -1050,6 +1057,7 @@ mod tests {
                     (
                         "1".into(),
                         LayerTarget::New {
+                            plot: None,
                             name: "Yeni".into(),
                             style: Box::new(style("fg")),
                             visible: true,

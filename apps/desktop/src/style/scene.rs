@@ -444,6 +444,8 @@ impl StyledCache {
         let shown = shown_layers(doc.layers().nodes());
         let mut layer_names = HashMap::new();
         names(doc.layers().nodes(), &mut layer_names);
+        let mut layer_styles = HashMap::new();
+        kentos_plot::layers::styles(doc.layers().nodes(), &mut layer_styles);
         let shown_ids: HashSet<&str> = shown.iter().map(|n| n.id.as_str()).collect();
         // Changed layers that are hidden wait until they show.
         for id in dirty.keys() {
@@ -477,7 +479,9 @@ impl StyledCache {
                 && match cached {
                     Some(l) if l.split => count >= PARTS_FROM / 2,
                     _ => count >= PARTS_FROM,
-                };
+                }
+                // A layer with a drawing order of its own is drawn in that order, whole (docs/adr/0260 §5).
+                && !doc.by_layer(&node.id).any(|e| e.base().look.order.is_some());
             // A view-dependent one built for another view is built again.
             let for_view = needs.scale
                 || needs.frame == Some(kentos_native_style::renderer::ViewFrameKind::Heat);
@@ -515,7 +519,10 @@ impl StyledCache {
                 shown
             };
             let parts = if !split {
-                vec![(0, doc.by_layer(&node.id).filter(&mut keep).collect())]
+                vec![(
+                    0,
+                    in_order(doc.by_layer(&node.id).filter(&mut keep).collect()),
+                )]
             } else if reset {
                 // Every part: the layer's objects by run of places.
                 let mut parts: Vec<(u64, Vec<&Entity>)> = Vec::new();
@@ -585,6 +592,7 @@ impl StyledCache {
         let build = |node: &LayerNode, entities: &[&Entity]| -> (StyledLayer, bool) {
             let framed = frames.get(&node.id);
             let opts = BuildOptions {
+                layer_styles: Some(&layer_styles),
                 origin: look.origin,
                 plot_scale: look.symbol_scale,
                 screen: look.screen,
@@ -675,10 +683,11 @@ impl StyledCache {
             if split && results.iter().any(|r| r.3) {
                 let timed =
                     plan.node.filter.is_some() || (plan.node.time.is_some() && window.is_some());
-                let entities: Vec<&Entity> = doc
-                    .by_layer(id)
-                    .filter(|e| !timed || store.view_shown(f64::from(e.base().id)))
-                    .collect();
+                let entities: Vec<&Entity> = in_order(
+                    doc.by_layer(id)
+                        .filter(|e| !timed || store.view_shown(f64::from(e.base().id)))
+                        .collect(),
+                );
                 let (layer, _) = build(plan.node, &entities);
                 split = false;
                 reset = true;
@@ -924,4 +933,13 @@ fn new_part(layer: StyledLayer, entities: &[&Entity], framed: bool) -> Part {
         }),
         construction: framed || entities.iter().any(|e| construction(e)),
     }
+}
+
+/// A layer's objects in its drawing order (docs/adr/0260 §5): by their order,
+/// absent 0, equals in the document's order (a stable sort).
+fn in_order(mut list: Vec<&Entity>) -> Vec<&Entity> {
+    if list.iter().any(|e| e.base().look.order.is_some()) {
+        list.sort_by_key(|e| e.base().look.order.unwrap_or(0));
+    }
+    list
 }

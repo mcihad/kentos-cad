@@ -406,7 +406,17 @@ impl Writer<'_> {
             }
         };
         self.out.str(8, layer);
-        if let Some(c) = &base.color {
+        // Its own line type (docs/adr/0260 §2), its LTYPE record written with the table.
+        if let Some(t) = base.look.line_type {
+            ltype_handle(self.ltypes, self.handles, t);
+            self.out.str(6, super::layers::ltype_name(t));
+        }
+        let follows =
+            |p: kentos_contracts::LookPart| self.defining && base.look.by_layer.contains(&p);
+        if follows(kentos_contracts::LookPart::Color) {
+            // A block's object that follows its own layer: BYLAYER (docs/adr/0260 §1).
+            self.out.int(62, 256);
+        } else if let Some(c) = &base.color {
             let (dc, note) = aci::from_app(c);
             if let Some(n) = note {
                 self.report.note("Nesne rengi", n, 0);
@@ -420,7 +430,11 @@ impl Writer<'_> {
             self.out.int(62, 0);
         }
         if self.defining && base.line_weight.is_none() {
-            self.out.int(370, -2);
+            let by_layer = base
+                .look
+                .by_layer
+                .contains(&kentos_contracts::LookPart::LineWeight);
+            self.out.int(370, if by_layer { -1 } else { -2 });
         }
         // Its own line weight as the nearest one DXF has; the exact one goes in KentOS's data.
         if let Some(w) = base.line_weight {
@@ -433,6 +447,14 @@ impl Writer<'_> {
                 );
             }
             self.out.int(370, dxf);
+        }
+        // Its pattern's scale and its transparency (docs/adr/0260 §2, §3): 48, and 440 as 0x02000000 with the alpha.
+        if let Some(s) = base.look.line_type_scale {
+            self.out.real(48, s);
+        }
+        if let Some(t) = base.look.transparency {
+            let alpha = ((1.0 - t) * 255.0).round().clamp(0.0, 255.0) as i64;
+            self.out.int(440, 0x0200_0000 | alpha);
         }
     }
 

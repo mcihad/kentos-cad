@@ -142,7 +142,10 @@ use crate::layer::LineType;
 ///    web's copy stays 53.
 /// 60 (docs/adr/0259): the NURBS curve (`nurbs`), the typed columns' kind 19; the DXF reader keeps a
 ///    SPLINE with control points as one exactly, its fit points with it. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 60;
+/// 61 (docs/adr/0260): an object's look in the typed columns (flag 64: line type, scale, transparency,
+///    order, by-layer parts); DXF's 6, 48 and 440 of an object and 290 of a layer read and written. The
+///    web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 61;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -163,6 +166,10 @@ pub struct ImportLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_weight: Option<f64>,
+    /// Yazdır (docs/adr/0260 §4): `false` when the file's layer is not printed (DXF's 290).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub plot: Option<bool>,
     /// Objects read onto this layer.
     pub count: u32,
     /// Those objects by kind (`point`, `line`, …): what a choice of layers
@@ -1055,6 +1062,11 @@ pub struct DxfWriteLayer {
     pub line_type: LineType,
     /// Plot line weight in mm (written as AutoCAD's nearest weight).
     pub line_weight: f64,
+    /// Yazdır (docs/adr/0260 §4): absent, printed; `false`, written with
+    /// DXF's plot switch off (290).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub plot: Option<bool>,
 }
 
 /// What `file.export.dxf` writes (an AutoCAD 2007 DXF).

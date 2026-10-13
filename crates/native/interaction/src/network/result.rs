@@ -149,6 +149,7 @@ pub fn write_results(
                 .objects
                 .iter()
                 .map(|(geometry, attrs)| kentos_contracts::NewObject {
+                    line_type: None,
                     geometry: geometry.clone(),
                     color: None,
                     line_weight: None,

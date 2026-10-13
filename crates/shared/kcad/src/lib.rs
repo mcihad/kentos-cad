@@ -388,9 +388,16 @@ pub const SCHEMA_WITH_POLYLINE_EXTRAS: u32 = 46;
 /// definition has one; older readers refuse such a file instead of losing
 /// the curve.
 pub const SCHEMA_WITH_NURBS: u32 = 47;
+/// Schema 48 (docs/adr/0260): an object's own line type, line type scale,
+/// transparency and drawing order, a block's object's parts that follow its
+/// layer (`byLayer`), and a layer's `plot`, written only when the drawing has
+/// one; older readers refuse such a file instead of drawing it otherwise.
+pub const SCHEMA_WITH_LOOK: u32 = 48;
+/// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
+pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 46] = [
+pub const SCHEMAS: [u32; 47] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -437,6 +444,7 @@ pub const SCHEMAS: [u32; 46] = [
     SCHEMA_WITH_REQUESTS,
     SCHEMA_WITH_POLYLINE_EXTRAS,
     SCHEMA_WITH_NURBS,
+    SCHEMA_WITH_LOOK,
 ];
 
 /// The file a drawing is saved as.

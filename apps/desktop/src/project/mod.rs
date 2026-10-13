@@ -475,6 +475,7 @@ mod tests {
     fn local_plate(app: &mut App) -> kentos_domain::Slot {
         use kentos_contracts::{CircleEntity, Entity, EntityBase, PathEntity, Vec2};
         let base = || EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: app
                 .document

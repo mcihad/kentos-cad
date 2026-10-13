@@ -76,6 +76,8 @@ pub struct Expanded {
     pub shapes: Vec<Shape>,
     pub colors: Vec<Option<String>>,
     pub weights: Vec<Option<f64>>,
+    /// Each piece's own layer and its parts that follow it (docs/adr/0260 §1).
+    pub by_layer: Vec<Option<(String, u8)>>,
 }
 
 /// One object: its id, geometry, layer and cached box.
@@ -434,6 +436,7 @@ impl Store {
             x.shapes.push(piece.shape);
             x.colors.push(piece.color);
             x.weights.push(piece.line_weight);
+            x.by_layer.push(piece.by_layer);
         }
         (Some(Arc::new(x)), b)
     }

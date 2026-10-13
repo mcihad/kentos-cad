@@ -588,6 +588,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
 /// place's). `id` is its slot (0 for a new one).
 fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id,
         layer_id: base.layer_id.clone(),
         color: base.color.clone(),

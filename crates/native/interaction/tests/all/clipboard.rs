@@ -352,6 +352,7 @@ fn a_paste_goes_through_the_commands_in_one_step() {
     // A blank text: the create command refuses and nothing is written.
     let text = Entity::Text(TextEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".to_owned(),
             color: None,

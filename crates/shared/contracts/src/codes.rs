@@ -189,6 +189,12 @@ codes! {
     /// too few control or fit points, knots that do not fit, a weight not
     /// above 0, knots given for a closed curve (docs/adr/0259).
     INVALID_NURBS = "invalid_nurbs", Failed, false, "Derece, denetim noktaları, ağırlıklar ya da düğümler bir NURBS eğrisi tanımlamıyor: derece 1 ile 11 arasında, en az derece + 1 denetim noktası, düğümler denetim noktası + derece + 1 tane ve azalmayan, ağırlıklar sıfırdan büyük; kapalı eğrinin düğümlerini komut kurar.";
+    /// A line type scale not above 0 or above 1000 (docs/adr/0260 §2).
+    INVALID_LINE_TYPE_SCALE = "invalid_line_type_scale", Failed, false, "Çizgi tipi ölçeği 0'dan büyük ve en çok 1000 olmalı.";
+    /// A transparency not from 0 to 0.9 (docs/adr/0260 §3).
+    INVALID_TRANSPARENCY = "invalid_transparency", Failed, false, "Saydamlık 0 ile 0,9 (%0–90) arasında olmalı.";
+    /// A layer's drawing orders at the 32-bit bound: nothing can go further front or back (docs/adr/0260 §5).
+    ORDER_LIMIT = "order_limit", Failed, false, "Katmanın çizim sırası sınıra geldi; öbür nesneleri ters yöne taşıyarak yer açın.";
     /// Two points in a row at one place where a curve passes each once (docs/adr/0259).
     COINCIDENT_POINTS = "coincident_points", Failed, false, "Ardışık iki geçiş noktası aynı yerde; eğri her noktadan bir kez geçer. Yinelenen noktayı çıkarın.";
 

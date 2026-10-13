@@ -3,6 +3,8 @@ import type { Attachment } from "./Attachment";
 import type { DrawingFont } from "./DrawingFont";
 import type { EntityId } from "./EntityId";
 import type { LabelPin } from "./LabelPin";
+import type { LineType } from "./LineType";
+import type { LookPart } from "./LookPart";
 import type { TextAlign } from "./TextAlign";
 import type { TextPath } from "./TextPath";
 import type { TextRun } from "./TextRun";
@@ -76,6 +78,29 @@ labelPins?: Array<LabelPin>,
  * §1); none on a block's objects.
  */
 attachments?: Array<Attachment>, 
+/**
+ * Its own line type; absent: its source's (the layer's, or the insert's in a block).
+ */
+lineType?: LineType, 
+/**
+ * Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own.
+ */
+lineTypeScale?: number, 
+/**
+ * How transparent it is, 0 to 0.9; absent: its source's (none for a layer).
+ */
+transparency?: number, 
+/**
+ * Its place in its layer's drawing order: lower first, equals in the
+ * document's order; absent: 0; a 32-bit integer. Only a drawing's object has it.
+ */
+order?: number, 
+/**
+ * On a block's object, the parts without a value of their own that
+ * follow the object's layer instead of the insert; in order, once each,
+ * never one with a value of its own.
+ */
+byLayer?: Array<LookPart>, 
 /**
  * Metres, finite and over 0: the lines wrap word by word to this width.
  * Absent: they end only at line breaks.

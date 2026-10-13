@@ -303,6 +303,7 @@ fn write_tiff(
 fn raster_object(f: &Frame, path: &str, srid: u32, (lo, hi): (f64, f64), layer: &str) -> Entity {
     Entity::Raster(RasterEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer.to_owned(),
             color: None,

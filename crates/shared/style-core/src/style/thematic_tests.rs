@@ -71,6 +71,7 @@ fn build(
         text_lens: &lens,
         numbers: &[],
         pieces: &[],
+        bands: &[],
     };
     let out = build_layer_in(
         &store,

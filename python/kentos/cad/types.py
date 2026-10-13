@@ -962,16 +962,26 @@ LayerServiceOperationName = Literal["add", "addFeed", "update", "remove"]
 
 
 class LayerSetOperation(_StrEnum):
-    """What `cad.layers.set` does."""
+    """What `cad.layers.set` does.
+
+    - ``rename``
+    - ``visible``
+    - ``locked``
+    - ``active``
+    - ``isolate``
+    - ``showAll``
+    - ``plot``: Yazdır (docs/adr/0260 §4): whether the node is printed.
+    """
     RENAME = "rename"
     VISIBLE = "visible"
     LOCKED = "locked"
     ACTIVE = "active"
     ISOLATE = "isolate"
     SHOW_ALL = "showAll"
+    PLOT = "plot"
 
 
-LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll"]
+LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot"]
 """The names of :class:`LayerSetOperation`, for a plain string."""
 
 
@@ -1057,6 +1067,18 @@ LineTypeName = Literal["continuous", "dashed", "dashdot", "dotted"]
 """The names of :class:`LineType`, for a plain string."""
 
 
+class LookPart(_StrEnum):
+    """A part of an object's look whose source can be its layer."""
+    COLOR = "color"
+    LINE_TYPE = "lineType"
+    LINE_WEIGHT = "lineWeight"
+    TRANSPARENCY = "transparency"
+
+
+LookPartName = Literal["color", "lineType", "lineWeight", "transparency"]
+"""The names of :class:`LookPart`, for a plain string."""
+
+
 class NetworkConnect(_StrEnum):
     """Where edges connect (docs/adr/0209 §3).
 
@@ -1119,6 +1141,20 @@ class ObstacleKind(_StrEnum):
 
 ObstacleKindName = Literal["interior", "boundary"]
 """The names of :class:`ObstacleKind`, for a plain string."""
+
+
+class OrderTo(_StrEnum):
+    """Where the objects go.
+
+    - ``front``: Öne getir: drawn after every other object of their layer. “Öne getir”.
+    - ``back``: Arkaya gönder: drawn before every other object of their layer. “Arkaya gönder”.
+    """
+    FRONT = "front"
+    BACK = "back"
+
+
+OrderToName = Literal["front", "back"]
+"""The names of :class:`OrderTo`, for a plain string."""
 
 
 class PointLabelMode(_StrEnum):
@@ -1289,6 +1325,9 @@ class PropertiesOperation(_StrEnum):
     - ``unlink``: Öznitelikler's Bağı kopar (docs/adr/0175 §4): linked texts follow
     - ``template``: Şablonu uygula (docs/adr/0176 §6): an object template's layer, look,
     - ``attachments``: Öznitelikler's Ekler (docs/adr/0225 §2): the objects' photos and
+    - ``lineType``: Çizgi tipi ▾ (docs/adr/0260 §2): their own line type, or their
+    - ``lineTypeScale``: Çizgi tipi ölçeği (docs/adr/0260 §2). “Çizgi tipi ölçeği”.
+    - ``transparency``: Saydamlık (docs/adr/0260 §3): their own, or their source's.
     """
     LAYER = "layer"
     COLOR = "color"
@@ -1299,9 +1338,12 @@ class PropertiesOperation(_StrEnum):
     UNLINK = "unlink"
     TEMPLATE = "template"
     ATTACHMENTS = "attachments"
+    LINE_TYPE = "lineType"
+    LINE_TYPE_SCALE = "lineTypeScale"
+    TRANSPARENCY = "transparency"
 
 
-PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink", "template", "attachments"]
+PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink", "template", "attachments", "lineType", "lineTypeScale", "transparency"]
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 
@@ -1827,13 +1869,18 @@ class Entity(_Union):
         # Every variant has these.
         attachments: list[Attachment] | Unset
         attrs: dict[str, str]
+        by_layer: list[LookPart | LookPartName] | Unset
         color: str | None | Unset
         id: int
         label: str | None | Unset
         label_pins: list[LabelPin] | Unset
         layer_id: str
+        line_type: LineType | LineTypeName | None | Unset
+        line_type_scale: float | None | Unset
         line_weight: float | None | Unset
+        order: int | None | Unset
         symbol: str | None | Unset
+        transparency: float | None | Unset
 
     @property
     def kind(self) -> str:
@@ -2373,6 +2420,8 @@ class ArcCreate(_Model):
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
         label: The text shown beside it (`EntityBase.label`). Absent: none.
+        line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+            from the current line type. Absent: its layer's (katmana göre).
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -2390,6 +2439,7 @@ class ArcCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -2408,6 +2458,8 @@ class ArcCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -2426,6 +2478,7 @@ class ArcCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -2473,14 +2526,22 @@ class ArcEntity(Entity):
         a1: Unit: rad.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "arc"
     id: int
@@ -2491,11 +2552,16 @@ class ArcEntity(Entity):
     a0: float
     a1: float
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "arc"}
@@ -2508,16 +2574,26 @@ class ArcEntity(Entity):
         out["a1"] = float(self.a1)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -2531,11 +2607,16 @@ class ArcEntity(Entity):
             a0=float(data["a0"]),
             a1=float(data["a1"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -3525,6 +3606,8 @@ class CircleCreate(_Model):
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
         label: The text shown beside it (`EntityBase.label`). Absent: none.
+        line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+            from the current line type. Absent: its layer's (katmana göre).
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -3540,6 +3623,7 @@ class CircleCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -3556,6 +3640,8 @@ class CircleCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -3572,6 +3658,7 @@ class CircleCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -3620,14 +3707,22 @@ class CircleEntity(Entity):
         r: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "circle"
     id: int
@@ -3636,11 +3731,16 @@ class CircleEntity(Entity):
     c: Vec2
     r: float
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "circle"}
@@ -3651,16 +3751,26 @@ class CircleEntity(Entity):
         out["r"] = float(self.r)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -3672,11 +3782,16 @@ class CircleEntity(Entity):
             c=Vec2.from_json(data["c"]),
             r=float(data["r"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -3793,14 +3908,22 @@ class ConstructionEntity(_Model):
         dir: Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     id: int
     layer_id: str
@@ -3808,11 +3931,16 @@ class ConstructionEntity(_Model):
     p: Vec2
     dir: Vec2
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3823,16 +3951,26 @@ class ConstructionEntity(_Model):
         out["dir"] = _vec2_out(self.dir)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -3844,11 +3982,16 @@ class ConstructionEntity(_Model):
             p=Vec2.from_json(data["p"]),
             dir=Vec2.from_json(data["dir"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -4021,6 +4164,9 @@ class DimensionEntity(Entity):
             `DEFAULT_ARROW` for the others. Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         c: Angular: the vertex. Arc length: the arc's centre. Jogged: the centre
             the line starts from (docs/adr/0147). Unit: length.
         color: Colour override; absent = the layer's colour ("katmana göre").
@@ -4039,12 +4185,16 @@ class DimensionEntity(Entity):
         font: The value's typeface; absent: the project's.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         mask: The value is drawn over the drawing's background (docs/adr/0147, as a
             text's mask, docs/adr/0145).
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         prefix: Written before the value (and its kind's own prefix).
         refs: The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
         suffix: Written after the value.
@@ -4052,6 +4202,7 @@ class DimensionEntity(Entity):
         text_color: The value's colour; absent: the object's.
         text_gap: The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`. Unit: 1.
         text_place: Where the value stands; absent: over the line.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         unit: The unit lengths and coordinates are written in; absent: the project's.
         za: Slope: the two points' elevations, metres (docs/adr/0147). Unit: elevation.
         zb: Unit: elevation.
@@ -4068,6 +4219,7 @@ class DimensionEntity(Entity):
     arrow: DimensionArrow | DimensionArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     c: Vec2 | None | Unset = UNSET
     color: str | None | Unset = UNSET
     decimals: int | None | Unset = UNSET
@@ -4083,8 +4235,11 @@ class DimensionEntity(Entity):
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
+    order: int | None | Unset = UNSET
     prefix: str | None | Unset = UNSET
     refs: DimensionRefs | None | Unset = UNSET
     style: DimensionStyle | DimensionStyleName | None | Unset = UNSET
@@ -4094,6 +4249,7 @@ class DimensionEntity(Entity):
     text_color: str | None | Unset = UNSET
     text_gap: float | None | Unset = UNSET
     text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     za: float | None | Unset = UNSET
     zb: float | None | Unset = UNSET
@@ -4115,6 +4271,8 @@ class DimensionEntity(Entity):
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.c is not UNSET:
             out["c"] = None if self.c is None else _vec2_out(self.c)
         if self.color is not UNSET:
@@ -4145,10 +4303,16 @@ class DimensionEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mask is not UNSET:
             out["mask"] = self.mask
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.prefix is not UNSET:
             out["prefix"] = self.prefix
         if self.refs is not UNSET:
@@ -4167,6 +4331,8 @@ class DimensionEntity(Entity):
             out["textGap"] = None if self.text_gap is None else float(self.text_gap)
         if self.text_place is not UNSET:
             out["textPlace"] = None if self.text_place is None else _enum_out(self.text_place)
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.unit is not UNSET:
             out["unit"] = None if self.unit is None else _enum_out(self.unit)
         if self.za is not UNSET:
@@ -4189,6 +4355,7 @@ class DimensionEntity(Entity):
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(DimensionArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             c=UNSET if "c" not in data else None if data["c"] is None else Vec2.from_json(data["c"]),
             color=data.get("color", UNSET),
             decimals=data.get("decimals", UNSET),
@@ -4204,8 +4371,11 @@ class DimensionEntity(Entity):
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
+            order=data.get("order", UNSET),
             prefix=data.get("prefix", UNSET),
             refs=UNSET if "refs" not in data else None if data["refs"] is None else DimensionRefs.from_json(data["refs"]),
             style=UNSET if "style" not in data else None if data["style"] is None else _enum_in(DimensionStyle, data["style"]),
@@ -4215,6 +4385,7 @@ class DimensionEntity(Entity):
             text_color=data.get("textColor", UNSET),
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
@@ -4789,14 +4960,22 @@ class EllipseEntity(Entity):
         t1: Unit: rad.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "ellipse"
     id: int
@@ -4808,11 +4987,16 @@ class EllipseEntity(Entity):
     t0: float
     t1: float
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "ellipse"}
@@ -4826,16 +5010,26 @@ class EllipseEntity(Entity):
         out["t1"] = float(self.t1)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -4850,11 +5044,16 @@ class EllipseEntity(Entity):
             t0=float(data["t0"]),
             t1=float(data["t1"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -6065,6 +6264,101 @@ class EntitiesOffsetPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesOrder(_Model):
+    """Input of `cad.entities.order` v1: the objects' persistent ids and where
+    they go, as one undo step. For each layer the objects are on, the others'
+    highest order (to the front) or lowest (to the back) is found, absent
+    counting 0; the objects take the next orders past it, in their own
+    drawing order (order, then the document's). A layer whose objects
+    already are all in front of (or behind) its others does not change; when
+    nothing changes, nothing is written. The command reads no selection
+    (TODOS.md CMD-07): Sırala ▾ gives the selection's ids.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities`,
+    `invalid_uid`, `invalid_revision`, `revision_conflict` (status
+    `conflict`), `entity_not_found`, `layer_locked` (the first object on a
+    locked layer, in the input's order: nothing is written), `order_limit` (a
+    layer's orders at the 32-bit bound, −2³¹ or 2³¹ − 1: no room past them).
+    Attributes:
+        uids: The objects' persistent ids, at least one; a repeated one counts once.
+        to: To the front or the back.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    uids: list[str]
+    to: OrderTo | OrderToName
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["to"] = _enum_out(self.to)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesOrder:
+        return cls(
+            uids=list(data["uids"]),
+            to=_enum_in(OrderTo, data["to"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesOrderPlan(_Model):
+    """What `cad.entities.order` would write (plan mode); nothing is written.
+    Attributes:
+        changed: The objects that would change, each as execute would write it, with
+            its own slot (`id`), in the input's order.
+        revision: The document revision the plan was made against.
+    """
+    changed: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesOrderPlan:
+        return cls(
+            changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesOrdered(_Model):
+    """Output of `cad.entities.order` v1.
+    Attributes:
+        changed: The objects whose order changed, in the input's order.
+        ids: Their slots in the open document (`Entity.id`), in the same order. Unit: id.
+        revision: The document's revision after the write (the same when nothing changed; in a plan, now).
+    """
+    changed: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesOrdered:
+        return cls(
+            changed=list(data["changed"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesPropertiesSet(_Model):
     """Output of `cad.entities.set` v1: the objects that changed.
     Attributes:
@@ -6121,6 +6415,8 @@ class EntitiesSetProperties(_Model):
     `invalid_uid` (each id in order), `nothing_to_set` (no property given),
     `invalid_attribute` (an attribute name empty or only white space),
     `invalid_line_weight` (a weight not a number from 0 to 100 mm),
+    `invalid_line_type_scale` (a scale not above 0 or above 1000),
+    `invalid_transparency` (a transparency not from 0 to 0.9),
     `invalid_attachments` (`attachments_problem`, docs/adr/0225 §1), then
     `invalid_revision`, `revision_conflict` (status `conflict`),
     `entity_not_found` (each id in order), `unknown_asset` (an embedded
@@ -6156,12 +6452,17 @@ class EntitiesSetProperties(_Model):
             unchanged.
         layer_id: The layer they move to: a layer's id (`LayerNode.id`), not a group's.
             Absent: they stay on theirs.
+        line_type: Their own line type (`ObjectLook.line_type`, docs/adr/0260 §2); null:
+            their source's (katmana göre). Absent: unchanged.
+        line_type_scale: Their pattern's own factor, above 0, at most 1000; null: 1. Absent: unchanged. Unit: 1.
         line_weight: Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100); null: their layer's (katmana göre). Absent:
             unchanged. Unit: paper-mm.
         symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of their layer's style; null: the layer's style. The id is
             not looked up: the libraries are the host's. Absent: unchanged.
+        transparency: Their own transparency, 0 to 0.9 (docs/adr/0260 §3); null: their
+            source's. Absent: unchanged. Unit: 1.
         unlink: Bağı kopar (docs/adr/0175 §4): `true` breaks the link of the texts
             among them that write an object's label (`TextEntity.label_of` and
             `label_scale` removed); they stay where and as they are and follow
@@ -6175,8 +6476,11 @@ class EntitiesSetProperties(_Model):
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
     unlink: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -6195,10 +6499,16 @@ class EntitiesSetProperties(_Model):
             out["label"] = self.label
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.unlink is not UNSET:
             out["unlink"] = self.unlink
         return out
@@ -6214,8 +6524,11 @@ class EntitiesSetProperties(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
             layer_id=data.get("layerId", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             unlink=data.get("unlink", UNSET),
         )
 
@@ -6975,15 +7288,23 @@ class HatchEntity(Entity):
         assoc: The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         holes: Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "hatch"
     id: int
@@ -6993,12 +7314,17 @@ class HatchEntity(Entity):
     pattern: HatchPattern
     assoc: HatchAssoc | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "hatch"}
@@ -7011,6 +7337,8 @@ class HatchEntity(Entity):
             out["assoc"] = None if self.assoc is None else self.assoc.to_json()
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.holes is not UNSET:
@@ -7019,10 +7347,18 @@ class HatchEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -7035,12 +7371,17 @@ class HatchEntity(Entity):
             pattern=HatchPattern.from_json(data["pattern"]),
             assoc=UNSET if "assoc" not in data else None if data["assoc"] is None else HatchAssoc.from_json(data["assoc"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -7212,6 +7553,9 @@ class ImageEntity(Entity):
             exactly one of `asset` and `file` is given.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         clip: The part shown, in the picture's own fractions (0,0 its lower left,
             1,1 its upper right): at least three corners inside the unit square;
             absent: the whole picture. Unit: 1.
@@ -7219,13 +7563,18 @@ class ImageEntity(Entity):
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         mirror: The picture mirrored in its own x axis (Aynala), before the turn.
         opacity: 0.1 to 1; absent: opaque. Unit: 1.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "image"
     id: int
@@ -7237,15 +7586,20 @@ class ImageEntity(Entity):
     rotation: float
     asset: str | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     clip: list[Vec2] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mirror: bool | Unset = UNSET
     opacity: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "image"}
@@ -7260,6 +7614,8 @@ class ImageEntity(Entity):
             out["asset"] = self.asset
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.clip is not UNSET:
             out["clip"] = None if self.clip is None else [_vec2_out(e0) for e0 in self.clip]
         if self.color is not UNSET:
@@ -7270,14 +7626,22 @@ class ImageEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mirror is not UNSET:
             out["mirror"] = self.mirror
         if self.opacity is not UNSET:
             out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -7292,15 +7656,20 @@ class ImageEntity(Entity):
             rotation=float(data["rotation"]),
             asset=data.get("asset", UNSET),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             clip=UNSET if "clip" not in data else None if data["clip"] is None else [Vec2.from_json(e0) for e0 in data["clip"]],
             color=data.get("color", UNSET),
             file=data.get("file", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mirror=data.get("mirror", UNSET),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -7513,15 +7882,23 @@ class InsertEntity(Entity):
         rotation: Radians, counter-clockwise from east. Unit: rad.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         mirror: Mirrored in the definition's x axis, before the turn.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "insert"
     id: int
@@ -7532,12 +7909,17 @@ class InsertEntity(Entity):
     scale: float
     rotation: float
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mirror: bool | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "insert"}
@@ -7550,18 +7932,28 @@ class InsertEntity(Entity):
         out["rotation"] = float(self.rotation)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mirror is not UNSET:
             out["mirror"] = self.mirror
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -7575,12 +7967,17 @@ class InsertEntity(Entity):
             scale=float(data["scale"]),
             rotation=float(data["rotation"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mirror=data.get("mirror", UNSET),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -8485,6 +8882,9 @@ class LayerNode(_Model):
         filter: The layer's filter (docs/adr/0211 §2): only the objects that pass it
             are shown, picked and given to its tools. Only a layer has it, never a
             group or a layer drawn from a service.
+        plot: Yazdır: absent, it is printed; `false`, it is drawn on screen but not
+            on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
+            docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
         replaces: A scenario's layer: the base layer it stands for (docs/adr/0210 §9).
         scenario: A group made a scenario (docs/adr/0210 §9). Only a group has it.
         service: A layer drawn from a map service (docs/adr/0208 §2): it holds no
@@ -8508,6 +8908,7 @@ class LayerNode(_Model):
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
     filter: LayerFilter | None | Unset = UNSET
+    plot: bool | None | Unset = UNSET
     replaces: str | None | Unset = UNSET
     scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
@@ -8536,6 +8937,8 @@ class LayerNode(_Model):
             out["fields"] = [e0.to_json() for e0 in self.fields]
         if self.filter is not UNSET:
             out["filter"] = None if self.filter is None else self.filter.to_json()
+        if self.plot is not UNSET:
+            out["plot"] = self.plot
         if self.replaces is not UNSET:
             out["replaces"] = self.replaces
         if self.scenario is not UNSET:
@@ -8565,6 +8968,7 @@ class LayerNode(_Model):
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
+            plot=data.get("plot", UNSET),
             replaces=data.get("replaces", UNSET),
             scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
@@ -9690,6 +10094,9 @@ class LayersSet(_Model):
     edit (the revision stays).
 
     - `rename`: `layer`, `name` (trimmed);
+    - `plot`: `layer`, `value` (docs/adr/0260 §4): a node not printed is drawn
+      on screen but not on a sheet, its PDF or a print; a group's covers
+      everything under it;
     - `visible`, `locked`: `layer`, `value`; a group's lock holds for
       everything under it, a hidden group hides everything under it;
     - `active`: `layer`, a layer holding objects;
@@ -9698,9 +10105,9 @@ class LayersSet(_Model):
     - `showAll`: every node shown.
 
     Refusals (`CommandError.code`), checked in this order: `no_layer`
-    (rename, visible, locked, active without `layer`), `no_layers` (isolate
+    (rename, visible, locked, plot, active without `layer`), `no_layers` (isolate
     without a node), `empty_name` (rename with a name empty or only white
-    space), `no_value` (visible, locked without `value`); then
+    space), `no_value` (visible, locked, plot without `value`); then
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `layer_not_found` (`layer`, `layers[i]`), `not_a_layer` (active: a
     group), `service_layer` (active: a layer drawn from a map service holds
@@ -9914,18 +10321,26 @@ class LeaderEntity(Entity):
             absent: 1. From `MIN_LEADER_ARROW` to `MAX_LEADER_ARROW`. Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         mask: The note's box is filled with the drawing area's colour before the
             note is drawn, as a text's mask (docs/adr/0145).
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
         text: The note, one line; absent: the arrow alone, no landing and no note.
             Never empty: no note is the field's absence.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "leader"
     id: int
@@ -9937,13 +10352,18 @@ class LeaderEntity(Entity):
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "leader"}
@@ -9959,20 +10379,30 @@ class LeaderEntity(Entity):
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mask is not UNSET:
             out["mask"] = self.mask
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.text is not UNSET:
             out["text"] = self.text
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -9987,13 +10417,18 @@ class LeaderEntity(Entity):
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
             text=data.get("text", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -10022,6 +10457,8 @@ class LineCreate(_Model):
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
         label: The text shown beside it (`EntityBase.label`). Absent: none.
+        line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+            from the current line type. Absent: its layer's (katmana göre).
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -10037,6 +10474,7 @@ class LineCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -10053,6 +10491,8 @@ class LineCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -10069,6 +10509,7 @@ class LineCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -10117,9 +10558,14 @@ class LineEntity(Entity):
         b: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -10127,7 +10573,10 @@ class LineEntity(Entity):
         ma: The start's measure (M) on a route, in the route's own unit; absent =
             none (docs/adr/0224 §1). Unit: measure.
         mb: The end's measure; absent = none. Unit: measure.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         za: The start's elevation, m; absent = none (docs/adr/0142). Unit: elevation.
         zb: The end's elevation, m; absent = none. Unit: elevation.
     """
@@ -10138,13 +10587,18 @@ class LineEntity(Entity):
     a: Vec2
     b: Vec2
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     ma: float | None | Unset = UNSET
     mb: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
     za: float | None | Unset = UNSET
     zb: float | None | Unset = UNSET
 
@@ -10157,20 +10611,30 @@ class LineEntity(Entity):
         out["b"] = _vec2_out(self.b)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.ma is not UNSET:
             out["ma"] = None if self.ma is None else float(self.ma)
         if self.mb is not UNSET:
             out["mb"] = None if self.mb is None else float(self.mb)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.za is not UNSET:
             out["za"] = None if self.za is None else float(self.za)
         if self.zb is not UNSET:
@@ -10186,13 +10650,18 @@ class LineEntity(Entity):
             a=Vec2.from_json(data["a"]),
             b=Vec2.from_json(data["b"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             ma=UNSET if "ma" not in data else None if data["ma"] is None else float(data["ma"]),
             mb=UNSET if "mb" not in data else None if data["mb"] is None else float(data["mb"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             za=UNSET if "za" not in data else None if data["za"] is None else float(data["za"]),
             zb=UNSET if "zb" not in data else None if data["zb"] is None else float(data["zb"]),
         )
@@ -10442,6 +10911,8 @@ class NewObject(_Model):
             (`TextEntity.label_of`). Absent: a text of its own.
         label_scale: The scale's denominator (1:N) the linked label is written at:
             finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`. Unit: scale.
+        line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+            from the current line type. Absent: its layer's (katmana göre).
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -10456,6 +10927,7 @@ class NewObject(_Model):
     label: str | None | Unset = UNSET
     label_of: str | None | Unset = UNSET
     label_scale: float | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -10472,6 +10944,8 @@ class NewObject(_Model):
             out["labelOf"] = self.label_of
         if self.label_scale is not UNSET:
             out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -10487,6 +10961,7 @@ class NewObject(_Model):
             label=data.get("label", UNSET),
             label_of=data.get("labelOf", UNSET),
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -10526,6 +11001,8 @@ class NurbsCreate(_Model):
             When given and the document is no longer at it, nothing is written and
             the answer is `conflict`.
         label: The text shown beside it (`EntityBase.label`). Absent: none.
+        line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+            from the current line type. Absent: its layer's (katmana göre).
         line_weight: Its own line weight, paper mm (0 to 100; docs/adr/0139). Absent: the layer's. Unit: paper-mm.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`; docs/adr/0176). Absent: the layer's style.
     """
@@ -10536,6 +11013,7 @@ class NurbsCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -10553,6 +11031,8 @@ class NurbsCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -10569,6 +11049,7 @@ class NurbsCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -10617,19 +11098,27 @@ class NurbsEntity(Entity):
             the curve runs over `knots[degree] .. knots[ctrl.len()]`, which is not empty. Unit: 1.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         closed: Its ends meet (AutoCAD's flag 1); the source's word, kept as written.
         color: Colour override; absent = the layer's colour ("katmana göre").
         fit: The points it was drawn through, kept with it; the control points are the source. Unit: length.
         fit_tolerance: How far the curve may pass from its fit points, ≥ 0 (AutoCAD's 44). Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         periodic: Periodic (AutoCAD's flag 2): kept as written.
         symbol: Library symbol overriding the layer's style.
         tangents: The fit points' start and end tangent directions; null where none was given. Unit: 1.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         weights: Each control point's weight, above 0; absent: all 1 (not rational). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "nurbs"
@@ -10640,16 +11129,21 @@ class NurbsEntity(Entity):
     ctrl: list[Vec2]
     knots: list[float]
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     closed: bool | Unset = UNSET
     color: str | None | Unset = UNSET
     fit: list[Vec2] | None | Unset = UNSET
     fit_tolerance: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     periodic: bool | Unset = UNSET
     symbol: str | None | Unset = UNSET
     tangents: list[Vec2 | None] | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
     weights: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -10662,6 +11156,8 @@ class NurbsEntity(Entity):
         out["knots"] = [float(e0) for e0 in self.knots]
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.closed is not UNSET:
             out["closed"] = self.closed
         if self.color is not UNSET:
@@ -10674,14 +11170,22 @@ class NurbsEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.periodic is not UNSET:
             out["periodic"] = self.periodic
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.tangents is not UNSET:
             out["tangents"] = None if self.tangents is None else [None if e0 is None else _vec2_out(e0) for e0 in self.tangents]
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.weights is not UNSET:
             out["weights"] = None if self.weights is None else [float(e0) for e0 in self.weights]
         return out
@@ -10696,16 +11200,21 @@ class NurbsEntity(Entity):
             ctrl=[Vec2.from_json(e0) for e0 in data["ctrl"]],
             knots=[float(e0) for e0 in data["knots"]],
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             closed=data.get("closed", UNSET),
             color=data.get("color", UNSET),
             fit=UNSET if "fit" not in data else None if data["fit"] is None else [Vec2.from_json(e0) for e0 in data["fit"]],
             fit_tolerance=UNSET if "fitTolerance" not in data else None if data["fitTolerance"] is None else float(data["fitTolerance"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             periodic=data.get("periodic", UNSET),
             symbol=data.get("symbol", UNSET),
             tangents=UNSET if "tangents" not in data else None if data["tangents"] is None else [None if e0 is None else Vec2.from_json(e0) for e0 in data["tangents"]],
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             weights=UNSET if "weights" not in data else None if data["weights"] is None else [float(e0) for e0 in data["weights"]],
         )
 
@@ -10744,12 +11253,17 @@ class PathEntity(_Model):
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         bulges: Unit: 1.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         closed: A polyline whose last vertex joins its first: a closed line, not an
             area (docs/adr/0258 §1); its closing edge's bulge is the last of
             `bulges`. One part only. A polygon is a ring without saying so.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -10757,10 +11271,13 @@ class PathEntity(_Model):
         ms: A polyline's vertices' measures (M) on a route, as many as `pts`;
             `null` for a vertex without one; absent when none has one
             (docs/adr/0224 §1). A polygon has none: a route is a line. Unit: measure.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         parts: A polygon's or a polyline's parts past its first, whose own are the
             fields above; absent for one part (docs/adr/0143, 0174). A
             polyline's parts are open, of two vertices or more, without holes.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         widths: A polyline's widths: the start and the end of the edge from each
             vertex, as many as `pts` (the last is the closing edge's, `[0, 0]`
             on an open polyline), in the drawing's length, not the paper's line
@@ -10775,15 +11292,20 @@ class PathEntity(_Model):
     pts: list[Vec2]
     attachments: list[Attachment] | Unset = UNSET
     bulges: list[float] | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     closed: bool | Unset = UNSET
     color: str | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     ms: list[float | None] | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     parts: list[AreaPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
     widths: list[list[float]] | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
@@ -10797,6 +11319,8 @@ class PathEntity(_Model):
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.closed is not UNSET:
             out["closed"] = self.closed
         if self.color is not UNSET:
@@ -10807,14 +11331,22 @@ class PathEntity(_Model):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.ms is not UNSET:
             out["ms"] = None if self.ms is None else [None if e0 is None else float(e0) for e0 in self.ms]
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.widths is not UNSET:
             out["widths"] = None if self.widths is None else [[float(e1) for e1 in e0] for e0 in self.widths]
         if self.zs is not UNSET:
@@ -10830,15 +11362,20 @@ class PathEntity(_Model):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             closed=data.get("closed", UNSET),
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
+            order=data.get("order", UNSET),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
@@ -11000,15 +11537,23 @@ class PointCloudEntity(_Model):
         srid: The files' system; 0: they named none and the user took the project's. Unit: epsg.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         opacity: 0.1 to 1; absent: opaque. Unit: 1.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     id: int
     layer_id: str
@@ -11019,12 +11564,17 @@ class PointCloudEntity(_Model):
     srid: int
     style: PointCloudStyle
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -11038,18 +11588,28 @@ class PointCloudEntity(_Model):
         out["style"] = self.style.to_json()
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.opacity is not UNSET:
             out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -11064,12 +11624,17 @@ class PointCloudEntity(_Model):
             srid=data["srid"],
             style=PointCloudStyle.from_json(data["style"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -11285,16 +11850,24 @@ class PointEntity(Entity):
         p: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         parts: A multi-point object's points past its first, whose own are the
             fields above; absent for one point (docs/adr/0174).
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         z: Unit: elevation.
     """
     TAG_VALUE: ClassVar[str] = "point"
@@ -11303,12 +11876,17 @@ class PointEntity(Entity):
     attrs: dict[str, str]
     p: Vec2
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     parts: list[PointPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -11319,18 +11897,28 @@ class PointEntity(Entity):
         out["p"] = _vec2_out(self.p)
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.z is not UNSET:
             out["z"] = None if self.z is None else float(self.z)
         return out
@@ -11343,12 +11931,17 @@ class PointEntity(Entity):
             attrs=dict(data["attrs"]),
             p=Vec2.from_json(data["p"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [PointPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
@@ -11455,6 +12048,8 @@ class PolygonCreate(_Model):
             longer at it, nothing is written and the answer is `conflict`.
         holes: Holes: closed rings of at least 3 corners, each with one bulge per edge when it has bulges.
         label: The text shown beside it (`EntityBase.label`). Absent: none.
+        line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+            from the current line type. Absent: its layer's (katmana göre).
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -11471,6 +12066,7 @@ class PolygonCreate(_Model):
     expected_revision: str | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
 
@@ -11490,6 +12086,8 @@ class PolygonCreate(_Model):
             out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -11507,6 +12105,7 @@ class PolygonCreate(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
             label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
         )
@@ -11602,6 +12201,8 @@ class PolylineCreate(_Model):
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
         label: The text shown beside it (`EntityBase.label`). Absent: none.
+        line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+            from the current line type. Absent: its layer's (katmana göre).
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -11622,6 +12223,7 @@ class PolylineCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     widths: list[list[float]] | None | Unset = UNSET
@@ -11642,6 +12244,8 @@ class PolylineCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
@@ -11661,6 +12265,7 @@ class PolylineCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
             widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
@@ -12857,17 +13462,25 @@ class RasterEntity(Entity):
             `asset` and `file` is given.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         dataset: A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         opacity: 0.1 to 1; absent: opaque. Unit: 1.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
     """
     TAG_VALUE: ClassVar[str] = "raster"
@@ -12883,14 +13496,19 @@ class RasterEntity(Entity):
     style: RasterStyle
     asset: str | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     dataset: RasterDataset | None | Unset = UNSET
     file: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
     url: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -12909,6 +13527,8 @@ class RasterEntity(Entity):
             out["asset"] = self.asset
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.dataset is not UNSET:
@@ -12919,12 +13539,20 @@ class RasterEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.opacity is not UNSET:
             out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.url is not UNSET:
             out["url"] = self.url
         return out
@@ -12944,14 +13572,19 @@ class RasterEntity(Entity):
             style=RasterStyle.from_json(data["style"]),
             asset=data.get("asset", UNSET),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else RasterDataset.from_json(data["dataset"]),
             file=data.get("file", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             url=data.get("url", UNSET),
         )
 
@@ -13876,14 +14509,22 @@ class SplineEntity(Entity):
         pts: Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "spline"
     id: int
@@ -13892,11 +14533,16 @@ class SplineEntity(Entity):
     pts: list[Vec2]
     closed: bool
     attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "spline"}
@@ -13907,16 +14553,26 @@ class SplineEntity(Entity):
         out["closed"] = self.closed
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -13928,11 +14584,16 @@ class SplineEntity(Entity):
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             closed=data["closed"],
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -14300,6 +14961,9 @@ class TableEntity(Entity):
         aligns: Each column's alignment, as many as there are columns; absent: all left.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
         frame: Its frame's width, metres: the outline drawn as a band that wide
@@ -14308,6 +14972,8 @@ class TableEntity(Entity):
         header: The first row is its heading: bold, centred.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -14315,9 +14981,12 @@ class TableEntity(Entity):
         merges: Merged ranges: each range's words in its top left cell, its others empty.
         oblique: How far its letters lean, degrees, positive with their tops to the
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         source: Where its rows came from (Tabloyu güncelle); absent: written by hand.
         symbol: Library symbol overriding the layer's style.
         text_style: The project's text style it follows, by its id; absent: Standart.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "table"
     id: int
@@ -14332,6 +15001,7 @@ class TableEntity(Entity):
     aligns: list[TableAlign | TableAlignName] | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
     bold: bool | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     frame: float | None | Unset = UNSET
@@ -14340,12 +15010,16 @@ class TableEntity(Entity):
     italic: bool | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     merges: list[CellRange] | Unset = UNSET
     oblique: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     source: TableSource | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "table"}
@@ -14364,6 +15038,8 @@ class TableEntity(Entity):
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.bold is not UNSET:
             out["bold"] = self.bold
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.font is not UNSET:
@@ -14380,18 +15056,26 @@ class TableEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.merges is not UNSET:
             out["merges"] = [e0.to_json() for e0 in self.merges]
         if self.oblique is not UNSET:
             out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.source is not UNSET:
             out["source"] = None if self.source is None else self.source.to_json()
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.text_style is not UNSET:
             out["textStyle"] = self.text_style
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -14409,6 +15093,7 @@ class TableEntity(Entity):
             aligns=UNSET if "aligns" not in data else None if data["aligns"] is None else [_enum_in(TableAlign, e0) for e0 in data["aligns"]],
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bold=data.get("bold", UNSET),
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
@@ -14417,12 +15102,16 @@ class TableEntity(Entity):
             italic=data.get("italic", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             merges=[CellRange.from_json(e0) for e0 in data["merges"]] if "merges" in data else UNSET,
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            order=data.get("order", UNSET),
             source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
             symbol=data.get("symbol", UNSET),
             text_style=data.get("textStyle", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -14443,6 +15132,9 @@ class TextEntity(Entity):
             §1); none on a block's objects.
         box_width: Metres, finite and over 0: the lines wrap word by word to this width.
             Absent: they end only at line breaks. Unit: length.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
         label_of: The object whose label this text writes (Etiketleri yazıya çevir's
@@ -14454,6 +15146,8 @@ class TextEntity(Entity):
         label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0. Unit: scale.
         line_spacing: The distance between the lines' baselines in 5/3 of the height (DXF's
             group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`. Unit: 1.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -14462,6 +15156,8 @@ class TextEntity(Entity):
             text is drawn (Netcad's “fon”): what lies under it does not show.
         oblique: How far its letters lean, degrees, positive with their tops to the
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         path: The curve its letters stand on (Eğri boyunca yazı, docs/adr/0196 §1),
             in its own frame; absent: a straight text.
         runs: The letters' formats: ranges of the text's Unicode scalar values (not
@@ -14470,6 +15166,7 @@ class TextEntity(Entity):
             Absent: none.
         symbol: Library symbol overriding the layer's style.
         text_style: The project's text style it follows, by its id; absent: Standart.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         width_factor: The letters' width times this, the height kept (Netcad's “sıkışma”,
             DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`. Unit: 1.
     """
@@ -14485,6 +15182,7 @@ class TextEntity(Entity):
     attachments: list[Attachment] | Unset = UNSET
     bold: bool | Unset = UNSET
     box_width: float | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     italic: bool | Unset = UNSET
@@ -14493,13 +15191,17 @@ class TextEntity(Entity):
     label_pins: list[LabelPin] | Unset = UNSET
     label_scale: float | None | Unset = UNSET
     line_spacing: float | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     oblique: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     path: TextPath | None | Unset = UNSET
     runs: list[TextRun] | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
     width_factor: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -14519,6 +15221,8 @@ class TextEntity(Entity):
             out["bold"] = self.bold
         if self.box_width is not UNSET:
             out["boxWidth"] = None if self.box_width is None else float(self.box_width)
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
         if self.font is not UNSET:
@@ -14535,12 +15239,18 @@ class TextEntity(Entity):
             out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
         if self.line_spacing is not UNSET:
             out["lineSpacing"] = None if self.line_spacing is None else float(self.line_spacing)
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mask is not UNSET:
             out["mask"] = self.mask
         if self.oblique is not UNSET:
             out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.path is not UNSET:
             out["path"] = None if self.path is None else self.path.to_json()
         if self.runs is not UNSET:
@@ -14549,6 +15259,8 @@ class TextEntity(Entity):
             out["symbol"] = self.symbol
         if self.text_style is not UNSET:
             out["textStyle"] = self.text_style
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.width_factor is not UNSET:
             out["widthFactor"] = None if self.width_factor is None else float(self.width_factor)
         return out
@@ -14567,6 +15279,7 @@ class TextEntity(Entity):
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             bold=data.get("bold", UNSET),
             box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             italic=data.get("italic", UNSET),
@@ -14575,13 +15288,17 @@ class TextEntity(Entity):
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
             line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            order=data.get("order", UNSET),
             path=UNSET if "path" not in data else None if data["path"] is None else TextPath.from_json(data["path"]),
             runs=[TextRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
             symbol=data.get("symbol", UNSET),
             text_style=data.get("textStyle", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
         )
 
@@ -18082,6 +18799,9 @@ __all__ = [
     "EntitiesOffset",
     "EntitiesOffsetMade",
     "EntitiesOffsetPlan",
+    "EntitiesOrder",
+    "EntitiesOrderPlan",
+    "EntitiesOrdered",
     "EntitiesPropertiesSet",
     "EntitiesSetProperties",
     "EntitiesSetPropertiesPlan",
@@ -18245,6 +18965,8 @@ __all__ = [
     "LinesCornerPick",
     "LocalCrsSystem",
     "LocalDefinition",
+    "LookPart",
+    "LookPartName",
     "MeasuredPoint",
     "MidSubPlace",
     "MirrorTransform",
@@ -18276,6 +18998,8 @@ __all__ = [
     "ObstacleKind",
     "ObstacleKindName",
     "OffsetBy",
+    "OrderTo",
+    "OrderToName",
     "OrdinateDimensionMeasure",
     "PartsDivision",
     "PathArrayLayout",

@@ -1008,7 +1008,12 @@ def layer(n):
     assert "filter" not in n or (n["type"] == "layer" and "service" not in n), f"layer {n.get('id')}: süzgeç yalnız nesnesi olan katmanın"
     assert not ({"actions", "card"} & set(n)) or (n["type"] == "layer" and "service" not in n), f"layer {n.get('id')}: eylemler ve kart yalnız nesnesi olan katmanın"
     assert "compose" not in n or n["type"] == "layer", f"layer {n.get('id')}: katman çizimi yalnız katmanın"
-    return cmap(
+    return cmap(layer_entries(n))
+
+
+def layer_entries(n):
+    """A layer's or group's encoded fields by key."""
+    return (
         fields(
             n,
             {
@@ -1031,6 +1036,8 @@ def layer(n):
                 "card": (info_card, False),
                 # Schema 41 (docs/adr/0226 §3, §4): a layer's opacity, blending mode and mask.
                 "compose": (layer_compose, False),
+                # Schema 48 (docs/adr/0260 §4): a layer or group not printed; only `false` is written.
+                "plot": (lambda b: boolean(b) if b is False else None, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1461,6 +1468,21 @@ def dimension_refs(refs):
     return cmap(fields(refs, {"a": (subref, False), "b": (subref, False), "c": (subref, False)}, "refs"))
 
 
+LOOK_PARTS = ("color", "lineType", "lineWeight", "transparency")
+
+
+def look_rule(e, in_block):
+    """An object's look (schema 48, docs/adr/0260), as a writer keeps it."""
+    assert "lineTypeScale" not in e or 0 < e["lineTypeScale"] <= 1000, "çizgi tipi ölçeği 0'dan büyük, en çok 1000"
+    assert "transparency" not in e or 0 <= e["transparency"] <= 0.9, "saydamlık 0 ile 0,9 arası"
+    assert "order" not in e or (not in_block and type(e["order"]) is int and -(2**31) <= e["order"] < 2**31), "çizim sırası çizimin nesnesinin, tam sayı"
+    parts = e.get("byLayer", [])
+    assert not parts or in_block, "katmana göre parçalar yalnız bloğun nesnesinde"
+    assert "byLayer" not in e or parts, "boş liste yazılmaz"
+    assert all(p in LOOK_PARTS for p in parts) and [LOOK_PARTS.index(p) for p in parts] == sorted(set(LOOK_PARTS.index(p) for p in parts)), "sırayla ve birer kez"
+    assert all(p not in e for p in parts), "kendi değeri olan parça katmana göre olamaz"
+
+
 def entity(e, uid, index):
     """An object; `uid` None for a block definition's object, which has no persistent id (schema 6)."""
     kind = e["kind"]
@@ -1479,8 +1501,16 @@ def entity(e, uid, index):
         "labelPins": (label_pins, False),
         # Schema 40 (docs/adr/0225 §1): its photos and documents; the drawing's objects only.
         "attachments": (attachments, False),
+        # Schema 48 (docs/adr/0260): its line type, pattern scale, transparency, drawing order (the drawing's
+        # objects) and the parts that follow its layer (a block's objects).
+        "lineType": (enum(LINE_TYPES), False),
+        "lineTypeScale": (f64, False),
+        "transparency": (f64, False),
+        "order": (integer, False),
+        "byLayer": (lambda ps: array([text(p) for p in ps]), False),
         **KINDS[kind],
     }
+    look_rule(e, uid is None)
     assert "labelPins" not in e or uid is not None, "blok tanımının nesnesinde etiket iğnesi olmaz"
     assert "attachments" not in e or uid is not None, "blok tanımının nesnesinde ek olmaz"
     if kind == "table":
@@ -1707,6 +1737,14 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def composed(nodes):
         return any("compose" in n or composed(n["children"]) for n in nodes)
 
+    # Schema 48 (docs/adr/0260): an object's look, a block definition's too, or a layer not printed.
+    looked = lambda es: any(k in e for e in es for k in ("lineType", "lineTypeScale", "transparency", "order", "byLayer"))  # noqa: E731
+
+    def unprinted(nodes):
+        return any(n.get("plot") is False or unprinted(n["children"]) for n in nodes)
+
+    if looked(entities) or any(looked(b["entities"]) for b in blocks or []) or unprinted(layers):
+        return 48
     # Schema 47 (docs/adr/0259): a NURBS curve, a block definition's too.
     def curved(es):
         return any(e["kind"] == "nurbs" for e in es)
@@ -2003,7 +2041,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-48.kcad"] = container(root(cmap(parts), version=uint(48)))
+    files["schema-version-49.kcad"] = container(root(cmap(parts), version=uint(49)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2313,6 +2351,16 @@ def broken(minimal_content, minimal_file):
         body = {**common, "degree": uint(2), "ctrl": ctrl, "knots": floats([0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0])}
         return cmap({"nurbs": cmap({**body, **extra})})
 
+    # An object's look is schema 48's (docs/adr/0260): in schema 47 unknown fields; a scale above 0 and at most 1000,
+    # a transparency from 0 to 0.9, a whole order on the drawing's objects only, by-layer parts on a block's only, in
+    # order, once, never one with a value of its own; a layer's plot only false.
+    files["look-in-schema-47.kcad"] = in_schema(47, line(lineType=text("dashed")))
+    files["look-line-type-unknown.kcad"] = in_schema(48, line(lineType=text("hidden")))
+    files["look-scale-zero.kcad"] = in_schema(48, line(lineTypeScale=f64(0.0)))
+    files["look-transparency-high.kcad"] = in_schema(48, line(transparency=f64(0.95)))
+    files["look-order-float.kcad"] = in_schema(48, line(order=f64(1.5)))
+    files["look-by-layer-in-drawing.kcad"] = in_schema(48, line(byLayer=array([text("color")])))
+    files["plot-true.kcad"] = container(root(cmap({**parts, "layers": array([cmap({**layer_entries(m["layers"][0]), "plot": boolean(True)})])}), version=uint(48)))
     files["nurbs-in-schema-46.kcad"] = in_schema(46, nurbs_of())
     files["nurbs-closed-false.kcad"] = in_schema(47, nurbs_of(closed=boolean(False)))
     files["nurbs-degree-12.kcad"] = in_schema(47, nurbs_of(degree=uint(12)))
@@ -3181,6 +3229,7 @@ def build():
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))
     out["nurbs.kcad"] = container(document(load("nurbs.json")))
+    out["look.kcad"] = container(document(load("look.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

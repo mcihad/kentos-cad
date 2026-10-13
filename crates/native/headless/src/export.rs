@@ -56,6 +56,7 @@ fn write_layer(doc: &Document, id: &str) -> Option<DxfWriteLayer> {
         up = layers.parent(&group.id);
     }
     Some(DxfWriteLayer {
+        plot: (!layers.printed(id)).then_some(false),
         id: id.to_owned(),
         name: l.name.clone(),
         path,

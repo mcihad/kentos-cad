@@ -55,6 +55,8 @@ pub struct NewLayer {
     /// A layer's filter (docs/adr/0211 §2), kept by the node it makes
     /// (Başka çizimden al's layers); a group keeps none.
     pub filter: Option<kentos_contracts::LayerFilter>,
+    /// Yazdır (docs/adr/0260 §4): `Some(false)` not printed.
+    pub plot: Option<bool>,
     /// A layer's actions and information card (docs/adr/0225 §4, §5), kept
     /// by the node it makes (Başka çizimden al's layers); a group keeps none.
     pub actions: Vec<kentos_contracts::LayerAction>,
@@ -68,6 +70,7 @@ impl NewLayer {
     /// A shown, unlocked layer in the default style.
     pub fn layer(name: impl Into<String>) -> Self {
         Self {
+            plot: None,
             id: None,
             name: name.into(),
             kind: LayerNodeType::Layer,
@@ -240,6 +243,34 @@ impl LayerTree {
         self.node_mut(id)
             .map(|node| node.locked = !node.locked)
             .is_some()
+    }
+
+    /// A node's printing set (docs/adr/0260 §4): only `false` is kept; whether it changed.
+    pub(crate) fn set_plot(&mut self, id: &str, plot: bool) -> bool {
+        let want = (!plot).then_some(false);
+        match self.node_mut(id) {
+            Some(node) if node.plot != want => {
+                node.plot = want;
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Whether a node and every group above it are printed.
+    pub fn printed(&self, id: &str) -> bool {
+        fn walk(nodes: &[kentos_contracts::LayerNode], id: &str) -> Option<bool> {
+            for n in nodes {
+                if n.id == id {
+                    return Some(n.plot != Some(false));
+                }
+                if let Some(below) = walk(&n.children, id) {
+                    return Some(below && n.plot != Some(false));
+                }
+            }
+            None
+        }
+        walk(self.nodes(), id).unwrap_or(true)
     }
 
     /// A node's own lock set; whether it changed (`cad.layers.set`, docs/adr/0248 §2).
@@ -562,6 +593,7 @@ impl LayerTree {
             None => self.next_id(),
         };
         LayerNode {
+            plot: new.plot.filter(|p| !p),
             id,
             name: new.name,
             kind: new.kind,

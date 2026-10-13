@@ -94,6 +94,7 @@ pub fn piece_entities(insert: &Entity, x: &Expanded) -> Vec<Entity> {
             }
             let geometry = edit_geometry(s.clone())?;
             let base = EntityBase {
+                look: Default::default(),
                 id: own.id,
                 layer_id: own.layer_id.clone(),
                 color: x

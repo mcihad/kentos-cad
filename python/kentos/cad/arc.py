@@ -14,6 +14,8 @@ from .types import (  # noqa: F401
     ArcCreate,
     ArcCreated,
     ArcPlan,
+    LineType,
+    LineTypeName,
     Vec2,
     Vec2Like,
 )
@@ -57,6 +59,7 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -87,6 +90,8 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
                 (from a plan, or the document). When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
             label: The text shown beside it (`EntityBase.label`). Absent: none.
+            line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+                from the current line type. Absent: its layer's (katmana göre).
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
                 object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -116,6 +121,7 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ), request_id=request_id, expected=expected)
@@ -134,6 +140,7 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> ArcPlan:
@@ -150,6 +157,7 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ))
@@ -168,6 +176,7 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -184,6 +193,7 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ))
@@ -202,6 +212,7 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         op: str = "execute",
@@ -223,6 +234,7 @@ class _ArcCreate(LocalCommand[ArcCreate, ArcCreated, ArcPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ), op=op, request_id=request_id, expected=expected)

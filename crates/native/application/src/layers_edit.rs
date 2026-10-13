@@ -50,6 +50,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 /// kopyala, Kopyasını oluştur; the web's `newObjectOf`).
 pub fn new_object(e: &Entity) -> Option<NewObject> {
     Some(NewObject {
+        line_type: None,
         geometry: edit_geometry(shape(e))?,
         color: e.base().color.clone(),
         line_weight: e.base().line_weight,
@@ -564,6 +565,9 @@ fn merge(doc: &mut Document, target: &str, from: &[String]) -> CommandResult<Lay
     let moved = uids.len();
     if !uids.is_empty() {
         let input = EntitiesSetProperties {
+            line_type: None,
+            line_type_scale: None,
+            transparency: None,
             uids,
             layer_id: Some(target.to_owned()),
             color: None,

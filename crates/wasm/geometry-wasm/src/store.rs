@@ -1272,6 +1272,8 @@ impl GeometryStore {
                 text_lens,
                 numbers,
                 pieces,
+                // The web gives no draw order bands yet (TODOS.md §0.2, docs/adr/0260).
+                bands: &[],
             },
             clip.as_ref(),
             Vec2::new(origin_x, origin_y),

@@ -57,6 +57,14 @@ pub enum PropertiesOperation {
     /// Öznitelikler's Ekler (docs/adr/0225 §2): the objects' photos and
     /// documents. “Ekler”.
     Attachments,
+    /// Çizgi tipi ▾ (docs/adr/0260 §2): their own line type, or their
+    /// source's. “Çizgi tipi değiştir”.
+    LineType,
+    /// Çizgi tipi ölçeği (docs/adr/0260 §2). “Çizgi tipi ölçeği”.
+    LineTypeScale,
+    /// Saydamlık (docs/adr/0260 §3): their own, or their source's.
+    /// “Saydamlık değiştir”.
+    Transparency,
 }
 
 /// Input of `cad.entities.set` v1: properties set for objects named by their
@@ -82,6 +90,8 @@ pub enum PropertiesOperation {
 /// `invalid_uid` (each id in order), `nothing_to_set` (no property given),
 /// `invalid_attribute` (an attribute name empty or only white space),
 /// `invalid_line_weight` (a weight not a number from 0 to 100 mm),
+/// `invalid_line_type_scale` (a scale not above 0 or above 1000),
+/// `invalid_transparency` (a transparency not from 0 to 0.9),
 /// `invalid_attachments` (`attachments_problem`, docs/adr/0225 §1), then
 /// `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `entity_not_found` (each id in order), `unknown_asset` (an embedded
@@ -132,6 +142,31 @@ pub struct EntitiesSetProperties {
     )]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<Option<f64>>,
+    /// Their own line type (`ObjectLook.line_type`, docs/adr/0260 §2); null:
+    /// their source's (katmana göre). Absent: unchanged.
+    #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Option<crate::layer::LineType>>", optional)
+    )]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::layer::LineType>"))]
+    pub line_type: Option<Option<crate::layer::LineType>>,
+    /// Their pattern's own factor, above 0, at most 1000; null: 1. Absent: unchanged.
+    #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub line_type_scale: Option<Option<f64>>,
+    /// Their own transparency, 0 to 0.9 (docs/adr/0260 §3); null: their
+    /// source's. Absent: unchanged.
+    #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<f64>", range(min = 0.0, max = 0.9))
+    )]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub transparency: Option<Option<f64>>,
     /// Their own symbol, a library item's id (`EntityBase.symbol`), drawn
     /// instead of their layer's style; null: the layer's style. The id is
     /// not looked up: the libraries are the host's. Absent: unchanged.

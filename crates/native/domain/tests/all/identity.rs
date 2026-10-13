@@ -68,6 +68,7 @@ fn the_same_file_opens_with_the_same_ids_and_new_objects_get_v7() {
     );
     let point = Entity::Point(PointEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".into(),
             color: None,
@@ -91,6 +92,7 @@ fn the_same_file_opens_with_the_same_ids_and_new_objects_get_v7() {
     // Edited, it is another snapshot: v1 stores no ids, so every object gets others (FILE-05).
     let edited = Entity::Point(PointEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".into(),
             color: None,

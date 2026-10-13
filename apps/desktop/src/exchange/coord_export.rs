@@ -438,6 +438,7 @@ mod tests {
         }
         Entity::Point(PointEntity {
             base: EntityBase {
+                look: Default::default(),
                 id: 1,
                 layer_id: "a".into(),
                 color: None,

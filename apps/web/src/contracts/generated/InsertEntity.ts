@@ -2,6 +2,8 @@
 import type { Attachment } from "./Attachment";
 import type { BlockId } from "./BlockId";
 import type { LabelPin } from "./LabelPin";
+import type { LineType } from "./LineType";
+import type { LookPart } from "./LookPart";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -60,4 +62,27 @@ labelPins?: Array<LabelPin>,
  * The photos and documents it carries, in their order (docs/adr/0225
  * §1); none on a block's objects.
  */
-attachments?: Array<Attachment>, };
+attachments?: Array<Attachment>, 
+/**
+ * Its own line type; absent: its source's (the layer's, or the insert's in a block).
+ */
+lineType?: LineType, 
+/**
+ * Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own.
+ */
+lineTypeScale?: number, 
+/**
+ * How transparent it is, 0 to 0.9; absent: its source's (none for a layer).
+ */
+transparency?: number, 
+/**
+ * Its place in its layer's drawing order: lower first, equals in the
+ * document's order; absent: 0; a 32-bit integer. Only a drawing's object has it.
+ */
+order?: number, 
+/**
+ * On a block's object, the parts without a value of their own that
+ * follow the object's layer instead of the insert; in order, once each,
+ * never one with a value of its own.
+ */
+byLayer?: Array<LookPart>, };

@@ -264,6 +264,7 @@ fn drawing(cloud: PointCloudFields) -> DocumentSnapshotV2 {
     doc.origin = Vec2 { x: X0, y: Y0 };
     doc.entities.push(Entity::PointCloud(PointCloudEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 1,
             layer_id: doc.active_layer.clone(),
             color: None,

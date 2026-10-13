@@ -178,6 +178,7 @@ fn a_grip_that_would_break_the_shape_is_left_where_it_was() {
         .doc
         .add(Entity::Circle(CircleEntity {
             base: EntityBase {
+                look: Default::default(),
                 id: 0,
                 layer_id: "cizim".to_owned(),
                 color: None,

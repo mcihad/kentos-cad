@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    LineType,
+    LineTypeName,
     PolylineCreate,
     PolylineCreated,
     PolylinePlan,
@@ -55,6 +57,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         widths: Sequence[Sequence[float]] | None | Unset = UNSET,
@@ -89,6 +92,8 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
                 (from a plan, or the document). When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
             label: The text shown beside it (`EntityBase.label`). Absent: none.
+            line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+                from the current line type. Absent: its layer's (katmana göre).
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
                 object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -121,6 +126,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
             widths=_opt(widths, lambda x: [list(p) for p in x]),
@@ -139,6 +145,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         widths: Sequence[Sequence[float]] | None | Unset = UNSET,
@@ -155,6 +162,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
             widths=_opt(widths, lambda x: [list(p) for p in x]),
@@ -173,6 +181,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         widths: Sequence[Sequence[float]] | None | Unset = UNSET,
@@ -189,6 +198,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
             widths=_opt(widths, lambda x: [list(p) for p in x]),
@@ -207,6 +217,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         widths: Sequence[Sequence[float]] | None | Unset = UNSET,
@@ -228,6 +239,7 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
             widths=_opt(widths, lambda x: [list(p) for p in x]),

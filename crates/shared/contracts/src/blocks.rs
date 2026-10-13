@@ -432,6 +432,7 @@ mod tests {
     fn insert(block: u8, scale: f64) -> Entity {
         Entity::Insert(InsertEntity {
             base: EntityBase {
+                look: Default::default(),
                 id: 1,
                 layer_id: "0".into(),
                 color: None,

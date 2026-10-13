@@ -557,9 +557,10 @@ pub(crate) type FeatureRow = (
     Option<f64>,
     Option<Value>,
     Option<Value>,
+    Option<Value>,
 );
 
-pub(crate) const FEATURE_COLUMNS: &str = "id, version, layer_id, kind, source_kind, public.st_asewkb(geom), cad_definition, properties, label, color, symbol, line_weight, label_pins, attachments";
+pub(crate) const FEATURE_COLUMNS: &str = "id, version, layer_id, kind, source_kind, public.st_asewkb(geom), cad_definition, properties, label, color, symbol, line_weight, label_pins, attachments, look";
 
 pub(crate) fn record(
     (
@@ -577,6 +578,7 @@ pub(crate) fn record(
         line_weight,
         label_pins,
         attachments,
+        look,
     ): FeatureRow,
 ) -> AppResult<FeatureRecord> {
     let source_kind = if source_kind == "geom" { "geom" } else { "cad" };
@@ -593,6 +595,7 @@ pub(crate) fn record(
         line_weight,
         label_pins,
         attachments,
+        look,
     };
     let entity = from_stored(&stored)
         .map_err(|e| AppError::invalid(format!("Nesne {id} okunamadı: {e}")))?;
@@ -699,6 +702,7 @@ mod tests {
         children: Vec<LayerNode>,
     ) -> LayerNode {
         LayerNode {
+            plot: None,
             id: id.to_owned(),
             name: id.to_owned(),
             kind,

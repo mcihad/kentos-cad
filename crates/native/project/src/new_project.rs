@@ -246,6 +246,7 @@ fn label(placement: LabelPlacement, size: f64) -> LabelStyle {
 
 fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
+        plot: None,
         id: id.to_owned(),
         name: name.to_owned(),
         kind: LayerNodeType::Layer,

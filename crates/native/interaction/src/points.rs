@@ -118,6 +118,7 @@ pub(crate) fn write_ring(
 ) -> bool {
     use kentos_native_application::{ExecutionContext, polygon};
     let input = kentos_contracts::PolygonCreate {
+        line_type: cx.draft.line_type,
         layer_id: cx.doc.layers().active().to_owned(),
         pts: pts.iter().map(|p| wire(*p)).collect(),
         bulges,
@@ -240,6 +241,11 @@ pub(crate) fn write_objects_each(
         objects: objects
             .into_iter()
             .map(|(geometry, attrs)| kentos_contracts::NewObject {
+                // And the current line type (docs/adr/0260 §2).
+                line_type: geometry
+                    .draws_lines()
+                    .then_some(cx.draft.line_type)
+                    .flatten(),
                 // The current weight goes to what is drawn with lines (docs/adr/0139).
                 line_weight: geometry
                     .draws_lines()

@@ -32,6 +32,7 @@ fn tm36() -> System {
 
 fn base(id: u32, layer: &str) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id,
         layer_id: layer.to_owned(),
         color: None,

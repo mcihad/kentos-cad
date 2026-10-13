@@ -426,6 +426,7 @@ mod tests {
         let format = Format::of(doc.settings());
         let black = |_: &str| Color::BLACK;
         let base = || EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".into(),
             color: None,
@@ -496,6 +497,7 @@ mod tests {
         let format = Format::of(doc.settings());
         let black = |_: &str| Color::BLACK;
         let base = || EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".into(),
             color: None,

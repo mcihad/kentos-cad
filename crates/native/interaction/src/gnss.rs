@@ -299,6 +299,7 @@ pub fn line_entities(lines: &[PlacedLine]) -> Vec<Entity> {
             Some(Entity::Polyline(PathEntity {
                 ms: None,
                 base: EntityBase {
+                    look: Default::default(),
                     id: 0,
                     layer_id: String::new(),
                     color: None,
@@ -330,6 +331,7 @@ pub fn entities(placed: &[Placed]) -> Vec<Entity> {
         .map(|pt| {
             Entity::Point(PointEntity {
                 base: EntityBase {
+                    look: Default::default(),
                     id: 0,
                     layer_id: String::new(),
                     color: None,

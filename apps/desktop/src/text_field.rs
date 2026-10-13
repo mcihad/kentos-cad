@@ -444,6 +444,7 @@ mod tests {
             .model
             .add(Entity::Leader(kentos_contracts::LeaderEntity {
                 base: kentos_contracts::EntityBase {
+                    look: Default::default(),
                     id: 0,
                     layer_id: "cizim".to_owned(),
                     color: None,

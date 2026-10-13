@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    LineType,
+    LineTypeName,
     NurbsBy,
     NurbsCreate,
     NurbsCreated,
@@ -59,6 +61,7 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -90,6 +93,8 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
                 When given and the document is no longer at it, nothing is written and
                 the answer is `conflict`.
             label: The text shown beside it (`EntityBase.label`). Absent: none.
+            line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+                from the current line type. Absent: its layer's (katmana göre).
             line_weight: Its own line weight, paper mm (0 to 100; docs/adr/0139). Absent: the layer's. Unit: paper-mm.
             symbol: Its own symbol, a library item's id (`EntityBase.symbol`; docs/adr/0176). Absent: the layer's style.
             request_id: Names this write: sent again with the same call it is answered as
@@ -112,6 +117,7 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ), request_id=request_id, expected=expected)
@@ -128,6 +134,7 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> NurbsPlan:
@@ -142,6 +149,7 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ))
@@ -158,6 +166,7 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -172,6 +181,7 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ))
@@ -188,6 +198,7 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         op: str = "execute",
@@ -207,6 +218,7 @@ class _NurbsCreate(LocalCommand[NurbsCreate, NurbsCreated, NurbsPlan]):
             color=color,
             expected_revision=expected_revision,
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ), op=op, request_id=request_id, expected=expected)

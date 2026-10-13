@@ -37,6 +37,7 @@ fn window(app: &App) -> &super::LayerStyleWindow {
 
 fn base(layer: &str) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: layer.to_owned(),
         color: None,

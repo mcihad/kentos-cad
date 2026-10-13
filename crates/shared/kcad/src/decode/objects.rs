@@ -198,6 +198,9 @@ pub(super) struct Features {
     polyline_extras: bool,
     /// Schema 47: the NURBS curve (docs/adr/0259).
     nurbs: bool,
+    /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
+    /// `order` and a block's object's `byLayer` (docs/adr/0260).
+    pub(super) look: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
     /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
     /// arrowheads (docs/adr/0205).
@@ -251,6 +254,7 @@ impl Features {
             sheets: schema >= SCHEMA_WITH_SHEETS,
             requests: schema >= SCHEMA_WITH_REQUESTS,
             polyline_extras: schema >= SCHEMA_WITH_POLYLINE_EXTRAS,
+            look: schema >= crate::SCHEMA_WITH_LOOK,
             nurbs: schema >= SCHEMA_WITH_NURBS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
@@ -278,6 +282,10 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
         // Photos and documents: the drawing's objects only (a definition's are not picked one by one).
         || (has.attachments && has.uids && key == "attachments")
         || (has.weights && key == "lineWeight")
+        // An object's look (docs/adr/0260): its order the drawing's objects', `byLayer` a definition's.
+        || (has.look && matches!(key, "lineType" | "lineTypeScale" | "transparency"))
+        || (has.look && has.uids && key == "order")
+        || (has.look && !has.uids && key == "byLayer")
         || match kind {
             Kind::Point => matches!(key, "p" | "z") || (has.line_parts && key == "parts"),
             Kind::Line => {
@@ -450,6 +458,8 @@ struct Fields {
     symbol: Option<String>,
     layer_id: Option<String>,
     line_weight: Option<f64>,
+    /// An object's look (docs/adr/0260).
+    object_look: kentos_contracts::ObjectLook,
     label_pins: Option<Vec<kentos_contracts::LabelPin>>,
     attachments: Option<Vec<kentos_contracts::Attachment>>,
     /// A NURBS curve's numbers (docs/adr/0259).
@@ -723,6 +733,20 @@ pub(super) fn object(
                     ));
                 }
                 f.line_weight = Some(w);
+            }
+            "lineType" => {
+                f.object_look.line_type = Some(super::named(
+                    r,
+                    &kentos_contracts::LineType::ALL.map(|t| (t.name(), t)),
+                )?)
+            }
+            "lineTypeScale" => f.object_look.line_type_scale = Some(r.float()?),
+            "transparency" => f.object_look.transparency = Some(r.float()?),
+            "order" => f.object_look.order = Some(r.int(crate::MAX_ORDER)? as i32),
+            "byLayer" => {
+                f.object_look.by_layer = list(r, |r, _| {
+                    super::named(r, &kentos_contracts::LookPart::ALL.map(|p| (p.name(), p)))
+                })?
             }
             "p" => f.p = Some(point(r)?),
             "a" => f.a = Some(point(r)?),
@@ -1312,7 +1336,17 @@ fn build(
 ) -> Result<Entity, KcadError> {
     // The slot a reader gives: 1, 2, 3 … in file order (§6.6). A payload holds far fewer than 2³² objects.
     let slot = u32::try_from(index + 1).unwrap_or(u32::MAX);
+    let look = std::mem::take(&mut f.object_look);
+    if let Some(problem) = kentos_contracts::look_problem(
+        &look,
+        f.color.is_some(),
+        f.line_weight.is_some(),
+        f.uid.is_none(),
+    ) {
+        return Err(r.fail(Code::BadValue, &problem));
+    }
     let base = EntityBase {
+        look,
         id: slot,
         layer_id: required(r, f.layer_id.take(), "layerId")?,
         color: f.color.take(),

@@ -160,6 +160,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
         .map(|l| {
             Entity::Text(TextEntity {
                 base: EntityBase {
+                    look: Default::default(),
                     id: 0,
                     layer_id: layer.id.clone(),
                     color: None,

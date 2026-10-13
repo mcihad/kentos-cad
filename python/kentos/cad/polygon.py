@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    LineType,
+    LineTypeName,
     PolygonCreate,
     PolygonCreated,
     PolygonPlan,
@@ -53,6 +55,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         expected_revision: str | None | Unset = UNSET,
         holes: Sequence[RingGeometry] | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -80,6 +83,8 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
                 longer at it, nothing is written and the answer is `conflict`.
             holes: Holes: closed rings of at least 3 corners, each with one bulge per edge when it has bulges.
             label: The text shown beside it (`EntityBase.label`). Absent: none.
+            line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
+                from the current line type. Absent: its layer's (katmana göre).
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
                 object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
@@ -108,6 +113,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             expected_revision=expected_revision,
             holes=_opt(holes, lambda x: list(x)),
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ), request_id=request_id, expected=expected)
@@ -125,6 +131,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         expected_revision: str | None | Unset = UNSET,
         holes: Sequence[RingGeometry] | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> PolygonPlan:
@@ -140,6 +147,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             expected_revision=expected_revision,
             holes=_opt(holes, lambda x: list(x)),
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ))
@@ -157,6 +165,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         expected_revision: str | None | Unset = UNSET,
         holes: Sequence[RingGeometry] | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -172,6 +181,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             expected_revision=expected_revision,
             holes=_opt(holes, lambda x: list(x)),
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ))
@@ -189,6 +199,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         expected_revision: str | None | Unset = UNSET,
         holes: Sequence[RingGeometry] | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
+        line_type: LineType | LineTypeName | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
         op: str = "execute",
@@ -209,6 +220,7 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             expected_revision=expected_revision,
             holes=_opt(holes, lambda x: list(x)),
             label=label,
+            line_type=line_type,
             line_weight=line_weight,
             symbol=symbol,
         ), op=op, request_id=request_id, expected=expected)

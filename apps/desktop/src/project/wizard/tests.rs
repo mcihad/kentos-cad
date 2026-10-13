@@ -396,6 +396,7 @@ fn axes_screens() {
             .add(Entity::Polygon(PathEntity {
                 ms: None,
                 base: EntityBase {
+                    look: Default::default(),
                     id: 0,
                     layer_id: doc.model.layers().active().to_owned(),
                     color: None,

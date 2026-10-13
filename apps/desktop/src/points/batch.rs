@@ -245,6 +245,9 @@ pub fn plan(doc: &Document, slots: &[Slot], op: &Op) -> Plan {
 
 fn input(uids: Vec<String>, label: Option<String>, layer: Option<String>) -> EntitiesSetProperties {
     EntitiesSetProperties {
+        line_type: None,
+        line_type_scale: None,
+        transparency: None,
         operation: if layer.is_some() {
             PropertiesOperation::Layer
         } else {

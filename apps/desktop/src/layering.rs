@@ -486,7 +486,17 @@ impl App {
                 Icon::Unlock
             } else {
                 Icon::Lock
-            });
+            })
+            // Yazdır (docs/adr/0260 §4): drawn on screen, left off sheets when off.
+            .item(
+                if node.plot == Some(false) {
+                    "Yazdır"
+                } else {
+                    "Yazdırma"
+                },
+                Message::LayerPlot(id.clone()),
+            )
+            .icon(Icon::Print);
         // A layer drawn from a map service: its service's items, none of the objects' (docs/adr/0208 §14).
         if node.service.is_some() {
             return self
@@ -1313,10 +1323,10 @@ fn screens() {
                     let _ = app.update(message);
                 };
                 snapshot.settle(&mut app, App::view, &mut update);
-                // The Bina row: the panel's third row, its swatch after the caret and indent.
+                // The Bina row: the panel's third row (below Kadastro and Parsel), its swatch after the caret and indent.
                 let panel = width - app.docks.size(kentos_ui::widget::docking::Side::Right);
-                let bina = iced::Point::new(panel + 120.0, 261.0);
-                let swatch = iced::Point::new(panel + 21.0, 261.0);
+                let bina = iced::Point::new(panel + 120.0, 303.0);
+                let swatch = iced::Point::new(panel + 21.0, 303.0);
                 use kentos_ui::snapshot::Input;
                 match name {
                     "menu" => {

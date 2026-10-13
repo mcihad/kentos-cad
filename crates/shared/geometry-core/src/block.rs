@@ -95,6 +95,10 @@ pub struct Piece {
     pub shape: Shape,
     pub color: Option<String>,
     pub line_weight: Option<f64>,
+    /// Its own layer and the parts of its look that follow that layer
+    /// rather than the insert (`byLayer`, docs/adr/0260 §1): a mask of
+    /// [`BY_LAYER_COLOR`] …; none when it has none.
+    pub by_layer: Option<(String, u8)>,
     pub attribute: Option<String>,
 }
 
@@ -202,6 +206,7 @@ impl Blocks {
                     shape,
                     color: piece.color.clone(),
                     line_weight: piece.line_weight,
+                    by_layer: piece.by_layer.clone(),
                     attribute: piece.attribute.clone(),
                 }
             })
@@ -521,10 +526,19 @@ fn flatten(
                 if matches!(&shape, Shape::Text { text, .. } if text.is_empty()) {
                     continue;
                 }
+                // A part that follows the piece's own layer takes nothing from the nested insert.
+                let follows = |bit: u8| piece.by_layer.as_ref().is_some_and(|(_, m)| m & bit != 0);
                 pieces.push(Piece {
                     shape,
-                    color: piece.color.clone().or_else(|| own_color.clone()),
-                    line_weight: piece.line_weight.or(own_weight),
+                    color: piece.color.clone().or_else(|| {
+                        (!follows(BY_LAYER_COLOR))
+                            .then(|| own_color.clone())
+                            .flatten()
+                    }),
+                    line_weight: piece
+                        .line_weight
+                        .or_else(|| (!follows(BY_LAYER_WEIGHT)).then_some(own_weight).flatten()),
+                    by_layer: piece.by_layer.clone(),
                     attribute: None,
                 });
             }
@@ -533,6 +547,7 @@ fn flatten(
                 shape: transform_shape(&e.shape, &to_base),
                 color: own_color,
                 line_weight: own_weight,
+                by_layer: by_layer(&e.rest),
                 attribute: None,
             });
         }
@@ -543,6 +558,7 @@ fn flatten(
             shape: transform_shape(&a.shape(a.value.clone()), &to_base),
             color: None,
             line_weight: None,
+            by_layer: None,
             attribute: Some(a.tag.clone()),
         });
     }
@@ -556,6 +572,33 @@ fn flatten(
             pieces,
         }),
     );
+}
+
+/// A piece's colour follows its own layer (docs/adr/0260 §1).
+pub const BY_LAYER_COLOR: u8 = 1;
+/// Its line type does.
+pub const BY_LAYER_LINE_TYPE: u8 = 2;
+/// Its line weight does.
+pub const BY_LAYER_WEIGHT: u8 = 4;
+/// Its transparency does.
+pub const BY_LAYER_TRANSPARENCY: u8 = 8;
+
+/// A definition's object's own layer and the mask of its `byLayer` parts; none without them.
+fn by_layer(rest: &[(String, Json)]) -> Option<(String, u8)> {
+    let parts = rest.iter().find_map(|(k, v)| match v {
+        Json::Arr(list) if k == "byLayer" => Some(list),
+        _ => None,
+    })?;
+    let mask = parts.iter().fold(0, |m, p| {
+        m | match p {
+            Json::Str(s) if s == "color" => BY_LAYER_COLOR,
+            Json::Str(s) if s == "lineType" => BY_LAYER_LINE_TYPE,
+            Json::Str(s) if s == "lineWeight" => BY_LAYER_WEIGHT,
+            Json::Str(s) if s == "transparency" => BY_LAYER_TRANSPARENCY,
+            _ => 0,
+        }
+    });
+    (mask != 0).then(|| (text_field(rest, "layerId").unwrap_or_default(), mask))
 }
 
 fn text_field(rest: &[(String, Json)], name: &str) -> Option<String> {

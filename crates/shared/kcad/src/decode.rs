@@ -850,6 +850,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut time, mut scenario, mut replaces) = (None, None, None);
     let mut filter = None;
     let (mut actions, mut card, mut compose) = (None, None, None);
+    let mut plot = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
@@ -857,6 +858,15 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "card" if has.attachments => card = Some(info::info_card(r)?),
             "actions" if has.attachments => actions = Some(info::layer_actions(r)?),
             "compose" if has.compose => compose = Some(compose::layer_compose(r)?),
+            "plot" if has.look => {
+                if r.bool()? {
+                    return Err(r.fail(
+                        Code::BadValue,
+                        "plot yalnız false yazılır; yazdırılan katmanda alan yoktur",
+                    ));
+                }
+                plot = Some(false);
+            }
             "filter" if has.filters => filter = Some(filter::layer_filter(r)?),
             "time" if has.temporal => time = Some(temporal::layer_time(r)?),
             "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
@@ -884,6 +894,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
         Ok(())
     })?;
     Ok(LayerNode {
+        plot,
         id: required(r, id, "id")?,
         name: required(r, name, "name")?,
         kind: required(r, kind, "type")?,

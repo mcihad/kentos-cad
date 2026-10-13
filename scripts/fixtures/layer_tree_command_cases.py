@@ -617,6 +617,18 @@ def set_cases():
                                edit_flags(changed(changed(t, "bina", locked=False), "koruma", locked=False)))]})
     out.append({"name": "Kilitle: zaten kilitli bir şey değiştirmez",
                 "steps": [step("execute", {"operation": "locked", "layer": "bina", "value": True}, set_result(False), unchanged(t))]})
+    # Yazdır (docs/adr/0260 §4): only false is kept; true takes the field away.
+    out.append({"name": "Yazdırma: katman yazdırılmaz; düzenlemedir, geri alma adımı değildir (ADR 0260 §4)",
+                "steps": [step("execute", {"operation": "plot", "layer": "yol", "value": False}, set_result(), edit_flags(changed(t, "yol", plot=False))),
+                          step("undo", returns=None, expect={"layers": changed(t, "yol", plot=False)})]})
+    out.append({"name": "Yazdırma: grup altındakileriyle yazdırılmaz; yeniden açılınca alan kalkar",
+                "steps": [step("execute", {"operation": "plot", "layer": "kadastro", "value": False}, set_result(), edit_flags(changed(t, "kadastro", plot=False))),
+                          step("execute", {"operation": "plot", "layer": "kadastro", "value": True}, set_result(), edit_flags(t))]})
+    out.append({"name": "Yazdırma: zaten yazdırılan bir şey değiştirmez",
+                "steps": [step("execute", {"operation": "plot", "layer": "yol", "value": True}, set_result(False), unchanged(t))]})
+    out.append(refused("Yazdırma: değersiz", {"operation": "plot", "layer": "parsel"}, "no_value",
+                       "Açık mı kapalı mı olduğunu value ile verin (true ya da false).", "value", t))
+    out.append(refused("Yazdırma: katmansız", {"operation": "plot", "value": False}, "no_layer", "Katmanı ya da grubu kimliğiyle verin (layer).", "layer", t))
     out.append({"name": "Etkin katman: dosyada saklanır ama düzenleme değildir (sürüm aynı)",
                 "steps": [step("execute", {"operation": "active", "layer": "yol"}, set_result(True, "yol"),
                                {"layers": t, "activeLayer": "yol", "revision": "same", "dirty": False, "canUndo": False})]})

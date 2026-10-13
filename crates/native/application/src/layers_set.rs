@@ -19,7 +19,11 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
     use LayerSetOperation as Op;
     let op = input.operation;
-    if matches!(op, Op::Rename | Op::Visible | Op::Locked | Op::Active) && input.layer.is_none() {
+    if matches!(
+        op,
+        Op::Rename | Op::Visible | Op::Locked | Op::Plot | Op::Active
+    ) && input.layer.is_none()
+    {
         return Err(fail(
             codes::NO_LAYER,
             "Katmanı ya da grubu kimliğiyle verin (layer).".into(),
@@ -40,7 +44,7 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
             "name",
         ));
     }
-    if matches!(op, Op::Visible | Op::Locked) && input.value.is_none() {
+    if matches!(op, Op::Visible | Op::Locked | Op::Plot) && input.value.is_none() {
         return Err(fail(
             codes::NO_VALUE,
             "Açık mı kapalı mı olduğunu value ile verin (true ya da false).".into(),
@@ -160,6 +164,7 @@ fn write(doc: &mut Document, input: &LayersSet) -> LayersChanged {
             doc.revision() != before
         }
         Op::Locked => doc.set_layer_locked(id, value),
+        Op::Plot => doc.set_layer_plot(id, value),
         Op::Active => {
             let before = doc.layers().active() != id;
             doc.set_active_layer(id) && before

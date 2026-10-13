@@ -42,6 +42,10 @@ pub struct Common {
     pub extrusion: P3,
     pub paper: bool,
     pub invisible: bool,
+    /// Its line type's name (6), pattern scale (48) and transparency (440; docs/adr/0260).
+    pub line_type: Option<String>,
+    pub ltscale: Option<f64>,
+    pub transparency: Option<i64>,
 }
 
 #[derive(Clone, Debug)]
@@ -372,6 +376,12 @@ fn common(list: &[Pair<'_>], dec: Decoder) -> Result<Common, Unreadable> {
         ],
         paper: g.int(67) == 1,
         invisible: g.int(60) == 1,
+        line_type: g.has(6).then(|| g.string(6)),
+        ltscale: list
+            .iter()
+            .find(|p| p.code == 48)
+            .and_then(|p| crate::num::parse_real(p.text())),
+        transparency: g.has(440).then(|| g.int(440)),
     })
 }
 

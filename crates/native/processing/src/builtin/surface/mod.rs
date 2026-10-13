@@ -327,6 +327,7 @@ pub(crate) fn base(
     line_weight: Option<f64>,
 ) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: layer.to_owned(),
         color: None,

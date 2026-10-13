@@ -447,6 +447,12 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub compose: Option<crate::layer_compose::LayerCompose>,
+    /// Yazdır: absent, it is printed; `false`, it is drawn on screen but not
+    /// on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
+    /// docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub plot: Option<bool>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

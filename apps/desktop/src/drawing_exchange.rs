@@ -351,6 +351,7 @@ fn put_nodes(
         match model.layers().get(&n.id).map(|m| m.style.clone()) {
             None => {
                 let new = NewLayer {
+                    plot: None,
                     id: Some(n.id.clone()),
                     name: n.name.clone(),
                     kind: n.kind,

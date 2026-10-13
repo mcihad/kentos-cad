@@ -329,6 +329,16 @@ fn line(
 
 /// Builds a layer as the page does: the store, the program and the table of the fields its expressions read.
 fn build(program: &str, objects: &[Obj], origin: Vec2) -> (Vec<Json>, Vec<f32>) {
+    build_banded(program, objects, origin, &[])
+}
+
+/// As `build`, the objects in the draw order bands given (docs/adr/0260 §3).
+fn build_banded(
+    program: &str,
+    objects: &[Obj],
+    origin: Vec2,
+    bands: &[i32],
+) -> (Vec<Json>, Vec<f32>) {
     let program = Program::read(program).expect("program");
     let mut store = Store::new();
     let mut ids = Vec::new();
@@ -367,6 +377,7 @@ fn build(program: &str, objects: &[Obj], origin: Vec2) -> (Vec<Json>, Vec<f32>) 
         text_lens: &lens,
         numbers: &numbers,
         pieces: &[],
+        bands,
     };
     let out = build_layer(&store, &program, &objects, None, origin, 1000.0, false).expect("build");
     let Json::Arr(batches) = Json::parse(&out.json).expect("json") else {
@@ -722,6 +733,48 @@ fn a_leader_strokes_its_lines_and_fills_its_arrowhead() {
     let (open, _) = build(&p, &[leader(Some("open"))], v(0.0, 0.0));
     assert_eq!(kinds(&open), ["stroke"]);
     assert_eq!(strokes(&open), [("#FF0000".into(), None, None)]);
+}
+
+/// Draw order bands (docs/adr/0260 §3): without them a layer's fills draw
+/// under all its strokes; an object brought to the front gets its own band,
+/// so its fill draws over the strokes of those behind it.
+#[test]
+fn an_object_brought_to_the_front_draws_its_fill_over_the_strokes_behind() {
+    let p = format!(
+        r##"{{"symbols":{{}},"renderer":null,"sets":[{{"line":{RED},"fill":{{"type":"fill","layers":[{{"id":"s","type":"simpleFill","color":"#FF0000"}}]}}}}],"refs":[],"colors":["#FF0000"],"assets":{{}}}}"##
+    );
+    let leader = |y: f64| Obj {
+        shape: Shape::Leader {
+            pts: vec![v(0.0, y), v(0.0, y + 4.0)],
+            text: None,
+            height: 3.0,
+            rotation: 0.0,
+            arrow: None,
+            arrow_size: None,
+            mask: None,
+        },
+        attrs: &[],
+        how: [MODE_SET, 0, 0, 0],
+    };
+    let kinds = |batches: &[Json]| {
+        batches
+            .iter()
+            .map(|b| text(b.get("kind")).to_owned())
+            .collect::<Vec<_>>()
+    };
+    let two = [leader(0.0), leader(10.0)];
+    let (flat, _) = build_banded(&p, &two, v(0.0, 0.0), &[]);
+    assert_eq!(kinds(&flat), ["fill", "stroke"]);
+    let (same, _) = build_banded(&p, &two, v(0.0, 0.0), &[0, 0]);
+    assert_eq!(kinds(&same), ["fill", "stroke"]);
+    let (front, _) = build_banded(&p, &two, v(0.0, 0.0), &[2, 0]);
+    assert_eq!(kinds(&front), ["fill", "stroke", "fill", "stroke"]);
+    // The second band is the first object's: its arrowhead is at y = 0.
+    let bounds = |b: &Json| match b.get("bounds") {
+        Json::Arr(xs) => xs.get(1).and_then(number).unwrap_or(f64::NAN),
+        _ => f64::NAN,
+    };
+    assert!(bounds(&front[2]) < 1.0 && bounds(&front[0]) > 9.0);
 }
 
 /// A multi-point object (docs/adr/0174) is drawn point by point with the

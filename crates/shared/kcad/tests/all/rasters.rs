@@ -70,6 +70,7 @@ fn raster(fields: impl FnOnce(&mut RasterFields)) -> Entity {
     fields(&mut raster);
     Entity::Raster(RasterEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "0".into(),
             color: None,

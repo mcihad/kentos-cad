@@ -107,6 +107,7 @@ fn whole_layers_as_frozen() {
                 text_lens: &lens,
                 numbers: &numbers,
                 pieces: &[],
+                bands: &[],
             },
             clip.as_ref(),
             origin,

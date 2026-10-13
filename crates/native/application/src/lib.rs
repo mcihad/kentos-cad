@@ -72,6 +72,7 @@ pub use break_join::{entities_break, entities_join};
 pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use region::{entities_boundary, entities_hatch};
+pub mod entities_order;
 pub mod file_import;
 pub mod geometry_store;
 pub mod import_apply;
@@ -151,6 +152,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION),
     (CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION),
     (CAD_ENTITIES_ARRAY, CAD_ENTITIES_ARRAY_VERSION),
+    // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
+    (
+        kentos_contracts::CAD_ENTITIES_ORDER,
+        kentos_contracts::CAD_ENTITIES_ORDER_VERSION,
+    ),
     // A NURBS curve by control points or through points ([`nurbs`], docs/adr/0259).
     (
         kentos_contracts::CAD_NURBS_CREATE,

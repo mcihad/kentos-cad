@@ -240,6 +240,10 @@ fn check(doc: &Document, input: &NurbsCreate) -> Result<(Vec<CommandWarning>, Cu
 fn entity(input: NurbsCreate, curve: Curve) -> Entity {
     Entity::Nurbs(NurbsEntity {
         base: EntityBase {
+            look: kentos_contracts::ObjectLook {
+                line_type: input.line_type,
+                ..Default::default()
+            },
             id: 0,
             layer_id: input.layer_id,
             color: input.color,

@@ -36,6 +36,7 @@ pub(crate) fn input_as(
         objects: geometries
             .into_iter()
             .map(|geometry| NewObject {
+                line_type: None,
                 geometry,
                 color: look.color.clone(),
                 line_weight: look.line_weight,

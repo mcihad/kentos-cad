@@ -239,6 +239,7 @@ mod tests {
 
     fn node(id: &str, kind: LayerNodeType, children: Vec<LayerNode>) -> LayerNode {
         LayerNode {
+            plot: None,
             id: id.to_owned(),
             name: id.to_owned(),
             kind,

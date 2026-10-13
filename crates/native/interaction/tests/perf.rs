@@ -19,6 +19,7 @@ const N: f64 = 4420000.0;
 
 fn base(layer: &str) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: layer.into(),
         color: None,

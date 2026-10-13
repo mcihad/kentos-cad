@@ -38,6 +38,7 @@ fn batches(e: &Entity) -> (usize, usize) {
     let library = StyleLibrary::default();
     let names = |_: &str| "A".to_owned();
     let opts = BuildOptions {
+        layer_styles: None,
         origin: Vec2::new(0.0, 0.0),
         plot_scale: 1000.0,
         screen: false,

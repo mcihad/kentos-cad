@@ -59,6 +59,9 @@ struct Entry {
     style: String,
     scale: Scale,
     level: f64,
+    /// The draw order band of its objects (docs/adr/0260 §3): bands draw one
+    /// after another, each with its own fills under its own strokes.
+    band: i32,
     order: usize,
     data: Vec<f64>,
     bounds: [f64; 4],
@@ -113,6 +116,8 @@ pub struct BatchSink {
     group: u32,
     group_json: String,
     groups: HashMap<String, u32>,
+    /// The draw order band of what follows (0 unless an object has its own order).
+    band: i32,
 }
 
 /// How many styles of a kind are remembered.
@@ -194,6 +199,20 @@ impl BatchSink {
             group: 0,
             group_json: String::new(),
             groups: HashMap::new(),
+            band: 0,
+        }
+    }
+
+    /// The draw order band of what follows (docs/adr/0260 §3), until changed:
+    /// an object brought to the front draws over the strokes of those behind
+    /// it, its fill too. The styles remembered are forgotten on a change, so
+    /// no batch takes primitives of two bands.
+    pub fn set_band(&mut self, band: i32) {
+        if band != self.band {
+            self.band = band;
+            self.recent_strokes = Recent::new();
+            self.recent_fills = Recent::new();
+            self.recent_markers = Recent::new();
         }
     }
 
@@ -246,6 +265,11 @@ impl BatchSink {
             number::to_string(tile[1]),
             self.group
         );
+        let k = if self.band == 0 {
+            k
+        } else {
+            format!("{k}|b{}", self.band)
+        };
         if let Some(&i) = self.index.get(&k) {
             return i;
         }
@@ -259,6 +283,7 @@ impl BatchSink {
             style: style(),
             scale: self.scale,
             level,
+            band: self.band,
             order: self.entries.len(),
             data: Vec::new(),
             bounds: [
@@ -354,7 +379,9 @@ impl BatchSink {
         stable_sort(&mut order, &mut |&a, &b| {
             let (a, b) = (&self.entries[a], &self.entries[b]);
             // An effect group's batches stay together (docs/adr/0226 §2); 0 is none.
-            js_cmp(a.level, b.level)
+            a.band
+                .cmp(&b.band)
+                .then(js_cmp(a.level, b.level))
                 .then(a.group.cmp(&b.group))
                 .then(a.kind.cmp(&b.kind))
                 .then(a.order.cmp(&b.order))

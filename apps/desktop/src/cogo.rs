@@ -314,6 +314,9 @@ impl App {
                         attrs.insert(cogo::ARC.to_owned(), Some(fixed(a, 3)));
                     }
                     let input = EntitiesSetProperties {
+                        line_type: None,
+                        line_type_scale: None,
+                        transparency: None,
                         uids: vec![uid.to_string()],
                         layer_id: None,
                         color: None,

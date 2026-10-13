@@ -49,12 +49,12 @@ use crate::{
     SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_LABELS,
     SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
-    SCHEMA_WITH_NURBS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS,
-    SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_REQUESTS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS, SCHEMA_WITH_STYLES,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LOOK, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM,
+    SCHEMA_WITH_NETWORKS, SCHEMA_WITH_NURBS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_RASTERS,
+    SCHEMA_WITH_REQUESTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES,
+    SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
     SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
 };
 use names::{
@@ -720,10 +720,11 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.filter.is_some())
                 + usize::from(!n.actions.is_empty())
                 + usize::from(n.card.is_some())
-                + usize::from(compose.is_some()),
+                + usize::from(compose.is_some())
+                + usize::from(n.plot == Some(false)),
             true,
         )?;
-        // id (2), card feed name snap time type (4), style (5), fields filter locked (6),
+        // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
         // actions compose service visible (7), children expanded replaces scenario (8).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
@@ -743,6 +744,20 @@ impl<'d> Encoder<'d> {
         }
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&n.name))?;
+        // Yazdır (docs/adr/0260 §4): only `false` is written.
+        match n.plot {
+            Some(false) => {
+                self.key("plot");
+                self.w.bool(false);
+            }
+            Some(true) => {
+                return Err(self.fail(
+                    Code::BadValue,
+                    "plot yalnız false yazılır; yazdırılan katmanda alan yoktur",
+                ));
+            }
+            None => {}
+        }
         if let Some(snap) = &n.snap {
             self.key("snap");
             self.at(Seg::Name("snap"), |e| e.layer_snap(n.kind, snap))?;
@@ -1107,6 +1122,19 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 48 (docs/adr/0260): an object's look, a block definition's too, or a layer not printed.
+    fn unprinted(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.plot == Some(false) || unprinted(&n.children))
+    }
+    let looks = |list: &[Entity]| list.iter().any(|e| !e.base().look.is_empty());
+    if looks(&doc.entities)
+        || doc.blocks.iter().any(|b| looks(&b.entities))
+        || unprinted(&doc.layers)
+    {
+        return SCHEMA_WITH_LOOK;
     }
     // Schema 47 (docs/adr/0259): a NURBS curve, a block definition's too.
     let curves = |list: &[Entity]| list.iter().any(|e| matches!(e, Entity::Nurbs(_)));

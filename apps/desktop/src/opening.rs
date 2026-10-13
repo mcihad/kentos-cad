@@ -406,6 +406,7 @@ impl App {
             | Message::PromptOption(_)
             | Message::LayerVisible(_)
             | Message::LayerLocked(_)
+            | Message::LayerPlot(_)
             | Message::Settings(_)
             | Message::Viewport(viewport::Event::Pressed(_) | viewport::Event::RightClick(_)) => {
                 Some(Task::none())

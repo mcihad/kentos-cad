@@ -83,6 +83,21 @@ impl App {
         self.set_layers(input);
     }
 
+    /// Yazdır: a node printed or not (`cad.layers.set`'s `plot`, docs/adr/0260 §4).
+    pub(crate) fn toggle_layer_plot(&mut self, id: &str) {
+        let Some(printed) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(id))
+            .map(|n| n.plot != Some(false))
+        else {
+            return;
+        };
+        let mut input = LayersSet::new(LayerSetOperation::Plot, Some(id.to_owned()));
+        input.value = Some(!printed);
+        self.set_layers(input);
+    }
+
     /// Hepsini göster (`layer.showAll`).
     pub(crate) fn show_all_layers(&mut self) {
         self.set_layers(LayersSet::new(LayerSetOperation::ShowAll, None));

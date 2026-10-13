@@ -316,6 +316,7 @@ mod tests {
         remove_at(&mut s, i);
         s.entities.push(Entity::Point(PointEntity {
             base: EntityBase {
+                look: Default::default(),
                 id: 0,
                 layer_id: "cizim".into(),
                 color: None,

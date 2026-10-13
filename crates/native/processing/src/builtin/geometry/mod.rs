@@ -70,6 +70,7 @@ pub fn new_object(s: Shape, layer_id: &str, attrs: BTreeMap<String, String>) -> 
     Some(entity_of(
         &geometry,
         EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer_id.to_owned(),
             color: None,
@@ -171,6 +172,7 @@ pub fn edit_object(
     Some(entity_of(
         geometry,
         EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer_id.to_owned(),
             color: None,

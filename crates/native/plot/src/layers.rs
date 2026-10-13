@@ -39,6 +39,37 @@ pub struct Look {
     pub reading_unit: kentos_native_style::ReadingUnit,
 }
 
+/// The shown layers a sheet prints, bottom first: [`shown_layers`] without
+/// those a node not printed holds (Yazdır off, docs/adr/0260 §4).
+pub fn printed_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
+    fn walk<'a>(nodes: &'a [LayerNode], on: bool, out: &mut Vec<&'a LayerNode>) {
+        for node in nodes {
+            let on = on && node.visible && node.plot != Some(false);
+            match node.kind {
+                LayerNodeType::Layer => {
+                    if on {
+                        out.push(node);
+                    }
+                }
+                LayerNodeType::Group => walk(&node.children, on, out),
+            }
+        }
+    }
+    let mut out = Vec::new();
+    walk(nodes, true, &mut out);
+    out.reverse();
+    out
+}
+
+/// A layer's objects in its drawing order (docs/adr/0260 §5): by their
+/// order, absent 0, equals in the document's order.
+pub fn in_order(mut list: Vec<&kentos_contracts::Entity>) -> Vec<&kentos_contracts::Entity> {
+    if list.iter().any(|e| e.base().look.order.is_some()) {
+        list.sort_by_key(|e| e.base().look.order.unwrap_or(0));
+    }
+    list
+}
+
 /// The shown layers, bottom first (the top of the tree draws last), as the plain scene orders them.
 pub fn shown_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
     fn walk<'a>(nodes: &'a [LayerNode], visible: bool, out: &mut Vec<&'a LayerNode>) {
@@ -67,6 +98,22 @@ pub fn names(nodes: &[LayerNode], out: &mut HashMap<String, String>) {
     }
 }
 
+/// Every layer's look by id: what a block's piece that follows its own layer draws with (docs/adr/0260 §1).
+pub fn styles(nodes: &[LayerNode], out: &mut HashMap<String, kentos_contracts::LayerStyle>) {
+    for n in nodes {
+        out.insert(n.id.clone(), n.style.clone());
+        styles(&n.children, out);
+    }
+}
+
+/// The layer tree's tables a build reads: every layer's name (`$katman`) and look (a block's piece that follows its
+/// own layer, docs/adr/0260 §1), by id.
+#[derive(Clone, Copy)]
+pub struct LayerTables<'a> {
+    pub names: &'a HashMap<String, String>,
+    pub styles: &'a HashMap<String, kentos_contracts::LayerStyle>,
+}
+
 /// One layer through the style engine whole, as a sheet's map frame draws it (the web's
 /// app/sheet/mapFrames.ts `styleAt` and `buildStyledLayer`): its objects' symbols at `look`'s
 /// scale and palette, its construction lines clipped to `clip`; empty where the engine refuses it.
@@ -77,9 +124,11 @@ pub fn build_whole(
     entities: &[&Entity],
     look: &Look,
     clip: Bounds,
-    names: &HashMap<String, String>,
+    tables: LayerTables<'_>,
 ) -> StyledLayer {
+    let names = tables.names;
     let opts = BuildOptions {
+        layer_styles: Some(tables.styles),
         origin: look.origin,
         plot_scale: look.symbol_scale,
         screen: look.screen,

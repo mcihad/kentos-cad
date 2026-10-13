@@ -3,4 +3,4 @@
 /**
  * What `cad.layers.set` does.
  */
-export type LayerSetOperation = "rename" | "visible" | "locked" | "active" | "isolate" | "showAll";
+export type LayerSetOperation = "rename" | "visible" | "locked" | "active" | "isolate" | "showAll" | "plot";

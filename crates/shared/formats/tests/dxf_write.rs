@@ -31,6 +31,7 @@ fn tm(dy: f64, dx: f64) -> Vec2 {
 
 fn base(layer: &str) -> EntityBase {
     EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: layer.into(),
         color: None,
@@ -58,6 +59,7 @@ fn layer(
     weight: f64,
 ) -> DxfWriteLayer {
     DxfWriteLayer {
+        plot: None,
         id: id.into(),
         name: name.into(),
         path: path.iter().map(|s| s.to_string()).collect(),
@@ -2926,4 +2928,58 @@ fn hatches_read_back_as_they_were() {
         );
         assert!(close_json(&g, &w), "{g}\n{w}");
     }
+}
+
+/// An object's look (docs/adr/0260): its own line type (with its LTYPE
+/// record), pattern scale and transparency go out as 6, 48 and 440 and come
+/// back as they were; a layer not printed goes out with 290 off and comes back
+/// so; the objects are written in their drawing order, read back without it.
+#[test]
+fn an_objects_look_and_a_layers_plot_go_out_and_come_back() {
+    let looked = |order: Option<i32>, f: &dyn Fn(&mut kentos_contracts::ObjectLook)| {
+        Entity::Line(LineEntity {
+            base: with("yapi", |b| {
+                f(&mut b.look);
+                b.look.order = order;
+            }),
+            a: tm(0.0, 0.0),
+            b: tm(10.0, 0.0),
+            za: None,
+            zb: None,
+            ma: None,
+            mb: None,
+        })
+    };
+    let objects = vec![
+        looked(Some(2), &|l| {
+            l.line_type = Some(LineType::Dashed);
+            l.line_type_scale = Some(2.5);
+            l.transparency = Some(0.5);
+        }),
+        looked(None, &|l| l.line_type = Some(LineType::Dotted)),
+        looked(Some(-1), &|l| l.transparency = Some(0.9)),
+    ];
+    let mut inp = input(objects.clone());
+    inp.layers[1].plot = Some(false);
+    let (text, _) = write(&inp);
+    let p = pairs(&text);
+    let lines = entities_of(&p, "LINE");
+    // Written in drawing order: −1, then 0 (no order), then 2.
+    assert_eq!(group(&lines[0], 440), Some("33554457"));
+    assert_eq!(group(&lines[1], 6), Some("DOT"));
+    assert_eq!(group(&lines[2], 6), Some("DASHED"));
+    assert_eq!(group(&lines[2], 48).map(|s| s.trim()), Some("2.5"));
+    assert_eq!(group(&lines[2], 440), Some("33554560"));
+    let r = read(&text);
+    let looks: Vec<_> = r.entities.iter().map(|e| e.base().look.clone()).collect();
+    assert_eq!(looks[0].transparency, Some(0.9));
+    assert_eq!(looks[1].line_type, Some(LineType::Dotted));
+    assert_eq!(
+        (looks[2].line_type, looks[2].line_type_scale, looks[2].transparency),
+        (Some(LineType::Dashed), Some(2.5), Some(0.5))
+    );
+    assert!(looks.iter().all(|l| l.order.is_none()));
+    let yapi = r.layers.iter().find(|l| l.name == "Yapı").expect("the layer");
+    assert_eq!(yapi.plot, Some(false));
+    assert!(r.layers.iter().filter(|l| l.name != "Yapı").all(|l| l.plot.is_none()));
 }

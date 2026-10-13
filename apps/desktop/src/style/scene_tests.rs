@@ -26,6 +26,7 @@ use crate::document::Document;
 
 fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
     LayerNode {
+        plot: None,
         id: id.into(),
         name: id.into(),
         kind: LayerNodeType::Layer,
@@ -62,6 +63,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
 fn drawing(n: usize, renderer: Option<Value>) -> Document {
     let mut entities = Vec::with_capacity(n + 10);
     let base = |id: u32, layer: &str| EntityBase {
+        look: Default::default(),
         id,
         layer_id: layer.into(),
         color: None,
@@ -343,6 +345,7 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
     let look = look(&doc);
     let names = |id: &str| id.to_owned();
     let opts = BuildOptions {
+        layer_styles: None,
         origin: look.origin,
         plot_scale: look.symbol_scale,
         screen: look.screen,

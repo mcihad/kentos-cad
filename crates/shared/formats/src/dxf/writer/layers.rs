@@ -108,6 +108,8 @@ pub(super) struct Layer {
     pub locked: bool,
     pub line_type: LineType,
     pub weight: i64,
+    /// Printed (DXF's 290; docs/adr/0260 §4).
+    pub plot: bool,
 }
 
 pub(super) struct Layers {
@@ -216,6 +218,7 @@ impl Layers {
                 locked: l.locked,
                 line_type: l.line_type,
                 weight,
+                plot: l.plot != Some(false),
             });
         }
         Layers { list, by_id, zero }
@@ -293,6 +296,7 @@ impl Layers {
                     locked: false,
                     line_type: LineType::Continuous,
                     weight: -3,
+                    plot: true,
                 },
             ),
         }
@@ -314,6 +318,9 @@ impl Layers {
             out.int(420, rgb);
         }
         out.str(6, ltype_name(l.line_type));
+        if !l.plot {
+            out.int(290, 0);
+        }
         out.int(370, l.weight);
         out.handle(390, PLOT_STYLE);
         out.handle(347, MATERIAL);
@@ -330,6 +337,7 @@ mod tests {
 
     fn layer(id: &str, name: &str, path: &[&str]) -> DxfWriteLayer {
         DxfWriteLayer {
+            plot: None,
             id: id.into(),
             name: name.into(),
             path: path.iter().map(|s| s.to_string()).collect(),

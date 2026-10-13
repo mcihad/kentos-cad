@@ -41,6 +41,7 @@ fn v(x: f64, y: f64) -> Vec2 {
 fn hatch(pattern: HatchPattern, assoc: Option<HatchAssoc>) -> Entity {
     Entity::Hatch(HatchEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "0".into(),
             color: None,

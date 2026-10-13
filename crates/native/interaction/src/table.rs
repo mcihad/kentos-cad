@@ -177,6 +177,7 @@ pub fn new_table(
 pub fn fit(doc: &Document, geometry: &mut EntityGeometry) {
     let font = drawing_font(doc.settings().drawing_font);
     let base = EntityBase {
+        look: Default::default(),
         id: 0,
         layer_id: String::new(),
         color: None,

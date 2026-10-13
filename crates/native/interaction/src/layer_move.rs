@@ -157,6 +157,9 @@ pub use kentos_native_application::layers_edit::new_object;
 /// Katmanı eşle's write: one `cad.entities.set` in the step “Katmanı eşle”.
 fn move_to(objects: &[Slot], layer: &str, name: &str, cx: &mut Context<'_>) {
     let input = EntitiesSetProperties {
+        line_type: None,
+        line_type_scale: None,
+        transparency: None,
         uids: objects
             .iter()
             .filter_map(|s| cx.doc.uid(*s))

@@ -260,6 +260,9 @@ pub struct Draft {
     /// Kalınlık, the web's `ctx.settings.lineWeight`; docs/adr/0139); `None`:
     /// the layer's (“Katmana göre”).
     pub line_weight: Option<f64>,
+    /// The line type new objects drawn with lines take (the ribbon's Çizgi
+    /// tipi; docs/adr/0260 §2); `None`: the layer's (“Katmana göre”).
+    pub line_type: Option<kentos_contracts::LineType>,
     /// How a geographic second system's values are written
     /// (`display.geographic`, docs/adr/0167 §1).
     pub geographic: crate::second::Notation,
@@ -296,6 +299,7 @@ impl Default for Draft {
             topology_points: false,
             overlap: Overlap::Allow,
             color: None,
+            line_type: None,
             line_weight: None,
             geographic: crate::second::Notation::Dms,
             select_kinds: None,

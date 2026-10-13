@@ -220,6 +220,12 @@
         {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 7.5, "label": "A1", "symbol": "temel.alan.dolu", "attrs": {"Tür": "Ağaç"}}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "circle", "id": 10, "layerId": "yapi", "attrs": {"Tür": "Ağaç"}, "label": "A1", "symbol": "temel.alan.dolu", "c": {"x": 487020, "y": 4420015}, "r": 7.5}}, "revision": "changed"}},
         {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9]}}
       ]
+    },
+    {
+      "name": "kendi çizgi tipiyle yazılır (ADR 0260 §2): şeridin Çizgi tipi yeni nesneye girdinin lineType'ıyla gelir; verilmezse katmanınkidir",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "c": { "x": 487020, "y": 4420015 }, "r": 7.5, "lineType": "dashdot" }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "circle", "id": 10, "layerId": "yapi", "attrs": {}, "lineType": "dashdot", "c": { "x": 487020, "y": 4420015 }, "r": 7.5 } }, "revision": "changed" } }
+      ]
     }
   ]
 }

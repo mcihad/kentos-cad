@@ -46,6 +46,7 @@ pub fn add_points(
                 attrs.insert("Z (m)".to_owned(), fixed(z, 3));
             }
             NewObject {
+                line_type: None,
                 geometry: EntityGeometry::Point {
                     p: Wire {
                         x: pt.p.x,

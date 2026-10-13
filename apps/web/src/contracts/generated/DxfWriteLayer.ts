@@ -26,4 +26,9 @@ visible: boolean, locked: boolean, lineType: LineType,
 /**
  * Plot line weight in mm (written as AutoCAD's nearest weight).
  */
-lineWeight: number, };
+lineWeight: number, 
+/**
+ * Yazdır (docs/adr/0260 §4): absent, printed; `false`, written with
+ * DXF's plot switch off (290).
+ */
+plot?: boolean, };

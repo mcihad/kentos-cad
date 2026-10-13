@@ -91,6 +91,7 @@ fn place(
     let entity = kentos_native_application::geometry::entity_of(
         &geometry,
         kentos_contracts::EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".into(),
             color: None,

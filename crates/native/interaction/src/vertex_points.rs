@@ -100,6 +100,7 @@ impl VertexPoints {
         let objects = points
             .iter()
             .map(|pt| NewObject {
+                line_type: None,
                 geometry: EntityGeometry::Point {
                     p: wire(pt.p),
                     z: pt.z,

@@ -40,6 +40,7 @@ fn without_slots(doc: &DocumentSnapshotV2) -> Value {
 fn point(x: f64) -> Entity {
     Entity::Point(PointEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".into(),
             color: None,

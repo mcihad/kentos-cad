@@ -676,6 +676,7 @@ fn an_arm_on_the_vertex_is_refused_and_esc_steps_back() {
 fn with_point(b: &mut Bench, at: [f64; 2], z: Option<f64>) {
     let point = Entity::Point(PointEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: "cizim".to_owned(),
             color: None,

@@ -422,7 +422,12 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             arrows: &mut arrows,
             pen: entities::Pen::default(),
         };
-        for e in &input.entities {
+        // In their drawing order (docs/adr/0260 §5): AutoCAD draws a file's objects in its order.
+        let mut drawn: Vec<&kentos_contracts::Entity> = input.entities.iter().collect();
+        if drawn.iter().any(|e| e.base().look.order.is_some()) {
+            drawn.sort_by_key(|e| e.base().look.order.unwrap_or(0));
+        }
+        for e in drawn {
             w.entity(e);
         }
         points |= w.points;

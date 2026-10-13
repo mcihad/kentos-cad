@@ -27,6 +27,7 @@ fn empty() -> Document {
 fn point(layer: &str, x: f64) -> Entity {
     Entity::Point(PointEntity {
         base: EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer.into(),
             color: None,

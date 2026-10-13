@@ -39,6 +39,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         entities.push(Entity::Polygon(PathEntity {
             ms: None,
             base: EntityBase {
+                look: Default::default(),
                 id: i as u32 + 1,
                 layer_id: "parsel".into(),
                 color: None,
@@ -99,6 +100,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         },
         home_view: None,
         layers: vec![LayerNode {
+            plot: None,
             id: "parsel".into(),
             name: "Parsel".into(),
             kind: LayerNodeType::Layer,

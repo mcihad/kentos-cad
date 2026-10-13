@@ -163,14 +163,27 @@ impl SheetMaps {
         );
         let mut names = std::collections::HashMap::new();
         crate::style::scene::names(doc.model.layers().nodes(), &mut names);
+        let mut styles = std::collections::HashMap::new();
+        kentos_plot::layers::styles(doc.model.layers().nodes(), &mut styles);
         let mut layers = Vec::new();
-        for node in crate::style::scene::shown_layers(doc.model.layers().nodes()) {
-            let objects: Vec<&kentos_contracts::Entity> = doc.model.by_layer(&node.id).collect();
+        // What a sheet prints: Yazdır off leaves a layer out; its objects in their drawing order (docs/adr/0260).
+        for node in kentos_plot::layers::printed_layers(doc.model.layers().nodes()) {
+            let objects: Vec<&kentos_contracts::Entity> =
+                kentos_plot::layers::in_order(doc.model.by_layer(&node.id).collect());
             if objects.is_empty() {
                 continue;
             }
             let styled = crate::style::scene::build_whole(
-                store, library, node, &objects, &look, clip, &names,
+                store,
+                library,
+                node,
+                &objects,
+                &look,
+                clip,
+                kentos_plot::layers::LayerTables {
+                    names: &names,
+                    styles: &styles,
+                },
             );
             layers.push((node.id.clone(), node.name.clone(), styled));
         }

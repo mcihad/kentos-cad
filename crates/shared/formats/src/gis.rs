@@ -275,6 +275,7 @@ impl Collect {
             }
         }
         let base = EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: layer.to_string(),
             color: None,
@@ -423,6 +424,7 @@ impl Collect {
             }
             let i = *index.entry(base.layer_id.clone()).or_insert_with(|| {
                 layers.push(ImportLayer {
+                    plot: None,
                     name: base.layer_id.clone(),
                     color: "ink".to_string(),
                     visible: true,

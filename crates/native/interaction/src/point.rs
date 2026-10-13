@@ -314,6 +314,9 @@ impl Point {
         let done = cx.doc.transact(CORRECT_LABEL, |doc| {
             if !given.is_empty() || !code.is_empty() {
                 let input = EntitiesSetProperties {
+                    line_type: None,
+                    line_type_scale: None,
+                    transparency: None,
                     uids: vec![uid.clone()],
                     layer_id: None,
                     color: None,

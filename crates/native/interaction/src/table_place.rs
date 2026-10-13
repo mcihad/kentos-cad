@@ -91,6 +91,7 @@ impl TablePlace {
         };
         let geometry = placed(&self.table, h);
         let base = EntityBase {
+            look: Default::default(),
             id: 0,
             layer_id: String::new(),
             color: None,
