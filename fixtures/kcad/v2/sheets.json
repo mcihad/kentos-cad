@@ -1,0 +1,177 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Paftalı proje",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "P1"
+      },
+      "p": {
+        "x": 500001.25,
+        "y": 4400002.5
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "sheets": {
+    "book": {
+      "schema": "kentos.sheet/1",
+      "sheets": [
+        {
+          "id": "pafta-1",
+          "name": "Büro paftası",
+          "page": {
+            "paper": "a4",
+            "orientation": "portrait",
+            "size": {
+              "width": 210000,
+              "height": 297000
+            },
+            "margins": {
+              "top": 10000,
+              "right": 10000,
+              "bottom": 10000,
+              "left": 20000
+            }
+          },
+          "items": [
+            {
+              "id": "harita",
+              "name": "Harita",
+              "frame": {
+                "left": 25000,
+                "top": 15000,
+                "width": 170000,
+                "height": 220000
+              },
+              "constraints": {
+                "h": "leftRight",
+                "v": "topBottom"
+              },
+              "kind": {
+                "type": "map",
+                "view": {
+                  "type": "fixed",
+                  "scale": 500
+                }
+              }
+            },
+            {
+              "id": "logo",
+              "name": "Logo",
+              "frame": {
+                "left": 25000,
+                "top": 245000,
+                "width": 30000,
+                "height": 30000
+              },
+              "constraints": {
+                "h": "left",
+                "v": "bottom"
+              },
+              "kind": {
+                "type": "picture",
+                "asset": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+              }
+            },
+            {
+              "id": "antet",
+              "name": "Antet",
+              "frame": {
+                "left": 60000,
+                "top": 245000,
+                "width": 135000,
+                "height": 30000
+              },
+              "constraints": {
+                "h": "right",
+                "v": "bottom"
+              },
+              "kind": {
+                "type": "titleBlock",
+                "rows": [
+                  {
+                    "cells": [
+                      {
+                        "label": "ADA",
+                        "value": "[% @ada %]"
+                      },
+                      {
+                        "label": "ÖLÇEK",
+                        "value": "[% @olcek %]"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "masters": [],
+      "assets": [
+        {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+        }
+      ],
+      "variables": [
+        {
+          "name": "proje_no",
+          "label": "Proje no",
+          "kind": "text",
+          "value": "2026/41"
+        }
+      ]
+    },
+    "pictures": [
+      {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+      }
+    ]
+  }
+}

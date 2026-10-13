@@ -199,6 +199,7 @@ impl ProjectSync {
                 blocks: known_blocks.iter().map(|(_, _, b)| (**b).clone()).collect(),
                 project_id: Some(ProjectId(self.project.into_bytes())),
                 migrated_from: None,
+                sheets: None,
             },
             versions,
             block_versions: known_blocks.into_iter().map(|(id, v, _)| (id, v)).collect(),

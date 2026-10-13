@@ -13,7 +13,7 @@ use std::sync::Arc;
 use kentos_contracts::{
     BlockDefinition, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV1,
     DocumentSnapshotV2, Entity, EntityId, LayerNode, LayerNodeType, MigrationSource, ProjectId,
-    ProjectSettings, v1_uids,
+    ProjectSettings, ProjectSheets, v1_uids,
 };
 
 use crate::document::Document;
@@ -28,6 +28,7 @@ struct Parts {
     uids: Vec<Uuid>,
     project_id: Option<Uuid>,
     migrated_from: Option<MigrationSource>,
+    sheets: Option<ProjectSheets>,
 }
 
 impl Document {
@@ -50,6 +51,7 @@ impl Document {
                 .collect(),
             project_id: Some(Uuid::from_bytes(ids.project)),
             migrated_from: Some(MigrationSource::v1(ids.source_sha256)),
+            sheets: None,
             snapshot,
         }))
     }
@@ -77,6 +79,13 @@ impl Document {
                 ));
             }
         }
+        if let Some((at, why)) = snapshot
+            .sheets
+            .as_ref()
+            .and_then(kentos_contracts::sheets_problem)
+        {
+            return Err(format!("{at}: {why}"));
+        }
         let DocumentSnapshotV2 {
             name,
             settings,
@@ -90,6 +99,7 @@ impl Document {
             blocks,
             project_id,
             migrated_from,
+            sheets,
             ..
         } = snapshot;
         Ok(Self::build(Parts {
@@ -109,6 +119,7 @@ impl Document {
             uids: uids.iter().map(|u| Uuid::from_bytes(u.0)).collect(),
             project_id: project_id.map(|p| Uuid::from_bytes(p.0)),
             migrated_from,
+            sheets,
         }))
     }
 
@@ -149,6 +160,7 @@ impl Document {
             blocks: blocks.into_iter().map(Arc::new).collect(),
             project_id: parts.project_id,
             migrated_from: parts.migrated_from,
+            sheets: parts.sheets.map(Arc::new),
             layers: LayerTree::new(layers, &active_layer),
             store,
             next_slot: u64::from(largest) + 1,
@@ -179,7 +191,7 @@ impl Document {
 
     /// The drawing as a v2 snapshot to write (docs/specs/kcad-v2.md): deep
     /// copies, objects in document order with their persistent ids, the
-    /// project's id and source record.
+    /// project's id and source record, its sheet book (docs/adr/0251).
     pub fn to_snapshot_v2(&self) -> DocumentSnapshotV2 {
         let (entities, uids) = self
             .store
@@ -201,6 +213,7 @@ impl Document {
             blocks: self.block_list(),
             project_id: self.project_id.map(|p| ProjectId(p.into_bytes())),
             migrated_from: self.migrated_from.clone(),
+            sheets: self.sheets.as_deref().cloned(),
         }
     }
 }

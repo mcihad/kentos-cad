@@ -748,7 +748,7 @@ fn a_sheet_saved_as_a_template_is_kept_and_found_again() {
     let dir = std::env::temp_dir().join(format!("kentos-sheet-ui-test-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let mut d = Designer::new(context());
-    d.attach(Store::open(&dir).unwrap(), "dosya/ada.kcad");
+    d.attach(Store::open(&dir).unwrap());
     new_sheet(&mut d);
     let title = item(&d, "Başlık").clone();
     d.update(Message::Select(vec![title.id.clone()]));
@@ -760,9 +760,12 @@ fn a_sheet_saved_as_a_template_is_kept_and_found_again() {
         matches!(effects.as_slice(), [Effect::Say(Say::Success, n)] if n.contains("Bürom") && n.contains("Benim")),
         "{effects:?}"
     );
-    // Another designer on the same store: the book and the template are there.
+    // Another designer on the same store, with the project's book: the book and the template are there.
     let mut again = Designer::new(context());
-    again.attach(Store::open(&dir).unwrap(), "dosya/ada.kcad");
+    again.attach(Store::open(&dir).unwrap());
+    let sheets = d.project_sheets().expect("writes").expect("a book");
+    let (book, pictures) = kentos_sheet::project::read_project_sheets(&sheets).expect("reads");
+    again.open_project(book, pictures);
     assert_eq!(again.book(), d.book());
     again.update(Message::Gallery(GalleryMessage::Open));
     again.update(Message::Gallery(GalleryMessage::Source(Source::Mine)));

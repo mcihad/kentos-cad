@@ -17,7 +17,7 @@ use std::sync::Arc;
 
 use kentos_contracts::{
     Entity, EntityBase, LayerField, LayerNodeType, LayerSnap, LayerStyle, ProjectSettings,
-    ProjectStyles, fields_problem,
+    ProjectSheets, ProjectStyles, fields_problem, sheets_problem,
 };
 
 use crate::document::Document;
@@ -850,6 +850,22 @@ impl Document {
             self.styles = styles;
             self.mark_edited();
         }
+    }
+
+    /// Replaces the project's sheet book and its pictures (docs/adr/0251;
+    /// none: the project has no book): an edit when it differs, never an
+    /// undo step. The book is the paper's: the sheet designer keeps its own
+    /// undo, the drawing's undo does not take a sheet back. Refused, with
+    /// the reason, when the file format could not keep it (`sheets_problem`).
+    pub fn set_sheets(&mut self, sheets: Option<ProjectSheets>) -> Result<(), String> {
+        if let Some((at, why)) = sheets.as_ref().and_then(sheets_problem) {
+            return Err(format!("{at}: {why}"));
+        }
+        if self.sheets.as_deref() != sheets.as_ref() {
+            self.sheets = sheets.map(Arc::new);
+            self.mark_edited();
+        }
+        Ok(())
     }
 }
 

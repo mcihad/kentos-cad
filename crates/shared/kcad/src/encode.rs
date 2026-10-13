@@ -24,6 +24,7 @@ mod names;
 mod networks;
 mod objects;
 mod services;
+mod sheets;
 mod styles;
 mod temporal;
 mod variables;
@@ -49,10 +50,10 @@ use crate::{
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_MEASURES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_NETWORKS,
     SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_RASTERS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_TRAVERSE_TOLERANCES,
-    SCHEMA_WITH_VARIABLES,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SERVICES, SCHEMA_WITH_SHEETS, SCHEMA_WITH_STYLES,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_TABLES, SCHEMA_WITH_TEMPORAL,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_TOPOLOGY,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_VARIABLES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, line_type, point_symbol, workspace,
@@ -267,9 +268,11 @@ impl<'d> Encoder<'d> {
         let optional = usize::from(!doc.blocks.is_empty())
             + usize::from(doc.home_view.is_some())
             + usize::from(doc.project_id.is_some())
-            + usize::from(doc.migrated_from.is_some());
+            + usize::from(doc.migrated_from.is_some())
+            + usize::from(doc.sheets.is_some());
         self.open(7 + optional, true)?;
-        // name (4), blocks layers origin styles (6), entities homeView settings (8), projectId (9), activeLayer (11), migratedFrom (12).
+        // name (4), blocks layers origin sheets styles (6), entities homeView settings (8), projectId (9),
+        // activeLayer (11), migratedFrom (12).
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&doc.name))?;
         if !doc.blocks.is_empty() {
@@ -280,6 +283,10 @@ impl<'d> Encoder<'d> {
         self.at(Seg::Name("layers"), |e| e.layers(&doc.layers))?;
         self.key("origin");
         self.at(Seg::Name("origin"), |e| e.point(&doc.origin))?;
+        if let Some(sheets) = &doc.sheets {
+            self.key("sheets");
+            self.at(Seg::Name("sheets"), |e| e.sheets(sheets))?;
+        }
         self.key("styles");
         self.at(Seg::Name("styles"), |e| {
             e.open(2, true)?;
@@ -1093,6 +1100,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 44 (docs/adr/0251): the project's sheet book.
+    if doc.sheets.is_some() {
+        return SCHEMA_WITH_SHEETS;
     }
     // Schema 43 (docs/adr/0249 §4): a dimension's references (the drawing's only; a block
     // definition's are refused).

@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `43`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-44.kcad`) |
+| `version` | tam sayı | `2`'den `44`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-45.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -281,6 +281,8 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 43**, şema 42'nin kendisi ve ilişkili ölçüdür (ADR 0249 §4): ölçünün `refs`'i (§6.6), `a`, `b` ve `c` noktalarının izlediği nesne yerleri. `refs` yalnız belgenin ölçüsündedir (blok tanımının nesnelerinin kalıcı kimliği yoktur): şema 43'te blok tanımında bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/dimension-refs-in-block.kcad`). Yazıcı `43`'ü **yalnız bir ölçünün başvurusu varken** yazar. Başka her çizim şema 2–42'dir ve eskisiyle bayt bayt aynıdır. Şema 2–42 yükünde `refs` bilinmeyen alandır (`unknown_field`, `broken/dimension-refs-in-schema-42.kcad`): eski okuyucu ölçünün bağlarını bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 43 şema 42'yi kapsar. Örnek dosya `dimension-refs.kcad`.
 
+**Şema 44**, şema 43'ün kendisi ve projenin pafta kitabıdır (ADR 0251): belgenin `sheets`'i (§6.12), pafta çekirdeğinin kitabı (paftalar, ana sayfalar, değişkenler, resimlerin bilgileri) ve resimlerin baytları. Yazıcı `44`'ü **yalnız projenin pafta kitabı varken** yazar. Başka her çizim şema 2–43'tür ve eskisiyle bayt bayt aynıdır. Şema 2–43 yükünde `sheets` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/sheets-in-schema-43.kcad`): eski okuyucu paftaları bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 44 şema 43'ü kapsar. Örnek dosya `sheets.kcad`.
+
 Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
@@ -293,6 +295,7 @@ Tablolar anahtarları **dosyadaki sırasıyla** verir (§5.2). “Zorunlu” sü
 | `blocks` | dizi: blok tanımı (§6.9) | | yalnız şema 6: blok tanımları, sırasıyla; boş dizi yazılmaz (`bad_value`) |
 | `layers` | dizi: katman (§6.5) | evet | katman ağacının üst düzeyi, sırasıyla |
 | `origin` | nokta | evet | yerel orijin: verinin yakınında bir çapa (GPU ona göre çalışır) |
+| `sheets` | harita (§6.12) | | yalnız şema 44: projenin pafta kitabı ve resimlerinin baytları |
 | `styles` | harita (§6.7) | evet | projenin kendi stil kitaplığı |
 | `entities` | dizi: nesne (§6.6) | evet | nesneler, **belge sırasıyla** (çizim sırası) |
 | `homeView` | sınırlar | | başlangıç görünümü; yoksa bütün nesneler |
@@ -970,9 +973,31 @@ Dosya biçimi geçerli olsa da uygulamalar açılışta çizimin kendi kurallar�
 - en az bir katman (`type: layer`) olmalı; her nesnenin `layerId`'si bir katmanın (grubun değil) kimliği olmalı;
 - `srid` uygulamanın tanıdığı bir koordinat sistemi ya da yerel sistem (0) olmalı (tahmin yapılmaz);
 - `polyline`, `polygon` ve parça en az 2, delik ve `hatch` halkası en az 3, `spline` en az 2 nokta; `bulges` nokta sayısından uzun olamaz; çemberin yarıçapı pozitif;
-- proje stilleri paylaşılan bir `.kstil` dosyası gibi denetlenir.
+- proje stilleri paylaşılan bir `.kstil` dosyası gibi denetlenir;
+- pafta kitabı bir `.kpafta`'nın kitabı gibi pafta çekirdeğiyle okunur ve denetlenir (`kentos_sheet::validate::read_book`); okunamayan kitap açılışta söylenir, çizim açılır, kitap bir sonraki kayıtta olduğu gibi yazılır (§6.12).
 
 Bu kurallar dosya biçiminin değil çizimin kurallarıdır; `tools/kcad/kcad.py` onları denetlemez.
+
+### 6.12 Pafta kitabı
+
+Şema 44 (ADR 0251). `sheets` harita:
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `book` | opak harita (§6.7) | evet | pafta çekirdeğinin kitabı (`kentos.sheet/1`): paftalar, ana sayfalar, öğeler, değişkenler ve resimlerin bilgileri (`assets`: SHA-256, tür, ad, boy), kimlikleriyle; harita değilse `wrong_type` (`broken/sheets-book-not-a-map.kcad`) |
+| `pictures` | dizi: resim | | kitabın resimlerinin baytları; resim yoksa yazılmaz, boş dizi `bad_value` (`broken/sheets-pictures-empty.kcad`) |
+
+Resim harita:
+
+| Anahtar | Tür | Zorunlu | Anlamı |
+|---|---|---|---|
+| `bytes` | bayt dizgisi | evet | dosyanın baytları (PNG, JPEG, SVG); en çok 2²⁴ bayt (§5.5) |
+| `sha256` | özet | evet | `bytes`'ın SHA-256'sı; uymazsa `bad_value` (`broken/sheets-picture-digest.kcad`), 32 bayt değilse `bad_value` (`broken/sheets-picture-sha256-length.kcad`) |
+
+- Aynı SHA-256 iki kez verilemez (`bad_value`, `broken/sheets-picture-twice.kcad`).
+- Kitap dosya biçimine opaktır: dosya biçimi onu yorumlamaz, olduğu gibi taşır; tam sayı ile float ayrıdır (§6.7). Kitabın kendi kuralları (kimliklerin benzersizliği, öğelerin türleri, resimlerin bilgileri) pafta çekirdeğinindir (§6.11). Kitabın andığı ama `pictures`'ta olmayan resim paftanın ön denetiminde söylenir; `pictures`'ta olup kitabın anmadığı resim yazıcının işi değildir, yazan uygulama onu yazmaz.
+- Sözleşmenin JSON'unda (`DocumentSnapshotV2.sheets`, `ProjectSheets`) `bytes` base64 metindir (RFC 4648, dolgulu), `sha256` 64 küçük onaltılık hanedir.
+- Pafta kitabının geri alma geçmişi dosyaya girmez (§6.10). Pafta şablonları (cihazın ve bulutun kitaplığı) projenin değildir, dosyaya girmez; paftaya kullanılmış şablonun sayfası ve resimleri kitapta zaten vardır.
 
 ## 7. v1'den göç
 

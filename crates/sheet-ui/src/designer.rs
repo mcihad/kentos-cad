@@ -276,9 +276,10 @@ pub struct Designer {
     /// Pictures' bytes by their SHA-256 (the book keeps only their metadata).
     pub(crate) asset_bytes: BTreeMap<String, Vec<u8>>,
 
-    // Where the book is kept.
+    // This device's templates and pictures; the book is the project's (docs/adr/0251).
     pub(crate) store: Option<Store>,
-    pub(crate) key: Option<String>,
+    /// How many times the book changed since it was opened: the host writes it into the project when this moves.
+    pub(crate) book_revision: u64,
     /// The templates kept on this device: its own and the copies of an account's cloud library.
     pub(crate) user_templates: Vec<crate::store::StoredTemplate>,
     /// Template files the core could not read (listed with their reasons, kept as they are).
@@ -347,7 +348,7 @@ impl Designer {
             pictures: RefCell::new(BTreeMap::new()),
             asset_bytes: BTreeMap::new(),
             store: None,
-            key: None,
+            book_revision: 0,
             user_templates: Vec::new(),
             refused: Vec::new(),
             library: crate::library::Library::default(),
@@ -485,45 +486,53 @@ impl Designer {
         self.commit_as(ops, Some(label))
     }
 
-    /// Pictures' bytes for the book (a template's, a `.kpafta`'s).
+    /// Pictures' bytes for the book (a template's, a `.kpafta`'s, one chosen
+    /// for a frame): the project keeps them with the book (docs/adr/0251).
     pub fn add_asset_bytes(&mut self, sha256: &str, bytes: Vec<u8>) {
         self.pictures.borrow_mut().remove(sha256);
-        if let Some(store) = &self.store {
-            store.put_asset(sha256, &bytes);
-        }
         self.asset_bytes.insert(sha256.to_owned(), bytes);
     }
 
-    /// Keeps the book in `store` under the project's `key` from now on, reading
-    /// what was kept there before (the host's data folder, design §10).
-    pub fn attach(&mut self, store: Store, key: &str) {
-        let book = store.load_book(key);
+    /// Uses `store` for this device's templates and the bytes of their
+    /// pictures (the host's data folder, design §10). The book is the
+    /// project's, given with [`open_project`](Self::open_project).
+    pub fn attach(&mut self, store: Store) {
         let (records, refused) = store.records();
         self.user_templates = records;
         self.refused = refused;
-        for a in book.iter().flat_map(|b| b.assets.iter()) {
-            if let Some(bytes) = store.asset(&a.sha256) {
-                self.asset_bytes.insert(a.sha256.clone(), bytes);
-            }
-        }
         self.store = Some(store);
-        self.key = Some(key.to_owned());
+    }
+
+    /// Whether the device's store is attached.
+    pub fn has_store(&self) -> bool {
+        self.store.is_some()
+    }
+
+    /// The project's book and the bytes of its pictures (its file's, or a
+    /// book moved from this device, docs/adr/0251): nothing in front, the
+    /// undo starts again.
+    pub fn open_project(&mut self, book: SheetBook, pictures: Vec<(String, Vec<u8>)>) {
+        self.pictures.borrow_mut().clear();
+        self.asset_bytes = pictures.into_iter().collect();
         self.open = None;
-        self.load(book.unwrap_or_default());
+        self.load(book);
     }
 
-    /// The project's key changed (a new drawing saved under a name): the book goes with it.
-    pub fn rekey(&mut self, key: &str) {
-        self.key = Some(key.to_owned());
-        self.persist();
+    /// How many times the book changed since it was opened.
+    pub fn book_revision(&self) -> u64 {
+        self.book_revision
     }
 
+    /// The book as the project keeps it, with the bytes of its pictures this
+    /// designer has (docs/adr/0251); none for an empty book.
+    pub fn project_sheets(&self) -> Result<Option<kentos_contracts::ProjectSheets>, String> {
+        let bytes = |sha: &str| self.asset_bytes.get(sha).cloned();
+        kentos_sheet::project::project_sheets(&self.book, bytes).map_err(|e| e.message)
+    }
+
+    /// The book changed: the host writes it into the project.
     pub(crate) fn persist(&mut self) {
-        if let (Some(store), Some(key)) = (&self.store, &self.key)
-            && let Err(e) = store.save_book(key, &self.book)
-        {
-            self.error = Some(format!("Paftalar kaydedilemedi: {e}"));
-        }
+        self.book_revision += 1;
     }
 
     // ── Ids ──

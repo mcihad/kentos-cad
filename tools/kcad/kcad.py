@@ -23,6 +23,7 @@ top (layer references, known CRS, vertex counts; spec §6.11) are not checked
 here.
 """
 
+import base64
 import hashlib
 import json
 import math
@@ -156,6 +157,8 @@ SCHEMA_WITH_ADDRESSES = 42
 # Schema 43: schema 42 and a dimension's `refs`, the places on objects its points follow; only in the drawing
 # (docs/adr/0249 §4).
 SCHEMA_WITH_DIMENSION_REFS = 43
+# Schema 44: schema 43 and the document's `sheets`, the project's sheet book and its pictures' bytes (docs/adr/0251).
+SCHEMA_WITH_SHEETS = 44
 # A reference's places and how many numbers (part, ring, index) each has; the codes of a broken one
 # (kentos_contracts::subref).
 SUBREF_PLACES = {"node": 1, "start": 0, "end": 0, "center": 0, "vertex": 3, "mid": 3}
@@ -313,7 +316,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1800,6 +1803,7 @@ class _Schema:
         self.compose = version >= SCHEMA_WITH_COMPOSE
         self.addresses = version >= SCHEMA_WITH_ADDRESSES
         self.dim_refs = version >= SCHEMA_WITH_DIMENSION_REFS
+        self.sheets = version >= SCHEMA_WITH_SHEETS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -1840,6 +1844,7 @@ class _Schema:
                 "projectId": (self.id16, False),
                 "activeLayer": (self.text, True),
                 "migratedFrom": (self.source, False),
+                **({"sheets": (self.sheets_, False)} if self.sheets else {}),
             }
         )(v)
         # Schema 32's links (docs/adr/0208 §2).
@@ -1893,7 +1898,40 @@ class _Schema:
             out["projectId"] = d["projectId"]
         if "migratedFrom" in d:
             out["migratedFrom"] = d["migratedFrom"]
+        if "sheets" in d:
+            out["sheets"] = d["sheets"]
         return out
+
+    def sheets_(self, v):
+        """The project's sheet book (schema 44, docs/adr/0251): the book an opaque map; each picture's bytes held to
+        its 32-byte SHA-256, none given twice; an empty picture list refused. The JSON form writes the bytes as base64."""
+        seen = set()
+
+        def book(b):
+            if type(b) is not dict:
+                self.fail("wrong_type", "pafta kitabı bir harita olmalı")
+            return self.any(b)
+
+        def picture(p):
+            q = self.fields({"bytes": (self.blob_, True), "sha256": (self.sha256, True)})(p)
+            if hashlib.sha256(q["bytes"]).hexdigest() != q["sha256"]:
+                self.fail("bad_value", "resmin baytları SHA-256'sına uymuyor")
+            if q["sha256"] in seen:
+                self.fail("bad_value", "aynı resim iki kez verilmiş")
+            seen.add(q["sha256"])
+            return {"sha256": q["sha256"], "bytes": base64.b64encode(q["bytes"]).decode("ascii")}
+
+        def pictures(ps):
+            if type(ps) is list and not ps:
+                self.fail("bad_value", "boş resim listesi yazılmaz")
+            return self.array(picture)(ps)
+
+        return self.fields({"book": (book, True), "pictures": (pictures, False)})(v)
+
+    def blob_(self, v):
+        if type(v) is not bytes:
+            self.fail("wrong_type", "bayt dizgisi olmalı")
+        return v
 
     def settings(self, v):
         s = self.fields(

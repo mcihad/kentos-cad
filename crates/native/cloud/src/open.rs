@@ -108,6 +108,7 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
         blocks: info.blocks.iter().map(|r| r.block.clone()).collect(),
         project_id: Some(ProjectId(project.into_bytes())),
         migrated_from: None,
+        sheets: None,
     }
 }
 

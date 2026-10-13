@@ -976,23 +976,16 @@ impl App {
         )
     }
 
-    /// After every message: the book follows the project (another drawing
-    /// loads its own; a new one that got its name takes it along), the
-    /// mode follows the project's values, the maps follow the drawing.
+    /// After every message: the book follows the project (the drawing's own,
+    /// docs/adr/0251; sheet_book.rs), the mode follows the project's values,
+    /// the maps follow the drawing.
     pub(crate) fn follow_sheets(&mut self) {
-        if let Some(store) = self.sheet_store.clone() {
-            let key = self.sheet_key();
-            let session = self.document.as_ref().map(|d| d.session);
-            let replaced = session != self.sheet_session;
-            match kentos_sheet_ui::store::key_change(self.sheet_project.as_ref(), &key, replaced) {
-                kentos_sheet_ui::store::KeyChange::Keep => {}
-                kentos_sheet_ui::store::KeyChange::Load => self.sheets.attach(store, &key.id),
-                kentos_sheet_ui::store::KeyChange::Move
-                | kentos_sheet_ui::store::KeyChange::Copy => self.sheets.rekey(&key.id),
-            }
-            self.sheet_project = Some(key);
-            self.sheet_session = session;
+        if let Some(store) = self.sheet_store.clone()
+            && !self.sheets.has_store()
+        {
+            self.sheets.attach(store);
         }
+        self.follow_sheet_book();
         // The gallery over the drawing reads the project too (what a template needs that it lacks).
         if !self.sheets.is_active() && !self.sheets.gallery_open() {
             return;

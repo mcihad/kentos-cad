@@ -127,7 +127,10 @@ use crate::layer::LineType;
 /// 55: associative dimensions (docs/adr/0249 §4): `.kcad` document schema 43, a dimension's `refs`
 ///    (the places on objects its points `a`, `b` and `c` follow; the typed columns' dimension
 ///    `REFS` flag). The web's copy stays 53 while the web is paused.
-pub const FORMATS_VERSION: u32 = 55;
+/// 56: the project's sheet book (docs/adr/0251): `.kcad` document schema 44, the document's
+///    `sheets` (the sheet core's book, opaque, and its pictures' bytes under their SHA-256; in the
+///    snapshot's JSON the bytes are base64). The web's copy stays 53 while the web is paused.
+pub const FORMATS_VERSION: u32 = 56;
 
 // ── Every import ────────────────────────────────────────────────────────
 

@@ -27,6 +27,7 @@ pub mod paper;
 pub mod pdf;
 pub mod preflight;
 pub mod profile;
+pub mod project;
 pub mod scene;
 pub mod snap;
 pub mod style;

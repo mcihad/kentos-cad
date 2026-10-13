@@ -1,13 +1,20 @@
-//! Where the desktop keeps sheets until `.kcad` carries them (design §10,
-//! integration.md §6): a folder of the host's data folder with the books by
-//! the project's key (the web's keys: `bulut/…`, `proje/…`, `dosya/…`,
-//! `oturum/…`), this device's templates and the pictures by their SHA-256.
-//! A file is written beside its place and renamed over it, so a crash never
-//! leaves half a book. Nothing here is the user's settings.
+//! This device's sheet files (design §10, integration.md §6): a folder of the
+//! host's data folder with this device's templates and the pictures of
+//! templates by their SHA-256. A file is written beside its place and
+//! renamed over it, so a crash never leaves half a file. Nothing here is the
+//! user's settings.
+//!
+//! The books of projects were kept here by the project's key (the web's
+//! keys: `bulut/…`, `proje/…`, `dosya/…`, `oturum/…`) until the project's
+//! file carried them (docs/adr/0251). A book still here is moved into its
+//! project the first time the project opens, and set aside under
+//! `kitaplar/tasindi/` once the project is saved with it: never deleted,
+//! never written over by an empty book.
 //!
 //! ```text
 //! pafta/
-//!   kitaplar/<anahtar>.json      the book of a project
+//!   kitaplar/<anahtar>.json      the book of a project, before docs/adr/0251
+//!   kitaplar/tasindi/…           a book moved into its project, kept aside
 //!   sablonlar/<kimlik>.json      a template of this device, or the cached
 //!                                copy of one of an account's cloud library
 //!   resimler/<sha256>            a picture's bytes
@@ -163,9 +170,30 @@ impl Store {
         }
     }
 
+    /// Keeps a book under `key`, as builds before docs/adr/0251 did (a test's,
+    /// a tool's: the designer keeps the book in its project now).
     pub fn save_book(&self, key: &str, book: &SheetBook) -> io::Result<()> {
         let json = serde_json::to_string_pretty(book).map_err(io::Error::other)?;
         write_atomic(&self.book_path(key), json.as_bytes())
+    }
+
+    /// Sets the book kept under `key` aside (`kitaplar/tasindi/`, named by
+    /// the time as well, so nothing is written over): its project keeps it
+    /// now. Where it went; none when there was no book.
+    pub fn retire_book(&self, key: &str) -> io::Result<Option<PathBuf>> {
+        let path = self.book_path(key);
+        if !path.exists() {
+            return Ok(None);
+        }
+        let aside = self.dir.join("kitaplar").join("tasindi");
+        fs::create_dir_all(&aside)?;
+        let stem = path
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let to = aside.join(format!("{stem}-{}.json", now_ms()));
+        fs::rename(&path, &to)?;
+        Ok(Some(to))
     }
 
     fn template_path(&self, id: &str) -> PathBuf {
@@ -322,31 +350,6 @@ pub fn project_key(
     }
 }
 
-/// What to do with the book when the key may have changed (the web's `keyChange`):
-/// another drawing loads its own; a new drawing that got its lasting name takes
-/// its book along; one that got another lasting name takes a copy along.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum KeyChange {
-    Keep,
-    Move,
-    Copy,
-    Load,
-}
-
-pub fn key_change(
-    before: Option<&ProjectKey>,
-    after: &ProjectKey,
-    drawing_replaced: bool,
-) -> KeyChange {
-    match before {
-        None => KeyChange::Load,
-        Some(_) if drawing_replaced => KeyChange::Load,
-        Some(b) if b.id == after.id => KeyChange::Keep,
-        Some(b) if b.lasting => KeyChange::Copy,
-        Some(_) => KeyChange::Move,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -371,7 +374,19 @@ mod tests {
             value: kentos_sheet::model::VarValue::Text("12".into()),
         });
         store.save_book("dosya/ada.kcad", &book).unwrap();
-        assert_eq!(store.load_book("dosya/ada.kcad"), Some(book));
+        assert_eq!(store.load_book("dosya/ada.kcad"), Some(book.clone()));
+        // Moved into its project, the book is set aside, not deleted; twice is nothing.
+        let aside = store
+            .retire_book("dosya/ada.kcad")
+            .unwrap()
+            .expect("set aside");
+        assert!(aside.starts_with(dir.join("kitaplar").join("tasindi")));
+        assert_eq!(
+            kentos_sheet::validate::read_book(&fs::read_to_string(&aside).unwrap()).unwrap(),
+            book
+        );
+        assert!(store.load_book("dosya/ada.kcad").is_none());
+        assert_eq!(store.retire_book("dosya/ada.kcad").unwrap(), None);
         // A key with odd letters is a safe name; two keys never share one.
         assert_ne!(file_name("dosya/a b"), file_name("dosya/a_b"));
         // A broken book is set aside.
@@ -458,17 +473,5 @@ mod tests {
         );
         let session = project_key(None, None, None, "s1");
         assert_eq!((session.id.as_str(), session.lasting), ("oturum/s1", false));
-        let file = project_key(None, None, Some("a.kcad"), "s1");
-        assert_eq!(key_change(Some(&session), &file, false), KeyChange::Move);
-        assert_eq!(
-            key_change(
-                Some(&file),
-                &project_key(None, None, Some("b.kcad"), "s1"),
-                false
-            ),
-            KeyChange::Copy
-        );
-        assert_eq!(key_change(Some(&file), &file, false), KeyChange::Keep);
-        assert_eq!(key_change(Some(&file), &file, true), KeyChange::Load);
     }
 }

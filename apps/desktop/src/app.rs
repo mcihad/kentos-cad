@@ -914,7 +914,8 @@ pub struct App {
     pub(crate) sheet_tab: bool,
     /// Where the books are kept; none in tests and snapshots.
     pub sheet_store: Option<kentos_sheet_ui::Store>,
-    pub(crate) sheet_project: Option<kentos_sheet_ui::ProjectKey>,
+    /// The open project's book as the designer shows it (docs/adr/0251; sheets.rs `follow_sheets`).
+    pub(crate) sheet_book: crate::sheet_book::BookLink,
     pub(crate) sheet_session: Option<u64>,
     pub(crate) sheet_generation: Option<(u64, u64)>,
     pub(crate) sheet_attributes: std::cell::Cell<bool>,
@@ -1042,7 +1043,7 @@ impl App {
             sheet_maps: crate::sheets::SheetMaps::default(),
             sheet_tab: false,
             sheet_store: None,
-            sheet_project: None,
+            sheet_book: crate::sheet_book::BookLink::default(),
             sheet_session: None,
             sheet_generation: None,
             sheet_attributes: std::cell::Cell::new(false),

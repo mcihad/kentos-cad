@@ -219,6 +219,7 @@ pub async fn read(
             .collect(),
         project_id: Some(ProjectId(*access.project.as_bytes())),
         migrated_from: None,
+        sheets: None,
     };
     Ok((doc, revision, cursor))
 }

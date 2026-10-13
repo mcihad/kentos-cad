@@ -16,6 +16,7 @@ mod labels;
 mod networks;
 mod objects;
 mod services;
+mod sheets;
 mod styles;
 mod temporal;
 mod variables;
@@ -254,12 +255,14 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let mut project_id = None;
     let mut active_layer = None;
     let mut migrated_from = None;
+    let mut sheets_ = None;
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
             "blocks" if has.blocks => blocks = Some(blocks::definitions(r, has)?),
             "layers" => layers = Some(list(r, |r, _| layer(r, has))?),
             "origin" => origin = Some(point(r)?),
+            "sheets" if has.sheets => sheets_ = Some(sheets::sheets(r)?),
             "styles" => styles = Some(project_styles(r)?),
             // Name, blocks and layers come first in the encoded order: the project and its
             // blocks are known before its objects.
@@ -314,6 +317,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         blocks: blocks.map(|(list, _)| list).unwrap_or_default(),
         project_id,
         migrated_from,
+        sheets: sheets_,
     })
 }
 

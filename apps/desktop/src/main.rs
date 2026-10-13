@@ -188,6 +188,7 @@ mod remote_scenes;
 #[cfg(test)]
 mod service_scenes;
 mod services;
+mod sheet_book;
 mod sheet_inputs;
 mod sheet_library;
 mod sheet_pdf;

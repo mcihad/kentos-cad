@@ -201,6 +201,7 @@ pub fn new_document(o: &NewProject) -> Result<Document, String> {
             blocks: v1.blocks,
             project_id: None,
             migrated_from: None,
+            sheets: None,
         },
         None,
     )

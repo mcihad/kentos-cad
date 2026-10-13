@@ -7,6 +7,7 @@ import type { LayerNode } from "./LayerNode";
 import type { MigrationSource } from "./MigrationSource";
 import type { ProjectId } from "./ProjectId";
 import type { ProjectSettings } from "./ProjectSettings";
+import type { ProjectSheets } from "./ProjectSheets";
 import type { ProjectStyles } from "./ProjectStyles";
 import type { Vec2 } from "./Vec2";
 
@@ -44,4 +45,9 @@ projectId?: ProjectId,
 /**
  * The v1 file a migrated drawing came from.
  */
-migratedFrom?: MigrationSource, };
+migratedFrom?: MigrationSource, 
+/**
+ * The project's sheet book and its pictures (docs/adr/0251); none in a
+ * project without one.
+ */
+sheets?: ProjectSheets, };
