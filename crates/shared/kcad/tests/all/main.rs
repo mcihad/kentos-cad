@@ -30,6 +30,7 @@ mod polyline_extras;
 mod rasters;
 mod requests;
 mod robustness;
+mod schemas;
 mod services;
 mod sheets;
 mod subref_extras;

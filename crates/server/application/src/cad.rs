@@ -85,22 +85,34 @@ fn pts(list: &[kentos_contracts::Vec2]) -> Vec<P> {
     list.iter().copied().map(p).collect()
 }
 
-/// Makes every number sign-free at zero and checks its size; counts points.
+/// The fields whose numbers are data, not coordinates or sizes: a raster's dataset (its dimensions' values, as a
+/// time in milliseconds; docs/adr/0243) and a point cloud's point counts (docs/adr/0207) may pass ±10⁹.
+const DATA_KEYS: [&str; 2] = ["dataset", "count"];
+
+/// Makes every number sign-free at zero and checks its size (not under [`DATA_KEYS`]); counts points.
 fn normalize(v: &mut Value, where_: &str) -> Result<(), String> {
+    normalize_in(v, where_, true)
+}
+
+fn normalize_in(v: &mut Value, where_: &str, bounded: bool) -> Result<(), String> {
     match v {
         Value::Number(n) => {
             let f = n
                 .as_f64()
                 .ok_or_else(|| format!("{where_}: sayı okunamadı"))?;
-            if f.abs() > MAX_ABS {
+            if bounded && f.abs() > MAX_ABS {
                 return Err(format!("{where_}: {f} çok büyük (en çok ±10⁹)"));
             }
             if f == 0.0 && f.is_sign_negative() {
                 *v = Value::from(0.0);
             }
         }
-        Value::Array(items) => items.iter_mut().try_for_each(|x| normalize(x, where_))?,
-        Value::Object(map) => map.values_mut().try_for_each(|x| normalize(x, where_))?,
+        Value::Array(items) => items
+            .iter_mut()
+            .try_for_each(|x| normalize_in(x, where_, bounded))?,
+        Value::Object(map) => map.iter_mut().try_for_each(|(k, x)| {
+            normalize_in(x, where_, bounded && !DATA_KEYS.contains(&k.as_str()))
+        })?,
         _ => {}
     }
     Ok(())
