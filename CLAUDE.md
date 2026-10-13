@@ -326,6 +326,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   mühendislik `12'-6.50"`, kesirli `150 1/2"`; `.kcad` şema 50), yazılan uzunlukta ayak ve inç işaretleri her projede (`5'6-1/2"`,
   çekirdeğin `tools::imperial`'i ve `point_text`'in `Len`'i), Proje ayarları ve sihirbazda İnç ve Ayak, `cad.settings.set`'in
   `lengthStyle`'ı (`style_needs_imperial`), `cad.units.change`'in oranı, DXF'in `$INSUNITS` 1 ve 2'si (ADR 0262);
+  eğri üzerindeki yer ve blok içi alt nesne: başvurunun `along` yeri (kenar ya da eğri boyunca `t`; Yakın, Dik, Teğet ve Çeyrek
+  kenetten), eğri aralığı (`SubRange`, `range_length`, `follow_range`), blok içi parçanın yolu (`path`; yerleştirme ya da tanım
+  değişince belge izler, `follow_in`, `piece_gone`), `.kcad` şema 51, `FORMATS_VERSION` 62, Yeniden bağla ve ölçü komutları (ADR 0263);
   yüzey analizi: İşlemler'in Yüzey analizi kategorisinde Eğim, Bakı, Gölgeli kabartma, Renkli kabartma, Eğrilik, Pürüzlülük (TRI, TPI,
   engebe), Güneşlenme ve Eş yükselti eğrileri; DEM şerit şerit okunur, sonuç önizleme katlı karolu GeoTIFF ve kaynağın hemen üstündeki
   yeni katmanda raster ya da kotlu çoklu çizgiler (Kot, Tür); masaüstünde İşlemler'in iş parçacığında ev sahibinin dosyalarıyla, web'de iş

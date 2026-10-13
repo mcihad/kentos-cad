@@ -8066,6 +8066,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -8078,6 +8118,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -22148,6 +22198,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -22160,6 +22250,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -33531,6 +33631,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -33543,6 +33683,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -38971,6 +39121,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -38983,6 +39173,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -44391,6 +44591,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -44403,6 +44643,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -49970,6 +50220,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -49982,6 +50272,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -55353,6 +55653,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -55365,6 +55705,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -60750,6 +61100,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -60762,6 +61152,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -66420,6 +66820,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -66432,6 +66872,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -70500,6 +70950,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -70512,6 +71002,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -75203,6 +75703,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -75215,6 +75755,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -80738,6 +81288,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -80750,6 +81340,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -86193,6 +86793,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -86205,6 +86845,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -91593,6 +92243,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -91605,6 +92295,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -97070,6 +97770,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -97082,6 +97822,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -98023,6 +98773,16 @@
           "PlaceOn": {
             "description": "A place on an object named by the object's persistent id.",
             "properties": {
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
               "place": {
                 "$ref": "#/$defs/SubPlace"
               },
@@ -98188,6 +98948,46 @@
                   "part",
                   "ring",
                   "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
                 ],
                 "type": "object"
               }
@@ -102628,6 +103428,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -102640,6 +103480,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -103468,6 +104318,7 @@
           "not_a_dimension",
           "invalid_refs",
           "no_such_place",
+          "piece_gone",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -103883,6 +104734,16 @@
                     "const": "place",
                     "type": "string"
                   },
+                  "path": {
+                    "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).",
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "index"
+                  },
                   "place": {
                     "$ref": "#/$defs/SubPlace"
                   },
@@ -104028,6 +104889,46 @@
                   "part",
                   "ring",
                   "index"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
                 ],
                 "type": "object"
               }
@@ -108558,6 +109459,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -108570,6 +109511,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -109392,6 +110343,7 @@
           "invalid_offset",
           "entity_not_found",
           "no_such_place",
+          "piece_gone",
           "not_measurable",
           "missing_elevation",
           "unknown_style",
@@ -114036,6 +114988,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -114048,6 +115040,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -119500,6 +120502,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -119512,6 +120554,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -124951,6 +126003,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -124963,6 +126055,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -130451,6 +131553,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -130463,6 +131605,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -135867,6 +137019,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -135879,6 +137071,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -141244,6 +142446,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -141256,6 +142498,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -146685,6 +147937,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -146697,6 +147989,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -152124,6 +153426,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -152136,6 +153478,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -157600,6 +158952,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -157612,6 +159004,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -163208,6 +164610,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -163220,6 +164662,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -167039,6 +168491,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -167051,6 +168543,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -171748,6 +173250,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -171760,6 +173302,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -177392,6 +178944,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -177404,6 +178996,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -182904,6 +184506,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -182916,6 +184558,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -188594,6 +190246,46 @@
                   "index"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A point along an edge or a curve (docs/adr/0263 §1): a line's (all zero) or a path's edge from vertex `index`\nto the next, at the fraction `t` of its chord or of its arc's sweep; an arc's (`a0 + t·sweep`), a circle's\n(`t·2π` from east) or an ellipse's (`t0 + t·sweep`) curve (all zero). `t` within 0 and 1.",
+                "properties": {
+                  "index": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "part": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "ring": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "index"
+                  },
+                  "t": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part",
+                  "ring",
+                  "index",
+                  "t"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -188606,6 +190298,16 @@
                   "string",
                   "null"
                 ]
+              },
+              "path": {
+                "description": "When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3): each number the object's\nplace in that level's definition, every one but the last an insert; empty (not written) for the object itself.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
               },
               "place": {
                 "$ref": "#/$defs/SubPlace"
@@ -213218,6 +214920,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nesnenin böyle bir yeri yok (halkasının ötesinde bir köşe, çizginin merkezi)."
+    },
+    {
+      "code": "piece_gone",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Blok yolunda böyle bir parça yok (tanımın dışında bir sıra, yerleştirmede biten ya da yerleştirme olmayandan geçen yol)."
     },
     {
       "code": "not_measurable",

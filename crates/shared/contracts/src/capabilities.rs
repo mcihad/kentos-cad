@@ -833,7 +833,12 @@ const ENTRIES: &[Entry] = &[
         id: "cad.dimensions.reassociate",
         refusals: &[
             OBJECTS,
-            &["not_a_dimension", "invalid_refs", "no_such_place"],
+            &[
+                "not_a_dimension",
+                "invalid_refs",
+                "no_such_place",
+                "piece_gone",
+            ],
             REVISION,
         ],
         warnings: &[],
@@ -857,6 +862,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_offset",
                 "entity_not_found",
                 "no_such_place",
+                "piece_gone",
                 "not_measurable",
                 "missing_elevation",
                 "unknown_style",

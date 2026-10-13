@@ -367,15 +367,23 @@ fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<&'d Entity, St
 fn point_of(doc: &Document, p: &MeasuredPoint, path: &str) -> Result<Vec2, Stop> {
     match p {
         MeasuredPoint::At { at } => Ok(v(*at)),
-        MeasuredPoint::Place { uid, place } => {
+        MeasuredPoint::Place {
+            uid,
+            place,
+            path: pieces,
+        } => {
             let e = object(doc, uid, path)?;
-            let core = kentos_domain::dimension_ties::core_place(*place);
-            kentos_geometry_core::ops::subref::point(&crate::blocks::core_entity(e), core).ok_or_else(|| {
-                refuse(
+            crate::blocks::place_point(doc.blocks(), e, pieces, *place).map_err(|miss| match miss {
+                crate::blocks::PlaceMiss::Piece => refuse(
+                    codes::PIECE_GONE,
+                    crate::blocks::NO_PIECE.into(),
+                    &format!("{path}.path"),
+                ),
+                crate::blocks::PlaceMiss::Place => refuse(
                     codes::NO_SUCH_PLACE,
                     "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.".into(),
                     &format!("{path}.place"),
-                )
+                ),
             })
         }
     }
@@ -423,9 +431,14 @@ fn elevation_of(
         return Ok(z);
     }
     let kept = match p {
-        MeasuredPoint::Place { uid, place } => object(doc, uid, path)
+        MeasuredPoint::Place {
+            uid,
+            place,
+            path: pieces,
+        } if pieces.is_empty() => object(doc, uid, path)
             .ok()
             .and_then(|e| elevation_at(e, *place)),
+        MeasuredPoint::Place { .. } => None,
         MeasuredPoint::At { .. } => None,
     };
     kept.ok_or_else(|| {
@@ -667,9 +680,10 @@ fn refs_of(kind: Kind, m: &DimensionMeasure) -> Option<DimensionRefs> {
         return None;
     }
     let r = |p: &MeasuredPoint| match p {
-        MeasuredPoint::Place { uid, place } => Uuid::parse_str(uid).ok().map(|u| SubRef {
+        MeasuredPoint::Place { uid, place, path } => Uuid::parse_str(uid).ok().map(|u| SubRef {
             uid: EntityId(*u.as_bytes()),
             place: *place,
+            path: path.clone(),
             broken: None,
         }),
         MeasuredPoint::At { .. } => None,
@@ -712,7 +726,7 @@ fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_contracts::Entities
         mask: input.mask.unwrap_or(false),
         za: g.za,
         zb: g.zb,
-        refs: m.refs.clone(),
+        refs: m.refs.clone().map(Box::new),
         look: m.look.clone(),
     };
     creating::input_as(&input.layer_id, vec![geometry], &input.look, None)

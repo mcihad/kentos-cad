@@ -14,15 +14,22 @@
 //!   gives the point a new reference too (`cad.dimensions.reassociate`)
 //!   keeps it.
 //!
+//! A reference to a piece inside an insert (its block `path`, docs/adr/0263
+//! §3) follows the piece: when the step changed the insert, or any block
+//! definition, the piece as it was (the definitions before the step) and as
+//! it is now are followed by the core's rule (`ops::subref::follow_in`).
+//!
 //! The changes join the step: one undo takes them back with the rest.
 
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
+use kentos_contracts::BlockDefinition;
 use kentos_contracts::{DimensionEntity, DimensionRefs, Entity, SubPlace, SubRef, Vec2};
 use kentos_geometry_core::api::json::{FromJson, Json};
+use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity as CoreEntity;
-use kentos_geometry_core::ops::subref::{Followed, Place, follow};
+use kentos_geometry_core::ops::subref::{Followed, Place, follow, follow_in};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -53,6 +60,17 @@ pub fn core_place(p: SubPlace) -> Place {
             ring: n(ring),
             index: n(index),
         },
+        SubPlace::Along {
+            part,
+            ring,
+            index,
+            t,
+        } => Place::Along {
+            part: n(part),
+            ring: n(ring),
+            index: n(index),
+            t,
+        },
     }
 }
 
@@ -74,7 +92,28 @@ pub fn contract_place(p: Place) -> SubPlace {
             ring: n(ring),
             index: n(index),
         },
+        Place::Along {
+            part,
+            ring,
+            index,
+            t,
+        } => SubPlace::Along {
+            part: n(part),
+            ring: n(ring),
+            index: n(index),
+            t,
+        },
     }
+}
+
+/// The definitions as the geometry core takes them (the contract's own JSON).
+pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
+    let list: Vec<&BlockDefinition> = blocks.iter().map(|b| &**b).collect();
+    let text = serde_json::to_string(&list).unwrap_or_else(|_| "[]".into());
+    Json::parse(&text)
+        .ok()
+        .and_then(|v| Blocks::from_json(&v).ok())
+        .unwrap_or_default()
 }
 
 /// A dimension's point by its name.
@@ -125,8 +164,12 @@ impl Document {
         // changed itself, as they were.
         let mut changed: Changed = BTreeMap::new();
         let mut own: BTreeMap<Slot, Arc<Entity>> = BTreeMap::new();
+        let mut redefined = false;
         for op in ops {
             match op {
+                Op::BlockAdd { .. } | Op::BlockRemove { .. } | Op::BlockUpdate { .. } => {
+                    redefined = true;
+                }
                 Op::Update { before, after } => {
                     changed
                         .entry(after.uid)
@@ -161,6 +204,16 @@ impl Document {
                 slots.push(*slot);
             }
         }
+        // A changed definition moves the pieces of every insert of it: every dimension that names a piece.
+        if redefined {
+            for slot in self.store.tied_slots() {
+                if seen.insert(slot) {
+                    slots.push(slot);
+                }
+            }
+        }
+        // The definitions before the step and now, built once when a piece is followed.
+        let mut definitions: Option<(Blocks, Blocks)> = None;
         let mut out = Vec::new();
         for slot in slots {
             let Some(current) = self.store.get(slot).cloned() else {
@@ -183,6 +236,50 @@ impl Document {
                     continue;
                 }
                 let of = Uuid::from_bytes(r.uid.0);
+                if !r.path.is_empty() && (redefined || changed.contains_key(&of)) {
+                    let (before, after) = match changed.get(&of) {
+                        Some((b, a)) => (Arc::clone(b), a.clone()),
+                        None => match self.slot_of(of).and_then(|s| self.store.get(s)) {
+                            Some(now) => (Arc::clone(&now.entity), Some(Arc::clone(&now.entity))),
+                            None => continue,
+                        },
+                    };
+                    let (was, now) = definitions.get_or_insert_with(|| {
+                        (
+                            core_blocks(&self.blocks_before(ops)),
+                            core_blocks(&self.blocks),
+                        )
+                    });
+                    let Some(b) = core(&before) else {
+                        continue;
+                    };
+                    let a = after.as_ref().and_then(|a| core(a));
+                    let followed = if after.is_some() && a.is_none() {
+                        Followed::Broken(kentos_geometry_core::ops::subref::Reason::KindChanged)
+                    } else {
+                        follow_in(
+                            core_place(r.place),
+                            &r.path,
+                            (was, &b),
+                            a.as_ref().map(|a| (&*now, a)),
+                        )
+                    };
+                    let slot_ref = reference_mut(&mut next_refs, name);
+                    match followed {
+                        Followed::At(place, p) => {
+                            set_point(&mut next, name, Vec2 { x: p.x, y: p.y });
+                            if let Some(s) = slot_ref {
+                                s.place = contract_place(place);
+                            }
+                        }
+                        Followed::Broken(reason) => {
+                            if let Some(s) = slot_ref {
+                                s.broken = Some(reason.code().to_owned());
+                            }
+                        }
+                    }
+                    continue;
+                }
                 match changed.get(&of) {
                     Some((before, after)) => {
                         let (Some(b), a) = (core(before), after.as_ref().and_then(|a| core(a)))
@@ -231,6 +328,28 @@ impl Document {
             self.apply_op(op);
         }
         out
+    }
+}
+
+impl Document {
+    /// The block definitions as they were before `ops` (applied): each block step taken back, last first.
+    fn blocks_before(&self, ops: &[Op]) -> Vec<Arc<BlockDefinition>> {
+        let mut list = self.blocks.clone();
+        for op in ops.iter().rev() {
+            match op {
+                Op::BlockAdd { block, .. } => list.retain(|b| b.id != block.id),
+                Op::BlockRemove { index, block } => {
+                    list.insert((*index).min(list.len()), Arc::clone(block));
+                }
+                Op::BlockUpdate { before, after } => {
+                    if let Some(b) = list.iter_mut().find(|b| b.id == after.id) {
+                        *b = Arc::clone(before);
+                    }
+                }
+                _ => {}
+            }
+        }
+        list
     }
 }
 

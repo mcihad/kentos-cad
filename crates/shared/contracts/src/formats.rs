@@ -145,7 +145,9 @@ use crate::layer::LineType;
 /// 61 (docs/adr/0260): an object's look in the typed columns (flag 64: line type, scale, transparency,
 ///    order, by-layer parts); DXF's 6, 48 and 440 of an object and 290 of a layer read and written. The
 ///    web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 61;
+/// 62 (docs/adr/0263): a dimension reference's `along` place (kind 6, its t a float) and block path (the
+///    kind plus 8, then the path) in the typed columns. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 62;
 
 // ── Every import ────────────────────────────────────────────────────────
 

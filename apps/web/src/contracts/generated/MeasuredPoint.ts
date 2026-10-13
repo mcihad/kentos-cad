@@ -9,4 +9,8 @@ export type MeasuredPoint = { "kind": "at", at: Vec2, } | { "kind": "place",
 /**
  * The object's persistent id (lowercase UUID text with hyphens).
  */
-uid: string, place: SubPlace, };
+uid: string, place: SubPlace, 
+/**
+ * When `uid` is an insert, the piece inside it the place is on (docs/adr/0263 §3).
+ */
+path?: Array<number>, };

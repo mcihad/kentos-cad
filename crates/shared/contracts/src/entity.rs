@@ -1061,7 +1061,7 @@ pub struct DimensionEntity {
     /// The objects its points follow (docs/adr/0249): an associative dimension; none, free points.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub refs: Option<crate::DimensionRefs>,
+    pub refs: Option<Box<crate::DimensionRefs>>,
     /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]

@@ -36,12 +36,12 @@ fn schema(file: &[u8]) -> u8 {
 
 fn refs_of(doc: &DocumentSnapshotV2, i: usize) -> Option<&DimensionRefs> {
     match &doc.entities[i] {
-        Entity::Dimension(d) => d.refs.as_ref(),
+        Entity::Dimension(d) => d.refs.as_deref(),
         other => panic!("{i}: {other:?}"),
     }
 }
 
-fn refs_mut(doc: &mut DocumentSnapshotV2, i: usize) -> &mut Option<DimensionRefs> {
+fn refs_mut(doc: &mut DocumentSnapshotV2, i: usize) -> &mut Option<Box<DimensionRefs>> {
     match &mut doc.entities[i] {
         Entity::Dimension(d) => &mut d.refs,
         other => panic!("{i}: {other:?}"),
@@ -66,6 +66,7 @@ fn the_sample_reads_to_the_contracts_value() {
                 ring: 0,
                 index: 0
             },
+            path: Vec::new(),
             broken: None,
         })
     );
@@ -107,13 +108,14 @@ fn every_place_comes_back_through_the_codec_and_the_columns() {
         let r = |broken: Option<&str>| SubRef {
             uid: PARCEL,
             place,
+            path: Vec::new(),
             broken: broken.map(str::to_owned),
         };
-        *refs_mut(&mut doc, 2) = Some(DimensionRefs {
+        *refs_mut(&mut doc, 2) = Some(Box::new(DimensionRefs {
             a: Some(r(None)),
             b: (i % 2 == 0).then(|| r(Some("ambiguous"))),
             c: Some(r(Some("object_gone"))),
-        });
+        }));
         let bytes = kentos_kcad::encode_verified(&doc).expect("writes");
         let back = kentos_kcad::decode(&bytes).expect("reads");
         assert_eq!(back, doc, "{place:?}");
@@ -212,7 +214,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "lost",
         ),
-        ("broken/schema-version-51.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-52.kcad", Code::SchemaVersion, ""),
     ] {
         let e = refused(file);
         assert_eq!(e.code, code, "{file}: {e}");

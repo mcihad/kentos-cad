@@ -75,6 +75,8 @@ def edge_mid(a, b, k):
 
 def point(e, pl):
     k, kind = e["kind"], pl["kind"]
+    if kind == "along":
+        return along_point(e, pl)
     if kind == "node" and k == "point":
         if pl["part"] == 0:
             return e["p"]
@@ -114,6 +116,245 @@ def point(e, pl):
     return None
 
 
+# ---- places along an edge or a curve (docs/adr/0263 §1) ----------------------------------------------------------
+
+def lerp(a, b, t):
+    return v(a["x"] + (b["x"] - a["x"]) * t, a["y"] + (b["y"] - a["y"]) * t)
+
+
+def bulge_circle(a, b, k):
+    """(centre, radius, start angle, signed sweep) of a bulged edge: centre on the chord's left normal at
+    chord·(1−k²)/(4k), radius chord·(1+k²)/(4|k|), sweep 4·atan(k)."""
+    dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+    chord = math.hypot(dx, dy)
+    if abs(k) <= 1e-12 or chord < 1e-12:
+        return None
+    s = (1 - k * k) / (4 * k)
+    c = v((a["x"] + b["x"]) / 2 - dy * s, (a["y"] + b["y"]) / 2 + dx * s)
+    r = chord * (1 + k * k) / (4 * abs(k))
+    return c, r, math.atan2(a["y"] - c["y"], a["x"] - c["x"]), 4 * math.atan(k)
+
+
+def on_circle(c, r, a):
+    return v(c["x"] + math.cos(a) * r, c["y"] + math.sin(a) * r)
+
+
+def ccw(a0, a1):
+    """The counter-clockwise sweep from a0 to a1 in (0, 2π]."""
+    s = (a1 - a0) % (2 * math.pi)
+    return 2 * math.pi if s < 1e-12 else s
+
+
+def edge_of(e, part, r, i):
+    """(a, b, bulge) of a path's edge from vertex i, or None."""
+    rg = ring(e, part, r)
+    if not rg:
+        return None
+    p, b, closed = rg
+    n = len(p)
+    if i >= n or (not closed and i + 1 >= n):
+        return None
+    return p[i], p[(i + 1) % n], bulge(b, i)
+
+
+def ellipse_at(e, t):
+    mj = e["major"]
+    mn = (-mj["y"] * e["ratio"], mj["x"] * e["ratio"])
+    return v(e["c"]["x"] + mj["x"] * math.cos(t) + mn[0] * math.sin(t),
+             e["c"]["y"] + mj["y"] * math.cos(t) + mn[1] * math.sin(t))
+
+
+def along_point(e, pl):
+    t = pl["t"]
+    if not (0 <= t <= 1):
+        return None
+    k = e["kind"]
+    whole = (pl["part"], pl["ring"], pl["index"]) == (0, 0, 0)
+    if k == "line":
+        return lerp(e["a"], e["b"], t) if whole else None
+    if k == "arc":
+        return on_circle(e["c"], e["r"], e["a0"] + t * ccw(e["a0"], e["a1"])) if whole else None
+    if k == "circle":
+        return on_circle(e["c"], e["r"], t * 2 * math.pi) if whole else None
+    if k == "ellipse":
+        return ellipse_at(e, e["t0"] + t * ccw(e["t0"], e["t1"])) if whole else None
+    edge = edge_of(e, pl["part"], pl["ring"], pl["index"])
+    if not edge:
+        return None
+    a, b, kb = edge
+    arc = bulge_circle(a, b, kb)
+    if not arc:
+        return lerp(a, b, t)
+    c, r, a0, sw = arc
+    return on_circle(c, r, a0 + t * sw)
+
+
+def tol(at):
+    return max(1e-9, 1e-14 * max(abs(at["x"]), abs(at["y"])))
+
+
+def clamp01(t):
+    return min(1.0, max(0.0, t))
+
+
+def t_on_segment(a, b, at):
+    dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+    ll = dx * dx + dy * dy
+    if ll == 0:
+        return None
+    t = ((at["x"] - a["x"]) * dx + (at["y"] - a["y"]) * dy) / ll
+    q = lerp(a, b, clamp01(t))
+    if math.hypot(q["x"] - at["x"], q["y"] - at["y"]) > tol(at):
+        return None
+    return clamp01(t)
+
+
+def t_on_arc(c, r, a0, sw, at):
+    """The fraction of a signed sweep from a0 at which `at` lies on the circle, or None off it."""
+    if abs(math.hypot(at["x"] - c["x"], at["y"] - c["y"]) - r) > tol(at):
+        return None
+    th = math.atan2(at["y"] - c["y"], at["x"] - c["x"])
+    d = (th - a0) % (2 * math.pi) if sw > 0 else (a0 - th) % (2 * math.pi)
+    span = abs(sw)
+    if d > span + 1e-9:
+        if d >= 2 * math.pi - 1e-9:
+            return 0.0
+        return None
+    return clamp01(d / span)
+
+
+def along_at(e, at):
+    """The first edge or curve of `e` that `at` lies on, as an along place (docs/adr/0263 §1)."""
+    k = e["kind"]
+    z = {"kind": "along", "part": 0, "ring": 0, "index": 0}
+    if k == "line":
+        t = t_on_segment(e["a"], e["b"], at)
+        return None if t is None else dict(z, t=t)
+    if k == "arc":
+        t = t_on_arc(e["c"], e["r"], e["a0"], ccw(e["a0"], e["a1"]), at)
+        return None if t is None else dict(z, t=t)
+    if k == "circle":
+        t = t_on_arc(e["c"], e["r"], 0.0, 2 * math.pi, at)
+        return None if t is None else dict(z, t=t % 1.0)
+    if k == "ellipse":
+        mj = e["major"]
+        mn = (-mj["y"] * e["ratio"], mj["x"] * e["ratio"])
+        det = mj["x"] * mn[1] - mj["y"] * mn[0]
+        dx, dy = at["x"] - e["c"]["x"], at["y"] - e["c"]["y"]
+        ux, uy = (mn[1] * dx - mn[0] * dy) / det, (-mj["y"] * dx + mj["x"] * dy) / det
+        p = math.atan2(uy, ux) % (2 * math.pi)
+        q = ellipse_at(e, p)
+        if math.hypot(q["x"] - at["x"], q["y"] - at["y"]) > tol(at):
+            return None
+        sw = ccw(e["t0"], e["t1"])
+        d = (p - e["t0"]) % (2 * math.pi)
+        if d > sw + 1e-9:
+            return dict(z, t=0.0) if d >= 2 * math.pi - 1e-9 else None
+        return dict(z, t=clamp01(d / sw))
+    for pl, _ in vertices(e):
+        if pl["kind"] != "vertex":
+            continue
+        edge = edge_of(e, pl["part"], pl["ring"], pl["index"])
+        if not edge:
+            continue
+        a, b, kb = edge
+        arc = bulge_circle(a, b, kb)
+        t = t_on_segment(a, b, at) if not arc else t_on_arc(*arc, at)
+        if t is not None:
+            return {"kind": "along", "part": pl["part"], "ring": pl["ring"], "index": pl["index"], "t": t}
+    return None
+
+
+# ---- ranges (docs/adr/0263 §2) -----------------------------------------------------------------------------------
+
+def edge_length(a, b, kb, t0, t1):
+    arc = bulge_circle(a, b, kb)
+    if not arc:
+        return math.hypot(b["x"] - a["x"], b["y"] - a["y"]) * (t1 - t0)
+    _, r, _, sw = arc
+    return r * abs(sw) * (t1 - t0)
+
+
+def ellipse_piece(e, s0, s1):
+    """The length of an ellipse's curve from parameter s0 to s1: ∫|C′(t)|dt by adaptive Simpson to 1e-13 (a different
+    rule from the core's Gauss–Legendre)."""
+    mj = e["major"]
+    mn = (-mj["y"] * e["ratio"], mj["x"] * e["ratio"])
+
+    def speed(t):
+        return math.hypot(-mj["x"] * math.sin(t) + mn[0] * math.cos(t), -mj["y"] * math.sin(t) + mn[1] * math.cos(t))
+
+    def simpson(a, b, fa, fm, fb):
+        return (b - a) / 6 * (fa + 4 * fm + fb)
+
+    def go(a, b, fa, fm, fb, whole, depth):
+        m = (a + b) / 2
+        lm, rm = speed((a + m) / 2), speed((m + b) / 2)
+        left, right = simpson(a, m, fa, lm, fm), simpson(m, b, fm, rm, fb)
+        if depth > 40 or abs(left + right - whole) <= 1e-14 * 15:
+            return left + right + (left + right - whole) / 15
+        return go(a, m, fa, lm, fm, left, depth + 1) + go(m, b, fm, rm, fb, right, depth + 1)
+
+    fa, fm, fb = speed(s0), speed((s0 + s1) / 2), speed(s1)
+    return go(s0, s1, fa, fm, fb, simpson(s0, s1, fa, fm, fb), 0)
+
+
+def range_length(e, a, b):
+    """The length from along place a to along place b in the object's direction, or None."""
+    if a["kind"] != "along" or b["kind"] != "along" or point(e, a) is None or point(e, b) is None:
+        return None
+    if (a["part"], a["ring"]) != (b["part"], b["ring"]):
+        return None
+    k = e["kind"]
+    ka, kb = (a["index"], a["t"]), (b["index"], b["t"])
+    if k in ("line", "arc", "ellipse") and not (k == "ellipse" and ccw(e["t0"], e["t1"]) >= 2 * math.pi):
+        if kb < ka:
+            return None
+        if k == "line":
+            return math.hypot(e["b"]["x"] - e["a"]["x"], e["b"]["y"] - e["a"]["y"]) * (b["t"] - a["t"])
+        if k == "arc":
+            return e["r"] * ccw(e["a0"], e["a1"]) * (b["t"] - a["t"])
+        sw = ccw(e["t0"], e["t1"])
+        return ellipse_piece(e, e["t0"] + a["t"] * sw, e["t0"] + b["t"] * sw)
+    if k == "circle":
+        d = b["t"] - a["t"]
+        return e["r"] * 2 * math.pi * (d if d >= 0 else d + 1)
+    if k == "ellipse":
+        d = b["t"] - a["t"]
+        s0 = e["t0"] + a["t"] * 2 * math.pi
+        return ellipse_piece(e, s0, s0 + (d if d >= 0 else d + 1) * 2 * math.pi)
+    p, bl, closed = ring(e, a["part"], a["ring"])
+    n = len(p)
+    edges = n if closed else n - 1
+    if kb < ka and not closed:
+        return None
+    total = 0.0
+    i, t = ka
+    # Whole edges and pieces from a to b, around the ring when b comes before a.
+    wrapped = kb < ka
+    while True:
+        last = (i == kb[0]) and (not wrapped)
+        x0, x1 = p[i], p[(i + 1) % n]
+        end = kb[1] if last else 1.0
+        total += edge_length(x0, x1, bulge(bl, i), t, end)
+        if last:
+            return total
+        i, t = (i + 1) % edges, 0.0
+        if i == 0 and wrapped:
+            wrapped = False
+
+
+def follow_range(a, b, before, after):
+    fa, fb = follow(a, before, after), follow(b, before, after)
+    if "broken" in fa:
+        return fa
+    if "broken" in fb:
+        return fb
+    if (fa["at"]["part"], fa["at"]["ring"]) != (fb["at"]["part"], fb["at"]["ring"]):
+        return {"broken": "vertex_gone"}
+    return {"from": fa["at"], "to": fb["at"]}
+
+
 def vertices(e):
     out = []
     if e["kind"] == "point":
@@ -134,7 +375,7 @@ def vertices(e):
 
 def same_structure(b, a, pl):
     # Only a path's rings and a multi-point's points have a structure; a line's middle has none.
-    if pl["kind"] in ("vertex", "mid") and b["kind"] in ("polyline", "polygon"):
+    if pl["kind"] in ("vertex", "mid", "along") and b["kind"] in ("polyline", "polygon"):
         rb, ra = ring(b, pl["part"], pl["ring"]), ring(a, pl["part"], pl["ring"])
         return bool(rb and ra and len(rb[0]) == len(ra[0]) and rb[2] == ra[2])
     if pl["kind"] == "node":
@@ -165,7 +406,7 @@ def follow(pl, before, after):
     if pl["kind"] in ("vertex", "node"):
         to, why = found(after, was)
         return {"at": to, "point": was} if to else {"broken": why}
-    if pl["kind"] == "mid":
+    if pl["kind"] in ("mid", "along"):
         p, _, _ = ring(before, pl["part"], pl["ring"])
         n = len(p)
         a, b = p[pl["index"]], p[(pl["index"] + 1) % n]
@@ -179,7 +420,9 @@ def follow(pl, before, after):
         nxt = ta["index"] + 1 if ta["index"] + 1 < m else (0 if closed else None)
         if nxt != tb["index"]:
             return {"broken": "vertex_gone"}
-        to = {"kind": "mid", "part": ta["part"], "ring": ta["ring"], "index": ta["index"]}
+        to = {"kind": pl["kind"], "part": ta["part"], "ring": ta["ring"], "index": ta["index"]}
+        if pl["kind"] == "along":
+            to["t"] = pl["t"]
         return {"at": to, "point": point(after, to)}
     p = point(after, pl)
     return {"at": pl, "point": p} if p is not None else {"broken": "no_such_place"}
@@ -197,10 +440,117 @@ def place_at(e, snap, at):
         cands = [place("center")]
     elif snap == "node":
         cands = [pl for pl, _ in vertices(e)]
+    elif snap in ("nearest", "perpendicular", "tangent", "quadrant"):
+        return along_at(e, at)
     for pl in cands:
         p = point(e, pl)
         if p is not None and abs(p["x"] - at["x"]) <= 1e-9 and abs(p["y"] - at["y"]) <= 1e-9:
             return pl
+    return None
+
+
+# ---- pieces inside blocks (docs/adr/0263 §3) ---------------------------------------------------------------------
+
+MAX_DEPTH = 16
+
+
+def placement(ins):
+    """x' = p + scale·R(rotation)·M·x, M mirroring in the x axis: (a, b, c, d, e, f) with x' = a·x + c·y + e and
+    y' = b·x + d·y + f."""
+    s, r, k = ins.get("scale", 1.0), ins.get("rotation", 0.0), -1.0 if ins.get("mirror") else 1.0
+    co, si = math.cos(r), math.sin(r)
+    return (s * co, s * si, -s * k * si, s * k * co, ins["p"]["x"], ins["p"]["y"])
+
+
+def compose(m, n):
+    """m after n."""
+    a, b, c, d, e, f = m
+    A, B, C, D, E, F = n
+    return (a * A + c * B, b * A + d * B, a * C + c * D, b * C + d * D, a * E + c * F + e, b * E + d * F + f)
+
+
+def shift(dx, dy):
+    return (1.0, 0.0, 0.0, 1.0, dx, dy)
+
+
+def apply(m, q):
+    a, b, c, d, e, f = m
+    return v(a * q["x"] + c * q["y"] + e, b * q["x"] + d * q["y"] + f)
+
+
+def placed(e, m):
+    out = json.loads(json.dumps(e))
+    det = m[0] * m[3] - m[1] * m[2]
+    for key in ("a", "b", "c", "p"):
+        if key in out:
+            out[key] = apply(m, out[key])
+    if "pts" in out:
+        out["pts"] = [apply(m, q) for q in out["pts"]]
+        if det < 0 and out.get("bulges"):
+            out["bulges"] = [-x for x in out["bulges"]]
+    if "r" in out:
+        out["r"] = out["r"] * math.sqrt(abs(det))
+    return out
+
+
+def piece(defs, ins, path):
+    """The object a block path names in an insert, placed in the drawing; None when there is none."""
+    if not path or len(path) > MAX_DEPTH:
+        return None
+    m, cur = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0), ins
+    for depth, i in enumerate(path):
+        d = defs.get(cur["block"])
+        if d is None:
+            return None
+        m = compose(m, compose(placement(cur), shift(-d["base"]["x"], -d["base"]["y"])))
+        if i >= len(d["entities"]):
+            return None
+        e = d["entities"][i]
+        if depth < len(path) - 1:
+            if e["kind"] != "insert":
+                return None
+            cur = e
+        else:
+            return None if e["kind"] == "insert" else placed(e, m)
+    return None
+
+
+def paths(defs, block, depth=0):
+    """Every piece's path of a definition, in the definition's order (a nested insert's pieces where it stands)."""
+    d = defs.get(block)
+    if d is None or depth >= MAX_DEPTH:
+        return []
+    out = []
+    for i, e in enumerate(d["entities"]):
+        if e["kind"] == "insert":
+            out.extend([i] + q for q in paths(defs, e["block"], depth + 1))
+        else:
+            out.append([i])
+    return out
+
+
+def follow_in(pl, path, defs_b, ins_b, defs_a, ins_a):
+    if ins_a is None:
+        return {"broken": "object_gone"}
+    if ins_a["kind"] != "insert":
+        return {"broken": "kind_changed"}
+    pb = piece(defs_b, ins_b, path)
+    if pb is None:
+        return {"broken": "no_such_place"}
+    pa = piece(defs_a, ins_a, path)
+    if pa is None:
+        return {"broken": "piece_gone"}
+    return follow(pl, pb, pa)
+
+
+def place_in(defs, ins, snap, at):
+    for path in paths(defs, ins["block"]):
+        e = piece(defs, ins, path)
+        if e is None:
+            continue
+        pl = place_at(e, snap, at)
+        if pl is not None:
+            return {"path": path, "place": pl}
     return None
 
 
@@ -323,11 +673,157 @@ SNAP_CASES = [
     ("Orta nokta: yaylı kenar", ARCED, "midpoint", v(1, -0.5)),
     ("Merkez: daire", CIRCLE, "center", v(1, 1)),
     ("Nokta: çok noktalının ikincisi", POINTS, "node", v(3, 3)),
-    ("Yakın: yer değil", LINE, "nearest", v(1, 0)),
+    ("Yakın: çizginin çeyreği", LINE, "nearest", v(1, 0)),
     ("Uç nokta ama orada köşe yok", ROOM, "endpoint", v(2, 0)),
+    ("Yakın: alanın kapanan kenarı", ROOM, "nearest", v(0, 0.75)),
+    ("Dik: yolun ikinci kenarı", WALL, "perpendicular", v(2, 0.5)),
+    ("Yakın: yaylı kenarın üstü", ARCED, "nearest", v(1, -0.5)),
+    ("Yakın: yolun dışında", WALL, "nearest", v(3, 3)),
+    ("Çeyrek: dairenin kuzeyi", CIRCLE, "quadrant", v(1, 3)),
+    ("Teğet: yayın üstü", ARC, "tangent", v(2 * math.cos(math.pi / 6), 2 * math.sin(math.pi / 6))),
+    ("Yakın: elipsin üstü", ELLIPSE, "nearest", ellipse_at(ELLIPSE, 1.0)),
+    ("Yakın: deliğin kenarı", HOLED, "nearest", v(3, 4)),
+    ("Kesişim: yer değil", LINE, "intersection", v(2, 0)),
 ]
 
-TRIG = {"Yayın başı", "Yayın sonu", "Elipsin başı", "Elipsin sonu", "Budanan yayın başı yeni başında", "Elipsin sonu"}
+ALONG = {"kind": "along"}
+
+
+def along(part, ring_, index, t):
+    return {"kind": "along", "part": part, "ring": ring_, "index": index, "t": t}
+
+
+ALONG_POINT_CASES = [
+    ("Çizginin çeyreği", LINE, along(0, 0, 0, 0.25)),
+    ("Çizgide olmayan kenar", LINE, along(0, 0, 1, 0.5)),
+    ("Alanın kapanan kenarında", ROOM, along(0, 0, 3, 0.5)),
+    ("Açık yolun son kenarı yok", WALL, along(0, 0, 3, 0.5)),
+    ("Yaylı kenarın yarısı", ARCED, along(0, 0, 0, 0.5)),
+    ("Yaylı kenarın çeyreği", ARCED, along(0, 0, 0, 0.25)),
+    ("Deliğin kenarı", HOLED, along(0, 1, 1, 0.5)),
+    ("İkinci parçanın kenarı", PARTS, along(1, 0, 2, 0.75)),
+    ("Yayın üçte biri", ARC, along(0, 0, 0, 1 / 3)),
+    ("Dairenin çeyreği", CIRCLE, along(0, 0, 0, 0.25)),
+    ("Elipsin yarısı", ELLIPSE, along(0, 0, 0, 0.5)),
+    ("Aralık dışı t", LINE, along(0, 0, 0, 1.5)),
+]
+
+ALONG_FOLLOW_CASES = [
+    ("Taşınan çizgide oran kalır", along(0, 0, 0, 0.25), LINE, moved(LINE, 1.5, 2)),
+    ("Uzatılan çizgide oran kalır", along(0, 0, 0, 0.25), LINE, dict(LINE, b=v(8, 0))),
+    ("Köşesi çekilen alanın kenarı", along(0, 0, 1, 0.5), ROOM, with_pts(ROOM, (0, 0), (4, 0), (5, 3.5), (0, 3))),
+    ("Önüne köşe eklenen kenar yeni sırasında", along(0, 0, 2, 0.25), ROOM,
+     with_pts(ROOM, (0, 0), (2, -0.5), (4, 0), (4, 3), (0, 3))),
+    ("Bölünen kenar kopar", along(0, 0, 1, 0.5), ROOM, with_pts(ROOM, (0, 0), (4, 0), (4.5, 1.5), (4, 3), (0, 3))),
+    ("Budanan yayda oran kalır", along(0, 0, 0, 0.5), ARC, dict(ARC, a0=math.pi / 6)),
+    ("Büyüyen dairede oran kalır", along(0, 0, 0, 0.125), CIRCLE, dict(CIRCLE, r=3)),
+    ("Silinen yay", along(0, 0, 0, 0.5), ARC, None),
+    ("Elips yaya döndü", along(0, 0, 0, 0.5), ELLIPSE, ARC),
+]
+
+RANGE_CASES = [
+    ("Çizginin ortadaki yarısı", LINE, along(0, 0, 0, 0.25), along(0, 0, 0, 0.75)),
+    ("Çizgide ters sıra", LINE, along(0, 0, 0, 0.75), along(0, 0, 0, 0.25)),
+    ("Yolun iki kenarından", WALL, along(0, 0, 0, 0.5), along(0, 0, 2, 0.5)),
+    ("Kapalı alanda dolanan", ROOM, along(0, 0, 3, 0.5), along(0, 0, 0, 0.5)),
+    ("Açık yolda ters sıra", WALL, along(0, 0, 2, 0.5), along(0, 0, 0, 0.5)),
+    ("Yaylı kenarla", ARCED, along(0, 0, 0, 0.0), along(0, 0, 1, 0.5)),
+    ("Yayın parçası", ARC, along(0, 0, 0, 0.25), along(0, 0, 0, 0.75)),
+    ("Dairede dolanan", CIRCLE, along(0, 0, 0, 0.75), along(0, 0, 0, 0.25)),
+    ("Elips yayının parçası", ELLIPSE, along(0, 0, 0, 0.0), along(0, 0, 0, 1.0)),
+    ("Farklı halkalar", HOLED, along(0, 0, 0, 0.5), along(0, 1, 0, 0.5)),
+    ("Köşe yer değil", WALL, place("vertex", 0, 0, 1), along(0, 0, 2, 0.5)),
+]
+
+RANGE_FOLLOW_CASES = [
+    ("Taşınan yolda aralık izler", WALL, along(0, 0, 0, 0.5), along(0, 0, 2, 0.5), moved(WALL, 1, 1)),
+    ("Ucu kopan aralık kopar", ROOM, along(0, 0, 0, 0.5), along(0, 0, 1, 0.5),
+     with_pts(ROOM, (0, 0), (4, 0), (4.5, 1.5), (4, 3), (0, 3))),
+    ("Silinen nesne", LINE, along(0, 0, 0, 0.25), along(0, 0, 0, 0.75), None),
+]
+
+# Blocks: a door (a line and a leaf), a room that holds the door twice, a frame that holds the room.
+DOOR = {"id": "kapi", "base": v(0, 0), "entities": [
+    {"kind": "line", "a": v(0, 0), "b": v(1, 0)},
+    {"kind": "polyline", "pts": pts((0, 0), (0, 1), (1, 1))},
+    {"kind": "circle", "c": v(0.5, 0.5), "r": 0.25},
+]}
+ROOM_BLOCK = {"id": "oda", "base": v(1, 1), "entities": [
+    {"kind": "polygon", "pts": pts((1, 1), (5, 1), (5, 4), (1, 4))},
+    {"kind": "insert", "block": "kapi", "p": v(2, 1), "scale": 1.0, "rotation": 0.0},
+    {"kind": "insert", "block": "kapi", "p": v(5, 2), "scale": 0.5, "rotation": math.pi / 2},
+]}
+FRAME = {"id": "cerceve", "base": v(0, 0), "entities": [
+    {"kind": "line", "a": v(0, 0), "b": v(10, 0)},
+    {"kind": "insert", "block": "oda", "p": v(3, 3), "scale": 2.0, "rotation": math.pi / 6, "mirror": True},
+]}
+DEFS = {d["id"]: d for d in (DOOR, ROOM_BLOCK, FRAME)}
+DOOR_WIDE = dict(DOOR, entities=[{"kind": "line", "a": v(0, 0), "b": v(1.5, 0)}] + DOOR["entities"][1:])
+DOOR_SHORT = dict(DOOR, entities=DOOR["entities"][:1])
+DEFS_WIDE = dict(DEFS, kapi=DOOR_WIDE)
+DEFS_SHORT = dict(DEFS, kapi=DOOR_SHORT)
+DEFS_REBASED = dict(DEFS, oda=dict(ROOM_BLOCK, base=v(0, 0)))
+
+
+def insert(block, x, y, scale=1.0, rotation=0.0, mirror=None):
+    d = {"kind": "insert", "block": block, "p": v(x, y), "scale": scale, "rotation": rotation}
+    if mirror is not None:
+        d["mirror"] = mirror
+    return d
+
+
+ROOM_IN = insert("oda", 20, 10)
+FRAME_IN = insert("cerceve", 100, 50, 1.0, math.pi / 2)
+
+PIECE_CASES = [
+    ("Odanın alanının köşesi", ROOM_IN, [0], place("vertex", 0, 0, 2)),
+    ("Odadaki kapının çizgisinin sonu", ROOM_IN, [1, 0], place("end")),
+    ("Dönük ve küçük kapının kanadının köşesi", ROOM_IN, [2, 1], place("vertex", 0, 0, 1)),
+    ("Kapının çemberinin merkezi", ROOM_IN, [2, 2], place("center")),
+    ("Aynalı odadaki kapının kanadı boyunca", FRAME_IN, [1, 1, 1], along(0, 0, 1, 0.5)),
+    ("Aynalı odanın köşesi", FRAME_IN, [1, 0], place("vertex", 0, 0, 1)),
+    ("Yerleştirme anılamaz", ROOM_IN, [1], place("start")),
+    ("Olmayan sıra", ROOM_IN, [7], place("start")),
+    ("Yerleştirme olmayanın içi", ROOM_IN, [0, 0], place("start")),
+    ("Boş yol", ROOM_IN, [], place("start")),
+]
+
+PIECE_FOLLOW_CASES = [
+    ("Taşınan odanın kapısı izler", [1, 0], place("end"), DEFS, ROOM_IN, DEFS, insert("oda", 25, 12)),
+    ("Döndürülen odanın köşesi izler", [0], place("vertex", 0, 0, 2), DEFS, ROOM_IN, DEFS,
+     insert("oda", 20, 10, 1.0, math.pi / 4)),
+    ("Genişleyen kapı: yeni tanımda uç izler", [1, 0], place("end"), DEFS, ROOM_IN, DEFS_WIDE, ROOM_IN),
+    ("Kanadı silinen kapı: parça yok", [1, 1], place("vertex", 0, 0, 1), DEFS, ROOM_IN, DEFS_SHORT, ROOM_IN),
+    ("Taban noktası değişen oda", [0], place("vertex", 0, 0, 0), DEFS, ROOM_IN, DEFS_REBASED, ROOM_IN),
+    ("Silinen yerleştirme", [1, 0], place("end"), DEFS, ROOM_IN, DEFS, None),
+    ("Yerleştirme çizgiye döndü", [1, 0], place("end"), DEFS, ROOM_IN, DEFS,
+     {"kind": "line", "a": v(0, 0), "b": v(1, 0)}),
+    ("Aynalı çerçevede kanat boyunca", [1, 1, 1], along(0, 0, 1, 0.5), DEFS, FRAME_IN, DEFS,
+     insert("cerceve", 90, 40, 1.0, math.pi / 2)),
+]
+
+PIECE_SNAP_CASES = [
+    ("Uç: odadaki kapının sonu", ROOM_IN, "endpoint", None, [1, 0], place("end")),
+    ("Merkez: dönük kapının çemberi", ROOM_IN, "center", None, [2, 2], place("center")),
+    ("Yakın: odanın alt kenarı", ROOM_IN, "nearest", v(22, 10), None, None),
+    ("Uç ama orada parça yok", ROOM_IN, "endpoint", v(30, 30), None, None),
+]
+
+TRIG = {"Yayın başı", "Yayın sonu", "Elipsin başı", "Elipsin sonu", "Budanan yayın başı yeni başında", "Elipsin sonu",
+        "Yaylı kenarın yarısı", "Yaylı kenarın çeyreği", "Yayın üçte biri", "Dairenin çeyreği", "Elipsin yarısı",
+        "Budanan yayda oran kalır", "Büyüyen dairede oran kalır"}
+
+
+def snap_at(defs, ins, path, pl):
+    """A piece's place's point in the drawing, where a snap would stand."""
+    return point(piece(defs, ins, path), pl)
+
+
+def piece_snap(name, ins, snap, at, path, pl):
+    if at is None:
+        at = snap_at(DEFS, ins, path, pl)
+    return {"name": name, "definitions": list(DEFS.values()), "insert": ins, "snap": snap, "at": at,
+            "expect": place_in(DEFS, ins, snap, at)}
 
 
 def build():
@@ -338,14 +834,37 @@ def build():
     for name, pl, before, after in FOLLOW_CASES:
         follows.append({"name": name, "place": pl, "before": before, "after": after,
                         "expect": follow(pl, before, after), "exact": name not in TRIG})
+    for name, e, pl in ALONG_POINT_CASES:
+        points.append({"name": name, "entity": e, "place": pl, "point": point(e, pl), "exact": name not in TRIG})
+    for name, pl, before, after in ALONG_FOLLOW_CASES:
+        follows.append({"name": name, "place": pl, "before": before, "after": after,
+                        "expect": follow(pl, before, after), "exact": name not in TRIG})
     snaps = [{"name": n, "entity": e, "snap": s, "at": at, "place": place_at(e, s, at)} for n, e, s, at in SNAP_CASES]
+    ranges = [{"name": n, "entity": e, "from": a, "to": b, "length": range_length(e, a, b)}
+              for n, e, a, b in RANGE_CASES]
+    range_follows = [{"name": n, "from": a, "to": b, "before": e, "after": after,
+                      "expect": follow_range(a, b, e, after)} for n, e, a, b, after in RANGE_FOLLOW_CASES]
+    pieces = [{"name": n, "definitions": list(DEFS.values()), "insert": ins, "path": path, "place": pl,
+               "point": (lambda e: point(e, pl) if e else None)(piece(DEFS, ins, path))}
+              for n, ins, path, pl in PIECE_CASES]
+    piece_follows = []
+    for n, path, pl, db, ib, da, ia in PIECE_FOLLOW_CASES:
+        piece_follows.append({"name": n, "path": path, "place": pl, "before": {"definitions": list(db.values()),
+                              "insert": ib}, "after": {"definitions": list(da.values()), "insert": ia},
+                              "expect": follow_in(pl, path, db, ib, da, ia)})
+    piece_snaps = [piece_snap(*c) for c in PIECE_SNAP_CASES]
     return {
         "format": "kentos.subref-cases",
         "version": 1,
-        "source": "scripts/fixtures/subref_cases.py (docs/adr/0249)",
+        "source": "scripts/fixtures/subref_cases.py (docs/adr/0249, 0263)",
         "points": points,
         "follows": follows,
         "snaps": snaps,
+        "ranges": ranges,
+        "rangeFollows": range_follows,
+        "pieces": pieces,
+        "pieceFollows": piece_follows,
+        "pieceSnaps": piece_snaps,
     }
 
 
@@ -358,7 +877,9 @@ def main():
         if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
             print(f"{OUT.relative_to(ROOT)} güncel değil", file=sys.stderr)
             return 1
-        print(f"alt nesne başvuruları tutarlı: {len(build()['points'])} nokta, {len(build()['follows'])} izleme, {len(build()['snaps'])} kenet durumu")
+        b = build()
+        print(f"alt nesne başvuruları tutarlı: {len(b['points'])} nokta, {len(b['follows'])} izleme, {len(b['snaps'])} kenet, "
+              f"{len(b['ranges']) + len(b['rangeFollows'])} aralık, {len(b['pieces']) + len(b['pieceFollows']) + len(b['pieceSnaps'])} blok durumu")
         return 0
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text, encoding="utf-8")

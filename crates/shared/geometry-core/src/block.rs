@@ -213,6 +213,60 @@ impl Blocks {
             .collect()
     }
 
+    /// The object a block path names inside an insert (docs/adr/0263 §3), placed in the drawing: each number its
+    /// object's place in that level's definition (`entities`), every one but the last an insert; none when the path
+    /// is empty, deeper than [`MAX_DEPTH`], leaves a definition or ends on an insert.
+    pub fn piece(&self, insert: &Shape, path: &[u32]) -> Option<Shape> {
+        if path.is_empty() || path.len() > MAX_DEPTH {
+            return None;
+        }
+        let mut cur = insert;
+        let mut m: Affine = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+        for (depth, &i) in path.iter().enumerate() {
+            let (flat, placed) = self.placed(cur)?;
+            m = compose(
+                &m,
+                &compose(&placed, &translation(-flat.base.x, -flat.base.y)),
+            );
+            let e = flat.entities.get(i as usize)?;
+            let inner = matches!(e.shape, Shape::Insert { .. });
+            if depth + 1 < path.len() {
+                if !inner {
+                    return None;
+                }
+                cur = &e.shape;
+            } else {
+                return (!inner).then(|| transform_shape(&e.shape, &m));
+            }
+        }
+        None
+    }
+
+    /// Every block path of an insert's objects (docs/adr/0263 §3), in the order the flattening places them (a nested
+    /// insert's objects where it stands); an unknown block has none.
+    pub fn piece_paths(&self, insert: &Shape) -> Vec<Vec<u32>> {
+        fn walk(blocks: &Blocks, shape: &Shape, prefix: &mut Vec<u32>, out: &mut Vec<Vec<u32>>) {
+            let Some((flat, _)) = blocks.placed(shape) else {
+                return;
+            };
+            if prefix.len() >= MAX_DEPTH {
+                return;
+            }
+            for (i, e) in flat.entities.iter().enumerate() {
+                prefix.push(i as u32);
+                if matches!(e.shape, Shape::Insert { .. }) {
+                    walk(blocks, &e.shape, prefix, out);
+                } else {
+                    out.push(prefix.clone());
+                }
+                prefix.pop();
+            }
+        }
+        let mut out = Vec::new();
+        walk(self, insert, &mut Vec::new(), &mut out);
+        out
+    }
+
     /// An insert's box (docs/adr/0186 §4): its pieces' box in its
     /// definition's frame, placed as the insert places them; none for an
     /// unknown block or one without pieces.

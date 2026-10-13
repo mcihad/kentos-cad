@@ -32,6 +32,7 @@ mod requests;
 mod robustness;
 mod services;
 mod sheets;
+mod subref_extras;
 mod survey_sigmas;
 mod texts;
 mod topology;

@@ -186,6 +186,10 @@ def point_of(p):
     eid, where = int(p["uid"].split(":")[1]), p["place"]
     if eid == 10:
         return (X + 2, Y + 20)
+    if eid == 11 and where["kind"] == "along":
+        # Along the line: a + t·(b − a) (docs/adr/0263 §1).
+        (ax, ay), (bx, by), t = LINE_11[0], LINE_11[1], where["t"]
+        return (ax + (bx - ax) * t, ay + (by - ay) * t)
     if eid == 11:
         return LINE_11[0] if where["kind"] == "start" else LINE_11[1]
     if eid == 12:
@@ -354,6 +358,11 @@ def written_cases():
     a, b, at = LINE_11[0], LINE_11[1], (X + 6, Y + 3)
     out.append(case("Hizalı: çizginin iki ucu yerleriyle, onlara bağlı; adım “Ekle”", inp(m, at),
                     lambda i: dimension(i, a, b, signed_offset(a, b, at), refs=refs(a=ref_of(m["a"]), b=ref_of(m["b"]))), undo=True))
+    # Hizalı from a place along the line (docs/adr/0263 §1) to the area's corner: both bound.
+    m = {"kind": "aligned", "a": place(11, "along", part=0, ring=0, index=0, t=0.25), "b": vertex(12, 0)}
+    a, b, at = point_of(m["a"]), point_of(m["b"]), (X + 10, Y + 3)
+    out.append(case("Hizalı: çizginin çeyreğinden (along) alanın köşesine, ikisi de bağlı", inp(m, at),
+                    lambda i: dimension(i, a, b, signed_offset(a, b, at), refs=refs(a=ref_of(m["a"]), b=ref_of(m["b"])))))
     # Hizalı by coordinates, the distance typed.
     m = {"kind": "aligned", "a": at_(X + 20, Y + 10), "b": at_(X + 26, Y + 18)}
     out.append(case("Hizalı: koordinatlarla, serbest; uzaklık yazılmış", inp(m, (X + 40, Y + 40), offset=-2),
@@ -493,6 +502,13 @@ def refused_cases():
                 "entity_not_found", not_found(MISSING), "measure.of.uid"),
         refused("Yerin nesnesi çizimde yok", inp({**aligned, "b": {"kind": "place", "uid": MISSING, "place": {"kind": "end"}}}, (X, Y)),
                 "entity_not_found", not_found(MISSING), "measure.b.uid"),
+        refused("Çizginin ikinci kenarı yok (along)", inp({**aligned, "b": place(11, "along", part=0, ring=0, index=1, t=0.5)}, (X, Y)),
+                "no_such_place",
+                "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.", "measure.b.place"),
+        refused("Blok yolu yerleştirme olmayan nesnede (docs/adr/0263 §3)",
+                inp({**aligned, "b": {**place(11, "end"), "path": [0]}}, (X, Y)), "piece_gone",
+                "Blok yolunda böyle bir parça yok: yolun bir sırası tanımın dışında, yol bir yerleştirmede bitiyor ya da yerleştirme olmayan bir nesneden geçiyor.",
+                "measure.b.path"),
         refused("Alanın böyle bir köşesi yok", inp({**aligned, "b": vertex(12, 9)}, (X, Y)), "no_such_place",
                 "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.", "measure.b.place"),
         refused("Çizginin yarıçapı ölçülmez", inp({"kind": "radius", "of": edge(11, (X + 6, Y))}, (X + 6, Y + 5)),

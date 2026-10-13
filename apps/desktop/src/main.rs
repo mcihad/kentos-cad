@@ -179,6 +179,8 @@ mod settings_look;
 mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
+#[cfg(test)]
+mod subref_scenes;
 mod ucs;
 #[cfg(test)]
 mod ucs_scenes;
