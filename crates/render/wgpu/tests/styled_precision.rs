@@ -178,3 +178,47 @@ fn around_the_anchor_positions_pack_as_before() {
         assert!(e < BOUND_M, "{e} m");
     }
 }
+
+/// A millimetre's detail on real coordinates (plan/cad.md `CAD-DATA-25`,
+/// docs/specs/numeric-policy.md §2): two corners 1 mm apart at 10 000 px/m
+/// (1 mm = 10 px, the deepest views of a building's plan). The packing reads
+/// the float64 sources and writes the GPU's own numbers: the drawing's
+/// coordinates are never touched. On screen a corner is off by at most the
+/// float32 step of its distance from its tile's centre: 12 m from the anchor
+/// a fiftieth of a pixel; 3 km away a step is 0.24 mm, and the 1 mm side
+/// shows as 0.98 mm. The step doubles with the distance (27 km: 2 mm): that
+/// is `REN-16`.
+#[test]
+fn a_millimetre_detail_is_off_by_no_more_than_its_float32_step_on_screen() {
+    let px_per_m = 10_000.0;
+    for offset in [[12.345_678, 23.456_789], [-3_000.25, 2_500.75]] {
+        let a = [ANCHOR[0] + offset[0], ANCHOR[1] + offset[1]];
+        let b = [a[0] + 0.001, a[1] + 0.001];
+        let center = [a[0] + 0.0005, a[1] + 0.0005];
+        let (pa, pb) = (
+            styled_px(a, center, px_per_m as f32),
+            styled_px(b, center, px_per_m as f32),
+        );
+        let (ea, eb) = (exact_px(a, center, px_per_m), exact_px(b, center, px_per_m));
+        // The float32 step at the corner's distance from its tile's centre (here the anchor's tile).
+        let far = offset[0].abs().max(offset[1].abs());
+        let step = 2f64.powi(far.log2().floor() as i32 - 23);
+        let bound = 2.0 * step * px_per_m;
+        assert!(
+            error(pa, ea) <= bound && error(pb, eb) <= bound,
+            "{offset:?}: {bound}"
+        );
+        let shown = (pb[0] - pa[0]).hypot(pb[1] - pa[1]);
+        let exact = (eb[0] - ea[0]).hypot(eb[1] - ea[1]);
+        assert!(
+            (shown - exact).abs() <= 2.0 * bound,
+            "{offset:?}: {shown} against {exact}"
+        );
+        if far < 100.0 {
+            assert!(
+                (shown - exact).abs() < 0.02,
+                "{offset:?}: {shown} against {exact}"
+            );
+        }
+    }
+}
