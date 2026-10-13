@@ -1,7 +1,7 @@
 {
   "format": "kentos.point-input-cases",
   "version": 1,
-  "note": "Yazılan nokta ve sayı girişinin dilbilgisi (TODOS.md UX-04, UX-05; docs/adr/0018, 0021). Web'in okuyucusu apps/web/src/tools/coordinateInput.ts (coordinateInput.test.ts), masaüstününki crates/shared/geometry-core/src/tools/point_text.rs (tests/point_text.rs); ikisi de bu dosyayı okur. fn: point (parsePointInput: metin, son nokta, imleç; nesne izleme yok), number (parseNumber), looksLikeCoordinate, pointName (#ad: noktanın adı, docs/adr/0152 §4; adın çözümü uygulamanındır). Noktalar tam eşit karşılaştırılır; tolerance verilmişse o kadar. null: nokta ya da sayı yok. unit (mm, cm): yazılan uzunluk ve koordinatlar yerel projenin o biriminde, nokta metrede beklenir (docs/adr/0165 §2); açı birimsizdir. convention (cad, gis) ve angleUnit (deg, grad): yazılan kutupsal açının düzeni ve birimi, projenin türü ve açı birimi (docs/adr/0165 §4): CAD'de doğudan saat yönünün tersine, CBS'de kuzeyden saat yönünde (semt); verilmezse CAD ve derece. unit in, ft ve ayak (') ile inç (\") işaretli uzunluk: işaretli uzunluk her projede inçtir, işaretsiz sayı çizim birimindedir (docs/adr/0262 §3). ucs (origin, angle: radyan, dünyada; docs/adr/0261 §4): mutlak nokta UCS'te, göreli ve kutupsal UCS'in eksenlerine göre; beklenen nokta dünyadadır; verilmezse dünya. Bugünkü dilbilgisidir; değişikliği UX-05'in kararıyla iki okuyucuda ve burada birlikte yapın.",
+  "note": "Yazılan nokta ve sayı girişinin dilbilgisi (TODOS.md UX-04, UX-05; docs/adr/0018, 0021). Web'in okuyucusu apps/web/src/tools/coordinateInput.ts (coordinateInput.test.ts), masaüstününki crates/shared/geometry-core/src/tools/point_text.rs (tests/point_text.rs); ikisi de bu dosyayı okur. fn: point (parsePointInput: metin, son nokta, imleç; nesne izleme yok), number (parseNumber), looksLikeCoordinate, pointName (#ad: noktanın adı, docs/adr/0152 §4; adın çözümü uygulamanındır). Noktalar tam eşit karşılaştırılır; tolerance verilmişse o kadar. null: nokta ya da sayı yok. unit (mm, cm): yazılan uzunluk ve koordinatlar yerel projenin o biriminde, nokta metrede beklenir (docs/adr/0165 §2); açı birimsizdir. convention (cad, gis) ve angleUnit (deg, grad): yazılan kutupsal açının düzeni ve birimi, projenin türü ve açı birimi (docs/adr/0165 §4): CAD'de doğudan saat yönünün tersine, CBS'de kuzeyden saat yönünde (semt); verilmezse CAD ve derece. unit in, ft ve ayak (') ile inç (\") işaretli uzunluk: işaretli uzunluk her projede inçtir, işaretsiz sayı çizim birimindedir (docs/adr/0262 §3). ucs (origin, angle: radyan, dünyada; docs/adr/0261 §4): mutlak nokta UCS'te, göreli ve kutupsal UCS'in eksenlerine göre; beklenen nokta dünyadadır; verilmezse dünya. Metrik birimli uzunluk (2.5m, 250cm, 1mm, 0.4km) her projede metreye; parantezdeki toplam (+ - * /, iç içe) sayı yerine (docs/adr/0266). Bugünkü dilbilgisidir; değişikliği UX-05'in kararıyla iki okuyucuda ve burada birlikte yapın.",
   "cases": [
     { "name": "mutlak Y,X, TM", "fn": "point", "text": "486512.34,4420118.9", "last": null, "cursor": null, "expect": { "x": 486512.34, "y": 4420118.9 } },
     { "name": "mutlak, noktalı virgül", "fn": "point", "text": "10;20", "last": null, "cursor": null, "expect": { "x": 10, "y": 20 } },
@@ -124,6 +124,28 @@
     { "name": "ayak projesi: işaretsiz sayı ayaktır", "fn": "point", "unit": "ft", "text": "1,2", "last": null, "cursor": null, "expect": { "x": 0.30479999999999996, "y": 0.6095999999999999 }, "tolerance": 1e-12 },
     { "name": "ayak projesi: işaretli inç ayağa çevrilmez", "fn": "point", "unit": "ft", "text": "6\",0", "last": null, "cursor": null, "expect": { "x": 0.15239999999999998, "y": 0.0 }, "tolerance": 1e-12 },
     { "name": "kesirli inç ve eksi", "fn": "point", "text": "1/2\",-1/4\"", "last": null, "cursor": null, "expect": { "x": 0.0127, "y": -0.00635 }, "tolerance": 1e-12 },
-    { "name": "ayak ve inç: boşluk iki koordinatı ayırır", "fn": "point", "text": "5'6 1/2\"", "last": null, "cursor": null, "expect": { "x": 1.6764, "y": 0.0127 }, "tolerance": 1e-12 }
+    { "name": "ayak ve inç: boşluk iki koordinatı ayırır", "fn": "point", "text": "5'6 1/2\"", "last": null, "cursor": null, "expect": { "x": 1.6764, "y": 0.0127 }, "tolerance": 1e-12 },
+    { "name": "metrik: mm projesinde metreli mesafe", "fn": "point", "unit": "mm", "text": "2.5m", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": { "x": 2.5, "y": 0 } },
+    { "name": "metrik: mm projesinde santimetreli göreli", "fn": "point", "unit": "mm", "text": "@250cm,-50cm", "last": { "x": 0, "y": 0 }, "cursor": null, "expect": { "x": 2.5, "y": -0.5 } },
+    { "name": "metrik: metre projesinde milimetreli mutlak", "fn": "point", "text": "1mm,2mm", "last": null, "cursor": null, "expect": { "x": 0.001, "y": 0.002 } },
+    { "name": "metrik: kilometreli kutupsal", "fn": "point", "text": "@0.4km<90", "last": { "x": 0, "y": 0 }, "cursor": null, "expect": { "x": 0, "y": 400 }, "tolerance": 1e-09 },
+    { "name": "metrik: birimle işaretsiz sayı karışık", "fn": "point", "unit": "cm", "text": "100,1m", "last": null, "cursor": null, "expect": { "x": 1, "y": 1 } },
+    { "name": "metrik: birimden sonra harf yok", "fn": "point", "text": "5mx,3", "last": null, "cursor": null, "expect": null },
+    { "name": "metrik: sayıyla birim arasında boşluk yok", "fn": "point", "text": "5 m", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": null },
+    { "name": "hesap: göreli iki toplam", "fn": "point", "text": "@(10+2.5),(3*4)", "last": { "x": 0, "y": 0 }, "cursor": null, "expect": { "x": 12.5, "y": 12 } },
+    { "name": "hesap: kutupsal açıda", "fn": "point", "text": "@10<(180/2)", "last": { "x": 0, "y": 0 }, "cursor": null, "expect": { "x": 0, "y": 10 }, "tolerance": 1e-12 },
+    { "name": "hesap: işaretli parantez", "fn": "point", "text": "-(2+3),4", "last": null, "cursor": null, "expect": { "x": -5, "y": 4 } },
+    { "name": "hesap: iç içe ve öncelik", "fn": "point", "text": "((1+2)*(3+4)-1)/4", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": null },
+    { "name": "hesap: iç içe, bütünü parantezde", "fn": "point", "text": "(((1+2)*(3+4)-1)/4)", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": { "x": 5, "y": 0 } },
+    { "name": "hesap: içinde boşluk", "fn": "point", "text": "( 2 + 3 )", "last": { "x": 0, "y": 0 }, "cursor": { "x": 0, "y": 1 }, "expect": { "x": 0, "y": 5 } },
+    { "name": "hesap: birimli", "fn": "point", "unit": "mm", "text": "(2+0.5)m", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": { "x": 2.5, "y": 0 } },
+    { "name": "hesap: sıfıra bölme", "fn": "point", "text": "(1/0)", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": null },
+    { "name": "hesap: kapanmayan parantez", "fn": "point", "text": "(1+2", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": null },
+    { "name": "hesap: işlecin ardı boş", "fn": "point", "text": "(1+)", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": null },
+    { "name": "hesap: sayı", "fn": "number", "text": "(3*4)", "expect": 12 },
+    { "name": "hesap: sayıda ondalık virgül", "fn": "number", "text": "(1,5+2)", "expect": 3.5 },
+    { "name": "hesap: parantezsiz işlem sayı değildir", "fn": "number", "text": "2*3", "expect": null },
+    { "name": "hesap: tekli eksi ve bölme", "fn": "number", "text": "(-6/-4)", "expect": 1.5 },
+    { "name": "parantezle başlayan yazı koordinattır", "fn": "looksLikeCoordinate", "text": "(1+2)", "expect": true }
   ]
 }

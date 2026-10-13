@@ -457,6 +457,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::ucs_scenes::scenes());
     all.extend(crate::imperial_scenes::scenes());
     all.extend(crate::subref_scenes::scenes());
+    all.extend(crate::input_scenes::scenes());
     all.extend(crate::image_scenes::scenes());
     all.extend(crate::temporal_scenes::scenes());
     all.extend(crate::attachment_scenes::scenes());

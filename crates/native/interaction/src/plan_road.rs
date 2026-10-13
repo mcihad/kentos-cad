@@ -42,7 +42,7 @@ use crate::edge;
 use crate::format::{Format, js_number};
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
-use crate::points::{self, Taken, plain_number, wire_all};
+use crate::points::{self, Taken, wire_all};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
     Context, Cursor, Flow, Memory, OptionChoice, Pointer, Preview, Stroke, Tag, Tool,
@@ -280,10 +280,9 @@ impl PlanRoad {
 
     /// A value typed for the value asked; false when it is not a number.
     fn value(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(n) = plain_number(text) else {
+        let Some((_, m)) = crate::points::plain_value(text, cx) else {
             return false;
         };
-        let m = cx.format().to_metres(n);
         let kind = usize::from(cx.memory.road_kind).min(ROAD_KINDS.len() - 1);
         match self.asking {
             Some(Asking::Width) => {
@@ -782,8 +781,7 @@ impl Stages for RoadJunctions {
             _ => {}
         }
         let ada = self.asking?;
-        let n = plain_number(typed)?;
-        let m = cx.format().to_metres(n);
+        let (_, m) = crate::points::plain_value(typed, cx)?;
         if m.is_nan() || m < 0.0 {
             cx.say(Level::Warn, "Yarıçap sıfır ya da pozitif olmalı.");
             return Some(Flow::Stay);

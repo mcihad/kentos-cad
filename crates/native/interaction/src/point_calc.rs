@@ -22,7 +22,7 @@ use kentos_geometry_core::geom::survey::{
 };
 use kentos_geometry_core::tools::point_calc::{bisector, bisector_nearest, slope};
 use kentos_geometry_core::tools::point_input::{along_ratio, calc_polar, midpoint, nearest_of};
-use kentos_geometry_core::tools::point_text::{is_js_space, js_trim, parse_number};
+use kentos_geometry_core::tools::point_text::{is_js_space, js_trim};
 
 use crate::format::Format;
 use crate::log::Level;
@@ -426,19 +426,28 @@ impl PointCalc {
         // Lengths are typed in the project's unit (docs/adr/0165 §2).
         let f = cx.format();
         let m = |typed: f64| f.to_metres(typed);
+        // Two lengths in the project's unit, or with their own or as sums (docs/adr/0266).
+        let lengths = |t: &str| {
+            pair(t).map(|(a, b)| (m(a), m(b))).or_else(|| {
+                let (a, b) = kentos_geometry_core::tools::point_text::parse_length_pair(t)?;
+                Some((a.metres(m), b.metres(m)))
+            })
+        };
+        let length =
+            |t: &str| kentos_geometry_core::tools::point_text::parse_length(t).map(|l| l.metres(m));
         match self.kind {
             CalcKind::Side => {
-                let Some((absis, ordinat)) = pair(t) else {
+                let Some((absis, ordinat)) = lengths(t) else {
                     return false;
                 };
-                self.finish(side_point(a, b, m(absis), m(ordinat)), cx);
+                self.finish(side_point(a, b, absis, ordinat), cx);
                 true
             }
             CalcKind::Distances => {
-                let Some((d1, d2)) = pair(t) else {
+                let Some((d1, d2)) = lengths(t) else {
                     return false;
                 };
-                let solutions = distance_intersection(a, b, m(d1), m(d2));
+                let solutions = distance_intersection(a, b, d1, d2);
                 match solutions.len() {
                     0 => cx.say(
                         Level::Warn,
@@ -456,10 +465,10 @@ impl PointCalc {
                     self.finish(along_ratio(a, b, num, den), cx);
                     return true;
                 }
-                let Some(n) = parse_number(t) else {
+                let Some(n) = length(t) else {
                     return false;
                 };
-                self.finish(along_line(a, b, m(n)), cx);
+                self.finish(along_line(a, b, n), cx);
                 true
             }
             CalcKind::Polar => {
@@ -487,10 +496,10 @@ impl PointCalc {
                 true
             }
             CalcKind::Bisector => {
-                let Some(d) = number(t) else {
+                let Some(d) = number(t).map(m).or_else(|| length(t)) else {
                     return false;
                 };
-                match bisector(a, b, self.pts[2], m(d)) {
+                match bisector(a, b, self.pts[2], d) {
                     Some(p) => self.finish(Some(p), cx),
                     None => cx.say(Level::Warn, BISECTOR_CORNER),
                 }

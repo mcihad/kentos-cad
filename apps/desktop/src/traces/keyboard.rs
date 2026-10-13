@@ -142,6 +142,10 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         (Layout::Us, '=') => Some(plain("=", Code::Equal)),
         // Mesafe ve eğim's slope (docs/adr/0188 §4): 25,8%.
         (Layout::Us, '%') => Some(shifted("5", Code::Digit5)),
+        // A sum in brackets (docs/adr/0266 §2): (10+2.5), (3*4).
+        (Layout::Us, '(') => Some(shifted("9", Code::Digit9)),
+        (Layout::Us, ')') => Some(shifted("0", Code::Digit0)),
+        (Layout::Us, '*') => Some(shifted("8", Code::Digit8)),
         // Turkish Q: + is Shift+4, − sits right of *, @ is AltGr+Q (Ctrl+Alt on Windows).
         (Layout::TurkishQ, '.') => Some(plain(".", Code::Slash)),
         (Layout::TurkishQ, ',') => Some(plain(",", Code::Backslash)),
@@ -175,6 +179,10 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         }),
         (Layout::TurkishQ, '=') => Some(shifted("0", Code::Digit0)),
         (Layout::TurkishQ, '%') => Some(shifted("5", Code::Digit5)),
+        // Turkish Q: ( and ) are Shift+8 and Shift+9, * its own key right of 0.
+        (Layout::TurkishQ, '(') => Some(shifted("8", Code::Digit8)),
+        (Layout::TurkishQ, ')') => Some(shifted("9", Code::Digit9)),
+        (Layout::TurkishQ, '*') => Some(plain("*", Code::Minus)),
         _ => None,
     };
     if let Some(stroke) = symbol {

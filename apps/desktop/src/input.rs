@@ -816,7 +816,10 @@ impl App {
                     }
                     return;
                 }
-                if !plain_number(&text) {
+                // A length: a number, with its own unit or a sum (docs/adr/0262 §3, 0266); not a point's text.
+                if !plain_number(&text)
+                    && kentos_geometry_core::tools::point_text::parse_length(&text).is_none()
+                {
                     return;
                 }
                 let locked = self.with_tool(|s, cx| match cx.typed_length(&text) {
@@ -854,6 +857,15 @@ impl App {
     /// The number typed in a lock's field locks that; false (and why, when
     /// it is not a number) when nothing was locked.
     fn lock_typed(&mut self, mode: LockAsk, text: &str) -> bool {
+        // A length with its own unit or a sum locks the length too (docs/adr/0266).
+        if mode == LockAsk::Length
+            && kentos_geometry_core::tools::point_text::parse_length(text).is_some()
+        {
+            return self.with_tool(|s, cx| match cx.typed_length(text) {
+                Some(m) => s.lock_length(m, cx),
+                None => false,
+            }) == Some(true);
+        }
         let Some(n) = kentos_geometry_core::tools::point_text::parse_number(text) else {
             if !text.is_empty() {
                 let name = self.lock_name(mode).to_lowercase();

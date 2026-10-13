@@ -29,7 +29,7 @@ use crate::Vec2;
 use crate::edge::Outline;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, Taken, plain_number};
+use crate::points::{self, Taken};
 use crate::prompt::Prompt;
 use crate::tool::{Area, Context, Flow, Pointer, Preview, Stroke, Tag, Tone, Tool};
 
@@ -280,14 +280,18 @@ impl Tool for Sector {
     /// anything else is a point, as everywhere.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         self.format = cx.format();
-        if let Some(n) = plain_number(text).filter(|_| self.stage() != Stage::Centre) {
+        let typed = crate::points::plain_value(text, cx);
+        if let Some(n) = typed
+            .map(|(n, _)| n)
+            .filter(|_| self.stage() != Stage::Centre)
+        {
             match self.stage() {
                 Stage::Start => {
                     if n <= 0.0 {
                         cx.say(Level::Warn, "Yarıçap sıfırdan büyük olmalı.");
                     } else {
                         // Typed in the project's unit (docs/adr/0165 §2).
-                        self.radius = Some(self.format.to_metres(n));
+                        self.radius = typed.map(|(_, m)| m);
                     }
                 }
                 Stage::StartAngle => self.start = Some(self.format.angle_from_typed(n)),

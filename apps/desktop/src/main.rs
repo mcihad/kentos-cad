@@ -76,6 +76,8 @@ mod image_scenes;
 mod imperial_scenes;
 mod info_card;
 mod input;
+#[cfg(test)]
+mod input_scenes;
 mod keys;
 mod keytips;
 #[cfg(test)]

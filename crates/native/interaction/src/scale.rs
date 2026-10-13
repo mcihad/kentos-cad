@@ -23,7 +23,7 @@ use crate::Vec2;
 use crate::format::{Format, fixed};
 use crate::log::Level;
 use crate::modify::{Modify, Stages, transform_selection};
-use crate::points::{SAME, plain_number, wire};
+use crate::points::{SAME, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow};
 
@@ -173,7 +173,7 @@ impl Stages for Scale {
             self.ref_mode = true;
             return Some(Flow::Stay);
         }
-        let n = plain_number(text)?;
+        let (n, typed) = crate::points::plain_value(text, cx)?;
         if n <= 0.0 {
             let why = if self.ref_mode {
                 "Uzunluk sıfırdan büyük olmalı."
@@ -183,8 +183,8 @@ impl Stages for Scale {
             cx.say(Level::Warn, why);
             return Some(Flow::Stay);
         }
-        // A reference length is typed in the project's unit and set against picked lengths in metres.
-        let typed = cx.format().to_metres(n);
+        // A reference length is typed in the project's unit (or with its own, docs/adr/0266) and set against picked
+        // lengths in metres.
         match (self.ref_mode, self.ref_length) {
             (true, None) => {
                 self.ref_length = Some(typed);

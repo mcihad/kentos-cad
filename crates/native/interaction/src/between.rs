@@ -206,14 +206,17 @@ impl PointsBetween {
                 cx.memory.between_parts = n as u32;
             }
             Method::Distances | Method::Ratios => {
-                let Some(mut list) = number_list(text) else {
+                // Distances are typed in the project's unit (docs/adr/0165 §2), or with their own (docs/adr/0266);
+                // ratios have none.
+                let list = if self.method == Method::Distances {
+                    let f = cx.format();
+                    length_list(text, |n| f.to_metres(n))
+                } else {
+                    number_list(text)
+                };
+                let Some(list) = list else {
                     return false;
                 };
-                // Distances are typed in the project's unit (docs/adr/0165 §2); ratios have none.
-                if self.method == Method::Distances {
-                    let f = cx.format();
-                    list.iter_mut().for_each(|d| *d = f.to_metres(*d));
-                }
                 let Some(values) = Values::from_slice(&list) else {
                     cx.say(
                         Level::Warn,
@@ -274,6 +277,18 @@ impl Default for PointsBetween {
 
 /// Numbers with commas, semicolons or spaces between them; none for anything
 /// else, and for none at all.
+/// Lengths in metres as [`number_list`] reads its numbers, each in the project's unit or with its own.
+fn length_list(text: &str, metres: impl Fn(f64) -> f64) -> Option<Vec<f64>> {
+    let list: Option<Vec<f64>> = js_trim(text)
+        .split(|c: char| c == ',' || c == ';' || c.is_whitespace())
+        .filter(|t| !t.is_empty())
+        .map(|t| {
+            kentos_geometry_core::tools::point_text::parse_length(t).map(|l| l.metres(&metres))
+        })
+        .collect();
+    list.filter(|l| !l.is_empty())
+}
+
 fn number_list(text: &str) -> Option<Vec<f64>> {
     let list: Option<Vec<f64>> = js_trim(text)
         .split(|c: char| c == ',' || c == ';' || c.is_whitespace())

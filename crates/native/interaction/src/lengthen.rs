@@ -277,7 +277,9 @@ impl Tool for Lengthen {
             self.redraw(cx);
             return true;
         }
-        let Some(n) = parse_number(text) else {
+        let Some((n, length)) = crate::points::plain_value(text, cx)
+            .or_else(|| parse_number(text).map(|n| (n, cx.format().to_metres(n))))
+        else {
             return false;
         };
         if let Some(ask) = self.ask {
@@ -288,8 +290,8 @@ impl Tool for Lengthen {
                 cx.say(Level::Warn, "Değer sıfırdan büyük olmalı.");
                 return true;
             }
-            // Lengths are typed in the project's unit (docs/adr/0165 §2); a percentage has none.
-            let length = cx.format().to_metres(n);
+            // Lengths are typed in the project's unit (docs/adr/0165 §2) or with their own (docs/adr/0266); a
+            // percentage has none.
             match ask {
                 LengthenMode::Delta => cx.memory.lengthen_delta = length,
                 LengthenMode::Percent => cx.memory.lengthen_percent = n,
@@ -301,7 +303,6 @@ impl Tool for Lengthen {
             return true;
         }
         if let Some((slot, at_end)) = self.target.take() {
-            let length = cx.format().to_metres(n);
             self.apply(slot, at_end, length, cx);
             self.drawn = Preview::default();
             self.see(cx);

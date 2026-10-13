@@ -35,7 +35,6 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{MAX_GHOSTS, Modify, Stages};
 use crate::object::ObjectAction;
-use crate::points::plain_number;
 use crate::prompt::{Prompt, upper_tr};
 use crate::select::SelectBox;
 use crate::tool::{
@@ -253,7 +252,7 @@ impl Split {
     /// A number in a click method: the count or the length, cutting at once
     /// when an object is picked.
     fn typed_value(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(n) = plain_number(text) else {
+        let Some((n, metres)) = crate::points::plain_value(text, cx) else {
             return false;
         };
         if self.mode == Mode::Equal {
@@ -270,8 +269,8 @@ impl Split {
                 cx.say(Level::Warn, "Uzunluk sıfırdan büyük olmalı.");
                 return true;
             }
-            // Typed in the project's unit (docs/adr/0165 §2).
-            cx.memory.split_length = cx.format().to_metres(n);
+            // Typed in the project's unit (docs/adr/0165 §2), or with its own (docs/adr/0266).
+            cx.memory.split_length = metres;
         }
         self.see(cx);
         if self.target.is_some() {

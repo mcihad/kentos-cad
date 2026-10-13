@@ -368,11 +368,13 @@ impl Rectangle {
         let n = parse_number(text);
         match self.stage {
             Stage::CornerSize => {
-                let Some(n) = n.filter(|n| *n >= 0.0) else {
+                let Some((n, size)) = crate::points::plain_value(text, cx)
+                    .or_else(|| n.map(|n| (n, cx.format().to_metres(n))))
+                    .filter(|(n, _)| *n >= 0.0)
+                else {
                     return false;
                 };
-                // Typed in the project's unit (docs/adr/0165 §2).
-                let size = cx.format().to_metres(n);
+                // Typed in the project's unit (docs/adr/0165 §2) or with its own (docs/adr/0266).
                 cx.memory.rect_corners = match (n > 0.0, self.pending) {
                     (false, _) => Corners::Sharp,
                     (true, Pending::Fillet) => Corners::Fillet(size),
@@ -389,15 +391,25 @@ impl Rectangle {
                 self.stage = Stage::Second;
                 true
             }
-            Stage::Size => match size_text(text) {
-                Some((length, width)) if length > 0.0 && width > 0.0 => {
-                    let f = cx.format();
-                    self.size = Some((f.to_metres(length), f.to_metres(width)));
-                    self.stage = Stage::Side;
-                    true
+            Stage::Size => {
+                // Typed in the project's unit (docs/adr/0165 §2), or with their own (docs/adr/0266).
+                let f = cx.format();
+                let size = size_text(text)
+                    .map(|(l, w)| (f.to_metres(l), f.to_metres(w)))
+                    .or_else(|| {
+                        let (l, w) =
+                            kentos_geometry_core::tools::point_text::parse_length_pair(text)?;
+                        Some((l.metres(|n| f.to_metres(n)), w.metres(|n| f.to_metres(n))))
+                    });
+                match size {
+                    Some((length, width)) if length > 0.0 && width > 0.0 => {
+                        self.size = Some((length, width));
+                        self.stage = Stage::Side;
+                        true
+                    }
+                    _ => false,
                 }
-                _ => false,
-            },
+            }
             _ => match cx.typed_point(text, self.d.last(), self.d.hover) {
                 Some(p) => {
                     self.accept(p, cx);
