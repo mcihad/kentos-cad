@@ -114,11 +114,7 @@ pub fn meets_box(ring: &[Vec2], b: &Bounds) -> bool {
 pub type Keep<'a> = Option<&'a mut dyn FnMut(&[Vec2]) -> bool>;
 
 /// The grid over the box; `keep` (Nesnelere değenler) chooses cells.
-pub fn pieces(
-    b: &Bounds,
-    spec: &Spec,
-    keep: Keep<'_>,
-) -> Result<Vec<Piece>, &'static str> {
+pub fn pieces(b: &Bounds, spec: &Spec, keep: Keep<'_>) -> Result<Vec<Piece>, &'static str> {
     match spec.kind {
         Kind::Rect => rects(b, spec, keep),
         Kind::Lines => lines(b, spec),
@@ -127,11 +123,7 @@ pub fn pieces(
     }
 }
 
-fn rects(
-    b: &Bounds,
-    spec: &Spec,
-    mut keep: Keep<'_>,
-) -> Result<Vec<Piece>, &'static str> {
+fn rects(b: &Bounds, spec: &Spec, mut keep: Keep<'_>) -> Result<Vec<Piece>, &'static str> {
     let (dx, dy) = (spec.dx, spec.dy);
     let (ox, oy) = (start(b.min_x, dx, spec.snap), start(b.min_y, dy, spec.snap));
     let (nc, nr) = (steps(ox, b.max_x, dx), steps(oy, b.max_y, dy));
@@ -207,11 +199,7 @@ fn whole(v: f64) -> i64 {
 
 /// Flat-topped hexagons of side a (§2): a lattice of a/2 across and
 /// h = a·√3/2 up; column c's centre at 3c + 2, row r's at 2r + 1 + (c mod 2).
-fn hexagons(
-    b: &Bounds,
-    spec: &Spec,
-    mut keep: Keep<'_>,
-) -> Result<Vec<Piece>, &'static str> {
+fn hexagons(b: &Bounds, spec: &Spec, mut keep: Keep<'_>) -> Result<Vec<Piece>, &'static str> {
     let a = spec.side;
     let (u, h) = (a / 2.0, (a * 3f64.sqrt()) / 2.0);
     let (ox, oy) = if spec.snap {
@@ -257,11 +245,7 @@ fn hexagons(
 
 /// Equilateral triangles of side a (§2): rows h = a·√3/2 high, odd rows
 /// shifted by a/2; in a row up and down triangles take turns.
-fn triangles(
-    b: &Bounds,
-    spec: &Spec,
-    mut keep: Keep<'_>,
-) -> Result<Vec<Piece>, &'static str> {
+fn triangles(b: &Bounds, spec: &Spec, mut keep: Keep<'_>) -> Result<Vec<Piece>, &'static str> {
     let a = spec.side;
     let (u, h) = (a / 2.0, (a * 3f64.sqrt()) / 2.0);
     let (ox, oy) = if spec.snap {

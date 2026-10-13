@@ -289,12 +289,12 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             target: The organisation or personal space (``Connection.tenant``).
             name:
             settings:
-            origin:
+            origin: Unit: length.
             layers:
             active_layer:
             styles:
             description: The catalog's description (docs/adr/0028); absent: none.
-            home_view:
+            home_view: Unit: length.
             project_type: Absent: the general type (`cad`).
             sheets: The project's sheet book and its pictures (docs/adr/0251); absent: none.
             storage: How the project is kept, for good (docs/adr/0031); absent: object by

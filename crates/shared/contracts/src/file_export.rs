@@ -55,11 +55,14 @@ pub struct ExportDxf {
 pub struct DxfExported {
     pub path: String,
     /// The file's bytes: written, or the size the plan would write.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     /// SHA-256 of the bytes, 64 hex digits.
     pub sha256: String,
     /// The objects written and the layers they are on.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub layers: u32,
     /// Whether a file was there (and is written over).
     pub replaced: bool,
@@ -96,6 +99,7 @@ pub struct ExportPdf {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct PdfExported {
     pub path: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,
     /// The sheets printed, by id, in page order.

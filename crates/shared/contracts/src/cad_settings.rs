@@ -69,18 +69,22 @@ pub struct SettingsSet {
     pub project_type: Option<Workspace>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub second_srid: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_unit: Option<DrawingUnit>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub length_decimals: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub area_decimals: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -90,6 +94,7 @@ pub struct SettingsSet {
     pub angle_unit: Option<AngleUnit>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub plot_scale: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -112,8 +117,10 @@ pub struct SettingsChanged {
     /// (`drawingUnit` too when a system made the unit metres).
     pub changed: Vec<String>,
     /// The annotations that took the new plot scale's height (one undo step).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub followed: u32,
     /// The annotations a locked layer kept at the old height.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub locked: u32,
     /// The document's revision afterwards (plan: the one it was made
     /// against), as decimal text.

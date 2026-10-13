@@ -45,11 +45,15 @@ pub enum HatchPatternType {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct PatternLine {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub angle: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "pattern")))]
     pub origin: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "pattern")))]
     pub offset: [f64; 2],
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "pattern")))]
     pub dashes: Vec<f64>,
 }
 
@@ -92,8 +96,10 @@ pub struct HatchPattern {
     pub kind: HatchPatternType,
     /// Degrees, counter-clockwise from east: the lines' (lines, cross), the
     /// pattern's turn (pattern), the gradient's direction (gradient).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub angle: f64,
     /// Metres between the lines (lines, cross); 1 and unread for the others.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub spacing: f64,
     /// A pattern's name (`ANSI31`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -102,6 +108,7 @@ pub struct HatchPattern {
     /// A pattern's metres per unit of its definition.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub scale: Option<f64>,
     /// A pattern's line families.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -128,6 +135,7 @@ pub struct HatchAssoc {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
     pub cutouts: Vec<EntityId>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub seed: Vec2,
 }
 

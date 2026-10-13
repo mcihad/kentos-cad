@@ -142,7 +142,9 @@ pub(super) fn form<'a>(env: &Env<'_>) -> Element<'a, Message> {
         number_row(env, "transparency"),
         dd_enabled(env),
     ];
-    let mut parts = column![Column::with_children(own).spacing(10)].spacing(14).width(Fill);
+    let mut parts = column![Column::with_children(own).spacing(10)]
+        .spacing(14)
+        .width(Fill);
     // Draw effects (docs/adr/0226 §2): a symbol's own layers take them.
     if env.effects {
         parts = parts

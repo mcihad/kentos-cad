@@ -28,7 +28,9 @@ pub const CAD_ENTITIES_STRETCH_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StretchWindow {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max: Vec2,
 }
 
@@ -73,8 +75,10 @@ pub struct EntitiesStretch {
     /// The window over the vertices to move, metres.
     pub window: StretchWindow,
     /// How far east (Y) the vertices move, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub dx: f64,
     /// How far north (X) the vertices move, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub dy: f64,
     /// Only these objects (the selection); absent: every shown object the window meets.
     #[serde(default, skip_serializing_if = "Option::is_none")]

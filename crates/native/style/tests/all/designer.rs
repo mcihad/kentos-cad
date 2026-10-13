@@ -316,7 +316,12 @@ fn child_types_and_steps() {
     };
     let f = fixture();
     for c in f["childTypes"].as_array().expect("a list") {
-        let want: Vec<&str> = c["types"].as_array().expect("types").iter().map(s).collect();
+        let want: Vec<&str> = c["types"]
+            .as_array()
+            .expect("types")
+            .iter()
+            .map(s)
+            .collect();
         assert_eq!(child_types(&c["parent"]), want, "{}", c["parent"]);
     }
     let st = &f["steps"];
@@ -333,7 +338,12 @@ fn child_types_and_steps() {
         assert_eq!(new_step(s(&c["kind"])), c["step"], "{}", c["kind"]);
     }
     for c in st["lines"].as_array().expect("a list") {
-        assert_eq!(step_summary(&c["step"], s(&c["unit"])), s(&c["line"]), "{}", c["step"]);
+        assert_eq!(
+            step_summary(&c["step"], s(&c["unit"])),
+            s(&c["line"]),
+            "{}",
+            c["step"]
+        );
     }
     for c in st["outputs"].as_array().expect("a list") {
         let steps = c["steps"].as_array().expect("steps");
@@ -354,7 +364,9 @@ fn child_types_and_steps() {
         let at = || op["at"].as_u64().expect("at") as usize;
         let got = match s(&op["op"]) {
             "add" => add_step(layer, s(&op["kind"])),
-            "move" => move_step(layer, at(), op["delta"].as_i64().expect("delta")).unwrap_or(Value::Null),
+            "move" => {
+                move_step(layer, at(), op["delta"].as_i64().expect("delta")).unwrap_or(Value::Null)
+            }
             "remove" => remove_step(layer, at()),
             "put" => put_step(layer, at(), op["step"].clone()),
             "kind" => set_generator_kind(layer, s(&op["kind"])),
@@ -394,6 +406,11 @@ fn effects() {
         assert_eq!(got, c["result"], "{name}");
     }
     for c in e["lines"].as_array().expect("a list") {
-        assert_eq!(effects_summary(&c["layer"]), s(&c["line"]), "{}", c["layer"]);
+        assert_eq!(
+            effects_summary(&c["layer"]),
+            s(&c["line"]),
+            "{}",
+            c["layer"]
+        );
     }
 }

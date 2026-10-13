@@ -45,12 +45,16 @@ pub enum Convention {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct Helmert {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub translation: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "arcsec")))]
     pub rotation: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ppm")))]
     pub scale: f64,
     pub convention: Convention,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub accuracy: Option<f64>,
 }
 
@@ -62,7 +66,9 @@ pub struct Helmert {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct Ellipsoid {
     pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub semi_major: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub inverse_flattening: f64,
 }
 
@@ -119,10 +125,15 @@ pub struct TmDefinition {
     pub custom_datum: Option<Box<CustomDatum>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub latitude_of_origin: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub central_meridian: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub scale_factor: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub false_easting: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub false_northing: f64,
 }
 
@@ -167,17 +178,27 @@ impl GeographicDefinition {
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum CrsPlane {
     Similarity {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         east: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         north: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         rotation: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         scale: f64,
     },
     Affine {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         a: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         b: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         c: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         d: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         e: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         f: f64,
     },
 }
@@ -192,6 +213,7 @@ pub enum CrsPlane {
 pub struct CrsBase {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -245,9 +267,11 @@ pub struct GridChoice {
     /// The file's size in bytes (at most the core's 256 MiB).
     // A number in TypeScript, as JSON gives it: exact up to 2^53.
     #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub size: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub accuracy: Option<f64>,
 }
 

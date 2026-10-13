@@ -154,6 +154,7 @@ pub struct LayersEdit {
     pub parent: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -164,6 +165,7 @@ pub struct LayersEdit {
     /// Plot line weight, mm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -228,6 +230,7 @@ pub struct LayersEdited {
     /// Whether anything was written (an undo step).
     pub changed: bool,
     /// The objects removed (remove), copied (duplicate) or moved (merge).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
     /// The nodes taken away: merge's sources, purge's layers then groups
     /// (deepest first).
@@ -235,6 +238,7 @@ pub struct LayersEdited {
     /// Purge's definitions taken away, in the order they went.
     pub blocks: Vec<String>,
     /// Purge's asked ones that stay because something staying uses them.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub kept: u32,
     /// The document's revision after the write (plan: the one it was made
     /// against), as decimal text.
@@ -439,10 +443,14 @@ pub struct LayerStatesDone {
     /// Whether anything changed.
     pub changed: bool,
     /// Apply's nodes shown or hidden, locked or unlocked, restyled.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub visible: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub locked: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub styles: u32,
     /// Apply's nodes the tree no longer has.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub missing: u32,
     /// The document's revision afterwards (plan: the one it was made
     /// against), as decimal text.

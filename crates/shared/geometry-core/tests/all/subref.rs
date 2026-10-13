@@ -23,8 +23,16 @@ fn place(v: &Value) -> Place {
         "start" => Place::Start,
         "end" => Place::End,
         "center" => Place::Center,
-        "vertex" => Place::Vertex { part: n("part"), ring: n("ring"), index: n("index") },
-        "mid" => Place::Mid { part: n("part"), ring: n("ring"), index: n("index") },
+        "vertex" => Place::Vertex {
+            part: n("part"),
+            ring: n("ring"),
+            index: n("index"),
+        },
+        "mid" => Place::Mid {
+            part: n("part"),
+            ring: n("ring"),
+            index: n("index"),
+        },
         other => panic!("{other} yeri yok"),
     }
 }
@@ -34,7 +42,10 @@ fn same(name: &str, got: Vec2, want: &Value, exact: bool) {
     if exact {
         assert!(got.x == x && got.y == y, "{name}: {got:?} ≠ ({x}, {y})");
     } else {
-        assert!((got.x - x).abs() <= 1e-9 && (got.y - y).abs() <= 1e-9, "{name}: {got:?} ≠ ({x}, {y})");
+        assert!(
+            (got.x - x).abs() <= 1e-9 && (got.y - y).abs() <= 1e-9,
+            "{name}: {got:?} ≠ ({x}, {y})"
+        );
     }
 }
 
@@ -48,7 +59,9 @@ fn every_place_is_where_the_reference_puts_it() {
         let got = point(&entity(&c["entity"]), place(&c["place"]));
         match (&c["point"], got) {
             (Value::Null, None) => {}
-            (want, Some(p)) if !want.is_null() => same(name, p, want, c["exact"].as_bool().unwrap()),
+            (want, Some(p)) if !want.is_null() => {
+                same(name, p, want, c["exact"].as_bool().unwrap())
+            }
             (want, got) => panic!("{name}: {got:?}, başvuru {want}"),
         }
     }
@@ -68,7 +81,11 @@ fn every_place_follows_its_object_as_the_reference_says() {
         let want = &c["expect"];
         match got {
             Followed::At(at, p) => {
-                assert!(want["broken"].is_null(), "{name}: izledi, başvuru {}", want["broken"]);
+                assert!(
+                    want["broken"].is_null(),
+                    "{name}: izledi, başvuru {}",
+                    want["broken"]
+                );
                 assert_eq!(at, place(&want["at"]), "{name}");
                 same(name, p, &want["point"], c["exact"].as_bool().unwrap());
             }
@@ -99,7 +116,10 @@ fn a_snap_names_the_place_the_reference_names() {
             "nearest" => SnapKind::Nearest,
             other => panic!("{other}"),
         };
-        let at = Vec2::new(c["at"]["x"].as_f64().unwrap(), c["at"]["y"].as_f64().unwrap());
+        let at = Vec2::new(
+            c["at"]["x"].as_f64().unwrap(),
+            c["at"]["y"].as_f64().unwrap(),
+        );
         let got = place_at(&entity(&c["entity"]), kind, at);
         let want = (!c["place"].is_null()).then(|| place(&c["place"]));
         assert_eq!(got, want, "{name}");

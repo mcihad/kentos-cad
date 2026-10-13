@@ -236,18 +236,17 @@ pub(super) fn rows(
     if let Some(text) = common_relation(dims) {
         let any = dims.iter().any(|d| d.refs.is_some());
         let row = Row::text("İlişki", &text);
-        rows.insert(0, if any {
-            row.editor(edit(select(
-                &text,
-                [(
-                    "Serbest bırak",
-                    false,
-                    Event::DimensionFree(slots.to_vec()),
-                )],
-            )))
-        } else {
-            row
-        });
+        rows.insert(
+            0,
+            if any {
+                row.editor(edit(select(
+                    &text,
+                    [("Serbest bırak", false, Event::DimensionFree(slots.to_vec()))],
+                )))
+            } else {
+                row
+            },
+        );
     }
     // Its lines (docs/adr/0205 §6): the dimension line's (and its
     // arrowheads'), the extension lines', the value's colour.
@@ -355,5 +354,9 @@ pub(super) fn relation(d: &DimensionEntity) -> Option<String> {
 fn common_relation(dims: &[&DimensionEntity]) -> Option<String> {
     let all: Vec<String> = dims.iter().map(|d| relation(d)).collect::<Option<_>>()?;
     let first = all.first()?.clone();
-    Some(if all.iter().all(|r| *r == first) { first } else { MIXED.to_owned() })
+    Some(if all.iter().all(|r| *r == first) {
+        first
+    } else {
+        MIXED.to_owned()
+    })
 }

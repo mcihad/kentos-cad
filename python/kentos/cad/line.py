@@ -67,8 +67,8 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
         Args:
             doc: The drawing it works on.
             layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
-            a: Where it starts: x east (Y), y north (X), in the project's units (m), float64.
-            b: Where it ends.
+            a: Where it starts: x east (Y), y north (X), in the project's units (m), float64. Unit: length.
+            b: Where it ends. Unit: length.
             attrs: GIS attributes, text in v1. Absent: none.
             color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
             expected_revision: The document revision the input was prepared against, as decimal text
@@ -77,7 +77,7 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
             label: The text shown beside it (`EntityBase.label`). Absent: none.
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
-                object from the current weight. Absent: the layer's (katmana göre).
+                object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
             symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the

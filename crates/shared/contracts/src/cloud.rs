@@ -358,6 +358,7 @@ pub struct ProjectAccessView {
 pub struct ProjectSummary {
     pub id: String,
     pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: u32,
     pub data_revision: String,
     /// RFC 3339.
@@ -429,9 +430,11 @@ pub struct ProjectList {
 pub struct ProjectCreate {
     pub name: String,
     pub settings: ProjectSettings,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub origin: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub home_view: Option<Bounds>,
     pub layers: Vec<LayerNode>,
     pub active_layer: String,
@@ -476,9 +479,11 @@ pub struct ProjectInfo {
     pub state: ProjectState,
     pub name: String,
     pub settings: ProjectSettings,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub origin: Vec2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub home_view: Option<Bounds>,
     pub layers: Vec<LayerNode>,
     pub active_layer: String,

@@ -69,6 +69,7 @@ pub enum PointSymbol {
 pub struct PointStyle {
     pub symbol: PointSymbol,
     /// Diameter in CSS px.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub size: f64,
 }
 
@@ -105,28 +106,35 @@ pub enum LabelInk {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelStyle {
     pub placement: LabelPlacement,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub size: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub grow: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub max_size: Option<f64>,
     /// 400, 500 or 600.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub weight: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub min_feature_px: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px/length")))]
     pub min_scale: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px/length")))]
     pub max_scale: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -166,14 +174,17 @@ pub struct LabelStyle {
     /// CSS px between a label and its object; absent, 2.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub distance: Option<f64>,
     /// CSS px between a line's repeated labels.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub repeat: Option<f64>,
     /// Degrees two neighbouring letters of a curved label may turn; absent, 25.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub max_angle: Option<f64>,
     /// An outline's label (perimeter, boundary) letter by letter.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -218,10 +229,12 @@ pub struct LabelStyle {
     /// The smallest size a label is made when it does not fit, a factor 0.5–1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub shrink: Option<f64>,
     /// 0 to 10; absent, 5: higher first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub priority: Option<u8>,
     /// Whether it may cover another label; absent, never.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -230,6 +243,7 @@ pub struct LabelStyle {
     /// CSS px within which the same text is labelled once.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub duplicates: Option<f64>,
 }
 
@@ -321,6 +335,7 @@ pub struct LayerStyle {
     pub color: String,
     pub line_type: LineType,
     /// Plot line weight in mm.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

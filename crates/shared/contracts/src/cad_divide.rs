@@ -33,9 +33,15 @@ pub const MAX_DIVISION_POINTS: u32 = 10_000;
 pub enum Division {
     /// Into `count` equal parts (2 to 10 000): a point between each two, and
     /// on a closed object one at its start too.
-    Parts { count: u32 },
+    Parts {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        count: u32,
+    },
     /// A point every `length` metres from the start (over 0).
-    Step { length: f64 },
+    Step {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        length: f64,
+    },
 }
 
 /// Input of `cad.entities.divide` v1: points along the object at

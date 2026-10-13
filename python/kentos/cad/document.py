@@ -15,7 +15,7 @@ import json
 import os
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, TypeVar
 
@@ -87,7 +87,10 @@ class SessionBase:
     def entity(self, uid: str) -> str:
         raise NotImplementedError
 
-    def measure(self, uid: str) -> str:
+    def measure(self, uid: str, method: str | None = None) -> str:
+        raise NotImplementedError
+
+    def measure_many(self, uids: str, method: str | None = None) -> str:
         raise NotImplementedError
 
     def undo(self) -> str | None:
@@ -207,19 +210,113 @@ def _units(raw: Mapping[str, Any] | None) -> Units:
 
 
 @dataclass(frozen=True, slots=True)
+class Basis:
+    """What a measure was taken in and how (docs/adr/0256 §4)."""
+
+    srid: int
+    """The project's system's EPSG code; 0 for none (a local project) or a definition of its own."""
+    system: str
+    """Its name: ``TUREF / TM33``, a definition's, ``Yerel (koordinat sistemi yok)``."""
+    kind: str
+    """``local``, ``projected`` or ``geographic``."""
+    frame: str
+    """The frame the coordinates and the box are in: ``world``, the drawing's own."""
+    method: str
+    """``plane`` (the project's plane), ``ellipsoid`` (geodesics on its ellipsoid) or ``ground``."""
+    height: float | None = None
+    """The ground's mean ellipsoidal height, m (``ground``)."""
+
+
+def _basis(raw: Mapping[str, Any] | None) -> Basis:
+    # A desktop older than docs/adr/0256 says none: its measures are the plane's.
+    raw = raw or {}
+    return Basis(
+        srid=int(raw.get("srid", 0)),
+        system=str(raw.get("system", "")),
+        kind=str(raw.get("kind", "")),
+        frame=str(raw.get("frame", "world")),
+        method=str(raw.get("method", "plane")),
+        height=raw.get("height"),
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class Measure:
     """An object's measures from its source geometry (not a drawn
-    approximation), in the units ``units`` names: metres and m² in the
-    project's plane, never the drawing unit."""
+    approximation), in the units ``units`` names, taken as ``basis`` says:
+    by default metres and m² in the project's plane, never the drawing unit."""
 
     uid: str
     kind: str
     area: float | None
-    """Plane area of a closed shape (``units.area``, m²); None for an open one."""
+    """Area of a closed shape (``units.area``); None for an open one."""
     length: float | None
-    """Length of a line or a path, perimeter of a closed shape (``units.length``, m); None for a point or a text."""
+    """Length of a line or a path, perimeter of a closed shape (``units.length``); None for a point or a text."""
     bounds: Bounds
     units: Units
+    basis: Basis = field(default_factory=lambda: _basis(None))
+
+
+@dataclass(frozen=True, slots=True)
+class MeasureItem:
+    """One object of a batch."""
+
+    uid: str
+    kind: str
+    area: float | None
+    length: float | None
+    bounds: Bounds
+
+
+@dataclass(frozen=True, slots=True)
+class Measures:
+    """Many objects' measures taken one way (docs/adr/0256 §4): each object,
+    the sums (``count``, ``area`` of those with one, ``length``), and the
+    units and basis once."""
+
+    items: list[MeasureItem]
+    count: int
+    area: float
+    length: float
+    units: Units
+    basis: Basis
+
+
+@dataclass(frozen=True, slots=True)
+class Conventions:
+    """The axes and angles the drawing's values and windows speak
+    (docs/adr/0165 §4, docs/adr/0256 §5). On the wire ``x`` is east and
+    ``y`` north, always; the windows call them X, Y in CAD and Y, X in CBS;
+    polar angles start east and turn counter-clockwise in CAD, start north
+    and turn clockwise (azimuth) in CBS."""
+
+    workspace: str
+    """``cad`` or ``gis``."""
+    axes: tuple[str, str]
+    """What the wire's x and y are: ``("east", "north")``."""
+    labels: tuple[str, str]
+    """What the windows call them: ``("X", "Y")`` in CAD, ``("Y", "X")`` in CBS."""
+    polar_zero: str
+    """Where polar angles start: ``east`` or ``north``."""
+    polar_turn: str
+    """Which way they turn: ``ccw`` or ``cw``."""
+    angle_unit: str
+    """The angle unit the windows show and take: ``deg`` or ``grad``. On the wire each angle field is in its own unit (the catalog's ``x-unit``)."""
+
+
+def _conventions(raw: Mapping[str, Any] | None) -> Conventions:
+    raw = raw or {}
+    axes = raw.get("axes") or {"x": "east", "y": "north"}
+    labels = raw.get("labels") or {"x": "Y", "y": "X"}
+    polar = raw.get("polar") or {"zero": "north", "turn": "cw"}
+    return Conventions(
+        workspace=str(raw.get("workspace", "gis")),
+        axes=(str(axes["x"]), str(axes["y"])),
+        labels=(str(labels["x"]), str(labels["y"])),
+        polar_zero=str(polar["zero"]),
+        polar_turn=str(polar["turn"]),
+        angle_unit=str(raw.get("angleUnit", "grad")),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,6 +374,10 @@ class DocumentInfo:
     """What the values are in: metres in the project's plane; ``units.drawing`` is the drawing unit."""
     stamps: Stamps | None = None
     """The project's parts' state stamps (``layers``, ``settings``, ``styles``, ``sheets``; docs/adr/0253 §2)."""
+    conventions: Conventions | None = None
+    """The axes and angles the values and the windows speak (docs/adr/0256 §5)."""
+    home_view: Bounds | None = None
+    """Where the view opens, in the project's plane; None: every object."""
 
 
 BoundsLike = Bounds | Sequence[float]
@@ -424,6 +525,8 @@ class Document:
             can_redo=s["canRedo"],
             units=_units(s.get("units")),
             stamps=None if s.get("stamps") is None else Stamps.from_json(s["stamps"]),
+            conventions=_conventions(s.get("conventions")),
+            home_view=None if s.get("homeView") is None else decode(Bounds, s["homeView"], "Document.info"),
         )
 
     def sheets(self) -> list[SheetInfo]:
@@ -462,6 +565,13 @@ class Document:
         """What the drawing's values are in: metres in the project's plane;
         ``units.drawing`` is the drawing unit (docs/adr/0245)."""
         return self.info().units
+
+    @property
+    def conventions(self) -> Conventions:
+        """The axes and angles the values and the windows speak: on the wire
+        ``x`` is east, ``y`` north; the windows' names and polar angles by the
+        project's type (docs/adr/0256 §5)."""
+        return self.info().conventions or _conventions(None)
 
     @property
     def active_layer(self) -> str:
@@ -560,9 +670,14 @@ class Document:
         raw = json.loads(_host(self._session.entity, uid))
         return Record(raw["uid"], decode(Entity, raw["entity"], "Document.entity"), raw.get("stamp"))
 
-    def measure(self, uid: str) -> Measure:
-        """An object's area, length and box from its source geometry."""
-        raw = json.loads(_host(self._session.measure, uid))
+    def measure(self, uid: str, method: str = "plane") -> Measure:
+        """An object's area, length and box from its source geometry.
+
+        ``method``: ``plane`` (the project's plane, the default), ``ellipsoid``
+        (on its coordinate system's ellipsoid, metres) or ``ground`` (at the
+        project's mean ellipsoidal height); ``basis`` says which
+        (docs/adr/0256 §4)."""
+        raw = json.loads(_host(self._session.measure, uid, method))
         return Measure(
             uid=raw["uid"],
             kind=raw["kind"],
@@ -570,6 +685,29 @@ class Document:
             length=raw.get("length"),
             bounds=decode(Bounds, raw["bounds"], "Document.measure"),
             units=_units(raw.get("units")),
+            basis=_basis(raw.get("basis")),
+        )
+
+    def measure_many(self, uids: Sequence[str], method: str = "plane") -> Measures:
+        """Many objects' measures taken one way, at most 1000: each object,
+        the sums, the units and the basis once (docs/adr/0256 §4)."""
+        raw = json.loads(_host(self._session.measure_many, json.dumps(list(uids)), method))
+        return Measures(
+            items=[
+                MeasureItem(
+                    uid=i["uid"],
+                    kind=i["kind"],
+                    area=i.get("area"),
+                    length=i.get("length"),
+                    bounds=decode(Bounds, i["bounds"], "Document.measure_many"),
+                )
+                for i in raw["items"]
+            ],
+            count=int(raw["totals"]["count"]),
+            area=float(raw["totals"]["area"]),
+            length=float(raw["totals"]["length"]),
+            units=_units(raw.get("units")),
+            basis=_basis(raw.get("basis")),
         )
 
     # ------------------------------------------------------------ history
@@ -718,4 +856,4 @@ def _walk(nodes: Iterable[LayerNode]) -> Iterator[LayerNode]:
         yield from _walk(n.children)
 
 
-__all__ = ["BoundsLike", "Document", "DocumentInfo", "Exported", "Measure", "Page", "Printed", "Record", "Saved", "Units", "current"]
+__all__ = ["Basis", "BoundsLike", "Conventions", "Document", "DocumentInfo", "Exported", "Measure", "MeasureItem", "Measures", "Page", "Printed", "Record", "Saved", "Units", "current"]

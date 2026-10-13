@@ -262,7 +262,7 @@ class Assist(unittest.TestCase):
         self.assertEqual(sig["argument"], "layer_id: str")
         code = "doc.measure("
         sig = self.assist.signature(self.names.names, code, len(code))
-        assert sig is not None and sig["label"].startswith("measure(uid: str)")
+        assert sig is not None and sig["label"].startswith("measure(uid: str, method: str")
         self.assertIsNone(self.assist.signature(self.names.names, "print(1) ", 9))
         self.assertIsNone(self.assist.signature(self.names.names, "s = '('", 7))
 

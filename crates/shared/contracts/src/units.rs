@@ -1,0 +1,376 @@
+//! One length unit in another, exactly, and every length of a drawing's
+//! objects and block definitions put in it (docs/adr/0165 §2, docs/adr/0256
+//! §1). Geometry is in metres; a local project's drawing unit is where the
+//! user meets the numbers. A scale is a ratio of whole numbers (`mul ÷
+//! div`), each exact in a float64: a millimetre is ÷1000, an inch ×254
+//! ÷10000, as a value typed in a local project's unit is turned into metres.
+//!
+//! What a scale puts in the new unit: coordinates, lengths, radii, the
+//! heights and sizes of texts, dimensions, leaders and tables, elevations,
+//! a hatch's spacing and its pattern's metres per unit, a picture's and a
+//! raster's frame, a curved text's curve, a paragraph's box, block
+//! definitions with their attribute definitions. What it leaves: angles,
+//! ratios (bulges, a dimension's and a leader's sizes, which are times
+//! their height), an insert's own scale (its definition is scaled with the
+//! drawing), paper sizes (pen widths), a route's measures (M, the route's
+//! own unit) and a point cloud's points, which are in its files.
+
+use crate::{
+    AreaPart, AttributeDefinition, BlockDefinition, Bounds, DrawingUnit, Entity, HatchPatternType,
+    RingGeometry, Vec2,
+};
+
+/// What every number of the command catalog's schemas is in (docs/adr/0256
+/// §3): its `x-unit` is one of these, on the number or on the field holding
+/// it (a point's `x`, `y` take the unit of the field that is the point).
+/// Directions are counter-clockwise from the plane's east (x) axis unless a
+/// field says otherwise.
+pub const UNITS: &[(&str, &str)] = &[
+    (
+        "length",
+        "Projenin düzleminde uzunluk ya da koordinat: metre, coğrafi sistemde derece (units.length).",
+    ),
+    (
+        "area",
+        "Projenin düzleminde alan: m², coğrafi sistemde derece² (units.area).",
+    ),
+    ("elevation", "Düşey metre: kot, z, yükseklik."),
+    (
+        "m",
+        "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",
+    ),
+    ("measure", "Rotanın ölçüsü (M), rotanın kendi biriminde."),
+    (
+        "paper-mm",
+        "Kâğıtta milimetre: kalınlık, kâğıttaki yazı yüksekliği, pafta boyları.",
+    ),
+    ("px", "Ekranda mantıksal piksel."),
+    (
+        "deg",
+        "Derece; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
+    ),
+    (
+        "rad",
+        "Radyan; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
+    ),
+    ("azimuth-deg", "Kuzeyden saat yönünde derece."),
+    (
+        "1",
+        "Birimsiz sayı: çarpan, oran, büküm, saydamlık (0–1), ağırlık, öncelik, katsayı.",
+    ),
+    ("percent", "Yüzde (0–100)."),
+    ("ppm", "Milyonda bir."),
+    (
+        "pattern",
+        "Tarama deseninin tanımının birimi; taramanın ölçeğiyle çarpılınca metre.",
+    ),
+    ("count", "Adet."),
+    ("index", "0'dan başlayan sıra."),
+    ("id", "Çizimdeki yuva numarası (kalıcı kimlik değil)."),
+    (
+        "epsg",
+        "Koordinat sisteminin EPSG kodu; 0: yok (yerel proje).",
+    ),
+    ("scale", "Ölçeğin paydası: 1:N'nin N'si."),
+    ("zoom", "Karo düzeyi."),
+    ("bytes", "Bayt."),
+    ("version", "Sürüm numarası."),
+    (
+        "value",
+        "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
+    ),
+    ("km/h", "Kilometre bölü saat."),
+    ("system", "Adı verilen koordinat sisteminin kendi birimi."),
+    ("arcsec", "Yay saniyesi (″)."),
+    (
+        "size-unit",
+        "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
+    ),
+    (
+        "px/length",
+        "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
+    ),
+];
+
+/// Whether `unit` is one of [`UNITS`].
+pub fn is_unit(unit: &str) -> bool {
+    UNITS.iter().any(|(u, _)| *u == unit)
+}
+
+/// `value × mul ÷ div`: one length unit in another.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Scale {
+    pub mul: f64,
+    pub div: f64,
+}
+
+impl Scale {
+    pub const ONE: Scale = Scale { mul: 1.0, div: 1.0 };
+
+    /// A local project's unit in metres: a value in `u` × this is metres.
+    pub fn from_unit(u: DrawingUnit) -> Scale {
+        Scale {
+            mul: 1.0,
+            div: u.per_metre(),
+        }
+    }
+
+    /// Metres in a local project's unit.
+    pub fn to_unit(u: DrawingUnit) -> Scale {
+        Scale {
+            mul: u.per_metre(),
+            div: 1.0,
+        }
+    }
+
+    /// What keeps a drawing's numbers when its unit goes from `from` to
+    /// `to` (docs/adr/0256 §1): the metres a number stood for in `from`
+    /// become the metres it stands for in `to`. One whole-number factor
+    /// (the units are powers of ten apart): ×1000 from mm to m, ÷10 from
+    /// cm to mm.
+    pub fn keeping_numbers(from: DrawingUnit, to: DrawingUnit) -> Scale {
+        let (a, b) = (from.per_metre(), to.per_metre());
+        if a >= b {
+            Scale {
+                mul: a / b,
+                div: 1.0,
+            }
+        } else {
+            Scale {
+                mul: 1.0,
+                div: b / a,
+            }
+        }
+    }
+
+    /// A value in the scale's unit.
+    pub fn apply(self, v: f64) -> f64 {
+        if self.mul == 1.0 {
+            v / self.div
+        } else if self.div == 1.0 {
+            v * self.mul
+        } else {
+            v * self.mul / self.div
+        }
+    }
+
+    /// The factor as one number (its rounding when neither part is 1).
+    pub fn factor(self) -> f64 {
+        self.mul / self.div
+    }
+
+    pub fn is_one(self) -> bool {
+        self.mul == self.div
+    }
+
+    fn point(self, p: &mut Vec2) {
+        p.x = self.apply(p.x);
+        p.y = self.apply(p.y);
+    }
+
+    fn points(self, pts: &mut [Vec2]) {
+        for p in pts {
+            self.point(p);
+        }
+    }
+
+    fn heights(self, zs: &mut Option<Vec<Option<f64>>>) {
+        for z in zs.iter_mut().flatten().flatten() {
+            *z = self.apply(*z);
+        }
+    }
+
+    fn height(self, z: &mut Option<f64>) {
+        if let Some(z) = z {
+            *z = self.apply(*z);
+        }
+    }
+
+    fn ring(self, r: &mut RingGeometry) {
+        self.points(&mut r.pts);
+        self.heights(&mut r.zs);
+    }
+
+    fn part(self, a: &mut AreaPart) {
+        self.points(&mut a.pts);
+        self.heights(&mut a.zs);
+        for h in a.holes.iter_mut().flatten() {
+            self.ring(h);
+        }
+    }
+}
+
+/// Every coordinate and length of `e` in the scale's unit.
+pub fn scale_entity(e: &mut Entity, s: Scale) {
+    match e {
+        Entity::Point(p) => {
+            s.point(&mut p.p);
+            s.height(&mut p.z);
+            for part in p.parts.iter_mut().flatten() {
+                s.point(&mut part.p);
+                s.height(&mut part.z);
+            }
+        }
+        Entity::Line(l) => {
+            s.point(&mut l.a);
+            s.point(&mut l.b);
+            s.height(&mut l.za);
+            s.height(&mut l.zb);
+        }
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            s.points(&mut p.pts);
+            s.heights(&mut p.zs);
+            for h in p.holes.iter_mut().flatten() {
+                s.ring(h);
+            }
+            for a in p.parts.iter_mut().flatten() {
+                s.part(a);
+            }
+        }
+        Entity::Circle(c) => {
+            s.point(&mut c.c);
+            c.r = s.apply(c.r);
+        }
+        Entity::Arc(a) => {
+            s.point(&mut a.c);
+            a.r = s.apply(a.r);
+        }
+        Entity::Ellipse(el) => {
+            s.point(&mut el.c);
+            s.point(&mut el.major);
+        }
+        Entity::Spline(sp) => s.points(&mut sp.pts),
+        Entity::Xline(c) | Entity::Ray(c) => s.point(&mut c.p),
+        Entity::Text(t) => {
+            s.point(&mut t.p);
+            t.height = s.apply(t.height);
+            if let Some(w) = &mut t.paragraph.box_width {
+                *w = s.apply(*w);
+            }
+            // The curve is in the text's own frame, metres (docs/adr/0196 §1).
+            if let Some(path) = &mut t.path {
+                s.points(&mut path.pts);
+            }
+        }
+        Entity::Dimension(d) => {
+            s.point(&mut d.a);
+            s.point(&mut d.b);
+            if let Some(c) = &mut d.c {
+                s.point(c);
+            }
+            d.offset = s.apply(d.offset);
+            d.height = s.apply(d.height);
+            s.height(&mut d.za);
+            s.height(&mut d.zb);
+        }
+        Entity::Hatch(h) => {
+            s.points(&mut h.ring);
+            for hole in h.holes.iter_mut().flatten() {
+                s.points(hole);
+            }
+            // Only lines are apart by a length; the other kinds' spacing is 1 and unread.
+            if matches!(
+                h.pattern.kind,
+                HatchPatternType::Lines | HatchPatternType::Cross
+            ) {
+                h.pattern.spacing = s.apply(h.pattern.spacing);
+            }
+            // A pattern's metres per unit of its definition: its definition stays.
+            if let Some(scale) = &mut h.pattern.scale {
+                *scale = s.apply(*scale);
+            }
+            if let Some(a) = &mut h.assoc {
+                s.point(&mut a.seed);
+            }
+        }
+        // Its definition is scaled with the drawing: its own scale stays.
+        Entity::Insert(i) => s.point(&mut i.p),
+        Entity::Leader(l) => {
+            s.points(&mut l.pts);
+            l.height = s.apply(l.height);
+        }
+        Entity::Table(t) => {
+            s.point(&mut t.p);
+            t.height = s.apply(t.height);
+            for x in t.rows.iter_mut().chain(t.columns.iter_mut()) {
+                *x = s.apply(*x);
+            }
+            if let Some(w) = &mut t.frame {
+                *w = s.apply(*w);
+            }
+        }
+        // Its clip is in its own fractions: unchanged (docs/adr/0192 §1).
+        Entity::Image(i) => {
+            s.point(&mut i.image.p);
+            i.image.width = s.apply(i.image.width);
+            i.image.height = s.apply(i.image.height);
+        }
+        // Its corner and its pixels' steps: every number of its affine is a length (docs/adr/0204 §2).
+        Entity::Raster(r) => {
+            for v in &mut r.raster.affine {
+                *v = s.apply(*v);
+            }
+        }
+        // A cloud's points are in its files, which no unit scales (docs/adr/0207 §11).
+        Entity::PointCloud(_) => {}
+    }
+}
+
+/// A block definition in the scale's unit: its base point, its objects and
+/// its attribute definitions, so that an insert, scaled with them, places
+/// the same drawing.
+pub fn scale_block(b: &mut BlockDefinition, s: Scale) {
+    s.point(&mut b.base);
+    for e in &mut b.entities {
+        scale_entity(e, s);
+    }
+    for a in &mut b.attributes {
+        scale_attribute(a, s);
+    }
+}
+
+fn scale_attribute(a: &mut AttributeDefinition, s: Scale) {
+    s.point(&mut a.p);
+    a.height = s.apply(a.height);
+}
+
+/// A box in the scale's unit.
+pub fn scale_bounds(b: &mut Bounds, s: Scale) {
+    b.min_x = s.apply(b.min_x);
+    b.min_y = s.apply(b.min_y);
+    b.max_x = s.apply(b.max_x);
+    b.max_y = s.apply(b.max_y);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The factor keeping the numbers is one whole number each way, so a
+    /// value goes there and back unchanged.
+    #[test]
+    fn keeping_the_numbers_is_one_whole_factor() {
+        use DrawingUnit::{Cm, M, Mm};
+        let cases = [
+            (Mm, M, 1000.0, 1.0),
+            (M, Mm, 1.0, 1000.0),
+            (Cm, Mm, 1.0, 10.0),
+            (Mm, Cm, 10.0, 1.0),
+            (Cm, M, 100.0, 1.0),
+            (M, Cm, 1.0, 100.0),
+            (M, M, 1.0, 1.0),
+        ];
+        for (from, to, mul, div) in cases {
+            let s = Scale::keeping_numbers(from, to);
+            assert_eq!((s.mul, s.div), (mul, div), "{from:?} → {to:?}");
+            let back = Scale::keeping_numbers(to, from);
+            for v in [0.1, 4.0, 1234.567, -0.003] {
+                assert_eq!(back.apply(s.apply(v)), v, "{v} {from:?} → {to:?} → back");
+            }
+        }
+        // The shown number stays: 4000 mm is 4 m of geometry; kept as 4000 m it is 4000 m.
+        let g = Scale::from_unit(Mm).apply(4000.0);
+        assert_eq!(g, 4.0);
+        assert_eq!(Scale::keeping_numbers(Mm, M).apply(g), 4000.0);
+    }
+}

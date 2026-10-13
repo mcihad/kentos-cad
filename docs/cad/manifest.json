@@ -2262,12 +2262,13 @@
    "title": "Proje ayarları…",
    "level": "semantic",
    "via": [
-    "cad.settings.set"
+    "cad.settings.set",
+    "cad.units.change"
    ],
    "operation": null,
-   "python": "kentos.cad.settings.set",
-   "mcp": "cad.settings.set",
-   "note": "Anahtarlarla: ad, tür, sistemler, birim, basamaklar, birimler, ölçek, yazı tipi. Tanımlı sistem, datum seçimleri, Ölçme, Değişkenler ve topoloji ayarlarının komutu yok (ADR 0248 §5).",
+   "python": "kentos.cad.settings.set, kentos.cad.units.change",
+   "mcp": "cad.settings.set, cad.units.change",
+   "note": "Anahtarlarla: ad, tür, sistemler, birim, basamaklar, birimler, ölçek, yazı tipi. Çizim varken birim değişimi cad.units.change ile: boylar ya da sayılar korunur (ADR 0256 §1). Tanımlı sistem, datum seçimleri, Ölçme, Değişkenler ve topoloji ayarlarının komutu yok (ADR 0248 §5).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

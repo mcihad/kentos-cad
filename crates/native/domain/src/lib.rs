@@ -48,6 +48,7 @@ mod patch;
 mod snapshot;
 mod step;
 mod store;
+mod units;
 
 pub use changes::{ChangeMark, Changes};
 pub use document::Document;
@@ -61,3 +62,4 @@ pub use kentos_contracts as contracts;
 pub use layers::{LayerTree, NewLayer, default_style};
 pub use patch::{Patch, PatchRefused};
 pub use step::{BlockChange, IdChanges, ObjectChange, Sealed, StepReport};
+pub use units::UnitState;

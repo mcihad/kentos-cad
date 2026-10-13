@@ -127,6 +127,7 @@ pub struct LayerMask {
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub markers: bool,
     /// How far the shapes grow, paper mm (0–10); their corners round as far.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub size: f64,
     /// The layers it cuts into, by their ids.
     pub targets: Vec<String>,
@@ -173,6 +174,7 @@ pub struct LayerCompose {
     /// 0–1; absent, 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
     /// Absent, normal.
     #[serde(default, skip_serializing_if = "Option::is_none")]

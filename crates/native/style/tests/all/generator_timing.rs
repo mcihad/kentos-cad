@@ -122,7 +122,8 @@ fn time(mut f: impl FnMut() -> StyledLayer) -> (f64, StyledLayer) {
 #[ignore = "a measurement, run by hand in release"]
 fn generator_timing() {
     println!("ADR 0226 §7: release, 1:1000");
-    let dot = json!({ "id": "c", "type": "shape", "shape": "circle", "size": 2, "fill": "#E5484D" });
+    let dot =
+        json!({ "id": "c", "type": "shape", "shape": "circle", "size": 2, "fill": "#E5484D" });
     let pts = points(10_000);
     let store = store_of(&pts);
     let plain = single(json!({ "marker": { "type": "marker", "layers": [dot.clone()] } }));

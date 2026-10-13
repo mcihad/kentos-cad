@@ -38,7 +38,12 @@ pub enum TrimBoundaries {
     All,
     /// Every shown object whose box meets the rectangle (the tools give their
     /// view: AutoCAD's quick mode, “every visible edge”).
-    Area { min: Vec2, max: Vec2 },
+    Area {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        min: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        max: Vec2,
+    },
     /// These objects (Sınır seç), shown or not; at least one.
     Objects {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -58,6 +63,7 @@ pub struct TrimPick {
     pub uid: String,
     /// A point on or near the object: Buda takes away the part between the
     /// boundaries around it; Uzat grows the end nearest it.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
 }
 

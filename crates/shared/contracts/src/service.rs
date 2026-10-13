@@ -122,14 +122,21 @@ pub struct ServiceParam {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TileMatrix {
     pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub resolution: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub x0: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub y0: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub tile_width: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub tile_height: u32,
     #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub matrix_width: u64,
     #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub matrix_height: u64,
 }
 
@@ -139,6 +146,7 @@ pub struct TileMatrix {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TileGrid {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: u32,
     pub matrices: Vec<TileMatrix>,
 }
@@ -170,6 +178,7 @@ pub struct ServiceLayer {
     /// The system asked: WMS's `CRS`, ArcGIS's `imageSR`; a grid's own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// WMTS's, OGC's and a cached ArcGIS service's matrices.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -186,12 +195,15 @@ pub struct ServiceLayer {
     /// XYZ's and the vector tiles' tile side, pixels; absent 256.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
     pub tile_size: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "zoom")))]
     pub min_zoom: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "zoom")))]
     pub max_zoom: Option<u32>,
     /// `{s}`'s values, taken in turn.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -222,6 +234,7 @@ pub struct ServiceLayer {
     /// 0.1 to 1; absent: opaque.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
     /// The project's connection whose proof goes with the requests.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -235,6 +248,7 @@ pub struct ServiceLayer {
     /// its capabilities give it: what “Servisin kapsamına yakınlaştır” shows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub bbox: Option<[f64; 4]>,
 }
 
@@ -283,6 +297,7 @@ pub struct FeatureFeed {
     /// The system asked of the service.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
     /// CQL, or ArcGIS's `where`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -291,9 +306,11 @@ pub struct FeatureFeed {
     /// The area asked, `[x₁, y₁, x₂, y₂]` in the project's system; absent: all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub bbox: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional, type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub limit: Option<u64>,
     /// WFS's version.
     #[serde(default, skip_serializing_if = "Option::is_none")]

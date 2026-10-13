@@ -113,6 +113,7 @@ pub struct TextFace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = -85.0, max = 85.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub oblique: Option<f64>,
 }
 
@@ -245,18 +246,22 @@ pub struct DimensionLook {
     /// `DEFAULT_ARROW` for the others.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub arrow_size: Option<f64>,
     /// The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub ext_offset: Option<f64>,
     /// How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub ext_beyond: Option<f64>,
     /// The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub text_gap: Option<f64>,
     /// Where the value stands; absent: over the line.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -267,6 +272,7 @@ pub struct DimensionLook {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(max = 8)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub decimals: Option<u32>,
     /// The unit lengths and coordinates are written in; absent: the project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -292,6 +298,7 @@ pub struct DimensionLook {
     /// The dimension line's weight, paper mm as an object's; absent: a hairline.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub dim_line_weight: Option<f64>,
     /// The dimension line's type; absent: continuous.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -304,6 +311,7 @@ pub struct DimensionLook {
     /// The extension lines' weight, paper mm; absent: a hairline.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub ext_weight: Option<f64>,
     /// The extension lines' type; absent: continuous.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -531,14 +539,17 @@ pub struct TextStyleDef {
     /// As a text's (`TextFace::oblique`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub oblique: Option<f64>,
     /// The texts' height on paper, mm; absent: the tool's height.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: Option<f64>,
     /// As a text's; absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub width_factor: Option<f64>,
     /// The typeface file a DXF named for it, written back as it came.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -558,6 +569,7 @@ pub struct DimensionStyleDef {
     /// As a text style's.
     pub name: String,
     /// The value's height on paper, mm.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub height: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -565,15 +577,19 @@ pub struct DimensionStyleDef {
     /// The arrowhead's length, mm; absent: the arrowhead's default times the height.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub arrow_size: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub ext_offset: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub ext_beyond: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub text_gap: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -581,6 +597,7 @@ pub struct DimensionStyleDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(max = 8)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub decimals: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -600,6 +617,7 @@ pub struct DimensionStyleDef {
     pub dim_line_color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub dim_line_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -609,6 +627,7 @@ pub struct DimensionStyleDef {
     pub ext_color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub ext_weight: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

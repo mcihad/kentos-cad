@@ -212,11 +212,26 @@ fn plain(doc: &mut Document, method: &str, params: &Value) -> Result<Value, Head
             })?;
             Ok(json!({ "uid": uid, "stamp": doc.stamp(slot), "entity": entity }))
         }
-        "measure" => to_value(&query::measure(doc, text(params, "uid")?)?),
+        "measure" => {
+            let method = query::Method::named(optional_text(params, "method")?.as_deref())?;
+            to_value(&query::measure_by(doc, text(params, "uid")?, method)?)
+        }
+        "measureMany" => {
+            let method = query::Method::named(optional_text(params, "method")?.as_deref())?;
+            let uids: Vec<String> = params
+                .get("uids")
+                .and_then(Value::as_array)
+                .ok_or_else(|| invalid("uids gerekli: nesne kimliklerinin listesi."))?
+                .iter()
+                .map(|u| u.as_str().map(str::to_owned))
+                .collect::<Option<_>>()
+                .ok_or_else(|| invalid("uids'in her öğesi bir nesne kimliği (metin) olmalı."))?;
+            to_value(&query::measure_many(doc, &uids, method)?)
+        }
         other => Err(HeadlessError::new(
             "unknown_method",
             format!(
-                "“{other}” bir istek değil: run, call, summary, layers, entities, entity, measure, journal, replay, start, job, wait ya da cancel."
+                "“{other}” bir istek değil: run, call, summary, layers, entities, entity, measure, measureMany, journal, replay, start, job, wait ya da cancel."
             ),
         )),
     }
@@ -231,6 +246,11 @@ pub fn summary(doc: &Document) -> Value {
         "objects": doc.len(),
         "settings": doc.settings(),
         "units": crate::query::units(doc.settings()),
+        // The axes and angles the values and the windows speak (docs/adr/0256 §5).
+        "conventions": crate::query::conventions(doc.settings()),
+        // Where the view opens and the drawing's anchor, in the project's plane.
+        "homeView": doc.home_view(),
+        "origin": doc.origin(),
         "activeLayer": doc.layers().active(),
         "legacy": false,
         "canUndo": doc.can_undo(),

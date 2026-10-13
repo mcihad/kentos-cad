@@ -278,7 +278,7 @@ class _EntitiesBoundary(LocalCommand[EntitiesBoundary, EntitiesCreated, Entities
 
         Args:
             doc: The drawing it works on.
-            at: A point inside the region.
+            at: A point inside the region. Unit: length.
             layer_id: The layer the area goes to.
             attrs: GIS attributes, text in v1. Absent: none.
             boundaries: Whose line work closes the region; absent: every shown object (`all`).
@@ -290,7 +290,7 @@ class _EntitiesBoundary(LocalCommand[EntitiesBoundary, EntitiesCreated, Entities
             islands: Adalar: closed groups inside the region are holes; absent: true.
             label: The text shown beside it. Absent: none.
             line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
-                is drawn with lines. Absent: the layer's.
+                is drawn with lines. Absent: the layer's. Unit: paper-mm.
             symbol: Its own symbol, a library item's id. Absent: the layer's style.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -475,11 +475,11 @@ class _EntitiesBreak(LocalCommand[EntitiesBreak, EntitiesEdited, EntitiesEditPla
         Args:
             doc: The drawing it works on.
             uid: The object's persistent id (lowercase UUID text with hyphens).
-            first: The first break point, on or near the object.
+            first: The first break point, on or near the object. Unit: length.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
-            second: The second; absent: the object splits at `first`.
+            second: The second; absent: the object splits at `first`. Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -608,9 +608,9 @@ class _EntitiesChamfer(LocalCommand[EntitiesChamfer, EntitiesCornered, EntitiesC
         Args:
             doc: The drawing it works on.
             corner:
-            distance: The cut's distance along the first side (a vertex's: the edge before it), metres.
+            distance: The cut's distance along the first side (a vertex's: the edge before it), metres. Unit: length.
             expected_revision:
-            second: Along the other side; absent: `distance`.
+            second: Along the other side; absent: `distance`. Unit: length.
             trim:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -1046,7 +1046,7 @@ class _EntitiesDivide(LocalCommand[EntitiesDivide, EntitiesCreated, EntitiesCrea
                 tool: from the end nearer the click).
             label: The text shown beside it. Absent: none.
             line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
-                is drawn with lines. Absent: the layer's.
+                is drawn with lines. Absent: the layer's. Unit: paper-mm.
             symbol: Its own symbol, a library item's id. Absent: the layer's style.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -1518,7 +1518,7 @@ class _EntitiesFillet(LocalCommand[EntitiesFillet, EntitiesCornered, EntitiesCor
         Args:
             doc: The drawing it works on.
             corner:
-            radius: The arc's radius, metres.
+            radius: The arc's radius, metres. Unit: length.
             expected_revision:
             trim: Kırp: the sides are cut back to the arc (the default).
             request_id: Names this write: sent again with the same call it is answered as
@@ -1683,7 +1683,7 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
                 written and the answer is `conflict`.
             label: The text shown beside it. Absent: none.
             line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
-                is drawn with lines. Absent: the layer's.
+                is drawn with lines. Absent: the layer's. Unit: paper-mm.
             symbol: Its own symbol, a library item's id. Absent: the layer's style.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -1863,7 +1863,7 @@ class _EntitiesJoin(LocalCommand[EntitiesJoin, EntitiesEdited, EntitiesEditPlan]
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
-            tolerance: How far apart two ends may be and still meet, metres; absent: 0.001.
+            tolerance: How far apart two ends may be and still meet, metres; absent: 0.001. Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -2212,7 +2212,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
                 Absent: they stay on theirs.
             line_weight: Their own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100); null: their layer's (katmana göre). Absent:
-                unchanged.
+                unchanged. Unit: paper-mm.
             symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
                 instead of their layer's style; null: the layer's style. The id is
                 not looked up: the libraries are the host's. Absent: unchanged.
@@ -2409,8 +2409,8 @@ class _EntitiesStretch(LocalCommand[EntitiesStretch, EntitiesStretched, Entities
         Args:
             doc: The drawing it works on.
             window: The window over the vertices to move, metres.
-            dx: How far east (Y) the vertices move, metres.
-            dy: How far north (X) the vertices move, metres.
+            dx: How far east (Y) the vertices move, metres. Unit: length.
+            dy: How far north (X) the vertices move, metres. Unit: length.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.

@@ -409,6 +409,7 @@ impl Document {
         }
         if let Some(settings) = &frame.settings
             && *settings != self.settings
+            && !report.parts.contains(&ProjectPart::Settings)
         {
             report.parts.push(ProjectPart::Settings);
         }
@@ -515,6 +516,12 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             Op::BlockUpdate { before, after } => {
                 report.blocks.change(after.id);
                 block_state(&mut report, after.id, Some(before), Some(after));
+            }
+            // The unit is a setting (docs/adr/0256 §1).
+            Op::Units { .. } => {
+                if !report.parts.contains(&ProjectPart::Settings) {
+                    report.parts.push(ProjectPart::Settings);
+                }
             }
         }
     }

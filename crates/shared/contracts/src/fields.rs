@@ -109,10 +109,12 @@ pub struct LayerField {
     /// A text's most characters (1–10 000).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub length: Option<u32>,
     /// A decimal's most fraction digits (0–15).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub scale: Option<u32>,
     /// A number's least value, in its canonical text; included.
     #[serde(default, skip_serializing_if = "Option::is_none")]

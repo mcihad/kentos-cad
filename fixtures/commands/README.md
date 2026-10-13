@@ -51,8 +51,9 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.entities.boundary.json` | `cad.entities.boundary` v1 (ADR 0254 §6: Alan oluştur; masaüstünün) | 25 |
 | `v1/cad.entities.hatch.json` | `cad.entities.hatch` v1 (ADR 0254 §7: Tarama ve Çoklu tara; masaüstünün) | 34 |
 | `v1/cad.dimensions.create.json` | `cad.dimensions.create` v1 (ADR 0255: Ölçülendirme'nin on türü; masaüstünün) | 49 |
+| `v1/cad.units.change.json` | `cad.units.change` v1 (ADR 0256 §1: birim değiştirme, boylar ya da sayılar korunur; masaüstünün) | 23 |
 
-Masaüstüne özgü dosyaların durumlarını KentOS kodu olmadan sözleşmenin ve işlemlerin tanımından şu betikler yazar (`--check` farkı arar): `edge_command_cases.py` (Buda, Uzat, Köşe yuvarla, Pah), `offset_command_cases.py`, `reshape_command_cases.py` (Esnet, Kır, Birleştir, Böl), `region_command_cases.py` (Alan oluştur, Tarama), `dimension_create_cases.py` (Ölçü ekle), `changeset_command_cases.py` (değişiklik kümesi) ve öbürlerinin kendi betikleri (`scripts/fixtures/`).
+Masaüstüne özgü dosyaların durumlarını KentOS kodu olmadan sözleşmenin ve işlemlerin tanımından şu betikler yazar (`--check` farkı arar): `edge_command_cases.py` (Buda, Uzat, Köşe yuvarla, Pah), `offset_command_cases.py`, `reshape_command_cases.py` (Esnet, Kır, Birleştir, Böl), `region_command_cases.py` (Alan oluştur, Tarama), `dimension_create_cases.py` (Ölçü ekle), `units_change_cases.py` (Birimi değiştir), `changeset_command_cases.py` (değişiklik kümesi) ve öbürlerinin kendi betikleri (`scripts/fixtures/`).
 
 **Yalnız masaüstünün durumları** `v1/desktop/`'tadır ([ADR 0207](../../docs/adr/0207-point-clouds-and-large-data.md) §10): nokta bulutunu şimdilik yalnız masaüstü ekler, çizer ve işler (sahibin kararı, 8 Ekim 2026), web'in koşucusu bu klasörü okumaz (`v1/*.json`). Biçim aynıdır; masaüstünün koşucusu (`the_desktops_own_cases_match_its_handlers`) dosya başına 20 durum aramaz. Durumları KentOS kodu olmadan sözleşmenin kurallarından `scripts/fixtures/pointcloud_command_cases.py` yazar (`--check` farkı arar). Web nokta bulutunu alınca durumlar yukarıdaki dosyalara taşınır.
 

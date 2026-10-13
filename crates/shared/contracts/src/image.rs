@@ -44,12 +44,16 @@ pub struct ImageEntity {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ImageFields {
     /// Its lower left corner.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
     /// Along its bottom edge, metres, over 0.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: f64,
     /// Along its left edge, metres, over 0.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: f64,
     /// Radians, counter-clockwise from east, about `p`.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub rotation: f64,
     /// The picture mirrored in its own x axis (Aynala), before the turn.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -69,10 +73,12 @@ pub struct ImageFields {
     /// absent: the whole picture.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub clip: Option<Vec<Vec2>>,
     /// 0.1 to 1; absent: opaque.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub opacity: Option<f64>,
 }
 

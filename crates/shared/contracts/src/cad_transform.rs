@@ -36,13 +36,33 @@ pub const CAD_ENTITIES_TRANSFORM_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum Transform {
     /// Move (taşı) by a displacement: `dx` east, `dy` north.
-    Move { dx: f64, dy: f64 },
+    Move {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        dx: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        dy: f64,
+    },
     /// Rotate (döndür) about `center` by `angle` radians, counter-clockwise.
-    Rotate { center: Vec2, angle: f64 },
+    Rotate {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        center: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+        angle: f64,
+    },
     /// Scale (ölçekle) about `center` by `factor`, above zero.
-    Scale { center: Vec2, factor: f64 },
+    Scale {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        center: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        factor: f64,
+    },
     /// Mirror (aynala) across the line through `a` and `b`, two different points.
-    Mirror { a: Vec2, b: Vec2 },
+    Mirror {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        a: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        b: Vec2,
+    },
     /// Align (hizala, AutoCAD's ALIGN): `source` goes onto `target`. With a
     /// second pair (`source2` and `target2`, given together) the objects
     /// also turn about `source` so that the direction from `source` to
@@ -51,13 +71,17 @@ pub enum Transform {
     /// other. The second pair's points must lie apart from the first's;
     /// `scale` means nothing without a second pair.
     Align {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         source: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         target: Vec2,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         source2: Option<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         target2: Option<Vec2>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
@@ -68,9 +92,13 @@ pub enum Transform {
     /// y′ = to.y + b·x̄ + a·ȳ, x̄ = x − from.x, ȳ = y − from.y. Every kind
     /// moves as the modify tools move it.
     Similarity {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         from: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         to: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         a: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         b: f64,
     },
     /// Oturt: an affine transform between centred frames, `m` = [a, b, c, d]:
@@ -79,13 +107,27 @@ pub enum Transform {
     /// object may change its kind), a path's arc segments straight vertices
     /// within 0.1 mm; texts, notes, blocks, dimensions and hatch patterns
     /// keep their shape at their anchor (docs/adr/0156 §4, §5).
-    Affine { from: Vec2, to: Vec2, m: [f64; 4] },
+    Affine {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        from: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        to: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        m: [f64; 4],
+    },
     /// Oturt: a projective transform between centred frames, `h` = [a1, a2,
     /// a3, b1, b2, b3, c1, c2]: w = c1·x̄ + c2·ȳ + 1, x′ = to.x + (a1·x̄ +
     /// a2·ȳ + a3)/w, y′ = to.y + (b1·x̄ + b2·ȳ + b3)/w. Lines stay straight;
     /// curves become straight vertices within 0.1 mm; a point where w is
     /// 1e-9 or less lies beyond the horizon.
-    Projective { from: Vec2, to: Vec2, h: [f64; 8] },
+    Projective {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        from: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        to: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        h: [f64; 8],
+    },
     /// Kauçuk levha (docs/adr/0158): the thin plate spline of the links'
     /// displacements, through every link exactly (a link whose `to` is its
     /// `from` holds its point), following their affine trend far from them.
@@ -108,6 +150,7 @@ pub enum Transform {
         mode: ArrangeMode,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Option<f64>,
     },
 }
@@ -136,7 +179,9 @@ pub enum ArrangeMode {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RubberLink {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub to: Vec2,
 }
 

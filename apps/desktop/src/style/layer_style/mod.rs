@@ -636,7 +636,10 @@ impl LayerStyleWindow {
                 true
             }
             CommandResult::Failed { error } => {
-                self.say(format!("Katman çizimi uygulanmadı: {}", error.message), true);
+                self.say(
+                    format!("Katman çizimi uygulanmadı: {}", error.message),
+                    true,
+                );
                 false
             }
             _ => {

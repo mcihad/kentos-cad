@@ -66,7 +66,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
         Args:
             doc: The drawing it works on.
             layer_id: The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
-            p: Where it is: x east (Y), y north (X), in the project's units (m), float64.
+            p: Where it is: x east (Y), y north (X), in the project's units (m), float64. Unit: length.
             attrs: GIS attributes, text in v1. Absent: none.
             color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
             expected_revision: The document revision the input was prepared against, as decimal text
@@ -78,7 +78,7 @@ class _PointCreate(LocalCommand[PointCreate, PointCreated, PointPlan]):
                 instead of its layer's style: an object template's (docs/adr/0176).
                 The id is not looked up: the libraries are the host's. Absent: the
                 layer's style.
-            z: Its elevation (kot), in metres. Absent: none.
+            z: Its elevation (kot), in metres. Absent: none. Unit: elevation.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's

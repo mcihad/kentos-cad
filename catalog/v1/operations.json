@@ -218,9 +218,10 @@
     "file.settings": {
       "level": "semantic",
       "via": [
-        "cad.settings.set"
+        "cad.settings.set",
+        "cad.units.change"
       ],
-      "note": "Anahtarlarla: ad, tür, sistemler, birim, basamaklar, birimler, ölçek, yazı tipi. Tanımlı sistem, datum seçimleri, Ölçme, Değişkenler ve topoloji ayarlarının komutu yok (ADR 0248 §5)."
+      "note": "Anahtarlarla: ad, tür, sistemler, birim, basamaklar, birimler, ölçek, yazı tipi. Çizim varken birim değişimi cad.units.change ile: boylar ya da sayılar korunur (ADR 0256 §1). Tanımlı sistem, datum seçimleri, Ölçme, Değişkenler ve topoloji ayarlarının komutu yok (ADR 0248 §5)."
     },
     "file.start": {
       "level": "host"

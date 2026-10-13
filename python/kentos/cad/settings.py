@@ -90,17 +90,17 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         Args:
             doc: The drawing it works on.
             angle_unit:
-            area_decimals:
+            area_decimals: Unit: count.
             area_unit:
             drawing_font:
             drawing_unit:
             expected_revision: The document revision the input was prepared against, as decimal text.
-            length_decimals:
+            length_decimals: Unit: count.
             name:
-            plot_scale:
+            plot_scale: Unit: scale.
             project_type:
-            second_srid:
-            srid:
+            second_srid: Unit: epsg.
+            srid: Unit: epsg.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's

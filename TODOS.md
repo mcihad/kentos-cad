@@ -145,6 +145,13 @@ Liste:
   (`classifyFixture.test.ts`'in yanında); bilinen bozulmalar: web'de açılan mm projesinin işleyicisi eski gibi metrede okunur
   (masaüstünün yazdığı sınıflar mm²'dedir, web'de pencere ve çizim onlarla uyuşmaz), `fixtures/expression/v2/builder.json`'un `$alan`
   ve `$uzunluk` açıklamaları (web'in WASM'ı yeniden derlenene kadar `builder.test.ts` eski metni görür).
+- [ ] `CAD-DATA-04`, `05`, `06`, `08` (ADR 0256, 13 Ekim): web'de gerekenler: `cad.units.change`'in işleyicisi `product/`'ta
+  (birim kuralı sözleşmeninki: `kentos_contracts::units`, web'e WASM'la ya da `io/`'nun DXF birim çevirisinin yanında), belgede birimin
+  geri alınan adımı (`model/document.ts`'e `Op::Units`'in karşılığı: birim, ana görünüm, çapa), Proje ayarları'nın birim sorusu
+  (`ui/settings/ProjectSettingsDialog.ts`: Boyları korunsun, Sayıları korunsun, Vazgeç; komutun planıyla), ortak durumlar
+  `fixtures/commands/v1/cad.units.change.json`; katalogda `hosts`'a Web; web'in DXF yazıcısının çevirisi aynı çekirdektendir
+  (kutu, çerçeve, eğri artık ölçeklenir: `dxf-write/units` yeni nesneleriyle web'in koşucusunda da geçmeli); bilinen bozulmalar:
+  web'in komut koşucusunda bir dosya kayıtsız komut, `CommandCatalog.ts`'in `units`'i (`CatalogUnit`) web'de okunmuyor.
 - [ ] Web'in bilinen hatası (12 Ekim, `1aad00d0`'da görüldü): belgenin yerel orijininden çok uzaktaki (~4 400 km) nesnede seçimin
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek

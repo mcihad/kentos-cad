@@ -168,7 +168,9 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             "drawing.summary",
             "Çizimin özeti",
             "Ad, revizyon, nesne sayısı, proje ayarları (SRID, birimler, ölçek), değerlerin birimleri (units: \
-             length m ya da degree, area m2 ya da degree2, drawing projenin çizim birimi), etkin katman, geri alma durumu.",
+             length m ya da degree, area m2 ya da degree2, drawing projenin çizim birimi), eksen ve açı düzeni (conventions: \
+             telde x doğu, y kuzey; labels arayüzün adları, CAD'de X,Y, CBS'de Y,X; polar kutupsal açının başlangıcı ve yönü, \
+             CAD'de doğudan saat yönünün tersine, CBS'de kuzeyden saat yönünde; angleUnit), ana görünüm, etkin katman, geri alma durumu.",
             object(json!({ "drawing": drawing_arg() }), &["drawing"]),
             annotations(true, false),
         ),
@@ -210,11 +212,20 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.measure",
             "Ölç",
-            "Nesnenin alanı, uzunluğu ya da çevresi ve kutusu; kaynak geometriden. Birimleri units'te: projenin \
-             düzleminde metre ve m² (coğrafi sistemde derece), çizim birimi mm olsa da.",
+            "Nesnenin (uid) ya da en çok 1000 nesnenin (uids) alanı, uzunluğu ya da çevresi ve kutusu; kaynak geometriden. \
+             Birimleri units'te, nasıl ölçüldüğü basis'te (srid, system, kind, frame: world, method): method plane projenin \
+             düzleminde metre ve m² (coğrafi sistemde derece; çizim birimi mm olsa da), ellipsoid sistemin elipsoidi üstünde \
+             metre, ground projenin ortalama elipsoit yüksekliğinde zeminde. uids'te nesneler items'ta, toplamlar totals'ta.",
             object(
-                json!({ "drawing": drawing_arg(), "uid": uid }),
-                &["drawing", "uid"],
+                json!({
+                    "drawing": drawing_arg(),
+                    "uid": uid,
+                    "uids": { "type": "array", "items": { "type": "string" }, "maxItems": 1000,
+                              "description": "Toplu ölçü: nesnelerin kalıcı kimlikleri (uid yerine)." },
+                    "method": { "type": "string", "enum": ["plane", "ellipsoid", "ground"],
+                                "description": "Nasıl ölçülür; varsayılan plane." },
+                }),
+                &["drawing"],
             ),
             annotations(true, false),
         ),
@@ -481,6 +492,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.stretch"
             | "cad.entities.break"
             | "cad.entities.join"
+            // Keeping the numbers scales every object of the drawing (docs/adr/0256 §1).
+            | "cad.units.change"
             // Its remove takes a service layer away (docs/adr/0208 §15).
             | "cad.layers.service"
             // Its remove takes a network's definition away (docs/adr/0209 §11).
@@ -523,7 +536,8 @@ fn command_tool(c: &Value) -> Value {
          (plan'ın kimliği: expected.plan olarak verilirse yalnız o plan yazılır), replayed, call (kaydın satırı). \
          Koordinatlar x doğu (Y), y kuzey (X); koordinatlar, uzunluklar ve alanlar projenin düzleminde metre ve \
          m²'dir (coğrafi sistemde derece), projenin çizim birimi mm ya da cm olsa da: 4000 mm 4 yazılır \
-         (docs/adr/0245).",
+         (docs/adr/0245). Şemadaki her sayının birimi x-unit'tedir (length, area, elevation, paper-mm, deg, rad, 1, \
+         count …; anlamları kataloğun units'inde, docs/adr/0256 §3): açılar alanına göre derece ya da radyandır.",
         c["summary"].as_str().unwrap_or_default()
     );
     json!({
@@ -618,7 +632,16 @@ fn on_desktop(server: &mut Server, handle: &str, name: &str, args: &Value) -> Re
             }),
         ),
         "drawing.entity" => ("entity", json!({ "uid": args.get("uid") })),
-        "drawing.measure" => ("measure", json!({ "uid": args.get("uid") })),
+        "drawing.measure" => match args.get("uids") {
+            Some(uids) => (
+                "measureMany",
+                json!({ "uids": uids, "method": args.get("method") }),
+            ),
+            None => (
+                "measure",
+                json!({ "uid": args.get("uid"), "method": args.get("method") }),
+            ),
+        },
         "drawing.close" => {
             server.desktops.remove(handle);
             return Ok(answer(json!({ "closed": handle, "detached": true }), false));
@@ -830,12 +853,24 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         }
         "drawing.measure" => {
             let (s, _) = session(server, args)?;
-            let uid = text(args, "uid").ok_or_else(|| refused("invalid_input", "uid gerekli."))?;
-            let m = s.measure(uid).map_err(host)?;
-            Ok(answer(
-                serde_json::to_value(&m).unwrap_or(Value::Null),
-                false,
-            ))
+            let method = kentos_headless::Method::named(text(args, "method")).map_err(host)?;
+            let value = match args.get("uids") {
+                Some(uids) => {
+                    let uids: Vec<String> = serde_json::from_value(uids.clone()).map_err(|_| {
+                        refused(
+                            "invalid_input",
+                            "uids nesne kimliklerinin (metin) listesi olmalı.",
+                        )
+                    })?;
+                    serde_json::to_value(&s.measure_many(&uids, method).map_err(host)?)
+                }
+                None => {
+                    let uid = text(args, "uid")
+                        .ok_or_else(|| refused("invalid_input", "uid ya da uids gerekli."))?;
+                    serde_json::to_value(&s.measure_by(uid, method).map_err(host)?)
+                }
+            };
+            Ok(answer(value.unwrap_or(Value::Null), false))
         }
         "project.list" => server
             .account

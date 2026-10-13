@@ -125,12 +125,16 @@ impl DrawingUnit {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectSettings {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub length_decimals: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub area_decimals: u32,
     pub area_unit: AreaUnit,
     pub angle_unit: AngleUnit,
     /// Plot scale denominator (1:1000 → 1000).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub plot_scale: f64,
     /// The project's type; none while it is not asked (files written before
     /// types). The former Hibrit mode reads as written and means the same
@@ -152,6 +156,7 @@ pub struct ProjectSettings {
     /// the project's own system, never a local project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub second_srid: Option<u32>,
     /// The project's own coordinate system when it is a definition
     /// (docs/adr/0168 §1); `srid` is then 0.
@@ -243,31 +248,38 @@ pub struct SurveySettings {
     /// k, within [−1, 1]; absent: [`REFRACTION`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub refraction: Option<f64>,
     /// The two faces' horizontal reading difference.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub face_hz: Option<f64>,
     /// The vertical index error.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub index: Option<f64>,
     /// The two faces' slope distance difference.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub face_slope: Option<f64>,
     /// A traverse leg's horizontal distance measured from its two ends
     /// (schema 15).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub two_way: Option<f64>,
     /// A traverse's angular misclosure (schema 15).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub traverse_angle: Option<f64>,
     /// A traverse's linear (coordinate) misclosure (schema 15).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub traverse_coord: Option<f64>,
     /// The project's mean ellipsoidal height (m), within [−500, 9000]: the
     /// ground values of Mesafe ölç and Alan hesapla (docs/adr/0171 §2;
@@ -275,6 +287,7 @@ pub struct SurveySettings {
     /// ellipsoidal is not known.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub ground_height: Option<f64>,
     /// Kutupsal alım and Poligon hesabı take measured (ground) lengths to the
     /// grid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;
@@ -286,26 +299,32 @@ pub struct SurveySettings {
     /// schema 28); absent: [`SIGMA_DEFAULTS`]'s.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub sigma_direction: Option<f64>,
     /// A distance's constant part, m (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sigma_distance: Option<f64>,
     /// A distance's part per million of its length (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ppm")))]
     pub sigma_ppm: Option<f64>,
     /// Each end's centering, the instrument's and the target's, m (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sigma_centering: Option<f64>,
     /// A zenith angle's, radians (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub sigma_zenith: Option<f64>,
     /// Geometric levelling's per √km, m (schema 28).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sigma_levelling: Option<f64>,
 }
 

@@ -1051,6 +1051,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.units.change",
+        refusals: &[
+            &["same_unit"],
+            REVISION,
+            &["unit_needs_local", "unit_mismatch", "layer_locked"],
+        ],
+        warnings: &["point_clouds_kept", "sheets_kept", "tolerances_kept"],
+        targets: none,
+    },
+    Entry {
         id: "cad.sheets.edit",
         refusals: &[
             &[

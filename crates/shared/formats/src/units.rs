@@ -9,87 +9,22 @@
 //! the web's `toMetres`). Angles, ratios, an insert's own scale and pen
 //! widths (millimetres on paper) are not lengths in the drawing and stay.
 
-use kentos_contracts::{
-    AreaPart, AttributeDefinition, BlockDefinition, Bounds, DrawingUnit, Entity, HatchPatternType,
-    RingGeometry, Vec2,
+use kentos_contracts::DrawingUnit;
+/// The scale and the scaling of a drawing's objects are the contracts'
+/// (`kentos_contracts::units`): one rule for DXF's units and for changing a
+/// project's unit (docs/adr/0256 §1).
+pub use kentos_contracts::units::{
+    Scale, scale_block as block, scale_bounds as bounds, scale_entity as entity,
 };
-
-/// `value × mul ÷ div`: one length unit in another.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Scale {
-    pub mul: f64,
-    pub div: f64,
-}
-
-impl Scale {
-    pub const ONE: Scale = Scale { mul: 1.0, div: 1.0 };
-
-    /// A value in the scale's unit.
-    pub fn apply(self, v: f64) -> f64 {
-        if self.mul == 1.0 {
-            v / self.div
-        } else if self.div == 1.0 {
-            v * self.mul
-        } else {
-            v * self.mul / self.div
-        }
-    }
-
-    pub fn is_one(self) -> bool {
-        self.mul == self.div
-    }
-
-    fn point(self, p: &mut Vec2) {
-        p.x = self.apply(p.x);
-        p.y = self.apply(p.y);
-    }
-
-    fn points(self, pts: &mut [Vec2]) {
-        for p in pts {
-            self.point(p);
-        }
-    }
-
-    fn heights(self, zs: &mut Option<Vec<Option<f64>>>) {
-        for z in zs.iter_mut().flatten().flatten() {
-            *z = self.apply(*z);
-        }
-    }
-
-    fn height(self, z: &mut Option<f64>) {
-        if let Some(z) = z {
-            *z = self.apply(*z);
-        }
-    }
-
-    fn ring(self, r: &mut RingGeometry) {
-        self.points(&mut r.pts);
-        self.heights(&mut r.zs);
-    }
-
-    fn part(self, a: &mut AreaPart) {
-        self.points(&mut a.pts);
-        self.heights(&mut a.zs);
-        for h in a.holes.iter_mut().flatten() {
-            self.ring(h);
-        }
-    }
-}
 
 /// Metres in one of a local project's drawing units.
 pub fn from_unit(u: DrawingUnit) -> Scale {
-    Scale {
-        mul: 1.0,
-        div: u.per_metre(),
-    }
+    Scale::from_unit(u)
 }
 
 /// A local project's drawing unit in metres: what a writer writes.
 pub fn to_unit(u: DrawingUnit) -> Scale {
-    Scale {
-        mul: u.per_metre(),
-        div: 1.0,
-    }
+    Scale::to_unit(u)
 }
 
 /// The unit an $INSUNITS code names, in metres, and its name; none for a
@@ -142,134 +77,6 @@ pub fn name_of(u: DrawingUnit) -> &'static str {
         DrawingUnit::Cm => "santimetre",
         DrawingUnit::M => "metre",
     }
-}
-
-/// Every coordinate and length of `e` in the scale's unit.
-pub fn entity(e: &mut Entity, s: Scale) {
-    match e {
-        Entity::Point(p) => {
-            s.point(&mut p.p);
-            s.height(&mut p.z);
-        }
-        Entity::Line(l) => {
-            s.point(&mut l.a);
-            s.point(&mut l.b);
-            s.height(&mut l.za);
-            s.height(&mut l.zb);
-        }
-        Entity::Polyline(p) | Entity::Polygon(p) => {
-            s.points(&mut p.pts);
-            s.heights(&mut p.zs);
-            for h in p.holes.iter_mut().flatten() {
-                s.ring(h);
-            }
-            for a in p.parts.iter_mut().flatten() {
-                s.part(a);
-            }
-        }
-        Entity::Circle(c) => {
-            s.point(&mut c.c);
-            c.r = s.apply(c.r);
-        }
-        Entity::Arc(a) => {
-            s.point(&mut a.c);
-            a.r = s.apply(a.r);
-        }
-        Entity::Ellipse(el) => {
-            s.point(&mut el.c);
-            s.point(&mut el.major);
-        }
-        Entity::Spline(sp) => s.points(&mut sp.pts),
-        Entity::Xline(c) | Entity::Ray(c) => s.point(&mut c.p),
-        Entity::Text(t) => {
-            s.point(&mut t.p);
-            t.height = s.apply(t.height);
-        }
-        Entity::Dimension(d) => {
-            s.point(&mut d.a);
-            s.point(&mut d.b);
-            if let Some(c) = &mut d.c {
-                s.point(c);
-            }
-            d.offset = s.apply(d.offset);
-            d.height = s.apply(d.height);
-            s.height(&mut d.za);
-            s.height(&mut d.zb);
-        }
-        Entity::Hatch(h) => {
-            s.points(&mut h.ring);
-            for hole in h.holes.iter_mut().flatten() {
-                s.points(hole);
-            }
-            // Only lines are apart by a length; the other kinds' spacing is 1 and unread.
-            if matches!(
-                h.pattern.kind,
-                HatchPatternType::Lines | HatchPatternType::Cross
-            ) {
-                h.pattern.spacing = s.apply(h.pattern.spacing);
-            }
-            // A pattern's metres per unit of its definition: its definition stays.
-            if let Some(scale) = &mut h.pattern.scale {
-                *scale = s.apply(*scale);
-            }
-            if let Some(a) = &mut h.assoc {
-                s.point(&mut a.seed);
-            }
-        }
-        // Its definition is scaled with the drawing: its own scale stays.
-        Entity::Insert(i) => s.point(&mut i.p),
-        Entity::Leader(l) => {
-            s.points(&mut l.pts);
-            l.height = s.apply(l.height);
-        }
-        Entity::Table(t) => {
-            s.point(&mut t.p);
-            t.height = s.apply(t.height);
-            for x in t.rows.iter_mut().chain(t.columns.iter_mut()) {
-                *x = s.apply(*x);
-            }
-        }
-        // Its clip is in its own fractions: unchanged (docs/adr/0192 §1).
-        Entity::Image(i) => {
-            s.point(&mut i.image.p);
-            i.image.width = s.apply(i.image.width);
-            i.image.height = s.apply(i.image.height);
-        }
-        // Its corner and its pixels' steps: every number of its affine is a length (docs/adr/0204 §2).
-        Entity::Raster(r) => {
-            for v in &mut r.raster.affine {
-                *v = s.apply(*v);
-            }
-        }
-        // A cloud's points are in its files, which no unit scales; DXF carries none (docs/adr/0207 §11).
-        Entity::PointCloud(_) => {}
-    }
-}
-
-/// A block definition in the scale's unit: its base point, its objects and
-/// its attribute definitions, so that an insert, scaled with them, places
-/// the same drawing.
-pub fn block(b: &mut BlockDefinition, s: Scale) {
-    s.point(&mut b.base);
-    for e in &mut b.entities {
-        entity(e, s);
-    }
-    for a in &mut b.attributes {
-        attribute(a, s);
-    }
-}
-
-fn attribute(a: &mut AttributeDefinition, s: Scale) {
-    s.point(&mut a.p);
-    a.height = s.apply(a.height);
-}
-
-/// A box in the scale's unit.
-pub fn bounds(b: &mut Bounds, s: Scale) {
-    b.min_x = s.apply(b.min_x);
-    b.min_y = s.apply(b.min_y);
-    b.max_x = s.apply(b.max_x);
-    b.max_y = s.apply(b.max_y);
 }
 
 #[cfg(test)]

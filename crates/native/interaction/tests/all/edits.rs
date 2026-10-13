@@ -246,9 +246,15 @@ fn the_trim_and_extend_tools_write_what_the_commands_write_without_a_store() {
         };
         let mut cx = ExecutionContext::new(&mut by_command.doc);
         let done = if extend {
-            matches!(entities_extend::execute(&mut cx, input), CommandResult::Completed { .. })
+            matches!(
+                entities_extend::execute(&mut cx, input),
+                CommandResult::Completed { .. }
+            )
         } else {
-            matches!(entities_trim::execute(&mut cx, input), CommandResult::Completed { .. })
+            matches!(
+                entities_trim::execute(&mut cx, input),
+                CommandResult::Completed { .. }
+            )
         };
         assert!(done, "{at:?}");
         let all = |b: &Bench| -> Vec<Entity> { b.doc.entities().cloned().collect() };

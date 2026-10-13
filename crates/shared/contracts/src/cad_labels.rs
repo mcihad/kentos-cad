@@ -159,6 +159,7 @@ pub struct LabelsPin {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LabelsPinned {
     /// The objects whose pins changed (an undo step was written when any did).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub changed: u32,
     /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

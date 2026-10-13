@@ -116,6 +116,7 @@ pub struct FileCommit {
 pub struct FileCommitted {
     /// The new revision (decimal text).
     pub revision: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub size: u32,
     pub sha256: String,
     /// How many objects the file holds (decimal text), counted when it was

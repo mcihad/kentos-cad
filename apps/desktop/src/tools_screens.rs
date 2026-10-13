@@ -232,7 +232,11 @@ fn mm_labels(app: &mut App) {
             id: 0,
             layer_id: layer.clone(),
             color: None,
-            attrs: [("Ad".to_owned(), if w > 1.5 { "Salon" } else { "Oda" }.to_owned())].into(),
+            attrs: [(
+                "Ad".to_owned(),
+                if w > 1.5 { "Salon" } else { "Oda" }.to_owned(),
+            )]
+            .into(),
             label: None,
             symbol: None,
             line_weight: None,
@@ -241,15 +245,17 @@ fn mm_labels(app: &mut App) {
         };
         slots.push(
             doc.model
-                .add(kentos_contracts::Entity::Polygon(kentos_contracts::PathEntity {
-                    base,
-                    pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],
-                    ms: None,
-                    bulges: None,
-                    holes: None,
-                    zs: None,
-                    parts: None,
-                }))
+                .add(kentos_contracts::Entity::Polygon(
+                    kentos_contracts::PathEntity {
+                        base,
+                        pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],
+                        ms: None,
+                        bulges: None,
+                        holes: None,
+                        zs: None,
+                        parts: None,
+                    },
+                ))
                 .expect("a slot"),
         );
     }

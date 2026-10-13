@@ -31,7 +31,10 @@ pub const CAD_DIMENSIONS_CREATE_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum MeasuredPoint {
     /// Coordinates: the point follows nothing.
-    At { at: Vec2 },
+    At {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        at: Vec2,
+    },
     /// A place on an object: the point is the place's now. Hizalı's,
     /// Doğrusal's, Koordinat's, Semt's and Eğim's points follow their places
     /// from then on (docs/adr/0249 §3); the others' are read from them.
@@ -56,6 +59,7 @@ pub struct EdgeNear {
     pub uid: String,
     /// Where it was clicked: its nearest edge is the one measured. An angle's
     /// arms reach as far as their edges were clicked.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub near: Vec2,
 }
 
@@ -75,6 +79,7 @@ pub enum DimensionMeasure {
         b: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         angle: Option<f64>,
     },
     /// Koordinat: `a`'s Y (angle 0) or X (90), its leader ending at `at`;
@@ -83,6 +88,7 @@ pub enum DimensionMeasure {
         a: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
         angle: Option<f64>,
     },
     /// Semt: the direction from `a` to `b`, from north clockwise.
@@ -94,9 +100,11 @@ pub enum DimensionMeasure {
         b: MeasuredPoint,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         za: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
         zb: Option<f64>,
     },
     /// Açı between two straight edges: their lines' crossing the vertex, the
@@ -122,6 +130,7 @@ pub enum DimensionMeasure {
         of: EdgeNear,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         between: Option<[Vec2; 2]>,
     },
     /// Kırıklı yarıçap of a circle, an arc or a path's arc segment: from the
@@ -129,7 +138,9 @@ pub enum DimensionMeasure {
     Jogged {
         of: EdgeNear,
         #[serde(rename = "shownCentre")]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         shown_centre: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         on: Vec2,
     },
 }
@@ -163,6 +174,7 @@ pub enum DimensionMeasure {
 pub struct DimensionsCreate {
     pub measure: DimensionMeasure,
     /// Where the dimension goes: its line, its arc or its leader through it.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
     /// Instead of `at`'s, the distance typed: Hizalı's, Semt's and Eğim's
     /// signed (left of a→b positive), Doğrusal's along its direction's
@@ -171,6 +183,7 @@ pub struct DimensionsCreate {
     /// centre shown. Yarıçap, Çap and Koordinat take none: `at` places them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub offset: Option<f64>,
     /// The layer the dimension goes to.
     pub layer_id: String,
@@ -183,6 +196,7 @@ pub struct DimensionsCreate {
     /// scale, Standart's the project's Ölçü height (docs/adr/0205).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub height: Option<f64>,
     /// The value drawn over the drawing's background (Zemin, docs/adr/0147).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -301,8 +315,10 @@ pub struct DimensionsReassociate {
 pub struct DimensionsReassociated {
     /// The points whose binding or coordinates changed (an undo step was
     /// written when any did).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub changed: u32,
     /// The dimension's measured value now, in its unit (`unit`).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub value: f64,
     /// "length" (metres), "angle" (radians), "percent" or "coordinate".
     pub unit: String,
@@ -321,8 +337,10 @@ pub struct DimensionsReassociatePlan {
     /// The dimension as execute would write it.
     pub dimension: Entity,
     /// The points whose binding or coordinates would change.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub changed: u32,
     /// Its measured value then, and the value's unit, as in the output.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub value: f64,
     pub unit: String,
     /// The document revision the plan was made against.

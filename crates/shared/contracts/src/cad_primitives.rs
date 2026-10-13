@@ -45,10 +45,12 @@ pub struct PointCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
     /// Where it is: x east (Y), y north (X), in the project's units (m), float64.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub p: Vec2,
     /// Its elevation (kot), in metres. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: Option<f64>,
     /// The text shown beside it (`EntityBase.label`): a point's name, a spot
     /// elevation. Absent: none.
@@ -89,6 +91,7 @@ pub struct PointCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
     /// Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: u32,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision
@@ -138,8 +141,10 @@ pub struct CircleCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
     /// Its centre: x east (Y), y north (X), in the project's units (m), float64.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub c: Vec2,
     /// Its radius, in the project's units; above zero.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub r: f64,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -151,6 +156,7 @@ pub struct CircleCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -186,6 +192,7 @@ pub struct CircleCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
     /// Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: u32,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision
@@ -238,13 +245,17 @@ pub struct ArcCreate {
     /// The layer it goes on: a layer's id (`LayerNode.id`), not a group's.
     pub layer_id: String,
     /// Its centre: x east (Y), y north (X), in the project's units (m), float64.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub c: Vec2,
     /// Its radius, in the project's units; above zero.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub r: f64,
     /// Where it starts: radians, counter-clockwise from east (a geometry
     /// angle, not a surveying bearing).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub a0: f64,
     /// Where it ends: the arc runs counter-clockwise from `a0` to `a1`.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub a1: f64,
     /// Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -256,6 +267,7 @@ pub struct ArcCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: Option<f64>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -291,6 +303,7 @@ pub struct ArcCreated {
     /// Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.
     pub uid: String,
     /// Its slot in the open document (`Entity.id`); it means nothing once the document is closed.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub id: u32,
     /// The document's revision after the write, as decimal text. Inside an
     /// open transaction or group the write joins it, and the revision

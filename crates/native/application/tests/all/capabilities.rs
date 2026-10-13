@@ -79,6 +79,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "beklenmez: komutun denetimleri belgenin reddedeceği katmanı önce yakalar",
     ),
     (
+        "cad.units.change",
+        "sheets_kept",
+        "ortak durumun kurulumu v1 JSON'dur, pafta kitabı taşımaz; units.rs'in kendi testinde (kitaplı çizim)",
+    ),
+    (
         "cad.entities.edit",
         "invalid_hatch",
         "kural cad.entities.create'in durumlarında; düzenleme aynı denetimden geçer",

@@ -13,8 +13,8 @@ use iced::font::{Family, Style, Weight};
 use kentos_contracts::DrawingFont;
 
 // The faces and their names are the plotter's: the headless host's PDF embeds the same bytes (docs/adr/0252).
-use kentos_plot::fonts::{FACE_KEYS, FACES};
 pub use kentos_plot::fonts::pdf_fonts;
+use kentos_plot::fonts::{FACE_KEYS, FACES};
 
 /// Puts the faces in Iced's text system before the first frame; later calls do nothing.
 pub fn load() {

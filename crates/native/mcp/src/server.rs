@@ -27,8 +27,10 @@ pub(crate) const INSTRUCTIONS: &str = "KentOS CAD çizimleri (.kcad) üzerinde �
 dönen `drawing` tutamacını sonraki her çağrıya verin. Komut araçları (cad.polygon.create …) kataloğun \
 ürün komutlarıdır: op=plan yazılacak olanı gösterir ve hiçbir şey yazmaz, op=execute tek geri alma \
 adımı olarak yazar. Nesneler kalıcı kimlikleriyle (uid) anılır. Koordinatlar x doğu (Y), y kuzey (X), \
-projenin biriminde (m); alan m². Büyük çizimi drawing.entities ile sayfa sayfa, katman, tür ve kutu \
-süzgeciyle okuyun. Değişiklikler drawing.save ile kaydedilene kadar yalnız bellektedir.";
+projenin biriminde (m); alan m². Her sayının birimi araç şemasının x-unit'idir (açılar alanına göre derece ya da \
+radyan); drawing.summary'nin conventions'ı arayüzün eksen adlarını ve kutupsal açının yönünü söyler. Büyük çizimi \
+drawing.entities ile sayfa sayfa, katman, tür ve kutu süzgeciyle okuyun. Değişiklikler drawing.save ile \
+kaydedilene kadar yalnız bellektedir.";
 
 /// A JSON-RPC error: its code, message and data.
 pub(crate) struct Fault {

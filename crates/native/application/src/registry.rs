@@ -12,7 +12,7 @@ use kentos_contracts::{
     EntitiesTransform, EntitiesTrim, LabelsPin, LayersCompose, LayersEdit, LayersFilter,
     LayersInfo, LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
     LineCreate, NetworkDefine, PointCreate, PolygonCreate, PolylineCreate, ScenariosEdit,
-    SettingsSet, SheetsEdit, StylesEdit, codes,
+    SettingsSet, SheetsEdit, StylesEdit, UnitsChange, codes,
 };
 use serde_json::Value;
 
@@ -23,7 +23,7 @@ use crate::{
     entities_hatch, entities_join, entities_trim, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_info, layers_labels, layers_renderer, layers_service, layers_set,
     layers_states, layers_time, line, network_define, offset, point, polygon, polyline,
-    scenarios_edit, set, settings_set, sheets_edit, stretch, styles_edit, transform,
+    scenarios_edit, set, settings_set, sheets_edit, stretch, styles_edit, transform, units_change,
 };
 
 /// Why a command was not run: not a refusal of the command (that is its
@@ -114,6 +114,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_LAYERS_STATES => $then!(layers_states, LayersStates),
             kentos_contracts::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),
+            kentos_contracts::CAD_UNITS_CHANGE => $then!(units_change, UnitsChange),
             kentos_contracts::CAD_SHEETS_EDIT => $then!(sheets_edit, SheetsEdit),
             kentos_contracts::CAD_CHANGESET_APPLY => $then!(changeset, ChangesetApply),
             other => Err(unknown(other)),

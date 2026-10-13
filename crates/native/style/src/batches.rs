@@ -1153,7 +1153,10 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         let (level, key) = order_of(d, style);
         let group = d.get("group").and_then(Value::as_u64).unwrap_or(0) as u32;
         let effect = (group > 0)
-            .then(|| d.get("effect").map(|e| std::sync::Arc::new(looks.effect(e))))
+            .then(|| {
+                d.get("effect")
+                    .map(|e| std::sync::Arc::new(looks.effect(e)))
+            })
             .flatten();
         let batch = match s(d, "kind") {
             "stroke" => {

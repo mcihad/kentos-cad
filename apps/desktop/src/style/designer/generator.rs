@@ -8,7 +8,9 @@
 use iced::widget::tooltip::Position;
 use iced::widget::{Column, button, column, container, row};
 use iced::{Border, Center, Color, Element, Fill, Theme};
-use kentos_native_style::designer::effects::{EFFECT_TYPES, effect_label, effect_of, put_effect, set_effect};
+use kentos_native_style::designer::effects::{
+    EFFECT_TYPES, effect_label, effect_of, put_effect, set_effect,
+};
 use kentos_native_style::designer::steps::{
     BUFFER_SIDES, STEP_KINDS, VERTEX_CHOICES, add_step, class_of, move_step, put_step, remove_step,
     set_generator_kind, step_label, step_output, step_summary,
@@ -63,7 +65,15 @@ pub(super) fn rows<'a>(env: &Env<'_>) -> Vec<Element<'a, Message>> {
         texts::DRAWS_WITH,
         fields::select(&DRAW_KINDS, &kind, move |v| {
             let next = set_generator_kind(&layer, v);
-            edit(at, "symbol", None, Some(set("symbol", next.get("symbol").cloned().unwrap_or(Value::Null))))
+            edit(
+                at,
+                "symbol",
+                None,
+                Some(set(
+                    "symbol",
+                    next.get("symbol").cloned().unwrap_or(Value::Null),
+                )),
+            )
         }),
         Some("Üretilen geometriyi çizen sembol; katmanları listede bu katmanın altındadır."),
     );
@@ -98,13 +108,21 @@ pub(super) fn rows<'a>(env: &Env<'_>) -> Vec<Element<'a, Message>> {
             let mut m = Menu::new();
             for k in STEP_KINDS {
                 m = m
-                    .item(step_label(k).unwrap_or(k), steps_event(&add_step(&layer, k), n))
+                    .item(
+                        step_label(k).unwrap_or(k),
+                        steps_event(&add_step(&layer, k), n),
+                    )
                     .icon(crate::icons::from_web(Some(step_icon(k))));
             }
             m
         },
     );
-    let mut out: Vec<Element<'a, Message>> = vec![draws, fields::group_title(texts::STEPS), list, container(add).into()];
+    let mut out: Vec<Element<'a, Message>> = vec![
+        draws,
+        fields::group_title(texts::STEPS),
+        list,
+        container(add).into(),
+    ];
     let input = class_of(env.context);
     if step_output(steps, input).is_none() {
         out.push(
@@ -117,12 +135,19 @@ pub(super) fn rows<'a>(env: &Env<'_>) -> Vec<Element<'a, Message>> {
     }
     if let Some(st) = steps.get(chosen) {
         let kind = st.get("kind").and_then(Value::as_str).unwrap_or("");
-        let mut form: Vec<Element<'a, Message>> =
-            vec![fields::group_title(&format!("{}. {}", chosen + 1, step_label(kind).unwrap_or(kind)))];
+        let mut form: Vec<Element<'a, Message>> = vec![fields::group_title(&format!(
+            "{}. {}",
+            chosen + 1,
+            step_label(kind).unwrap_or(kind)
+        ))];
         form.extend(step_fields(env, chosen, st));
         out.push(
             container(Column::with_children(form).spacing(8))
-                .padding(iced::Padding { left: 10.0, top: 6.0, ..iced::Padding::ZERO })
+                .padding(iced::Padding {
+                    left: 10.0,
+                    top: 6.0,
+                    ..iced::Padding::ZERO
+                })
                 .into(),
         );
     }
@@ -130,16 +155,30 @@ pub(super) fn rows<'a>(env: &Env<'_>) -> Vec<Element<'a, Message>> {
 }
 
 /// A step's row: its number and line, ↑, ↓ and ✕; pressed, the step is chosen.
-fn step_row<'a>(l: &Value, i: usize, st: &Value, chosen: bool, n: usize, u: &str) -> Element<'a, Message> {
+fn step_row<'a>(
+    l: &Value,
+    i: usize,
+    st: &Value,
+    chosen: bool,
+    n: usize,
+    u: &str,
+) -> Element<'a, Message> {
     let tool = |name: &str, words: &str, press: Option<Message>| -> Element<'a, Message> {
         tip(
-            button(icon(glyph(name)).size(13.0)).padding([2, 4]).style(style::button::ghost).on_press_maybe(press),
+            button(icon(glyph(name)).size(13.0))
+                .padding([2, 4])
+                .style(style::button::ghost)
+                .on_press_maybe(press),
             Tip::new(words.to_owned()),
             Position::Top,
         )
     };
-    let up = (i > 0).then(|| move_step(l, i, -1).map(|s| steps_event(&s, i - 1))).flatten();
-    let down = (i + 1 < n).then(|| move_step(l, i, 1).map(|s| steps_event(&s, i + 1))).flatten();
+    let up = (i > 0)
+        .then(|| move_step(l, i, -1).map(|s| steps_event(&s, i - 1)))
+        .flatten();
+    let down = (i + 1 < n)
+        .then(|| move_step(l, i, 1).map(|s| steps_event(&s, i + 1)))
+        .flatten();
     let gone = steps_event(&remove_step(l, i), i.min(n.saturating_sub(2)));
     let face = row![
         label::caption(format!("{}.", i + 1)).style(style::text::muted),
@@ -167,7 +206,11 @@ fn step_row<'a>(l: &Value, i: usize, st: &Value, chosen: bool, n: usize, u: &str
             button::Style {
                 background: Some(iced::Background::Color(background)),
                 text_color: tk.text,
-                border: Border { color: edge, width: 1.0, radius: kentos_ui::theme::shape::radius(4.0).into() },
+                border: Border {
+                    color: edge,
+                    width: 1.0,
+                    radius: kentos_ui::theme::shape::radius(4.0).into(),
+                },
                 ..button::Style::default()
             }
         })
@@ -206,7 +249,10 @@ fn step_icon(kind: &str) -> &'static str {
 fn dd<'a>(env: &Env<'_>, i: usize, field: &str, fallback: f64) -> Element<'a, Message> {
     let key = format!("step.{i}.{field}");
     let label = numbers::spec_of(env.layer, &key).map_or("", |s| s.label);
-    let st = steps_of(env.layer).get(i).cloned().unwrap_or_else(|| json!({}));
+    let st = steps_of(env.layer)
+        .get(i)
+        .cloned()
+        .unwrap_or_else(|| json!({}));
     let v = st.get(field).cloned();
     let at = env.at;
     let layer = env.layer.clone();
@@ -225,21 +271,34 @@ fn dd<'a>(env: &Env<'_>, i: usize, field: &str, fallback: f64) -> Element<'a, Me
         let back = fallback_value.clone().unwrap_or_else(|| js_value(fallback));
         let with_line = with.clone();
         let line_key = key.clone();
-        let line = fields::text(field_id(&format!("{key}:expr")), text, "\"Alan\" ya da ifade", true, move |t| {
-            let mut e = json!({ "expr": t });
-            if let (Some(o), Some(f)) = (e.as_object_mut(), &fallback_value) {
-                o.insert("fallback".into(), f.clone());
-            }
-            edit(at, &line_key, None, Some(with_line(e)))
-        });
+        let line = fields::text(
+            field_id(&format!("{key}:expr")),
+            text,
+            "\"Alan\" ya da ifade",
+            true,
+            move |t| {
+                let mut e = json!({ "expr": t });
+                if let (Some(o), Some(f)) = (e.as_object_mut(), &fallback_value) {
+                    o.insert("fallback".into(), f.clone());
+                }
+                edit(at, &line_key, None, Some(with_line(e)))
+            },
+        );
         column![
-            row![line, fields::fx(true, edit(at, &key, None, Some(with(back))))].spacing(6).align_y(Center),
+            row![
+                line,
+                fields::fx(true, edit(at, &key, None, Some(with(back))))
+            ]
+            .spacing(6)
+            .align_y(Center),
             fields::hint("İfade boş sonuç verirse sabit değer kullanılır.")
         ]
         .spacing(4)
         .into()
     } else {
-        let current = v.cloned().unwrap_or_else(|| js_value(numbers::shown(env.layer, &key)));
+        let current = v
+            .cloned()
+            .unwrap_or_else(|| js_value(numbers::shown(env.layer, &key)));
         let fx = ev(Event::Edit(Edit {
             at,
             key: key.clone(),
@@ -247,15 +306,33 @@ fn dd<'a>(env: &Env<'_>, i: usize, field: &str, fallback: f64) -> Element<'a, Me
             patch: Some(with(json!({ "expr": "", "fallback": current }))),
             focus: Some(format!("{key}:expr")),
         }));
-        row![number_control(env, &key), fields::fx(false, fx)].spacing(6).align_y(Center).into()
+        row![number_control(env, &key), fields::fx(false, fx)]
+            .spacing(6)
+            .align_y(Center)
+            .into()
     };
     fields::labelled(label.to_owned(), control, None)
 }
 
 /// A step's choice (Köşeler, Yan), written into the step.
-fn step_select<'a>(env: &Env<'_>, i: usize, field: &'static str, label: &str, choices: &[Choice], default: &str, hint: Option<&str>) -> Element<'a, Message> {
-    let st = steps_of(env.layer).get(i).cloned().unwrap_or_else(|| json!({}));
-    let value = st.get(field).and_then(Value::as_str).unwrap_or(default).to_owned();
+fn step_select<'a>(
+    env: &Env<'_>,
+    i: usize,
+    field: &'static str,
+    label: &str,
+    choices: &[Choice],
+    default: &str,
+    hint: Option<&str>,
+) -> Element<'a, Message> {
+    let st = steps_of(env.layer)
+        .get(i)
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    let value = st
+        .get(field)
+        .and_then(Value::as_str)
+        .unwrap_or(default)
+        .to_owned();
     let (at, layer) = (env.at, env.layer.clone());
     fields::labelled(
         label.to_owned(),
@@ -265,7 +342,15 @@ fn step_select<'a>(env: &Env<'_>, i: usize, field: &'static str, label: &str, ch
                 o.insert(field.into(), Value::from(v));
             }
             let next = put_step(&layer, i, step);
-            edit(at, &format!("step.{i}.{field}"), None, Some(set("steps", next.get("steps").cloned().unwrap_or(Value::Null))))
+            edit(
+                at,
+                &format!("step.{i}.{field}"),
+                None,
+                Some(set(
+                    "steps",
+                    next.get("steps").cloned().unwrap_or(Value::Null),
+                )),
+            )
         }),
         hint,
     )
@@ -274,12 +359,34 @@ fn step_select<'a>(env: &Env<'_>, i: usize, field: &'static str, label: &str, ch
 /// The chosen step's own values (`stepFields`).
 fn step_fields<'a>(env: &Env<'_>, i: usize, st: &Value) -> Vec<Element<'a, Message>> {
     match st.get("kind").and_then(Value::as_str).unwrap_or("") {
-        "vertices" => vec![step_select(env, i, "which", "Köşeler", &VERTEX_CHOICES, "all", None)],
-        "offset" => vec![dd(env, i, "distance", 1.0), fields::hint("Artı çizginin soluna, alanın içine.")],
-        "extend" => vec![fields::pair(dd(env, i, "start", 0.0), dd(env, i, "end", 0.0))],
+        "vertices" => vec![step_select(
+            env,
+            i,
+            "which",
+            "Köşeler",
+            &VERTEX_CHOICES,
+            "all",
+            None,
+        )],
+        "offset" => vec![
+            dd(env, i, "distance", 1.0),
+            fields::hint("Artı çizginin soluna, alanın içine."),
+        ],
+        "extend" => vec![fields::pair(
+            dd(env, i, "start", 0.0),
+            dd(env, i, "end", 0.0),
+        )],
         "buffer" => vec![
             dd(env, i, "distance", 2.0),
-            step_select(env, i, "side", "Yan", &BUFFER_SIDES, "both", Some("Eksi uzaklık alanı içe küçültür; yan yalnız çizgilerde.")),
+            step_select(
+                env,
+                i,
+                "side",
+                "Yan",
+                &BUFFER_SIDES,
+                "both",
+                Some("Eksi uzaklık alanı içe küçültür; yan yalnız çizgilerde."),
+            ),
         ],
         "circle" => vec![dd(env, i, "radius", 2.0)],
         "wedge" => vec![
@@ -293,7 +400,10 @@ fn step_fields<'a>(env: &Env<'_>, i: usize, st: &Value) -> Vec<Element<'a, Messa
             fields::hint("İlk köşe kuzeyde; döndürme saat yönünün tersine."),
         ],
         "translate" => vec![fields::pair(dd(env, i, "dx", 0.0), dd(env, i, "dy", 0.0))],
-        "rotate" => vec![dd(env, i, "angle", 45.0), fields::hint("Saat yönünün tersine, ağırlık merkezinde.")],
+        "rotate" => vec![
+            dd(env, i, "angle", 45.0),
+            fields::hint("Saat yönünün tersine, ağırlık merkezinde."),
+        ],
         "scale" => vec![
             fields::pair(dd(env, i, "x", 1.0), dd(env, i, "y", 1.0)),
             fields::hint("Ağırlık merkezinde; biri boşsa öbürü."),
@@ -309,8 +419,17 @@ pub(super) fn effects<'a>(env: &Env<'_>) -> Element<'a, Message> {
     for kind in EFFECT_TYPES {
         let e = effect_of(l, kind);
         let on = e.is_some_and(|e| e.get("enabled") != Some(&Value::Bool(false)));
-        let toggle = edit(env.at, &format!("effects:{kind}"), None, Some(numbers::effects_patch(&set_effect(l, kind, !on))));
-        rows.push(fields::check(Check::from(on), effect_label(kind), Some(toggle)));
+        let toggle = edit(
+            env.at,
+            &format!("effects:{kind}"),
+            None,
+            Some(numbers::effects_patch(&set_effect(l, kind, !on))),
+        );
+        rows.push(fields::check(
+            Check::from(on),
+            effect_label(kind),
+            Some(toggle),
+        ));
         let Some(e) = e.filter(|_| on) else {
             continue;
         };
@@ -319,29 +438,44 @@ pub(super) fn effects<'a>(env: &Env<'_>) -> Element<'a, Message> {
         let color = {
             let value = e.get("color").and_then(Value::as_str).map(str::to_owned);
             let (layer, effect) = (l.clone(), e.clone());
-            plain_color(env, &format!("fx.{kind}.color"), "Renk", value.as_deref(), move |c| {
-                let mut next = effect.clone();
-                if let (Some(o), Some(c)) = (next.as_object_mut(), c) {
-                    o.insert("color".into(), Value::from(c));
-                }
-                numbers::effects_patch(&put_effect(&layer, next))
-            })
+            plain_color(
+                env,
+                &format!("fx.{kind}.color"),
+                "Renk",
+                value.as_deref(),
+                move |c| {
+                    let mut next = effect.clone();
+                    if let (Some(o), Some(c)) = (next.as_object_mut(), c) {
+                        o.insert("color".into(), Value::from(c));
+                    }
+                    numbers::effects_patch(&put_effect(&layer, next))
+                },
+            )
         };
         match kind {
             "dropShadow" | "innerShadow" => {
                 own.push(fields::pair(n("distance"), n("angle")));
                 own.push(n("blur"));
-                own.push(fields::pair(fields::labelled("Renk", color, None), n("transparency")));
+                own.push(fields::pair(
+                    fields::labelled("Renk", color, None),
+                    n("transparency"),
+                ));
             }
             "outerGlow" | "innerGlow" => {
                 own.push(fields::pair(n("spread"), n("blur")));
-                own.push(fields::pair(fields::labelled("Renk", color, None), n("transparency")));
+                own.push(fields::pair(
+                    fields::labelled("Renk", color, None),
+                    n("transparency"),
+                ));
             }
             _ => own.push(n("blur")),
         }
         rows.push(
             container(Column::with_children(own).spacing(8))
-                .padding(iced::Padding { left: 10.0, ..iced::Padding::ZERO })
+                .padding(iced::Padding {
+                    left: 10.0,
+                    ..iced::Padding::ZERO
+                })
                 .into(),
         );
     }

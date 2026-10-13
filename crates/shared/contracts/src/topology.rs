@@ -26,6 +26,7 @@ pub struct TopologySettings {
     /// Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: Option<f64>,
     /// The rules, in the order they are checked and listed.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -58,6 +59,7 @@ pub struct TopologyRule {
     /// radians; absent: the kind's default.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub value: Option<f64>,
 }
 
@@ -190,6 +192,7 @@ pub struct TopologyException {
     pub rule: String,
     /// At least one.
     pub objects: Vec<EntityId>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
 }
 

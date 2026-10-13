@@ -63,6 +63,7 @@ pub struct NetworkDef {
     pub junctions: Vec<JunctionLayer>,
     pub connect: NetworkConnect,
     /// Metres, within [`NETWORK_TOLERANCES`].
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub tolerance: f64,
     pub direction: NetworkDirection,
     /// The costs besides the length, in the order the tools offer them.
@@ -188,6 +189,7 @@ pub struct NetworkCost {
     /// A speed cost's speed (km/h) where the field gives none it can read.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub speed: Option<f64>,
 }
 
