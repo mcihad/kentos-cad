@@ -396,6 +396,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `text_frame`'i: okunur yazı aynadaki yerinde, baş aşağı olmadan, hizası değişerek; bloğun yazıları ve öznitelikleri her zaman okunur,
   değerleri değişmez; Aynala ve tutamaç kipinde Yazılar (Y, `Memory::mirror_text_mirrored`); web'in çağrısı eski kuralda (ADR 0292);
   `self_intersecting`; çekirdeğin `offset_noted`'ı, `offset_entity` web'in kayıtlarıyla aynı (ADR 0293);
+  Buda ve Uzat'ta AutoCAD'in seçenekleri: Çit (`fence`) ve Kesişen (`crossing`) komutun girdisi, Uzantılar (`edgeMode`: çizgi doğrusuyla,
+  yay çemberiyle, açık çoklu çizginin uç kenarları), hızlı kipte kesilmeyen nesnenin silinmesi (`eraseUncut`), kalan parçanın bütünüyle
+  gitmesi; araçta K, boş yere tıklama, U ve Sil (R); tutamaç kipinin Döndür'ü projenin açı düzeniyle (ADR 0294);
   yolundan yazar (`points::write_area_by`) (ADR 0290);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
