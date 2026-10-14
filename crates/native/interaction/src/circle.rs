@@ -155,6 +155,13 @@ impl Circle {
             self.diameter = key != "R";
             return true;
         }
+        // The ribbon's Merkez, çap (docs/adr/0287): the centre, then the diameter.
+        if matches!(key, "MÇ" | "MC") && self.d.pts.is_empty() {
+            self.mode = Mode::Center;
+            self.diameter = true;
+            self.tangents.clear();
+            return true;
+        }
         let mode = match key {
             "2N" => Mode::Two,
             "3N" => Mode::Three,

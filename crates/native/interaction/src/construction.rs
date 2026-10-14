@@ -6,7 +6,10 @@
 //!   through, one line a click; before the first point Yatay (Y), Düşey (D)
 //!   and Açı (A, a typed angle that stays for as long as the app lives) fix
 //!   the direction and every click is a line; Açıortay (B) takes an angle's
-//!   vertex and a point on each arm; Enter starts over;
+//!   vertex and a point on each arm; Paralel (P, AutoCAD's Offset, docs/adr/0287)
+//!   takes a distance typed (or Noktadan, N: through a point), then a straight
+//!   edge picked and the side clicked, one line a pick, the distance kept
+//!   (`xline_offset`); Enter starts over;
 //! - Işın: a start point, then one ray towards every point clicked.
 //!
 //! Every line is written through `cad.entities.create`, its own object and
@@ -16,8 +19,9 @@
 //! `unit_toward`).
 
 use kentos_contracts::EntityGeometry;
+use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::angle_deg;
-use kentos_geometry_core::tools::drawing::{unit_toward, xline_direction};
+use kentos_geometry_core::tools::drawing::{unit_toward, xline_direction, xline_offset};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 
 use crate::Vec2;
@@ -51,6 +55,19 @@ enum Mode {
     Vertical,
     Angle,
     Bisect,
+    /// Paralel (docs/adr/0287): parallel to a straight edge.
+    Offset,
+}
+
+/// Paralel's step.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Offset {
+    /// The distance (or Noktadan) is asked.
+    Distance,
+    /// A straight edge is picked: `None` through a point, else the distance.
+    Edge(Option<f64>),
+    /// The side (or the point) is shown for the edge picked.
+    Side(Option<f64>, Vec2, Vec2),
 }
 
 impl Mode {
@@ -62,6 +79,7 @@ impl Mode {
             Mode::Vertical => "vertical",
             Mode::Angle => "angle",
             Mode::Bisect => "bisect",
+            Mode::Offset => "offset",
         }
     }
 
@@ -80,6 +98,7 @@ pub struct Xline {
     /// The typed angle, degrees, as the session remembered it at the last call.
     angle: f64,
     reach: f64,
+    offset: Offset,
 }
 
 impl Default for Xline {
@@ -90,6 +109,7 @@ impl Default for Xline {
             ask_angle: false,
             angle: 0.0,
             reach: 0.0,
+            offset: Offset::Distance,
         }
     }
 }
@@ -114,10 +134,67 @@ impl Xline {
             "D" => Mode::Vertical,
             "A" => Mode::Angle,
             "B" => Mode::Bisect,
+            "P" => Mode::Offset,
+            // Noktadan: through a point, while Paralel asks its distance.
+            "N" if self.mode == Mode::Offset && self.offset == Offset::Distance => {
+                self.offset = Offset::Edge(None);
+                return true;
+            }
             _ => return false,
         };
         self.ask_angle = key == "A";
+        self.offset = Offset::Distance;
         true
+    }
+
+    /// Paralel: a press picks the straight edge, then shows the side (or the point).
+    fn offset_press(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        match self.offset {
+            Offset::Distance => cx.say(
+                Level::Warn,
+                "Önce paralel uzaklığı yazın ya da Noktadan (N) seçin.",
+            ),
+            Offset::Edge(distance) => match crate::locks::picked_edge(p.raw, cx) {
+                Some((Edge::Seg { a, b }, _)) => self.offset = Offset::Side(distance, a, b),
+                _ => cx.say(
+                    Level::Warn,
+                    "Düz bir kenara tıklayın: çizgi, çoklu çizgi ya da alan kenarı.",
+                ),
+            },
+            Offset::Side(distance, a, b) => {
+                let side = self.d.constrain(p, cx);
+                self.write_offset(distance, a, b, side, cx);
+            }
+        }
+    }
+
+    /// The parallel line for the side (or the point) shown, through `cad.entities.create`; the next edge is asked.
+    fn write_offset(
+        &mut self,
+        distance: Option<f64>,
+        a: Vec2,
+        b: Vec2,
+        side: Vec2,
+        cx: &mut Context<'_>,
+    ) {
+        let Some((p, dir)) = xline_offset(a, b, distance, side) else {
+            cx.say(
+                Level::Warn,
+                "Kenarın bir yanını gösterin: nokta kenarın doğrusunun üstünde.",
+            );
+            return;
+        };
+        let geometry = EntityGeometry::Xline {
+            p: wire(p),
+            dir: wire(dir),
+        };
+        if let Some(out) = points::write_objects(vec![geometry], None, cx) {
+            if let Some(&id) = out.ids.first() {
+                self.d.note(id, cx);
+            }
+            cx.say(Level::Success, "Yardımcı çizgi eklendi.");
+        }
+        self.offset = Offset::Edge(distance);
     }
 
     /// The direction of the line through `p` in the current mode; `None`
@@ -157,6 +234,7 @@ impl Xline {
     fn reset(&mut self) {
         self.mode = Mode::Point;
         self.ask_angle = false;
+        self.offset = Offset::Distance;
         self.d.reset();
     }
 }
@@ -187,7 +265,23 @@ impl Tool for Xline {
             );
         }
         let n = self.d.pts.len();
-        let step = match self.mode {
+        let step = match (self.mode, self.offset) {
+            (Mode::Offset, Offset::Distance) => {
+                return Prompt::new(XLINE_LABEL, "paralel uzaklığı yazın").option("Noktadan", "N");
+            }
+            (Mode::Offset, Offset::Edge(_)) => {
+                return Prompt::new(XLINE_LABEL, "paralel olacağı düz kenara tıklayın")
+                    .option("Bitir", "Enter");
+            }
+            (Mode::Offset, Offset::Side(None, _, _)) => {
+                return Prompt::new(XLINE_LABEL, "geçeceği noktayı belirtin");
+            }
+            (Mode::Offset, Offset::Side(Some(_), _, _)) => {
+                return Prompt::new(XLINE_LABEL, "hangi yana konacağını gösterin");
+            }
+            _ => self.mode,
+        };
+        let step = match step {
             Mode::Horizontal => "geçeceği noktayı belirtin (yatay)".to_owned(),
             Mode::Vertical => "geçeceği noktayı belirtin (düşey)".to_owned(),
             Mode::Angle => {
@@ -205,9 +299,11 @@ impl Tool for Xline {
                     .option("Yatay", "Y")
                     .option("Düşey", "D")
                     .option("Açı", "A")
-                    .option("Açıortay", "B");
+                    .option("Açıortay", "B")
+                    .option("Paralel", "P");
             }
             Mode::Point => "geçeceği noktayı belirtin".to_owned(),
+            Mode::Offset => String::new(),
         };
         Prompt::new(XLINE_LABEL, step).option("Bitir", "Enter")
     }
@@ -231,12 +327,32 @@ impl Tool for Xline {
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if self.mode == Mode::Offset {
+            self.offset_press(p, cx);
+            self.see(cx);
+            return;
+        }
         let p = self.d.constrain(p, cx);
         self.accept(p, cx);
         self.see(cx);
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        // Paralel's distance, in the project's unit or with its own (docs/adr/0266).
+        if self.mode == Mode::Offset
+            && self.offset == Offset::Distance
+            && let Some((_, d)) = crate::points::plain_value(text, cx).filter(|(_, d)| *d > 0.0)
+        {
+            self.offset = Offset::Edge(Some(d));
+            return true;
+        }
+        // The point Paralel's line passes through, or its side, typed.
+        if let (Mode::Offset, Offset::Side(distance, a, b)) = (self.mode, self.offset)
+            && let Some(p) = cx.typed_point(text, None, self.d.hover)
+        {
+            self.write_offset(distance, a, b, p, cx);
+            return true;
+        }
         if self.ask_angle {
             let Some(n) = parse_number(text) else {
                 return false;
@@ -263,6 +379,10 @@ impl Tool for Xline {
 
     /// Enter: the lines through this point end; with none, the tool leaves.
     fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+        if self.mode == Mode::Offset {
+            self.reset();
+            return Flow::Stay;
+        }
         if self.d.pts.is_empty() {
             return Flow::Exit;
         }
@@ -291,6 +411,18 @@ impl Tool for Xline {
             tracking: self.d.tracking,
             ..Preview::default()
         };
+        if let (Mode::Offset, Offset::Side(distance, a, b)) = (self.mode, self.offset) {
+            preview
+                .strokes
+                .push(Stroke::dashed(vec![a, b], false, [2.0, 2.0]));
+            if let Some((p, dir)) = xline_offset(a, b, distance, h) {
+                preview.strokes.push(infinite(p, dir, self.reach, false));
+            }
+            return preview;
+        }
+        if self.mode == Mode::Offset {
+            return preview;
+        }
         if self.mode == Mode::Bisect && self.d.pts.len() == 1 {
             preview
                 .strokes

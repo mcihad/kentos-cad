@@ -36,6 +36,40 @@ pub struct CatalogAdditions {
     pub icons: BTreeMap<String, String>,
     #[serde(default)]
     pub ribbon: Vec<RibbonAddition>,
+    /// A tool's methods added to its ribbon button (docs/adr/0287): its split's
+    /// entries, or a split made of its button; each starts the tool and gives it
+    /// its option as if typed. One without an option names the tool's default
+    /// method, the first entry of a split made of a button.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AddedMethod>>", optional))]
+    pub methods: Vec<AddedMethod>,
+}
+
+/// A method of a tool (the inventory's split entry, `SplitEntry`): the tool's
+/// command, the entry's name, the option it gives the tool.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AddedMethod {
+    /// The tool's command (`tool.arc`).
+    pub command: String,
+    /// Its name in the menu (`Başlangıç, merkez, açı`).
+    pub label: String,
+    /// What it gives the tool once it runs, as if typed; none: the tool's default method.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub option: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub description: Option<String>,
+    /// Typed names that start the tool with this method.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub aliases: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub icon: Option<String>,
 }
 
 /// A command of the interface, as the inventory lists one.
@@ -271,6 +305,33 @@ impl CatalogAdditions {
                 }
             }
         }
+        for (i, m) in self.methods.iter().enumerate() {
+            let at = format!("{}. yöntem", i + 1);
+            if !m.command.starts_with("tool.") || !command(&m.command) {
+                return Some(format!("{at}: “{}” bir araç komutu değil", m.command));
+            }
+            if m.label.trim().is_empty() {
+                return Some(format!("{at}: adı boş"));
+            }
+            if m.option
+                .as_deref()
+                .is_some_and(|o| o.trim().is_empty() || o.trim() != o)
+            {
+                return Some(format!("{at}: seçeneği boş ya da kırpılmamış"));
+            }
+            if self.methods[..i]
+                .iter()
+                .any(|o| o.command == m.command && (o.option == m.option || o.label == m.label))
+            {
+                return Some(format!(
+                    "{at}: “{}” aracının aynı seçenekli ya da aynı adlı yöntemi iki kez var",
+                    m.command
+                ));
+            }
+            if let Some(name) = m.icon.as_deref().filter(|i| !icon(i)) {
+                return Some(format!("{at}: ikonu “{name}” yok"));
+            }
+        }
         None
     }
 }
@@ -314,11 +375,34 @@ mod tests {
                 }],
                 overflow: vec!["file.open".into()],
             }],
+            methods: vec![AddedMethod {
+                command: "tool.arc".into(),
+                label: "Başlangıç, merkez, açı".into(),
+                option: Some("BMA".into()),
+                description: None,
+                aliases: Vec::new(),
+                icon: Some("addressSearch".into()),
+            }],
         }
     }
 
+    #[test]
+    fn methods_name_a_tool_once_each() {
+        let ok = check(&file());
+        assert_eq!(ok, None);
+        let mut f = file();
+        f.methods[0].command = "address.search".into();
+        assert!(check(&f).is_some_and(|p| p.contains("araç komutu değil")));
+        let mut f = file();
+        f.methods.push(f.methods[0].clone());
+        assert!(check(&f).is_some_and(|p| p.contains("iki kez")));
+        let mut f = file();
+        f.methods[0].icon = Some("yok".into());
+        assert!(check(&f).is_some_and(|p| p.contains("ikonu")));
+    }
+
     fn check(f: &CatalogAdditions) -> Option<String> {
-        let command = |id: &str| id == "file.open";
+        let command = |id: &str| id == "file.open" || id == "tool.arc";
         let icon = |name: &str| name == "basemap";
         let panels = |mode: &str, tab: &str| {
             (mode == "gis" && tab == "map").then(|| vec!["Altlık".to_owned(), "Parsel".to_owned()])

@@ -346,7 +346,7 @@ fn two_corners_with_the_options_values_in_the_prompt() {
     b.click(0.0, 0.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Dikdörtgen: karşı köşeyi belirtin [Döndür (D): 0° / Boyutlar (B)]"
+        "Dikdörtgen: karşı köşeyi belirtin [Döndür (D): 0° / Boyutlar (B) / Alan (A)]"
     );
     b.click(20.0, 10.0);
     let (pts, bulges) = polygon(&b);
@@ -398,7 +398,7 @@ fn rotation_and_exact_size() {
     assert!(b.type_text("D") && b.type_text("90"));
     assert_eq!(
         b.session.prompt().text(),
-        "Dikdörtgen: karşı köşeyi belirtin [Döndür (D): 90° / Boyutlar (B)]"
+        "Dikdörtgen: karşı köşeyi belirtin [Döndür (D): 90° / Boyutlar (B) / Alan (A)]"
     );
     assert!(b.type_text("B"));
     assert!(!b.type_text("20;-10"), "sizes are unsigned");

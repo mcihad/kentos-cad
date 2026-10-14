@@ -212,6 +212,12 @@ impl App {
                 .rev()
                 .find(|l| plan::listed_in(listing, l.level))
                 .map_or(0, |l| l.id)
+                // A new call in Komut geçmişi is a new row too (history/).
+                + if listing == Listing::History {
+                    self.history.given()
+                } else {
+                    0
+                }
         });
         match (self.follow.shown, listing) {
             (Some((was, _)), Some(now_listing)) if was == now_listing => {
@@ -261,7 +267,9 @@ impl App {
             .lines()
             .filter(|l| plan::listed_in(listing, l.level))
             .peekable();
-        if lines.peek().is_none() {
+        // Komut geçmişi lists the commands' calls too (history/, docs/adr/0284).
+        let calls = listing == Listing::History && self.history_has_calls();
+        if lines.peek().is_none() && !calls {
             let empty = match listing {
                 Listing::History => plan::EMPTY_HISTORY,
                 Listing::Messages => plan::EMPTY_MESSAGES,
@@ -272,7 +280,12 @@ impl App {
                 .into();
         }
         let zone = Zone::system();
-        let rows = Column::with_children(lines.map(|l| log_row(l, zone))).padding([6, 0]);
+        let rows = if listing == Listing::History {
+            Column::with_children(self.history_rows(lines.collect(), zone, log_row))
+        } else {
+            Column::with_children(lines.map(|l| log_row(l, zone)))
+        }
+        .padding([6, 0]);
         scrollable(rows)
             .id(LIST)
             .on_scroll(Message::LogScrolled)

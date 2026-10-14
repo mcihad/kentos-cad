@@ -18,8 +18,8 @@
 use std::collections::{HashMap, VecDeque};
 
 use kentos_contracts::{
-    CallKind, CallRecord, CallStatus, JOURNAL_IDS, JOURNAL_ROWS, ProjectPart, REQUEST_LEDGER,
-    RequestRecord,
+    CallKind, CallRecord, CallStatus, CommandError, JOURNAL_IDS, JOURNAL_ROWS, ProjectPart,
+    REQUEST_LEDGER, RequestRecord,
 };
 
 use crate::document::Document;
@@ -42,6 +42,34 @@ struct Entry {
     step: Option<u64>,
 }
 
+/// The most refused calls a document remembers.
+pub const REFUSED_CALLS: usize = 200;
+
+/// How a call that wrote nothing ended.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RefusedAs {
+    Failed,
+    Conflict,
+    NeedsInput,
+    Cancelled,
+}
+
+/// A command's call that wrote nothing (docs/adr/0284): the command
+/// history shows it with its error's code; Python's code and a replay are
+/// made from its input. Of this session: not in the file, not in the journal.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RefusedCall {
+    /// Its place among the refused calls, from 1.
+    pub seq: u64,
+    pub command: String,
+    pub version: u32,
+    /// The input as the command's type wrote it back.
+    pub input: serde_json::Value,
+    pub refused: RefusedAs,
+    /// The error; none for a cancelled call.
+    pub error: Option<CommandError>,
+}
+
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Calls {
     rows: VecDeque<CallRecord>,
@@ -49,6 +77,9 @@ pub(crate) struct Calls {
     /// The last row number given.
     given: u64,
     ledger: VecDeque<Entry>,
+    refused: VecDeque<RefusedCall>,
+    /// The last refused call's number.
+    refused_given: u64,
 }
 
 impl Calls {
@@ -93,6 +124,8 @@ impl Calls {
             waiting: Vec::new(),
             given: self.given,
             ledger: self.ledger.clone(),
+            refused: VecDeque::new(),
+            refused_given: self.refused_given,
         }
     }
 
@@ -294,6 +327,37 @@ impl Document {
     /// The journal's rows, oldest first (`kentos.calls/1`).
     pub fn journal(&self) -> impl Iterator<Item = &CallRecord> {
         self.calls.rows.iter()
+    }
+
+    /// A command's call wrote nothing (docs/adr/0284): kept for the command
+    /// history, the last [`REFUSED_CALLS`]. Its number.
+    pub fn note_refusal(
+        &mut self,
+        command: &str,
+        version: u32,
+        input: serde_json::Value,
+        refused: RefusedAs,
+        error: Option<CommandError>,
+    ) -> u64 {
+        let calls = &mut self.calls;
+        calls.refused_given += 1;
+        calls.refused.push_back(RefusedCall {
+            seq: calls.refused_given,
+            command: command.to_owned(),
+            version,
+            input,
+            refused,
+            error,
+        });
+        while calls.refused.len() > REFUSED_CALLS {
+            calls.refused.pop_front();
+        }
+        calls.refused_given
+    }
+
+    /// The calls that wrote nothing, oldest first.
+    pub fn refused_calls(&self) -> impl Iterator<Item = &RefusedCall> {
+        self.calls.refused.iter()
     }
 
     /// The journal's row `seq`, recorded or still waiting.

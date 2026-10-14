@@ -63,6 +63,15 @@ pub fn rect_from_corners(a: Vec2, b: Vec2, rotation: f64) -> Option<Vec<Vec2>> {
     ])
 }
 
+/// The other side of a rectangle of `area` (m²) whose one side is `side` (m):
+/// AutoCAD RECTANG's Alan (docs/adr/0287). None unless both are above zero
+/// and finite.
+pub fn rect_side_for_area(area: f64, side: f64) -> Option<f64> {
+    (area.is_finite() && side.is_finite() && area > 0.0 && side > 0.0)
+        .then(|| area / side)
+        .filter(|w| w.is_finite() && *w > 0.0)
+}
+
 /// Rectangle of `length` × `width` from corner a, in the quadrant `towards` lies in.
 pub fn rect_from_size(
     a: Vec2,
@@ -337,4 +346,70 @@ pub(crate) static OPS: &[Op] = &[
         |start: Vec2, end: Vec2, center: Vec2| arc_start_end_center(start, end, center)
     ),
     op!("cloudOf", |ring: Vec<Vec2>, arc: f64| cloud_of(&ring, arc)),
+    op!(
+        "rectSideForArea",
+        |area: f64, side: f64| rect_side_for_area(area, side)
+    ),
 ];
+
+/// REVCLOUD's Nesne (docs/adr/0287): the cloud round a closed object's outer
+/// outline (an area's, a closed polyline's, a circle's, a closed curve's, a
+/// full ellipse's), its curves at `segments` a turn; none for an open object.
+pub fn cloud_around(shape: &crate::entity::Shape, arc: f64, segments: f64) -> Option<Cloud> {
+    use crate::entity::{Shape, entity_outline, is_closed_outline};
+    let closed = is_closed_outline(shape) || matches!(shape, Shape::Polyline { closed: true, .. });
+    if !closed || matches!(shape, Shape::Hatch { .. }) {
+        return None;
+    }
+    let mut ring = entity_outline(shape, segments);
+    // A closed outline may end on its first point (a closed polyline's does).
+    if ring.len() > 1 && ring.first() == ring.last() {
+        ring.pop();
+    }
+    cloud_of(&ring, arc)
+}
+
+#[cfg(test)]
+mod method_tests {
+    use super::*;
+    use crate::entity::Shape;
+
+    /// RECTANG's Alan (docs/adr/0287): the other side is the area over the side given.
+    #[test]
+    fn the_side_for_an_area() {
+        assert_eq!(rect_side_for_area(500.0, 20.0), Some(25.0));
+        assert_eq!(rect_side_for_area(1000.0, 40.0), Some(25.0));
+        assert_eq!(rect_side_for_area(500.0, 0.0), None);
+        assert_eq!(rect_side_for_area(0.0, 20.0), None);
+        assert_eq!(rect_side_for_area(-5.0, 20.0), None);
+        assert_eq!(rect_side_for_area(f64::INFINITY, 20.0), None);
+    }
+
+    /// REVCLOUD's Nesne: an area's cloud is its outline's; an open line has none.
+    #[test]
+    fn the_cloud_round_an_object() {
+        let square = vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(10.0, 0.0),
+            Vec2::new(10.0, 10.0),
+            Vec2::new(0.0, 10.0),
+        ];
+        let area = Shape::Polygon {
+            pts: square.clone(),
+            bulges: None,
+            holes: None,
+            parts: None,
+        };
+        assert_eq!(cloud_around(&area, 2.0, 64.0), cloud_of(&square, 2.0));
+        let circle = Shape::Circle {
+            c: Vec2::new(0.0, 0.0),
+            r: 5.0,
+        };
+        assert!(cloud_around(&circle, 2.0, 64.0).is_some_and(|c| c.pts.len() >= 8));
+        let line = Shape::Line {
+            a: Vec2::new(0.0, 0.0),
+            b: Vec2::new(10.0, 0.0),
+        };
+        assert_eq!(cloud_around(&line, 2.0, 64.0), None);
+    }
+}

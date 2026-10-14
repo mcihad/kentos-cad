@@ -12,7 +12,7 @@
   "clickTolerance": 0.125,
   "steps": [
     { "run": "tool.rectangle", "expect": { "tool": "rectangle", "points": 0, "options": ["Y", "P"] } },
-    { "click": [-28, 8], "expect": { "points": 1, "options": ["D", "B"] } },
+    { "click": [-28, 8], "expect": { "points": 1, "options": ["D", "B", "A"] } },
     { "click": [-18, 16], "expect": { "entities": 1, "newest": { "kind": "polygon", "points": [[-28, 8], [-18, 8], [-18, 16], [-28, 16]], "arcs": 0 }, "log": "success", "points": 0 } },
     { "key": "Y", "expect": { "options": [], "points": 0 } },
     { "text": "2" },
@@ -25,7 +25,7 @@
     { "click": [4, 6] },
     { "key": "D", "expect": { "options": [] } },
     { "text": "30" },
-    { "key": "Enter", "expect": { "options": ["D", "B"] } },
+    { "key": "Enter", "expect": { "options": ["D", "B", "A"] } },
     { "key": "B", "expect": { "options": [] } },
     { "text": "10,5" },
     { "key": "Enter", "expect": { "options": [], "points": 1 } },
