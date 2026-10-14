@@ -135,6 +135,7 @@ pub fn label(layout: &ArrayLayout) -> &'static str {
         ArrayLayout::Grid { .. } => "Dizi",
         ArrayLayout::Polar { .. } => "Kutupsal dizi",
         ArrayLayout::Path { .. } => "Yol boyunca dizi",
+        ArrayLayout::Line { .. } => "Kopyala",
     }
 }
 
@@ -147,6 +148,10 @@ pub fn array_numbers(layout: &ArrayLayout) -> (&'static str, Vec<f64>) {
         ArrayLayout::Grid { rows, cols, dx, dy } => {
             ("grid", vec![f64::from(rows), f64::from(cols), dx, dy])
         }
+        ArrayLayout::Line { count, dx, dy, fit } => (
+            "line",
+            vec![f64::from(count), dx, dy, if fit { 1.0 } else { 0.0 }],
+        ),
         ArrayLayout::Polar {
             center,
             count,
@@ -215,6 +220,25 @@ fn check_layout(layout: &ArrayLayout) -> Result<(), Stop> {
                     codes::INVALID_SPACING,
                     "Satırlar arasındaki aralık (dX) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.",
                     "layout.dy",
+                ));
+            }
+        }
+        ArrayLayout::Line { count, dx, dy, .. } => {
+            let fix = "Yer değiştirmeyi sonlu bir sayıyla verin.";
+            checks::finite(dx, "Doğu (Y) yönündeki yer değiştirme", fix, "layout.dx")?;
+            checks::finite(dy, "Kuzey (X) yönündeki yer değiştirme", fix, "layout.dy")?;
+            if !(2..=10_000).contains(&count) {
+                return Err(refuse(
+                    codes::INVALID_COUNT,
+                    "Adet 2 ile 10 000 arasında bir tam sayı olmalı; asıllar da sayılır. Başka bir adet verin.",
+                    "layout.count",
+                ));
+            }
+            if dx.abs() < NONE && dy.abs() < NONE {
+                return Err(refuse(
+                    codes::INVALID_SPACING,
+                    "Yer değiştirme sıfır; kopyalar asılların üstüne düşer. Sıfırdan farklı bir yer değiştirme verin.",
+                    "layout",
                 ));
             }
         }

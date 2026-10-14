@@ -5,7 +5,8 @@
 //! - the objects, the base point, then a typed factor; or lengths: a point
 //!   shows the reference length from the base, the next the new length;
 //! - Referans (R): the reference length between two points (or typed), then
-//!   the new length shown from the base or typed;
+//!   the new length shown from the base, typed, or with Noktalar (N) shown
+//!   between two points (docs/adr/0291);
 //! - Kopya (K): the originals stay and scaled copies are added.
 //!
 //! Written through `cad.entities.transform` (a scale about the base), one
@@ -42,6 +43,9 @@ pub struct Scale {
     /// Referans: its first end, then its length once known.
     ref_from: Option<Vec2>,
     ref_length: Option<f64>,
+    /// Noktalar (N): the new length between two points; its first once given.
+    new_points: bool,
+    new_from: Option<Vec2>,
 }
 
 impl Scale {
@@ -52,6 +56,10 @@ impl Scale {
     /// The factor with the cursor at `hover` (the web's `factor`).
     fn factor(&self, hover: Vec2) -> Option<f64> {
         let base = self.base?;
+        if self.new_points {
+            let (from, length) = (self.new_from?, self.ref_length.filter(|l| *l != 0.0)?);
+            return Some(dist(from, hover) / length);
+        }
         if self.ref_mode {
             return self
                 .ref_length
@@ -95,12 +103,16 @@ impl Stages for Scale {
         self.ref_from = None;
         self.ref_mode = false;
         self.ref_length = None;
+        self.new_points = false;
+        self.new_from = None;
         Flow::Stay
     }
 
     fn anchor(&self) -> Option<Vec2> {
         if self.ref_mode && self.ref_length.is_none() {
             self.ref_from
+        } else if self.new_points {
+            self.new_from.or(self.base)
         } else {
             self.base
         }
@@ -119,8 +131,17 @@ impl Stages for Scale {
             };
             return Prompt::new(LABEL, step);
         }
+        if self.new_points {
+            let step = if self.new_from.is_some() {
+                "yeni uzunluğun ikinci ucunu gösterin"
+            } else {
+                "yeni uzunluğun ilk ucunu gösterin"
+            };
+            return Prompt::new(LABEL, step);
+        }
         if self.ref_mode {
             return Prompt::new(LABEL, "yeni uzunluğu temel noktadan gösterin ya da yazın")
+                .option("Noktalar", "N")
                 .option_with("Kopya", "K", copy);
         }
         if self.reference.is_none() {
@@ -140,6 +161,18 @@ impl Stages for Scale {
             self.base = Some(p);
             return Flow::Stay;
         };
+        if self.new_points {
+            return match (self.new_from, self.ref_length) {
+                (None, _) => {
+                    self.new_from = Some(p);
+                    Flow::Stay
+                }
+                (Some(from), Some(length)) if dist(from, p) > SAME => {
+                    self.scale(dist(from, p) / length, cx)
+                }
+                _ => Flow::Stay,
+            };
+        }
         if self.ref_mode {
             if let Some(length) = self.ref_length {
                 return self.scale(scale_factor(base, p, length), cx);
@@ -171,6 +204,10 @@ impl Stages for Scale {
         }
         if t == "R" && !self.ref_mode && self.reference.is_none() {
             self.ref_mode = true;
+            return Some(Flow::Stay);
+        }
+        if t == "N" && self.ref_mode && self.ref_length.is_some() && !self.new_points {
+            self.new_points = true;
             return Some(Flow::Stay);
         }
         let (n, typed) = crate::points::plain_value(text, cx)?;

@@ -1210,7 +1210,7 @@ impl Input for EntitiesArray {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         let rest = path.strip_prefix("layout.")?;
         match &mut self.layout {
-            ArrayLayout::Grid { dx, dy, .. } => match rest {
+            ArrayLayout::Grid { dx, dy, .. } | ArrayLayout::Line { dx, dy, .. } => match rest {
                 "dx" => Some(dx),
                 "dy" => Some(dy),
                 _ => None,

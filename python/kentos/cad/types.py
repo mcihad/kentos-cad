@@ -1790,6 +1790,7 @@ class ArrayLayout(_Union):
 
     - :class:`GridArrayLayout` (``kind: grid``)
     - :class:`PolarArrayLayout` (``kind: polar``)
+    - :class:`LineArrayLayout` (``kind: line``)
     - :class:`PathArrayLayout` (``kind: path``)
     """
     __slots__ = ()
@@ -5440,8 +5441,8 @@ class EntitiesArray(_Model):
     Each copy takes every field of its original (layer, colour, attributes,
     label, symbol) and a new persistent id; the originals stay. The copies
     are written place after place, each place the objects in the input's
-    order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi” or
-    “Yol boyunca dizi”.
+    order. The undo step is the tool's name: “Dizi”, “Kutupsal dizi”,
+    “Yol boyunca dizi” or, for a line of copies, “Kopyala”.
 
     Objects on a locked layer (by itself or a group above it) are not
     copied: with others they are named in the output's `locked` with a
@@ -5455,7 +5456,8 @@ class EntitiesArray(_Model):
     `layout.path`), `not_finite` (the layout's numbers, in their order),
     `invalid_count` (rows and columns, or the count, out of their range),
     `invalid_spacing` (a grid direction with more than one place and no
-    spacing; a path array's spacing not above zero), `invalid_fill` (a polar
+    spacing; a line's displacement of no length; a path array's spacing not
+    above zero), `invalid_fill` (a polar
     fill of zero or past a full turn), `invalid_revision`,
     `revision_conflict` (status `conflict`), `entity_not_found` (each id in
     order, then the path at `layout.path`), `invalid_path` (a path that is
@@ -17068,6 +17070,41 @@ class PolarArrayLayout(ArrayLayout):
 
 
 @dataclass(kw_only=True, slots=True)
+class LineArrayLayout(ArrayLayout):
+    """Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,
+    `dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one
+    moves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.
+    Attributes:
+        count: Unit: count.
+        dx: Unit: length.
+        dy: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "line"
+    count: int
+    dx: float
+    dy: float
+    fit: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "line"}
+        out["count"] = self.count
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        if self.fit is not UNSET:
+            out["fit"] = self.fit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LineArrayLayout:
+        return cls(
+            count=data["count"],
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            fit=data.get("fit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PathArrayLayout(ArrayLayout):
     """Yol boyunca dizi (docs/adr/0140): `count` places, 2 to 10 000, along
     the object `path` names by its persistent id (a line, an arc, a
@@ -20906,7 +20943,7 @@ class DeleteViewsOp(ViewsOp):
         )
 
 
-_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "path": PathArrayLayout}
+_ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar": PolarArrayLayout, "line": LineArrayLayout, "path": PathArrayLayout}
 
 
 _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "update": UpdateBlockChange, "delete": DeleteBlockChange}
@@ -21353,6 +21390,7 @@ __all__ = [
     "LeaderEntityGeometry",
     "LengthStyle",
     "LengthStyleName",
+    "LineArrayLayout",
     "LineCreate",
     "LineCreated",
     "LineEntity",

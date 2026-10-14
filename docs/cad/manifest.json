@@ -7214,12 +7214,13 @@
    "title": "Kopyala",
    "level": "semantic",
    "via": [
-    "cad.entities.transform"
+    "cad.entities.transform",
+    "cad.entities.array"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.transform",
-   "mcp": "cad.entities.transform",
-   "note": null,
+   "python": "kentos.cad.entities.transform, kentos.cad.entities.array",
+   "mcp": "cad.entities.transform, cad.entities.array",
+   "note": "Her kopya yer değiştirmesiyle cad.entities.transform'a, Dizi adet, yer değiştirme ve Sığdır ile cad.entities.array'in line yerleşimine verilir (ADR 0291).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

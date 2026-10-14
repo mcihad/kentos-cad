@@ -426,6 +426,7 @@ __all__ = [
     "LeaderEntityGeometry",
     "LengthStyle",
     "LengthStyleName",
+    "LineArrayLayout",
     "LineCreate",
     "LineCreated",
     "LineEntity",
