@@ -10,6 +10,13 @@
 //! - merkez–başlangıç (M first): the centre, the start, then as above;
 //! - Devam (D first): tangent to the newest line, arc or polyline, from its end.
 //!
+//! The ribbon's methods (docs/adr/0287) give the whole construction before the
+//! first point, AutoCAD's eleven: `BMS` başlangıç, merkez, bitiş; `BMA` …,
+//! açı; `BMU` …, uzunluk (the chord); `BSA` başlangıç, bitiş, açı; `BSY` …,
+//! yön; `BSR` …, yarıçap; `MBA` merkez, başlangıç, açı; `MBU` …, uzunluk
+//! (M is merkez, başlangıç, bitiş; D Devam). A method stays for the next
+//! arcs while the tool runs; an option letter changes it for the arc at hand.
+//!
 //! Arcs are stored counter-clockwise; a clockwise pick gives the same curve.
 //! Every arc is written through `cad.arc.create`, its own object and undo
 //! step, and says “Yay eklendi: r = …, açı …°”; a construction that gives no
@@ -73,6 +80,9 @@ pub struct Arc {
     sub: Sub,
     /// Devam: the direction the arc leaves its start in.
     cont_dir: Option<Vec2>,
+    /// The ribbon's method (docs/adr/0287): the mode and the third input it
+    /// gives every arc from its first point.
+    method: Option<(Mode, Sub)>,
 }
 
 impl Default for Arc {
@@ -82,8 +92,36 @@ impl Default for Arc {
             mode: Mode::Three,
             sub: Sub::End,
             cont_dir: None,
+            method: None,
         }
     }
+}
+
+/// The ribbon's methods by their options (docs/adr/0287): what the arc is
+/// given after its first point, or from it (merkez first).
+pub const METHODS: [(&str, &str); 8] = [
+    ("BMS", "Başlangıç, merkez, bitiş"),
+    ("BMA", "Başlangıç, merkez, açı"),
+    ("BMU", "Başlangıç, merkez, uzunluk"),
+    ("BSA", "Başlangıç, bitiş, açı"),
+    ("BSY", "Başlangıç, bitiş, yön"),
+    ("BSR", "Başlangıç, bitiş, yarıçap"),
+    ("MBA", "Merkez, başlangıç, açı"),
+    ("MBU", "Merkez, başlangıç, uzunluk"),
+];
+
+fn method_of(key: &str) -> Option<(Mode, Sub)> {
+    Some(match key {
+        "BMS" => (Mode::StartCenter, Sub::End),
+        "BMA" => (Mode::StartCenter, Sub::Angle),
+        "BMU" => (Mode::StartCenter, Sub::Chord),
+        "BSA" => (Mode::StartEnd, Sub::Angle),
+        "BSY" => (Mode::StartEnd, Sub::Direction),
+        "BSR" => (Mode::StartEnd, Sub::Radius),
+        "MBA" => (Mode::CenterStart, Sub::Angle),
+        "MBU" => (Mode::CenterStart, Sub::Chord),
+        _ => return None,
+    })
 }
 
 impl Arc {
@@ -152,6 +190,13 @@ impl Arc {
     /// Option letters by step (the web's `option`); false when the key is none of those now.
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
         let n = self.d.pts.len();
+        if n == 0
+            && let Some(method) = method_of(key)
+        {
+            self.method = Some(method);
+            self.begin_method();
+            return true;
+        }
         match (n, self.mode, key) {
             (0, Mode::Three, "M") => self.mode = Mode::CenterStart,
             (0, Mode::Three, "D") => match Self::last_end(cx) {
@@ -203,6 +248,24 @@ impl Arc {
             self.commit(arc, cx);
         } else {
             self.d.pts.push(p);
+            // A method that starts at the start point takes its course from it.
+            if self.d.pts.len() == 1
+                && self.mode == Mode::Three
+                && let Some((mode, sub)) = self.method.filter(|(m, _)| *m != Mode::CenterStart)
+            {
+                self.mode = mode;
+                self.sub = sub;
+            }
+        }
+    }
+
+    /// The method's course before the first point: merkez first takes it at once.
+    fn begin_method(&mut self) {
+        self.mode = Mode::Three;
+        self.sub = Sub::End;
+        if let Some((Mode::CenterStart, sub)) = self.method {
+            self.mode = Mode::CenterStart;
+            self.sub = sub;
         }
     }
 
@@ -226,9 +289,8 @@ impl Arc {
             cx.say(Level::Success, line);
         }
         self.d.pts.clear();
-        self.mode = Mode::Three;
-        self.sub = Sub::End;
         self.cont_dir = None;
+        self.begin_method();
     }
 
     /// One arc through the product command `cad.arc.create` (docs/adr/0032):
@@ -259,9 +321,8 @@ impl Arc {
     }
 
     fn reset(&mut self) {
-        self.mode = Mode::Three;
-        self.sub = Sub::End;
         self.cont_dir = None;
+        self.begin_method();
         self.d.reset();
     }
 

@@ -83,6 +83,16 @@ impl RegularPolygon {
             "Ç" | "C" => cx.memory.polygon_inscribed = !cx.memory.polygon_inscribed,
             "K" => self.by_edge = true,
             "M" => self.by_edge = false,
+            // The ribbon's methods (docs/adr/0287): the circle through the corners or touching the edges,
+            // set, not turned (Çember turns it).
+            "İÇ" | "IC" => {
+                self.by_edge = false;
+                cx.memory.polygon_inscribed = true;
+            }
+            "DIŞ" | "DIS" => {
+                self.by_edge = false;
+                cx.memory.polygon_inscribed = false;
+            }
             _ => return false,
         }
         true

@@ -121,6 +121,8 @@ mod marks;
 mod message_log;
 #[cfg(test)]
 mod message_log_tests;
+#[cfg(test)]
+mod method_scenes;
 mod modes;
 mod navigation;
 mod navigation_cards;
