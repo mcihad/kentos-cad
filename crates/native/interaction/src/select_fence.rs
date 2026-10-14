@@ -74,8 +74,11 @@ impl SelectFence {
             return Flow::Stay;
         }
         let fence = std::mem::take(&mut self.pts);
-        let hits = cx.spatial.in_fence(&fence, cx.pick_tolerance());
-        let hits = crate::selectable::ids(cx, hits);
+        let region = kentos_contracts::SelectRegion::Fence {
+            points: fence.iter().copied().map(crate::selectable::point).collect(),
+            tolerance: cx.pick_tolerance(),
+        };
+        let hits = crate::selectable::query(cx, region);
         let n = hits.len();
         if n == 0 {
             cx.say(Level::Warn, "Çit hiçbir nesneyi kesmedi.");

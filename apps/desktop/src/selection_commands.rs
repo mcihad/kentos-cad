@@ -74,26 +74,30 @@ fn select_filter_blocks() -> Vec<(&'static str, Vec<&'static str>)> {
 }
 
 impl App {
-    /// Önceki seçim's objects still in the drawing and shown, in their order.
+    /// Önceki seçim's objects still in the drawing and shown, in their order: the query's `objects`
+    /// (docs/adr/0275), the filter's kinds with it, over the store as it is (the command brings it up to the
+    /// drawing first).
     pub(crate) fn previous_selection_ids(&self) -> Vec<Slot> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
-        let layers = doc.model.layers();
-        self.selection
+        let uids: Vec<String> = self
+            .selection
             .previous()
             .iter()
-            .copied()
-            .filter(|s| {
-                doc.model
-                    .get(*s)
-                    .is_some_and(|e| layers.is_visible(&e.base().layer_id))
-            })
-            .collect()
+            .filter_map(|s| doc.model.uid(*s))
+            .map(|u| u.to_string())
+            .collect();
+        let region = kentos_contracts::SelectRegion::Objects { uids };
+        selectable::query_in(&doc.model, &self.spatial, self.draft.select_kinds, region)
+            .map_or_else(Vec::new, |found| found.slots)
     }
 
     /// `edit.previousSelection`: the last selection replaced or cleared comes back.
     pub(crate) fn previous_selection(&mut self) {
+        if let Some(doc) = &self.document {
+            self.spatial.sync(&doc.model);
+        }
         let ids = self.previous_selection_ids();
         if ids.is_empty() {
             self.warn("Geri getirilecek önceki seçim yok.");

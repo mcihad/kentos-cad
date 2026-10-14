@@ -78,8 +78,12 @@ impl SelectCircle {
             return;
         }
         let crossing = cx.memory.circle_crossing;
-        let hits = cx.spatial.in_circle(centre, radius, crossing);
-        let hits = crate::selectable::ids(cx, hits);
+        let region = kentos_contracts::SelectRegion::Circle {
+            center: crate::selectable::point(centre),
+            radius,
+            crossing,
+        };
+        let hits = crate::selectable::query(cx, region);
         let n = hits.len();
         if n == 0 {
             cx.say(Level::Warn, "Dairede nesne yok.");

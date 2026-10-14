@@ -1,0 +1,2317 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.select",
+ "commandVersion": 1,
+ "title": "Nesne seç: bölge, liste ya da benzerlik; türler ve katmanlar",
+ "note": "ADR 0275. Yalnız gösterilen nesneler; kilitli katmanınkiler seçilir. Süzgeçler bölgeden sonra: önce türler, sonra katmanlar, dışarıda kalanları sayarak. Çizim değişmez. Bağımsız başvuru: scripts/fixtures/entities_select_cases.py (kesirlerle, KentOS kodu olmadan).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Nesne seç",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "koruma",
+    "name": "Koruma",
+    "type": "group",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "kilitli",
+      "name": "Sit alanı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "yapi",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "yapi",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420010.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "yapi",
+    "attrs": {},
+    "color": "#E5484D",
+    "pts": [
+     {
+      "x": 487002.0,
+      "y": 4420002.0
+     },
+     {
+      "x": 487004.0,
+      "y": 4420002.0
+     },
+     {
+      "x": 487004.0,
+      "y": 4420004.0
+     },
+     {
+      "x": 487002.0,
+      "y": 4420004.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "yapi",
+    "attrs": {},
+    "color": "#E5484D",
+    "pts": [
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487030.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487030.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420010.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 486995.0,
+     "y": 4420005.0
+    },
+    "b": {
+     "x": 487015.0,
+     "y": 4420005.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487040.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 6,
+    "layerId": "yapi",
+    "attrs": {},
+    "c": {
+     "x": 487060.0,
+     "y": 4420005.0
+    },
+    "r": 3.0
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "yapi",
+    "attrs": {},
+    "p": {
+     "x": 487005.0,
+     "y": 4420020.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "gizli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420040.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420040.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 9,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 487020.0,
+     "y": 4420020.0
+    },
+    "b": {
+     "x": 487030.0,
+     "y": 4420020.0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 10,
+    "layerId": "yapi",
+    "attrs": {},
+    "p": {
+     "x": 487040.0,
+     "y": 4420030.0
+    },
+    "text": "Yazı",
+    "height": 1.0,
+    "rotation": 0
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "pencere: kutunun tamamen içindekiler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "window",
+       "a": {
+        "x": 486999.0,
+        "y": 4419999.0
+       },
+       "b": {
+        "x": 487011.0,
+        "y": 4420011.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kesişen: içindekiler ve kesen çizgi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "crossing",
+       "a": {
+        "x": 486999.0,
+        "y": 4419999.0
+       },
+       "b": {
+        "x": 487011.0,
+        "y": 4420011.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:4"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kesişen: kutunun ortası alanın içinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "crossing",
+       "a": {
+        "x": 487005.0,
+        "y": 4420006.0
+       },
+       "b": {
+        "x": 487006.0,
+        "y": 4420007.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "pencere: içinde nesne yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "window",
+       "a": {
+        "x": 487005.0,
+        "y": 4420006.0
+       },
+       "b": {
+        "x": 487006.0,
+        "y": 4420007.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çit: kestiği iki alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "fence",
+       "points": [
+        {
+         "x": 486998.0,
+         "y": 4420008.0
+        },
+        {
+         "x": 487035.0,
+         "y": 4420008.0
+        }
+       ],
+       "tolerance": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:3"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çit: toleransı içindeki nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "fence",
+       "points": [
+        {
+         "x": 487004.0,
+         "y": 4420019.5
+        },
+        {
+         "x": 487006.0,
+         "y": 4420019.5
+        }
+       ],
+       "tolerance": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:7"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çokgen: içindekiler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "polygon",
+       "points": [
+        {
+         "x": 487001.0,
+         "y": 4420001.0
+        },
+        {
+         "x": 487012.0,
+         "y": 4420001.0
+        },
+        {
+         "x": 487012.0,
+         "y": 4420025.0
+        },
+        {
+         "x": 487001.0,
+         "y": 4420025.0
+        }
+       ],
+       "mode": "inside"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:7"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çokgen: kesişenler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "polygon",
+       "points": [
+        {
+         "x": 487001.0,
+         "y": 4420001.0
+        },
+        {
+         "x": 487012.0,
+         "y": 4420001.0
+        },
+        {
+         "x": 487012.0,
+         "y": 4420025.0
+        },
+        {
+         "x": 487001.0,
+         "y": 4420025.0
+        }
+       ],
+       "mode": "crossing"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:4",
+        "$uidOf:7"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çokgen: dışındakiler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "polygon",
+       "points": [
+        {
+         "x": 487001.0,
+         "y": 4420001.0
+        },
+        {
+         "x": 487012.0,
+         "y": 4420001.0
+        },
+        {
+         "x": 487012.0,
+         "y": 4420025.0
+        },
+        {
+         "x": 487001.0,
+         "y": 4420025.0
+        }
+       ],
+       "mode": "outside"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "daire: tamamen içindeki",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "circle",
+       "center": {
+        "x": 487003.0,
+        "y": 4420003.0
+       },
+       "radius": 1.8
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:2"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "daire: dokunanlar, merkezi alanın içinde olan da",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "circle",
+       "center": {
+        "x": 487003.0,
+        "y": 4420003.0
+       },
+       "radius": 1.8,
+       "crossing": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "içeren alanlar küçükten büyüğe",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "containing",
+       "at": {
+        "x": 487003.0,
+        "y": 4420003.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:1"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "içeren daire",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "containing",
+       "at": {
+        "x": 487060.0,
+        "y": 4420005.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:6"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tıklama: önce çizgi, sonra içinde olduğu alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "point",
+       "at": {
+        "x": 487005.0,
+        "y": 4420005.1
+       },
+       "tolerance": 0.3
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:4",
+        "$uidOf:1"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hepsi: gizli katmanınki yok, kilitlininki var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "all"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hepsi, yalnız alanlar: süzgeç dışarıda kalanları sayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "all"
+      },
+      "kinds": [
+       "polygon"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3"
+       ],
+       "leftOut": {
+        "kinds": 6,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hepsi, yalnız Yol katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "all"
+      },
+      "layers": [
+       "yol"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:4",
+        "$uidOf:5"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 7,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tür ve katman birlikte: önce tür, sonra katman sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "all"
+      },
+      "kinds": [
+       "line"
+      ],
+      "layers": [
+       "kilitli"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:9"
+       ],
+       "leftOut": {
+        "kinds": 6,
+        "layers": 2,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "verilenler (önceki seçim): gizli olan sayılır, sıra korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "objects",
+       "uids": [
+        "$uidOf:3",
+        "$uidOf:8",
+        "$uidOf:1",
+        "$uidOf:3"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:3",
+        "$uidOf:1"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 1
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ters çevir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "invert",
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "benzerleri: tür, katman, renk ve sembol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "similar",
+       "uids": [
+        "$uidOf:2"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:2",
+        "$uidOf:3"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "benzerleri: renk dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "similar",
+       "uids": [
+        "$uidOf:2"
+       ],
+       "criteria": {
+        "kind": true,
+        "layer": true,
+        "color": false,
+        "symbol": true
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "benzerleri: yalnız tür, kilitli katmanınki de",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "similar",
+       "uids": [
+        "$uidOf:4"
+       ],
+       "criteria": {
+        "kind": true,
+        "layer": false,
+        "color": false,
+        "symbol": false
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:9"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "benzerleri: ölçütsüz, bütün gösterilenler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "similar",
+       "uids": [
+        "$uidOf:4"
+       ],
+       "criteria": {
+        "kind": false,
+        "layer": false,
+        "color": false,
+        "symbol": false
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katmandaki çizgi seçilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "window",
+       "a": {
+        "x": 487019.0,
+        "y": 4420019.0
+       },
+       "b": {
+        "x": 487031.0,
+        "y": 4420021.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:9"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "gizli katmandaki alan seçilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "window",
+       "a": {
+        "x": 486999.0,
+        "y": 4420029.0
+       },
+       "b": {
+        "x": 487011.0,
+        "y": 4420041.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "region": {
+       "kind": "window",
+       "a": {
+        "x": 486999.0,
+        "y": 4419999.0
+       },
+       "b": {
+        "x": 487011.0,
+        "y": 4420011.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ],
+       "leftOut": {
+        "kinds": 0,
+        "layers": 0,
+        "hidden": 0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "region": {
+       "kind": "all"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kutunun köşesi sonlu olmalı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "window",
+       "a": {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       "b": {
+        "x": 487001.0,
+        "y": 4420001.0
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Kutunun ilk köşesinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "region.a.x"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "region.a.x": "Infinity"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çitin tek noktası olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "fence",
+       "points": [
+        {
+         "x": 487000.0,
+         "y": 4420000.0
+        }
+       ],
+       "tolerance": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_few_points",
+       "message": "Çitin en az iki noktası olmalı.",
+       "path": "region.points"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çokgenin iki köşesi olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "polygon",
+       "points": [
+        {
+         "x": 487000.0,
+         "y": 4420000.0
+        },
+        {
+         "x": 487001.0,
+         "y": 4420001.0
+        }
+       ],
+       "mode": "inside"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_few_corners",
+       "message": "Seçim çokgeninin en az üç köşesi olmalı.",
+       "path": "region.points"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kendini kesen çokgen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "polygon",
+       "points": [
+        {
+         "x": 487000.0,
+         "y": 4420000.0
+        },
+        {
+         "x": 487010.0,
+         "y": 4420010.0
+        },
+        {
+         "x": 487010.0,
+         "y": 4420000.0
+        },
+        {
+         "x": 487000.0,
+         "y": 4420010.0
+        }
+       ],
+       "mode": "crossing"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_ring",
+       "message": "Çokgen kendini kesiyor; son köşeyi geri alın (G) ya da kesmeyen bir köşe gösterin.",
+       "path": "region.points"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dairenin yarıçapı sıfır olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "circle",
+       "center": {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       "radius": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_radius",
+       "message": "Seçim dairesinin yarıçapı sıfırdan büyük olmalı.",
+       "path": "region.radius"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eksi tolerans",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "point",
+       "at": {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       "tolerance": -1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_distance",
+       "message": "Tolerans sıfırdan küçük olamaz: tıklamanın ya da çitin yakınında aranacak uzaklığı metre olarak verin.",
+       "path": "region.tolerance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "objects",
+       "uids": [
+        "abc"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“abc” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+       "path": "region.uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "invert",
+       "uids": [
+        "$uidOf:1",
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4999"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4999” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir.",
+       "path": "region.uids[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "örneksiz benzerleri",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "similar",
+       "uids": []
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_objects",
+       "message": "Benzerini seç için en az bir örnek nesnenin kimliğini verin.",
+       "path": "region.uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "all"
+      },
+      "layers": [
+       "yapi",
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layers[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "katman grubu süzgeç olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "region": {
+       "kind": "all"
+      },
+      "layers": [
+       "koruma"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Koruma” bir katman grubu; süzgeç katmanları alır. Grubun katmanlarını verin.",
+       "path": "layers[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

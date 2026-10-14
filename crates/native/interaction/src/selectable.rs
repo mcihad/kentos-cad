@@ -2,10 +2,12 @@
 //! are selected, by a click and its hover, a window or crossing box, the
 //! selection tools, Tümünü seç, Ters çevir and a command's step that
 //! selects objects. What it leaves out is said. The web's twin is
-//! `apps/web/src/tools/selectable.ts`.
+//! `apps/web/src/tools/selectable.ts`. Every selection asks the one query
+//! of `cad.entities.select` (docs/adr/0275) with the filter's kinds.
 
-use kentos_contracts::Entity;
-use kentos_domain::Slot;
+use kentos_contracts::{EntitiesSelect, Entity, SelectRegion, Vec2 as Point};
+use kentos_domain::{Document, Slot};
+use kentos_native_application::entities_select::{self, Selected};
 
 use crate::Vec2;
 use crate::data_search::kind_name;
@@ -54,6 +56,37 @@ fn allowed(cx: &Context<'_>, slot: Slot) -> bool {
         .is_some_and(|e| kind_allowed(cx.draft.select_kinds, e.kind()))
 }
 
+/// A point as the query takes it.
+pub fn point(p: Vec2) -> Point {
+    Point { x: p.x, y: p.y }
+}
+
+/// The selection query (`cad.entities.select`, docs/adr/0275) over the session's store with the filter's kinds
+/// (`kinds`: `Draft::select_kinds`, none while the filter is off); none when the region is refused (a tool checks
+/// its region before it asks).
+pub fn query_in(
+    doc: &Document,
+    spatial: &crate::Spatial,
+    kinds: Option<u32>,
+    region: SelectRegion,
+) -> Option<Selected> {
+    let input = EntitiesSelect {
+        region,
+        kinds: kinds.map(entities_select::kinds_of_mask),
+        layers: None,
+    };
+    entities_select::select(doc, spatial.store(), &input).ok()
+}
+
+/// [`query_in`] for a tool: the objects, and what the filter left out said.
+pub fn query(cx: &mut Context<'_>, region: SelectRegion) -> Vec<Slot> {
+    let Some(found) = query_in(cx.doc, cx.spatial, cx.draft.select_kinds, region) else {
+        return Vec::new();
+    };
+    say_filtered(cx, found.left_out.kinds as usize);
+    found.slots
+}
+
 /// Says how many objects the filter left out of a selection; nothing when none.
 pub fn say_filtered(cx: &mut Context<'_>, n: usize) {
     if n > 0 {
@@ -79,7 +112,11 @@ pub fn ids(cx: &mut Context<'_>, ids: Vec<Slot>) -> Vec<Slot> {
 /// seç's candidates, docs/adr/0187 §1), the filter's leftovers dropped; when
 /// it drops every one, said.
 pub fn candidates(cx: &mut Context<'_>, at: Vec2) -> Vec<Slot> {
-    let all = cx.spatial.hits(at, cx.pick_tolerance());
+    let region = SelectRegion::Point {
+        at: point(at),
+        tolerance: cx.pick_tolerance(),
+    };
+    let all = query_in(cx.doc, cx.spatial, None, region).map_or_else(Vec::new, |f| f.slots);
     if cx.draft.select_kinds.is_none() {
         return all;
     }
@@ -138,5 +175,18 @@ mod tests {
         // Every kind of object is one of the filter's: a picture too (docs/adr/0187 §5, 8 Ekim).
         assert!(kind_allowed(Some(ALL), "image"));
         assert!(!kind_allowed(Some(ALL & !bit("image")), "image"));
+    }
+
+    /// The filter's bits are the query's kinds in one order (docs/adr/0275).
+    #[test]
+    fn the_mask_and_the_query_s_kinds_are_one_order() {
+        let names: Vec<&str> = kentos_contracts::SelectKind::ALL.iter().map(|k| k.name()).collect();
+        assert_eq!(names, KINDS);
+        let mask = bit("line") | bit("table");
+        let kinds = entities_select::kinds_of_mask(mask);
+        assert_eq!(
+            kinds.iter().map(|k| k.name()).collect::<Vec<_>>(),
+            ["line", "table"]
+        );
     }
 }

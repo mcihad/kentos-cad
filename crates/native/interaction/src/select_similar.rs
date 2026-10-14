@@ -17,7 +17,7 @@
 //!   examples, a click on another object makes it the example; Enter, Esc or
 //!   a right click ends.
 
-use kentos_contracts::Entity;
+use kentos_contracts::{SelectRegion, SimilarCriteria};
 use kentos_domain::Slot;
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -67,62 +67,23 @@ impl Criteria {
     }
 }
 
-/// The facts the criteria that are on compare, `None` where one is off:
-/// the kind and an insert's block, the layer, the colour, the symbol.
-type Key<'a> = (
-    Option<(&'a str, Option<&'a str>)>,
-    Option<&'a str>,
-    Option<Option<&'a str>>,
-    Option<Option<&'a str>>,
-);
-
-/// What an object is compared by.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Facts {
-    pub id: Slot,
-    pub kind: &'static str,
-    /// An insert's block, none for any other object.
-    pub block: Option<String>,
-    pub layer: String,
-    pub color: Option<String>,
-    pub symbol: Option<String>,
-}
-
-impl Facts {
-    pub fn of(id: Slot, e: &Entity) -> Facts {
-        let b = e.base();
-        Facts {
-            id,
-            kind: e.kind(),
-            block: match e {
-                Entity::Insert(i) => Some(i.block.to_text()),
-                _ => None,
-            },
-            layer: b.layer_id.clone(),
-            color: b.color.clone(),
-            symbol: b.symbol.clone(),
+impl From<Criteria> for SimilarCriteria {
+    fn from(c: Criteria) -> Self {
+        SimilarCriteria {
+            kind: c.kind,
+            layer: c.layer,
+            color: c.color,
+            symbol: c.symbol,
         }
     }
-
-    /// The facts the criteria compare.
-    fn key(&self, c: Criteria) -> Key<'_> {
-        (
-            c.kind.then_some((self.kind, self.block.as_deref())),
-            c.layer.then_some(self.layer.as_str()),
-            c.color.then_some(self.color.as_deref()),
-            c.symbol.then_some(self.symbol.as_deref()),
-        )
-    }
 }
 
-/// The objects similar to at least one of `examples`, in the objects' order.
+/// What an object is compared by: the query's (docs/adr/0275).
+pub use kentos_native_application::entities_select::Facts;
+
+/// The objects similar to at least one of `examples`, in the objects' order: the query's rule.
 pub fn similar_to(objects: &[Facts], examples: &[Facts], c: Criteria) -> Vec<Slot> {
-    let wanted: Vec<_> = examples.iter().map(|e| e.key(c)).collect();
-    objects
-        .iter()
-        .filter(|o| wanted.contains(&o.key(c)))
-        .map(|o| o.id)
-        .collect()
+    kentos_native_application::entities_select::similar_to(objects, examples, c.into())
 }
 
 /// The criteria's options in the prompt and the keys that turn them.
@@ -167,27 +128,23 @@ impl SelectSimilar {
         self.memory = *cx.memory;
     }
 
-    /// Selects what is similar to the examples still in the drawing.
+    /// Selects what is similar to the examples still in the drawing: the query's `similar` (docs/adr/0275).
     fn select(&mut self, cx: &mut Context<'_>) {
-        let examples: Vec<Facts> = self
+        let uids: Vec<String> = self
             .examples
             .iter()
-            .filter_map(|s| cx.doc.get(*s).map(|e| Facts::of(*s, e)))
+            .filter_map(|s| cx.doc.uid(*s))
+            .map(|u| u.to_string())
             .collect();
-        if examples.is_empty() {
+        if uids.is_empty() {
             return;
         }
-        let layers = cx.doc.layers();
-        let objects: Vec<Facts> = cx
-            .doc
-            .entities()
-            .filter(|e| layers.is_visible(&e.base().layer_id))
-            // What a layer's filter leaves out is not on the layer (docs/adr/0211 §1).
-            .filter(|e| cx.spatial.filter_shown(Slot(e.base().id)))
-            .map(|e| Facts::of(Slot(e.base().id), e))
-            .collect();
         let c = cx.memory.similar;
-        let ids = selectable::ids(cx, similar_to(&objects, &examples, c));
+        let region = SelectRegion::Similar {
+            uids,
+            criteria: Some(c.into()),
+        };
+        let ids = selectable::query(cx, region);
         let n = ids.len();
         cx.selection.set(self.base.iter().copied().chain(ids));
         cx.say(

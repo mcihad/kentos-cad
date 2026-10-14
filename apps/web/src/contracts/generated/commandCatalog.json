@@ -213681,6 +213681,589 @@
       ]
     },
     {
+      "id": "cad.entities.select",
+      "version": 1,
+      "title": "Nesne seç",
+      "summary": "Bir bölgenin, listenin ya da benzerliğin nesnelerini kalıcı kimlikleriyle verir: pencere, kesişen kutu, çit, çokgen (içindekiler, kesişenler, dışındakiler), daire, noktayı içeren alanlar (küçükten büyüğe), bir tıklamanın adayları, hepsi, verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol). Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "sec",
+        "select"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "PolygonSelectMode": {
+            "description": "How a polygon selects (Çokgenle seç, docs/adr/0187 §2).",
+            "oneOf": [
+              {
+                "const": "inside",
+                "description": "İçindekiler: wholly inside.",
+                "type": "string"
+              },
+              {
+                "const": "crossing",
+                "description": "Kesişenler: inside or touching.",
+                "type": "string"
+              },
+              {
+                "const": "outside",
+                "description": "Dışındakiler: every object it does not touch.",
+                "type": "string"
+              }
+            ]
+          },
+          "SelectKind": {
+            "description": "A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`).",
+            "enum": [
+              "point",
+              "line",
+              "polyline",
+              "polygon",
+              "circle",
+              "arc",
+              "ellipse",
+              "spline",
+              "xline",
+              "ray",
+              "text",
+              "dimension",
+              "hatch",
+              "insert",
+              "leader",
+              "table",
+              "image"
+            ],
+            "type": "string"
+          },
+          "SelectRegion": {
+            "description": "Where the objects are, or which they are.",
+            "oneOf": [
+              {
+                "description": "Pencere: wholly inside the box from `a` to `b` (an infinite line never is).",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "window",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kesişen: inside the box or touching it (an edge across it, a point of it inside, the box's middle in its\narea).",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "crossing",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Çitle seç: what the open path crosses; a point, `tolerance` metres from it.",
+                "properties": {
+                  "kind": {
+                    "const": "fence",
+                    "type": "string"
+                  },
+                  "points": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array",
+                    "x-unit": "length"
+                  },
+                  "tolerance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "points",
+                  "tolerance"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Çokgenle seç: a simple ring's inside, crossing or outside.",
+                "properties": {
+                  "kind": {
+                    "const": "polygon",
+                    "type": "string"
+                  },
+                  "mode": {
+                    "$ref": "#/$defs/PolygonSelectMode"
+                  },
+                  "points": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "points",
+                  "mode"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Daireyle seç: wholly inside the circle, and with `crossing` touching it too.",
+                "properties": {
+                  "center": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "crossing": {
+                    "type": "boolean"
+                  },
+                  "kind": {
+                    "const": "circle",
+                    "type": "string"
+                  },
+                  "radius": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "center",
+                  "radius"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "İçeren alanı seç: the closed shapes around the point, the smallest first.",
+                "properties": {
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "containing",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "at"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A click: what a click at `at` selects within `tolerance` metres, the most specific first (Sıradakini seç's\ncandidates, docs/adr/0187 §1).",
+                "properties": {
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "point",
+                    "type": "string"
+                  },
+                  "tolerance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "at",
+                  "tolerance"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Tümünü seç: every object shown.",
+                "properties": {
+                  "kind": {
+                    "const": "all",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The objects given, those shown (Önceki seçim: the list the caller kept).",
+                "properties": {
+                  "kind": {
+                    "const": "objects",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Seçimi ters çevir: every object shown but those given.",
+                "properties": {
+                  "kind": {
+                    "const": "invert",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Benzerini seç: every object shown like one of those given.",
+                "properties": {
+                  "criteria": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/SimilarCriteria"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Absent: every criterion on."
+                  },
+                  "kind": {
+                    "const": "similar",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "SimilarCriteria": {
+            "description": "What Benzerini seç compares (docs/adr/0187 §4): an object is like an example when it equals it in every\ncriterion that is on; none on: every object.",
+            "properties": {
+              "color": {
+                "description": "Renk: the object's own colour (“by layer” is a value of its own).",
+                "type": "boolean"
+              },
+              "kind": {
+                "description": "Tür: the kind, an insert's block too.",
+                "type": "boolean"
+              },
+              "layer": {
+                "description": "Katman.",
+                "type": "boolean"
+              },
+              "symbol": {
+                "description": "Sembol: the object's own symbol.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "layer",
+              "color",
+              "symbol"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.select` v1: the objects the region gives that pass the kinds and the layers, in the\nregion's order (the drawing's, the smallest first for `containing`, the most specific first for `point`).\nOnly objects shown count: a hidden layer's, and what a layer's filter or the time window leaves out, never\n(docs/adr/0211 §1, 0210); a locked layer's do (a lock forbids editing, not selecting).\n\nRefusals (`CommandError.code`), the region's in its fields' order, then the layers': `not_finite` (a point, a\ntolerance, a radius), `too_many_points` (more than 100 000 points or objects), `too_few_points` (a fence of\nfewer than two points), `too_few_corners` (a polygon of fewer than three), `invalid_ring` (a polygon crossing\nitself or without area), `invalid_radius` (a circle's not above zero), `invalid_distance` (a tolerance below\nzero), `invalid_uid`, `entity_not_found` (an object given), `no_objects` (Benzerini seç without an example),\n`layer_not_found`, `not_a_layer` (a group in `layers`).",
+        "properties": {
+          "kinds": {
+            "description": "Seçim süzgeci: only these kinds; absent: every kind.",
+            "items": {
+              "$ref": "#/$defs/SelectKind"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "Only on these layers (their ids); absent: every layer.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "region": {
+            "$ref": "#/$defs/SelectRegion"
+          }
+        },
+        "required": [
+          "region"
+        ],
+        "title": "EntitiesSelect",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "SelectLeftOut": {
+            "description": "What the kinds and the layers left out of the region's objects, and the objects given that are not shown.",
+            "properties": {
+              "hidden": {
+                "description": "Objects given (`objects`) that are not shown.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kinds": {
+                "description": "By the kinds (the selection filter).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layers": {
+                "description": "By the layers.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "kinds",
+              "layers",
+              "hidden"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.select` v1, and its plan: the objects' persistent ids in the region's order, what was\nleft out, and the revision they were read at.",
+        "properties": {
+          "leftOut": {
+            "$ref": "#/$defs/SelectLeftOut"
+          },
+          "revision": {
+            "description": "The document's revision the objects were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "leftOut",
+          "revision"
+        ],
+        "title": "EntitiesSelected",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "SelectLeftOut": {
+            "description": "What the kinds and the layers left out of the region's objects, and the objects given that are not shown.",
+            "properties": {
+              "hidden": {
+                "description": "Objects given (`objects`) that are not shown.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kinds": {
+                "description": "By the kinds (the selection filter).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layers": {
+                "description": "By the layers.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "kinds",
+              "layers",
+              "hidden"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.select` v1, and its plan: the objects' persistent ids in the region's order, what was\nleft out, and the revision they were read at.",
+        "properties": {
+          "leftOut": {
+            "$ref": "#/$defs/SelectLeftOut"
+          },
+          "revision": {
+            "description": "The document's revision the objects were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "leftOut",
+          "revision"
+        ],
+        "title": "EntitiesSelected",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "too_few_points",
+          "too_few_corners",
+          "invalid_ring",
+          "invalid_radius",
+          "invalid_distance",
+          "too_many_points",
+          "invalid_uid",
+          "entity_not_found",
+          "no_objects",
+          "layer_not_found",
+          "not_a_layer"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir pencerenin içindeki alanlar",
+          "input": {
+            "kinds": [
+              "polygon"
+            ],
+            "region": {
+              "a": {
+                "x": 487000.0,
+                "y": 4420000.0
+              },
+              "b": {
+                "x": 487050.0,
+                "y": 4420030.0
+              },
+              "kind": "window"
+            }
+          }
+        },
+        {
+          "title": "Bir nesnenin katmanındaki ve türündeki bütün nesneler",
+          "input": {
+            "region": {
+              "criteria": {
+                "color": false,
+                "kind": true,
+                "layer": true,
+                "symbol": false
+              },
+              "kind": "similar",
+              "uids": [
+                "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.snap.find",
       "version": 1,
       "title": "Kenet bul",
@@ -216283,6 +216866,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Hiç kenet türü verilmedi; listeyi kaldırın (varsayılan türler) ya da en az bir tür verin."
+    },
+    {
+      "code": "invalid_ring",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Seçim çokgeni kendini kesiyor ya da alanı yok."
     },
     {
       "code": "not_measurable",

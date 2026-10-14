@@ -107,8 +107,15 @@ impl SelectPolygon {
         }
         let ring = std::mem::take(&mut self.pts);
         let mode = cx.memory.polygon_select;
-        let hits = cx.spatial.in_polygon(&ring, mode);
-        let hits = selectable::ids(cx, hits);
+        let region = kentos_contracts::SelectRegion::Polygon {
+            points: ring.iter().copied().map(selectable::point).collect(),
+            mode: match mode {
+                PolygonMode::Inside => kentos_contracts::PolygonSelectMode::Inside,
+                PolygonMode::Crossing => kentos_contracts::PolygonSelectMode::Crossing,
+                PolygonMode::Outside => kentos_contracts::PolygonSelectMode::Outside,
+            },
+        };
+        let hits = selectable::query(cx, region);
         let n = hits.len();
         if n == 0 {
             cx.say(Level::Warn, none_found(mode));
