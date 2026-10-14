@@ -45,6 +45,7 @@ pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
 pub mod break_join;
+pub mod reverse;
 pub mod call;
 pub mod changeset;
 mod checks;
@@ -69,6 +70,7 @@ pub mod jobs;
 pub mod label_texts;
 pub mod labels_pin;
 pub use break_join::{entities_break, entities_join};
+pub use reverse::entities_reverse;
 pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use region::{entities_boundary, entities_hatch};
@@ -341,6 +343,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_JOIN,
         kentos_contracts::CAD_ENTITIES_JOIN_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_REVERSE,
+        kentos_contracts::CAD_ENTITIES_REVERSE_VERSION,
     ),
     (
         kentos_contracts::CAD_ENTITIES_DIVIDE,

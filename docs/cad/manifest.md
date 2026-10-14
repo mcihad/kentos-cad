@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 48 | 109 | 38 | 38 | 233 |
-| geometry | 20 | 66 | 0 | 8 | 94 |
+| semantic | 48 | 110 | 38 | 38 | 234 |
+| geometry | 20 | 65 | 0 | 8 | 93 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 21 | 1 | 4 | 26 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 494 satırdan 137'i: geometry 86, none 20, processing 13, query 18.
+CBS'ye özgü olmayan 494 satırdan 136'i: geometry 85, none 20, processing 13, query 18.
 
-### Sonucu çağıran hesaplar (geometry) — 86
+### Sonucu çağıran hesaplar (geometry) — 85
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -98,7 +98,6 @@ CBS'ye özgü olmayan 494 satırdan 137'i: geometry 86, none 20, processing 13, 
 | `tool.revcloud#Dikdörtgen` | Revizyon bulutu: Dikdörtgen | cad | cad.polygon.create |  |
 | `tool.revcloud#Nesne` | Revizyon bulutu: Nesne | cad | cad.polygon.create |  |
 | `tool.revcloud#Çokgen` | Revizyon bulutu: Çokgen | cad | cad.polygon.create |  |
-| `tool.reverse` | Yönü çevir | shared | cad.entities.edit `reverse` |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
 | `tool.sector` | Daire dilimi | shared | cad.polygon.create |  |
 | `tool.setElevation` | Kot ver | shared | cad.entities.edit `elevation` |  |

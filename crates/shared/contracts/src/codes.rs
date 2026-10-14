@@ -398,6 +398,12 @@ codes! {
     NOT_BREAKABLE = "not_breakable", Failed, false, "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ya da ışın olmalı.";
     /// The core could not break the object there.
     BREAK_FAILED = "break_failed", Failed, false, "Nesne bu noktalarda kırılamadı.";
+    /// An object Birleştir was given that joined nothing (docs/adr/0296).
+    NOT_JOINED = "not_joined", Warning, false, "Nesne hiçbir nesneyle birleşmedi: ucu başka bir ucun toleransında değil ya da türü birleşmez.";
+    /// Joined objects whose attributes or labels differ: the first's stay (docs/adr/0296).
+    DATA_CONFLICT = "data_conflict", Warning, false, "Birleşen nesnelerin öznitelikleri ayrışıyor; ilk nesnenin değerleri kaldı.";
+    /// An object with no direction of its own (docs/adr/0296): Yönü çevir leaves it.
+    NOT_REVERSIBLE = "not_reversible", FailedOrWarning, false, "Nesnenin kendi yönü yok: yay, daire ve elips hep saat yönünün tersine gider; nokta, yazı ve benzerleri yönsüz.";
     /// A chain's seed that is not a line, an arc or an open polyline (Zincir).
     NOT_JOINABLE = "not_joinable", Failed, false, "Zincir bir çizgiden, yaydan ya da açık çoklu çizgiden başlar.";
     /// No chain of two objects meeting end to end (Birleştir).

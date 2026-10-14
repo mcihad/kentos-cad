@@ -511,6 +511,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.vertex"
             | "cad.entities.break"
             | "cad.entities.join"
+            // Yönü çevir turns the objects in place (docs/adr/0296).
+            | "cad.entities.reverse"
             // Keeping the numbers scales every object of the drawing (docs/adr/0256 §1).
             | "cad.units.change"
             // Its remove takes a service layer away (docs/adr/0208 §15).

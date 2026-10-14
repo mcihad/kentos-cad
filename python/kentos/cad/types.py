@@ -5746,10 +5746,14 @@ class EntitiesBreak(_Model):
     """Input of `cad.entities.break` v1: the part of the object between `first`
     and `second` goes; without `second` (or with it on `first`) the object
     splits at `first`. One undo step “Kır”. The object is replaced by its
-    pieces, the first in its place keeping its id (its data kept when one
-    piece is left, not for a closed area), the others new objects from it.
-    Lines, polylines, areas, arcs, circles, ellipses, construction lines and
-    rays break.
+    pieces, the first in its place keeping its id, the others new objects
+    from it. Every piece keeps what the object carried (docs/adr/0296): its
+    layer, colour, line weight, line type, transparency, symbol, attributes,
+    label and attachments; its elevations, measures and widths go with the
+    vertices where they lie. An associative dimension's point on the object
+    follows the piece it lies on, or breaks (`vertex_gone`) when it lay in
+    the part taken away. Lines, polylines, areas, arcs, circles, ellipses,
+    NURBS curves, construction lines and rays break.
 
     Refusals (`CommandError.code`), checked in this order: `invalid_uid`,
     `not_finite` (`first`, then `second`), `invalid_revision`,
@@ -6492,6 +6496,15 @@ class EntitiesJoin(_Model):
     step “Birleştir”. Those on a locked layer are left out with a
     `locked_skipped` warning at `uids[i]`.
 
+    As AutoCAD's JOIN (docs/adr/0296): a chain of lines on one straight line
+    is that line; a chain of arcs of one circle is one arc, or the circle
+    when it closes; any other chain a polyline. The joined object keeps all
+    its first object carried; the others' elevations, measures and widths go
+    with their vertices, their attributes and label do not: a key whose value
+    differs is said (`data_conflict`). An object of `uids` that joins nothing
+    is said with why (`not_joined`). An associative dimension's point on a
+    joined object follows the joined one.
+
     Zincir (`chain`, docs/adr/0161 §2): `uids` is one object, the seed; the
     objects joined end to end with it among `chain`'s objects (lines, arcs,
     open polylines) are joined with it, up to a free end, a junction, a
@@ -6878,6 +6891,48 @@ class EntitiesPropertiesSet(_Model):
             changed=list(data["changed"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesReverse(_Model):
+    """Input of `cad.entities.reverse` v1, Yönü çevir (AutoCAD's REVERSE): the
+    objects of `uids` run the other way round, the same outline, as one undo
+    step “Yönü çevir”. Lines swap their ends; polylines, areas (and their
+    holes), closed polylines, fit-point curves and NURBS curves run
+    backwards, their arcs turning the other way. Every object keeps its id
+    and all it carries; its elevations, measures and widths go with their
+    vertices, so they run backwards too; an associative dimension's point
+    keeps its place on it (docs/adr/0296). Arcs, circles and ellipses always
+    run counter-clockwise: they, and kinds with no direction, are left out
+    with a `not_reversible` warning; those on a locked layer with a
+    `layer_locked` warning counting them.
+
+    Refusals (`CommandError.code`), checked in this order: `no_entities`,
+    `invalid_uid` (at `uids[i]`), `invalid_revision`, `revision_conflict`
+    (status `conflict`), `entity_not_found`, `layer_locked` (every object on
+    a locked layer), `not_reversible` (none has a direction).
+    Attributes:
+        uids: The objects' persistent ids (lowercase UUID text with hyphens), at least one.
+        expected_revision: The document revision the input was prepared against, as decimal
+            text. When given and the document is no longer at it, nothing is
+            written and the answer is `conflict`.
+    """
+    uids: list[str]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesReverse:
+        return cls(
+            uids=list(data["uids"]),
+            expected_revision=data.get("expectedRevision", UNSET),
         )
 
 
@@ -21794,6 +21849,7 @@ __all__ = [
     "EntitiesPick",
     "EntitiesPicked",
     "EntitiesPropertiesSet",
+    "EntitiesReverse",
     "EntitiesSelect",
     "EntitiesSelected",
     "EntitiesSetProperties",

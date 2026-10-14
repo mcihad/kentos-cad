@@ -1414,7 +1414,7 @@
         "cad.entities.break"
       ],
       "was": "cad.entities.edit",
-      "note": "Nesne ve iki nokta komuta verilir; parçalar çekirdekten (ADR 0254 §3)."
+      "note": "Nesne ve iki nokta komuta verilir; parçalar çekirdekten, her parça kaynağın bütün taşıdıklarıyla, ilişkili ölçüler parçalara izler (ADR 0254 §3, 0296)."
     },
     "join": {
       "level": "semantic",
@@ -1422,7 +1422,7 @@
         "cad.entities.join"
       ],
       "was": "cad.entities.edit",
-      "note": "Nesneler ya da Zincir'in tohumu ve görünüm komuta verilir (ADR 0254 §4)."
+      "note": "Nesneler ya da Zincir'in tohumu ve görünüm komuta verilir; aynı doğrudakiler çizgi, aynı dairedekiler yay ya da daire olur, birleşmeyen ve ayrışan öznitelik söylenir (ADR 0254 §4, 0296)."
     },
     "explode": {
       "level": "geometry",
@@ -1458,8 +1458,12 @@
       }
     },
     "reverse": {
-      "level": "geometry",
-      "operation": "reverse"
+      "level": "semantic",
+      "via": [
+        "cad.entities.reverse"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Nesnelerin kimlikleri komuta verilir; kotlar, ölçüler (M) ve genişlikler tersine, ilişkili ölçüler izler (ADR 0296)."
     },
     "simplify": {
       "level": "geometry",

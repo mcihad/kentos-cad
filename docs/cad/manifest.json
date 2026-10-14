@@ -6944,7 +6944,7 @@
    "operation": null,
    "python": "kentos.cad.entities.break",
    "mcp": "cad.entities.break",
-   "note": "Nesne ve iki nokta komuta verilir; parçalar çekirdekten (ADR 0254 §3).",
+   "note": "Nesne ve iki nokta komuta verilir; parçalar çekirdekten, her parça kaynağın bütün taşıdıklarıyla, ilişkili ölçüler parçalara izler (ADR 0254 §3, 0296).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -7910,7 +7910,7 @@
    "operation": null,
    "python": "kentos.cad.entities.join",
    "mcp": "cad.entities.join",
-   "note": "Nesneler ya da Zincir'in tohumu ve görünüm komuta verilir (ADR 0254 §4).",
+   "note": "Nesneler ya da Zincir'in tohumu ve görünüm komuta verilir; aynı doğrudakiler çizgi, aynı dairedekiler yay ya da daire olur, birleşmeyen ve ayrışan öznitelik söylenir (ADR 0254 §4, 0296).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 3
@@ -8869,14 +8869,14 @@
    "id": "tool.reverse",
    "kind": "tool",
    "title": "Yönü çevir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.entities.reverse"
    ],
-   "operation": "reverse",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.entities.reverse",
+   "mcp": "cad.entities.reverse",
+   "note": "Nesnelerin kimlikleri komuta verilir; kotlar, ölçüler (M) ve genişlikler tersine, ilişkili ölçüler izler (ADR 0296).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

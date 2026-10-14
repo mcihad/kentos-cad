@@ -6,9 +6,9 @@
 use crate::api::Op;
 use crate::api::json::{Json, ToJson, field};
 use crate::entity::{Entity, Shape};
-use crate::geom::arc::{ArcGeom, arc_end, arc_start, bulge_from_arc};
+use crate::geom::arc::{ArcGeom, arc_end, arc_start, bulge_from_arc, norm_angle};
 use crate::geom::bulge::{bulge_at, clean_bulge_path, reverse_bulge_path};
-use crate::jsmath::js_hypot;
+use crate::jsmath::{atan2, js_hypot};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -231,6 +231,86 @@ pub fn join_entities(list: &[Entity], tol: f64) -> Result<Joined, String> {
         }
     }
     Ok(Joined { groups, skipped })
+}
+
+/// AutoCAD's JOIN (docs/adr/0296): what [`join_entities`] made of `members`
+/// (`joined`) in its simplest kind. A chain of lines on one straight line,
+/// running one way, is that line; a chain of arcs of one circle turning one
+/// way is one arc, or the circle when it closes. Any other chain stays as it
+/// is (a polyline, or a closed area).
+pub fn simplest(joined: &Shape, members: &[Shape], tol: f64) -> Shape {
+    if members.len() < 2 {
+        return joined.clone();
+    }
+    if members.iter().all(|m| matches!(m, Shape::Line { .. }))
+        && let Shape::Polyline {
+            pts, closed: false, ..
+        } = joined
+        && let (Some(&a), Some(&b)) = (pts.first(), pts.last())
+    {
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let len = js_hypot(dx, dy);
+        if len > tol {
+            let (ux, uy) = (dx / len, dy / len);
+            let mut along = 0.0_f64;
+            let straight = pts.iter().all(|p| {
+                let (px, py) = (p.x - a.x, p.y - a.y);
+                let s = px * ux + py * uy;
+                let off = (px * uy - py * ux).abs();
+                // On the line and never turning back.
+                let ok = off <= tol && s >= along - tol;
+                along = along.max(s);
+                ok
+            });
+            if straight {
+                return Shape::Line { a, b };
+            }
+        }
+    }
+    let arcs: Vec<(Vec2, f64)> = members
+        .iter()
+        .filter_map(|m| match m {
+            Shape::Arc { c, r, .. } => Some((*c, *r)),
+            _ => None,
+        })
+        .collect();
+    if arcs.len() == members.len()
+        && let Some(&(c, r)) = arcs.first()
+        && arcs
+            .iter()
+            .all(|(c2, r2)| js_hypot(c2.x - c.x, c2.y - c.y) <= tol && (r2 - r).abs() <= tol)
+    {
+        match joined {
+            Shape::Polygon { bulges, .. } => {
+                let bs: Vec<f64> = bulges.clone().unwrap_or_default();
+                if bs.iter().all(|b| *b > 0.0) || bs.iter().all(|b| *b < 0.0) {
+                    return Shape::Circle { c, r };
+                }
+            }
+            Shape::Polyline {
+                pts,
+                bulges,
+                closed: false,
+                ..
+            } => {
+                let n = pts.len().saturating_sub(1);
+                let bs: Vec<f64> = (0..n).map(|i| bulge_at(bulges.as_deref(), i)).collect();
+                let ccw = bs.iter().all(|b| *b > 0.0);
+                let cw = bs.iter().all(|b| *b < 0.0);
+                if let (true, Some(&s), Some(&e)) = (ccw || cw, pts.first(), pts.last()) {
+                    let angle = |p: Vec2| norm_angle(atan2(p.y - c.y, p.x - c.x));
+                    let (a0, a1) = if ccw {
+                        (angle(s), angle(e))
+                    } else {
+                        (angle(e), angle(s))
+                    };
+                    return Shape::Arc { c, r, a0, a1 };
+                }
+            }
+            _ => {}
+        }
+    }
+    joined.clone()
 }
 
 /// An object Zincir may walk through: its shape and whether its layer is locked.

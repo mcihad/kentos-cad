@@ -44,7 +44,7 @@ use kentos_native_application::{
 };
 use kentos_native_application::{
     changeset, create, dimensions_create, divide, entities_boundary, entities_break,
-    entities_hatch, entities_join, file_import, stretch,
+    entities_hatch, entities_join, entities_reverse, file_import, stretch,
 };
 use serde_json::{Value, json};
 
@@ -69,6 +69,7 @@ struct State {
 
 const STEP_KEYS: &[&str] = &[
     "op",
+    "command",
     "input",
     "nonFinite",
     "result",
@@ -816,6 +817,12 @@ impl Input for EntitiesJoin {
             return self.tolerance.as_mut();
         }
         area_number(&mut self.chain, path.strip_prefix("chain.")?)
+    }
+}
+
+impl Input for kentos_domain::contracts::EntitiesReverse {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -1706,6 +1713,9 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_STRETCH => run!(stretch, EntitiesStretch),
         kentos_domain::contracts::CAD_ENTITIES_BREAK => run!(entities_break, EntitiesBreak),
         kentos_domain::contracts::CAD_ENTITIES_JOIN => run!(entities_join, EntitiesJoin),
+        kentos_domain::contracts::CAD_ENTITIES_REVERSE => {
+            run!(entities_reverse, kentos_domain::contracts::EntitiesReverse)
+        }
         kentos_domain::contracts::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
         kentos_domain::contracts::CAD_ENTITIES_BOUNDARY => {
             run!(entities_boundary, EntitiesBoundary)
@@ -1899,7 +1909,14 @@ fn run_step(
     }
     let before = doc.revision();
     match step["op"].as_str().unwrap_or("?") {
-        "validate" | "plan" | "execute" => run_command(command, doc, state, step, at)?,
+        // A step may run another command first (a dimension tied before it is broken, docs/adr/0296).
+        "validate" | "plan" | "execute" => run_command(
+            step["command"].as_str().unwrap_or(command),
+            doc,
+            state,
+            step,
+            at,
+        )?,
         op @ ("undo" | "redo") => {
             let label = if op == "undo" { doc.undo() } else { doc.redo() };
             if let Some(want) = step.get("returns") {

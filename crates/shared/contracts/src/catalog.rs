@@ -1887,8 +1887,8 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_ENTITIES_BREAK_VERSION,
             title: "Nesneyi kır".into(),
             summary: "Kalıcı kimliğiyle verilen nesnenin first ile second arasındaki kısmını siler; second yoksa nesneyi first'te ikiye böler. Tek geri alma adımı “Kır”. \
-                      Çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ve ışın kırılır; öbürleri not_breakable. Kilitli katmandaki nesne kırılmaz. \
-                      Nesnenin yerini ilk parça alır, öbür parçalar ondan yeni nesnelerdir; tek parça kalırsa özellikleri korunur (kapalı alan değilse). Parçaları paylaşılan geometri çekirdeği bulur; bulamadığında break_failed çekirdeğin sözüyle döner. \
+                      Çizgi, çoklu çizgi, alan, yay, daire, elips, NURBS eğrisi, yardımcı çizgi ve ışın kırılır; öbürleri not_breakable. Kilitli katmandaki nesne kırılmaz. \
+                      Nesnenin yerini ilk parça alır, öbür parçalar ondan yeni nesnelerdir. Her parça nesnenin taşıdıklarını alır (ADR 0296): katman, renk, kalınlık, çizgi tipi, saydamlık, sembol, öznitelikler, etiket ve ekler; kot, ölçü (M) ve genişlikler köşeleriyle gider. İlişkili ölçünün nesnedeki noktası üstünde durduğu parçayı izler, silinen kısımdaysa kopar (vertex_gone). Parçaları paylaşılan geometri çekirdeği bulur; bulamadığında break_failed çekirdeğin sözüyle döner. \
                       Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -1923,6 +1923,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Kalıcı kimlikleriyle verilen çizgi, yay ve açık çoklu çizgilerden uç uca buluşanları her zincir için tek nesne yapar; kapanan zincir kapalı alan olur. Tek geri alma adımı “Birleştir”. \
                       Zincir ilk nesnesinin yerini, kimliğini ve verisini alır, öbürleri silinir. tolerance uçların aralığıdır (metre, varsayılan 0,001). Kilitli katmandakiler locked_skipped uyarısıyla dışarıda kalır; hiç zincir kurulamazsa nothing_to_join. \
                       chain verilirse (Zincir) uids tek nesnedir, tohum: ona uç uca bağlı nesneler chain'in nesneleri arasında (all, area ya da objects) serbest uca, kavşağa, kilitli nesneye ya da başa dönene kadar onunla birleşir; tohum yerini, kimliğini ve verisini verir. \
+                      AutoCAD'in JOIN'i gibi (ADR 0296): aynı doğrudaki çizgiler tek çizgi, aynı çemberin yayları tek yay, kapanırsa daire olur; öbür zincirler çoklu çizgi. Birleşen nesne ilk nesnenin taşıdıklarını korur; öbürlerinin kot, ölçü ve genişlikleri köşeleriyle gelir, öznitelik ve etiketleri gelmez: değeri ayrışan anahtar data_conflict uyarısıyla söylenir. Hiçbir şeyle birleşmeyen nesne not_joined uyarısıyla nedeni söylenerek kalır. İlişkili ölçünün birleşen nesnedeki noktası birleşen nesneyi izler. \
                       Zincirleri paylaşılan geometri çekirdeği bulur. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -1949,6 +1950,32 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_REVERSE.into(),
+            version: crate::CAD_ENTITIES_REVERSE_VERSION,
+            title: "Yönü çevir".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesneleri aynı biçimde, öbür yöne çevirir (AutoCAD'in REVERSE'ü); tek geri alma adımı “Yönü çevir”. \
+                      Çizginin uçları yer değiştirir; çoklu çizgi, kapalı çoklu çizgi, alan (delikleriyle), eğri ve NURBS eğrisi geriye doğru gider, yayları öbür yöne döner. Her nesne kimliğini ve taşıdıklarını korur; kot, ölçü (M) ve genişlikler köşeleriyle gider, yani onlar da tersine döner; ilişkili ölçünün noktası nesnedeki yerinde kalır (ADR 0296). \
+                      Yay, daire ve elips hep saat yönünün tersine gider: onlar ve yönsüz türler not_reversible, kilitli katmandakiler layer_locked uyarısıyla atlanır; hiçbiri çevrilemezse ret. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesReverse>(),
+            output: schema::<crate::EntitiesEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir rotanın yönünü çevir; ölçüleri (M) de tersine döner".into(),
+                input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"] }),
+                output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "created": [], "removed": [], "revision": "64" })),
+            }],
         },
         CommandDescriptor {
             id: crate::CAD_ENTITIES_DIVIDE.into(),
@@ -4040,6 +4067,10 @@ mod tests {
                     crate::CAD_ENTITIES_JOIN => {
                         serde_json::from_value::<crate::EntitiesJoin>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_REVERSE => {
+                        serde_json::from_value::<crate::EntitiesReverse>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_ENTITIES_DIVIDE => {
                         serde_json::from_value::<crate::EntitiesDivide>(e.input.clone()).map(|_| ())
                     }
@@ -4235,7 +4266,9 @@ mod tests {
                             serde_json::from_value::<crate::EntitiesStretched>(output.clone())
                                 .map(|_| ())
                         }
-                        crate::CAD_ENTITIES_BREAK | crate::CAD_ENTITIES_JOIN => {
+                        crate::CAD_ENTITIES_BREAK
+                        | crate::CAD_ENTITIES_JOIN
+                        | crate::CAD_ENTITIES_REVERSE => {
                             serde_json::from_value::<crate::EntitiesEdited>(output.clone())
                                 .map(|_| ())
                         }

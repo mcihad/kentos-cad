@@ -25,11 +25,11 @@ use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
 use kentos_contracts::BlockDefinition;
-use kentos_contracts::{DimensionEntity, DimensionRefs, Entity, SubPlace, SubRef, Vec2};
+use kentos_contracts::{DimensionEntity, DimensionRefs, Entity, EntityId, SubPlace, SubRef, Vec2};
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity as CoreEntity;
-use kentos_geometry_core::ops::subref::{Followed, Place, follow, follow_in};
+use kentos_geometry_core::ops::subref::{Followed, Place, Reason, follow, follow_in, place_near};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -150,13 +150,21 @@ fn reference_mut<'a>(r: &'a mut DimensionRefs, name: &str) -> &'a mut Option<Sub
     }
 }
 
+/// How far a relocated point may lie from the object it is looked for on, metres (docs/adr/0296): the pieces are
+/// cut where the point was, so it lies on one of them but for rounding.
+const RELOCATE_TOLERANCE: f64 = 1e-6;
+
 /// Where a step left each object it changed or removed: before and after (none: removed).
 type Changed = BTreeMap<Uuid, (Arc<Entity>, Option<Arc<Entity>>)>;
 
 impl Document {
     /// What keeps the associative dimensions with their objects after `ops` (a
     /// step about to be recorded), applied: the step takes them in.
-    pub(crate) fn follow_dimensions(&mut self, ops: &[Op]) -> Vec<Op> {
+    pub(crate) fn follow_dimensions(
+        &mut self,
+        ops: &[Op],
+        relocated: &BTreeMap<Uuid, Vec<Uuid>>,
+    ) -> Vec<Op> {
         if !self.store.has_ties() {
             return Vec::new();
         }
@@ -276,6 +284,29 @@ impl Document {
                             if let Some(s) = slot_ref {
                                 s.broken = Some(reason.code().to_owned());
                             }
+                        }
+                    }
+                    continue;
+                }
+                // Kır's pieces, Birleştir's joined object, Yönü çevir's object (docs/adr/0296): the point
+                // keeps its coordinates and is looked for on them.
+                if changed.contains_key(&of)
+                    && let Some(onto) = relocated.get(&of)
+                    && let Some(p) = point_of(d, name)
+                {
+                    let found = onto.iter().find_map(|u| {
+                        let slot = self.slot_of(*u)?;
+                        let e = core(&self.store.get(slot)?.entity)?;
+                        let at = kentos_geometry_core::Vec2::new(p.x, p.y);
+                        place_near(&e, at, RELOCATE_TOLERANCE).map(|(place, _)| (*u, place))
+                    });
+                    if let Some(s) = reference_mut(&mut next_refs, name) {
+                        match found {
+                            Some((u, place)) => {
+                                s.uid = EntityId(u.into_bytes());
+                                s.place = contract_place(place);
+                            }
+                            None => s.broken = Some(Reason::VertexGone.code().to_owned()),
                         }
                     }
                     continue;
