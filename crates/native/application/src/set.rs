@@ -325,22 +325,8 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             Some((id, node.name.as_str()))
         }
     };
-    // Nothing on a locked layer changes, and nothing moves onto one.
-    for (at, _, e, _) in &found {
-        let layer = &e.base().layer_id;
-        if layers.is_locked(layer) {
-            let name = layers
-                .get(layer)
-                .map_or(layer.as_str(), |n| n.name.as_str());
-            return Err(Stop::failed(error(
-                codes::LAYER_LOCKED,
-                format!(
-                    "“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
-                ),
-                Some(format!("uids[{at}]")),
-            )));
-        }
-    }
+    // What is on a locked layer is left out, said by its count (docs/adr/0278); nothing moves onto one.
+    let (found, locked) = checks::skip_locked(doc, found)?;
     if let Some((id, name)) = target
         && layers.is_locked(id)
     {
@@ -377,7 +363,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         })
         .collect();
     // On a hidden layer they vanish from the drawing: said when at least one moves there.
-    let mut warnings = Vec::new();
+    let mut warnings: Vec<CommandWarning> = locked.into_iter().collect();
     if let Some((id, name)) = target
         && !layers.is_visible(id)
         && changes.iter().any(|c| c.moves)

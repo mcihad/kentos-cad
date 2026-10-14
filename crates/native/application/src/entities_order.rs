@@ -24,9 +24,9 @@ pub use crate::codes;
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesOrder) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed {
+        Ok((_, warnings)) => CommandResult::Completed {
             output: (),
-            warnings: Vec::new(),
+            warnings,
         },
         Err(stop) => stop.into(),
     }
@@ -35,12 +35,12 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesOrder) -> CommandResu
 /// What execute would change, and the revision to expect for exactly that.
 pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesOrder) -> CommandResult<EntitiesOrderPlan> {
     match check(cx.doc, input) {
-        Ok(changes) => CommandResult::Completed {
+        Ok((changes, warnings)) => CommandResult::Completed {
             output: EntitiesOrderPlan {
                 changed: changes.into_iter().map(|c| c.entity).collect(),
                 revision: cx.doc.revision().to_string(),
             },
-            warnings: Vec::new(),
+            warnings,
         },
         Err(stop) => stop.into(),
     }
@@ -64,8 +64,8 @@ fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: EntitiesOrder,
 ) -> CommandResult<EntitiesOrdered> {
-    let changes = match check(cx.doc, &input) {
-        Ok(changes) => changes,
+    let (changes, warnings) = match check(cx.doc, &input) {
+        Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
     let (uids, slots): (Vec<String>, Vec<Slot>) =
@@ -80,7 +80,7 @@ fn write_execute(
             ids: slots.iter().map(|s| s.0).collect(),
             revision: cx.doc.revision().to_string(),
         },
-        warnings: Vec::new(),
+        warnings,
     }
 }
 
@@ -104,26 +104,16 @@ fn place(at: usize, e: &Entity) -> (i64, usize) {
     (i64::from(e.base().look.order.unwrap_or(0)), at)
 }
 
-fn check(doc: &Document, input: &EntitiesOrder) -> Result<Vec<Change>, Stop> {
+fn check(
+    doc: &Document,
+    input: &EntitiesOrder,
+) -> Result<(Vec<Change>, Vec<kentos_contracts::CommandWarning>), Stop> {
     checks::uids(&input.uids, "Sırası değişecek nesne verilmedi.")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let named = checks::named(doc, &input.uids)?;
+    // What is on a locked layer is left out, said by its count (docs/adr/0278).
+    let (named, locked) = checks::skip_locked(doc, named)?;
     let layers = doc.layers();
-    for (at, _, e, _) in &named {
-        let layer = &e.base().layer_id;
-        if layers.is_locked(layer) {
-            let name = layers
-                .get(layer)
-                .map_or(layer.as_str(), |n| n.name.as_str());
-            return Err(Stop::failed(checks::error(
-                codes::LAYER_LOCKED,
-                format!(
-                    "“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
-                ),
-                Some(format!("uids[{at}]")),
-            )));
-        }
-    }
     // Every object's place in the document, by its slot.
     let all: Vec<(Slot, &Entity)> = doc.entities().map(|e| (Slot(e.base().id), e)).collect();
     let index = |slot: Slot| {
@@ -215,5 +205,5 @@ fn check(doc: &Document, input: &EntitiesOrder) -> Result<Vec<Change>, Stop> {
             .unwrap_or(usize::MAX)
     };
     out.sort_by_key(|c| at(&c.uid));
-    Ok(out)
+    Ok((out, locked.into_iter().collect()))
 }

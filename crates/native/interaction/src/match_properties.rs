@@ -273,7 +273,7 @@ impl Tool for MatchProperties {
                 }
             }
             None => {
-                let hit = cx.spatial.pick(p.raw, cx.pick_tolerance());
+                let hit = crate::selectable::hover(cx, p.raw);
                 cx.selection.set_hover(hit);
             }
         }
@@ -295,7 +295,8 @@ impl Tool for MatchProperties {
         let Some(press) = self.press.take() else {
             return;
         };
-        let hit = cx.spatial.pick(p.raw, cx.pick_tolerance());
+        // The selection filter's kinds, as every selecting step (docs/adr/0278).
+        let hit = crate::selectable::pick(cx, p.raw);
         if self.source.is_none() {
             if press.dragging {
                 return;
@@ -313,9 +314,7 @@ impl Tool for MatchProperties {
                 worlds: None,
             }
             .crossing();
-            let slots = cx
-                .spatial
-                .in_rect(press.from_world, p.raw, crossing);
+            let slots = crate::selectable::in_box(cx, press.from_world, p.raw, crossing);
             self.give(slots, cx);
         } else if let Some(slot) = hit {
             self.give(vec![slot], cx);

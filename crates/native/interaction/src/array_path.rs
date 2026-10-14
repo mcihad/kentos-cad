@@ -144,7 +144,7 @@ impl ArrayPath {
 
     /// A path picked by a click: not one of the objects to copy.
     fn choose(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let Some(slot) = edge::pick(p, cx, follows) else {
+        let Some(slot) = edge::pick_said(p, cx, follows) else {
             cx.say(
                 Level::Warn,
                 "Yol olarak bir çizgiye, yaya, daireye ya da çoklu çizgiye tıklayın.",

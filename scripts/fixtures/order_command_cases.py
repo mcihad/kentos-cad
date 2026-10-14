@@ -160,6 +160,11 @@ def failed(code, message, path=None):
     return {"status": "failed", "error": error}
 
 
+def LOCKED_SKIPPED(n):
+    """The warning of the objects left out for their locked layer (docs/adr/0278)."""
+    return {"code": "layer_locked", "message": f"{n} nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}
+
+
 def locked_object(name, i):
     return failed("layer_locked", f"“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", f"uids[{i}]")
 
@@ -372,12 +377,14 @@ cases.append({
     ],
 })
 
+written, changed = moved([2], "front")
 cases.append({
-    "name": "kilitli katmandaki nesnenin sırası değişmez: layer_locked; biri kilitliyse hiçbiri yazılmaz; kilitli grubun katmanı da kilitlidir",
+    "name": "kilitli katmandaki nesnenin sırası değişmez: öbürleri yazılır, kilitliler sayıyla uyarılır (ADR 0278); hepsi kilitliyse layer_locked; kilitli grubun katmanı da kilitlidir",
     "steps": [
-        {"op": "execute", "input": {"uids": uids(2, 5), "to": "front"}, "result": locked_object("Kilitli katman", 1),
-         "expect": {**NOTHING, "entities": {"2": E(2), "5": E(5)}}},
-        {"op": "execute", "input": {"uids": uids(6), "to": "back"}, "result": locked_object("Eski", 0), "expect": NOTHING},
+        {"op": "execute", "input": {"uids": uids(2, 5), "to": "front"}, "result": done(changed, [LOCKED_SKIPPED(1)]),
+         "expect": {"entities": {**written, "5": E(5)}, "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": uids(6), "to": "back"}, "result": locked_object("Eski", 0),
+         "expect": {"entities": {"6": E(6)}, "revision": "same"}},
     ],
 })
 

@@ -401,10 +401,7 @@ impl<S: Stages> Tool for Modify<S> {
                 worlds: None,
             }
             .crossing();
-            let ids = cx
-                .spatial
-                .in_rect(press.from_world, p.raw, crossing);
-            let ids = crate::selectable::ids(cx, ids);
+            let ids = crate::selectable::in_box(cx, press.from_world, p.raw, crossing);
             cx.selection.add(ids);
         } else if let Some(hit) = crate::selectable::pick(cx, p.raw) {
             if let Some(flow) = self.stages.picked(hit, cx) {

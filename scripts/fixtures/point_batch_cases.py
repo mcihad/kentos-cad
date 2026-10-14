@@ -150,14 +150,18 @@ def run(objects, ids, op):
     moving = [o for o in targets if o["layerId"] != layer]
     if not moving:
         return objs, [f"{PREFIX}Taşınacak nokta yok."], None
-    for o in moving:
-        if o["layerId"] in LOCKED:
-            return objs, [edit_refusal(o["layerId"])], None
+    # A point on a locked layer is left out, said by its count; all of them locked, nothing moves (docs/adr/0278).
+    locked = [o for o in moving if o["layerId"] in LOCKED]
+    if len(locked) == len(moving):
+        return objs, [edit_refusal(locked[0]["layerId"])], None
     if layer in LOCKED:
         return objs, [f"“{LAYERS[layer]}” katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin."], None
+    moving = [o for o in moving if o["layerId"] not in LOCKED]
     for o in moving:
         o["layerId"] = layer
     said = [f"{PREFIX}{len(moving)} nokta “{LAYERS[layer]}” katmanına taşındı."]
+    if locked:
+        said.append(f"{len(locked)} nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.")
     if layer in HIDDEN:
         said.append(f"“{LAYERS[layer]}” katmanı gizli; taşınan nesneler görünmeyecek.")
     return objs, said, STEPS[kind]

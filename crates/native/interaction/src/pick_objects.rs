@@ -75,11 +75,17 @@ impl PickObjects {
 
     /// Whether the field takes this object.
     fn takes(&self, slot: Slot, cx: &Context<'_>) -> bool {
-        self.kinds.as_ref().is_none_or(|kinds| {
-            cx.doc
-                .get(slot)
-                .is_some_and(|e| kinds.iter().any(|k| k == e.kind()))
-        })
+        // The selection filter's kinds too, as every selecting step (docs/adr/0278).
+        let filtered = cx
+            .doc
+            .get(slot)
+            .is_some_and(|e| crate::selectable::entity_allowed(cx.draft.select_kinds, e));
+        filtered
+            && self.kinds.as_ref().is_none_or(|kinds| {
+                cx.doc
+                    .get(slot)
+                    .is_some_and(|e| kinds.iter().any(|k| k == e.kind()))
+            })
     }
 
     /// The object of the field's kinds under the pointer: the most specific
@@ -201,9 +207,7 @@ impl Tool for PickObjects {
                 worlds: None,
             }
             .crossing();
-            let ids: Vec<Slot> = cx
-                .spatial
-                .in_rect(press.from_world, p.raw, crossing)
+            let ids: Vec<Slot> = crate::selectable::in_box(cx, press.from_world, p.raw, crossing)
                 .into_iter()
                 .filter(|s| self.takes(*s, cx))
                 .collect();

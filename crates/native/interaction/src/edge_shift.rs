@@ -75,7 +75,7 @@ impl EdgeShift {
 
     /// The edge under the click, or why none is taken.
     fn pick(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let Some(slot) = edge::pick(p, cx, editable) else {
+        let Some(slot) = edge::pick_said(p, cx, editable) else {
             cx.say(Level::Warn, NO_EDGE_HERE);
             return;
         };

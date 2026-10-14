@@ -400,7 +400,7 @@ impl Tool for Boundary {
             self.selected = cx.selection.len();
             return;
         }
-        let Some(slot) = edge::pick(p, cx, edge::unlocked) else {
+        let Some(slot) = edge::pick_said(p, cx, edge::unlocked) else {
             let label = if p.shift {
                 self.other_label()
             } else {

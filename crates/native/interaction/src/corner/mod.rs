@@ -496,7 +496,7 @@ impl Tool for CornerTool {
             self.lock(c, cx);
             return self.redraw(cx);
         }
-        let Some(slot) = edge::pick(p, cx, editable) else {
+        let Some(slot) = edge::pick_said(p, cx, editable) else {
             cx.say(
                 Level::Warn,
                 "Bir köşeye ya da düzenlenebilir bir çizgi veya çoklu çizgi kenarına tıklayın.",

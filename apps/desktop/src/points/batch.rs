@@ -295,12 +295,15 @@ pub fn run(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outcome
         }
         let uids: Vec<String> = plan.changes.iter().map(|(s, _)| uid(doc, *s)).collect();
         let mut warnings = Vec::new();
+        // What the command moved: a point on a locked layer is left out and counted (docs/adr/0278).
+        let mut moved = 0;
         let refused = in_step(doc, step, |doc| {
             match set::execute(
                 &mut ExecutionContext::new(doc),
                 input(uids, None, Some(layer.clone())),
             ) {
-                CommandResult::Completed { warnings: w, .. } => {
+                CommandResult::Completed { output, warnings: w } => {
+                    moved = output.changed.len();
                     warnings = w.into_iter().map(|w| w.message).collect();
                     None
                 }
@@ -321,10 +324,7 @@ pub fn run(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outcome
             .layers()
             .get(layer)
             .map_or_else(|| layer.clone(), |n| n.name.clone());
-        let mut said = vec![format!(
-            "{PREFIX}{} nokta “{name}” katmanına taşındı.",
-            plan.changes.len()
-        )];
+        let mut said = vec![format!("{PREFIX}{moved} nokta “{name}” katmanına taşındı.")];
         said.extend(warnings);
         return Outcome {
             said,

@@ -228,7 +228,7 @@ impl Tool for Divide {
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let Some(slot) = edge::pick(p, cx, divisible) else {
+        let Some(slot) = edge::pick_said(p, cx, divisible) else {
             cx.say(
                 Level::Warn,
                 "Çizgi, çoklu çizgi, yay, daire ya da eğriye tıklayın.",
