@@ -1,0 +1,2879 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.join",
+ "commandVersion": 1,
+ "title": "Birleştir: AutoCAD'in sonuçları, taşınanlar ve söylenenler",
+ "note": "ADR 0296. Nesnelerin taşıdıkları ve ilişkili ölçüler Kır, Birleştir ve Yönü çevir'de. Bağımsız başvuru: scripts/fixtures/break_join_policy_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kır, Birleştir ve Yönü çevir",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 40,
+   "y": 50
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "olcu",
+    "name": "Ölçü",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Duvar"
+    },
+    "color": "#E5484D",
+    "lineWeight": 0.5,
+    "lineType": "dashed",
+    "lineTypeScale": 2,
+    "transparency": 0.3,
+    "symbol": "cit",
+    "label": "D1",
+    "attachments": [
+     {
+      "name": "Foto",
+      "file": "foto/d1.jpg"
+     }
+    ],
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    },
+    "za": 1,
+    "zb": 3,
+    "ma": 0,
+    "mb": 10
+   },
+   {
+    "kind": "polyline",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Bordür"
+    },
+    "symbol": "bordur",
+    "lineType": "dashdot",
+    "pts": [
+     {
+      "x": 0,
+      "y": 10
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 10,
+      "y": 20
+     }
+    ],
+    "zs": [
+     1,
+     2,
+     3
+    ],
+    "ms": [
+     0,
+     10,
+     20
+    ],
+    "widths": [
+     [
+      0.2,
+      0.4
+     ],
+     [
+      0.4,
+      0.6
+     ],
+     [
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kemer"
+    },
+    "pts": [
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 30,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     1,
+     0
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {
+     "Ada": "101"
+    },
+    "label": "101",
+    "pts": [
+     {
+      "x": 40,
+      "y": 0
+     },
+     {
+      "x": 50,
+      "y": 0
+     },
+     {
+      "x": 50,
+      "y": 10
+     },
+     {
+      "x": 40,
+      "y": 10
+     }
+    ]
+   },
+   {
+    "kind": "circle",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kuyu"
+    },
+    "c": {
+     "x": 60,
+     "y": 5
+    },
+    "r": 5
+   },
+   {
+    "kind": "arc",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Yay"
+    },
+    "c": {
+     "x": 80,
+     "y": 0
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 3.141592653589793
+   },
+   {
+    "kind": "spline",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0,
+      "y": 60
+     },
+     {
+      "x": 5,
+      "y": 64
+     },
+     {
+      "x": 10,
+      "y": 60
+     },
+     {
+      "x": 15,
+      "y": 64
+     }
+    ],
+    "closed": false
+   },
+   {
+    "kind": "line",
+    "id": 8,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 70
+    },
+    "b": {
+     "x": 10,
+     "y": 70
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 9,
+    "layerId": "olcu",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    },
+    "offset": 1.5,
+    "height": 0.25
+   },
+   {
+    "kind": "dimension",
+    "id": 10,
+    "layerId": "olcu",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 10
+    },
+    "b": {
+     "x": 10,
+     "y": 20
+    },
+    "offset": 1.5,
+    "height": 0.25
+   },
+   {
+    "kind": "line",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Yol",
+     "No": "1"
+    },
+    "color": "#3E63DD",
+    "a": {
+     "x": 0,
+     "y": 30
+    },
+    "b": {
+     "x": 5,
+     "y": 30
+    },
+    "za": 0,
+    "zb": 1,
+    "ma": 0,
+    "mb": 5
+   },
+   {
+    "kind": "line",
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Yol",
+     "No": "2"
+    },
+    "a": {
+     "x": 5,
+     "y": 30
+    },
+    "b": {
+     "x": 10,
+     "y": 30
+    },
+    "za": 1,
+    "zb": 2,
+    "ma": 5,
+    "mb": 10
+   },
+   {
+    "kind": "line",
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 10,
+     "y": 30
+    },
+    "b": {
+     "x": 10,
+     "y": 40
+    },
+    "za": 2,
+    "zb": 5
+   },
+   {
+    "kind": "arc",
+    "id": 15,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kavis"
+    },
+    "c": {
+     "x": 30,
+     "y": 30
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   {
+    "kind": "arc",
+    "id": 16,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 30,
+     "y": 30
+    },
+    "r": 5,
+    "a0": 1.5707963267948966,
+    "a1": 3.141592653589793
+   },
+   {
+    "kind": "arc",
+    "id": 17,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Havuz"
+    },
+    "c": {
+     "x": 50,
+     "y": 30
+    },
+    "r": 5,
+    "a0": 0,
+    "a1": 3.141592653589793
+   },
+   {
+    "kind": "arc",
+    "id": 18,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 50,
+     "y": 30
+    },
+    "r": 5,
+    "a0": 3.141592653589793,
+    "a1": 0
+   },
+   {
+    "kind": "line",
+    "id": 19,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 60,
+     "y": 30
+    },
+    "b": {
+     "x": 65,
+     "y": 30
+    }
+   },
+   {
+    "kind": "arc",
+    "id": 20,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 65,
+     "y": 35
+    },
+    "r": 5,
+    "a0": 4.71238898038469,
+    "a1": 0
+   },
+   {
+    "kind": "point",
+    "id": 21,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 80,
+     "y": 30
+    }
+   },
+   {
+    "kind": "line",
+    "id": 22,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 70,
+     "y": 50
+    },
+    "b": {
+     "x": 75,
+     "y": 50
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 23,
+    "layerId": "olcu",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 30
+    },
+    "b": {
+     "x": 10,
+     "y": 30
+    },
+    "offset": 1.5,
+    "height": 0.25
+   },
+   {
+    "kind": "line",
+    "id": 24,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 50
+    },
+    "b": {
+     "x": 5,
+     "y": 50
+    }
+   },
+   {
+    "kind": "line",
+    "id": 25,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 5.0005,
+     "y": 50
+    },
+    "b": {
+     "x": 10,
+     "y": 50
+    }
+   },
+   {
+    "kind": "line",
+    "id": 26,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 80
+    },
+    "b": {
+     "x": 10,
+     "y": 80
+    }
+   },
+   {
+    "kind": "line",
+    "id": 27,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 10,
+     "y": 80
+    },
+    "b": {
+     "x": 5,
+     "y": 80
+    }
+   },
+   {
+    "kind": "line",
+    "id": 28,
+    "layerId": "cizim",
+    "attrs": {},
+    "label": "Y1",
+    "a": {
+     "x": 20,
+     "y": 80
+    },
+    "b": {
+     "x": 30,
+     "y": 80
+    }
+   },
+   {
+    "kind": "line",
+    "id": 29,
+    "layerId": "cizim",
+    "attrs": {},
+    "label": "Y2",
+    "a": {
+     "x": 30,
+     "y": 80
+    },
+    "b": {
+     "x": 30,
+     "y": 90
+    }
+   },
+   {
+    "kind": "line",
+    "id": 30,
+    "layerId": "cizim",
+    "attrs": {
+     "Ad": "Üçgen"
+    },
+    "a": {
+     "x": 40,
+     "y": 80
+    },
+    "b": {
+     "x": 50,
+     "y": 80
+    }
+   },
+   {
+    "kind": "line",
+    "id": 31,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 50,
+     "y": 80
+    },
+    "b": {
+     "x": 40,
+     "y": 90
+    }
+   },
+   {
+    "kind": "line",
+    "id": 32,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 40,
+     "y": 90
+    },
+    "b": {
+     "x": 40,
+     "y": 80
+    }
+   },
+   {
+    "kind": "line",
+    "id": 33,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 60,
+     "y": 80
+    },
+    "b": {
+     "x": 70,
+     "y": 80
+    }
+   },
+   {
+    "kind": "line",
+    "id": 34,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 70,
+     "y": 80
+    },
+    "b": {
+     "x": 80,
+     "y": 80
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 35,
+    "layerId": "cizim",
+    "attrs": {
+     "Tür": "Kapalı"
+    },
+    "pts": [
+     {
+      "x": 0,
+      "y": 100
+     },
+     {
+      "x": 10,
+      "y": 100
+     },
+     {
+      "x": 10,
+      "y": 110
+     }
+    ],
+    "closed": true,
+    "zs": [
+     1,
+     2,
+     3
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Aynı doğrudaki iki çizgi tek çizgi olur: ilkinin kimliği ve taşıdıkları; kot ve ölçü uçlarla; ayrışan öznitelik data_conflict ile söylenir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:12",
+       "$uidOf:13"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "data_conflict",
+        "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: No (1 / 2); ilk nesnenin değerleri kaldı.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 12,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Yol",
+          "No": "1"
+         },
+         "color": "#3E63DD",
+         "a": {
+          "x": 0,
+          "y": 30
+         },
+         "b": {
+          "x": 10,
+          "y": 30
+         },
+         "za": 0,
+         "zb": 2,
+         "ma": 0,
+         "mb": 10
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:13"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sıra değişince ilk nesne öbürüdür: onun kimliği ve öznitelikleri kalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:13",
+       "$uidOf:12"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "data_conflict",
+        "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: No (1 / 2); ilk nesnenin değerleri kaldı.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 12,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Yol",
+          "No": "1"
+         },
+         "color": "#3E63DD",
+         "a": {
+          "x": 0,
+          "y": 30
+         },
+         "b": {
+          "x": 10,
+          "y": 30
+         },
+         "za": 0,
+         "zb": 2,
+         "ma": 0,
+         "mb": 10
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:13"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgiler dönünce çoklu çizgi olur, köşelerin kotları kaynaklardan",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:12",
+       "$uidOf:13",
+       "$uidOf:14"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "data_conflict",
+        "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: No (1 / 2); ilk nesnenin değerleri kaldı.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 12,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Yol",
+          "No": "1"
+         },
+         "color": "#3E63DD",
+         "pts": [
+          {
+           "x": 0,
+           "y": 30
+          },
+          {
+           "x": 5,
+           "y": 30
+          },
+          {
+           "x": 10,
+           "y": 30
+          },
+          {
+           "x": 10,
+           "y": 40
+          }
+         ],
+         "zs": [
+          0,
+          1,
+          2,
+          5
+         ],
+         "ms": [
+          0,
+          5,
+          10,
+          null
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:13",
+        "$uidOf:14"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı çemberin iki yayı tek yay",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:15",
+       "$uidOf:16"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "arc",
+         "id": 15,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Kavis"
+         },
+         "c": {
+          "x": 30,
+          "y": 30
+         },
+         "r": 5,
+         "a0": 0.0,
+         "a1": 3.141592653589793
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:16"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı çemberin kapanan iki yayı daire olur",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:17",
+       "$uidOf:18"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "circle",
+         "id": 17,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Havuz"
+         },
+         "c": {
+          "x": 50,
+          "y": 30
+         },
+         "r": 5
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:18"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi ve yay bükümlü çoklu çizgi",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:19",
+       "$uidOf:20"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 19,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 60,
+           "y": 30
+          },
+          {
+           "x": 65,
+           "y": 30
+          },
+          {
+           "x": 70,
+           "y": 35
+          }
+         ],
+         "bulges": [
+          0,
+          0.4142135623730951,
+          0
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:20"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Birleşmeyenler nedenleriyle söylenir: nokta türünden, uzaktaki çizgi ucundan (not_joined)",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:12",
+       "$uidOf:13",
+       "$uidOf:21",
+       "$uidOf:22"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "data_conflict",
+        "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: No (1 / 2); ilk nesnenin değerleri kaldı.",
+        "path": "uids"
+       },
+       {
+        "code": "not_joined",
+        "path": "uids[2]",
+        "message": "Yalnız çizgi, yay ve açık çoklu çizgi birleşir; bu nesne birleşmedi."
+       },
+       {
+        "code": "not_joined",
+        "path": "uids[3]",
+        "message": "Ucu başka bir nesnenin ucuna toleransta değmiyor; birleşmedi."
+       }
+      ],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 12,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Yol",
+          "No": "1"
+         },
+         "color": "#3E63DD",
+         "a": {
+          "x": 0,
+          "y": 30
+         },
+         "b": {
+          "x": 10,
+          "y": 30
+         },
+         "za": 0,
+         "zb": 2,
+         "ma": 0,
+         "mb": 10
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:13"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlişkili ölçünün uçları birleşen çizgiyi izler: silinen nesnedeki uç da",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.dimensions.reassociate",
+     "input": {
+      "uid": "$uidOf:23",
+      "points": [
+       {
+        "point": "a",
+        "to": {
+         "uid": "$uidOf:12",
+         "place": {
+          "kind": "start"
+         }
+        }
+       },
+       {
+        "point": "b",
+        "to": {
+         "uid": "$uidOf:13",
+         "place": {
+          "kind": "end"
+         }
+        }
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "23": {
+        "kind": "dimension",
+        "id": 23,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 30
+        },
+        "b": {
+         "x": 10,
+         "y": 30
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:13",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "captureUid",
+     "id": 13,
+     "as": "j13"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:12",
+       "$uidOf:13"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "data_conflict",
+        "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: No (1 / 2); ilk nesnenin değerleri kaldı.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 12,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Yol",
+          "No": "1"
+         },
+         "color": "#3E63DD",
+         "a": {
+          "x": 0,
+          "y": 30
+         },
+         "b": {
+          "x": 10,
+          "y": 30
+         },
+         "za": 0,
+         "zb": 2,
+         "ma": 0,
+         "mb": 10
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:13"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:12",
+       "$uidOf:13"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "data_conflict",
+        "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: No (1 / 2); ilk nesnenin değerleri kaldı.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [
+        "$uidOf:12"
+       ],
+       "created": [],
+       "removed": [
+        "$uid:j13"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "entities": {
+       "23": {
+        "kind": "dimension",
+        "id": 23,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 30
+        },
+        "b": {
+         "x": 10,
+         "y": 30
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Birleştir",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "entities": {
+       "23": {
+        "kind": "dimension",
+        "id": 23,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+         "x": 0,
+         "y": 30
+        },
+        "b": {
+         "x": 10,
+         "y": 30
+        },
+        "offset": 1.5,
+        "height": 0.25,
+        "refs": {
+         "a": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:13",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toleranstaki aralık kapanır: tek çizgi",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:24",
+       "$uidOf:25"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 24,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 0,
+          "y": 50
+         },
+         "b": {
+          "x": 10,
+          "y": 50
+         }
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:25"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geri dönen aynı doğrudaki çizgiler çizgi olmaz, çoklu çizgi kalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:26",
+       "$uidOf:27"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 26,
+         "layerId": "cizim",
+         "attrs": {},
+         "pts": [
+          {
+           "x": 0,
+           "y": 80
+          },
+          {
+           "x": 10,
+           "y": 80
+          },
+          {
+           "x": 5,
+           "y": 80
+          }
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:27"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Etiketleri ayrışan çizgiler: etiket de söylenir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:28",
+       "$uidOf:29"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "data_conflict",
+        "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: etiket (Y1 / Y2); ilk nesnenin değerleri kaldı.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [
+        {
+         "kind": "polyline",
+         "id": 28,
+         "layerId": "cizim",
+         "attrs": {},
+         "label": "Y1",
+         "pts": [
+          {
+           "x": 20,
+           "y": 80
+          },
+          {
+           "x": 30,
+           "y": 80
+          },
+          {
+           "x": 30,
+           "y": 90
+          }
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:29"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapanan üç çizgi kapalı alan olur, ilkinin verisiyle",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:30",
+       "$uidOf:31",
+       "$uidOf:32"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "polygon",
+         "id": 30,
+         "layerId": "cizim",
+         "attrs": {
+          "Ad": "Üçgen"
+         },
+         "pts": [
+          {
+           "x": 40,
+           "y": 80
+          },
+          {
+           "x": 50,
+           "y": 80
+          },
+          {
+           "x": 40,
+           "y": 90
+          }
+         ]
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:31",
+        "$uidOf:32"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki nesne locked_skipped ile kalır, öbürleri birleşir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:33",
+       "$uidOf:12",
+       "$uidOf:13"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "locked_skipped",
+        "message": "Nesne kilitli katmanda olduğu için birleştirilmedi.",
+        "path": "uids[0]"
+       },
+       {
+        "code": "data_conflict",
+        "message": "Birleşen nesnelerin öznitelikleri ayrışıyor: No (1 / 2); ilk nesnenin değerleri kaldı.",
+        "path": "uids"
+       }
+      ],
+      "output": {
+       "changed": [
+        {
+         "kind": "line",
+         "id": 12,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Yol",
+          "No": "1"
+         },
+         "color": "#3E63DD",
+         "a": {
+          "x": 0,
+          "y": 30
+         },
+         "b": {
+          "x": 10,
+          "y": 30
+         },
+         "za": 0,
+         "zb": 2,
+         "ma": 0,
+         "mb": 10
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:13"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazma: ölçü olmadan da tek adım, geri alınır",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 16,
+     "as": "j16"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:15",
+       "$uidOf:16"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "arc",
+         "id": 15,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Kavis"
+         },
+         "c": {
+          "x": 30,
+          "y": 30
+         },
+         "r": 5,
+         "a0": 0.0,
+         "a1": 3.141592653589793
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:16"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:15",
+       "$uidOf:16"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:15"
+       ],
+       "created": [],
+       "removed": [
+        "$uid:j16"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "entities": {},
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Birleştir",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "entities": {},
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazma: kapanan yaylar",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 18,
+     "as": "j18"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:17",
+       "$uidOf:18"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        {
+         "kind": "circle",
+         "id": 17,
+         "layerId": "cizim",
+         "attrs": {
+          "Tür": "Havuz"
+         },
+         "c": {
+          "x": 50,
+          "y": 30
+         },
+         "r": 5
+        }
+       ],
+       "created": [],
+       "removed": [
+        "$uidOf:18"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:17",
+       "$uidOf:18"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [],
+      "output": {
+       "changed": [
+        "$uidOf:17"
+       ],
+       "created": [],
+       "removed": [
+        "$uid:j18"
+       ],
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "entities": {},
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Birleştir",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "entities": {},
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_entities",
+       "message": "Birleştirilecek nesne yok. En az bir nesnenin kalıcı kimliğini verin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Toleransın altındaki aralık kapanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:24",
+       "$uidOf:25"
+      ],
+      "tolerance": 0.0001
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_join",
+       "message": "Uçları birleşen çizgi, yay ya da açık çoklu çizgi bulunamadı. Toleransı artırmayı deneyin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tolerans sıfır olamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:12",
+       "$uidOf:13"
+      ],
+      "tolerance": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_distance",
+       "message": "Tolerans sıfırdan büyük sonlu bir uzunluk (metre) olmalı.",
+       "path": "tolerance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesne çizimde yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız noktalar: birleşecek bir şey yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:21",
+       "$uidOf:22"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_join",
+       "message": "Uçları birleşen çizgi, yay ya da açık çoklu çizgi bulunamadı. Toleransı artırmayı deneyin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

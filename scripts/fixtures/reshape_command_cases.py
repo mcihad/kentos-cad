@@ -403,12 +403,13 @@ def walk(pts, closed, s0, s1):
 
 
 def piece(e, pts, pid, keep):
-    """A piece as written: a line for two ends, else a polyline; the object's look, its data when kept."""
+    """A piece as written: a line's a line, a polyline's or an area's a polyline, two-vertex ones too
+    (docs/adr/0296); the object's look, its data when kept."""
     base = {"layerId": e["layerId"], "attrs": dict(e["attrs"]) if keep else {}}
     for k in ("color", "lineWeight"):
         if k in e:
             base[k] = e[k]
-    if len(pts) == 2:
+    if len(pts) == 2 and e["kind"] == "line":
         return {"kind": "line", "id": pid, **base, "a": P(*pts[0]), "b": P(*pts[1])}
     return {"kind": "polyline", "id": pid, **base, "pts": [P(*p) for p in pts]}
 
@@ -438,7 +439,7 @@ def broken(e, p1, p2):
 def break_case(name, eid, p1, p2=None, plan=False, extra=()):
     e = BY_ID[eid]
     pieces = broken(e, p1, p1 if p2 is None else p2)
-    keep = len(pieces) == 1 and e["kind"] != "polygon"
+    keep = True  # every piece keeps all its object carried (docs/adr/0296)
     first = piece(e, pieces[0], eid, keep)
     created = [piece(e, q, (0 if plan else NEXT + k), keep) for k, q in enumerate(pieces[1:])]
     inp = {"uid": UID(eid), "first": P(*p1)}
@@ -458,13 +459,13 @@ def break_case(name, eid, p1, p2=None, plan=False, extra=()):
 
 def break_cases():
     out = [
-        break_case("Çizginin iki noktası arası gider: iki parça, ilki yerinde, öbürü yeni; öznitelik kalmaz, renk kalır; adım “Kır”",
+        break_case("Çizginin iki noktası arası gider: iki parça, ilki yerinde, öbürü yeni; ikisi de öznitelikleri ve rengi taşır; adım “Kır”",
                    10, (X + 4, Y), (X + 6, Y),
                    extra=[{"op": "undo", "returns": "Kır", "expect": {"ids": IDS, "entities": {"10": BY_ID[10]}, "canUndo": False, "canRedo": True}}]),
         break_case("İkinci nokta yoksa çizgi ilk noktada ikiye bölünür", 10, (X + 5, Y)),
         break_case("Nokta nesnenin dışındaysa izdüşümü sayılır: uca kadar gider, tek parça öznitelikleriyle kalır", 10, (X + 8, Y), (X + 12, Y)),
-        break_case("Çoklu çizginin iki kenarı arası: iki uçlu parçalar çizgi olur", 11, (X + 5, Y + 20), (X + 10, Y + 25)),
-        break_case("Kapalı alan: ilk noktadan ikinciye saat tersi giden kısım silinir, kalan açık çoklu çizgi; alanın verisi kalmaz",
+        break_case("Çoklu çizginin iki kenarı arası: iki uçlu parçalar da çoklu çizgi kalır", 11, (X + 5, Y + 20), (X + 10, Y + 25)),
+        break_case("Kapalı alan: ilk noktadan ikinciye saat tersi giden kısım silinir, kalan açık çoklu çizgi alanın verisini taşır",
                    12, (X + 25, Y), (X + 30, Y + 5)),
         break_case("Kapalı alan tek noktada: halka o noktadan açılır, tek açık çoklu çizgi", 12, (X + 25, Y)),
         break_case("Noktalar ters sırayla verilse de aynı kısım gider", 10, (X + 6, Y), (X + 4, Y)),
@@ -479,7 +480,7 @@ def break_cases():
         refused("Beklenen sürüm sayı değil", {**one, "expectedRevision": "on iki"}, "invalid_revision", INVALID_REVISION, "expectedRevision"),
         refused("Nesne çizimde yok", {**one, "uid": MISSING}, "entity_not_found", not_found(MISSING), "uid"),
         refused("Nokta kırılmaz", {"uid": UID(16), "first": P(X + 50, Y)}, "not_breakable",
-                "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ya da ışın olmalı.", "uid"),
+                "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, NURBS eğrisi, yardımcı çizgi ya da ışın olmalı.", "uid"),
         refused("Adalı alan kırılmaz", {"uid": UID(25), "first": P(X + 75, Y), "second": P(X + 80, Y + 5)}, "not_breakable",
                 "Adalı alanda kırma yapılamaz; iç halkalar kaybolurdu. Önce Patlat ile halkalarına ayırın ya da Alan böl kullanın.", "uid"),
         refused("Kilitli katmandaki çizgi", {"uid": UID(14), "first": P(X + 4, Y + 40)}, "layer_locked", LOCKED, "uid"),
@@ -571,15 +572,55 @@ def chain_walk(seed):
     return list(reversed(sides[0])) + [seed] + sides[1], stopped
 
 
-def joined_entity(first, pts):
+def straight(pts):
+    """A chain on one straight line running one way (AutoCAD's JOIN makes it a line, docs/adr/0296)."""
+    (ax, ay), (bx, by) = pts[0], pts[-1]
+    dx, dy = bx - ax, by - ay
+    if dx == 0 and dy == 0:
+        return False
+    along = 0
+    for (px, py) in pts:
+        if (px - ax) * dy - (py - ay) * dx != 0:
+            return False
+        s = (px - ax) * dx + (py - ay) * dy
+        if s < along:
+            return False
+        along = s
+    return True
+
+
+def joined_entity(first, pts, sources):
     e = BY_ID[first]
     closed = len(pts) > 2 and pts[0] == pts[-1]
-    out = {"kind": "polygon" if closed else "polyline", "id": first, "layerId": e["layerId"], "attrs": dict(e["attrs"])}
+    lines = all(BY_ID[s]["kind"] == "line" for s in sources)
+    kind = "polygon" if closed else ("line" if lines and straight(pts) else "polyline")
+    out = {"kind": kind, "id": first, "layerId": e["layerId"], "attrs": dict(e["attrs"])}
     for k in ("color", "lineWeight"):
         if k in e:
             out[k] = e[k]
-    out["pts"] = [P(*p) for p in (pts[:-1] if closed else pts)]
+    if kind == "line":
+        out["a"], out["b"] = P(*pts[0]), P(*pts[-1])
+    else:
+        out["pts"] = [P(*p) for p in (pts[:-1] if closed else pts)]
     return out
+
+
+def conflicts(first, sources):
+    """The other objects' attributes that differ from the first's (docs/adr/0296), as Birleştir says them."""
+    kept = BY_ID[first]["attrs"]
+    keys = {}
+    for s in sources:
+        if s == first:
+            continue
+        for k, v in BY_ID[s]["attrs"].items():
+            if kept.get(k) != v:
+                vals = keys.setdefault(k, [kept.get(k, "yok")])
+                if v not in vals:
+                    vals.append(v)
+    if not keys:
+        return None
+    listed = ", ".join(f"{k} ({' / '.join(v)})" for k, v in sorted(keys.items()))
+    return warning("data_conflict", f"Birleşen nesnelerin öznitelikleri ayrışıyor: {listed}; ilk nesnenin değerleri kaldı.", "uids")
 
 
 def join_case(name, uids, tol=F(1, 1000), chain=False, plan=False, input_tol=None, extra=()):
@@ -604,7 +645,10 @@ def join_case(name, uids, tol=F(1, 1000), chain=False, plan=False, input_tol=Non
         first = keep if keep in sources else sources[0]
         changed.append(first)
         removed += [s for s in sources if s != first]
-        ents[str(first)] = joined_entity(first, pts)
+        ents[str(first)] = joined_entity(first, pts, sources)
+        said = conflicts(first, sources)
+        if said:
+            warnings.append(said)
     inp = {"uids": [UID(i) for i in uids]}
     if input_tol is not None:
         inp["tolerance"] = num(input_tol)

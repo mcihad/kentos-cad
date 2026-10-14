@@ -126,12 +126,14 @@ class Case:
             self.check(step.get("expect"), before, at)
 
     def command(self, step: dict[str, Any], at: str) -> None:
-        typed = self.wrapper.input_type.from_json(self.fill(step["input"], at))
+        # A step may run another command first (a dimension tied before it is broken, docs/adr/0296).
+        wrapper = cad.command(step["command"]) if "command" in step else self.wrapper
+        typed = wrapper.input_type.from_json(self.fill(step["input"], at))
         if "nonFinite" in step:
             put_non_finite(typed, step["nonFinite"])
             before = self.doc.revision
             try:
-                self.wrapper.run(self.doc, typed, op=step["op"])
+                wrapper.run(self.doc, typed, op=step["op"])
             except cad.InvalidInput as e:
                 assert e.code == "not_finite", f"{at}: {e}"
             else:
@@ -139,9 +141,12 @@ class Case:
             assert self.doc.revision == before, f"{at}: written"
             return
         layers_before = self.layer_ids()
-        outcome = self.wrapper.run(self.doc, typed, op=step["op"])
+        outcome = wrapper.run(self.doc, typed, op=step["op"])
         got = wire(outcome)
         want = json.loads(json.dumps(step["result"]))
+        if want == "$any":
+            # A step that only prepares the case (a dimension tied before the command, docs/adr/0296): any answer.
+            return
         # `$layer:K`: the layers the command added (execute) or would add (plan), ids the tree did not have, by their
         # number (docs/adr/0210 §11); a command that adds none leaves the last ones.
         fresh = sorted({s for s in strings(got) if re.fullmatch(r"layer-\d+", s) and s not in layers_before}, key=lambda s: int(s[6:]))

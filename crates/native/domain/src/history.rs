@@ -585,7 +585,8 @@ impl Document {
         let ties = self.follow_hatches(ops);
         ops.extend(ties);
         // After the hatches: a dimension follows the places its points name.
-        let dims = self.follow_dimensions(ops);
+        let relocated = std::mem::take(&mut self.relocated);
+        let dims = self.follow_dimensions(ops, &relocated);
         ops.extend(dims);
     }
 

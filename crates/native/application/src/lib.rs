@@ -68,10 +68,12 @@ pub mod info_templates;
 pub mod jobs;
 pub mod label_texts;
 pub mod labels_pin;
+pub mod reverse;
 pub use break_join::{entities_break, entities_join};
 pub use dimension_create::dimensions_create;
 pub use edge_commands::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 pub use region::{entities_boundary, entities_hatch};
+pub use reverse::entities_reverse;
 pub mod entities_order;
 pub mod entities_pick;
 pub mod entities_select;
@@ -341,6 +343,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_JOIN,
         kentos_contracts::CAD_ENTITIES_JOIN_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ENTITIES_REVERSE,
+        kentos_contracts::CAD_ENTITIES_REVERSE_VERSION,
     ),
     (
         kentos_contracts::CAD_ENTITIES_DIVIDE,

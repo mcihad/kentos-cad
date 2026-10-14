@@ -460,6 +460,32 @@ fn directions() -> Objects {
     o
 }
 
+/// Kır and Birleştir's objects with data (docs/adr/0296): two walls in a row
+/// whose kinds differ, two arcs of one circle, a far line and a labelled road.
+fn carried() -> Objects {
+    let mut o = Objects::new();
+    let a = o.line("cizim", [0.0, 0.0], [12.0, 0.0]);
+    let b = o.line("cizim", [12.0, 0.0], [24.0, 0.0]);
+    let half = std::f64::consts::PI;
+    let arc = |a0: f64, a1: f64| json!({ "kind": "arc", "c": xy([36.0, 6.0]), "r": 6.0, "a0": a0, "a1": a1 });
+    let c = o.push("parsel", arc(half, 0.0));
+    let d = o.push("parsel", arc(0.0, half));
+    o.line("cizim", [0.0, 8.0], [10.0, 8.0]);
+    let road = o.path("yol", &[[0.0, 18.0], [14.0, 18.0], [24.0, 26.0]], false);
+    for (id, attrs, label) in [
+        (a, json!({ "Tür": "Duvar" }), "D1"),
+        (b, json!({ "Tür": "Çit" }), "D2"),
+        (c, json!({ "Ad": "Havuz" }), "H"),
+        (d, json!({ "Ad": "Havuz" }), "H"),
+        (road, json!({ "Ad": "Gül Sk." }), "Gül Sk."),
+    ] {
+        let e = &mut o.0[id as usize - 1];
+        e["attrs"] = attrs;
+        e["label"] = json!(label);
+    }
+    o
+}
+
 /// A surveyed road with a vertex every metre and a millimetre of noise, and
 /// a parcel with extra vertices along its straight sides.
 fn dense() -> Objects {
@@ -778,6 +804,25 @@ fn first_phase() -> Vec<Scene> {
             select_all(app);
             run(app, "tool.reverse");
             run(app, "tool.confirm");
+        }),
+        ("kir-onizleme", |app| {
+            open(app, carried());
+            run(app, "tool.break");
+            click(app, [10.0, 18.0]);
+            hover(app, [19.0, 22.0]);
+        }),
+        ("kir-sonuc", |app| {
+            open(app, carried());
+            run(app, "tool.break");
+            click(app, [10.0, 18.0]);
+            click(app, [19.0, 22.0]);
+            select_all(app);
+        }),
+        ("birlestir-sonuc", |app| {
+            open(app, carried());
+            forget(app);
+            select_all(app);
+            run(app, "tool.join");
         }),
         ("sadelestir-onizleme", |app| {
             open(app, dense());

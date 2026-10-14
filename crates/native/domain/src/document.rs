@@ -50,6 +50,9 @@ pub struct Document {
     pub(crate) store: Store,
     /// The next slot to give out; u64 so the last `u32` can be given without overflow.
     pub(crate) next_slot: u64,
+    /// Within a step: objects whose associative dimensions follow them by where
+    /// their points are, onto the objects listed (`relocate_ties`, docs/adr/0296).
+    pub(crate) relocated: std::collections::BTreeMap<Uuid, Vec<Uuid>>,
     pub(crate) history: History,
     /// The journal of what was written and the ledger of requests executed
     /// (calls.rs, docs/adr/0253 §3, §6).
@@ -106,6 +109,18 @@ impl Document {
 
     pub fn layers(&self) -> &LayerTree {
         &self.layers
+    }
+
+    /// Within a step: the associative dimensions' points on `of` follow it
+    /// by where they are rather than by their place's index (docs/adr/0296):
+    /// when the step is recorded, each such point is looked for on the
+    /// objects of `onto`, in their order, as they are then; it takes the
+    /// first one it lies on, at the place it lies on there, and keeps its
+    /// coordinates; on none its reference breaks (`vertex_gone`). Kır gives
+    /// an object's pieces, Birleştir a joined object for each of its members,
+    /// Yönü çevir the object itself. Forgotten when the step ends.
+    pub fn relocate_ties(&mut self, of: Uuid, onto: Vec<Uuid>) {
+        self.relocated.insert(of, onto);
     }
 
     // ── Objects ──────────────────────────────────────────────────────────
@@ -200,6 +215,7 @@ impl Document {
             layers: self.layers.clone(),
             store: self.store.clone(),
             next_slot: self.next_slot,
+            relocated: Default::default(),
             history: History::default(),
             // A copy starts its own journal; the ledger it keeps, so a call
             // on the copy (a plan, a job) knows the requests already executed.

@@ -261,6 +261,7 @@ __all__ = [
     "EntitiesPick",
     "EntitiesPicked",
     "EntitiesPropertiesSet",
+    "EntitiesReverse",
     "EntitiesSelect",
     "EntitiesSelected",
     "EntitiesSetProperties",

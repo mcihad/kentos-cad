@@ -6,8 +6,15 @@
 //! are `fixtures/commands/v1/cad.entities.break.json` and `.join.json`.
 //!
 //! Nothing is computed twice: the pieces and the chains are the shared
-//! core's (`break_entity`, `join_entities`, `chain`), written through
-//! `cad.entities.edit`'s `break` and `join` operations ([`crate::edit`]).
+//! core's (`break_entity`, `join_entities`, `chain`, `simplest`), written
+//! through `cad.entities.edit`'s `break` and `join` operations
+//! ([`crate::edit`]).
+//!
+//! What the pieces and the joined object keep is docs/adr/0296's policy:
+//! every piece of Kır all its object carried; Birleştir's object all its
+//! first object carried, the others' differing attributes said. The
+//! associative dimensions on them follow by where their points are
+//! (`Document::relocate_ties`).
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EditOperation, EntitiesBreak, EntitiesEdit, EntitiesEditPlan,
@@ -19,7 +26,7 @@ use kentos_geometry_core::entity::Entity as CoreEntity;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::breaking::break_entity;
 use kentos_geometry_core::ops::curve_cuts::Cut;
-use kentos_geometry_core::ops::join::{ChainObject, chain, join_entities};
+use kentos_geometry_core::ops::join::{ChainObject, chain, join_entities, simplest};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::vec2::Vec2;
 
@@ -30,12 +37,23 @@ use crate::edit;
 use crate::geometry::{edit_geometry, shape};
 use crate::geometry_store::store_of;
 use crate::topology_follow::slot;
-use crate::trim::{relay, replace_changes};
+use crate::trim::relay;
+
+/// The objects whose associative dimensions follow them by where their points are, onto which
+/// (`Document::relocate_ties`); `pieces` adds the objects the write creates to the first's list (Kır).
+#[derive(Default)]
+pub(crate) struct Ties {
+    pub(crate) onto: Vec<(Uuid, Vec<Uuid>)>,
+    pub(crate) pieces: bool,
+}
+
+/// What a check gives: the edit, its warnings and the ties to relocate.
+pub(crate) type Checked = (EntitiesEdit, Vec<CommandWarning>, Ties);
 
 /// The commands' shapes over the edit they compute (`checked`).
-fn validate_with(checked: Result<(EntitiesEdit, Vec<CommandWarning>), Stop>) -> CommandResult<()> {
+pub(crate) fn validate_with(checked: Result<Checked, Stop>) -> CommandResult<()> {
     match checked {
-        Ok((_, warnings)) => CommandResult::Completed {
+        Ok((_, warnings, _)) => CommandResult::Completed {
             output: (),
             warnings,
         },
@@ -43,12 +61,12 @@ fn validate_with(checked: Result<(EntitiesEdit, Vec<CommandWarning>), Stop>) -> 
     }
 }
 
-fn plan_with(
+pub(crate) fn plan_with(
     doc: &Document,
-    checked: Result<(EntitiesEdit, Vec<CommandWarning>), Stop>,
+    checked: Result<Checked, Stop>,
 ) -> CommandResult<EntitiesEditPlan> {
     match checked {
-        Ok((change, warnings)) => match edit::plan_in(doc, &change) {
+        Ok((change, warnings, _)) => match edit::plan_in(doc, &change) {
             CommandResult::Completed {
                 output,
                 warnings: more,
@@ -62,19 +80,33 @@ fn plan_with(
     }
 }
 
-fn execute_with(
+pub(crate) fn execute_with(
     cx: &mut ExecutionContext<'_>,
-    checked: Result<(EntitiesEdit, Vec<CommandWarning>), Stop>,
+    checked: Result<Checked, Stop>,
 ) -> CommandResult<EntitiesEdited> {
     match checked {
-        Ok((change, warnings)) => match edit::execute(cx, change) {
+        Ok((change, warnings, ties)) => match edit::execute(cx, change) {
             CommandResult::Completed {
                 output,
                 warnings: more,
-            } => CommandResult::Completed {
-                output,
-                warnings: [warnings, more].concat(),
-            },
+            } => {
+                // In the same step: the dimensions follow when it is recorded.
+                let created: Vec<Uuid> = output
+                    .created
+                    .iter()
+                    .filter_map(|u| Uuid::parse_str(u).ok())
+                    .collect();
+                for (k, (of, mut onto)) in ties.onto.into_iter().enumerate() {
+                    if ties.pieces && k == 0 {
+                        onto.extend(created.iter().copied());
+                    }
+                    cx.doc.relocate_ties(of, onto);
+                }
+                CommandResult::Completed {
+                    output,
+                    warnings: [warnings, more].concat(),
+                }
+            }
             other => relay(other),
         },
         Err(stop) => stop.into(),
@@ -143,16 +175,41 @@ pub fn breakable(e: &Entity) -> bool {
             | Entity::Arc(_)
             | Entity::Circle(_)
             | Entity::Ellipse(_)
+            | Entity::Nurbs(_)
             | Entity::Xline(_)
             | Entity::Ray(_)
     )
 }
 
-/// The checks of `cad.entities.break`, in order; the edit it writes.
-fn check_break(
+/// Kır's pieces in place of the object at `slot`: the first is the object, the others new objects from it,
+/// every one keeping all it carried (docs/adr/0296).
+fn piece_changes(
     doc: &Document,
-    input: &EntitiesBreak,
-) -> Result<(EntitiesEdit, Vec<CommandWarning>), Stop> {
+    slot: Slot,
+    pieces: &[kentos_geometry_core::entity::Shape],
+) -> Vec<EntityEdit> {
+    let id = doc.uid(slot).map(|u| u.to_string()).unwrap_or_default();
+    let mut changes = Vec::with_capacity(pieces.len());
+    for (k, geometry) in pieces
+        .iter()
+        .filter_map(|s| edit_geometry(s.clone()))
+        .enumerate()
+    {
+        changes.push(if k == 0 {
+            EntityEdit::Replace {
+                uid: id.clone(),
+                geometry,
+                keep_data: Some(true),
+            }
+        } else {
+            EntityEdit::add(id.clone(), geometry, Some(true))
+        });
+    }
+    changes
+}
+
+/// The checks of `cad.entities.break`, in order; the edit it writes.
+fn check_break(doc: &Document, input: &EntitiesBreak) -> Result<Checked, Stop> {
     if !is_uid_text(&input.uid) {
         return Err(invalid_uid(&input.uid, "uid"));
     }
@@ -168,7 +225,7 @@ fn check_break(
     if !breakable(e) {
         return Err(refuse(
             codes::NOT_BREAKABLE,
-            "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ya da ışın olmalı.".into(),
+            "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, NURBS eğrisi, yardımcı çizgi ya da ışın olmalı.".into(),
             "uid",
         ));
     }
@@ -195,14 +252,37 @@ fn check_break(
             "first",
         )),
         Cut::Pieces(pieces) => {
-            let shapes: Vec<_> = pieces.into_iter().map(|p| p.shape).collect();
+            // A polyline's (or an area's) pieces stay polylines, two-vertex ones too, as AutoCAD's BREAK
+            // leaves them: their widths go with them (docs/adr/0296).
+            let path = matches!(e, Entity::Polyline(_) | Entity::Polygon(_));
+            let shapes: Vec<_> = pieces
+                .into_iter()
+                .map(|p| match p.shape {
+                    kentos_geometry_core::entity::Shape::Line { a, b } if path => {
+                        kentos_geometry_core::entity::Shape::Polyline {
+                            pts: vec![a, b],
+                            bulges: None,
+                            holes: None,
+                            parts: None,
+                            closed: false,
+                            widths: None,
+                        }
+                    }
+                    other => other,
+                })
+                .collect();
+            let ties = Ties {
+                onto: doc.uid(slot).map(|u| (u, vec![u])).into_iter().collect(),
+                pieces: true,
+            };
             Ok((
                 EntitiesEdit {
                     operation: EditOperation::Break,
-                    changes: replace_changes(doc, slot, &shapes),
+                    changes: piece_changes(doc, slot, &shapes),
                     expected_revision: None,
                 },
                 Vec::new(),
+                ties,
             ))
         }
     }
@@ -294,7 +374,7 @@ fn check_join(
     doc: &Document,
     store: Option<&Store>,
     input: &EntitiesJoin,
-) -> Result<(EntitiesEdit, Vec<CommandWarning>), Stop> {
+) -> Result<Checked, Stop> {
     if input.uids.is_empty() {
         return Err(refuse(
             codes::NO_ENTITIES,
@@ -408,7 +488,7 @@ fn check_join(
         }
         None => {
             let mut targets = Vec::with_capacity(named.len());
-            for (i, slot, e, _) in named {
+            for &(i, slot, e, _) in &named {
                 if doc.layers().is_locked(&e.base().layer_id) {
                     warnings.push(CommandWarning {
                         code: codes::LOCKED_SKIPPED.into(),
@@ -448,15 +528,24 @@ fn check_join(
         Json::Num(n) if *n >= 0.0 && n.fract() == 0.0 => Some(Slot(*n as u32)),
         _ => None,
     };
-    // Each chain is its first object (or the seed), joined: its slot, persistent id,
-    // layer, colour, attributes and label; the others go.
+    // Each chain is its first object (or the seed), joined, in its simplest kind (AutoCAD's JOIN): its slot,
+    // persistent id and all it carried; the others go, their differing attributes said (docs/adr/0296).
     let mut changes = Vec::new();
+    let mut ties = Ties::default();
+    let mut joined: Vec<Slot> = Vec::new();
     for g in &groups {
         let slots: Vec<Slot> = g.sources.iter().filter_map(slot_of).collect();
+        joined.extend(&slots);
         let first = keep
             .filter(|k| slots.contains(k))
             .or_else(|| slots.first().copied());
-        let (Some(first), Some(geometry)) = (first, edit_geometry(g.geometry.shape.clone())) else {
+        let members: Vec<_> = slots
+            .iter()
+            .filter_map(|s| doc.get(*s))
+            .map(shape)
+            .collect();
+        let made = simplest(&g.geometry.shape, &members, tolerance.max(1e-9));
+        let (Some(first), Some(geometry)) = (first, edit_geometry(made)) else {
             continue;
         };
         let uid = |s: Slot| doc.uid(s).map(|u| u.to_string()).unwrap_or_default();
@@ -468,6 +557,35 @@ fn check_join(
         for s in slots.iter().filter(|&&s| s != first) {
             changes.push(EntityEdit::Remove { uid: uid(*s) });
         }
+        if let Some(kept) = doc.uid(first) {
+            ties.onto.push((kept, vec![kept]));
+            for s in slots.iter().filter(|&&s| s != first) {
+                if let Some(gone) = doc.uid(*s) {
+                    ties.onto.push((gone, vec![kept]));
+                }
+            }
+        }
+        if let Some(said) = conflicts(doc, first, &slots) {
+            warnings.push(said);
+        }
+    }
+    // What was given and joined nothing, with why (not in a chain: Zincir's members are what it found).
+    if input.chain.is_none() {
+        for (i, slot, e, _) in &named {
+            if joined.contains(slot) || doc.layers().is_locked(&e.base().layer_id) {
+                continue;
+            }
+            let why = if chainable(e) {
+                "Ucu başka bir nesnenin ucuna toleransta değmiyor; birleşmedi."
+            } else {
+                "Yalnız çizgi, yay ve açık çoklu çizgi birleşir; bu nesne birleşmedi."
+            };
+            warnings.push(CommandWarning {
+                code: codes::NOT_JOINED.into(),
+                message: why.into(),
+                path: Some(format!("uids[{i}]")),
+            });
+        }
     }
     Ok((
         EntitiesEdit {
@@ -476,7 +594,56 @@ fn check_join(
             expected_revision: None,
         },
         warnings,
+        ties,
     ))
+}
+
+/// The attributes and labels of a chain's other objects that differ from its first's, which stay: a
+/// `data_conflict` warning naming each key with its values, the first's first (“yok” when it has none).
+fn conflicts(doc: &Document, first: Slot, slots: &[Slot]) -> Option<CommandWarning> {
+    let kept = doc.get(first)?.base();
+    let mut keys: std::collections::BTreeMap<String, Vec<String>> = Default::default();
+    let none = || "yok".to_owned();
+    for s in slots.iter().filter(|&&s| s != first) {
+        let Some(other) = doc.get(*s).map(Entity::base) else {
+            continue;
+        };
+        for (k, v) in &other.attrs {
+            if kept.attrs.get(k) != Some(v) {
+                let values = keys
+                    .entry(k.clone())
+                    .or_insert_with(|| vec![kept.attrs.get(k).cloned().unwrap_or_else(none)]);
+                if !values.contains(v) {
+                    values.push(v.clone());
+                }
+            }
+        }
+        if let Some(label) = &other.label
+            && kept.label.as_ref() != Some(label)
+        {
+            let values = keys
+                .entry("etiket".to_owned())
+                .or_insert_with(|| vec![kept.label.clone().unwrap_or_else(none)]);
+            if !values.contains(label) {
+                values.push(label.clone());
+            }
+        }
+    }
+    if keys.is_empty() {
+        return None;
+    }
+    let listed: Vec<String> = keys
+        .iter()
+        .map(|(k, values)| format!("{k} ({})", values.join(" / ")))
+        .collect();
+    Some(CommandWarning {
+        code: codes::DATA_CONFLICT.into(),
+        message: format!(
+            "Birleşen nesnelerin öznitelikleri ayrışıyor: {}; ilk nesnenin değerleri kaldı.",
+            listed.join(", ")
+        ),
+        path: Some("uids".into()),
+    })
 }
 
 /// `cad.entities.join` v1: Birleştir.
