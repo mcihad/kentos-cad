@@ -142,7 +142,7 @@ impl App {
             text_color: Some(tone.icon(theme)),
             ..container::Style::default()
         });
-        let head = row![
+        let mut head = row![
             text(title)
                 .font(typography::mono_strong())
                 .size(size)
@@ -156,10 +156,12 @@ impl App {
                 .line_height(height)
                 .style(faint),
             space::horizontal(),
-            self.call_buttons(entry.id, has_python, open),
         ]
         .spacing(10)
         .align_y(Center);
+        if let Some(buttons) = self.call_buttons(entry, open) {
+            head = head.push(buttons);
+        }
         let mut body = Column::new().push(head);
         if !input.is_empty() {
             body = body.push(small(input, size, height, Tone::Muted));
@@ -182,19 +184,21 @@ impl App {
         .into()
     }
 
-    /// A call's buttons: Python shown, Python copied, the replay input copied and saved.
-    fn call_buttons(&self, id: u64, python: bool, open: bool) -> Element<'_, Message> {
-        let action = |glyph: Icon, event: Option<Event>, about: Tip| {
+    /// A call's buttons: Python shown, Python copied, the replay input copied and saved; none for an edit made
+    /// without a command (it has no Python and no replay input).
+    pub(crate) fn call_buttons(&self, entry: &Entry, open: bool) -> Option<Element<'_, Message>> {
+        self.python_of(entry)?;
+        let id = entry.id;
+        let action = |glyph: Icon, event: Event, about: Tip| {
             tip(
                 button(icon(glyph).size(13.0))
-                    .on_press_maybe(event.map(Message::History))
+                    .on_press(Message::History(event))
                     .padding([2, 4])
                     .style(kentos_ui::style::button::flat),
                 about,
                 iced::widget::tooltip::Position::Top,
             )
         };
-        let no_python = "Komutla yazılmadı; Python karşılığı yok.";
         let show = button(
             row![
                 icon(if open {
@@ -208,36 +212,31 @@ impl App {
             .spacing(3)
             .align_y(Center),
         )
-        .on_press_maybe(python.then_some(Message::History(Event::Toggle(id))))
+        .on_press(Message::History(Event::Toggle(id)))
         .padding([1, 6])
         .style(kentos_ui::style::button::flat);
-        row![
+        let buttons = row![
             show,
             action(
                 Icon::Copy,
-                python.then_some(Event::CopyPython(id)),
-                if python {
-                    Tip::new("Python kodunu kopyala")
-                        .body("kentos.cad ile aynı komut, aynı girdiyle")
-                } else {
-                    Tip::new("Python kodunu kopyala").body(no_python)
-                },
+                Event::CopyPython(id),
+                Tip::new("Python kodunu kopyala").body("kentos.cad ile aynı komut, aynı girdiyle"),
             ),
             action(
                 Icon::Play,
-                python.then_some(Event::CopyReplay(id)),
+                Event::CopyReplay(id),
                 Tip::new("Tekrar oynatma girdisini kopyala")
                     .body("kentos.replay/1; doc.replay(...) ile oynatılır"),
             ),
             action(
                 Icon::Save,
-                python.then_some(Event::SaveReplay(id)),
+                Event::SaveReplay(id),
                 Tip::new("Tekrar oynatma girdisini kaydet…").body("kentos.replay/1 JSON dosyası"),
             ),
         ]
         .spacing(2)
-        .align_y(Center)
-        .into()
+        .align_y(Center);
+        Some(buttons.into())
     }
 
     /// A layer's name by its id, in the open drawing.
