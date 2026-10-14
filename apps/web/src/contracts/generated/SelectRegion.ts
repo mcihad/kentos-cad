@@ -6,4 +6,8 @@ import type { Vec2 } from "./Vec2";
 /**
  * Where the objects are, or which they are.
  */
-export type SelectRegion = { "kind": "window", a: Vec2, b: Vec2, } | { "kind": "crossing", a: Vec2, b: Vec2, } | { "kind": "fence", points: Array<Vec2>, tolerance: number, } | { "kind": "polygon", points: Array<Vec2>, mode: PolygonSelectMode, } | { "kind": "circle", center: Vec2, radius: number, crossing?: boolean, } | { "kind": "containing", at: Vec2, } | { "kind": "point", at: Vec2, tolerance: number, } | { "kind": "all" } | { "kind": "objects", uids: Array<string>, } | { "kind": "invert", uids: Array<string>, } | { "kind": "similar", uids: Array<string>, criteria?: SimilarCriteria, };
+export type SelectRegion = { "kind": "window", a: Vec2, b: Vec2, } | { "kind": "crossing", a: Vec2, b: Vec2, } | { "kind": "fence", points: Array<Vec2>, tolerance: number, } | { "kind": "polygon", points: Array<Vec2>, mode: PolygonSelectMode, } | { "kind": "circle", center: Vec2, radius: number, crossing?: boolean, } | { "kind": "containing", at: Vec2, } | { "kind": "point", at: Vec2, tolerance: number, } | { "kind": "all" } | { "kind": "objects", uids: Array<string>, } | { "kind": "invert", uids: Array<string>, } | { "kind": "similar", uids: Array<string>, 
+/**
+ * Absent: every criterion on.
+ */
+criteria?: SimilarCriteria, };

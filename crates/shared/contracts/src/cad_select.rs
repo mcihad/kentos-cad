@@ -14,6 +14,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::Vec2;
+use crate::subref::SubPlace;
 
 /// Selects objects by a region, a list or a likeness.
 pub const CAD_ENTITIES_SELECT: &str = "cad.entities.select";
@@ -275,6 +276,71 @@ pub struct SelectLeftOut {
 pub struct EntitiesSelected {
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
+    pub left_out: SelectLeftOut,
+    /// The document's revision the objects were read at, as decimal text.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// The objects a click falls on, each with its sub-object.
+pub const CAD_ENTITIES_PICK: &str = "cad.entities.pick";
+pub const CAD_ENTITIES_PICK_VERSION: u32 = 1;
+
+/// Input of `cad.entities.pick` v1 (docs/adr/0276): what a click at `at` within `tolerance` metres can mean, the
+/// most specific first (Sıradakini seç's candidates: points and edges by their distance, then the areas around it by
+/// their size), each with the sub-object it falls on. Only objects shown count; `kinds` is the selection filter.
+///
+/// Refusals (`CommandError.code`), in this order: `not_finite` (`at`, the tolerance), `invalid_distance` (a
+/// tolerance below zero).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesPick {
+    /// Where the click is.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Vec2,
+    /// How far from `at` an object may be, metres (a tool's is its pixels at the view's scale).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub tolerance: f64,
+    /// Seçim süzgeci: only these kinds; absent: every kind.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kinds: Option<Vec<SelectKind>>,
+}
+
+/// An object a click falls on and its sub-object.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PickedEntity {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    /// The sub-object (docs/adr/0249, 0263): the object's nearest point within the tolerance (an end, a vertex, a
+    /// point, an insertion point), else the nearest point of an edge or a curve (`along`); absent when the click is
+    /// in the object's area or on a text's body.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub place: Option<SubPlace>,
+    /// When the object is an insert, the piece inside it the place is on.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub path: Vec<u32>,
+}
+
+/// Output of `cad.entities.pick` v1, and its plan: the objects the most specific first, what the kinds left out, the
+/// revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesPicked {
+    pub picks: Vec<PickedEntity>,
     pub left_out: SelectLeftOut,
     /// The document's revision the objects were read at, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

@@ -1244,6 +1244,12 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.entities.pick",
+        refusals: &[&["not_finite", "invalid_distance"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.select",
         refusals: &[&[
             "not_finite",

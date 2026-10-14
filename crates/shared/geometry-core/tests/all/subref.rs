@@ -292,3 +292,38 @@ fn a_piece_inside_a_block_is_where_the_reference_puts_it_and_follows_its_insert(
         }
     }
 }
+
+/// The sub-object a click falls on (docs/adr/0276): an object's nearest point before its edges, an edge's nearest
+/// point as an along place, nothing off the object; inside an insert the piece's path too.
+#[test]
+fn a_click_falls_on_the_sub_object_the_reference_names() {
+    use kentos_geometry_core::ops::subref::{place_near, place_near_in};
+    let cases: Value = serde_json::from_str(CASES).expect("the cases");
+    let nears = cases["nears"].as_array().expect("nears");
+    assert!(nears.len() >= 15);
+    let at = |c: &Value| Vec2::new(c["at"]["x"].as_f64().unwrap(), c["at"]["y"].as_f64().unwrap());
+    for c in nears {
+        let name = c["name"].as_str().unwrap();
+        let tol = c["tolerance"].as_f64().unwrap();
+        let got = place_near(&entity(&c["entity"]), at(c), tol).map(|(p, _)| p);
+        match (got, c["place"].is_null()) {
+            (None, true) => {}
+            (Some(p), false) => same_place(name, p, place(&c["place"])),
+            (got, _) => panic!("{name}: {got:?}, başvuru {}", c["place"]),
+        }
+    }
+    for c in cases["pieceNears"].as_array().expect("piece nears") {
+        let name = c["name"].as_str().unwrap();
+        let tol = c["tolerance"].as_f64().unwrap();
+        let got = place_near_in(&blocks(&c["definitions"]), &entity(&c["insert"]), at(c), tol);
+        let want = &c["expect"];
+        match (got, want.is_null()) {
+            (None, true) => {}
+            (Some((p, pl, _)), false) => {
+                assert_eq!(p, path(&want["path"]), "{name}");
+                same_place(name, pl, place(&want["place"]));
+            }
+            (got, _) => panic!("{name}: {got:?}, başvuru {want}"),
+        }
+    }
+}

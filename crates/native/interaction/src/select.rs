@@ -262,6 +262,11 @@ impl Select {
                 // Every object the click could mean, the most specific first (docs/adr/0187 §1):
                 // the first is selected; among several, Sıradakini seç's chip opens.
                 let candidates = crate::selectable::candidates(cx, p.raw);
+                // Ctrl: the sub-object the click falls on, each candidate's (docs/adr/0276).
+                if p.ctrl && !p.shift {
+                    pick_sub(p.raw, candidates, cx);
+                    return;
+                }
                 match candidates.first().copied() {
                     Some(hit) if p.shift => {
                         cx.selection.toggle(hit);
@@ -536,4 +541,48 @@ fn grip_z(slot: Slot, index: usize, cx: &Context<'_>) -> Option<f64> {
 /// What the grip's tag says of a vertex's elevation: `Kot 104.000 m`.
 fn elevation_line(z: f64, format: &Format) -> String {
     format!("Kot {}", format.length(z))
+}
+
+/// A Ctrl click (docs/adr/0276): the objects it could mean, each with the sub-object it falls on
+/// (`cad.entities.pick`'s rule); the first is selected and said with its id and place.
+fn pick_sub(at: Vec2, candidates: Vec<Slot>, cx: &mut Context<'_>) {
+    let tol = cx.pick_tolerance();
+    let picks: Vec<(Slot, Option<crate::SubObject>)> = candidates
+        .iter()
+        .map(|s| {
+            let sub = cx.doc.get(*s).and_then(|e| {
+                kentos_native_application::entities_pick::sub_object(cx.doc, e, at, tol)
+            });
+            let sub = sub.map(|(path, p)| crate::SubObject {
+                path,
+                place: kentos_domain::dimension_ties::contract_place(p),
+            });
+            (*s, sub)
+        })
+        .collect();
+    cx.selection.pick_sub(at, picks);
+    if let Some(line) = sub_line(cx.doc, cx.selection) {
+        cx.say(crate::log::Level::Info, line);
+    }
+}
+
+/// The selected sub-object as the log says it: “Alt nesne: Kapalı alan 0192f5a0 · 3. köşe”.
+pub fn sub_line(doc: &kentos_domain::Document, selection: &crate::Selection) -> Option<String> {
+    let [slot] = selection.ids() else {
+        return None;
+    };
+    let e = doc.get(*slot)?;
+    let uid = doc.uid(*slot)?.to_string();
+    let place = match selection.sub() {
+        Some((_, sub)) => {
+            let words = crate::dimension_reassociate::place_words(&sub.place);
+            if sub.path.is_empty() { words } else { format!("{words} (blokta)") }
+        }
+        None => "bütün nesne".to_owned(),
+    };
+    Some(format!(
+        "Alt nesne: {} {} · {place}",
+        crate::data_search::kind_name(e),
+        uid.get(..8).unwrap_or(&uid)
+    ))
 }

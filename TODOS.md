@@ -165,6 +165,9 @@ Liste:
 - [ ] `CAD-INPUT-01` (ADR 0266, 14 Ekim): web'de gerekenler: `coordinateInput.ts`'in metrik birimli uzunluğu (`2.5m`, `250cm`) ve
   parantezli toplamı (`fixtures/point-input/v1`'in 22 yeni satırı), `looksLikeCoordinate`'in `(`'u ve araçların uzunluk alanlarının
   birimli ve toplamlı okunması; web'in iz oynatıcısı `value-entry.json`'u geçmeli (`(`, `)`, `*` tuşları, Tab'ın birimli kilidi).
+- [ ] `CAD-INPUT-12` (ADR 0276, 14 Ekim): web'de gerekenler: `cad.entities.pick`'in web işleyicisi (ortak durumlar
+  `cad.entities.pick.json`; alt nesne kuralı WASM'la çekirdekten), seçim aracında Ctrl+tık (alt nesnenin halkası, günlük satırı, çipte
+  her adayın alt nesnesi) ve kısayol penceresinde Ctrl + tık ile Çizerken grubu.
 - [ ] `CAD-INPUT-11` (ADR 0275, 14 Ekim): web'de gerekenler: `cad.entities.select`'in web işleyicisi (ortak durumlar
   `cad.entities.select.json`) ve web'in seçim araçlarının (`tools/select*.ts`, Tümünü seç, Ters çevir, Önceki seçim) aynı sorguya
   bağlanması; Ters çevir ve Önceki seçim katman süzgecine ve zaman penceresine uymalı.

@@ -260,7 +260,7 @@ pub use path::NO_SQUARE_CLOSE;
 pub use points::{Aid, ortho_now};
 pub use prompt::{Prompt, PromptOption, lower_tr, upper_tr};
 pub use select::SelectBox;
-pub use selection::{Cycle, Selection};
+pub use selection::{Cycle, Selection, SubObject};
 pub use session::{
     LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRACK_TOOL, NO_TRAVEL, Session,
 };

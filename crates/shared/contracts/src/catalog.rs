@@ -3349,6 +3349,31 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_ENTITIES_PICK.into(),
+            version: crate::CAD_ENTITIES_PICK_VERSION,
+            title: "Tıklanan nesneler".into(),
+            summary: "Bir tıklamanın seçebileceği nesneleri en belirliden verir (Sıradakini seç'in adayları: noktalar ve kenarlar uzaklıklarıyla, sonra içinde kalınan alanlar boylarıyla); her birinin kalıcı kimliği ve tıklamanın düştüğü alt nesne: toleranstaki en yakın noktası (uç, köşe, nokta, ekleme noktası), yoksa kenarının ya da eğrisinin en yakın noktası (along); blokta parçanın yolu. \
+                      Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına ve öbür komutlara olduğu gibi verilir. Yalnız gösterilen nesneler; kinds seçim süzgecidir. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["tikla".into(), "pick".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesPick>(),
+            output: schema::<crate::EntitiesPicked>(),
+            plan: Some(schema::<crate::EntitiesPicked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir köşenin yanına, yarım metrelik toleransla".into(),
+                input: json!({ "at": { "x": 487010.1, "y": 4420009.9 }, "tolerance": 0.5 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_ENTITIES_SELECT.into(),
             version: crate::CAD_ENTITIES_SELECT_VERSION,
             title: "Nesne seç".into(),
@@ -3908,6 +3933,9 @@ mod tests {
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_PICK => {
+                        serde_json::from_value::<crate::EntitiesPick>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_SELECT => {
                         serde_json::from_value::<crate::EntitiesSelect>(e.input.clone())

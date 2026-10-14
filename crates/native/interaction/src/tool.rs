@@ -38,6 +38,9 @@ pub struct Pointer {
     /// `world` is where object tracking locked the cursor (no snap under it):
     /// exact as a snap is (docs/adr/0085).
     pub tracked: bool,
+    /// The platform's command key held (Ctrl; ⌘ on macOS): a click selects the sub-object it falls on
+    /// (docs/adr/0276).
+    pub ctrl: bool,
 }
 
 impl Pointer {
@@ -50,7 +53,14 @@ impl Pointer {
             shift,
             snap,
             tracked: false,
+            ctrl: false,
         }
+    }
+
+    /// With the platform's command key held or not.
+    pub fn with_ctrl(mut self, ctrl: bool) -> Self {
+        self.ctrl = ctrl;
+        self
     }
 
     /// On the point object tracking locked the cursor to, when there is no

@@ -8607,12 +8607,13 @@
    "title": "Seç",
    "level": "session",
    "via": [
-    "cad.entities.select"
+    "cad.entities.select",
+    "cad.entities.pick"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.select",
-   "mcp": "cad.entities.select",
-   "note": "Seçim oturumundur; aynı sorgu cad.entities.select (ADR 0275).",
+   "python": "kentos.cad.entities.select, kentos.cad.entities.pick",
+   "mcp": "cad.entities.select, cad.entities.pick",
+   "note": "Seçim oturumundur; aynı sorgu cad.entities.select, tıklama ve alt nesne cad.entities.pick (ADR 0275, 0276).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 6
